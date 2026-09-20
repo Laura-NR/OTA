@@ -1,0 +1,68 @@
+# Development infrastructure only.
+# Application processes (api/storefront/backoffice) run via `pnpm dev` on the host.
+# Usage: docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    container_name: ota-postgres
+    environment:
+      POSTGRES_USER: ota
+      POSTGRES_PASSWORD: ota
+      POSTGRES_DB: ota_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - ota_pgdata:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ota -d ota_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: ota-redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: ota-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - ota_minio:/data
+
+  createbuckets:
+    image: quay.io/minio/mc
+    container_name: ota-createbuckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set local http://minio:9000 minio minio123) do echo 'waiting for minio'; sleep 2; done;
+      /usr/bin/mc mb --ignore-existing local/ota-documents;
+      exit 0;
+      "
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: ota-mailpit
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+volumes:
+  ota_pgdata:
+  ota_minio:

@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Environment (never commit real values)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Test / coverage
+coverage/
+
+# Mobile
+.expo/
+.web-build/
+
+# Logs / OS
+*.log
+.DS_Store

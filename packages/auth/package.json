@@ -1,0 +1,21 @@
+{
+  "name": "@ota/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "auth:generate": "auth generate"
+  },
+  "dependencies": {
+    "@better-auth/passkey": "^1.7.5",
+    "better-auth": "^1.7.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^6.0.3"
+  }
+}

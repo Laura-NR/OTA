@@ -1,0 +1,371 @@
+// OTA core schema. Mirrors spec §6 with snake_case columns matching the data
+// dictionary. Inventory/CMS and pricing tables land in Phase 2.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  OPERATIONS_ADMIN
+  ADMINISTRATIVE_SUPPORT
+  SERVICE_WORKER
+  TRAVELER
+}
+
+enum ReservationStatus {
+  DRAFT
+  ITINERARY_SUBMITTED
+  DISPATCH_IN_PROGRESS
+  ASSEMBLY_AND_ESCALATION
+  SECURED_AND_INVOICED
+  PENDING_PAYMENT
+  ACTION_REQUIRED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceType {
+  GUIDE
+  TRANSPORTATION
+  ACCOMMODATION
+  EXPERIENCE
+}
+
+enum ServiceItemStatus {
+  UNASSIGNED
+  OFFERED
+  ACCEPTED
+  DECLINED
+  TIMEOUT
+  FULFILLED
+}
+
+enum SupplierCategory {
+  TOUR_GUIDE
+  PRIVATE_DRIVER
+  HOMESTAY_HOST
+  TRANSLATOR
+}
+
+enum VerificationStatus {
+  PENDING_AUDIT
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum PaymentRail {
+  OPEN_BANKING_SEPA
+  CARD
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  ACCRUED
+  PROCESSING
+  SETTLED
+  FAILED
+}
+
+enum DocumentType {
+  VOUCHER
+  WORK_ORDER
+  INVOICE
+  RECEIPT
+  EMERGENCY_CONTACT
+}
+
+enum MessageSender {
+  TRAVELER
+  OPERATIONS
+}
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  role          Role     @default(TRAVELER)
+  fullName      String?  @map("full_name")
+  image         String?
+  phone         String?
+  locale        String   @default("es")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // GDPR retention lifecycle (spec §3.5)
+  retentionConsentGrantedAt DateTime? @map("retention_consent_granted_at")
+  anonymizedAt              DateTime? @map("anonymized_at")
+
+  supplierProfile SupplierProfile?
+  reservations    Reservation[]
+  auditLogs       AuditLog[]
+
+  // Better Auth relations
+  sessions Session[]
+  accounts Account[]
+  passkeys Passkey[]
+
+  @@map("users")
+}
+
+// --- Better Auth core schema -------------------------------------------------
+// Field names follow Better Auth's expected model shape; table names are the
+// adapter defaults (singular). Column names stay camelCase because these tables
+// are owned by Better Auth, not the OTA domain.
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String    @db.Uuid
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Passkey {
+  id           String    @id
+  name         String?
+  publicKey    String
+  userId       String   @db.Uuid
+  credentialID String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  aaguid       String?
+  createdAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("passkey")
+}
+
+model SupplierProfile {
+  id                    String             @id @default(uuid()) @db.Uuid
+  userId                String             @unique @map("user_id") @db.Uuid
+  category              SupplierCategory
+  primaryPhone          String             @map("primary_phone")
+  provincesActive       String[]           @map("provinces_active")
+  vehicleDetails        Json?              @map("vehicle_details")
+  rtnLicenseNumber      String             @unique @map("rtn_license_number")
+  credentialDocumentUrl String?            @map("credential_document_url")
+  credentialExpiresAt   DateTime?          @map("credential_expires_at")
+  verificationStatus    VerificationStatus @default(PENDING_AUDIT) @map("verification_status")
+  isAvailable           Boolean            @default(true) @map("is_available")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceItems ServiceItem[]
+  availabilities Availability[]
+
+  @@index([verificationStatus])
+  @@map("supplier_profiles")
+}
+
+model Reservation {
+  id                      String            @id @default(uuid()) @db.Uuid
+  userId                  String            @map("user_id") @db.Uuid
+  bookingCode             String            @unique @map("booking_code")
+  startDate               DateTime          @map("start_date") @db.Date
+  endDate                 DateTime          @map("end_date") @db.Date
+  status                  ReservationStatus @default(DRAFT)
+  totalCurrency           String            @default("EUR") @map("total_currency")
+  totalAmount             Decimal           @default(0) @map("total_amount") @db.Decimal(10, 2)
+  customItineraryPayload  Json?             @map("custom_itinerary_payload")
+  createdAt               DateTime          @default(now()) @map("created_at")
+  updatedAt               DateTime          @updatedAt @map("updated_at")
+
+  user        User            @relation(fields: [userId], references: [id])
+  serviceItems ServiceItem[]
+  payments    PaymentReceipt[]
+  documents   Document[]
+  messages    Message[]
+  reviews     Review[]
+  incidents   Incident[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("reservations")
+}
+
+model ServiceItem {
+  id               String            @id @default(uuid()) @db.Uuid
+  reservationId    String            @map("reservation_id") @db.Uuid
+  supplierId       String?           @map("supplier_id") @db.Uuid
+  serviceType      ServiceType       @map("service_type")
+  serviceDateStart DateTime          @map("service_date_start")
+  serviceDateEnd   DateTime          @map("service_date_end")
+  status           ServiceItemStatus @default(UNASSIGNED)
+  dispatchDeadline DateTime?         @map("dispatch_deadline")
+  offeredAt        DateTime?         @map("offered_at")
+  respondedAt      DateTime?         @map("responded_at")
+  declineReason    String?           @map("decline_reason")
+  payoutRate       Decimal           @default(0) @map("payout_rate") @db.Decimal(10, 2)
+  payoutStatus     PayoutStatus      @default(ACCRUED) @map("payout_status")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  supplier    SupplierProfile? @relation(fields: [supplierId], references: [id])
+
+  @@index([reservationId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("service_items")
+}
+
+model PaymentReceipt {
+  id           String        @id @default(uuid()) @db.Uuid
+  reservationId String       @map("reservation_id") @db.Uuid
+  gatewayTxId  String?       @map("gateway_tx_id")
+  rail         PaymentRail
+  currency     String        @default("EUR")
+  amount       Decimal       @db.Decimal(10, 2)
+  status       PaymentStatus @default(PENDING)
+  payoutStatus PayoutStatus  @default(ACCRUED) @map("payout_status")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+  @@map("payment_receipts")
+}
+
+model Document {
+  id            String       @id @default(uuid()) @db.Uuid
+  reservationId String       @map("reservation_id") @db.Uuid
+  type          DocumentType
+  storageKey    String       @map("storage_key")
+  generatedAt   DateTime     @default(now()) @map("generated_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+  @@map("documents")
+}
+
+model Message {
+  id            String        @id @default(uuid()) @db.Uuid
+  reservationId String        @map("reservation_id") @db.Uuid
+  sender        MessageSender
+  body          String
+  readAt        DateTime?     @map("read_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+  @@map("messages")
+}
+
+model Availability {
+  id         String   @id @default(uuid()) @db.Uuid
+  supplierId String   @map("supplier_id") @db.Uuid
+  date       DateTime @db.Date
+  isAvailable Boolean @default(true) @map("is_available")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  supplier SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, date])
+  @@map("availabilities")
+}
+
+model Review {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @map("reservation_id") @db.Uuid
+  supplierId    String?  @map("supplier_id") @db.Uuid
+  rating        Int
+  comment       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+  @@map("reviews")
+}
+
+model Incident {
+  id            String    @id @default(uuid()) @db.Uuid
+  reservationId String    @map("reservation_id") @db.Uuid
+  category      String
+  description   String
+  severity      String
+  resolvedAt    DateTime? @map("resolved_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+  @@map("incidents")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}
