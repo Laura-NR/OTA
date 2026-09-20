@@ -17,6 +17,7 @@ export {
 } from './supplier';
 export {
   declineServiceItemSchema,
+  dispatchCandidateSchema,
   dispatchServiceItemSchema,
   dispatchViewSchema,
   escalationAlertSchema,
@@ -24,6 +25,7 @@ export {
   serviceItemStatusSchema,
   serviceTypeSchema,
   type DeclineServiceItemRequest,
+  type DispatchCandidateDto,
   type DispatchServiceItemDto,
   type DispatchViewDto,
   type ReassignServiceItemRequest,

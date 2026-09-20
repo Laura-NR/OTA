@@ -20,18 +20,24 @@ import {
   assertTransition,
   canAutoDispatch,
   canTransition,
+  coversProvince,
   escalationAlert,
   resolveDispatchTimeoutMs,
   type ServiceType,
   type SupplierCategory,
 } from '@ota/domain';
 import type {
+  DispatchCandidateDto,
   DispatchServiceItemDto,
   DispatchViewDto,
   ReassignServiceItemRequest,
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import {
+  ESCALATION_PUBLISHER,
+  type EscalationPublisher,
+} from '../escalation/escalation.publisher';
 import { PrismaService } from '../prisma/prisma.service';
 import { DISPATCH_SCHEDULER, type DispatchScheduler } from './dispatch.scheduler';
 
@@ -44,6 +50,7 @@ export class DispatchService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(DISPATCH_SCHEDULER) private readonly scheduler: DispatchScheduler,
+    @Inject(ESCALATION_PUBLISHER) private readonly escalation: EscalationPublisher,
   ) {}
 
   onModuleInit(): void {
@@ -125,6 +132,17 @@ export class DispatchService implements OnModuleInit {
     await this.scheduler.cancelTimeout(item.id);
     await this.advanceIfFullyAccepted(item.reservationId, actor);
 
+    this.escalation.publish({
+      type: 'dispatch.accept',
+      alert: 'NONE',
+      reservationId: item.reservationId,
+      serviceItemId: item.id,
+      supplierId: item.supplierId,
+      province: item.province,
+      workerPhone: null,
+      occurredAt: now.toISOString(),
+    });
+
     return this.getView(item.reservationId);
   }
 
@@ -164,6 +182,17 @@ export class DispatchService implements OnModuleInit {
     await this.scheduler.cancelTimeout(item.id);
     await this.flagReservation(item.reservationId, actor, reason);
 
+    this.escalation.publish({
+      type: 'dispatch.decline',
+      alert: 'RED',
+      reservationId: item.reservationId,
+      serviceItemId: item.id,
+      supplierId: item.supplierId,
+      province: item.province,
+      workerPhone: item.supplier?.primaryPhone ?? null,
+      occurredAt: now.toISOString(),
+    });
+
     return this.getView(item.reservationId);
   }
 
@@ -198,6 +227,17 @@ export class DispatchService implements OnModuleInit {
     });
 
     await this.flagReservation(item.reservationId, null, 'dispatch timeout');
+
+    this.escalation.publish({
+      type: 'dispatch.timeout',
+      alert: 'RED',
+      reservationId: item.reservationId,
+      serviceItemId: item.id,
+      supplierId: item.supplierId,
+      province: item.province,
+      workerPhone: null,
+      occurredAt: new Date().toISOString(),
+    });
   }
 
   async reassign(
@@ -278,6 +318,7 @@ export class DispatchService implements OnModuleInit {
       categories,
       excluded,
       now,
+      item.province,
       preferredSupplierId,
     );
 
@@ -325,19 +366,31 @@ export class DispatchService implements OnModuleInit {
     });
 
     await this.scheduler.scheduleTimeout(item.id, timeoutMs);
+
+    this.escalation.publish({
+      type: 'dispatch.offer',
+      alert: 'NONE',
+      reservationId: item.reservationId,
+      serviceItemId: item.id,
+      supplierId: supplier.id,
+      province: item.province,
+      workerPhone: supplier.primaryPhone,
+      occurredAt: now.toISOString(),
+    });
   }
 
   private async pickSupplier(
     categories: readonly SupplierCategory[],
     excluded: Set<string>,
     now: Date,
+    province: string | null,
     preferredSupplierId?: string,
   ): Promise<SupplierProfile | null> {
     if (preferredSupplierId && !excluded.has(preferredSupplierId)) {
       const preferred = await this.prisma.supplierProfile.findUnique({
         where: { id: preferredSupplierId },
       });
-      if (preferred && this.isEligible(preferred, categories, now)) {
+      if (preferred && this.isEligible(preferred, categories, now, province)) {
         return preferred;
       }
     }
@@ -354,7 +407,8 @@ export class DispatchService implements OnModuleInit {
     return (
       candidates.find(
         (candidate) =>
-          !excluded.has(candidate.id) && this.isEligible(candidate, categories, now),
+          !excluded.has(candidate.id) &&
+          this.isEligible(candidate, categories, now, province),
       ) ?? null
     );
   }
@@ -363,8 +417,12 @@ export class DispatchService implements OnModuleInit {
     supplier: SupplierProfile,
     categories: readonly SupplierCategory[],
     now: Date,
+    province: string | null,
   ): boolean {
     if (!categories.includes(supplier.category)) {
+      return false;
+    }
+    if (!coversProvince(supplier.provincesActive, province)) {
       return false;
     }
     return canAutoDispatch(
@@ -447,7 +505,7 @@ export class DispatchService implements OnModuleInit {
   private async loadItemForWorker(
     serviceItemId: string,
     actor: AuthUser,
-  ): Promise<ServiceItem> {
+  ): Promise<ServiceItem & { supplier: SupplierProfile | null }> {
     const item = await this.prisma.serviceItem.findUnique({
       where: { id: serviceItemId },
       include: { supplier: true },
@@ -459,6 +517,55 @@ export class DispatchService implements OnModuleInit {
       throw new ForbiddenException('Service item is not assigned to this worker');
     }
     return item;
+  }
+
+  /**
+   * Manual re-dispatch menu: eligible suppliers that have not already been
+   * offered this item, restricted to those covering the item's province.
+   */
+  async getCandidates(serviceItemId: string): Promise<DispatchCandidateDto[]> {
+    const item = await this.prisma.serviceItem.findUnique({
+      where: { id: serviceItemId },
+    });
+    if (!item) {
+      throw new NotFoundException(`Service item ${serviceItemId} not found`);
+    }
+
+    const previousOffers = await this.prisma.dispatchOffer.findMany({
+      where: { serviceItemId },
+      select: { supplierId: true },
+    });
+    const excluded = new Set(previousOffers.map((offer) => offer.supplierId));
+    const categories =
+      SERVICE_TYPE_TO_SUPPLIER_CATEGORIES[item.serviceType as ServiceType];
+    const now = new Date();
+
+    const candidates = await this.prisma.supplierProfile.findMany({
+      where: {
+        category: { in: [...categories] as PrismaSupplierCategory[] },
+        isAvailable: true,
+        verificationStatus: VERIFIED,
+      },
+      include: { user: { select: { fullName: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return candidates
+      .filter(
+        (candidate) =>
+          !excluded.has(candidate.id) &&
+          this.isEligible(candidate, categories, now, item.province),
+      )
+      .map((candidate) => ({
+        supplierId: candidate.id,
+        fullName: candidate.user.fullName,
+        category: candidate.category,
+        primaryPhone: candidate.primaryPhone,
+        provincesActive: candidate.provincesActive,
+        credentialExpiresAt: candidate.credentialExpiresAt
+          ? candidate.credentialExpiresAt.toISOString()
+          : null,
+      }));
   }
 
   private assertOpenForResponse(item: ServiceItem): void {
@@ -491,6 +598,7 @@ export class DispatchService implements OnModuleInit {
       serviceType: item.serviceType,
       status: item.status,
       supplierId: item.supplierId,
+      province: item.province,
       offeredAt: item.offeredAt ? item.offeredAt.toISOString() : null,
       deadline: item.dispatchDeadline ? item.dispatchDeadline.toISOString() : null,
       escalation,

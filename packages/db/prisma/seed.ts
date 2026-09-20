@@ -70,6 +70,7 @@ async function main(): Promise<void> {
         serviceType: 'GUIDE',
         serviceDateStart: new Date('2026-11-02T09:00:00Z'),
         serviceDateEnd: new Date('2026-11-02T13:00:00Z'),
+        province: 'La Habana',
         status: 'UNASSIGNED',
       },
     });

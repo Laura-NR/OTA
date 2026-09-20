@@ -8,6 +8,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type {
+  EscalationEvent,
+  EscalationPublisher,
+} from '../src/escalation/escalation.publisher';
+import type {
   DispatchScheduler,
   DispatchTimeoutHandler,
 } from '../src/dispatch/dispatch.scheduler';
@@ -52,6 +56,7 @@ function makeServiceItem(overrides: Partial<ServiceItem> = {}): ServiceItem {
     serviceType: 'GUIDE',
     serviceDateStart: new Date('2026-11-02T09:00:00Z'),
     serviceDateEnd: new Date('2026-11-02T13:00:00Z'),
+    province: null,
     status: ServiceItemStatus.Unassigned,
     dispatchDeadline: null,
     offeredAt: null,
@@ -100,6 +105,14 @@ class FakeScheduler implements DispatchScheduler {
 
   async cancelTimeout(serviceItemId: string): Promise<void> {
     this.cancelled.push(serviceItemId);
+  }
+}
+
+class FakePublisher implements EscalationPublisher {
+  events: EscalationEvent[] = [];
+
+  publish(event: EscalationEvent): void {
+    this.events.push(event);
   }
 }
 
@@ -182,7 +195,12 @@ function createFakePrisma(store: Store) {
         if (where?.verificationStatus) {
           rows = rows.filter((s) => s.verificationStatus === where.verificationStatus);
         }
-        return rows.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        return rows
+          .map((supplier) => ({
+            ...supplier,
+            user: { fullName: `Worker ${supplier.id}` },
+          }))
+          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       },
     },
     dispatchOffer: {
@@ -235,6 +253,7 @@ function createFakePrisma(store: Store) {
 describe('DispatchService', () => {
   let store: Store;
   let scheduler: FakeScheduler;
+  let publisher: FakePublisher;
   let service: DispatchService;
 
   beforeEach(() => {
@@ -246,7 +265,8 @@ describe('DispatchService', () => {
       audits: [],
     };
     scheduler = new FakeScheduler();
-    service = new DispatchService(createFakePrisma(store), scheduler);
+    publisher = new FakePublisher();
+    service = new DispatchService(createFakePrisma(store), scheduler, publisher);
     service.onModuleInit();
   });
 
@@ -332,5 +352,49 @@ describe('DispatchService', () => {
     await expect(service.startDispatch(RESERVATION_ID, OPERATOR)).rejects.toBeInstanceOf(
       InvalidReservationTransitionError,
     );
+  });
+
+  it('only offers to suppliers covering the item province', async () => {
+    store.serviceItems[0]!.province = 'Matanzas';
+    store.suppliers = [
+      makeSupplier({ id: GUIDE_ONE, provincesActive: ['La Habana'] }),
+      makeSupplier({
+        id: GUIDE_TWO,
+        userId: 'user-worker-2',
+        provincesActive: ['Matanzas'],
+      }),
+    ];
+
+    const view = await service.startDispatch(RESERVATION_ID, OPERATOR);
+
+    expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_TWO);
+  });
+
+  it('lists fallback candidates excluding workers already offered', async () => {
+    store.suppliers = [
+      makeSupplier({ id: GUIDE_ONE }),
+      makeSupplier({ id: GUIDE_TWO, userId: 'user-worker-2' }),
+    ];
+    await service.startDispatch(RESERVATION_ID, OPERATOR);
+
+    const candidates = await service.getCandidates(ITEM_ID);
+
+    expect(candidates.map((candidate) => candidate.supplierId)).toEqual([GUIDE_TWO]);
+    expect(candidates[0]?.primaryPhone).toBe('+53 5555 0000');
+  });
+
+  it('publishes escalation events on offer and decline', async () => {
+    await service.startDispatch(RESERVATION_ID, OPERATOR);
+    expect(publisher.events.map((event) => event.type)).toContain('dispatch.offer');
+
+    const worker: AuthUser = {
+      id: WORKER_USER_ID,
+      email: 'guide@example.test',
+      role: 'SERVICE_WORKER',
+    };
+    await service.decline(ITEM_ID, 'unavailable', worker);
+
+    const decline = publisher.events.find((event) => event.type === 'dispatch.decline');
+    expect(decline?.alert).toBe('RED');
   });
 });

@@ -55,15 +55,20 @@ storage, auth, testing). `tenant/` is the ONLY fork-specific directory. Infra in
 workspaces (`@ota/config`, `@ota/domain`, `@ota/schemas`, `@ota/db`, `@ota/auth`,
 `@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
 running Docker stack: `pnpm --filter @ota/db exec prisma migrate dev` (created
-`20260919221723_init` and `20260920161240_better_auth`),
-`pnpm --filter @ota/db run seed`, and `docker compose up -d`. End-to-end smoke
-tests against the live DB passed: `/health` 200; `POST
-/reservations/:id/transition` returns 401 unauthenticated, 403 for a TRAVELER,
-200 for a SUPER_ADMIN, and 409 for an illegal transition, with the status change
-and audit row persisted. Better Auth verified live: `/api/auth/ok` 200, email
-sign-up issues a session, `/api/auth/get-session` returns the user. Remaining
-UNVERIFIED: `pnpm e2e` (no e2e suite yet); magic-link and passkey flows are
-configured but not yet exercised end to end.
+`20260919221723_init`, `20260920161240_better_auth`, `20260920163920_dispatch_offers`,
+and `service_item_province`), `pnpm --filter @ota/db run seed`, and
+`docker compose up -d`. End-to-end smoke tests against the live DB passed:
+`/health` 200; `POST /reservations/:id/transition` returns 401 unauthenticated,
+403 for a TRAVELER, 200 for a SUPER_ADMIN, and 409 for an illegal transition, with
+the status change and audit row persisted. Better Auth verified live:
+`/api/auth/ok` 200, email sign-up issues a session, `/api/auth/get-session`
+returns the user. Dispatch verified live: `/reservations/:id/dispatch` offers an
+eligible worker, persists `dispatch_offers`, and leaves a BullMQ delayed job in
+Redis; `/service-items/:id/candidates` excludes already-offered workers; the
+Socket.IO engine handshake succeeds on `/socket.io`. Remaining UNVERIFIED:
+`pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
+yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
+exercised over a live socket.
 
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
@@ -121,6 +126,10 @@ nothing that weakens an Article.
 - `<2026-09-20: Nest's body parser is disabled (bodyParser: false) and express.json() is registered AFTER the Better Auth mount in main.ts. Better Auth must see the raw request body. Do not re-enable Nest's body parser or move express.json() ahead of the auth mount.>`
 - `<2026-09-20: AUTH_SECRET is required at startup. apps/api/.env is gitignored and loaded via process.loadEnvFile; magic-link sending currently just logs the URL until packages/email exists.>`
 - `<2026-09-20: better-sqlite3 (an optional transitive of better-auth) has its build script disabled in pnpm-workspace.yaml; we use Postgres.>`
+- `<2026-09-20: AuthService is provided by a global AuthModule, so guards and the escalation gateway can inject it anywhere. Tests override AuthService to fake a session.>`
+- `<2026-09-20: dispatch eligibility requires the supplier's provincesActive to include ServiceItem.province (coversProvince); a null province matches any supplier.>`
+- `<2026-09-20: real-time escalation is a Socket.IO gateway on namespace /ops; only operations roles may join. Dispatch publishes through the EscalationPublisher interface (ESCALATION_PUBLISHER) — tests inject a fake, so never call the gateway directly from services.>`
+- `<2026-09-20: BullMQ 6 does not bundle a Redis client; ioredis is a direct dependency of apps/api. Dispatch timeouts go through the DispatchScheduler interface (no-op in tests).>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
 
 ---

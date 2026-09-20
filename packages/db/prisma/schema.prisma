@@ -255,6 +255,7 @@ model ServiceItem {
   serviceType      ServiceType       @map("service_type")
   serviceDateStart DateTime          @map("service_date_start")
   serviceDateEnd   DateTime          @map("service_date_end")
+  province         String?
   status           ServiceItemStatus @default(UNASSIGNED)
   dispatchDeadline DateTime?         @map("dispatch_deadline")
   offeredAt        DateTime?         @map("offered_at")

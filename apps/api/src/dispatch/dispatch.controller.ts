@@ -13,6 +13,7 @@ import {
   declineServiceItemSchema,
   reassignServiceItemSchema,
   type DeclineServiceItemRequest,
+  type DispatchCandidateDto,
   type DispatchViewDto,
   type ReassignServiceItemRequest,
 } from '@ota/schemas';
@@ -41,6 +42,12 @@ export class DispatchController {
   @Roles(UserRole.OperationsAdmin, UserRole.AdministrativeSupport, UserRole.SuperAdmin)
   view(@Param('id', ParseUUIDPipe) id: string): Promise<DispatchViewDto> {
     return this.dispatch.getView(id);
+  }
+
+  @Get('service-items/:id/candidates')
+  @Roles(UserRole.OperationsAdmin, UserRole.AdministrativeSupport, UserRole.SuperAdmin)
+  candidates(@Param('id', ParseUUIDPipe) id: string): Promise<DispatchCandidateDto[]> {
+    return this.dispatch.getCandidates(id);
   }
 
   @Post('service-items/:id/accept')

@@ -29,6 +29,7 @@ export {
   SupplierCategory,
   VerificationStatus,
   canAutoDispatch,
+  coversProvince,
   isCredentialExpiringSoon,
   type DispatchEligibilityInput,
 } from './supplier/compliance';

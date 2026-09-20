@@ -2,6 +2,7 @@ import { ServiceItemStatus, ServiceType } from '@ota/domain';
 import { z } from 'zod';
 
 import { reservationStatusSchema } from './reservation';
+import { supplierCategorySchema } from './supplier';
 
 export const serviceTypeSchema = z.enum([
   ServiceType.Guide,
@@ -38,12 +39,24 @@ export const dispatchServiceItemSchema = z.object({
   serviceType: serviceTypeSchema,
   status: serviceItemStatusSchema,
   supplierId: z.string().uuid().nullable(),
+  province: z.string().nullable(),
   offeredAt: z.string().nullable(),
   deadline: z.string().nullable(),
   escalation: escalationAlertSchema,
 });
 
 export type DispatchServiceItemDto = z.infer<typeof dispatchServiceItemSchema>;
+
+export const dispatchCandidateSchema = z.object({
+  supplierId: z.string().uuid(),
+  fullName: z.string().nullable(),
+  category: supplierCategorySchema,
+  primaryPhone: z.string(),
+  provincesActive: z.array(z.string()),
+  credentialExpiresAt: z.string().nullable(),
+});
+
+export type DispatchCandidateDto = z.infer<typeof dispatchCandidateSchema>;
 
 export const dispatchViewSchema = z.object({
   reservationId: z.string().uuid(),

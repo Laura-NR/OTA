@@ -35,6 +35,20 @@ export function isCredentialExpiringSoon(
   return expiresAt.getTime() - now.getTime() <= windowDays * DAY_MS;
 }
 
+/**
+ * Whether a supplier operates in the required province. A missing requirement
+ * (no province on the service item) matches any supplier.
+ */
+export function coversProvince(
+  provincesActive: readonly string[],
+  province: string | null | undefined,
+): boolean {
+  if (!province) {
+    return true;
+  }
+  return provincesActive.includes(province);
+}
+
 export interface DispatchEligibilityInput {
   verificationStatus: VerificationStatus;
   isAvailable: boolean;

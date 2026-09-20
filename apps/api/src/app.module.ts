@@ -3,7 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 
 import { AuthGuard } from './auth/auth.guard';
-import { AuthService } from './auth/auth.service';
+import { AuthModule } from './auth/auth.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { HealthController } from './health.controller';
 import { PrismaModule } from './prisma/prisma.module';
@@ -24,12 +24,13 @@ const isTest = process.env.NODE_ENV === 'test';
             : { target: 'pino-pretty', options: { singleLine: true } },
       },
     }),
+    AuthModule,
     PrismaModule,
     ReservationsModule,
     SuppliersModule,
     DispatchModule,
   ],
   controllers: [HealthController],
-  providers: [AuthService, { provide: APP_GUARD, useClass: AuthGuard }],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}

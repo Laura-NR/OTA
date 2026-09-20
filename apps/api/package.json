@@ -14,6 +14,8 @@
     "@nestjs/common": "^12.0.3",
     "@nestjs/core": "^12.0.3",
     "@nestjs/platform-express": "^12.0.3",
+    "@nestjs/platform-socket.io": "^12.0.3",
+    "@nestjs/websockets": "^12.0.3",
     "@ota/auth": "workspace:*",
     "@ota/db": "workspace:*",
     "@ota/domain": "workspace:*",
@@ -25,6 +27,7 @@
     "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "socket.io": "^4.8.3",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { VerificationStatus, canAutoDispatch, isCredentialExpiringSoon } from '../src';
+import {
+  VerificationStatus,
+  canAutoDispatch,
+  coversProvince,
+  isCredentialExpiringSoon,
+} from '../src';
 
 const NOW = new Date('2026-09-20T12:00:00Z');
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -55,5 +60,17 @@ describe('canAutoDispatch', () => {
 
   it('allows a worker with no tracked credential expiry', () => {
     expect(canAutoDispatch({ ...eligible, credentialExpiresAt: null }, NOW)).toBe(true);
+  });
+});
+
+describe('coversProvince', () => {
+  it('matches any supplier when no province is required', () => {
+    expect(coversProvince(['La Habana'], null)).toBe(true);
+    expect(coversProvince([], undefined)).toBe(true);
+  });
+
+  it('requires the province to be in the active list', () => {
+    expect(coversProvince(['La Habana', 'Matanzas'], 'Matanzas')).toBe(true);
+    expect(coversProvince(['La Habana'], 'Matanzas')).toBe(false);
   });
 });
