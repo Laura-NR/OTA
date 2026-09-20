@@ -50,3 +50,4 @@ export {
   type PricingRuleDto,
   type UpdateInventoryItemRequest,
 } from './inventory';
+export { documentSchema, documentTypeSchema, type DocumentDto } from './document';

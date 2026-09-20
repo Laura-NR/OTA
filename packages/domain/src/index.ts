@@ -5,6 +5,7 @@ export {
   ServiceItemStatus,
   ServiceType,
   UserRole,
+  DocumentType,
 } from './reservation/status';
 export {
   assertTransition,

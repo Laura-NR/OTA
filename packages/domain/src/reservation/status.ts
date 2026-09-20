@@ -67,3 +67,16 @@ export const UserRole = {
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+/**
+ * Generated document kinds (spec §4.4).
+ */
+export const DocumentType = {
+  Voucher: 'VOUCHER',
+  WorkOrder: 'WORK_ORDER',
+  Invoice: 'INVOICE',
+  Receipt: 'RECEIPT',
+  EmergencyContact: 'EMERGENCY_CONTACT',
+} as const;
+
+export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType];

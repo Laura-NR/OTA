@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { DispatchModule } from './dispatch/dispatch.module';
+import { DocumentsModule } from './documents/documents.module';
 import { HealthController } from './health.controller';
 import { InventoryModule } from './inventory/inventory.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -31,6 +32,7 @@ const isTest = process.env.NODE_ENV === 'test';
     SuppliersModule,
     DispatchModule,
     InventoryModule,
+    DocumentsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],

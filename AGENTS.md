@@ -51,9 +51,9 @@ storage, auth, testing). `tenant/` is the ONLY fork-specific directory. Infra in
 
 **Verification status (2026-09-20):** `pnpm install`, `pnpm build`, `pnpm test`,
 `pnpm --filter <package> exec vitest run <path>`, `pnpm lint`, `pnpm format`,
-`pnpm format:check`, `pnpm typecheck`, and `pnpm dev` ran green across all 6
+`pnpm format:check`, `pnpm typecheck`, and `pnpm dev` ran green across all 7
 workspaces (`@ota/config`, `@ota/domain`, `@ota/schemas`, `@ota/db`, `@ota/auth`,
-`@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
+`@ota/documents`, `@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
 running Docker stack: `pnpm --filter @ota/db exec prisma migrate dev` (created
 `20260919221723_init`, `20260920161240_better_auth`, `20260920163920_dispatch_offers`,
 `service_item_province`, and `inventory_pricing`), `pnpm --filter @ota/db run seed`, and
@@ -69,7 +69,9 @@ Socket.IO engine handshake succeeds on `/socket.io`. Inventory verified live:
 `POST /inventory` creates a catalog item, `POST /inventory/:id/pricing-rules`
 adds seasonal/markup rules, and `GET /inventory/:id/price?date=` returns the
 computed breakdown (seasonal override + summed markups; a dateless markup applies
-year-round). Remaining UNVERIFIED:
+year-round). Documents verified live: transitioning a reservation to CONFIRMED
+generates VOUCHER, WORK_ORDER, and INVOICE PDFs (real `%PDF-` files on disk,
+Document rows persisted). Remaining UNVERIFIED:
 `pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
 yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
 exercised over a live socket.
@@ -136,6 +138,9 @@ nothing that weakens an Article.
 - `<2026-09-20: BullMQ 6 does not bundle a Redis client; ioredis is a direct dependency of apps/api. Dispatch timeouts go through the DispatchScheduler interface (no-op in tests).>`
 - `<2026-09-20: pricing lives in packages/domain (calculatePrice). A SEASONAL_RATE with no matching date is ignored; the latest matching start date wins. A MARKUP with no date bounds is always active.>`
 - `<2026-09-20: inventory_items + pricing_rules are the CMS/pricing tables. Inventory attributes are free-form JSON; base price is Decimal(10,2).>`
+- `<2026-09-20: document templates + Playwright PDF rendering live in packages/documents. Generated PDFs go to DOCUMENTS_DIR (default apps/api/.documents, gitignored); storage is behind the DOCUMENT_STORAGE interface (Local now, S3/MinIO later).>`
+- `<2026-09-20: the MINTUR license and agency branding come from env (AGENCY_NAME, MINTUR_LICENSE, AGENCY_PRIMARY_COLOR, ...) until packages/config tenant manifest exists; every document footer injects the license (spec 8.1).>`
+- `<2026-09-20: entering CONFIRMED triggers document generation best-effort via ReservationService -> DocumentsService; a failure is logged and does not roll back the persisted transition. Regenerate with POST /reservations/:id/documents.>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
 
 ---

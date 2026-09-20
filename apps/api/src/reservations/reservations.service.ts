@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Reservation } from '@ota/db';
-import { assertTransition, type ReservationStatus } from '@ota/domain';
+import { ReservationStatus, assertTransition } from '@ota/domain';
 import type { ReservationDto, TransitionReservationRequest } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { DocumentsService } from '../documents/documents.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 function toDto(reservation: Reservation): ReservationDto {
@@ -21,7 +22,12 @@ function toDto(reservation: Reservation): ReservationDto {
 
 @Injectable()
 export class ReservationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ReservationsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly documents: DocumentsService,
+  ) {}
 
   /**
    * Apply a status transition to a reservation and record it in the audit log.
@@ -62,6 +68,20 @@ export class ReservationsService {
 
       return result;
     });
+
+    // Entering CONFIRMED issues the legal document set (spec §4.4). Generation
+    // is best-effort: the transition is already persisted, and documents can be
+    // regenerated via POST /reservations/:id/documents if this fails.
+    if (input.to === ReservationStatus.Confirmed) {
+      try {
+        await this.documents.generate(id, actor);
+      } catch (error) {
+        this.logger.error(
+          `Document generation failed for reservation ${id}`,
+          error instanceof Error ? error.stack : undefined,
+        );
+      }
+    }
 
     return toDto(updated);
   }
