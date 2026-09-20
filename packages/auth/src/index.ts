@@ -23,6 +23,8 @@ export interface CreateAuthOptions {
   baseURL: string;
   sendMagicLink: (params: SendMagicLinkParams) => Promise<void>;
   google?: GoogleProviderConfig;
+  /** Origins allowed to initiate auth (storefront, back-office). */
+  trustedOrigins?: string[];
 }
 
 export interface AuthSessionUser {
@@ -66,6 +68,7 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
   const instance = betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
+    trustedOrigins: options.trustedOrigins,
     database: prismaAdapter(options.prisma as never, { provider: 'postgresql' }),
     emailAndPassword: {
       enabled: true,

@@ -51,9 +51,9 @@ storage, auth, testing). `tenant/` is the ONLY fork-specific directory. Infra in
 
 **Verification status (2026-09-20):** `pnpm install`, `pnpm build`, `pnpm test`,
 `pnpm --filter <package> exec vitest run <path>`, `pnpm lint`, `pnpm format`,
-`pnpm format:check`, `pnpm typecheck`, and `pnpm dev` ran green across all 7
+`pnpm format:check`, `pnpm typecheck`, and `pnpm dev` ran green across all 8
 workspaces (`@ota/config`, `@ota/domain`, `@ota/schemas`, `@ota/db`, `@ota/auth`,
-`@ota/documents`, `@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
+`@ota/documents`, `@ota/email`, `@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
 running Docker stack: `pnpm --filter @ota/db exec prisma migrate dev` (created
 `20260919221723_init`, `20260920161240_better_auth`, `20260920163920_dispatch_offers`,
 `service_item_province`, and `inventory_pricing`), `pnpm --filter @ota/db run seed`, and
@@ -72,8 +72,9 @@ computed breakdown (seasonal override + summed markups; a dateless markup applie
 year-round). Documents verified live: transitioning a reservation to CONFIRMED
 generates VOUCHER, WORK_ORDER, and INVOICE PDFs (real `%PDF-` files on disk,
 Document rows persisted). Tenant config verified live: `GET /tenant/config`
-returns the public agency manifest (branding, locales, feature flags). Remaining
-UNVERIFIED:
+returns the public agency manifest (branding, locales, feature flags). Magic link
+verified live: requesting one delivers a branded email to Mailpit with a
+`magic-link/verify` URL and the MINTUR license. Remaining UNVERIFIED:
 `pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
 yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
 exercised over a live socket.
@@ -144,6 +145,8 @@ nothing that weakens an Article.
 - `<2026-09-20: tenant/ is the ONLY fork-specific directory. tenant/agency.config.json is the agency manifest (branding, MINTUR license, locales, theme, feature flags), validated by packages/config at startup and loaded into the global TENANT_CONFIG token. Core packages must never import tenant/ directly.>`
 - `<2026-09-20: GET /tenant/config is @Public() and returns the non-secret manifest for web/mobile clients; document branding (incl. the MINTUR license, spec 8.1) comes from TENANT_CONFIG, not env.>`
 - `<2026-09-20: entering CONFIRMED triggers document generation best-effort via ReservationService -> DocumentsService; a failure is logged and does not roll back the persisted transition. Regenerate with POST /reservations/:id/documents.>`
+- `<2026-09-20: transactional email lives in packages/email (SmtpMailer via nodemailer, ConsoleMailer fallback when SMTP_HOST/MAIL_FROM are unset). Magic-link delivery sends through it; Mailpit UI is at http://localhost:8025.>`
+- `<2026-09-20: Better Auth rejects cross-origin callbackURL unless the origin is in TRUSTED_ORIGINS (comma-separated, default http://localhost:3000,http://localhost:3002). Add new web/mobile origins there.>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
 
 ---

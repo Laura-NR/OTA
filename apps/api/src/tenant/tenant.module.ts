@@ -1,17 +1,9 @@
 import { Global, Module } from '@nestjs/common';
-import { join } from 'node:path';
 import { loadTenantConfig } from '@ota/config';
 
 import { TenantController } from './tenant.controller';
+import { resolveTenantConfigPath } from './tenant.path';
 import { TENANT_CONFIG } from './tenant.tokens';
-
-const DEFAULT_TENANT_PATH = join(
-  process.cwd(),
-  '..',
-  '..',
-  'tenant',
-  'agency.config.json',
-);
 
 @Global()
 @Module({
@@ -19,8 +11,7 @@ const DEFAULT_TENANT_PATH = join(
   providers: [
     {
       provide: TENANT_CONFIG,
-      useFactory: () =>
-        loadTenantConfig(process.env.TENANT_CONFIG_PATH ?? DEFAULT_TENANT_PATH),
+      useFactory: () => loadTenantConfig(resolveTenantConfigPath()),
     },
   ],
   exports: [TENANT_CONFIG],

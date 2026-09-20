@@ -19,6 +19,8 @@ underway (suppliers, dispatch, escalation, inventory/pricing, documents done).
   locales, theme, feature flags).
 - `packages/documents` — data models, HTML templates (tenant branding + MINTUR
   license), and Playwright Chromium HTML→PDF.
+- `packages/email` — SmtpMailer (nodemailer) + ConsoleMailer fallback; magic-link
+  template. Magic-link delivery now sends through it (Mailpit in dev).
 - `apps/api` — NestJS (CJS). Global `AuthGuard` + `AuthModule`; modules:
   `reservations` (transition; triggers documents on CONFIRMED), `suppliers`,
   `dispatch`, `escalation` (Socket.IO `/ops`), `inventory`,
@@ -31,14 +33,17 @@ underway (suppliers, dispatch, escalation, inventory/pricing, documents done).
 ## Verified
 Node 22.22.3, pnpm 12.4.2, TS 6.0.3 (2026-09-20):
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck` (12/12), `pnpm test`
-  (84: config 6, domain 33, schemas 3, documents 6, api 36), `pnpm build` (7/7) —
+  (88: config 6, domain 33, schemas 3, documents 6, email 4, api 36),
+  `pnpm build` (8/8) —
   green.
 - Live documents: transitioning DEMO0001 to CONFIRMED produced VOUCHER,
   WORK_ORDER, and INVOICE rows and real `%PDF-` files under
   `.documents/DEMO0001/` (~20–23 KB each).
 - Earlier live: Better Auth; reservations RBAC; dispatch offer + BullMQ job +
   candidates; Socket.IO engine handshake; inventory pricing quote. Tenant config
-  verified live: `GET /tenant/config` returns the public manifest.
+  verified live: `GET /tenant/config` returns the public manifest. Magic link
+  verified live: a branded email lands in Mailpit with a `magic-link/verify` URL
+  and the MINTUR license.
 
 Not verified: `pnpm e2e`; magic-link/passkey; `/ops` live socket; BullMQ timeout
 firing; worker accept/decline against a real DB; PDF download endpoint (not built).
@@ -49,7 +54,7 @@ firing; worker accept/decline against a real DB; PDF download endpoint (not buil
   structured booking payload.
 - Document storage is local FS; swap for S3/MinIO for multi-instance.
 - Agency branding + MINTUR license come from env until `packages/config`.
-- Magic-link delivery logs the URL; needs `packages/email`.
+- Magic-link delivery sends through `packages/email`; without SMTP it logs.
 - Payments undecided; `docs/adr/0002-payments.md` not written.
 
 ## Traps
@@ -65,13 +70,14 @@ firing; worker accept/decline against a real DB; PDF download endpoint (not buil
 - `bodyParser: false` + `express.json()` after the auth mount.
 - Global guard is secure-by-default: add `@Public()` deliberately.
 - Pin `typescript@^6.0.3` and Prisma 6.x. `docker` needs the docker group.
+- Better Auth rejects cross-origin `callbackURL` unless the origin is in
+  `TRUSTED_ORIGINS`; add new web/mobile origins there.
 
 ## Next
-1. `packages/email` + wire magic-link delivery (replace the console log).
-2. Document download endpoint + messaging (traveler↔ops) with email fallback.
-3. Bulk Excel/CSV import with column mapping + validation preview.
-4. `packages/ui` + theming; storefront.
-5. Worker-facing accept/decline against a real DB.
+1. Document download endpoint + messaging (traveler↔ops) with email fallback.
+2. Bulk Excel/CSV import with column mapping + validation preview.
+3. `packages/ui` + theming; storefront.
+4. Worker-facing accept/decline against a real DB.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
@@ -89,3 +95,7 @@ firing; worker accept/decline against a real DB; PDF download endpoint (not buil
 - 2026-09-20 — documents rendered from HTML via Playwright Chromium, behind
   `DocumentRenderer`/`DocumentStorage` interfaces; generation on CONFIRMED is
   best-effort and never rolls back the transition.
+- 2026-09-20 — transactional email lives in `packages/email` (SMTP via
+  nodemailer, console fallback); magic-link delivery uses it.
+- 2026-09-20 — tenant manifest at `tenant/agency.config.json`, loaded into the
+  global `TENANT_CONFIG`; public `GET /tenant/config`.

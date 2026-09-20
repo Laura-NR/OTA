@@ -1,12 +1,15 @@
 import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
+import { loadTenantConfig } from '@ota/config';
 import { prisma } from '@ota/db';
+import { createMailer, magicLinkEmail } from '@ota/email';
 import express from 'express';
 import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 import { setAuthRuntime } from './auth/auth.runtime';
+import { resolveTenantConfigPath } from './tenant/tenant.path';
 
 async function bootstrap(): Promise<void> {
   try {
@@ -20,15 +23,24 @@ async function bootstrap(): Promise<void> {
     throw new Error('AUTH_SECRET is required to start the API');
   }
 
+  const tenant = loadTenantConfig(resolveTenantConfigPath());
+  const mailer = createMailer();
+  const trustedOrigins = (
+    process.env.TRUSTED_ORIGINS ?? 'http://localhost:3000,http://localhost:3002'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   const { createAuth, createAuthMiddleware, toWebHeaders } = await import('@ota/auth');
   const auth = createAuth({
     prisma,
     secret,
     baseURL:
       process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? 3001}`,
+    trustedOrigins,
     sendMagicLink: async ({ email, url }) => {
-      // Development delivery. Replace with the email package when it lands.
-      console.log(`[magic-link] ${email}: ${url}`);
+      await mailer.send(magicLinkEmail({ to: email, url, branding: tenant.branding }));
     },
   });
   setAuthRuntime({ auth, toWebHeaders });

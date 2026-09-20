@@ -21,6 +21,7 @@
     "@ota/db": "workspace:*",
     "@ota/documents": "workspace:*",
     "@ota/domain": "workspace:*",
+    "@ota/email": "workspace:*",
     "@ota/schemas": "workspace:*",
     "bullmq": "^6.3.8",
     "express": "^5.2.1",

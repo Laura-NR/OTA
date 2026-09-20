@@ -1,0 +1,21 @@
+{
+  "name": "@ota/email",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "nodemailer": "^10.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/nodemailer": "^8.0.2",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.1"
+  }
+}
