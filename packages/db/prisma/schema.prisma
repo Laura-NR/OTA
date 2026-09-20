@@ -55,6 +55,17 @@ enum DispatchOfferStatus {
   CANCELLED
 }
 
+enum InventoryType {
+  ACCOMMODATION
+  TRANSPORT
+  EXPERIENCE
+}
+
+enum PricingRuleKind {
+  SEASONAL_RATE
+  MARKUP
+}
+
 enum SupplierCategory {
   TOUR_GUIDE
   PRIVATE_DRIVER
@@ -217,9 +228,56 @@ model SupplierProfile {
   serviceItems ServiceItem[]
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
+  inventoryItems InventoryItem[]
 
   @@index([verificationStatus])
   @@map("supplier_profiles")
+}
+
+// Catalog entity displayed on the storefront and used by the pricing engine.
+// CRM (inventory/CMS) — separate from the storefront content hub.
+model InventoryItem {
+  id          String        @id @default(uuid()) @db.Uuid
+  type        InventoryType
+  name        String
+  description String?
+  province    String?
+  currency    String        @default("EUR")
+  basePrice   Decimal       @map("base_price") @db.Decimal(10, 2)
+  active      Boolean       @default(true)
+  attributes  Json?
+  supplierId  String?       @map("supplier_id") @db.Uuid
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  supplier     SupplierProfile? @relation(fields: [supplierId], references: [id])
+  pricingRules PricingRule[]
+
+  @@index([type])
+  @@index([province])
+  @@index([active])
+  @@map("inventory_items")
+}
+
+// Seasonal rate overrides and agency markups. A null inventoryItemId on a
+// MARKUP rule means it applies to every item.
+model PricingRule {
+  id              String          @id @default(uuid()) @db.Uuid
+  inventoryItemId String?         @map("inventory_item_id") @db.Uuid
+  kind            PricingRuleKind
+  label           String
+  startDate       DateTime?       @map("start_date") @db.Date
+  endDate         DateTime?       @map("end_date") @db.Date
+  amount          Decimal?        @db.Decimal(10, 2)
+  percent         Decimal?        @db.Decimal(5, 2)
+  active          Boolean         @default(true)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId])
+  @@map("pricing_rules")
 }
 
 model Reservation {

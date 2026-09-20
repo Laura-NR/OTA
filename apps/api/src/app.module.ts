@@ -6,6 +6,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { HealthController } from './health.controller';
+import { InventoryModule } from './inventory/inventory.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
@@ -29,6 +30,7 @@ const isTest = process.env.NODE_ENV === 'test';
     ReservationsModule,
     SuppliersModule,
     DispatchModule,
+    InventoryModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],

@@ -56,7 +56,7 @@ workspaces (`@ota/config`, `@ota/domain`, `@ota/schemas`, `@ota/db`, `@ota/auth`
 `@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
 running Docker stack: `pnpm --filter @ota/db exec prisma migrate dev` (created
 `20260919221723_init`, `20260920161240_better_auth`, `20260920163920_dispatch_offers`,
-and `service_item_province`), `pnpm --filter @ota/db run seed`, and
+`service_item_province`, and `inventory_pricing`), `pnpm --filter @ota/db run seed`, and
 `docker compose up -d`. End-to-end smoke tests against the live DB passed:
 `/health` 200; `POST /reservations/:id/transition` returns 401 unauthenticated,
 403 for a TRAVELER, 200 for a SUPER_ADMIN, and 409 for an illegal transition, with
@@ -65,7 +65,11 @@ the status change and audit row persisted. Better Auth verified live:
 returns the user. Dispatch verified live: `/reservations/:id/dispatch` offers an
 eligible worker, persists `dispatch_offers`, and leaves a BullMQ delayed job in
 Redis; `/service-items/:id/candidates` excludes already-offered workers; the
-Socket.IO engine handshake succeeds on `/socket.io`. Remaining UNVERIFIED:
+Socket.IO engine handshake succeeds on `/socket.io`. Inventory verified live:
+`POST /inventory` creates a catalog item, `POST /inventory/:id/pricing-rules`
+adds seasonal/markup rules, and `GET /inventory/:id/price?date=` returns the
+computed breakdown (seasonal override + summed markups; a dateless markup applies
+year-round). Remaining UNVERIFIED:
 `pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
 yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
 exercised over a live socket.
@@ -130,6 +134,8 @@ nothing that weakens an Article.
 - `<2026-09-20: dispatch eligibility requires the supplier's provincesActive to include ServiceItem.province (coversProvince); a null province matches any supplier.>`
 - `<2026-09-20: real-time escalation is a Socket.IO gateway on namespace /ops; only operations roles may join. Dispatch publishes through the EscalationPublisher interface (ESCALATION_PUBLISHER) — tests inject a fake, so never call the gateway directly from services.>`
 - `<2026-09-20: BullMQ 6 does not bundle a Redis client; ioredis is a direct dependency of apps/api. Dispatch timeouts go through the DispatchScheduler interface (no-op in tests).>`
+- `<2026-09-20: pricing lives in packages/domain (calculatePrice). A SEASONAL_RATE with no matching date is ignored; the latest matching start date wins. A MARKUP with no date bounds is always active.>`
+- `<2026-09-20: inventory_items + pricing_rules are the CMS/pricing tables. Inventory attributes are free-form JSON; base price is Decimal(10,2).>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
 
 ---
