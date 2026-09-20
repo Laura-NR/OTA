@@ -60,6 +60,21 @@ async function main(): Promise<void> {
     },
   });
 
+  const existingItem = await prisma.serviceItem.findFirst({
+    where: { reservationId: reservation.id },
+  });
+  if (!existingItem) {
+    await prisma.serviceItem.create({
+      data: {
+        reservationId: reservation.id,
+        serviceType: 'GUIDE',
+        serviceDateStart: new Date('2026-11-02T09:00:00Z'),
+        serviceDateEnd: new Date('2026-11-02T13:00:00Z'),
+        status: 'UNASSIGNED',
+      },
+    });
+  }
+
   console.log(
     `Seeded ${superAdmin.email}, ${worker.email}, and reservation ${reservation.bookingCode} (${reservation.id})`,
   );

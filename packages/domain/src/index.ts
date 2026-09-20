@@ -23,6 +23,7 @@ export {
   type EscalationAlert,
   type EscalationInput,
 } from './dispatch/policy';
+export { SERVICE_TYPE_TO_SUPPLIER_CATEGORIES } from './dispatch/assignment';
 export {
   CREDENTIAL_EXPIRY_WINDOW_DAYS,
   SupplierCategory,

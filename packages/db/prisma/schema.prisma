@@ -47,6 +47,14 @@ enum ServiceItemStatus {
   FULFILLED
 }
 
+enum DispatchOfferStatus {
+  OFFERED
+  ACCEPTED
+  DECLINED
+  TIMEOUT
+  CANCELLED
+}
+
 enum SupplierCategory {
   TOUR_GUIDE
   PRIVATE_DRIVER
@@ -208,6 +216,7 @@ model SupplierProfile {
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceItems ServiceItem[]
   availabilities Availability[]
+  dispatchOffers DispatchOffer[]
 
   @@index([verificationStatus])
   @@map("supplier_profiles")
@@ -258,11 +267,36 @@ model ServiceItem {
 
   reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   supplier    SupplierProfile? @relation(fields: [supplierId], references: [id])
+  dispatchOffers DispatchOffer[]
 
   @@index([reservationId])
   @@index([supplierId])
   @@index([status])
   @@map("service_items")
+}
+
+// Ledger of every dispatch offer, including superseded and re-routed ones.
+// ServiceItem holds the current offer's state; this table is the history used
+// for escalation and worker reliability scorecards.
+model DispatchOffer {
+  id            String               @id @default(uuid()) @db.Uuid
+  serviceItemId String               @map("service_item_id") @db.Uuid
+  supplierId    String               @map("supplier_id") @db.Uuid
+  status        DispatchOfferStatus  @default(OFFERED)
+  offeredAt     DateTime             @default(now()) @map("offered_at")
+  deadline      DateTime
+  respondedAt   DateTime?            @map("responded_at")
+  declineReason String?              @map("decline_reason")
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+
+  serviceItem ServiceItem      @relation(fields: [serviceItemId], references: [id], onDelete: Cascade)
+  supplier    SupplierProfile  @relation(fields: [supplierId], references: [id])
+
+  @@index([serviceItemId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("dispatch_offers")
 }
 
 model PaymentReceipt {

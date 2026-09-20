@@ -15,3 +15,16 @@ export {
   type SetVerificationRequest,
   type SupplierDto,
 } from './supplier';
+export {
+  declineServiceItemSchema,
+  dispatchServiceItemSchema,
+  dispatchViewSchema,
+  escalationAlertSchema,
+  reassignServiceItemSchema,
+  serviceItemStatusSchema,
+  serviceTypeSchema,
+  type DeclineServiceItemRequest,
+  type DispatchServiceItemDto,
+  type DispatchViewDto,
+  type ReassignServiceItemRequest,
+} from './dispatch';
