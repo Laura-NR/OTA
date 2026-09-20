@@ -11,6 +11,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
+import { TenantModule } from './tenant/tenant.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
@@ -27,6 +28,7 @@ const isTest = process.env.NODE_ENV === 'test';
       },
     }),
     AuthModule,
+    TenantModule,
     PrismaModule,
     ReservationsModule,
     SuppliersModule,

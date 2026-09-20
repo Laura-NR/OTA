@@ -1,13 +1,14 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import type { TenantConfig } from '@ota/config';
 import type { Document, Reservation, ServiceItem, SupplierProfile, User } from '@ota/db';
 import {
   buildInvoiceModel,
   buildVoucherModel,
   buildWorkOrderModels,
-  brandingFromEnv,
   renderInvoiceHtml,
   renderVoucherHtml,
   renderWorkOrderHtml,
+  type DocumentBranding,
   type ReservationDocumentInput,
 } from '@ota/documents';
 import { DocumentType } from '@ota/domain';
@@ -15,6 +16,7 @@ import type { DocumentDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
+import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { DOCUMENT_RENDERER, type DocumentRenderer } from './document-renderer';
 import { DOCUMENT_STORAGE, type DocumentStorage } from './document-storage';
 
@@ -69,7 +71,18 @@ export class DocumentsService {
     private readonly prisma: PrismaService,
     @Inject(DOCUMENT_RENDERER) private readonly renderer: DocumentRenderer,
     @Inject(DOCUMENT_STORAGE) private readonly storage: DocumentStorage,
+    @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
   ) {}
+
+  private branding(): DocumentBranding {
+    return {
+      agencyName: this.tenant.branding.agencyName,
+      licenseNumber: this.tenant.branding.licenseNumber,
+      primaryColor: this.tenant.branding.primaryColor,
+      supportEmail: this.tenant.branding.supportEmail,
+      supportPhone: this.tenant.branding.supportPhone,
+    };
+  }
 
   async list(reservationId: string): Promise<DocumentDto[]> {
     const documents = await this.prisma.document.findMany({
@@ -97,7 +110,7 @@ export class DocumentsService {
     }
 
     const input = toDocumentInput(reservation);
-    const branding = brandingFromEnv();
+    const branding = this.branding();
     const artifacts: Array<{ type: DocumentType; html: string }> = [
       {
         type: DocumentType.Voucher,

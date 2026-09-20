@@ -1,4 +1,5 @@
 import type { Document } from '@ota/db';
+import type { TenantConfig } from '@ota/config';
 import { NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -14,6 +15,30 @@ const OPERATOR: AuthUser = {
   id: 'user-ops',
   email: 'ops@example.test',
   role: 'OPERATIONS_ADMIN',
+};
+
+const tenantConfig: TenantConfig = {
+  tenantId: 'cuba-eco-travel',
+  branding: {
+    agencyName: 'Authentic Cuba Expeditions',
+    licenseNumber: 'MINTUR-TEST-1234',
+    primaryColor: '#0f766e',
+    supportEmail: null,
+    supportPhone: null,
+  },
+  primaryLocale: 'es',
+  supportedLocales: ['es', 'en', 'fr'],
+  theme: { palette: 'ecoGreen', borderRadius: 'md' },
+  features: {
+    interactiveSvgMap: true,
+    culturalEventsBanner: true,
+    recruitmentPortal: true,
+    customItineraryBuilder: true,
+    instantBooking: false,
+    directBankTransferRail: true,
+    creditCardGatewayRail: true,
+  },
+  destinations: { geographyType: 'cuba_provinces' },
 };
 
 const reservation = {
@@ -103,7 +128,7 @@ describe('DocumentsService', () => {
   });
 
   it('generates a voucher, work order, and invoice', async () => {
-    const service = new DocumentsService(fakePrisma(), renderer, storage);
+    const service = new DocumentsService(fakePrisma(), renderer, storage, tenantConfig);
 
     const documents = await service.generate(RESERVATION_ID, OPERATOR);
 
@@ -117,7 +142,7 @@ describe('DocumentsService', () => {
   });
 
   it('stores documents under the booking code', async () => {
-    const service = new DocumentsService(fakePrisma(), renderer, storage);
+    const service = new DocumentsService(fakePrisma(), renderer, storage, tenantConfig);
 
     await service.generate(RESERVATION_ID, OPERATOR);
 
@@ -128,7 +153,7 @@ describe('DocumentsService', () => {
     const prisma = {
       reservation: { findUnique: async () => null },
     } as unknown as PrismaService;
-    const service = new DocumentsService(prisma, renderer, storage);
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
 
     await expect(service.generate('missing', OPERATOR)).rejects.toBeInstanceOf(
       NotFoundException,

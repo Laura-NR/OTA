@@ -211,6 +211,9 @@ importers:
       '@ota/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@ota/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@ota/db':
         specifier: workspace:*
         version: link:../../packages/db

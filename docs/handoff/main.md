@@ -14,6 +14,9 @@ underway (suppliers, dispatch, escalation, inventory/pricing, documents done).
 - `packages/db` — Prisma 6; migrations `init`, `better_auth`, `dispatch_offers`,
   `service_item_province`, `inventory_pricing`; seed.
 - `packages/auth` — ESM Better Auth.
+- `packages/config` — env schema + tenant manifest schema/loader. `tenant/` is the
+  only fork-specific directory (`agency.config.json`: branding, MINTUR license,
+  locales, theme, feature flags).
 - `packages/documents` — data models, HTML templates (tenant branding + MINTUR
   license), and Playwright Chromium HTML→PDF.
 - `apps/api` — NestJS (CJS). Global `AuthGuard` + `AuthModule`; modules:
@@ -28,13 +31,14 @@ underway (suppliers, dispatch, escalation, inventory/pricing, documents done).
 ## Verified
 Node 22.22.3, pnpm 12.4.2, TS 6.0.3 (2026-09-20):
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck` (12/12), `pnpm test`
-  (81: config 3, domain 33, schemas 3, documents 6, api 36), `pnpm build` (7/7) —
+  (84: config 6, domain 33, schemas 3, documents 6, api 36), `pnpm build` (7/7) —
   green.
 - Live documents: transitioning DEMO0001 to CONFIRMED produced VOUCHER,
   WORK_ORDER, and INVOICE rows and real `%PDF-` files under
   `.documents/DEMO0001/` (~20–23 KB each).
 - Earlier live: Better Auth; reservations RBAC; dispatch offer + BullMQ job +
-  candidates; Socket.IO engine handshake; inventory pricing quote.
+  candidates; Socket.IO engine handshake; inventory pricing quote. Tenant config
+  verified live: `GET /tenant/config` returns the public manifest.
 
 Not verified: `pnpm e2e`; magic-link/passkey; `/ops` live socket; BullMQ timeout
 firing; worker accept/decline against a real DB; PDF download endpoint (not built).
@@ -63,11 +67,11 @@ firing; worker accept/decline against a real DB; PDF download endpoint (not buil
 - Pin `typescript@^6.0.3` and Prisma 6.x. `docker` needs the docker group.
 
 ## Next
-1. `packages/config` tenant manifest + feature flags; move branding out of env.
-2. `packages/email` + wire magic-link delivery.
-3. Document download endpoint + messaging (traveler↔ops) with email fallback.
-4. Bulk Excel/CSV import with column mapping + validation preview.
-5. `packages/ui` + theming; storefront.
+1. `packages/email` + wire magic-link delivery (replace the console log).
+2. Document download endpoint + messaging (traveler↔ops) with email fallback.
+3. Bulk Excel/CSV import with column mapping + validation preview.
+4. `packages/ui` + theming; storefront.
+5. Worker-facing accept/decline against a real DB.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.

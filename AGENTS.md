@@ -71,7 +71,9 @@ adds seasonal/markup rules, and `GET /inventory/:id/price?date=` returns the
 computed breakdown (seasonal override + summed markups; a dateless markup applies
 year-round). Documents verified live: transitioning a reservation to CONFIRMED
 generates VOUCHER, WORK_ORDER, and INVOICE PDFs (real `%PDF-` files on disk,
-Document rows persisted). Remaining UNVERIFIED:
+Document rows persisted). Tenant config verified live: `GET /tenant/config`
+returns the public agency manifest (branding, locales, feature flags). Remaining
+UNVERIFIED:
 `pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
 yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
 exercised over a live socket.
@@ -139,7 +141,8 @@ nothing that weakens an Article.
 - `<2026-09-20: pricing lives in packages/domain (calculatePrice). A SEASONAL_RATE with no matching date is ignored; the latest matching start date wins. A MARKUP with no date bounds is always active.>`
 - `<2026-09-20: inventory_items + pricing_rules are the CMS/pricing tables. Inventory attributes are free-form JSON; base price is Decimal(10,2).>`
 - `<2026-09-20: document templates + Playwright PDF rendering live in packages/documents. Generated PDFs go to DOCUMENTS_DIR (default apps/api/.documents, gitignored); storage is behind the DOCUMENT_STORAGE interface (Local now, S3/MinIO later).>`
-- `<2026-09-20: the MINTUR license and agency branding come from env (AGENCY_NAME, MINTUR_LICENSE, AGENCY_PRIMARY_COLOR, ...) until packages/config tenant manifest exists; every document footer injects the license (spec 8.1).>`
+- `<2026-09-20: tenant/ is the ONLY fork-specific directory. tenant/agency.config.json is the agency manifest (branding, MINTUR license, locales, theme, feature flags), validated by packages/config at startup and loaded into the global TENANT_CONFIG token. Core packages must never import tenant/ directly.>`
+- `<2026-09-20: GET /tenant/config is @Public() and returns the non-secret manifest for web/mobile clients; document branding (incl. the MINTUR license, spec 8.1) comes from TENANT_CONFIG, not env.>`
 - `<2026-09-20: entering CONFIRMED triggers document generation best-effort via ReservationService -> DocumentsService; a failure is logged and does not roll back the persisted transition. Regenerate with POST /reservations/:id/documents.>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
 

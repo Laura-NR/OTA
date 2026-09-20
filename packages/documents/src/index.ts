@@ -1,4 +1,4 @@
-export { brandingFromEnv, type DocumentBranding } from './branding';
+export { type DocumentBranding } from './branding';
 export {
   buildInvoiceModel,
   buildVoucherModel,

@@ -1,0 +1,28 @@
+{
+  "tenantId": "cuba-eco-travel",
+  "branding": {
+    "agencyName": "Authentic Cuba Expeditions",
+    "licenseNumber": "MINTUR-2026-XXXX",
+    "primaryColor": "#0f766e",
+    "supportEmail": null,
+    "supportPhone": null
+  },
+  "primaryLocale": "es",
+  "supportedLocales": ["es", "en", "fr"],
+  "theme": {
+    "palette": "ecoGreen",
+    "borderRadius": "md"
+  },
+  "features": {
+    "interactiveSvgMap": true,
+    "culturalEventsBanner": true,
+    "recruitmentPortal": true,
+    "customItineraryBuilder": true,
+    "instantBooking": false,
+    "directBankTransferRail": true,
+    "creditCardGatewayRail": true
+  },
+  "destinations": {
+    "geographyType": "cuba_provinces"
+  }
+}
