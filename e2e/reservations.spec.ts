@@ -7,18 +7,25 @@ test.describe('reservations pipeline', () => {
     await signIn(page);
   });
 
-  test('lists the pipeline and applies a legal transition in the browser', async ({
+  test('opens a booking from the board and applies a legal transition', async ({
     page,
   }) => {
     await expect(page.getByRole('heading', { name: 'Reservations' })).toBeVisible();
 
-    const row = page.locator('tr', { hasText: 'E2E0001' });
-    await expect(row.getByText('DRAFT', { exact: true })).toBeVisible();
+    const card = page.getByRole('link', { name: /E2E0001/ });
+    await expect(card).toBeVisible();
+    await card.click();
 
-    await row.getByRole('button', { name: 'ITINERARY SUBMITTED' }).click();
+    await expect(page).toHaveURL(/\/reservations\/[0-9a-f-]+$/);
+    await expect(page.getByRole('heading', { name: 'E2E0001' })).toBeVisible();
+    await expect(page.getByText('DRAFT', { exact: true })).toBeVisible();
 
-    await expect(row.getByRole('button', { name: 'DISPATCH IN PROGRESS' })).toBeVisible();
-    await expect(row.getByText('DRAFT', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'ITINERARY SUBMITTED' }).click();
+
+    await expect(
+      page.getByRole('button', { name: 'DISPATCH IN PROGRESS' }),
+    ).toBeVisible();
+    await expect(page.getByText('reservation.transition').first()).toBeVisible();
   });
 
   test('signs out back to the login page', async ({ page }) => {

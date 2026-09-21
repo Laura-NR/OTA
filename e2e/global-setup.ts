@@ -27,7 +27,7 @@ export default async function globalSetup(): Promise<void> {
       );
     }
 
-    await prisma.reservation.upsert({
+    const reservation = await prisma.reservation.upsert({
       where: { bookingCode: 'E2E0001' },
       update: { status: 'DRAFT' },
       create: {
@@ -39,6 +39,11 @@ export default async function globalSetup(): Promise<void> {
         totalCurrency: 'EUR',
         totalAmount: '321.00',
       },
+    });
+
+    // Clear this fixture reservation's audit rows so each run starts clean.
+    await prisma.auditLog.deleteMany({
+      where: { entityType: 'Reservation', entityId: reservation.id },
     });
 
     await prisma.supplierProfile.update({
