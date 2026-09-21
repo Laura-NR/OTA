@@ -66,6 +66,12 @@ enum PricingRuleKind {
   MARKUP
 }
 
+enum ImportBatchStatus {
+  STAGED
+  COMMITTED
+  FAILED
+}
+
 enum SupplierCategory {
   TOUR_GUIDE
   PRIVATE_DRIVER
@@ -278,6 +284,26 @@ model PricingRule {
 
   @@index([inventoryItemId])
   @@map("pricing_rules")
+}
+
+// Staging record for a bulk spreadsheet import: detected columns, parsed rows,
+// and the committed mapping. Committing creates InventoryItems.
+model ImportBatch {
+  id              String            @id @default(uuid()) @db.Uuid
+  createdByUserId String?           @map("created_by_user_id") @db.Uuid
+  filename        String
+  status          ImportBatchStatus @default(STAGED)
+  columns         String[]
+  rowCount        Int               @map("row_count")
+  rows            Json
+  mapping         Json?
+  importedCount   Int?              @map("imported_count")
+  errors          Json?
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("import_batches")
 }
 
 model Reservation {

@@ -8,6 +8,7 @@ import { DispatchModule } from './dispatch/dispatch.module';
 import { DocumentsModule } from './documents/documents.module';
 import { EmailModule } from './email/email.module';
 import { HealthController } from './health.controller';
+import { ImportsModule } from './imports/imports.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { MessagesModule } from './messages/messages.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -39,6 +40,7 @@ const isTest = process.env.NODE_ENV === 'test';
     InventoryModule,
     DocumentsModule,
     MessagesModule,
+    ImportsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],

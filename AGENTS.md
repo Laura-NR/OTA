@@ -51,12 +51,13 @@ storage, auth, testing). `tenant/` is the ONLY fork-specific directory. Infra in
 
 **Verification status (2026-09-20):** `pnpm install`, `pnpm build`, `pnpm test`,
 `pnpm --filter <package> exec vitest run <path>`, `pnpm lint`, `pnpm format`,
-`pnpm format:check`, `pnpm typecheck`, and `pnpm dev` ran green across all 8
+`pnpm format:check`, `pnpm typecheck`, and `pnpm dev` ran green across all 9
 workspaces (`@ota/config`, `@ota/domain`, `@ota/schemas`, `@ota/db`, `@ota/auth`,
-`@ota/documents`, `@ota/email`, `@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
+`@ota/documents`, `@ota/email`, `@ota/imports`, `@ota/api`), and a deliberately broken file fails `pnpm typecheck`. Against the
 running Docker stack: `pnpm --filter @ota/db exec prisma migrate dev` (created
 `20260919221723_init`, `20260920161240_better_auth`, `20260920163920_dispatch_offers`,
-`service_item_province`, and `inventory_pricing`), `pnpm --filter @ota/db run seed`, and
+`service_item_province`, `inventory_pricing`, and `import_batches`),
+`pnpm --filter @ota/db run seed`, and
 `docker compose up -d`. End-to-end smoke tests against the live DB passed:
 `/health` 200; `POST /reservations/:id/transition` returns 401 unauthenticated,
 403 for a TRAVELER, 200 for a SUPER_ADMIN, and 409 for an illegal transition, with
@@ -77,7 +78,10 @@ verified live: requesting one delivers a branded email to Mailpit with a
 `magic-link/verify` URL and the MINTUR license. Messaging verified live: an
 operations admin posts to `/reservations/:id/messages`, the message persists and
 broadcasts, and the traveler receives an email fallback in Mailpit;
-`GET /documents/:id/download` streams the stored PDF. Remaining UNVERIFIED:
+`GET /documents/:id/download` streams the stored PDF. Bulk import verified live:
+`POST /imports` stages a CSV/XLSX preview, `POST /imports/:id/commit` with a
+column mapping creates inventory items, and invalid rows return 422 with
+per-row errors. Remaining UNVERIFIED:
 `pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
 yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
 exercised over a live socket.
@@ -153,6 +157,8 @@ nothing that weakens an Article.
 - `<2026-09-20: traveler<->ops messaging is stored in messages and exposed at GET/POST /reservations/:id/messages. The service enforces ownership (traveler) or an ops role. Real-time goes through MESSAGE_PUBLISHER (Socket.IO namespace /conversations, ?reservationId=); the email fallback goes through MAILER.>`
 - `<2026-09-20: document downloads stream via GET /documents/:id/download; a traveler may only read documents for their own reservations (ops roles may read any).>`
 - `<2026-09-20: MAILER is provided by a global EmailModule (createMailer); main.ts also builds one via the same factory for magic links. ConsoleMailer is the dev fallback when SMTP_HOST/MAIL_FROM are unset.>`
+- `<2026-09-20: bulk import lives in packages/imports (exceljs parses CSV and XLSX) with staging in the import_batches table. Upload is JSON {filename, contentBase64} (no multipart yet); POST /imports stages, POST /imports/:id/commit validates the whole batch atomically and imports InventoryItems on success.>`
+- `<2026-09-20: exceljs pulls deprecated transitive packages (fstream/glob/inflight). It is the only spreadsheet parser; revisit if a lighter, maintained option appears.>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
 
 ---
