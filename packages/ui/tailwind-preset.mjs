@@ -1,13 +1,13 @@
 /**
  * Tailwind preset that maps semantic utility names onto the `--ota-*` design
- * tokens. Apps consume it with `presets: [require('@ota/ui/tailwind-preset')]`.
+ * tokens. Apps consume it with `import preset from '@ota/ui/tailwind-preset'`.
  *
  * The token names are the contract with `@ota/theming`, which writes the values
  * (see THEME_TOKEN_KEYS). Colours are HSL triples so opacity modifiers work.
  *
  * @type {import('tailwindcss').Config}
  */
-module.exports = {
+const preset = {
   darkMode: ['class'],
   theme: {
     extend: {
@@ -69,3 +69,5 @@ module.exports = {
     },
   },
 };
+
+export default preset;

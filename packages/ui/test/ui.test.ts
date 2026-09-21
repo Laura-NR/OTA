@@ -1,11 +1,8 @@
-import { createRequire } from 'node:module';
-
 import { describe, expect, it } from 'vitest';
 
 import { cn } from '../src/cn';
 
-const require = createRequire(import.meta.url);
-const preset = require('../tailwind-preset.js') as {
+const preset = (await import('../tailwind-preset.mjs')).default as {
   theme: {
     extend: {
       colors: Record<
@@ -23,7 +20,7 @@ describe('cn', () => {
   });
 
   it('drops falsy values', () => {
-    expect(cn('text-sm', false && 'hidden', undefined, null)).toBe('text-sm');
+    expect(cn('text-sm', undefined, null, '')).toBe('text-sm');
   });
 });
 
