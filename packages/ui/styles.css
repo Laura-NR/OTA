@@ -1,0 +1,34 @@
+/**
+ * Fallback design tokens. `@ota/theming` overwrites these per tenant by setting
+ * the same custom properties on the document root; these defaults keep
+ * components renderable in isolation (tests, Storybook-style previews, a fork
+ * that has not yet set a palette).
+ */
+:root {
+  --ota-background: 180 20% 99%;
+  --ota-foreground: 174 30% 12%;
+  --ota-card: 0 0% 100%;
+  --ota-card-foreground: 174 30% 12%;
+  --ota-popover: 0 0% 100%;
+  --ota-popover-foreground: 174 30% 12%;
+  --ota-primary: 174 77% 26%;
+  --ota-primary-foreground: 0 0% 100%;
+  --ota-secondary: 172 30% 94%;
+  --ota-secondary-foreground: 174 40% 20%;
+  --ota-muted: 172 25% 95%;
+  --ota-muted-foreground: 174 12% 42%;
+  --ota-accent: 160 45% 90%;
+  --ota-accent-foreground: 174 45% 18%;
+  --ota-destructive: 0 72% 51%;
+  --ota-destructive-foreground: 0 0% 100%;
+  --ota-success: 142 71% 40%;
+  --ota-success-foreground: 0 0% 100%;
+  --ota-border: 172 20% 88%;
+  --ota-input: 172 20% 88%;
+  --ota-ring: 174 77% 30%;
+  --ota-sidebar: 174 25% 15%;
+  --ota-sidebar-foreground: 172 20% 92%;
+  --ota-sidebar-accent: 174 30% 22%;
+  --ota-sidebar-accent-foreground: 0 0% 100%;
+  --ota-radius: 0.5rem;
+}
