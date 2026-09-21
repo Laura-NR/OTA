@@ -24,10 +24,14 @@ storefront, then the remaining live-socket/worker gaps.
   price quote), imports (base64 upload → preview → mapping → commit), documents
   (pick reservation, list/download/regenerate). The tenant theme is applied as
   inline `--ota-*` variables on `<body>` in the root layout.
+- `apps/storefront` — Next.js 15 public site (:3000) sharing the tenant theme
+  (`themeCssVariables` → `--ota-*`) and the same-origin `/api/ota` rewrite. A
+  content-hub home plus `/catalog`, which reads the new public `GET /catalog`
+  (ISR, revalidate 60; tolerates an unavailable API at build).
 - `apps/api` — added `GET /reservations` (pipeline list, optional status filter
-  and limit, ops roles). Its dev runner is now
-  `node --watch -r @swc-node/register src/main.ts` (tsx removed), so `pnpm dev`
-  boots both the API and the back-office.
+  and limit, ops roles) and public `GET /catalog` (active inventory only). Its
+  dev runner is now `node --watch -r @swc-node/register src/main.ts` (tsx
+  removed), so `pnpm dev` boots the API, back-office, and storefront.
 - `e2e/` — Playwright suite at the repo root (`pnpm e2e`, `@playwright/test`
   1.63.0 against the cached `chromium-1243`). `global-setup.ts` resets an
   E2E-owned reservation and the guide supplier through Prisma; `helpers.ts`
@@ -39,9 +43,9 @@ storefront, then the remaining live-socket/worker gaps.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-21):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck` (22 tasks), `pnpm test`
-  (120: domain 33, api 50, theming 9, config 6, documents 6, imports 5, ui 4,
-  email 4, schemas 3), `pnpm build` (12 tasks) — green.
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (121: domain
+  33, api 51, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
+  schemas 3), `pnpm build` (14 tasks) — green.
 - Live back-office smoke (API from `dist`; back-office `next dev` on :3002):
   `POST /api/auth/sign-in/magic-link` through the Next proxy → 200; the link in
   Mailpit verified via 302 → `http://localhost:3002/`; `GET /api/ota/reservations`
@@ -51,8 +55,8 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
   public manifest.
 - Root cause of the old API dev failure proven: `tsx` emits no `design:paramtypes`
   (`Reflect.getMetadata(...) === undefined`), while the tsc output emits it.
-- `pnpm dev` (turbo: API + back-office) now boots cleanly — API `/health` 200,
-  back-office `/login` 200; touching `apps/api/src/main.ts` restarts the API
+- `pnpm dev` (turbo: API + back-office + storefront) now boots cleanly — API
+  `/health` 200, back-office `/login` 200; touching `apps/api/src/main.ts` restarts the API
   (`Restarting 'src/main.ts'`) and `/health` stays 200. The full magic-link →
   session → reservations → SSR dashboard smoke test was repeated against this
   `pnpm dev` stack.
@@ -60,11 +64,16 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
   suspend/reinstate, and sign-out. Green both against an already-running
   `pnpm dev` and with Playwright starting the stack itself (webServer → `pnpm dev`
   → API `/health`). Docker (Postgres/Redis/Mailpit) and the seed are required.
+- Storefront smoke (`pnpm dev`, :3000): `/` and `/catalog` → 200 with the agency
+  name, `--ota-primary:175 77% 26%`, and all three active inventory items from
+  the public `GET /catalog` (reachable through `/api/ota/catalog` with no
+  session).
 
-Not verified: the mutating UI actions not yet in the e2e suite (dispatch
-start/candidates, import commit); the Playwright MCP still cannot launch (no
-system `chrome`); and the pre-existing UNVERIFIED items (passkeys, live `/ops` +
-`/conversations`, BullMQ timeout firing, worker accept/decline over a real DB).
+Not verified: storefront browser flows (none in the e2e suite yet); the mutating
+UI actions not yet in the e2e suite (dispatch start/candidates, import commit);
+the Playwright MCP still cannot launch (no system `chrome`); and the pre-existing
+UNVERIFIED items (passkeys, live `/ops` + `/conversations`, BullMQ timeout
+firing, worker accept/decline over a real DB).
 
 ## Assumptions & unknowns
 - Back-office routes are `export const dynamic = 'force-dynamic'`; each request
@@ -89,9 +98,10 @@ system `chrome`); and the pre-existing UNVERIFIED items (passkeys, live `/ops` +
   `.next` directory does not fail back-office typecheck.
 
 ## Next
-1. Storefront (content hub, SVG map, dynamic package builder, recruitment portal).
+1. Storefront (continued): SVG map, dynamic package builder, recruitment portal,
+   traveler auth, i18n (es/en/fr), and the booking/checkout funnel.
 2. Extend the e2e suite to the remaining mutating actions (dispatch
-   start/candidates, import commit).
+   start/candidates, import commit) and add a storefront spec.
 3. Worker accept/decline against a real DB; live `/ops` + `/conversations`; then
    the payments/ADR 0002 spike.
 
@@ -131,3 +141,6 @@ system `chrome`); and the pre-existing UNVERIFIED items (passkeys, live `/ops` +
 - 2026-09-21 — e2e uses `@playwright/test` against the repo's cached
   `chromium-1243` bundle (no system Chrome, no sudo); Playwright's `webServer`
   starts `pnpm dev` so `pnpm e2e` works from a cold checkout with Docker up.
+- 2026-09-21 — the storefront reads a public `GET /catalog` (active items only)
+  instead of opening the ops `GET /inventory`; it is ISR (revalidate 60) and
+  tolerates an unavailable API at build.

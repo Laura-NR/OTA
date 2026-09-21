@@ -352,6 +352,55 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  apps/storefront:
+    dependencies:
+      '@ota/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@ota/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@ota/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+      '@ota/theming':
+        specifier: workspace:*
+        version: link:../../packages/theming
+      '@ota/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: ^15.5.25
+        version: 15.5.25(@playwright/test@1.63.0)(@types/node@26.6.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.1
+        version: 26.6.2
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      autoprefixer:
+        specifier: ^10.4.21
+        version: 10.6.1(postcss@8.5.28)
+      postcss:
+        specifier: ^8.5.6
+        version: 8.5.28
+      tailwindcss:
+        specifier: ^3.4.19
+        version: 3.4.19(tsx@4.23.13)(yaml@2.9.1)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
   packages/auth:
     dependencies:
       '@better-auth/passkey':

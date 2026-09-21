@@ -104,6 +104,16 @@ suspend/reinstate, and sign-out all pass. Still not browser-exercised: dispatch
 start/candidates and import commit (covered over HTTP only). The Playwright MCP
 itself remains unusable here (it needs the system `chrome` channel).
 
+**Storefront increment (2026-09-21):** `apps/storefront` (Next.js 15, :3000)
+added; it themes from the same tenant manifest → `--ota-*` tokens and renders a
+content-hub home + catalog from the new public `GET /catalog` (active items
+only; the ops `GET /inventory` stays authenticated). 13 workspaces, 121 tests
+(api 51). `pnpm lint/format:check/typecheck/test/build` green. Live smoke:
+storefront `/` and `/catalog` 200 with the agency name, the tenant primary
+token, and every active catalog item; the public endpoint answers through the
+`/api/ota` rewrite with no session. Remaining storefront scope (Phase 4): SVG
+map, dynamic package builder, recruitment portal, traveler auth, i18n, checkout.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -181,6 +191,7 @@ nothing that weakens an Article.
 - `<2026-09-21: apps/api dev runs node --watch -r @swc-node/register src/main.ts. tsx/esbuild emits no design:paramtypes, so Nest DI fails under it; keep an swc-based register for the API dev runner. Tests are unaffected (apps/api runs under unplugin-swc; packages/db seed still uses tsx).>`
 - `<2026-09-21: web/back-office theming sets the --ota-* custom properties from themeCssVariables(tenant) on <body>; packages/ui's Tailwind preset maps semantic utilities to those names. The name contract is THEME_TOKEN_KEYS in packages/theming; packages/ui/styles.css holds fallbacks. Core never imports tenant/ — the app loads the manifest via packages/config.>`
 - `<2026-09-21: apps/backoffice/next.config.ts must stay .ts, not .mjs — the root flat ESLint config has no node globals, so process.env in a .mjs config trips no-undef. Next regenerates next-env.d.ts (with a .next/types triple-slash) on build; it is ESLint-ignored and a missing .next does not fail typecheck.>`
+- `<2026-09-21: the public storefront catalog is GET /catalog (@Public(), active items only) in apps/api/src/inventory/public-catalog.controller.ts; the ops view stays authenticated GET /inventory. apps/storefront and apps/backoffice share the packages/theming token contract and the same-origin /api/ota rewrite; the storefront is ISR (revalidate 60) and tolerates an unavailable API at build.>`
 - `<2026-09-21: the Playwright MCP is pinned to the chrome channel and cannot launch here (no system Chrome, no passwordless sudo). Use the repo's pnpm e2e for real-browser checks: @playwright/test 1.63.0 drives the cached chromium-1243 bundle, and its webServer starts pnpm dev.>`
 
 ---
