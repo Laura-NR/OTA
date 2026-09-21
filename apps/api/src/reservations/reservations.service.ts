@@ -1,7 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Reservation } from '@ota/db';
 import { ReservationStatus, assertTransition } from '@ota/domain';
-import type { ReservationDto, TransitionReservationRequest } from '@ota/schemas';
+import type {
+  ListReservationsQuery,
+  ReservationDto,
+  TransitionReservationRequest,
+} from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { DocumentsService } from '../documents/documents.service';
@@ -28,6 +32,21 @@ export class ReservationsService {
     private readonly prisma: PrismaService,
     private readonly documents: DocumentsService,
   ) {}
+
+  /**
+   * The operations pipeline: most recent first, optionally narrowed to a single
+   * status. Serves the back-office board; the domain state machine is the only
+   * source of legal statuses.
+   */
+  async list(query: ListReservationsQuery): Promise<ReservationDto[]> {
+    const reservations = await this.prisma.reservation.findMany({
+      where: query.status ? { status: query.status } : undefined,
+      orderBy: { createdAt: 'desc' },
+      take: query.limit,
+    });
+
+    return reservations.map(toDto);
+  }
 
   /**
    * Apply a status transition to a reservation and record it in the audit log.

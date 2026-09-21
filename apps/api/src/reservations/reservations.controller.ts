@@ -1,16 +1,20 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseFilters,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
+  listReservationsQuerySchema,
   transitionReservationSchema,
+  type ListReservationsQuery,
   type ReservationDto,
   type TransitionReservationRequest,
 } from '@ota/schemas';
@@ -26,6 +30,15 @@ import { ReservationsService } from './reservations.service';
 @UseFilters(DomainExceptionFilter)
 export class ReservationsController {
   constructor(private readonly reservations: ReservationsService) {}
+
+  @Get()
+  @Roles(UserRole.OperationsAdmin, UserRole.AdministrativeSupport, UserRole.SuperAdmin)
+  list(
+    @Query(new ZodValidationPipe(listReservationsQuerySchema))
+    query: ListReservationsQuery,
+  ): Promise<ReservationDto[]> {
+    return this.reservations.list(query);
+  }
 
   @Post(':id/transition')
   @HttpCode(HttpStatus.OK)

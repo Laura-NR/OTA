@@ -46,6 +46,20 @@ function createFakePrisma(store: Map<string, Reservation>) {
     reservation: {
       findUnique: async ({ where }: { where: { id: string } }) =>
         store.get(where.id) ?? null,
+      findMany: async ({
+        where,
+        take,
+      }: {
+        where?: { status?: Reservation['status'] };
+        take?: number;
+      }) => {
+        let rows = [...store.values()];
+        if (where?.status) {
+          rows = rows.filter((reservation) => reservation.status === where.status);
+        }
+        rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        return take ? rows.slice(0, take) : rows;
+      },
       update: async ({
         where,
         data,
@@ -167,5 +181,86 @@ describe('POST /reservations/:id/transition', () => {
       .send({ to: 'MADE_UP' });
 
     expect(response.status).toBe(400);
+  });
+});
+
+describe('GET /reservations', () => {
+  const OLDER_ID = '55555555-5555-4555-8555-555555555555';
+  let app: INestApplication;
+  let store: Map<string, Reservation>;
+
+  beforeEach(async () => {
+    store = new Map([
+      [RESERVATION_ID, makeReservation({ createdAt: new Date('2026-09-21T10:00:00Z') })],
+      [
+        OLDER_ID,
+        makeReservation({
+          id: OLDER_ID,
+          bookingCode: 'OLD00001',
+          status: 'CONFIRMED',
+          createdAt: new Date('2026-09-01T10:00:00Z'),
+        }),
+      ],
+    ]);
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(PrismaService)
+      .useValue(createFakePrisma(store))
+      .overrideProvider(AuthService)
+      .useValue(fakeAuthService)
+      .compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('returns the pipeline newest-first for an operations admin', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/reservations')
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(response.status).toBe(200);
+    expect(response.body.map((reservation: { id: string }) => reservation.id)).toEqual([
+      RESERVATION_ID,
+      OLDER_ID,
+    ]);
+  });
+
+  it('filters by status', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/reservations?status=CONFIRMED')
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].bookingCode).toBe('OLD00001');
+  });
+
+  it('rejects an unknown status filter with 400', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/reservations?status=MADE_UP')
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(response.status).toBe(400);
+  });
+
+  it('returns 401 when unauthenticated', async () => {
+    const response = await request(app.getHttpServer()).get('/reservations');
+
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 403 for a traveler', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/reservations')
+      .set('x-test-user', TRAVELER.email);
+
+    expect(response.status).toBe(403);
   });
 });

@@ -1,7 +1,9 @@
 export {
+  listReservationsQuerySchema,
   reservationSchema,
   reservationStatusSchema,
   transitionReservationSchema,
+  type ListReservationsQuery,
   type ReservationDto,
   type TransitionReservationRequest,
 } from './reservation';

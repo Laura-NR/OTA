@@ -16,6 +16,13 @@ export const transitionReservationSchema = z.object({
 
 export type TransitionReservationRequest = z.infer<typeof transitionReservationSchema>;
 
+export const listReservationsQuerySchema = z.object({
+  status: reservationStatusSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
+export type ListReservationsQuery = z.infer<typeof listReservationsQuerySchema>;
+
 export const reservationSchema = z.object({
   id: z.string().uuid(),
   bookingCode: z.string(),
