@@ -114,6 +114,16 @@ token, and every active catalog item; the public endpoint answers through the
 `/api/ota` rewrite with no session. Remaining storefront scope (Phase 4): SVG
 map, dynamic package builder, recruitment portal, traveler auth, i18n, checkout.
 
+**Back-office workbench increment (2026-09-21):** the reservation read model is
+now a pipeline — `GET /reservations` carries traveler + service-item context,
+and `POST /reservations` (ops intake), `GET /reservations/:id`, and
+`GET /reservations/:id/audit` were added. The back-office dashboard is a status
+board that deep-links to a reservation workbench (transitions, service items,
+documents, audit timeline). 128 tests (api 58); the e2e suite drives board →
+detail → transition. `docs/adr/0002-back-office-priority.md` fixes the order:
+finish the back-office operator surface (increments A–E) before storefront
+expansion; the payments ADR is renumbered `0003-payments.md`.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -192,6 +202,7 @@ nothing that weakens an Article.
 - `<2026-09-21: web/back-office theming sets the --ota-* custom properties from themeCssVariables(tenant) on <body>; packages/ui's Tailwind preset maps semantic utilities to those names. The name contract is THEME_TOKEN_KEYS in packages/theming; packages/ui/styles.css holds fallbacks. Core never imports tenant/ — the app loads the manifest via packages/config.>`
 - `<2026-09-21: apps/backoffice/next.config.ts must stay .ts, not .mjs — the root flat ESLint config has no node globals, so process.env in a .mjs config trips no-undef. Next regenerates next-env.d.ts (with a .next/types triple-slash) on build; it is ESLint-ignored and a missing .next does not fail typecheck.>`
 - `<2026-09-21: the public storefront catalog is GET /catalog (@Public(), active items only) in apps/api/src/inventory/public-catalog.controller.ts; the ops view stays authenticated GET /inventory. apps/storefront and apps/backoffice share the packages/theming token contract and the same-origin /api/ota rewrite; the storefront is ISR (revalidate 60) and tolerates an unavailable API at build.>`
+- `<2026-09-21: the back-office reservation workbench is board (/) -> detail (/reservations/[id]) -> audit. GET /reservations returns ReservationListItemDto (traveler + service-item count); POST /reservations is the ops intake (creates DRAFT with an 8-char booking code, audited). This is increment A of docs/adr/0002-back-office-priority.md.>`
 - `<2026-09-21: the Playwright MCP is pinned to the chrome channel and cannot launch here (no system Chrome, no passwordless sudo). Use the repo's pnpm e2e for real-browser checks: @playwright/test 1.63.0 drives the cached chromium-1243 bundle, and its webServer starts pnpm dev.>`
 
 ---

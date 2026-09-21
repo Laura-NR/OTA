@@ -105,8 +105,9 @@ International card/SEPA settlement for Cuba-nexus transactions is heavily
 sanctioned. The spec names TropiPay. This must be confirmed with real providers and
 legal counsel before Phase 4. Mitigation: build against a **mock payment adapter**
 behind the `packages/payments` interface so all other work proceeds unblocked.
-Deliverable: `docs/adr/0002-payments.md` decision memo (spike runs in parallel from
-Phase 0).
+Deliverable: `docs/adr/0003-payments.md` decision memo (spike runs in parallel from
+Phase 0). Note: ADR 0002 is the back-office-priority decision
+(`docs/adr/0002-back-office-priority.md`).
 
 ---
 
@@ -359,4 +360,4 @@ schedule; 2–3 developers ≈ 4–5 months.
 3. `opencode.jsonc` — remove the hardcoded token, env-ref it, read-only Postgres MCP.
 4. Scaffold the monorepo skeleton + docker-compose + CI.
 5. Run the verification loop: green CI and a deliberate-failure check.
-6. Payments/sanctions spike → `docs/adr/0002-payments.md` (parallel).
+6. Payments/sanctions spike → `docs/adr/0003-payments.md` (parallel).

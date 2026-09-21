@@ -34,17 +34,25 @@ storefront, then the remaining live-socket/worker gaps.
   removed), so `pnpm dev` boots the API, back-office, and storefront.
 - `e2e/` — Playwright suite at the repo root (`pnpm e2e`, `@playwright/test`
   1.63.0 against the cached `chromium-1243`). `global-setup.ts` resets an
-  E2E-owned reservation and the guide supplier through Prisma; `helpers.ts`
-  signs in through the real magic-link flow. Specs cover the reservations
-  transition, supplier suspend/reinstate, and sign-out.
+  E2E-owned reservation (status + audit rows) and the guide supplier through
+  Prisma; `helpers.ts` signs in through the real magic-link flow. Specs cover
+  board → detail → transition, supplier suspend/reinstate, and sign-out.
+- Back-office increment A — the reservation read model is a pipeline:
+  `GET /reservations` (traveler + service-item count), `POST /reservations`
+  (ops intake → DRAFT + 8-char code + audit), `GET /reservations/:id`, and
+  `GET /reservations/:id/audit`. The dashboard is a status board that
+  deep-links to `/reservations/[id]` (transitions, service items, documents,
+  audit) and `/reservations/new`. Sequencing is fixed by
+  `docs/adr/0002-back-office-priority.md` (increments A–E; payments ADR 0003).
 - Committed: `23920d7` (reservations list), `3547317` (ui + theming),
   `87c464a` (back-office + root wiring), `e2a9058` (docs), `fc084f6`
-  (dev-runner fix), plus the e2e commit.
+  (dev-runner fix), `1b4304d` (e2e), `ad29d0c` (storefront), plus the
+  Increment A commit.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-21):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (121: domain
-  33, api 51, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (128: domain
+  33, api 58, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
   schemas 3), `pnpm build` (14 tasks) — green.
 - Live back-office smoke (API from `dist`; back-office `next dev` on :3002):
   `POST /api/auth/sign-in/magic-link` through the Next proxy → 200; the link in
@@ -81,7 +89,10 @@ firing, worker accept/decline over a real DB).
 - The UI hides controls by role, but authorisation is enforced only in the API —
   the client is not a security boundary.
 - The e2e suite writes E2E-owned fixtures to the dev database; `global-setup.ts`
-  resets them each run. It does not use a separate test database.
+  resets the reservation status and deletes that fixture's audit rows each run.
+  It does not use a separate test database.
+- The ops `POST /reservations` creates DRAFT only (no storefront builder yet);
+  the storefront will submit the same shape and land at ITINERARY_SUBMITTED.
 
 ## Traps
 - The API dev runner must stay swc-based (`node --watch -r @swc-node/register`).
@@ -98,12 +109,20 @@ firing, worker accept/decline over a real DB).
   `.next` directory does not fail back-office typecheck.
 
 ## Next
-1. Storefront (continued): SVG map, dynamic package builder, recruitment portal,
-   traveler auth, i18n (es/en/fr), and the booking/checkout funnel.
-2. Extend the e2e suite to the remaining mutating actions (dispatch
-   start/candidates, import commit) and add a storefront spec.
-3. Worker accept/decline against a real DB; live `/ops` + `/conversations`; then
-   the payments/ADR 0002 spike.
+Sequence is fixed by `docs/adr/0002-back-office-priority.md`.
+1. **Increment B — escalation + messaging operator surface:** messaging inbox on
+   the existing endpoints and the `/conversations` socket; live escalation
+   dashboard consuming `/ops` (amber/red, `tel:` click-to-call, one-click
+   re-dispatch); prove the BullMQ timeout actually fires.
+2. **Increment C** — compliance: `packages/storage` (S3/MinIO) credential
+   uploads, visual inspector, 30-day expiry job pausing auto-dispatch.
+3. **Increment D** — document depth (itemized invoice, voucher emergency/
+   rendezvous); **Increment E** — inventory CMS completion (delete, availability,
+   media).
+4. Then Wave 2a (payments mock + ADR 0003, storefront builder/map/recruitment/
+   traveler auth/i18n), Phase 3 BI/AI, and the mobile apps.
+Also: extend the e2e suite to dispatch start/candidates, import commit, and the
+reservation intake form.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
@@ -144,3 +163,11 @@ firing, worker accept/decline over a real DB).
 - 2026-09-21 — the storefront reads a public `GET /catalog` (active items only)
   instead of opening the ops `GET /inventory`; it is ISR (revalidate 60) and
   tolerates an unavailable API at build.
+- 2026-09-21 — `docs/adr/0002-back-office-priority.md`: finish the back-office
+  operator surface (increments A–E) before storefront expansion; the payments
+  ADR is renumbered `0003-payments.md`.
+- 2026-09-21 — the reservation read model is a pipeline (`ReservationListItemDto`
+  with traveler + service-item count; detail + audit endpoints); ops intake
+  `POST /reservations` creates DRAFT with a generated 8-char booking code.
+- 2026-09-21 — the dashboard is a status board that deep-links to a reservation
+  workbench, replacing the flat reservations table (removed).
