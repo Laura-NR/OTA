@@ -1,10 +1,20 @@
 export {
+  auditLogEntrySchema,
+  createReservationSchema,
   listReservationsQuerySchema,
+  reservationDetailSchema,
+  reservationListItemSchema,
   reservationSchema,
+  reservationServiceItemSchema,
   reservationStatusSchema,
   transitionReservationSchema,
+  type AuditLogEntryDto,
+  type CreateReservationRequest,
   type ListReservationsQuery,
+  type ReservationDetailDto,
   type ReservationDto,
+  type ReservationListItemDto,
+  type ReservationServiceItemDto,
   type TransitionReservationRequest,
 } from './reservation';
 export {

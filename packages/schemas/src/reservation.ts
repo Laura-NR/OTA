@@ -1,4 +1,9 @@
-import { RESERVATION_STATUSES, type ReservationStatus } from '@ota/domain';
+import {
+  RESERVATION_STATUSES,
+  ServiceItemStatus,
+  ServiceType,
+  type ReservationStatus,
+} from '@ota/domain';
 import { z } from 'zod';
 
 /**
@@ -35,3 +40,67 @@ export const reservationSchema = z.object({
 });
 
 export type ReservationDto = z.infer<typeof reservationSchema>;
+
+/** Ops-created booking. The storefront builder will adopt the same payload. */
+export const createReservationSchema = z.object({
+  travelerEmail: z.string().email(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  totalCurrency: z.string().trim().length(3).default('EUR'),
+  totalAmount: z.coerce.number().nonnegative().default(0),
+  customItineraryPayload: z.record(z.string(), z.unknown()).optional(),
+});
+
+export type CreateReservationRequest = z.infer<typeof createReservationSchema>;
+
+/** Pipeline list row: the reservation plus the operator-relevant context. */
+export const reservationListItemSchema = reservationSchema.extend({
+  travelerEmail: z.string().email(),
+  travelerName: z.string().nullable(),
+  serviceItemCount: z.number().int().nonnegative(),
+});
+
+export type ReservationListItemDto = z.infer<typeof reservationListItemSchema>;
+
+export const reservationServiceItemSchema = z.object({
+  id: z.string().uuid(),
+  serviceType: z.enum([
+    ServiceType.Guide,
+    ServiceType.Transportation,
+    ServiceType.Accommodation,
+    ServiceType.Experience,
+  ]),
+  status: z.enum([
+    ServiceItemStatus.Unassigned,
+    ServiceItemStatus.Offered,
+    ServiceItemStatus.Accepted,
+    ServiceItemStatus.Declined,
+    ServiceItemStatus.Timeout,
+    ServiceItemStatus.Fulfilled,
+  ]),
+  province: z.string().nullable(),
+  serviceDateStart: z.string(),
+  serviceDateEnd: z.string(),
+  supplierId: z.string().uuid().nullable(),
+});
+
+export type ReservationServiceItemDto = z.infer<typeof reservationServiceItemSchema>;
+
+export const reservationDetailSchema = reservationListItemSchema.extend({
+  travelerId: z.string().uuid(),
+  serviceItems: z.array(reservationServiceItemSchema),
+});
+
+export type ReservationDetailDto = z.infer<typeof reservationDetailSchema>;
+
+export const auditLogEntrySchema = z.object({
+  id: z.string().uuid(),
+  action: z.string(),
+  entityType: z.string(),
+  entityId: z.string().nullable(),
+  actorEmail: z.string().email().nullable(),
+  metadata: z.unknown().nullable(),
+  createdAt: z.string(),
+});
+
+export type AuditLogEntryDto = z.infer<typeof auditLogEntrySchema>;

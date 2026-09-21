@@ -12,10 +12,15 @@ import {
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
+  createReservationSchema,
   listReservationsQuerySchema,
   transitionReservationSchema,
+  type AuditLogEntryDto,
+  type CreateReservationRequest,
   type ListReservationsQuery,
+  type ReservationDetailDto,
   type ReservationDto,
+  type ReservationListItemDto,
   type TransitionReservationRequest,
 } from '@ota/schemas';
 
@@ -26,18 +31,46 @@ import { DomainExceptionFilter } from '../common/errors/domain-exception.filter'
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { ReservationsService } from './reservations.service';
 
+const READ_ROLES = [
+  UserRole.OperationsAdmin,
+  UserRole.AdministrativeSupport,
+  UserRole.SuperAdmin,
+] as const;
+
 @Controller('reservations')
 @UseFilters(DomainExceptionFilter)
 export class ReservationsController {
   constructor(private readonly reservations: ReservationsService) {}
 
   @Get()
-  @Roles(UserRole.OperationsAdmin, UserRole.AdministrativeSupport, UserRole.SuperAdmin)
+  @Roles(...READ_ROLES)
   list(
     @Query(new ZodValidationPipe(listReservationsQuerySchema))
     query: ListReservationsQuery,
-  ): Promise<ReservationDto[]> {
+  ): Promise<ReservationListItemDto[]> {
     return this.reservations.list(query);
+  }
+
+  @Post()
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  create(
+    @Body(new ZodValidationPipe(createReservationSchema))
+    body: CreateReservationRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<ReservationDetailDto> {
+    return this.reservations.create(body, actor);
+  }
+
+  @Get(':id')
+  @Roles(...READ_ROLES)
+  getById(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationDetailDto> {
+    return this.reservations.getById(id);
+  }
+
+  @Get(':id/audit')
+  @Roles(...READ_ROLES)
+  audit(@Param('id', ParseUUIDPipe) id: string): Promise<AuditLogEntryDto[]> {
+    return this.reservations.listAudit(id);
   }
 
   @Post(':id/transition')
