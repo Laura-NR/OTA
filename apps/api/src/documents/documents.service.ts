@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
 import type { Document, Reservation, ServiceItem, SupplierProfile, User } from '@ota/db';
 import {
@@ -11,7 +16,7 @@ import {
   type DocumentBranding,
   type ReservationDocumentInput,
 } from '@ota/documents';
-import { DocumentType } from '@ota/domain';
+import { DocumentType, UserRole } from '@ota/domain';
 import type { DocumentDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
@@ -90,6 +95,27 @@ export class DocumentsService {
       orderBy: { generatedAt: 'asc' },
     });
     return documents.map(toDocumentDto);
+  }
+
+  /**
+   * Load a stored document for download. A traveler may only fetch documents
+   * for their own reservations; operations roles may fetch any.
+   */
+  async read(
+    documentId: string,
+    actor: AuthUser,
+  ): Promise<{ document: Document; data: Uint8Array }> {
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      include: { reservation: { select: { userId: true } } },
+    });
+    if (!document) {
+      throw new NotFoundException(`Document ${documentId} not found`);
+    }
+    if (actor.role === UserRole.Traveler && document.reservation.userId !== actor.id) {
+      throw new ForbiddenException('Document belongs to another traveler');
+    }
+    return { document, data: await this.storage.read(document.storageKey) };
   }
 
   /**

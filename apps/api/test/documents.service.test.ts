@@ -1,6 +1,6 @@
 import type { Document } from '@ota/db';
 import type { TenantConfig } from '@ota/config';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
@@ -92,6 +92,7 @@ describe('DocumentsService', () => {
     save: vi.fn(async (key: string) => {
       savedKeys.push(key);
     }),
+    read: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),
   };
   let audits: string[];
 
@@ -102,6 +103,11 @@ describe('DocumentsService', () => {
       },
       document: {
         findMany: async () => created,
+        findUnique: async (args: { where: { id: string } }) => {
+          const doc = created.find((item) => item.id === args.where.id);
+          if (!doc) return null;
+          return { ...doc, reservation: { userId: 'user-traveler' } };
+        },
         create: async (args: { data: Record<string, unknown> }) => {
           const doc = {
             id: `doc-${created.length + 1}`,
@@ -157,6 +163,37 @@ describe('DocumentsService', () => {
 
     await expect(service.generate('missing', OPERATOR)).rejects.toBeInstanceOf(
       NotFoundException,
+    );
+  });
+
+  it('lets an operations admin read any stored document', async () => {
+    const service = new DocumentsService(fakePrisma(), renderer, storage, tenantConfig);
+    await service.generate(RESERVATION_ID, OPERATOR);
+
+    const result = await service.read('doc-1', OPERATOR);
+
+    expect(result.data).toBeInstanceOf(Uint8Array);
+  });
+
+  it('forbids a traveler from reading another traveler’s document', async () => {
+    const prisma = {
+      document: {
+        findUnique: async () => ({
+          id: 'doc-1',
+          storageKey: 'ABC12345/voucher-1.pdf',
+          reservation: { userId: 'someone-else' },
+        }),
+      },
+    } as unknown as PrismaService;
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
+    const traveler: AuthUser = {
+      id: 'user-traveler',
+      email: 'jane@example.test',
+      role: 'TRAVELER',
+    };
+
+    await expect(service.read('doc-1', traveler)).rejects.toBeInstanceOf(
+      ForbiddenException,
     );
   });
 });

@@ -24,18 +24,24 @@ underway (suppliers, dispatch, escalation, inventory/pricing, documents done).
 - `apps/api` — NestJS (CJS). Global `AuthGuard` + `AuthModule`; modules:
   `reservations` (transition; triggers documents on CONFIRMED), `suppliers`,
   `dispatch`, `escalation` (Socket.IO `/ops`), `inventory`,
-  `documents` (generate + list).
+  `documents` (generate + list + `GET /documents/:id/download`),
+  `messages` (traveler↔ops, Socket.IO `/conversations` + email fallback).
 - Infra: docker-compose (postgres, redis, minio, mailpit). `apps/api/.env`
   (gitignored) has DATABASE_URL/REDIS_URL/AUTH_SECRET/agency branding.
-- Committed/pushed: `e6e41bf`, `36dd100`, `071e2ff`, `af906dd`, `ca2169a`. This
-  increment adds document generation.
+- Committed/pushed: `e6e41bf`, `36dd100`, `071e2ff`, `af906dd`, `ca2169a`,
+  `fd60f76`, `f7d294b`, `0555cde`. This increment adds document download and
+  messaging.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2, TS 6.0.3 (2026-09-20):
-- `pnpm lint`, `pnpm format:check`, `pnpm typecheck` (12/12), `pnpm test`
-  (88: config 6, domain 33, schemas 3, documents 6, email 4, api 36),
-  `pnpm build` (8/8) —
-  green.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck` (15/15), `pnpm test`
+  (94: config 6, domain 33, schemas 3, documents 6, email 4, api 42),
+  `pnpm build` (8/8) — green.
+- Live messaging: an operations admin posts to `/reservations/:id/messages`
+  (201, persisted, broadcast) and the traveler gets the email fallback in
+  Mailpit; unauthenticated list → 401. Live download:
+  `GET /documents/:id/download` streams a 23 KB `%PDF-` with
+  `content-type: application/pdf`.
 - Live documents: transitioning DEMO0001 to CONFIRMED produced VOUCHER,
   WORK_ORDER, and INVOICE rows and real `%PDF-` files under
   `.documents/DEMO0001/` (~20–23 KB each).
@@ -74,10 +80,12 @@ firing; worker accept/decline against a real DB; PDF download endpoint (not buil
   `TRUSTED_ORIGINS`; add new web/mobile origins there.
 
 ## Next
-1. Document download endpoint + messaging (traveler↔ops) with email fallback.
-2. Bulk Excel/CSV import with column mapping + validation preview.
-3. `packages/ui` + theming; storefront.
-4. Worker-facing accept/decline against a real DB.
+1. Bulk Excel/CSV import with column mapping + validation preview.
+2. `packages/ui` + theming; scaffold the back-office (Next.js) app so there is a
+   browser UI (the API is currently the only surface).
+3. Worker-facing accept/decline against a real DB; `/ops` and `/conversations`
+   live socket tests.
+4. Payments/sanctions spike (`docs/adr/0002-payments.md`).
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.

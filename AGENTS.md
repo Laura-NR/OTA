@@ -74,7 +74,10 @@ generates VOUCHER, WORK_ORDER, and INVOICE PDFs (real `%PDF-` files on disk,
 Document rows persisted). Tenant config verified live: `GET /tenant/config`
 returns the public agency manifest (branding, locales, feature flags). Magic link
 verified live: requesting one delivers a branded email to Mailpit with a
-`magic-link/verify` URL and the MINTUR license. Remaining UNVERIFIED:
+`magic-link/verify` URL and the MINTUR license. Messaging verified live: an
+operations admin posts to `/reservations/:id/messages`, the message persists and
+broadcasts, and the traveler receives an email fallback in Mailpit;
+`GET /documents/:id/download` streams the stored PDF. Remaining UNVERIFIED:
 `pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
 yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
 exercised over a live socket.
@@ -147,6 +150,9 @@ nothing that weakens an Article.
 - `<2026-09-20: entering CONFIRMED triggers document generation best-effort via ReservationService -> DocumentsService; a failure is logged and does not roll back the persisted transition. Regenerate with POST /reservations/:id/documents.>`
 - `<2026-09-20: transactional email lives in packages/email (SmtpMailer via nodemailer, ConsoleMailer fallback when SMTP_HOST/MAIL_FROM are unset). Magic-link delivery sends through it; Mailpit UI is at http://localhost:8025.>`
 - `<2026-09-20: Better Auth rejects cross-origin callbackURL unless the origin is in TRUSTED_ORIGINS (comma-separated, default http://localhost:3000,http://localhost:3002). Add new web/mobile origins there.>`
+- `<2026-09-20: traveler<->ops messaging is stored in messages and exposed at GET/POST /reservations/:id/messages. The service enforces ownership (traveler) or an ops role. Real-time goes through MESSAGE_PUBLISHER (Socket.IO namespace /conversations, ?reservationId=); the email fallback goes through MAILER.>`
+- `<2026-09-20: document downloads stream via GET /documents/:id/download; a traveler may only read documents for their own reservations (ops roles may read any).>`
+- `<2026-09-20: MAILER is provided by a global EmailModule (createMailer); main.ts also builds one via the same factory for magic links. ConsoleMailer is the dev fallback when SMTP_HOST/MAIL_FROM are unset.>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
 
 ---

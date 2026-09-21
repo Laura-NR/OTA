@@ -51,3 +51,10 @@ export {
   type UpdateInventoryItemRequest,
 } from './inventory';
 export { documentSchema, documentTypeSchema, type DocumentDto } from './document';
+export {
+  messageSchema,
+  messageSenderSchema,
+  sendMessageSchema,
+  type MessageDto,
+  type SendMessageRequest,
+} from './message';
