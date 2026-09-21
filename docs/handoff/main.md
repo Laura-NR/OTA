@@ -25,9 +25,12 @@ storefront, then the remaining live-socket/worker gaps.
   (pick reservation, list/download/regenerate). The tenant theme is applied as
   inline `--ota-*` variables on `<body>` in the root layout.
 - `apps/api` — added `GET /reservations` (pipeline list, optional status filter
-  and limit, ops roles). Nothing else in the API changed.
+  and limit, ops roles). Its dev runner is now
+  `node --watch -r @swc-node/register src/main.ts` (tsx removed), so `pnpm dev`
+  boots both the API and the back-office.
 - Committed: `23920d7` (reservations list), `3547317` (ui + theming),
-  `87c464a` (back-office + root wiring).
+  `87c464a` (back-office + root wiring), `e2a9058` (docs), plus the dev-runner
+  fix commit.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-21):
@@ -41,8 +44,13 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
   the agency name, `--ota-primary:175 77% 26%`, and the `IN PROGRESS` transition
   action; unauthenticated `/` → 307 `/login`; `/api/ota/tenant/config` → the
   public manifest.
-- Root cause of the API dev failure proven: `tsx` emits no `design:paramtypes`
+- Root cause of the old API dev failure proven: `tsx` emits no `design:paramtypes`
   (`Reflect.getMetadata(...) === undefined`), while the tsc output emits it.
+- `pnpm dev` (turbo: API + back-office) now boots cleanly — API `/health` 200,
+  back-office `/login` 200; touching `apps/api/src/main.ts` restarts the API
+  (`Restarting 'src/main.ts'`) and `/health` stays 200. The full magic-link →
+  session → reservations → SSR dashboard smoke test was repeated against this
+  `pnpm dev` stack.
 
 Not verified: a real headless-browser run (the Playwright MCP needs the system
 `chrome` channel, absent here); the mutating UI actions beyond read/render
@@ -59,10 +67,9 @@ firing, worker accept/decline over a real DB).
   exercised only through the API/HTTP layer, not clicked in a browser.
 
 ## Traps
-- `pnpm dev`'s API half is broken: `tsx watch` + esbuild has no decorator
-  metadata, so Nest DI throws `UndefinedDependencyException`. Run
-  `pnpm --filter @ota/api build && pnpm --filter @ota/api start` for now. The
-  clean fix is an swc-based runner (new dependency — Article 2).
+- The API dev runner must stay swc-based (`node --watch -r @swc-node/register`).
+  tsx/esbuild emits no `design:paramtypes`, so Nest DI throws
+  `UndefinedDependencyException` under it. Tests don't care (unplugin-swc).
 - The back-office must keep talking to the API through the Next rewrites. Do not
   add CORS to the API or a cross-origin auth `baseURL`; keep `TRUSTED_ORIGINS`
   including `http://localhost:3002`.
@@ -74,10 +81,9 @@ firing, worker accept/decline over a real DB).
   `.next` directory does not fail back-office typecheck.
 
 ## Next
-1. Fix the API dev runner so `pnpm dev` works end-to-end.
-2. Click the mutating UI actions in a browser once Chrome is available.
-3. Storefront (content hub, SVG map, dynamic package builder, recruitment portal).
-4. Worker accept/decline against a real DB; live `/ops` + `/conversations`; then
+1. Click the mutating UI actions in a browser once Chrome is available.
+2. Storefront (content hub, SVG map, dynamic package builder, recruitment portal).
+3. Worker accept/decline against a real DB; live `/ops` + `/conversations`; then
    the payments/ADR 0002 spike.
 
 ## Decisions (append-only)
@@ -110,3 +116,6 @@ firing, worker accept/decline over a real DB).
   rewrites instead of enabling CORS on the Nest API.
 - 2026-09-21 — added `GET /reservations` (ops roles) so the dashboard reads the
   pipeline without introducing any write path.
+- 2026-09-21 — switched the API dev runner from `tsx` to `@swc-node/register`
+  under `node --watch`: esbuild emits no decorator metadata, and `@swc/core`
+  was already a devDependency, so no new native toolchain was introduced.
