@@ -87,6 +87,20 @@ the `/ops` and `/conversations` Socket.IO namespaces are unit-tested but not
 exercised over a live socket; the BullMQ dispatch timeout firing is only observed
 as scheduling; worker accept/decline has no real-DB test.
 
+**UI increment (2026-09-21):** `packages/ui` (design tokens, Tailwind preset,
+shadcn-style base components), `packages/theming` (palette presets + tenant →
+`--ota-*` CSS variables), and `apps/backoffice` (Next.js 15 admin shell) added;
+12 workspaces. `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`
+(120: domain 33, api 50, theming 9, config 6, documents 6, imports 5, ui 4,
+email 4, schemas 3), and `pnpm build` are green. Live back-office smoke test:
+the magic link requested through the Next `/api/auth` rewrite lands in Mailpit,
+verifying it establishes a session, `GET /api/ota/reservations` returns 200 with
+`DEMO0001`, and the SSR dashboard renders the booking, the agency name, the
+tenant-derived `--ota-primary` token, and the legal transition actions;
+unauthenticated `/` redirects to `/login`. Not verified: a real headless-browser
+run (the Playwright MCP needs the system `chrome` channel, absent here) and the
+UI action buttons (transition/verify/dispatch/import) beyond read/render.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -160,6 +174,11 @@ nothing that weakens an Article.
 - `<2026-09-20: bulk import lives in packages/imports (exceljs parses CSV and XLSX) with staging in the import_batches table. Upload is JSON {filename, contentBase64} (no multipart yet); POST /imports stages, POST /imports/:id/commit validates the whole batch atomically and imports InventoryItems on success.>`
 - `<2026-09-20: exceljs pulls deprecated transitive packages (fstream/glob/inflight). It is the only spreadsheet parser; revisit if a lighter, maintained option appears.>`
 - `<2026-09-20: the @typescript-eslint/consistent-type-imports rule is disabled for apps/api/** because Nest DI needs value imports for emitDecoratorMetadata; rewriting them to import type silently breaks injection. It stays enabled for the pure packages.>`
+- `<2026-09-21: apps/backoffice reaches the API only through same-origin Next rewrites (/api/auth/* and /api/ota/* -> the API), so the browser never makes a cross-origin call and the API needs no CORS. API_URL (server-only) defaults to http://localhost:3001; TRUSTED_ORIGINS must keep http://localhost:3002 for the magic-link callbackURL.>`
+- `<2026-09-21: pnpm dev's API half is broken — apps/api dev is tsx watch, and esbuild emits no design:paramtypes, so Nest DI throws UndefinedDependencyException (DocumentsService index 0). Run the API from the tsc build (pnpm --filter @ota/api build && pnpm --filter @ota/api start) until the dev script moves to an swc-based runner (new dependency, needs approval). Tests are unaffected: apps/api runs under unplugin-swc.>`
+- `<2026-09-21: web/back-office theming sets the --ota-* custom properties from themeCssVariables(tenant) on <body>; packages/ui's Tailwind preset maps semantic utilities to those names. The name contract is THEME_TOKEN_KEYS in packages/theming; packages/ui/styles.css holds fallbacks. Core never imports tenant/ — the app loads the manifest via packages/config.>`
+- `<2026-09-21: apps/backoffice/next.config.ts must stay .ts, not .mjs — the root flat ESLint config has no node globals, so process.env in a .mjs config trips no-undef. Next regenerates next-env.d.ts (with a .next/types triple-slash) on build; it is ESLint-ignored and a missing .next does not fail typecheck.>`
+- `<2026-09-21: the Playwright MCP is pinned to the chrome channel and cannot launch here (no system Chrome, no passwordless sudo); browser checks fall back to HTTP+SSR smoke tests. Install Chrome to use the browser tooling.>`
 
 ---
 

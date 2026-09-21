@@ -1,99 +1,84 @@
-# Handoff — main — updated 2026-09-21 07:00
+# Handoff — main — updated 2026-09-21 09:35
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
-stack: `docs/adr/0001-stack.md`. Wave 1 = Phases 0–2. Phases 0–1 done; Phase 2
-core done (suppliers, dispatch, escalation, inventory/pricing, documents,
-messaging, bulk import). Next: a browser UI (back-office) + storefront.
+stack: `docs/adr/0001-stack.md`. Phases 0–2 core are done; this increment adds
+the shared design system and the first browser surface (back-office). Next:
+storefront, then the remaining live-socket/worker gaps.
 
 ## State
-- Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions.
-- `packages/domain` — reservation state machine, dispatch policy, supplier
-  compliance + `coversProvince`, service-type→category mapping, pricing
-  calculator, `DocumentType`.
-- `packages/schemas` — reservation, supplier, dispatch, inventory, document,
-  message, and import DTOs.
-- `packages/db` — Prisma 6; migrations `init`, `better_auth`, `dispatch_offers`,
-  `service_item_province`, `inventory_pricing`, `import_batches`; seed.
-- `packages/auth` — ESM Better Auth.
-- `packages/config` — env schema + tenant manifest schema/loader. `tenant/` is the
-  only fork-specific directory (`agency.config.json`: branding, MINTUR license,
-  locales, theme, feature flags).
-- `packages/documents` — data models, HTML templates (tenant branding + MINTUR
-  license), and Playwright Chromium HTML→PDF.
-- `packages/email` — SmtpMailer (nodemailer) + ConsoleMailer fallback; magic-link
-  template. Magic-link delivery now sends through it (Mailpit in dev).
-- `apps/api` — NestJS (CJS). Global `AuthGuard` + `AuthModule`; modules:
-  `reservations` (transition; triggers documents on CONFIRMED), `suppliers`,
-  `dispatch`, `escalation` (Socket.IO `/ops`), `inventory`,
-  `documents` (generate + list + `GET /documents/:id/download`),
-  `messages` (traveler↔ops, Socket.IO `/conversations` + email fallback),
-  `imports` (CSV/XLSX staging + mapped commit into inventory).
-- `packages/imports` — ExcelJS CSV/XLSX parsing + column-mapping validation.
-- Infra: docker-compose (postgres, redis, minio, mailpit). `apps/api/.env`
-  (gitignored) has DATABASE_URL/REDIS_URL/AUTH_SECRET/TENANT_CONFIG_PATH/SMTP.
-- Committed/pushed: `e6e41bf`, `36dd100`, `071e2ff`, `af906dd`, `ca2169a`,
-  `fd60f76`, `f7d294b`, `0555cde`, `8d8fb7d`. This increment adds bulk import.
+- Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
+  12 workspaces.
+- Core packages unchanged: domain, schemas, db, auth, config, documents, email,
+  imports.
+- `packages/theming` — palette presets, hex→HSL conversion, `themeCssVariables`
+  (tenant manifest → `--ota-*` custom properties), radius scale.
+- `packages/ui` — shadcn-style base components (button, card, input, label,
+  alert, badge, table, select), `cn`, fallback CSS (`styles.css`), and
+  `tailwind-preset.mjs` (ESM) mapping semantic utilities onto the tokens.
+- `apps/backoffice` — Next.js 15 App Router shell. Same-origin rewrites proxy
+  `/api/auth/*` and `/api/ota/*` to the API, so no CORS and no cross-origin
+  cookies. Magic-link login; a server-resolved session gates a route group
+  whose pages are: reservations (`/`, transition actions), suppliers (verify),
+  dispatch (pick reservation, view + start + candidates), inventory (create +
+  price quote), imports (base64 upload → preview → mapping → commit), documents
+  (pick reservation, list/download/regenerate). The tenant theme is applied as
+  inline `--ota-*` variables on `<body>` in the root layout.
+- `apps/api` — added `GET /reservations` (pipeline list, optional status filter
+  and limit, ops roles). Nothing else in the API changed.
+- Committed: `23920d7` (reservations list), `3547317` (ui + theming),
+  `87c464a` (back-office + root wiring).
 
 ## Verified
-Node 22.22.3, pnpm 12.4.2, TS 6.0.3 (2026-09-20):
-- `pnpm lint`, `pnpm format:check`, `pnpm typecheck` (17/17), `pnpm test`
-  (102: config 6, domain 33, schemas 3, documents 6, email 4, imports 5, api 45),
-  `pnpm build` (9/9) — green.
-- Live bulk import: `POST /imports` staged a CSV preview, `POST
-  /imports/:id/commit` with a mapping created 2 inventory items, and a bad batch
-  returned 422 with per-row errors.
-- Live messaging: an operations admin posts to `/reservations/:id/messages`
-  (201, persisted, broadcast) and the traveler gets the email fallback in
-  Mailpit; unauthenticated list → 401. Live download:
-  `GET /documents/:id/download` streams a 23 KB `%PDF-` with
-  `content-type: application/pdf`.
-- Live documents: transitioning DEMO0001 to CONFIRMED produced VOUCHER,
-  WORK_ORDER, and INVOICE rows and real `%PDF-` files under
-  `.documents/DEMO0001/` (~20–23 KB each).
-- Earlier live: Better Auth; reservations RBAC; dispatch offer + BullMQ job +
-  candidates; Socket.IO engine handshake; inventory pricing quote. Tenant config
-  verified live: `GET /tenant/config` returns the public manifest. Magic link
-  verified live: a branded email lands in Mailpit with a `magic-link/verify` URL
-  and the MINTUR license.
+Node 22.22.3, pnpm 12.4.2 (2026-09-21):
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck` (22 tasks), `pnpm test`
+  (120: domain 33, api 50, theming 9, config 6, documents 6, imports 5, ui 4,
+  email 4, schemas 3), `pnpm build` (12 tasks) — green.
+- Live back-office smoke (API from `dist`; back-office `next dev` on :3002):
+  `POST /api/auth/sign-in/magic-link` through the Next proxy → 200; the link in
+  Mailpit verified via 302 → `http://localhost:3002/`; `GET /api/ota/reservations`
+  with the session cookie → 200 `DEMO0001`; SSR `/` → 200 containing `DEMO0001`,
+  the agency name, `--ota-primary:175 77% 26%`, and the `IN PROGRESS` transition
+  action; unauthenticated `/` → 307 `/login`; `/api/ota/tenant/config` → the
+  public manifest.
+- Root cause of the API dev failure proven: `tsx` emits no `design:paramtypes`
+  (`Reflect.getMetadata(...) === undefined`), while the tsc output emits it.
 
-Not verified: `pnpm e2e`; passkeys; `/ops` and `/conversations` over a live
-socket; the BullMQ timeout actually firing; worker accept/decline against a real
-DB.
+Not verified: a real headless-browser run (the Playwright MCP needs the system
+`chrome` channel, absent here); the mutating UI actions beyond read/render
+(transition, verify, dispatch, import commit); and all pre-existing UNVERIFIED
+items (`pnpm e2e`, passkeys, live `/ops` + `/conversations`, BullMQ timeout
+firing, worker accept/decline over a real DB).
 
 ## Assumptions & unknowns
-- Document generation on CONFIRMED is best-effort: failures are logged, not fatal.
-- Invoice itemization is a single line; per-service traveler pricing awaits a
-  structured booking payload.
-- Document storage is local FS; swap for S3/MinIO for multi-instance.
-- Agency branding + MINTUR license come from `tenant/agency.config.json` (not env).
-- Magic-link and message emails send through `packages/email`; without SMTP the
-  console fallback logs.
-- Payments undecided; `docs/adr/0002-payments.md` not written.
+- Back-office routes are `export const dynamic = 'force-dynamic'`; each request
+  re-reads the tenant manifest and re-resolves the session.
+- The UI hides controls by role, but authorisation is enforced only in the API —
+  the client is not a security boundary.
+- Mutating UI actions use the same proxy path as the verified reads; they were
+  exercised only through the API/HTTP layer, not clicked in a browser.
 
 ## Traps
-- Document rendering needs Playwright's Chromium; `pnpm exec playwright install
-  chromium` once per machine. `.documents/` is gitignored.
-- Services publish through interfaces (ESCALATION_PUBLISHER, MESSAGE_PUBLISHER,
-  DOCUMENT_RENDERER, DOCUMENT_STORAGE, DISPATCH_SCHEDULER, MAILER); tests inject
-  fakes and never launch a browser, hit Redis/SMTP, or touch the filesystem.
-- AuthService is in a global `AuthModule`.
-- `startDispatch` requires at least `ITINERARY_SUBMITTED` (not DRAFT).
-- Better Auth is ESM-only; API stays CommonJS via dynamic import.
-- Prisma adapter keys models by client property; do NOT set modelName.
-- `bodyParser: false` + `express.json()` after the auth mount.
-- Global guard is secure-by-default: add `@Public()` deliberately.
-- Pin `typescript@^6.0.3` and Prisma 6.x. `docker` needs the docker group.
-- Better Auth rejects cross-origin `callbackURL` unless the origin is in
-  `TRUSTED_ORIGINS`; add new web/mobile origins there.
+- `pnpm dev`'s API half is broken: `tsx watch` + esbuild has no decorator
+  metadata, so Nest DI throws `UndefinedDependencyException`. Run
+  `pnpm --filter @ota/api build && pnpm --filter @ota/api start` for now. The
+  clean fix is an swc-based runner (new dependency — Article 2).
+- The back-office must keep talking to the API through the Next rewrites. Do not
+  add CORS to the API or a cross-origin auth `baseURL`; keep `TRUSTED_ORIGINS`
+  including `http://localhost:3002`.
+- `packages/ui/tailwind-preset` is ESM (`.mjs`) inside an otherwise CJS package.
+  Token names must stay in sync with `THEME_TOKEN_KEYS` in `packages/theming`.
+- `apps/backoffice/next.config.ts` must not become `.mjs` (flat ESLint has no
+  node globals, so `process` trips `no-undef`).
+- Next regenerates `next-env.d.ts` on build; it is ESLint-ignored and a missing
+  `.next` directory does not fail back-office typecheck.
 
 ## Next
-1. `packages/ui` + theming; scaffold the back-office (Next.js) app so there is a
-   browser UI (the API is currently the only surface).
-2. Storefront (content hub, SVG map, dynamic package builder, recruitment portal).
-3. Worker-facing accept/decline against a real DB; `/ops` and `/conversations`
-   live socket tests.
-4. Payments/sanctions spike (`docs/adr/0002-payments.md`).
+1. Fix the API dev runner so `pnpm dev` works end-to-end.
+2. Click the mutating UI actions in a browser once Chrome is available.
+3. Storefront (content hub, SVG map, dynamic package builder, recruitment portal).
+4. Worker accept/decline against a real DB; live `/ops` + `/conversations`; then
+   the payments/ADR 0002 spike.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
@@ -118,3 +103,10 @@ DB.
 - 2026-09-20 — bulk import parses CSV/XLSX in `packages/imports` (exceljs) and
   stages in `import_batches`; commit validates the whole batch atomically before
   writing inventory.
+- 2026-09-21 — the design-token contract lives in `packages/theming`
+  (`THEME_TOKEN_KEYS`); `packages/ui` owns the Tailwind preset and fallback CSS;
+  no agency values in core.
+- 2026-09-21 — the back-office proxies auth + API through Next same-origin
+  rewrites instead of enabling CORS on the Nest API.
+- 2026-09-21 — added `GET /reservations` (ops roles) so the dashboard reads the
+  pipeline without introducing any write path.
