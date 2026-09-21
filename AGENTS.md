@@ -97,9 +97,12 @@ the magic link requested through the Next `/api/auth` rewrite lands in Mailpit,
 verifying it establishes a session, `GET /api/ota/reservations` returns 200 with
 `DEMO0001`, and the SSR dashboard renders the booking, the agency name, the
 tenant-derived `--ota-primary` token, and the legal transition actions;
-unauthenticated `/` redirects to `/login`. Not verified: a real headless-browser
-run (the Playwright MCP needs the system `chrome` channel, absent here) and the
-UI action buttons (transition/verify/dispatch/import) beyond read/render.
+unauthenticated `/` redirects to `/login`. `pnpm e2e` (Playwright against the
+cached `chromium-1243` bundle) reuses that path and exercises real-browser
+actions: magic-link sign-in, a reservation transition, supplier
+suspend/reinstate, and sign-out all pass. Still not browser-exercised: dispatch
+start/candidates and import commit (covered over HTTP only). The Playwright MCP
+itself remains unusable here (it needs the system `chrome` channel).
 
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
@@ -178,7 +181,7 @@ nothing that weakens an Article.
 - `<2026-09-21: apps/api dev runs node --watch -r @swc-node/register src/main.ts. tsx/esbuild emits no design:paramtypes, so Nest DI fails under it; keep an swc-based register for the API dev runner. Tests are unaffected (apps/api runs under unplugin-swc; packages/db seed still uses tsx).>`
 - `<2026-09-21: web/back-office theming sets the --ota-* custom properties from themeCssVariables(tenant) on <body>; packages/ui's Tailwind preset maps semantic utilities to those names. The name contract is THEME_TOKEN_KEYS in packages/theming; packages/ui/styles.css holds fallbacks. Core never imports tenant/ — the app loads the manifest via packages/config.>`
 - `<2026-09-21: apps/backoffice/next.config.ts must stay .ts, not .mjs — the root flat ESLint config has no node globals, so process.env in a .mjs config trips no-undef. Next regenerates next-env.d.ts (with a .next/types triple-slash) on build; it is ESLint-ignored and a missing .next does not fail typecheck.>`
-- `<2026-09-21: the Playwright MCP is pinned to the chrome channel and cannot launch here (no system Chrome, no passwordless sudo); browser checks fall back to HTTP+SSR smoke tests. Install Chrome to use the browser tooling.>`
+- `<2026-09-21: the Playwright MCP is pinned to the chrome channel and cannot launch here (no system Chrome, no passwordless sudo). Use the repo's pnpm e2e for real-browser checks: @playwright/test 1.63.0 drives the cached chromium-1243 bundle, and its webServer starts pnpm dev.>`
 
 ---
 

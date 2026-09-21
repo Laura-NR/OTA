@@ -28,9 +28,14 @@ storefront, then the remaining live-socket/worker gaps.
   and limit, ops roles). Its dev runner is now
   `node --watch -r @swc-node/register src/main.ts` (tsx removed), so `pnpm dev`
   boots both the API and the back-office.
+- `e2e/` — Playwright suite at the repo root (`pnpm e2e`, `@playwright/test`
+  1.63.0 against the cached `chromium-1243`). `global-setup.ts` resets an
+  E2E-owned reservation and the guide supplier through Prisma; `helpers.ts`
+  signs in through the real magic-link flow. Specs cover the reservations
+  transition, supplier suspend/reinstate, and sign-out.
 - Committed: `23920d7` (reservations list), `3547317` (ui + theming),
-  `87c464a` (back-office + root wiring), `e2a9058` (docs), plus the dev-runner
-  fix commit.
+  `87c464a` (back-office + root wiring), `e2a9058` (docs), `fc084f6`
+  (dev-runner fix), plus the e2e commit.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-21):
@@ -51,20 +56,23 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
   (`Restarting 'src/main.ts'`) and `/health` stays 200. The full magic-link →
   session → reservations → SSR dashboard smoke test was repeated against this
   `pnpm dev` stack.
+- `pnpm e2e` — 3 real-browser tests pass: reservations transition, supplier
+  suspend/reinstate, and sign-out. Green both against an already-running
+  `pnpm dev` and with Playwright starting the stack itself (webServer → `pnpm dev`
+  → API `/health`). Docker (Postgres/Redis/Mailpit) and the seed are required.
 
-Not verified: a real headless-browser run (the Playwright MCP needs the system
-`chrome` channel, absent here); the mutating UI actions beyond read/render
-(transition, verify, dispatch, import commit); and all pre-existing UNVERIFIED
-items (`pnpm e2e`, passkeys, live `/ops` + `/conversations`, BullMQ timeout
-firing, worker accept/decline over a real DB).
+Not verified: the mutating UI actions not yet in the e2e suite (dispatch
+start/candidates, import commit); the Playwright MCP still cannot launch (no
+system `chrome`); and the pre-existing UNVERIFIED items (passkeys, live `/ops` +
+`/conversations`, BullMQ timeout firing, worker accept/decline over a real DB).
 
 ## Assumptions & unknowns
 - Back-office routes are `export const dynamic = 'force-dynamic'`; each request
   re-reads the tenant manifest and re-resolves the session.
 - The UI hides controls by role, but authorisation is enforced only in the API —
   the client is not a security boundary.
-- Mutating UI actions use the same proxy path as the verified reads; they were
-  exercised only through the API/HTTP layer, not clicked in a browser.
+- The e2e suite writes E2E-owned fixtures to the dev database; `global-setup.ts`
+  resets them each run. It does not use a separate test database.
 
 ## Traps
 - The API dev runner must stay swc-based (`node --watch -r @swc-node/register`).
@@ -81,8 +89,9 @@ firing, worker accept/decline over a real DB).
   `.next` directory does not fail back-office typecheck.
 
 ## Next
-1. Click the mutating UI actions in a browser once Chrome is available.
-2. Storefront (content hub, SVG map, dynamic package builder, recruitment portal).
+1. Storefront (content hub, SVG map, dynamic package builder, recruitment portal).
+2. Extend the e2e suite to the remaining mutating actions (dispatch
+   start/candidates, import commit).
 3. Worker accept/decline against a real DB; live `/ops` + `/conversations`; then
    the payments/ADR 0002 spike.
 
@@ -119,3 +128,6 @@ firing, worker accept/decline over a real DB).
 - 2026-09-21 — switched the API dev runner from `tsx` to `@swc-node/register`
   under `node --watch`: esbuild emits no decorator metadata, and `@swc/core`
   was already a devDependency, so no new native toolchain was introduced.
+- 2026-09-21 — e2e uses `@playwright/test` against the repo's cached
+  `chromium-1243` bundle (no system Chrome, no sudo); Playwright's `webServer`
+  starts `pnpm dev` so `pnpm e2e` works from a cold checkout with Docker up.

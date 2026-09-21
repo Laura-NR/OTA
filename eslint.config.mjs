@@ -10,6 +10,8 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/coverage/**',
       '**/next-env.d.ts',
+      '**/playwright-report/**',
+      '**/test-results/**',
       'resources/**',
       'tools/**',
     ],
