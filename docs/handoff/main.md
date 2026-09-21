@@ -1,18 +1,20 @@
-# Handoff — main — updated 2026-09-20 17:30
+# Handoff — main — updated 2026-09-21 07:00
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
-stack: `docs/adr/0001-stack.md`. Wave 1 = Phases 0–2. Phase 1 done; Phase 2 core
-underway (suppliers, dispatch, escalation, inventory/pricing, documents done).
+stack: `docs/adr/0001-stack.md`. Wave 1 = Phases 0–2. Phases 0–1 done; Phase 2
+core done (suppliers, dispatch, escalation, inventory/pricing, documents,
+messaging, bulk import). Next: a browser UI (back-office) + storefront.
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions.
 - `packages/domain` — reservation state machine, dispatch policy, supplier
   compliance + `coversProvince`, service-type→category mapping, pricing
   calculator, `DocumentType`.
-- `packages/schemas` — reservation, supplier, dispatch, inventory, document DTOs.
+- `packages/schemas` — reservation, supplier, dispatch, inventory, document,
+  message, and import DTOs.
 - `packages/db` — Prisma 6; migrations `init`, `better_auth`, `dispatch_offers`,
-  `service_item_province`, `inventory_pricing`; seed.
+  `service_item_province`, `inventory_pricing`, `import_batches`; seed.
 - `packages/auth` — ESM Better Auth.
 - `packages/config` — env schema + tenant manifest schema/loader. `tenant/` is the
   only fork-specific directory (`agency.config.json`: branding, MINTUR license,
@@ -29,7 +31,7 @@ underway (suppliers, dispatch, escalation, inventory/pricing, documents done).
   `imports` (CSV/XLSX staging + mapped commit into inventory).
 - `packages/imports` — ExcelJS CSV/XLSX parsing + column-mapping validation.
 - Infra: docker-compose (postgres, redis, minio, mailpit). `apps/api/.env`
-  (gitignored) has DATABASE_URL/REDIS_URL/AUTH_SECRET/agency branding.
+  (gitignored) has DATABASE_URL/REDIS_URL/AUTH_SECRET/TENANT_CONFIG_PATH/SMTP.
 - Committed/pushed: `e6e41bf`, `36dd100`, `071e2ff`, `af906dd`, `ca2169a`,
   `fd60f76`, `f7d294b`, `0555cde`, `8d8fb7d`. This increment adds bulk import.
 
@@ -55,24 +57,26 @@ Node 22.22.3, pnpm 12.4.2, TS 6.0.3 (2026-09-20):
   verified live: a branded email lands in Mailpit with a `magic-link/verify` URL
   and the MINTUR license.
 
-Not verified: `pnpm e2e`; magic-link/passkey; `/ops` live socket; BullMQ timeout
-firing; worker accept/decline against a real DB; PDF download endpoint (not built).
+Not verified: `pnpm e2e`; passkeys; `/ops` and `/conversations` over a live
+socket; the BullMQ timeout actually firing; worker accept/decline against a real
+DB.
 
 ## Assumptions & unknowns
 - Document generation on CONFIRMED is best-effort: failures are logged, not fatal.
 - Invoice itemization is a single line; per-service traveler pricing awaits a
   structured booking payload.
 - Document storage is local FS; swap for S3/MinIO for multi-instance.
-- Agency branding + MINTUR license come from env until `packages/config`.
-- Magic-link delivery sends through `packages/email`; without SMTP it logs.
+- Agency branding + MINTUR license come from `tenant/agency.config.json` (not env).
+- Magic-link and message emails send through `packages/email`; without SMTP the
+  console fallback logs.
 - Payments undecided; `docs/adr/0002-payments.md` not written.
 
 ## Traps
 - Document rendering needs Playwright's Chromium; `pnpm exec playwright install
   chromium` once per machine. `.documents/` is gitignored.
-- Services publish through interfaces (ESCALATION_PUBLISHER, DOCUMENT_RENDERER,
-  DOCUMENT_STORAGE, DISPATCH_SCHEDULER); tests inject fakes and never launch a
-  browser, hit Redis, or touch the filesystem.
+- Services publish through interfaces (ESCALATION_PUBLISHER, MESSAGE_PUBLISHER,
+  DOCUMENT_RENDERER, DOCUMENT_STORAGE, DISPATCH_SCHEDULER, MAILER); tests inject
+  fakes and never launch a browser, hit Redis/SMTP, or touch the filesystem.
 - AuthService is in a global `AuthModule`.
 - `startDispatch` requires at least `ITINERARY_SUBMITTED` (not DRAFT).
 - Better Auth is ESM-only; API stays CommonJS via dynamic import.

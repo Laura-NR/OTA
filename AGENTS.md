@@ -49,7 +49,7 @@ storage, auth, testing). `tenant/` is the ONLY fork-specific directory. Infra in
 | DB migrate (dev) | `pnpm --filter @ota/db exec prisma migrate dev` |
 | DB seed | `pnpm --filter @ota/db run seed` |
 
-**Verification status (2026-09-20):** `pnpm install`, `pnpm build`, `pnpm test`,
+**Verification status (2026-09-21):** `pnpm install`, `pnpm build`, `pnpm test`,
 `pnpm --filter <package> exec vitest run <path>`, `pnpm lint`, `pnpm format`,
 `pnpm format:check`, `pnpm typecheck`, and `pnpm dev` ran green across all 9
 workspaces (`@ota/config`, `@ota/domain`, `@ota/schemas`, `@ota/db`, `@ota/auth`,
@@ -82,9 +82,10 @@ broadcasts, and the traveler receives an email fallback in Mailpit;
 `POST /imports` stages a CSV/XLSX preview, `POST /imports/:id/commit` with a
 column mapping creates inventory items, and invalid rows return 422 with
 per-row errors. Remaining UNVERIFIED:
-`pnpm e2e` (no e2e suite yet); magic-link and passkey flows are configured but not
-yet exercised end to end; the `/ops` namespace handshake is unit-tested but not
-exercised over a live socket.
+`pnpm e2e` (no e2e suite yet); passkey flows are configured but not exercised;
+the `/ops` and `/conversations` Socket.IO namespaces are unit-tested but not
+exercised over a live socket; the BullMQ dispatch timeout firing is only observed
+as scheduling; worker accept/decline has no real-DB test.
 
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
@@ -124,7 +125,7 @@ Articles. One line each, dated. Facts and constraints only — no philosophy, an
 nothing that weakens an Article.
 
 - `<2026-09-20: Node 22 is installed via nvm; the login shell may default to Node 20. Always run `nvm use` before pnpm (see .nvmrc).>`
-- `<2026-09-20: the primary dev machine lacks the docker compose plugin (docker engine is present). docker-compose.yml is committed but unverified locally; GitHub CI runners and standard Docker installs have it.>`
+- `<2026-09-21: the docker compose plugin is installed user-level at ~/.docker/cli-plugins/docker-compose; `docker compose up -d` is verified via `sg docker -c '...'` (a shell may predate the docker group).>`
 - `<2026-09-20: opencode.jsonc reads GITHUB_PERSONAL_ACCESS_TOKEN from the environment via {env:...}; never hardcode a token there. Core packages must never import tenant/ — config is injected via packages/config.>`
 - `<2026-09-20: TypeScript is pinned to 6.x. typescript-eslint 8.x refuses to run against TS 7; lift the pin once typescript-eslint supports TS >= 7.1.>`
 - `<2026-09-20: pnpm 10+ blocks dependency lifecycle scripts by default. Native deps need allowBuilds in pnpm-workspace.yaml (@swc/core and esbuild are already listed).>`
@@ -134,13 +135,12 @@ nothing that weakens an Article.
 - `<2026-09-20: Prisma is pinned to 6.x. Prisma 7 is a CLI/generator rewrite; do not upgrade without updating the schema generator and prisma.config. Approve @prisma/client, @prisma/engines, and prisma build scripts via pnpm allowBuilds.>`
 - `<2026-09-20: reservation statuses follow spec §4.2 (DRAFT -> ITINERARY_SUBMITTED -> DISPATCH_IN_PROGRESS -> ASSEMBLY_AND_ESCALATION -> SECURED_AND_INVOICED -> PENDING_PAYMENT -> CONFIRMED -> IN_PROGRESS -> COMPLETED, with ACTION_REQUIRED/CANCELLED branches). The §6.2 data dictionary lists a shorter, inconsistent set; §4.2 is authoritative in packages/domain.>`
 - `<2026-09-20: packages/db/.env holds the local DATABASE_URL and is gitignored. Prisma CLI loads it relative to the schema directory.>`
-- `<2026-09-20: inventory/CMS and pricing tables are intentionally not in the Phase 1 schema; they land in Phase 2.>`
 - `<2026-09-20: reference slice = POST /reservations/:id/transition. Copy its shape: controller (apps/api/src/reservations/reservations.controller.ts) validates with ZodValidationPipe + @Roles, delegates to a service, the service throws domain errors, and DomainExceptionFilter maps them. Tests live in apps/api/test/reservations.e2e.test.ts and override PrismaService and AuthService with fakes — they never need a database.>` 
 - `<2026-09-20: auth is secure by default. AuthGuard is registered globally (APP_GUARD) and requires a session on every route unless it is marked @Public(). @Roles(...) restricts an authenticated route further. Add @Public() deliberately and only for genuinely open routes.>`
 - `<2026-09-20: Better Auth is ESM-only. The API stays CommonJS and loads it through a dynamic import of packages/auth (@ota/auth) in main.ts and AuthService. Do not convert apps/api to ESM or statically import better-auth from CJS.>`
 - `<2026-09-20: the Better Auth Prisma adapter addresses models by Prisma client property (prisma.user, prisma.session), which Prisma lowercases from our PascalCase models. Do NOT set user/session/account/verification modelName — the defaults already match. Only field mapping (name -> fullName) and additionalFields are configured.>`
 - `<2026-09-20: Nest's body parser is disabled (bodyParser: false) and express.json() is registered AFTER the Better Auth mount in main.ts. Better Auth must see the raw request body. Do not re-enable Nest's body parser or move express.json() ahead of the auth mount.>`
-- `<2026-09-20: AUTH_SECRET is required at startup. apps/api/.env is gitignored and loaded via process.loadEnvFile; magic-link sending currently just logs the URL until packages/email exists.>`
+- `<2026-09-21: AUTH_SECRET is required at startup. apps/api/.env is gitignored and loaded via process.loadEnvFile; magic-link emails are sent through packages/email via the mailer built in main.ts.>`
 - `<2026-09-20: better-sqlite3 (an optional transitive of better-auth) has its build script disabled in pnpm-workspace.yaml; we use Postgres.>`
 - `<2026-09-20: AuthService is provided by a global AuthModule, so guards and the escalation gateway can inject it anywhere. Tests override AuthService to fake a session.>`
 - `<2026-09-20: dispatch eligibility requires the supplier's provincesActive to include ServiceItem.province (coversProvince); a null province matches any supplier.>`
