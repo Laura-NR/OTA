@@ -53,6 +53,12 @@ auth, i18n (es/en/fr), checkout.
   `/account` trips list, `/account/reservations/[id]` itinerary + document vault;
   `better-auth` reused as the browser client; the header reads the session so
   storefront pages are dynamic.
+- Wave 2a — **dynamic package builder:** `/build` is a five-step wizard
+  (dates → stays → transport → experiences → review); `POST /me/reservations`
+  creates an ITINERARY_SUBMITTED booking for the caller with service items
+  derived from catalog items. `/login?next=` returns the traveler to where they
+  started. The booking-code generator is shared at
+  `apps/api/src/common/booking-code.ts`.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
@@ -61,18 +67,19 @@ auth, i18n (es/en/fr), checkout.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**168**: api 89,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**171**: api 92,
   payments 3, domain 33, theming 9, documents 8, config 7, imports 5, ui 4, email
   4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
   and applied `20260922070932_inventory_media`.
-- `pnpm e2e` — 11 real-browser tests pass, including the inventory flow, the
+- `pnpm e2e` — 12 real-browser tests pass, including the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
-  the storefront map province filter, and storefront traveler sign-in → dashboard.
-- New unit/e2e coverage: `me.e2e.test.ts` (5: profile, own list, own detail,
-  404 for another traveler's booking, 401). Earlier: `payments.test.ts` (3),
-  `payments.e2e.test.ts` (8), `inventory.service.test.ts` (13),
-  `catalog.e2e.test.ts` (3), `suppliers.e2e.test.ts` (14).
+  the storefront map province filter, traveler sign-in → dashboard, and the
+  package builder submit.
+- New unit/e2e coverage: `me.e2e.test.ts` (8: profile/list/detail, ownership 404,
+  itinerary creation, unavailable item 400, inverted dates 400, 401). Earlier:
+  `payments.test.ts` (3), `payments.e2e.test.ts` (8), `inventory.service.test.ts`
+  (13), `catalog.e2e.test.ts` (3), `suppliers.e2e.test.ts` (14).
 
 Not verified: outbound expiry notifications; live escalation event round-trip;
 the PDF branch of the credential inspector; dispatch start/candidates and import
@@ -122,10 +129,10 @@ browser flows beyond the catalog read.
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Wave 2a storefront (map + traveler auth done):** dynamic package builder →
-   `ITINERARY_SUBMITTED`, recruitment portal, i18n (es/en/fr — needs approval for
-   `next-intl`/`i18next`), and the checkout page that consumes the mock payment
-   link (traveler auth now unblocks it).
+1. **Wave 2a storefront (map + traveler auth + builder done):** recruitment
+   portal, i18n (es/en/fr — needs approval for `next-intl`/`i18next`), and the
+   checkout page that consumes the mock payment link (traveler auth + builder now
+   unblock it).
 2. Then select a real payment rail + legal clearance (ADR 0003 open item) and add
    signature-verified webhooks.
 3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
@@ -213,3 +220,9 @@ browser flows beyond the catalog read.
   (no new dependency) and resolves the session server-side by forwarding cookies
   to `/api/auth/get-session`; the root header reads the session, so storefront
   pages are dynamic and the storefront is not a security boundary.
+- 2026-09-22 — the package builder submits to `POST /me/reservations` and creates
+  ITINERARY_SUBMITTED for the caller (not DRAFT); each ServiceItem's type,
+  province, and price are derived server-side from the catalog item.
+- 2026-09-22 — the ops and storefront booking-code generators were unified into
+  `apps/api/src/common/booking-code.ts` (retry-on-collision stays at each call
+  site because only it can query the database).

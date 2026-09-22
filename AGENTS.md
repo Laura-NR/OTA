@@ -199,6 +199,16 @@ dynamic. `better-auth` is reused as the browser client (already in the repo).
 168 tests (api 89); `pnpm e2e` is 7 specs / 11 tests (adds storefront traveler
 sign-in → dashboard). `pnpm lint/format:check/typecheck/test/build` green.
 
+**Package builder increment (2026-09-22, Wave 2a):** the storefront gains the
+five-step dynamic package builder at `/build` (dates → stays → transport →
+experiences → review). `POST /me/reservations` creates an ITINERARY_SUBMITTED
+booking for the signed-in traveler; service type, province, and price are derived
+from the catalog item, never the client. The booking-code generator moved to
+`apps/api/src/common/booking-code.ts` and is shared with the ops intake path.
+`/login?next=…` returns the traveler to the page they came from. 171 tests
+(api 92); `pnpm e2e` is 8 specs / 12 tests (adds the builder submit flow).
+`pnpm lint/format:check/typecheck/test/build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -296,6 +306,8 @@ nothing that weakens an Article.
 - `<2026-09-22: pnpm build writes a production .next. If you then start next dev and the first SSR of a route throws "Application error … Digest", delete apps/storefront/.next and apps/backoffice/.next before pnpm e2e — a stale production .next can poison the first dev compile.>`
 - `<2026-09-22: self-service reads are under /me and scoped to the caller (GET /me, /me/reservations, /me/reservations/:id) — any authenticated role, never another traveler's row. The traveler document DTO omits storageKey; downloads stay on GET /documents/:id/download, which already allows the owner.>`
 - `<2026-09-22: the storefront reuses better-auth as a browser client (apps/storefront/src/lib/auth-client.ts) and reads the session server-side by forwarding cookies to the API (/api/auth/get-session). The root layout calls getServerSession, which makes storefront pages dynamic; the storefront is not a security boundary — the API enforces ownership.>`
+- `<2026-09-22: the dynamic package builder is apps/storefront/src/app/build (five steps) posting to POST /me/reservations, which creates an ITINERARY_SUBMITTED booking for the caller and derives each ServiceItem's type/province/price from the catalog item. The shared booking-code generator lives in apps/api/src/common/booking-code.ts.>`
+- `<2026-09-22: /login?next=<path> (path must start with "/") makes the magic-link callbackURL return the traveler to that path after sign-in; the default is /account.>`
 
 ---
 
