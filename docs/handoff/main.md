@@ -1,11 +1,11 @@
-# Handoff — main — updated 2026-09-22 14:05
+# Handoff — main — updated 2026-09-22 14:40
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
 stack: `docs/adr/0001-stack.md`. Wave 1 (the back-office ERP, ADR 0002 increments
-A–E) is done; **Wave 2a has started** with the payments mock (`docs/adr/0003-payments.md`).
-Next: storefront SVG map, dynamic package builder, recruitment portal, traveler
-auth, i18n (es/en/fr), checkout.
+A–E) is done. In Wave 2a the payments mock, storefront map, traveler auth +
+dashboard, package builder, and recruitment portal are all done; **next is i18n
+(es/en/fr)**, then the mock-payment checkout page.
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
