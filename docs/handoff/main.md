@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-22 15:45
+# Handoff — main — updated 2026-09-22 16:40
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -78,11 +78,16 @@ Phase 3 has started with the analytics/BI overview.
   avg response, funnel), quality, and geography. Back-office `/analytics`.
   Regulatory reports (nationalities, bed-nights, ecotourism ratio) are deferred —
   the schema has no such fields.
+- Wave 2a — **storefront messaging + banner:** the account reservation page has a
+  traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
+  /reservations/:id/messages`, refresh-on-send — no storefront socket); a
+  `promotional-banner.tsx` renders site-wide when the tenant enables
+  `culturalEventsBanner`, with copy in `packages/i18n`.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 12 spec files / 15 tests (`pnpm e2e`, cached `chromium-1243`).
-- Head `ae75dc3`, pushed to `origin/main`.
+- e2e: 12 spec files / 16 tests (`pnpm e2e`, cached `chromium-1243`).
+- Head `d2c7df2`, pushed to `origin/main`.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
@@ -92,13 +97,15 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-22):
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260922070932_inventory_media` and `20260922122512_supplier_applications`
   (8 migrations total).
-- `pnpm e2e` — 15 real-browser tests pass, including the inventory flow, the
+- `pnpm e2e` — 16 real-browser tests pass, including the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
-  the storefront map province filter, traveler sign-in → dashboard, the package
-  builder submit, recruitment submit → approve, the locale switch, and the
-  analytics dashboard.
-- New coverage: `analytics.test.ts` (6 pure KPI cases) and
-  `analytics.e2e.test.ts` (4: overview, window, 403, 401). Earlier:
+  the storefront map province filter (and banner), traveler sign-in → dashboard,
+  the traveler message send, the package builder submit, recruitment submit →
+  approve, the locale switch, and the analytics dashboard.
+- New coverage: the storefront message send and the cultural-events banner
+  assertion (both in `storefront-auth.spec.ts` / `storefront.spec.ts`).
+  Earlier: `analytics.test.ts` (6 pure KPI cases) and
+  `analytics.e2e.test.ts` (4: overview, window, 403, 401),
   `packages/i18n` key-parity test, `storefront-i18n.spec.ts`,
   `supplier-applications.e2e.test.ts` (7), `me.e2e.test.ts` (8),
   `payments.test.ts` (3), `payments.e2e.test.ts` (8),
@@ -156,9 +163,7 @@ flows are covered (map, auth, builder, i18n, recruitment).
 
 ## Next
 1. **Phase 4 storefront remainder:** checkout (blocked by ADR 0003 until a real
-   signed-webhook provider is selected); a traveler ↔ ops messaging UI on the
-   storefront (the API exists, no UI); a content hub / promotional banner (the
-   `culturalEventsBanner` flag is unused); curated packages (no bundle model);
+   signed-webhook provider is selected); curated packages (no bundle model);
    the catalog/map do not yet show real-time availability.
 2. **Phase 3 remainder:** regulatory reporting (nationalities, bed-nights,
    ecotourism ratio, MINTUR/ONAT exports) needs structured fields → a migration
@@ -278,3 +283,8 @@ flows are covered (map, auth, builder, i18n, recruitment).
 - 2026-09-22 — regulatory reporting (MINTUR nationalities/bed-nights, ONAT
   exports, ecotourism ratio) is deferred: the schema has no nationality or
   booking-taxonomy fields, so claiming those reports would require a migration.
+- 2026-09-22 — the storefront message thread reloads on send instead of opening
+  the `/conversations` socket (that socket is a back-office concern); the API's
+  async email fallback still fires on every send.
+- 2026-09-22 — the promotional banner is gated by the tenant
+  `culturalEventsBanner` flag; its copy lives in `packages/i18n`, not in code.

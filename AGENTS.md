@@ -241,6 +241,16 @@ The back-office has an `/analytics` dashboard. 190 tests (api 103, domain 39);
 reporting (nationalities, bed-nights, ecotourism ratio) is deliberately deferred:
 it needs structured fields, which is a migration decision.
 
+**Storefront messaging + banner increment (2026-09-22, Wave 2a):** the account
+reservation page gains a traveler ↔ operations thread (`message-thread.tsx`) that
+lists history over `GET /reservations/:id/messages` and posts replies; it refreshes
+on send rather than opening a socket (the `/conversations` socket feeds the
+back-office, and the API's async email fallback still fires). A
+`promotional-banner.tsx` strip renders site-wide when the tenant enables
+`culturalEventsBanner`, with its copy in `packages/i18n`. `pnpm e2e` is 12 specs /
+16 tests (adds the traveler message send); 190 tests;
+`pnpm lint/format:check/typecheck/test/build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -347,6 +357,8 @@ nothing that weakens an Article.
 - `<2026-09-22: after moving storefront routes under app/[locale], a stale .next holds type refs to the old /app/... paths and fails typecheck; delete apps/storefront/.next after structural route moves.>`
 - `<2026-09-22: KPI maths lives in packages/domain/src/analytics (pure, unit-tested); the API only fetches raw rows and reduces them. GET /analytics/overview is ops-roles-only and the range filters on createdAt. GBV is the sum of PAID PaymentReceipt.amount; supplier payouts sum ServiceItem.payoutRate by payoutStatus; takeRate = netRevenue / GBV.>`
 - `<2026-09-22: regulatory reporting (MINTUR nationalities/bed-nights, ONAT exports, ecotourism ratio) is NOT implementable from the current schema — User has no nationality and no booking taxonomy exists. Add structured fields (migration) before claiming those reports.>`
+- `<2026-09-22: the storefront message thread reloads on send and does NOT open the /conversations socket (that socket is a back-office concern); every send still triggers the API's async email fallback.>`
+- `<2026-09-22: the storefront promotional banner is gated by the tenant culturalEventsBanner feature flag and its copy lives in packages/i18n (banner.text/cta), not in code.>`
 
 ---
 
