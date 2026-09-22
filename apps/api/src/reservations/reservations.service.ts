@@ -5,7 +5,6 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { randomInt } from 'node:crypto';
 
 import type { Prisma, Reservation } from '@ota/db';
 import { ReservationStatus, assertTransition } from '@ota/domain';
@@ -21,6 +20,7 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { generateBookingCode } from '../common/booking-code';
 import { DocumentsService } from '../documents/documents.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -41,17 +41,6 @@ type DetailRow = Prisma.ReservationGetPayload<{
 type AuditRow = Prisma.AuditLogGetPayload<{
   include: { actor: { select: { email: true } } };
 }>;
-
-// Excludes I/O/0/1 so a booking code can be read over the phone.
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-function generateBookingCode(): string {
-  let code = '';
-  for (let index = 0; index < 8; index += 1) {
-    code += CODE_ALPHABET.charAt(randomInt(CODE_ALPHABET.length));
-  }
-  return code;
-}
 
 function toDto(reservation: Reservation): ReservationDto {
   return {

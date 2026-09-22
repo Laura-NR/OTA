@@ -1,12 +1,24 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
-import type {
-  MeProfileDto,
-  MyReservationDetailDto,
-  MyReservationListItemDto,
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
+import {
+  createMyReservationSchema,
+  type CreateMyReservationRequest,
+  type MeProfileDto,
+  type MyReservationDetailDto,
+  type MyReservationListItemDto,
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { MeService } from './me.service';
 
 /**
@@ -25,6 +37,16 @@ export class MeController {
   @Get('reservations')
   reservations(@CurrentUser() actor: AuthUser): Promise<MyReservationListItemDto[]> {
     return this.me.listReservations(actor.id);
+  }
+
+  @Post('reservations')
+  @HttpCode(HttpStatus.CREATED)
+  createReservation(
+    @Body(new ZodValidationPipe(createMyReservationSchema))
+    body: CreateMyReservationRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<MyReservationDetailDto> {
+    return this.me.createReservation(actor.id, body);
   }
 
   @Get('reservations/:id')

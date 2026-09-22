@@ -83,10 +83,12 @@ export {
   type UploadInventoryMediaRequest,
 } from './inventory';
 export {
+  createMyReservationSchema,
   meProfileSchema,
   myDocumentSchema,
   myReservationDetailSchema,
   myReservationListItemSchema,
+  type CreateMyReservationRequest,
   type MeProfileDto,
   type MyDocumentDto,
   type MyReservationDetailDto,

@@ -34,6 +34,7 @@ const MY_RESERVATION = '33333333-3333-4333-8333-333333333333';
 const OTHER_RESERVATION = '44444444-4444-4444-8444-444444444444';
 const SERVICE_ITEM = '55555555-5555-4555-8555-555555555555';
 const DOCUMENT = '66666666-6666-4666-8666-666666666666';
+const CATALOG_ITEM = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
   return {
@@ -52,12 +53,17 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
   };
 }
 
-function createFakePrisma(state: {
+interface FakeState {
   users: (typeof TRAVELER)[];
   reservations: Map<string, Reservation>;
   serviceItems: Record<string, unknown>[];
   documents: Record<string, unknown>[];
-}) {
+  inventoryItems: Record<string, unknown>[];
+  audits: { action: string }[];
+  counter: { value: number };
+}
+
+function createFakePrisma(state: FakeState) {
   const counts = (reservationId: string) => ({
     serviceItems: state.serviceItems.filter(
       (item) => item.reservationId === reservationId,
@@ -66,16 +72,36 @@ function createFakePrisma(state: {
       .length,
   });
 
-  return {
+  const fake = {
     user: {
       findUnique: async (args: { where: { id: string } }) =>
         state.users.find((user) => user.id === args.where.id) ?? null,
+    },
+    inventoryItem: {
+      findMany: async (args: { where: { id: { in: string[] }; active?: boolean } }) =>
+        state.inventoryItems.filter(
+          (item) =>
+            args.where.id.in.includes(item.id as string) &&
+            (args.where.active === undefined || item.active === args.where.active),
+        ),
     },
     reservation: {
       findMany: async (args: { where: { userId: string } }) =>
         [...state.reservations.values()]
           .filter((row) => row.userId === args.where.userId)
           .map((row) => ({ ...row, _count: counts(row.id) })),
+      findUnique: async (args: {
+        where: { id?: string; bookingCode?: string };
+        select?: unknown;
+      }) => {
+        const row = args.where.id
+          ? state.reservations.get(args.where.id)
+          : [...state.reservations.values()].find(
+              (candidate) => candidate.bookingCode === args.where.bookingCode,
+            );
+        if (!row) return null;
+        return args.select ? { id: row.id } : row;
+      },
       findFirst: async (args: { where: { id: string; userId: string } }) => {
         const row = [...state.reservations.values()].find(
           (candidate) =>
@@ -91,8 +117,55 @@ function createFakePrisma(state: {
           _count: counts(row.id),
         };
       },
+      create: async (args: {
+        data: {
+          userId: string;
+          bookingCode: string;
+          startDate: Date;
+          endDate: Date;
+          status: string;
+          totalCurrency: string;
+          totalAmount: number;
+          customItineraryPayload?: unknown;
+          serviceItems?: { create: Record<string, unknown>[] };
+        };
+      }) => {
+        state.counter.value += 1;
+        const id = `77777777-7777-4777-8777-${String(state.counter.value).padStart(12, '0')}`;
+        const reservation: Reservation = {
+          id,
+          userId: args.data.userId,
+          bookingCode: args.data.bookingCode,
+          startDate: args.data.startDate,
+          endDate: args.data.endDate,
+          status: args.data.status as Reservation['status'],
+          totalCurrency: args.data.totalCurrency,
+          totalAmount: new Prisma.Decimal(args.data.totalAmount),
+          customItineraryPayload: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        state.reservations.set(id, reservation);
+        for (const item of args.data.serviceItems?.create ?? []) {
+          state.serviceItems.push({
+            id: `svc-${state.serviceItems.length + 1}`,
+            reservationId: id,
+            ...item,
+          });
+        }
+        return reservation;
+      },
     },
+    auditLog: {
+      create: async (args: { data: { action: string } }) => {
+        state.audits.push({ action: args.data.action });
+        return args.data;
+      },
+    },
+    $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
+
+  return fake;
 }
 
 const fakeAuthService = {
@@ -113,7 +186,7 @@ const fakeAuthService = {
 
 describe('me API', () => {
   let app: INestApplication;
-  let state: Parameters<typeof createFakePrisma>[0];
+  let state: FakeState;
 
   beforeEach(async () => {
     state = {
@@ -149,6 +222,18 @@ describe('me API', () => {
           generatedAt: new Date('2026-11-01T08:00:00Z'),
         },
       ],
+      inventoryItems: [
+        {
+          id: CATALOG_ITEM,
+          type: 'ACCOMMODATION',
+          basePrice: new Prisma.Decimal('90.00'),
+          currency: 'EUR',
+          province: 'La Habana',
+          active: true,
+        },
+      ],
+      audits: [],
+      counter: { value: 0 },
     };
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
@@ -212,6 +297,57 @@ describe('me API', () => {
       .set('x-test-user', TRAVELER.email);
 
     expect(response.status).toBe(404);
+  });
+
+  it('builds an itinerary at ITINERARY_SUBMITTED for the caller', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/me/reservations')
+      .set('x-test-user', TRAVELER.email)
+      .send({
+        startDate: '2027-01-10',
+        endDate: '2027-01-14',
+        serviceItems: [{ inventoryItemId: CATALOG_ITEM }],
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.status).toBe('ITINERARY_SUBMITTED');
+    expect(response.body.bookingCode).toMatch(/^[A-Z2-9]{8}$/);
+    expect(response.body.serviceItems).toHaveLength(1);
+    expect(response.body.serviceItems[0].serviceType).toBe('ACCOMMODATION');
+    expect(response.body.serviceItems[0].province).toBe('La Habana');
+    expect(response.body.totalAmount).toBe('90');
+
+    const created = [...state.reservations.values()].find(
+      (row) => row.bookingCode === response.body.bookingCode,
+    );
+    expect(created?.userId).toBe(TRAVELER.id);
+    expect(state.audits.map((entry) => entry.action)).toContain('reservation.submitted');
+  });
+
+  it('rejects an unavailable catalog item', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/me/reservations')
+      .set('x-test-user', TRAVELER.email)
+      .send({
+        startDate: '2027-01-10',
+        endDate: '2027-01-14',
+        serviceItems: [{ inventoryItemId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }],
+      });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('rejects an inverted date range', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/me/reservations')
+      .set('x-test-user', TRAVELER.email)
+      .send({
+        startDate: '2027-01-14',
+        endDate: '2027-01-10',
+        serviceItems: [{ inventoryItemId: CATALOG_ITEM }],
+      });
+
+    expect(response.status).toBe(400);
   });
 
   it('returns 401 when unauthenticated', async () => {

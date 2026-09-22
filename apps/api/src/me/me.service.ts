@@ -1,14 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Prisma } from '@ota/db';
-import type { ReservationStatus } from '@ota/domain';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import type { InventoryType, Prisma } from '@ota/db';
+import { ReservationStatus, ServiceType } from '@ota/domain';
 import type {
+  CreateMyReservationRequest,
   MeProfileDto,
   MyDocumentDto,
   MyReservationDetailDto,
   MyReservationListItemDto,
 } from '@ota/schemas';
 
+import { generateBookingCode } from '../common/booking-code';
 import { PrismaService } from '../prisma/prisma.service';
+
+/** Catalog types map onto the dispatch service types (inventory has no GUIDE). */
+const INVENTORY_TO_SERVICE: Record<InventoryType, ServiceType> = {
+  ACCOMMODATION: ServiceType.Accommodation,
+  TRANSPORT: ServiceType.Transportation,
+  EXPERIENCE: ServiceType.Experience,
+};
 
 type ListRow = Prisma.ReservationGetPayload<{
   include: { _count: { select: { serviceItems: true; documents: true } } };
@@ -101,5 +115,95 @@ export class MeService {
       throw new NotFoundException(`Reservation ${id} not found`);
     }
     return toDetailDto(row);
+  }
+
+  /**
+   * Build an itinerary from catalog items (spec §4.2 dynamic package builder)
+   * and land it at ITINERARY_SUBMITTED for the caller. Service type, province,
+   * and price come from the catalog item, never the client. Dispatch is a
+   * separate operations action, so the booking is not auto-dispatched here.
+   */
+  async createReservation(
+    userId: string,
+    input: CreateMyReservationRequest,
+  ): Promise<MyReservationDetailDto> {
+    if (input.endDate < input.startDate) {
+      throw new BadRequestException('endDate must be on or after startDate');
+    }
+
+    const ids = [...new Set(input.serviceItems.map((item) => item.inventoryItemId))];
+    const items = await this.prisma.inventoryItem.findMany({
+      where: { id: { in: ids }, active: true },
+    });
+    if (items.length !== ids.length) {
+      throw new BadRequestException('One or more catalog items are unavailable');
+    }
+    const byId = new Map(items.map((item) => [item.id, item]));
+
+    const totalAmount = items.reduce((sum, item) => sum + Number(item.basePrice), 0);
+    const currency = items[0]?.currency ?? 'EUR';
+
+    let createdId: string | null = null;
+    for (let attempt = 0; attempt < 5 && !createdId; attempt += 1) {
+      const bookingCode = generateBookingCode();
+      const clash = await this.prisma.reservation.findUnique({
+        where: { bookingCode },
+        select: { id: true },
+      });
+      if (clash) {
+        continue;
+      }
+
+      createdId = await this.prisma.$transaction(async (tx) => {
+        const reservation = await tx.reservation.create({
+          data: {
+            userId,
+            bookingCode,
+            startDate: input.startDate,
+            endDate: input.endDate,
+            status: ReservationStatus.ItinerarySubmitted,
+            totalCurrency: currency,
+            totalAmount,
+            customItineraryPayload: {
+              notes: input.notes ?? null,
+              inventoryItemIds: ids,
+            } as Prisma.InputJsonValue,
+            serviceItems: {
+              create: input.serviceItems.map((selection) => {
+                const item = byId.get(selection.inventoryItemId)!;
+                return {
+                  serviceType: INVENTORY_TO_SERVICE[item.type],
+                  serviceDateStart: selection.serviceDateStart ?? input.startDate,
+                  serviceDateEnd: selection.serviceDateEnd ?? input.endDate,
+                  province: item.province,
+                  status: 'UNASSIGNED' as const,
+                  payoutRate: 0,
+                };
+              }),
+            },
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            actorUserId: userId,
+            action: 'reservation.submitted',
+            entityType: 'Reservation',
+            entityId: reservation.id,
+            metadata: {
+              bookingCode,
+              serviceItemCount: input.serviceItems.length,
+            },
+          },
+        });
+
+        return reservation.id;
+      });
+    }
+
+    if (!createdId) {
+      throw new ConflictException('Could not allocate a unique booking code');
+    }
+    return this.getReservation(userId, createdId);
   }
 }

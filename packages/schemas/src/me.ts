@@ -42,3 +42,31 @@ export const myReservationDetailSchema = myReservationListItemSchema.extend({
 });
 
 export type MyReservationDetailDto = z.infer<typeof myReservationDetailSchema>;
+
+/**
+ * A traveler-built itinerary (spec §4.2 / storefront dynamic package builder).
+ * The server derives each service item's type, province, and price from the
+ * catalog item so the client cannot set them.
+ */
+export const createMyReservationSchema = z
+  .object({
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date(),
+    serviceItems: z
+      .array(
+        z.object({
+          inventoryItemId: z.string().uuid(),
+          serviceDateStart: z.coerce.date().optional(),
+          serviceDateEnd: z.coerce.date().optional(),
+        }),
+      )
+      .min(1)
+      .max(20),
+    notes: z.string().trim().max(1000).optional(),
+  })
+  .refine((value) => value.endDate >= value.startDate, {
+    message: 'endDate must be on or after startDate',
+    path: ['endDate'],
+  });
+
+export type CreateMyReservationRequest = z.infer<typeof createMyReservationSchema>;
