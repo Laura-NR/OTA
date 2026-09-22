@@ -153,6 +153,21 @@ workspaces, 139 tests. Live: regenerating DEMO0001's documents produced real
 PDFs whose text contains
 the rendezvous, emergency contacts, and the itemised service list.
 
+**Inventory CMS increment (2026-09-22, ADR 0002 increment E):** the inventory
+surface is complete. `DELETE /inventory/:id` hard-deletes (pricing rules + media
+cascade, media objects removed best-effort, audited); pricing rules gain PATCH and
+DELETE; `InventoryItemDto` carries a `media` gallery. Images live in the new
+`inventory_media` table (migration `20260922070932_inventory_media`) behind
+`packages/storage`, uploaded at `POST /inventory/:id/media` and streamed by
+`GET /inventory/media/:id` (ops) or `GET /catalog/media/:id` (@Public, inactive
+items refused). Availability is managed per supplier day at
+`GET|PUT /suppliers/:id/availability` with a calendar on the supplier inspector.
+The public `GET /catalog` accepts optional `type` and `province` filters; the
+storefront `/catalog` is dynamic per filter and renders images. 152 tests (api 76);
+`pnpm e2e` is 5 specs / 8 tests (adds the inventory create→media→pricing→delete
+flow and the supplier availability toggle). `pnpm lint/format:check/typecheck/test/
+build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -238,6 +253,11 @@ nothing that weakens an Article.
 - `<2026-09-21: BullMQ 6 has no repeat option on JobsOptions; repeatable jobs use queue.upsertJobScheduler(id, { pattern | every }, template). The credential-expiry scan is daily at 06:00 and auto-dispatch already pauses within 30 days via the domain canAutoDispatch.>`
 - `<2026-09-21: duty-of-care contacts come from the tenant manifest emergencyContacts (label + phone) and are injected into vouchers and work orders via DocumentBranding; the demo tenant uses placeholder +53 5555 numbers pending agency/legal confirmation. Per-service traveler prices do not exist, so the invoice itemises included services without unit amounts; payoutRate is internal and is rendered only on the supplier work order.>`
 - `<2026-09-21: the Playwright MCP is pinned to the chrome channel and cannot launch here (no system Chrome, no passwordless sudo). Use the repo's pnpm e2e for real-browser checks: @playwright/test 1.63.0 drives the cached chromium-1243 bundle, and its webServer starts pnpm dev.>`
+- `<2026-09-22: inventory/CMS completion (ADR 0002 E). Catalog images live in the new inventory_media table (migration 20260922070932_inventory_media) keyed by storage_key; keys are inventory/<itemId>/<uuid>.<ext> behind packages/storage and the content type is derived from the extension (no column). InventoryItemDto gained a media array (additive).>`
+- `<2026-09-22: media reads go through authorised API routes, never public URLs: GET /inventory/media/:mediaId (ops roles) serves any item's image, GET /catalog/media/:mediaId (@Public) refuses images of inactive items. The back-office gallery uses /api/ota/inventory/media/...; the storefront uses /api/ota/catalog/media/....>`
+- `<2026-09-22: public GET /catalog now accepts optional type and province filters (active=true is always forced server-side); the storefront /catalog reads searchParams so it is dynamic per filter instead of a single ISR page, and renders the first image per card.>`
+- `<2026-09-22: DELETE /inventory/:id hard-deletes the row (pricing rules and media cascade), removes the media storage objects best-effort, and audits inventory.deleted; active=false remains the soft-disable path. Pricing rules have PATCH/DELETE at /inventory/:id/pricing-rules/:ruleId.>`
+- `<2026-09-22: the Availability model stays supplier-scoped (it has no inventory-item link). It is exposed at GET /suppliers/:id/availability?from&to and PUT /suppliers/:id/availability ({date,isAvailable}; upsert on supplier+date, ops+super roles, audited). The back-office calendar treats a day with no row as available.>`
 
 ---
 
