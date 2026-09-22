@@ -1,6 +1,10 @@
 import Link from 'next/link';
 
-export function SiteHeader({ agencyName }: { agencyName: string }) {
+import { getServerSession } from '@/lib/api';
+
+export async function SiteHeader({ agencyName }: { agencyName: string }) {
+  const session = await getServerSession();
+
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
@@ -14,6 +18,15 @@ export function SiteHeader({ agencyName }: { agencyName: string }) {
           <Link href="/catalog" className="hover:text-primary">
             Experiences
           </Link>
+          {session ? (
+            <Link href="/account" className="hover:text-primary">
+              My account
+            </Link>
+          ) : (
+            <Link href="/login" className="hover:text-primary">
+              Sign in
+            </Link>
+          )}
         </nav>
       </div>
     </header>

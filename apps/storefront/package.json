@@ -15,6 +15,7 @@
     "@ota/schemas": "workspace:*",
     "@ota/theming": "workspace:*",
     "@ota/ui": "workspace:*",
+    "better-auth": "^1.7.5",
     "next": "^15.5.25",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
