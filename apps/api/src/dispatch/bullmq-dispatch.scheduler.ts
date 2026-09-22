@@ -31,11 +31,11 @@ export class BullmqDispatchScheduler implements DispatchScheduler {
   private readonly worker: Worker<TimeoutJobData>;
   private handler?: DispatchTimeoutHandler;
 
-  constructor(redisUrl: string) {
+  constructor(redisUrl: string, queueName: string = QUEUE_NAME) {
     const connection = parseRedisUrl(redisUrl);
-    this.queue = new Queue<TimeoutJobData>(QUEUE_NAME, { connection });
+    this.queue = new Queue<TimeoutJobData>(queueName, { connection });
     this.worker = new Worker<TimeoutJobData>(
-      QUEUE_NAME,
+      queueName,
       async (job: Job<TimeoutJobData>) => {
         if (this.handler) {
           await this.handler(job.data.serviceItemId);

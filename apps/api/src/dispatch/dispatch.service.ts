@@ -43,7 +43,8 @@ import { DISPATCH_SCHEDULER, type DispatchScheduler } from './dispatch.scheduler
 
 const VERIFIED = 'VERIFIED';
 
-type ReservationWithItems = Reservation & { serviceItems: ServiceItem[] };
+type ServiceItemWithSupplier = ServiceItem & { supplier: SupplierProfile | null };
+type ReservationWithItems = Reservation & { serviceItems: ServiceItemWithSupplier[] };
 
 @Injectable()
 export class DispatchService implements OnModuleInit {
@@ -100,9 +101,38 @@ export class DispatchService implements OnModuleInit {
 
     return {
       reservationId: reservation.id,
+      bookingCode: reservation.bookingCode,
       status: reservation.status as ReservationStatus,
       serviceItems: reservation.serviceItems.map((item) => this.toItemDto(item, now)),
     };
+  }
+
+  /**
+   * Every reservation currently in the dispatch/escalation flow, for the live
+   * operations dashboard (spec §4.3).
+   */
+  async listActive(): Promise<DispatchViewDto[]> {
+    const reservations = await this.prisma.reservation.findMany({
+      where: {
+        status: {
+          in: [
+            ReservationStatus.DispatchInProgress,
+            ReservationStatus.AssemblyAndEscalation,
+            ReservationStatus.ActionRequired,
+          ],
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+      include: { serviceItems: { include: { supplier: true } } },
+    });
+
+    const now = new Date();
+    return reservations.map((reservation) => ({
+      reservationId: reservation.id,
+      bookingCode: reservation.bookingCode,
+      status: reservation.status as ReservationStatus,
+      serviceItems: reservation.serviceItems.map((item) => this.toItemDto(item, now)),
+    }));
   }
 
   async accept(serviceItemId: string, actor: AuthUser): Promise<DispatchViewDto> {
@@ -494,7 +524,7 @@ export class DispatchService implements OnModuleInit {
   private async loadReservation(reservationId: string): Promise<ReservationWithItems> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
-      include: { serviceItems: true },
+      include: { serviceItems: { include: { supplier: true } } },
     });
     if (!reservation) {
       throw new NotFoundException(`Reservation ${reservationId} not found`);
@@ -574,7 +604,7 @@ export class DispatchService implements OnModuleInit {
     }
   }
 
-  private toItemDto(item: ServiceItem, now: Date): DispatchServiceItemDto {
+  private toItemDto(item: ServiceItemWithSupplier, now: Date): DispatchServiceItemDto {
     let escalation: DispatchServiceItemDto['escalation'] = 'NONE';
     if (
       item.status === ServiceItemStatus.Declined ||
@@ -602,6 +632,7 @@ export class DispatchService implements OnModuleInit {
       offeredAt: item.offeredAt ? item.offeredAt.toISOString() : null,
       deadline: item.dispatchDeadline ? item.dispatchDeadline.toISOString() : null,
       escalation,
+      workerPhone: item.supplier?.primaryPhone ?? null,
     };
   }
 

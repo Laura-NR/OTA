@@ -150,6 +150,28 @@ function createFakePrisma(store: Store) {
         Object.assign(reservation, args.data);
         return reservation;
       },
+      findMany: async (args: {
+        where?: { status?: { in?: string[] } };
+        include?: { serviceItems?: boolean };
+      }) => {
+        let rows = [...store.reservations];
+        const statuses = args.where?.status?.in;
+        if (statuses) {
+          rows = rows.filter((reservation) => statuses.includes(reservation.status));
+        }
+        return rows
+          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+          .map((reservation) =>
+            args.include?.serviceItems
+              ? {
+                  ...reservation,
+                  serviceItems: store.serviceItems.filter(
+                    (item) => item.reservationId === reservation.id,
+                  ),
+                }
+              : reservation,
+          );
+      },
     },
     serviceItem: {
       findUnique: async (args: {
@@ -280,6 +302,21 @@ describe('DispatchService', () => {
     expect(scheduler.scheduled).toEqual([
       { id: ITEM_ID, delayMs: expect.any(Number) as number },
     ]);
+  });
+
+  it('lists only reservations in the dispatch flow for the live dashboard', async () => {
+    store.reservations = [
+      makeReservation({ status: ReservationStatus.DispatchInProgress }),
+      makeReservation({ id: 'res-2', bookingCode: 'DONE0001', status: 'COMPLETED' }),
+    ];
+    store.serviceItems = [makeServiceItem()];
+
+    const views = await service.listActive();
+
+    expect(views).toHaveLength(1);
+    expect(views[0]?.bookingCode).toBe('ABC12345');
+    expect(views[0]?.reservationId).toBe(RESERVATION_ID);
+    expect(views[0]?.serviceItems).toHaveLength(1);
   });
 
   it('flags the reservation when no supplier is eligible', async () => {

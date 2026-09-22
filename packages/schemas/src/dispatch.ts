@@ -43,6 +43,8 @@ export const dispatchServiceItemSchema = z.object({
   offeredAt: z.string().nullable(),
   deadline: z.string().nullable(),
   escalation: escalationAlertSchema,
+  // Present when the item is offered, for the operations desk's click-to-call.
+  workerPhone: z.string().nullable(),
 });
 
 export type DispatchServiceItemDto = z.infer<typeof dispatchServiceItemSchema>;
@@ -60,6 +62,7 @@ export type DispatchCandidateDto = z.infer<typeof dispatchCandidateSchema>;
 
 export const dispatchViewSchema = z.object({
   reservationId: z.string().uuid(),
+  bookingCode: z.string(),
   status: reservationStatusSchema,
   serviceItems: z.array(dispatchServiceItemSchema),
 });

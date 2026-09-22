@@ -38,6 +38,12 @@ export class DispatchController {
     return this.dispatch.startDispatch(id, actor);
   }
 
+  @Get('dispatch/active')
+  @Roles(UserRole.OperationsAdmin, UserRole.AdministrativeSupport, UserRole.SuperAdmin)
+  active(): Promise<DispatchViewDto[]> {
+    return this.dispatch.listActive();
+  }
+
   @Get('reservations/:id/dispatch')
   @Roles(UserRole.OperationsAdmin, UserRole.AdministrativeSupport, UserRole.SuperAdmin)
   view(@Param('id', ParseUUIDPipe) id: string): Promise<DispatchViewDto> {
