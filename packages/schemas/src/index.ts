@@ -82,6 +82,16 @@ export {
   type UpdatePricingRuleRequest,
   type UploadInventoryMediaRequest,
 } from './inventory';
+export {
+  createPaymentIntentSchema,
+  paymentIntentSchema,
+  paymentRailSchema,
+  paymentReceiptSchema,
+  paymentStatusSchema,
+  type CreatePaymentIntentRequest,
+  type PaymentIntentDto,
+  type PaymentReceiptDto,
+} from './payment';
 export { documentSchema, documentTypeSchema, type DocumentDto } from './document';
 export {
   messageSchema,

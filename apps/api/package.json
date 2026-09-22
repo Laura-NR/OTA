@@ -23,6 +23,7 @@
     "@ota/domain": "workspace:*",
     "@ota/email": "workspace:*",
     "@ota/imports": "workspace:*",
+    "@ota/payments": "workspace:*",
     "@ota/schemas": "workspace:*",
     "@ota/storage": "workspace:*",
     "bullmq": "^6.3.8",
