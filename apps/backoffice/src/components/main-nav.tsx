@@ -9,6 +9,7 @@ const ITEMS = [
   { href: '/escalation', label: 'Escalation' },
   { href: '/messages', label: 'Messages' },
   { href: '/suppliers', label: 'Suppliers' },
+  { href: '/applications', label: 'Applications' },
   { href: '/dispatch', label: 'Dispatch' },
   { href: '/inventory', label: 'Inventory' },
   { href: '/imports', label: 'Imports' },
