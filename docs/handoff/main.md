@@ -1,164 +1,111 @@
-# Handoff — main — updated 2026-09-21 09:35
+# Handoff — main — updated 2026-09-22 08:38
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
-stack: `docs/adr/0001-stack.md`. Phases 0–2 core are done; this increment adds
-the shared design system and the first browser surface (back-office). Next:
-storefront, then the remaining live-socket/worker gaps.
+stack: `docs/adr/0001-stack.md`. Wave 1 is the back-office ERP, and
+`docs/adr/0002-back-office-priority.md` fixes the order (increments A–E before
+storefront expansion). A–D are done; E (inventory CMS completion) is next.
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
-  12 workspaces.
-- Core packages unchanged: domain, schemas, db, auth, config, documents, email,
-  imports.
-- `packages/theming` — palette presets, hex→HSL conversion, `themeCssVariables`
-  (tenant manifest → `--ota-*` custom properties), radius scale.
-- `packages/ui` — shadcn-style base components (button, card, input, label,
-  alert, badge, table, select), `cn`, fallback CSS (`styles.css`), and
-  `tailwind-preset.mjs` (ESM) mapping semantic utilities onto the tokens.
-- `apps/backoffice` — Next.js 15 App Router shell. Same-origin rewrites proxy
-  `/api/auth/*` and `/api/ota/*` to the API, so no CORS and no cross-origin
-  cookies. Magic-link login; a server-resolved session gates a route group
-  whose pages are: reservations (`/`, transition actions), suppliers (verify),
-  dispatch (pick reservation, view + start + candidates), inventory (create +
-  price quote), imports (base64 upload → preview → mapping → commit), documents
-  (pick reservation, list/download/regenerate). The tenant theme is applied as
-  inline `--ota-*` variables on `<body>` in the root layout.
-- `apps/storefront` — Next.js 15 public site (:3000) sharing the tenant theme
-  (`themeCssVariables` → `--ota-*`) and the same-origin `/api/ota` rewrite. A
-  content-hub home plus `/catalog`, which reads the new public `GET /catalog`
-  (ISR, revalidate 60; tolerates an unavailable API at build).
-- `apps/api` — added `GET /reservations` (pipeline list, optional status filter
-  and limit, ops roles) and public `GET /catalog` (active inventory only). Its
-  dev runner is now `node --watch -r @swc-node/register src/main.ts` (tsx
-  removed), so `pnpm dev` boots the API, back-office, and storefront.
-- `e2e/` — Playwright suite at the repo root (`pnpm e2e`, `@playwright/test`
-  1.63.0 against the cached `chromium-1243`). `global-setup.ts` resets an
-  E2E-owned reservation (status + audit rows) and the guide supplier through
-  Prisma; `helpers.ts` signs in through the real magic-link flow. Specs cover
-  board → detail → transition, supplier suspend/reinstate, and sign-out.
-- Back-office increment A — the reservation read model is a pipeline:
-  `GET /reservations` (traveler + service-item count), `POST /reservations`
-  (ops intake → DRAFT + 8-char code + audit), `GET /reservations/:id`, and
-  `GET /reservations/:id/audit`. The dashboard is a status board that
-  deep-links to `/reservations/[id]` (transitions, service items, documents,
-  audit) and `/reservations/new`. Sequencing is fixed by
-  `docs/adr/0002-back-office-priority.md` (increments A–E; payments ADR 0003).
-- Back-office increment B — `/escalation` consumes the `/ops` socket (amber/red
-  recomputed client-side, `tel:` click-to-call, one-click re-dispatch) and
-  `/messages` uses the `/conversations` socket; both connect the browser
-  directly to the API. The API adds `GET /dispatch/active` and `workerPhone` on
-  the dispatch item. The BullMQ timeout **firing** is proven live
-  (`dispatch.bullmq.integration.test.ts`, gated on `REDIS_URL`). New dependency:
-  `socket.io-client`.
-- Back-office increment C — `packages/storage` (S3/MinIO) backs supplier
-  credential upload/download (`POST|GET /suppliers/:id/credential`); the
-  back-office inspector is `/suppliers/[id]`, the list flags credentials
-  expiring within 30 days (`GET /suppliers/expiring`), and a daily BullMQ
-  repeatable job scans them. No schema migration (content type derived from the
-  key extension). New dependency: `@aws-sdk/client-s3`.
-- Back-office increment D — documents are richer: the voucher has a rendezvous
-  column (province + start) and the tenant emergency directory; the work order
-  has an emergency protocol; the invoice itemises included services. Emergency
-  contacts come from the tenant manifest (`emergencyContacts`, `packages/config`),
-  so a fork sets them in `tenant/agency.config.json`.
-- Committed: `23920d7` (reservations list), `3547317` (ui + theming),
-  `87c464a` (back-office + root wiring), `e2a9058` (docs), `fc084f6`
-  (dev-runner fix), `1b4304d` (e2e), `ad29d0c` (storefront), plus the
-  Increment A commit.
+  **14 workspace projects** (3 apps, 11 packages).
+- Apps: `api` (NestJS, CommonJS), `backoffice`, `storefront` (Next.js 15).
+- Packages: domain, schemas, db, auth, config, documents, email, imports,
+  storage, theming, ui.
+- Back-office (ADR 0002):
+  - **A — reservation pipeline:** `GET /reservations` (list DTO with traveler +
+    service-item count), `GET /reservations/:id`, `GET /reservations/:id/audit`,
+    `POST /reservations` (ops intake → DRAFT + 8-char code). Dashboard is a status
+    board deep-linking to `/reservations/[id]` (transitions, service items,
+    documents, audit) and `/reservations/new`.
+  - **B — escalation + messaging:** `/escalation` live desk on the `/ops` socket
+    (amber/red recomputed client-side, `tel:` click-to-call, one-click
+    re-dispatch) and `/messages` on the `/conversations` socket; API
+    `GET /dispatch/active` + `workerPhone`.
+  - **C — compliance:** `packages/storage` (S3/MinIO) backs
+    `POST|GET /suppliers/:id/credential`; inspector at `/suppliers/[id]`;
+    `GET /suppliers/expiring` + a daily BullMQ scan.
+  - **D — document depth:** voucher rendezvous + emergency directory, work-order
+    emergency protocol, itemised invoice; `emergencyContacts` in the tenant
+    manifest.
+- Web apps reach the API through same-origin Next rewrites; Socket.IO connects
+  the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
+- API dev runner: `node --watch -r @swc-node/register src/main.ts` (esbuild/tsx
+  cannot emit decorator metadata).
+- e2e: 4 spec files / 6 tests (`pnpm e2e`, `@playwright/test` against the cached
+  `chromium-1243`).
+- Head `4657647`, pushed to `origin/main`.
 
 ## Verified
-Node 22.22.3, pnpm 12.4.2 (2026-09-21):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (139: domain
-  33, api 63, theming 9, documents 8, config 7, imports 5, ui 4, email 4,
-  schemas 3, storage 3), `pnpm build` — green.
-- Document depth proven live: regenerating DEMO0001's documents
-  (`POST /reservations/:id/documents`) produced real PDFs whose `pdftotext`
-  output contains the voucher rendezvous column + emergency directory
-  ("Medical emergency: +53 5555 0104"), the invoice's itemised
-  "GUIDE — La Habana" line, and the work order's emergency protocol.
-- BullMQ timeout firing proven live: `REDIS_URL=… vitest
-  test/dispatch.bullmq.integration.test.ts` → the delayed job fires the handler
-  (~300 ms). The credential-expiry repeatable scan is proven the same way
-  (`test/compliance.bullmq.integration.test.ts`). Both skipped without
-  `REDIS_URL`.
-- S3 round-trip proven live: `S3_ENDPOINT=http://localhost:9000
-  S3_ACCESS_KEY_ID=minio S3_SECRET_ACCESS_KEY=minio123 pnpm --filter
-  @ota/storage exec vitest run test/s3.integration.test.ts` → put/get/delete
-  against MinIO. Skipped without the `S3_*` env.
-- Live back-office smoke (API from `dist`; back-office `next dev` on :3002):
-  `POST /api/auth/sign-in/magic-link` through the Next proxy → 200; the link in
-  Mailpit verified via 302 → `http://localhost:3002/`; `GET /api/ota/reservations`
-  with the session cookie → 200 `DEMO0001`; SSR `/` → 200 containing `DEMO0001`,
-  the agency name, `--ota-primary:175 77% 26%`, and the `IN PROGRESS` transition
-  action; unauthenticated `/` → 307 `/login`; `/api/ota/tenant/config` → the
-  public manifest.
-- Root cause of the old API dev failure proven: `tsx` emits no `design:paramtypes`
-  (`Reflect.getMetadata(...) === undefined`), while the tsc output emits it.
-- `pnpm dev` (turbo: API + back-office + storefront) now boots cleanly — API
-  `/health` 200, back-office `/login` 200; touching `apps/api/src/main.ts` restarts the API
-  (`Restarting 'src/main.ts'`) and `/health` stays 200. The full magic-link →
-  session → reservations → SSR dashboard smoke test was repeated against this
-  `pnpm dev` stack.
-- `pnpm e2e` — 6 real-browser tests pass: the `/ops` escalation socket connects,
-  a message is sent into the conversation, board → detail → transition, supplier
-  suspend/reinstate, a credential upload + inspector render, and sign-out. Green
-  both against an already-running `pnpm dev` and with Playwright starting the
-  stack itself (webServer → `pnpm dev` → API `/health`). Docker
+Node 22.22.3, pnpm 12.4.2 (2026-09-22):
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (139: api 63,
+  domain 33, theming 9, documents 8, config 7, imports 5, ui 4, email 4, schemas
+  3, storage 3), `pnpm build`, `pnpm install --frozen-lockfile` — green.
+- `pnpm e2e` — 6 real-browser tests: `/ops` connect, message send, board →
+  detail → transition, supplier suspend/reinstate, credential upload + inspector
+  render, sign-out. Playwright starts `pnpm dev` via `webServer`; Docker
   (Postgres/Redis/Mailpit/MinIO) and the seed are required.
-- Storefront smoke (`pnpm dev`, :3000): `/` and `/catalog` → 200 with the agency
-  name, `--ota-primary:175 77% 26%`, and all three active inventory items from
-  the public `GET /catalog` (reachable through `/api/ota/catalog` with no
-  session).
+- Documents proven live: regenerating DEMO0001's PDFs (`POST
+  /reservations/:id/documents`) yields `pdftotext` output with the voucher
+  rendezvous + emergency directory, the itemised invoice line, and the work-order
+  emergency protocol.
+- Live-gated integrations: BullMQ timeout firing, the credential-expiry
+  repeatable scan (`REDIS_URL`), and an S3 put/get/delete round-trip against
+  MinIO (`S3_*`). All skipped without their env.
+- `pnpm dev` boots API + back-office + storefront; magic-link → session →
+  reservations → SSR dashboard smoke passed; storefront `/` and `/catalog`
+  render the tenant theme and the public catalog.
 
 Not verified: storefront browser flows; dispatch start/candidates and import
-commit UI actions; receiving a live escalation event in the browser (the `/ops`
-socket *connect* is verified, not an event round-trip); the credential inspector
-PDF path (only an image is exercised); outbound expiry notifications (the scan
-logs; no email/push yet); the Playwright MCP still cannot launch (no system
-`chrome`); and passkeys + worker accept/decline over a real DB.
+commit UI actions; a live escalation event round-trip (the `/ops` connect is
+verified, not an event); the PDF branch of the credential inspector; outbound
+expiry notifications; the Playwright MCP (needs system Chrome); passkeys; worker
+accept/decline against a real DB.
 
 ## Assumptions & unknowns
-- Back-office routes are `export const dynamic = 'force-dynamic'`; each request
-  re-reads the tenant manifest and re-resolves the session.
-- The UI hides controls by role, but authorisation is enforced only in the API —
-  the client is not a security boundary.
-- The e2e suite writes E2E-owned fixtures to the dev database; `global-setup.ts`
-  resets the reservation status and deletes that fixture's audit rows each run.
-  It does not use a separate test database.
-- The ops `POST /reservations` creates DRAFT only (no storefront builder yet);
-  the storefront will submit the same shape and land at ITINERARY_SUBMITTED.
-- Documents itemise the included services, not per-service traveler prices: the
-  model has no structured booking prices yet, so the invoice lists services and
-  the booking total. `payoutRate` (internal supplier cost) is only on the work
-  order, never the traveler invoice. Voucher rendezvous is province + start time;
-  an explicit meeting-point field still needs a `ServiceItem` column/migration.
-- The demo tenant's `emergencyContacts` are placeholders (+53 5555 numbers)
-  pending agency/legal confirmation (spec §9).
+- Back-office routes are `force-dynamic`; each request re-reads the tenant
+  manifest and re-resolves the session.
+- Authorisation is enforced only in the API — the UI hides controls by role but
+  is not a security boundary.
+- e2e writes E2E-owned fixtures to the dev DB; `global-setup.ts` resets the
+  reservation status and clears that fixture's audit rows and messages each run.
+  No separate test database.
+- `POST /reservations` is ops-only and creates DRAFT; the storefront builder will
+  submit the same shape at ITINERARY_SUBMITTED.
+- Documents itemise included services, not per-service traveler prices (no
+  structured booking prices yet); `payoutRate` is internal (work order only).
+  Voucher rendezvous is province + start time; a real meeting point needs a
+  `ServiceItem` column.
+- Demo `emergencyContacts` are placeholders pending agency/legal confirmation.
 
 ## Traps
-- The API dev runner must stay swc-based (`node --watch -r @swc-node/register`).
-  tsx/esbuild emits no `design:paramtypes`, so Nest DI throws
-  `UndefinedDependencyException` under it. Tests don't care (unplugin-swc).
-- The back-office must keep talking to the API through the Next rewrites. Do not
-  add CORS to the API or a cross-origin auth `baseURL`; keep `TRUSTED_ORIGINS`
-  including `http://localhost:3002`.
-- `packages/ui/tailwind-preset` is ESM (`.mjs`) inside an otherwise CJS package.
-  Token names must stay in sync with `THEME_TOKEN_KEYS` in `packages/theming`.
+- API dev must stay swc-based (`node --watch -r @swc-node/register`); tsx/esbuild
+  emits no `design:paramtypes` and Nest DI throws `UndefinedDependencyException`.
+- Keep the back-office on Next same-origin rewrites; do not add CORS or a
+  cross-origin auth `baseURL`; `TRUSTED_ORIGINS` must include `:3002`.
+- WebSocket features bypass Next (rewrites do not proxy WS upgrades) and connect
+  the browser to the API origin (`NEXT_PUBLIC_API_ORIGIN`, default host:3001).
+- `packages/ui/tailwind-preset` is ESM (`.mjs`) inside a CJS package; token names
+  must match `THEME_TOKEN_KEYS` in `packages/theming`.
 - `apps/backoffice/next.config.ts` must not become `.mjs` (flat ESLint has no
-  node globals, so `process` trips `no-undef`).
-- Next regenerates `next-env.d.ts` on build; it is ESLint-ignored and a missing
-  `.next` directory does not fail back-office typecheck.
+  node globals). `next-env.d.ts` is regenerated by Next and ESLint-ignored.
+- BullMQ 6 has no `repeat` on `JobsOptions`; repeatable jobs use
+  `queue.upsertJobScheduler`.
+- Supplier credential content type is derived from the storage-key extension, so
+  there is no `SupplierProfile` column for it.
+- Do **not** run `next build` while a Next dev server is running (it clobbers
+  `.next`). `pnpm e2e` leaves its webServer process on failure — kill the
+  stack and clear `:3000–:3002` before re-running.
 
 ## Next
-Sequence is fixed by `docs/adr/0002-back-office-priority.md`.
+Sequence per `docs/adr/0002-back-office-priority.md`.
 1. **Increment E — inventory CMS completion:** delete, availability calendar,
-   media, and the storefront sync controls (final back-office increment).
-2. Then Wave 2a — payments mock + ADR 0003, storefront (SVG map, dynamic package
-   builder, recruitment portal, traveler auth, i18n, checkout).
-3. Then Phase 3 (BI/reporting, AI assistant) and the mobile apps (Phases 5–6).
-Also: extend the e2e suite to dispatch start/candidates, import commit, the
-reservation intake form, and a live escalation-event round-trip.
+   media, and storefront sync controls (final back-office increment).
+2. Wave 2a — payments mock + ADR `0003-payments.md`; storefront SVG map, dynamic
+   package builder, recruitment portal, traveler auth, i18n (es/en/fr), checkout.
+3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
+Also: extend e2e to dispatch start/candidates, import commit, the intake form,
+and a live escalation event round-trip.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.

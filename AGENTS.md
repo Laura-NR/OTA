@@ -81,7 +81,8 @@ broadcasts, and the traveler receives an email fallback in Mailpit;
 `GET /documents/:id/download` streams the stored PDF. Bulk import verified live:
 `POST /imports` stages a CSV/XLSX preview, `POST /imports/:id/commit` with a
 column mapping creates inventory items, and invalid rows return 422 with
-per-row errors. Remaining UNVERIFIED:
+per-row errors. Remaining UNVERIFIED at this baseline (later increments close
+several of these — see below):
 `pnpm e2e` (no e2e suite yet); passkey flows are configured but not exercised;
 the `/ops` and `/conversations` Socket.IO namespaces are unit-tested but not
 exercised over a live socket; the BullMQ dispatch timeout firing is only observed
@@ -147,8 +148,9 @@ carries a rendezvous column (province + start time) and the tenant's emergency
 directory; the work order carries an emergency protocol; the invoice itemises
 the included services by description (not unit prices — there is no structured
 per-service traveler price yet, and `payoutRate` is internal). Emergency contacts
-live in the tenant manifest (`emergencyContacts`, `packages/config`). 139 tests.
-Live: regenerating DEMO0001's documents produced real PDFs whose text contains
+live in the tenant manifest (`emergencyContacts`, `packages/config`). 14
+workspaces, 139 tests. Live: regenerating DEMO0001's documents produced real
+PDFs whose text contains
 the rendezvous, emergency contacts, and the itemised service list.
 
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
