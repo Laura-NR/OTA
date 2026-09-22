@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { SupplierProfile } from '@ota/db';
+import type { Availability, SupplierProfile } from '@ota/db';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -43,8 +43,60 @@ function makeSupplier(
   };
 }
 
-function createFakePrisma(store: Map<string, ReturnType<typeof makeSupplier>>) {
+function createFakePrisma(
+  store: Map<string, ReturnType<typeof makeSupplier>>,
+  availability: Map<string, Availability>,
+) {
+  const availabilityKey = (supplierId: string, date: Date) =>
+    `${supplierId}:${date.toISOString()}`;
+
   const fake = {
+    availability: {
+      findMany: async ({
+        where,
+      }: {
+        where?: { supplierId?: string; date?: { gte?: Date; lte?: Date } };
+      }) => {
+        let rows = [...availability.values()];
+        if (where?.supplierId) {
+          rows = rows.filter((row) => row.supplierId === where.supplierId);
+        }
+        if (where?.date?.gte) {
+          rows = rows.filter((row) => row.date >= where.date!.gte!);
+        }
+        if (where?.date?.lte) {
+          rows = rows.filter((row) => row.date <= where.date!.lte!);
+        }
+        return rows.sort((a, b) => a.date.getTime() - b.date.getTime());
+      },
+      upsert: async ({
+        where,
+        create,
+        update,
+      }: {
+        where: { supplierId_date: { supplierId: string; date: Date } };
+        create: Omit<Availability, 'id' | 'createdAt' | 'updatedAt'>;
+        update: { isAvailable: boolean };
+      }) => {
+        const key = availabilityKey(
+          where.supplierId_date.supplierId,
+          where.supplierId_date.date,
+        );
+        const existing = availability.get(key);
+        if (existing) {
+          existing.isAvailable = update.isAvailable;
+          return existing;
+        }
+        const created = {
+          id: `avail-${availability.size + 1}`,
+          ...create,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as Availability;
+        availability.set(key, created);
+        return created;
+      },
+    },
     supplierProfile: {
       findMany: async ({
         where,
@@ -118,9 +170,11 @@ const fakeAuthService = {
 describe('suppliers', () => {
   let app: INestApplication;
   let store: Map<string, ReturnType<typeof makeSupplier>>;
+  let availability: Map<string, Availability>;
   let fakePrisma: ReturnType<typeof createFakePrisma>;
 
   beforeEach(async () => {
+    availability = new Map();
     store = new Map([
       [
         GUIDE_ID,
@@ -141,7 +195,7 @@ describe('suppliers', () => {
       ],
     ]);
 
-    fakePrisma = createFakePrisma(store);
+    fakePrisma = createFakePrisma(store, availability);
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
@@ -270,5 +324,63 @@ describe('suppliers', () => {
       .send({ status: 'MADE_UP' });
 
     expect(response.status).toBe(400);
+  });
+
+  it('sets and lists a supplier availability day', async () => {
+    const set = await request(app.getHttpServer())
+      .put(`/suppliers/${GUIDE_ID}/availability`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ date: '2027-02-01', isAvailable: false });
+
+    expect(set.status).toBe(200);
+    expect(set.body).toMatchObject({
+      supplierId: GUIDE_ID,
+      date: '2027-02-01',
+      isAvailable: false,
+    });
+
+    const list = await request(app.getHttpServer())
+      .get(`/suppliers/${GUIDE_ID}/availability?from=2027-02-01&to=2027-02-28`)
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(list.status).toBe(200);
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0].isAvailable).toBe(false);
+  });
+
+  it('updates an existing availability day instead of duplicating it', async () => {
+    await request(app.getHttpServer())
+      .put(`/suppliers/${GUIDE_ID}/availability`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ date: '2027-02-01', isAvailable: false });
+    await request(app.getHttpServer())
+      .put(`/suppliers/${GUIDE_ID}/availability`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ date: '2027-02-01', isAvailable: true });
+
+    const list = await request(app.getHttpServer())
+      .get(`/suppliers/${GUIDE_ID}/availability`)
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0].isAvailable).toBe(true);
+  });
+
+  it('returns 403 when a traveler sets availability', async () => {
+    const response = await request(app.getHttpServer())
+      .put(`/suppliers/${GUIDE_ID}/availability`)
+      .set('x-test-user', TRAVELER.email)
+      .send({ date: '2027-02-01', isAvailable: false });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('returns 404 when setting availability for an unknown supplier', async () => {
+    const response = await request(app.getHttpServer())
+      .put('/suppliers/99999999-9999-4999-8999-999999999999/availability')
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ date: '2027-02-01', isAvailable: true });
+
+    expect(response.status).toBe(404);
   });
 });

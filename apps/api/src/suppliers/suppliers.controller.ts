@@ -7,17 +7,23 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
   Query,
   Res,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
+  availabilityQuerySchema,
   expiringSuppliersQuerySchema,
   listSuppliersQuerySchema,
+  setAvailabilitySchema,
   setVerificationSchema,
   uploadCredentialSchema,
+  type AvailabilityDayDto,
+  type AvailabilityQuery,
   type ExpiringSuppliersQuery,
   type ListSuppliersQuery,
+  type SetAvailabilityRequest,
   type SetVerificationRequest,
   type SupplierDto,
   type UploadCredentialRequest,
@@ -74,6 +80,26 @@ export class SuppliersController {
     response.setHeader('content-type', contentType);
     response.setHeader('content-disposition', 'inline');
     response.send(Buffer.from(data));
+  }
+
+  @Get(':id/availability')
+  @Roles(...READ_ROLES)
+  listAvailability(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query(new ZodValidationPipe(availabilityQuerySchema)) query: AvailabilityQuery,
+  ): Promise<AvailabilityDayDto[]> {
+    return this.suppliers.listAvailability(id, query);
+  }
+
+  @Put(':id/availability')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  setAvailability(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(setAvailabilitySchema)) body: SetAvailabilityRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<AvailabilityDayDto> {
+    return this.suppliers.setAvailability(id, body, actor);
   }
 
   @Post(':id/verification')

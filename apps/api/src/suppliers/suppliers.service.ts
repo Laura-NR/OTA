@@ -6,12 +6,15 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
-import type { Prisma, SupplierProfile, User } from '@ota/db';
+import type { Availability, Prisma, SupplierProfile, User } from '@ota/db';
 import { VerificationStatus } from '@ota/domain';
 import type { ObjectStorage } from '@ota/storage';
 import type {
+  AvailabilityDayDto,
+  AvailabilityQuery,
   ExpiringSuppliersQuery,
   ListSuppliersQuery,
+  SetAvailabilityRequest,
   SetVerificationRequest,
   SupplierDto,
   UploadCredentialRequest,
@@ -55,6 +58,21 @@ function contentTypeFromKey(key: string | null): string | null {
   }
   const extension = key.split('.').pop()?.toLowerCase() ?? '';
   return EXTENSION_CONTENT_TYPE[extension] ?? null;
+}
+
+function startOfUtcDay(value: Date): Date {
+  return new Date(
+    Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()),
+  );
+}
+
+function toAvailabilityDto(day: Availability): AvailabilityDayDto {
+  return {
+    id: day.id,
+    supplierId: day.supplierId,
+    date: day.date.toISOString().slice(0, 10),
+    isAvailable: day.isAvailable,
+  };
 }
 
 function toDto(supplier: SupplierWithUser): SupplierDto {
@@ -248,5 +266,75 @@ export class SuppliersService {
     }
 
     return { data: object.body, contentType: object.contentType };
+  }
+
+  /** Availability overrides for a worker within an inclusive date window. */
+  async listAvailability(
+    id: string,
+    query: AvailabilityQuery,
+  ): Promise<AvailabilityDayDto[]> {
+    await this.requireSupplier(id);
+
+    const where: Prisma.AvailabilityWhereInput = { supplierId: id };
+    if (query.from || query.to) {
+      where.date = {
+        ...(query.from ? { gte: query.from } : {}),
+        ...(query.to ? { lte: query.to } : {}),
+      };
+    }
+
+    const days = await this.prisma.availability.findMany({
+      where,
+      orderBy: { date: 'asc' },
+    });
+    return days.map(toAvailabilityDto);
+  }
+
+  /**
+   * Set one calendar day's availability (spec §5.2 single-tap toggle / granular
+   * blocking). Upserts on the unique supplier+date pair and audits the change.
+   */
+  async setAvailability(
+    id: string,
+    input: SetAvailabilityRequest,
+    actor: AuthUser,
+  ): Promise<AvailabilityDayDto> {
+    await this.requireSupplier(id);
+    const date = startOfUtcDay(input.date);
+
+    const day = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.availability.upsert({
+        where: { supplierId_date: { supplierId: id, date } },
+        create: { supplierId: id, date, isAvailable: input.isAvailable },
+        update: { isAvailable: input.isAvailable },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: 'supplier.availability_set',
+          entityType: 'SupplierProfile',
+          entityId: id,
+          metadata: {
+            date: date.toISOString().slice(0, 10),
+            isAvailable: input.isAvailable,
+          },
+        },
+      });
+
+      return result;
+    });
+
+    return toAvailabilityDto(day);
+  }
+
+  private async requireSupplier(id: string): Promise<void> {
+    const supplier = await this.prisma.supplierProfile.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!supplier) {
+      throw new NotFoundException(`Supplier ${id} not found`);
+    }
   }
 }
