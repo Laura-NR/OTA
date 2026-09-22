@@ -220,6 +220,15 @@ Approving creates a `SERVICE_WORKER` user (if none) and a `PENDING_AUDIT`
 tests (api 99); `pnpm e2e` is 9 specs / 13 tests (adds submit → approve).
 `pnpm lint/format:check/typecheck/test/build` green.
 
+**i18n increment (2026-09-22, Wave 2a):** the storefront is localized (es/en/fr)
+with `next-intl` and a shared `packages/i18n` catalog. Routes live under
+`app/[locale]` with `localePrefix: 'as-needed'` — the tenant default (`es`) is
+unprefixed, while `/en` and `/fr` are prefixed — plus a header locale switcher.
+Middleware detects the locale from `Accept-Language`, so tests pin a browser
+locale or use the `/en` prefix. `pnpm e2e` is 10 specs / 14 tests (adds the
+locale-switch spec); 180 tests (api 99, i18n 2), 16 workspaces.
+`pnpm lint/format:check/typecheck/test/build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -320,6 +329,10 @@ nothing that weakens an Article.
 - `<2026-09-22: the dynamic package builder is apps/storefront/src/app/build (five steps) posting to POST /me/reservations, which creates an ITINERARY_SUBMITTED booking for the caller and derives each ServiceItem's type/province/price from the catalog item. The shared booking-code generator lives in apps/api/src/common/booking-code.ts.>`
 - `<2026-09-22: /login?next=<path> (path must start with "/") makes the magic-link callbackURL return the traveler to that path after sign-in; the default is /account.>`
 - `<2026-09-22: supplier recruitment is a staging flow: POST /supplier-applications (@Public) only writes a supplier_applications row; approving (ops/super) is what creates the User (SERVICE_WORKER) + SupplierProfile (PENDING_AUDIT). Nothing touches Better Auth's user table until an operator approves, so a stray public submission cannot collide with sign-up.>`
+- `<2026-09-22: storefront i18n is next-intl with locale routing (app/[locale], localePrefix 'as-needed', default es); message catalogs live in packages/i18n (JSON es/en/fr) and its test enforces identical key sets across locales. i18next is deferred until the mobile app consumes it.>`
+- `<2026-09-22: next-intl middleware detects the locale from Accept-Language (and a cookie), so an unprefixed storefront path (/catalog) may serve a non-default locale in a browser that prefers one; e2e pins the browser locale or uses the /en prefix.>`
+- `<2026-09-22: @parcel/watcher (a next-intl transitive) has its build disabled in pnpm-workspace.yaml allowBuilds.>`
+- `<2026-09-22: after moving storefront routes under app/[locale], a stale .next holds type refs to the old /app/... paths and fails typecheck; delete apps/storefront/.next after structural route moves.>`
 
 ---
 

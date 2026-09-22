@@ -4,8 +4,9 @@
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
 stack: `docs/adr/0001-stack.md`. Wave 1 (the back-office ERP, ADR 0002 increments
 A–E) is done. In Wave 2a the payments mock, storefront map, traveler auth +
-dashboard, package builder, and recruitment portal are all done; **next is i18n
-(es/en/fr)**, then the mock-payment checkout page.
+dashboard, package builder, recruitment portal, and storefront i18n (es/en/fr)
+are all done. What remains of Wave 2a is the checkout page, which is gated by
+ADR 0003 (no public mark-paid route until a real signed-webhook provider).
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
@@ -64,6 +65,11 @@ dashboard, package builder, and recruitment portal are all done; **next is i18n
   and only stages; ops approve/reject, and approval creates the `SERVICE_WORKER`
   user + `PENDING_AUDIT` profile. Storefront `/join-our-network`; back-office
   `/applications`.
+- Wave 2a — **storefront i18n:** `next-intl` + shared `packages/i18n` catalogs
+  (es/en/fr); routes under `app/[locale]` with `localePrefix: 'as-needed'` (default
+  `es` unprefixed, `/en` and `/fr` prefixed) and a header locale switcher. Locale
+  is detected from `Accept-Language`. `[locale]` routes are dynamic (the shell
+  reads the session), so the header and `/account` reflect the live session.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
@@ -72,20 +78,21 @@ dashboard, package builder, and recruitment portal are all done; **next is i18n
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**178**: api 99,
-  payments 3, domain 33, theming 9, documents 8, config 7, imports 5, ui 4, email
-  4, schemas 3, storage 3), `pnpm build` — green.
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**180**: api 99,
+  payments 3, i18n 2, domain 33, theming 9, documents 8, config 7, imports 5, ui
+  4, email 4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
   and applied `20260922070932_inventory_media`.
-- `pnpm e2e` — 13 real-browser tests pass, including the inventory flow, the
+- `pnpm e2e` — 14 real-browser tests pass, including the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
   the storefront map province filter, traveler sign-in → dashboard, the package
-  builder submit, and recruitment submit → approve.
-- New unit/e2e coverage: `supplier-applications.e2e.test.ts` (7: public submit,
-  duplicate 409, validation 400, list/RBAC, approve provisions worker, reject,
-  404). Earlier: `me.e2e.test.ts` (8), `payments.test.ts` (3),
-  `payments.e2e.test.ts` (8), `inventory.service.test.ts` (13),
-  `catalog.e2e.test.ts` (3), `suppliers.e2e.test.ts` (14).
+  builder submit, recruitment submit → approve, and the locale switch.
+- New coverage: `packages/i18n` test enforces identical key sets across es/en/fr;
+  `storefront-i18n.spec.ts` switches es → en → fr. Earlier:
+  `supplier-applications.e2e.test.ts` (7), `me.e2e.test.ts` (8),
+  `payments.test.ts` (3), `payments.e2e.test.ts` (8),
+  `inventory.service.test.ts` (13), `catalog.e2e.test.ts` (3),
+  `suppliers.e2e.test.ts` (14).
 
 Not verified: outbound expiry notifications; live escalation event round-trip;
 the PDF branch of the credential inspector; dispatch start/candidates and import
@@ -135,10 +142,10 @@ browser flows beyond the catalog read.
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Wave 2a storefront (map + traveler auth + builder + recruitment done):**
-   i18n (es/en/fr with `next-intl` + `i18next`, both approved), then the checkout
-   page for the mock payment link (per ADR 0003 it cannot self-confirm until a
-   real signed-webhook provider exists).
+1. **Wave 2a remainder — checkout is blocked by ADR 0003:** it cannot self-confirm
+   until a real signed-webhook provider exists. Next unblocked work is **Phase 3
+   BI** (KPI/regulatory aggregations over existing models; no deps/migrations);
+   Phase 3 AI needs an LLM-provider dependency (Article 2).
 2. Then select a real payment rail + legal clearance (ADR 0003 open item) and add
    signature-verified webhooks.
 3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
@@ -235,5 +242,12 @@ browser flows beyond the catalog read.
 - 2026-09-22 — supplier recruitment stages a `supplier_applications` row first;
   only operator approval creates the User + SupplierProfile, so a public
   submission never writes to Better Auth's user table.
-- 2026-09-22 — i18n will follow the locked stack (`next-intl` + `i18next`),
-  approved by the human; implementation is the next increment.
+- 2026-09-22 — storefront i18n uses `next-intl` with `app/[locale]` and
+  `localePrefix: 'as-needed'` (tenant default `es` unprefixed); catalogs live in
+  `packages/i18n`. `i18next` is deferred until the mobile app consumes it, so it
+  is not an unused dependency today.
+- 2026-09-22 — the `[locale]` layout/pages stay dynamic (the shell reads the
+  session); `generateStaticParams` was removed so the header and `/account` are
+  not frozen into a static shell without a session.
+- 2026-09-22 — locale is detected from `Accept-Language`; e2e pins the browser
+  locale (`test.use({ locale: 'es' })`) or navigates the `/en` prefix.
