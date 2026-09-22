@@ -41,18 +41,26 @@ async function latestMagicLink(email: string): Promise<string> {
 
 /**
  * Sign in through the real magic-link flow: request the link, read it from
- * Mailpit, and follow it in the browser. The verify redirect lands on the
- * back-office dashboard.
+ * Mailpit, and follow it in the browser. Defaults to the back-office dashboard;
+ * pass `origin`/`callbackPath` to sign in to the storefront instead.
  */
-export async function signIn(page: Page, email = 'admin@example.test'): Promise<void> {
+export async function signIn(
+  page: Page,
+  email = 'admin@example.test',
+  options: { origin?: string; callbackPath?: string } = {},
+): Promise<void> {
+  const origin = options.origin ?? BACKOFFICE_URL;
+  const callbackPath = options.callbackPath ?? '/';
+  const callbackURL = `${origin}${callbackPath}`;
+
   await fetch(`${MAILPIT_URL}/api/v1/messages`, { method: 'DELETE' }).catch(
     () => undefined,
   );
 
   const response = await fetch(`${API_URL}/api/auth/sign-in/magic-link`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', origin: BACKOFFICE_URL },
-    body: JSON.stringify({ email, callbackURL: `${BACKOFFICE_URL}/` }),
+    headers: { 'content-type': 'application/json', origin },
+    body: JSON.stringify({ email, callbackURL }),
   });
   if (!response.ok) {
     throw new Error(
@@ -62,5 +70,5 @@ export async function signIn(page: Page, email = 'admin@example.test'): Promise<
 
   const url = await latestMagicLink(email);
   await page.goto(url);
-  await page.waitForURL((current) => current.href === `${BACKOFFICE_URL}/`);
+  await page.waitForURL((current) => current.href === callbackURL);
 }
