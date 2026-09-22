@@ -29,10 +29,17 @@ function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem {
 function createFakePrisma(items: InventoryItem[]) {
   return {
     inventoryItem: {
-      findMany: async (args: { where?: { active?: boolean } }) =>
-        items.filter(
-          (item) => args.where?.active === undefined || item.active === args.where.active,
-        ),
+      findMany: async (args: {
+        where?: { active?: boolean; type?: string; province?: string };
+      }) =>
+        items.filter((item) => {
+          const where = args.where ?? {};
+          if (where.active !== undefined && item.active !== where.active) return false;
+          if (where.type !== undefined && item.type !== where.type) return false;
+          if (where.province !== undefined && item.province !== where.province)
+            return false;
+          return true;
+        }),
     },
   };
 }
@@ -47,6 +54,12 @@ describe('GET /catalog', () => {
         id: '22222222-2222-4222-8222-222222222222',
         name: 'Retired Experience',
         active: false,
+      }),
+      makeItem({
+        id: '33333333-3333-4333-8333-333333333333',
+        name: 'Classic Car',
+        type: 'TRANSPORT',
+        province: 'Matanzas',
       }),
     ];
 
@@ -72,6 +85,26 @@ describe('GET /catalog', () => {
     expect(response.status).toBe(200);
     expect(response.body.map((item: { name: string }) => item.name)).toEqual([
       'Casa Colonial',
+      'Classic Car',
+    ]);
+    expect(response.body[0].media).toEqual([]);
+  });
+
+  it('filters the public catalog by type', async () => {
+    const response = await request(app.getHttpServer()).get('/catalog?type=TRANSPORT');
+
+    expect(response.status).toBe(200);
+    expect(response.body.map((item: { name: string }) => item.name)).toEqual([
+      'Classic Car',
+    ]);
+  });
+
+  it('filters the public catalog by province', async () => {
+    const response = await request(app.getHttpServer()).get('/catalog?province=Matanzas');
+
+    expect(response.status).toBe(200);
+    expect(response.body.map((item: { name: string }) => item.name)).toEqual([
+      'Classic Car',
     ]);
   });
 });
