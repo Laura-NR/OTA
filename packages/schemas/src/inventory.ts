@@ -38,23 +38,60 @@ export const listInventoryQuerySchema = z.object({
 
 export type ListInventoryQuery = z.infer<typeof listInventoryQuerySchema>;
 
-export const createPricingRuleSchema = z
-  .object({
-    kind: pricingRuleKindSchema,
-    label: z.string().trim().min(1).max(200),
-    startDate: z.coerce.date().optional(),
-    endDate: z.coerce.date().optional(),
-    amount: z.coerce.number().nonnegative().optional(),
-    percent: z.coerce.number().nonnegative().max(100).optional(),
-  })
-  .refine(
-    (rule) =>
-      (rule.kind === PricingRuleKind.SeasonalRate && rule.amount !== undefined) ||
-      (rule.kind === PricingRuleKind.Markup && rule.percent !== undefined),
-    { message: 'SEASONAL_RATE requires amount; MARKUP requires percent' },
-  );
+/** The public catalog exposes only active items; callers may filter by type and
+ * province but cannot see inactive ones (spec §4.6 storefront control). */
+export const listCatalogQuerySchema = z.object({
+  type: inventoryTypeSchema.optional(),
+  province: z.string().trim().min(1).optional(),
+});
+
+export type ListCatalogQuery = z.infer<typeof listCatalogQuerySchema>;
+
+/** Catalog images are served inline; PDFs and other documents are not media. */
+export const mediaContentTypeSchema = z.enum(['image/jpeg', 'image/png', 'image/webp']);
+
+export const inventoryMediaSchema = z.object({
+  id: z.string().uuid(),
+  inventoryItemId: z.string().uuid(),
+  altText: z.string().nullable(),
+  position: z.number().int(),
+  contentType: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+export type InventoryMediaDto = z.infer<typeof inventoryMediaSchema>;
+
+export const uploadInventoryMediaSchema = z.object({
+  contentType: mediaContentTypeSchema,
+  contentBase64: z.string().min(1),
+  altText: z.string().trim().max(300).optional(),
+});
+
+export type UploadInventoryMediaRequest = z.infer<typeof uploadInventoryMediaSchema>;
+
+const pricingRuleInputSchema = z.object({
+  kind: pricingRuleKindSchema,
+  label: z.string().trim().min(1).max(200),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  amount: z.coerce.number().nonnegative().optional(),
+  percent: z.coerce.number().nonnegative().max(100).optional(),
+});
+
+export const createPricingRuleSchema = pricingRuleInputSchema.refine(
+  (rule) =>
+    (rule.kind === PricingRuleKind.SeasonalRate && rule.amount !== undefined) ||
+    (rule.kind === PricingRuleKind.Markup && rule.percent !== undefined),
+  { message: 'SEASONAL_RATE requires amount; MARKUP requires percent' },
+);
 
 export type CreatePricingRuleRequest = z.infer<typeof createPricingRuleSchema>;
+
+export const updatePricingRuleSchema = pricingRuleInputSchema
+  .partial()
+  .extend({ active: z.boolean().optional() });
+
+export type UpdatePricingRuleRequest = z.infer<typeof updatePricingRuleSchema>;
 
 export const pricingRuleSchema = z.object({
   id: z.string().uuid(),
@@ -80,6 +117,7 @@ export const inventoryItemSchema = z.object({
   basePrice: z.string(),
   active: z.boolean(),
   supplierId: z.string().uuid().nullable(),
+  media: z.array(inventoryMediaSchema),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

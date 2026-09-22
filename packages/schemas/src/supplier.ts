@@ -70,3 +70,27 @@ export const expiringSuppliersQuerySchema = z.object({
 });
 
 export type ExpiringSuppliersQuery = z.infer<typeof expiringSuppliersQuerySchema>;
+
+/** Availability calendar window (spec §5.2). Bounds are inclusive. */
+export const availabilityQuerySchema = z.object({
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+});
+
+export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
+
+export const availabilityDaySchema = z.object({
+  id: z.string().uuid(),
+  supplierId: z.string().uuid(),
+  date: z.string(),
+  isAvailable: z.boolean(),
+});
+
+export type AvailabilityDayDto = z.infer<typeof availabilityDaySchema>;
+
+export const setAvailabilitySchema = z.object({
+  date: z.coerce.date(),
+  isAvailable: z.boolean(),
+});
+
+export type SetAvailabilityRequest = z.infer<typeof setAvailabilitySchema>;
