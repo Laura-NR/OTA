@@ -19,4 +19,18 @@ test.describe('storefront traveler account', () => {
     await expect(page.getByRole('heading', { name: 'E2E0001' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Itinerary' })).toBeVisible();
   });
+
+  test('sends a message to operations from the booking page', async ({ page }) => {
+    await signIn(page, 'traveler@example.test', {
+      origin: STOREFRONT_URL,
+      callbackPath: '/en/account',
+    });
+    await page.getByRole('link', { name: 'E2E0001' }).click();
+    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();
+
+    const body = `e2e message ${Date.now()}`;
+    await page.getByLabel('Messages').fill(body);
+    await page.getByRole('button', { name: 'Send' }).click();
+    await expect(page.getByText(body)).toBeVisible();
+  });
 });

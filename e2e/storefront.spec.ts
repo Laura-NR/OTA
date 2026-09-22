@@ -6,6 +6,8 @@ test.describe('storefront catalog map', () => {
   test('renders every province and filters the catalog on select', async ({ page }) => {
     await page.goto(`${STOREFRONT_URL}/en/catalog`);
     await expect(page.getByRole('heading', { name: 'Experiences' })).toBeVisible();
+    // The tenant enables the cultural-events banner, so it renders site-wide.
+    await expect(page.getByText(/Cultural events across Cuba/)).toBeVisible();
 
     const map = page.getByRole('group', { name: 'Map of Cuba by province' });
     await expect(map).toBeVisible();
