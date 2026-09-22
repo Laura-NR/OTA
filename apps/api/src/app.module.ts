@@ -10,6 +10,7 @@ import { EmailModule } from './email/email.module';
 import { HealthController } from './health.controller';
 import { ImportsModule } from './imports/imports.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { MeModule } from './me/me.module';
 import { MessagesModule } from './messages/messages.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -45,6 +46,7 @@ const isTest = process.env.NODE_ENV === 'test';
     MessagesModule,
     ImportsModule,
     PaymentsModule,
+    MeModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
