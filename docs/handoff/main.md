@@ -44,6 +44,13 @@ storefront, then the remaining live-socket/worker gaps.
   deep-links to `/reservations/[id]` (transitions, service items, documents,
   audit) and `/reservations/new`. Sequencing is fixed by
   `docs/adr/0002-back-office-priority.md` (increments A–E; payments ADR 0003).
+- Back-office increment B — `/escalation` consumes the `/ops` socket (amber/red
+  recomputed client-side, `tel:` click-to-call, one-click re-dispatch) and
+  `/messages` uses the `/conversations` socket; both connect the browser
+  directly to the API. The API adds `GET /dispatch/active` and `workerPhone` on
+  the dispatch item. The BullMQ timeout **firing** is proven live
+  (`dispatch.bullmq.integration.test.ts`, gated on `REDIS_URL`). New dependency:
+  `socket.io-client`.
 - Committed: `23920d7` (reservations list), `3547317` (ui + theming),
   `87c464a` (back-office + root wiring), `e2a9058` (docs), `fc084f6`
   (dev-runner fix), `1b4304d` (e2e), `ad29d0c` (storefront), plus the
@@ -51,9 +58,12 @@ storefront, then the remaining live-socket/worker gaps.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-21):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (128: domain
-  33, api 58, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (129: domain
+  33, api 59, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
   schemas 3), `pnpm build` (14 tasks) — green.
+- BullMQ timeout firing proven live: `REDIS_URL=redis://localhost:6379 pnpm
+  --filter @ota/api exec vitest run test/dispatch.bullmq.integration.test.ts`
+  → the delayed job fires the handler (~300 ms). Skipped without `REDIS_URL`.
 - Live back-office smoke (API from `dist`; back-office `next dev` on :3002):
   `POST /api/auth/sign-in/magic-link` through the Next proxy → 200; the link in
   Mailpit verified via 302 → `http://localhost:3002/`; `GET /api/ota/reservations`
@@ -68,7 +78,8 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
   (`Restarting 'src/main.ts'`) and `/health` stays 200. The full magic-link →
   session → reservations → SSR dashboard smoke test was repeated against this
   `pnpm dev` stack.
-- `pnpm e2e` — 3 real-browser tests pass: reservations transition, supplier
+- `pnpm e2e` — 5 real-browser tests pass: the `/ops` escalation socket connects,
+  a message is sent into the conversation, board → detail → transition, supplier
   suspend/reinstate, and sign-out. Green both against an already-running
   `pnpm dev` and with Playwright starting the stack itself (webServer → `pnpm dev`
   → API `/health`). Docker (Postgres/Redis/Mailpit) and the seed are required.
@@ -77,11 +88,11 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
   the public `GET /catalog` (reachable through `/api/ota/catalog` with no
   session).
 
-Not verified: storefront browser flows (none in the e2e suite yet); the mutating
-UI actions not yet in the e2e suite (dispatch start/candidates, import commit);
-the Playwright MCP still cannot launch (no system `chrome`); and the pre-existing
-UNVERIFIED items (passkeys, live `/ops` + `/conversations`, BullMQ timeout
-firing, worker accept/decline over a real DB).
+Not verified: storefront browser flows; dispatch start/candidates and import
+commit UI actions; receiving a live escalation event in the browser (the `/ops`
+socket *connect* is verified, not an event round-trip); the Playwright MCP still
+cannot launch (no system `chrome`); and passkeys + worker accept/decline over a
+real DB.
 
 ## Assumptions & unknowns
 - Back-office routes are `export const dynamic = 'force-dynamic'`; each request
@@ -110,19 +121,16 @@ firing, worker accept/decline over a real DB).
 
 ## Next
 Sequence is fixed by `docs/adr/0002-back-office-priority.md`.
-1. **Increment B — escalation + messaging operator surface:** messaging inbox on
-   the existing endpoints and the `/conversations` socket; live escalation
-   dashboard consuming `/ops` (amber/red, `tel:` click-to-call, one-click
-   re-dispatch); prove the BullMQ timeout actually fires.
-2. **Increment C** — compliance: `packages/storage` (S3/MinIO) credential
-   uploads, visual inspector, 30-day expiry job pausing auto-dispatch.
-3. **Increment D** — document depth (itemized invoice, voucher emergency/
+1. **Increment C — compliance:** `packages/storage` (S3/MinIO) credential
+   uploads, a visual document inspector, and a 30-day expiry job that pauses
+   auto-dispatch.
+2. **Increment D** — document depth (itemized invoice, voucher emergency/
    rendezvous); **Increment E** — inventory CMS completion (delete, availability,
    media).
-4. Then Wave 2a (payments mock + ADR 0003, storefront builder/map/recruitment/
+3. Then Wave 2a (payments mock + ADR 0003, storefront builder/map/recruitment/
    traveler auth/i18n), Phase 3 BI/AI, and the mobile apps.
-Also: extend the e2e suite to dispatch start/candidates, import commit, and the
-reservation intake form.
+Also: extend the e2e suite to dispatch start/candidates, import commit, the
+reservation intake form, and a live escalation-event round-trip.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
@@ -171,3 +179,12 @@ reservation intake form.
   `POST /reservations` creates DRAFT with a generated 8-char booking code.
 - 2026-09-21 — the dashboard is a status board that deep-links to a reservation
   workbench, replacing the flat reservations table (removed).
+- 2026-09-21 — the escalation desk and messaging inbox connect the browser
+  directly to the API over Socket.IO (`NEXT_PUBLIC_API_ORIGIN`) rather than
+  through Next, because Next rewrites do not proxy WebSocket upgrades; the
+  gateways authenticate via the shared host-only session cookie.
+- 2026-09-21 — `GET /dispatch/active` and `workerPhone` on the dispatch item feed
+  the live desk; amber/red is recomputed client-side from the deadline with the
+  domain `escalationAlert`.
+- 2026-09-21 — the BullMQ timeout-firing integration test constructs the
+  scheduler with a unique queue name so it does not race the running API worker.
