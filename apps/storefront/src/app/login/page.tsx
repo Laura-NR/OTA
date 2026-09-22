@@ -4,10 +4,21 @@ import { redirect } from 'next/navigation';
 import { MagicLinkForm } from '@/components/magic-link-form';
 import { getServerSession } from '@/lib/api';
 
-export default async function LoginPage() {
+function safeNext(value: string | undefined): string {
+  return value && value.startsWith('/') ? value : '/account';
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const callbackPath = safeNext(next);
+
   const session = await getServerSession();
   if (session) {
-    redirect('/account');
+    redirect(callbackPath);
   }
 
   return (
@@ -21,7 +32,7 @@ export default async function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MagicLinkForm />
+          <MagicLinkForm callbackPath={callbackPath} />
         </CardContent>
       </Card>
     </main>

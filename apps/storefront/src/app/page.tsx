@@ -31,7 +31,7 @@ export default async function HomePage() {
             Explore experiences
           </Link>
           {isFeatureEnabled(tenant, 'customItineraryBuilder') ? (
-            <Link href="/catalog" className={ctaSecondary}>
+            <Link href="/build" className={ctaSecondary}>
               Build an itinerary
             </Link>
           ) : null}

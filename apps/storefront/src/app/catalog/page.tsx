@@ -35,7 +35,15 @@ export default async function CatalogPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">Experiences</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight">Experiences</h1>
+        <Link
+          href="/build"
+          className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          Build your own itinerary
+        </Link>
+      </div>
       <p className="mt-2 text-muted-foreground">
         {items.length} curated option(s) across Cuba.
       </p>

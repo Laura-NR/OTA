@@ -9,7 +9,7 @@ import { authClient } from '@/lib/auth-client';
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 /** Traveler sign-in: request a one-time magic link to the account dashboard. */
-export function MagicLinkForm() {
+export function MagicLinkForm({ callbackPath = '/account' }: { callbackPath?: string }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,7 @@ export function MagicLinkForm() {
 
     const { error: authError } = await authClient.signIn.magicLink({
       email,
-      callbackURL: `${window.location.origin}/account`,
+      callbackURL: `${window.location.origin}${callbackPath}`,
     });
 
     if (authError) {
