@@ -189,6 +189,16 @@ province again clears the filter. The SVG path data is generated from
 `cuba-provinces.ts`. `pnpm e2e` is 6 specs / 10 tests (adds a storefront map spec);
 163 unit tests, 15 workspaces; `pnpm lint/format:check/typecheck/test/build` green.
 
+**Traveler auth increment (2026-09-22, Wave 2a):** the storefront gains traveler
+magic-link sign-in and a self-service dashboard. The API adds `GET /me`,
+`GET /me/reservations`, and `GET /me/reservations/:id` (any authenticated role,
+scoped to the caller; documents omit the storage key). The storefront ships
+`/login`, `/account` (trips list), and `/account/reservations/[id]` (itinerary +
+document vault); the root header reads the session, so storefront pages are
+dynamic. `better-auth` is reused as the browser client (already in the repo).
+168 tests (api 89); `pnpm e2e` is 7 specs / 11 tests (adds storefront traveler
+sign-in → dashboard). `pnpm lint/format:check/typecheck/test/build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -284,6 +294,8 @@ nothing that weakens an Article.
 - `<2026-09-22: PaymentReceipt already existed in the schema, so the mock payments increment needed no migration. PAYMENT_PROVIDER defaults to mock; PAYMENT_CHECKOUT_BASE_URL is the mock checkout base (storefront origin) and is informational until a checkout page exists.>`
 - `<2026-09-22: the Cuba map path data lives in apps/storefront/src/lib/cuba-provinces.ts, GENERATED from resources/index.html by tools/extract-cuba-map.mjs; both are eslint/prettier ignored. The SVG's historical "Ciudad de la Habana" is aliased to "La Habana" so map clicks match the province strings catalog/supplier records use.>`
 - `<2026-09-22: pnpm build writes a production .next. If you then start next dev and the first SSR of a route throws "Application error … Digest", delete apps/storefront/.next and apps/backoffice/.next before pnpm e2e — a stale production .next can poison the first dev compile.>`
+- `<2026-09-22: self-service reads are under /me and scoped to the caller (GET /me, /me/reservations, /me/reservations/:id) — any authenticated role, never another traveler's row. The traveler document DTO omits storageKey; downloads stay on GET /documents/:id/download, which already allows the owner.>`
+- `<2026-09-22: the storefront reuses better-auth as a browser client (apps/storefront/src/lib/auth-client.ts) and reads the session server-side by forwarding cookies to the API (/api/auth/get-session). The root layout calls getServerSession, which makes storefront pages dynamic; the storefront is not a security boundary — the API enforces ownership.>`
 
 ---
 

@@ -47,6 +47,12 @@ auth, i18n (es/en/fr), checkout.
   and filters `/catalog?province=…`; the path data is generated from
   `resources/index.html` by `tools/extract-cuba-map.mjs` into an ignored
   `cuba-provinces.ts` (historical "Ciudad de la Habana" aliased to "La Habana").
+- Wave 2a — **traveler auth + dashboard:** API `GET /me`, `GET /me/reservations`,
+  `GET /me/reservations/:id` (any authenticated role, scoped to the caller;
+  traveler documents omit `storageKey`). Storefront `/login` (magic link),
+  `/account` trips list, `/account/reservations/[id]` itinerary + document vault;
+  `better-auth` reused as the browser client; the header reads the session so
+  storefront pages are dynamic.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
@@ -55,17 +61,17 @@ auth, i18n (es/en/fr), checkout.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**163**: api 84,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**168**: api 89,
   payments 3, domain 33, theming 9, documents 8, config 7, imports 5, ui 4, email
   4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
   and applied `20260922070932_inventory_media`.
-- `pnpm e2e` — 10 real-browser tests pass, including the inventory flow, the
+- `pnpm e2e` — 11 real-browser tests pass, including the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
-  and the storefront map province filter.
-- New unit/e2e coverage: `payments.test.ts` (3: mock intent + webhook parsing),
-  `payments.e2e.test.ts` (8: link → PENDING_PAYMENT, confirm → CONFIRMED, list,
-  409/404/403/401). Earlier increment coverage: `inventory.service.test.ts` (13),
+  the storefront map province filter, and storefront traveler sign-in → dashboard.
+- New unit/e2e coverage: `me.e2e.test.ts` (5: profile, own list, own detail,
+  404 for another traveler's booking, 401). Earlier: `payments.test.ts` (3),
+  `payments.e2e.test.ts` (8), `inventory.service.test.ts` (13),
   `catalog.e2e.test.ts` (3), `suppliers.e2e.test.ts` (14).
 
 Not verified: outbound expiry notifications; live escalation event round-trip;
@@ -116,10 +122,10 @@ browser flows beyond the catalog read.
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Wave 2a storefront (map done):** dynamic package builder →
-   `ITINERARY_SUBMITTED`, recruitment portal, traveler auth + dashboard, i18n
-   (es/en/fr — needs approval for `next-intl`/`i18next`), and the checkout page
-   that consumes the mock payment link.
+1. **Wave 2a storefront (map + traveler auth done):** dynamic package builder →
+   `ITINERARY_SUBMITTED`, recruitment portal, i18n (es/en/fr — needs approval for
+   `next-intl`/`i18next`), and the checkout page that consumes the mock payment
+   link (traveler auth now unblocks it).
 2. Then select a real payment rail + legal clearance (ADR 0003 open item) and add
    signature-verified webhooks.
 3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
@@ -200,3 +206,10 @@ browser flows beyond the catalog read.
   generated from `resources/index.html` (not a copied SVG blob), so provinces are
   real buttons and the tenant primary token drives the selection; historical
   province labels are aliased to the catalog's names.
+- 2026-09-22 — traveler self-service reads live under `/me`, always scoped to the
+  caller; the traveler document DTO omits `storageKey`, and downloads keep using
+  the owner-allowed `GET /documents/:id/download`.
+- 2026-09-22 — the storefront reuses the existing `better-auth` browser client
+  (no new dependency) and resolves the session server-side by forwarding cookies
+  to `/api/auth/get-session`; the root header reads the session, so storefront
+  pages are dynamic and the storefront is not a security boundary.
