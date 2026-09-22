@@ -18,6 +18,9 @@ export async function SiteHeader({ agencyName }: { agencyName: string }) {
           <Link href="/catalog" className="hover:text-primary">
             Experiences
           </Link>
+          <Link href="/join-our-network" className="hover:text-primary">
+            Work with us
+          </Link>
           {session ? (
             <Link href="/account" className="hover:text-primary">
               My account
