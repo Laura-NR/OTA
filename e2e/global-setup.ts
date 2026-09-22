@@ -41,10 +41,12 @@ export default async function globalSetup(): Promise<void> {
       },
     });
 
-    // Clear this fixture reservation's audit rows so each run starts clean.
+    // Clear this fixture reservation's audit rows and messages so each run
+    // starts clean.
     await prisma.auditLog.deleteMany({
       where: { entityType: 'Reservation', entityId: reservation.id },
     });
+    await prisma.message.deleteMany({ where: { reservationId: reservation.id } });
 
     await prisma.supplierProfile.update({
       where: { id: guide.supplierProfile.id },
