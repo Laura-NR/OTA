@@ -1,4 +1,10 @@
 export {
+  analyticsOverviewSchema,
+  analyticsRangeSchema,
+  type AnalyticsOverviewDto,
+  type AnalyticsRangeQuery,
+} from './analytics';
+export {
   auditLogEntrySchema,
   createReservationSchema,
   listReservationsQuerySchema,
