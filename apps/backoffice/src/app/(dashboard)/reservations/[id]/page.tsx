@@ -1,5 +1,10 @@
 import { UserRole } from '@ota/domain';
-import type { AuditLogEntryDto, DocumentDto, ReservationDetailDto } from '@ota/schemas';
+import type {
+  AuditLogEntryDto,
+  DocumentDto,
+  PaymentReceiptDto,
+  ReservationDetailDto,
+} from '@ota/schemas';
 import {
   Alert,
   Badge,
@@ -18,6 +23,7 @@ import {
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { PaymentPanel } from '@/components/payment-panel';
 import { ReservationActions } from '@/components/reservation-actions';
 import { StatusBadge } from '@/components/status-badge';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -43,9 +49,10 @@ export default async function ReservationDetailPage({
     },
   );
 
-  const [audit, documents] = await Promise.all([
+  const [audit, documents, payments] = await Promise.all([
     apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
     apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
+    apiFetch<PaymentReceiptDto[]>(`/reservations/${id}/payments`).catch(() => []),
   ]);
 
   return (
@@ -109,6 +116,24 @@ export default async function ReservationDetailPage({
             reservationId={reservation.id}
             status={reservation.status}
             canManage={canManage}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Payments</CardTitle>
+          <CardDescription>
+            Payment links are generated at SECURED_AND_INVOICED; confirming clears funds
+            and confirms the booking.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PaymentPanel
+            reservationId={reservation.id}
+            status={reservation.status}
+            canManage={canManage}
+            receipts={payments}
           />
         </CardContent>
       </Card>
