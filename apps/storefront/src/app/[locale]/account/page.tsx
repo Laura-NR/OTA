@@ -1,35 +1,38 @@
+import { DEFAULT_LOCALE } from '@ota/i18n';
 import type { MyReservationListItemDto } from '@ota/schemas';
 import { Alert, Badge, Card, CardContent, CardHeader, CardTitle } from '@ota/ui';
-import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
 import { SignOutButton } from '@/components/sign-out-button';
+import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 
 export default async function AccountPage() {
   const session = await getServerSession();
   if (!session) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(locale === DEFAULT_LOCALE ? '/login' : `/${locale}/login`);
   }
 
+  const t = await getTranslations('account');
+  const ts = await getTranslations('status.reservation');
   const reservations = await apiFetch<MyReservationListItemDto[]>('/me/reservations');
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">My trips</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Signed in as {session.user.email}
+            {t('signedInAs', { email: session.user.email })}
           </p>
         </div>
         <SignOutButton />
       </div>
 
       {reservations.length === 0 ? (
-        <Alert className="mt-6">
-          No bookings yet. Explore the catalog to start planning.
-        </Alert>
+        <Alert className="mt-6">{t('empty')}</Alert>
       ) : (
         <ul className="mt-6 space-y-3">
           {reservations.map((reservation) => (
@@ -44,16 +47,14 @@ export default async function AccountPage() {
                       {reservation.bookingCode}
                     </Link>
                   </CardTitle>
-                  <Badge variant="secondary">
-                    {reservation.status.replaceAll('_', ' ')}
-                  </Badge>
+                  <Badge variant="secondary">{ts(reservation.status)}</Badge>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   {new Date(reservation.startDate).toLocaleDateString()} →{' '}
                   {new Date(reservation.endDate).toLocaleDateString()} ·{' '}
                   {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}{' '}
-                  · {reservation.serviceItemCount} service(s) ·{' '}
-                  {reservation.documentCount} document(s)
+                  · {t('serviceCount', { count: reservation.serviceItemCount })} ·{' '}
+                  {t('documentCount', { count: reservation.documentCount })}
                 </CardContent>
               </Card>
             </li>

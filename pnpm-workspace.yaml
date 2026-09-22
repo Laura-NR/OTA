@@ -5,6 +5,7 @@ packages:
 # pnpm 10+ blocks lifecycle scripts by default. These packages need them to
 # install/build native binaries.
 allowBuilds:
+  '@parcel/watcher': false
   '@prisma/client': true
   '@prisma/engines': true
   '@swc/core': true

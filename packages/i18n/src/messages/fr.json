@@ -1,0 +1,153 @@
+{
+  "metadata": {
+    "title": "{agency} — Voyages authentiques à Cuba",
+    "description": "Écotourisme, agrotourisme et voyages culturels à travers Cuba avec {agency}."
+  },
+  "nav": {
+    "home": "Accueil",
+    "experiences": "Expériences",
+    "workWithUs": "Travaillez avec nous",
+    "account": "Mon compte",
+    "signIn": "Se connecter"
+  },
+  "footer": {
+    "license": "Licence MINTUR {license}"
+  },
+  "home": {
+    "eyebrow": "Voyages communautaires · Cuba",
+    "description": "Écotourisme, agrotourisme et immersion culturelle au-delà des circuits de resort — organisés avec les communautés cubaines.",
+    "explore": "Explorer les expériences",
+    "build": "Créer un itinéraire",
+    "featured": "À la une",
+    "preparing": "Le catalogue est en préparation. Revenez bientôt."
+  },
+  "catalog": {
+    "title": "Expériences",
+    "build": "Créez votre propre itinéraire",
+    "count": "{count, plural, =0 {Aucune option} =1 {1 option} other {# options}} à travers Cuba.",
+    "mapHint": "Sélectionnez une province pour filtrer le catalogue. Les provinces colorées ont des options disponibles.",
+    "mapAria": "Carte de Cuba par province",
+    "all": "Tout",
+    "allProvinces": "Toutes les provinces",
+    "empty": "Aucune expérience ne correspond. Essayez un autre filtre.",
+    "provinceFallback": "Cuba",
+    "types": {
+      "ACCOMMODATION": "Hébergements",
+      "TRANSPORT": "Transport",
+      "EXPERIENCE": "Expériences"
+    }
+  },
+  "build": {
+    "title": "Créez votre itinéraire",
+    "description": "Choisissez vos dates ainsi que les hébergements, transports et expériences souhaités. Nous assemblerons l'itinéraire et commencerons à réserver les prestataires.",
+    "steps": {
+      "dates": "Dates",
+      "stays": "Hébergements",
+      "transport": "Transport",
+      "experiences": "Expériences",
+      "review": "Vérification"
+    },
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "dateError": "La date de fin doit être égale ou postérieure à la date de début.",
+    "noOptions": "Aucune option dans cette catégorie pour l'instant — passez à l'étape suivante.",
+    "addAtLeastOne": "Ajoutez au moins un service avant de soumettre.",
+    "estimatedTotal": "Total estimé : {currency} {amount}",
+    "back": "Retour",
+    "continue": "Continuer",
+    "submit": "Soumettre l'itinéraire",
+    "submitting": "Envoi…",
+    "error": "Impossible de créer l'itinéraire"
+  },
+  "login": {
+    "title": "Se connecter",
+    "description": "Saisissez votre e-mail et nous vous enverrons un lien à usage unique vers vos réservations et documents.",
+    "email": "E-mail",
+    "send": "Envoyer le lien",
+    "sending": "Envoi…",
+    "sent": "Vérifiez votre boîte de réception — un lien de connexion arrive à {email}.",
+    "error": "Impossible d'envoyer le lien."
+  },
+  "account": {
+    "title": "Mes voyages",
+    "signedInAs": "Connecté en tant que {email}",
+    "signOut": "Se déconnecter",
+    "empty": "Aucune réservation pour l'instant. Explorez le catalogue pour commencer.",
+    "serviceCount": "{count, plural, =1 {1 service} other {# services}}",
+    "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
+    "booking": "Réservation",
+    "itinerary": "Itinéraire",
+    "itineraryAssembling": "Votre itinéraire est en cours d'assemblage.",
+    "documents": "Documents",
+    "documentsEmpty": "Les bons et factures apparaîtront ici une fois votre réservation confirmée.",
+    "download": "Télécharger le PDF",
+    "back": "Mes voyages",
+    "columns": {
+      "type": "Type",
+      "status": "Statut",
+      "province": "Province",
+      "starts": "Début",
+      "ends": "Fin"
+    }
+  },
+  "join": {
+    "title": "Rejoignez notre réseau",
+    "description": "Guides, chauffeurs, hôtes et traducteurs — postulez ci-dessous. Notre équipe examine chaque candidature et vous contactera pour la conformité et l'intégration.",
+    "cardTitle": "Candidature prestataire",
+    "cardDescription": "Nous n'utilisons ces informations que pour l'intégration et la conformité.",
+    "fullName": "Nom complet",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "category": "Catégorie",
+    "categories": {
+      "TOUR_GUIDE": "Guide touristique",
+      "PRIVATE_DRIVER": "Chauffeur privé",
+      "HOMESTAY_HOST": "Hôte de casa particular",
+      "TRANSLATOR": "Traducteur"
+    },
+    "provinces": "Provinces (séparées par des virgules)",
+    "provincesPlaceholder": "La Havane, Matanzas",
+    "license": "Numéro de licence RTN",
+    "message": "Parlez-nous de votre activité (facultatif)",
+    "apply": "Postuler",
+    "applying": "Envoi…",
+    "sent": "Merci — votre candidature est reçue. Notre équipe l'examinera et vous recontactera.",
+    "error": "Impossible d'envoyer votre candidature"
+  },
+  "status": {
+    "reservation": {
+      "DRAFT": "Brouillon",
+      "ITINERARY_SUBMITTED": "Itinéraire soumis",
+      "DISPATCH_IN_PROGRESS": "Répartition en cours",
+      "ASSEMBLY_AND_ESCALATION": "Assemblage et escalade",
+      "SECURED_AND_INVOICED": "Sécurisé et facturé",
+      "PENDING_PAYMENT": "Paiement en attente",
+      "ACTION_REQUIRED": "Action requise",
+      "CONFIRMED": "Confirmé",
+      "IN_PROGRESS": "En cours",
+      "COMPLETED": "Terminé",
+      "CANCELLED": "Annulé"
+    },
+    "serviceItem": {
+      "UNASSIGNED": "Non attribué",
+      "OFFERED": "Proposé",
+      "ACCEPTED": "Accepté",
+      "DECLINED": "Refusé",
+      "TIMEOUT": "Délai dépassé",
+      "FULFILLED": "Réalisé"
+    },
+    "serviceType": {
+      "GUIDE": "Guide",
+      "TRANSPORTATION": "Transport",
+      "ACCOMMODATION": "Hébergement",
+      "EXPERIENCE": "Expérience"
+    },
+    "document": {
+      "VOUCHER": "Bon",
+      "WORK_ORDER": "Ordre de travail",
+      "RECEIPT": "Reçu",
+      "INVOICE": "Facture",
+      "EMERGENCY_CONTACT": "Contact d'urgence"
+    }
+  }
+}

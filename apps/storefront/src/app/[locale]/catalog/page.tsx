@@ -1,15 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@ota/ui';
-import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
 import { CubaMap } from '@/components/cuba-map';
+import { Link } from '@/i18n/navigation';
 import { getCatalog, type CatalogFilters } from '@/lib/catalog';
 
-const TYPES = [
-  { value: undefined, label: 'All' },
-  { value: 'ACCOMMODATION', label: 'Stays' },
-  { value: 'TRANSPORT', label: 'Transport' },
-  { value: 'EXPERIENCE', label: 'Experiences' },
-] as const;
+const TYPES = ['ACCOMMODATION', 'TRANSPORT', 'EXPERIENCE'] as const;
 
 function catalogHref(filters: CatalogFilters): string {
   const params = new URLSearchParams();
@@ -26,6 +22,7 @@ export default async function CatalogPage({
 }) {
   const { type, province } = await searchParams;
   const filters: CatalogFilters = { type, province };
+  const t = await getTranslations('catalog');
   const [items, all] = await Promise.all([getCatalog(filters), getCatalog()]);
   const provinces = [
     ...new Set(
@@ -36,39 +33,45 @@ export default async function CatalogPage({
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">Experiences</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
         <Link
           href="/build"
           className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Build your own itinerary
+          {t('build')}
         </Link>
       </div>
-      <p className="mt-2 text-muted-foreground">
-        {items.length} curated option(s) across Cuba.
-      </p>
+      <p className="mt-2 text-muted-foreground">{t('count', { count: items.length })}</p>
 
       <div className="mt-6 rounded-lg border bg-card p-2">
         <CubaMap availableProvinces={provinces} selectedProvince={province} type={type} />
-        <p className="px-2 pb-1 text-xs text-muted-foreground">
-          Select a province to filter the catalog. Filled provinces have options
-          available.
-        </p>
+        <p className="px-2 pb-1 text-xs text-muted-foreground">{t('mapHint')}</p>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
+        <Link
+          href={catalogHref({ type: undefined, province })}
+          className={cn(
+            'rounded-full border px-3 py-1 text-sm transition-colors',
+            !type
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-input hover:bg-accent',
+          )}
+        >
+          {t('all')}
+        </Link>
         {TYPES.map((option) => (
           <Link
-            key={option.label}
-            href={catalogHref({ type: option.value, province })}
+            key={option}
+            href={catalogHref({ type: option, province })}
             className={cn(
               'rounded-full border px-3 py-1 text-sm transition-colors',
-              type === option.value
+              type === option
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-input hover:bg-accent',
             )}
           >
-            {option.label}
+            {t(`types.${option}`)}
           </Link>
         ))}
       </div>
@@ -84,7 +87,7 @@ export default async function CatalogPage({
                 : 'border-input hover:bg-accent',
             )}
           >
-            All provinces
+            {t('allProvinces')}
           </Link>
           {provinces.map((value) => (
             <Link
@@ -104,9 +107,7 @@ export default async function CatalogPage({
       ) : null}
 
       {items.length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">
-          No matching experiences right now. Try another filter.
-        </p>
+        <p className="mt-6 text-sm text-muted-foreground">{t('empty')}</p>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
@@ -121,7 +122,7 @@ export default async function CatalogPage({
               <CardHeader>
                 <CardTitle className="text-base">{item.name}</CardTitle>
                 <CardDescription>
-                  {item.province ?? 'Cuba'} · {item.type.replaceAll('_', ' ')}
+                  {item.province ?? t('provinceFallback')} · {t(`types.${item.type}`)}
                 </CardDescription>
               </CardHeader>
               <CardContent>

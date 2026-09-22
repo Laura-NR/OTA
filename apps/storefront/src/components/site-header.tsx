@@ -1,35 +1,39 @@
-import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
+import { LocaleSwitcher } from '@/components/locale-switcher';
+import { Link } from '@/i18n/navigation';
 import { getServerSession } from '@/lib/api';
 
 export async function SiteHeader({ agencyName }: { agencyName: string }) {
+  const t = await getTranslations('nav');
   const session = await getServerSession();
 
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
         <Link href="/" className="text-lg font-semibold tracking-tight">
           {agencyName}
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium">
+        <nav className="flex items-center gap-4 text-sm font-medium">
           <Link href="/" className="hover:text-primary">
-            Home
+            {t('home')}
           </Link>
           <Link href="/catalog" className="hover:text-primary">
-            Experiences
+            {t('experiences')}
           </Link>
           <Link href="/join-our-network" className="hover:text-primary">
-            Work with us
+            {t('workWithUs')}
           </Link>
           {session ? (
             <Link href="/account" className="hover:text-primary">
-              My account
+              {t('account')}
             </Link>
           ) : (
             <Link href="/login" className="hover:text-primary">
-              Sign in
+              {t('signIn')}
             </Link>
           )}
+          <LocaleSwitcher />
         </nav>
       </div>
     </header>

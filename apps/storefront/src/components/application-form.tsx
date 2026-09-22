@@ -1,13 +1,22 @@
 'use client';
 
 import { Alert, Button, Input, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
+const CATEGORIES = [
+  'TOUR_GUIDE',
+  'PRIVATE_DRIVER',
+  'HOMESTAY_HOST',
+  'TRANSLATOR',
+] as const;
+
 /** Public supplier recruitment form (spec §4.6). Creates a PENDING application. */
 export function ApplicationForm() {
+  const t = useTranslations('join');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -37,68 +46,61 @@ export function ApplicationForm() {
         }),
       });
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as {
-          message?: string;
-        } | null;
-        throw new Error(body?.message ?? 'Could not submit your application');
+        throw new Error(t('error'));
       }
       setStatus('sent');
     } catch (submitError) {
       setStatus('error');
-      setError(submitError instanceof Error ? submitError.message : 'Could not submit');
+      setError(submitError instanceof Error ? submitError.message : t('error'));
     }
   }
 
   if (status === 'sent') {
-    return (
-      <Alert variant="success">
-        Thank you — your application is in. Our operations team will review it and get
-        back to you.
-      </Alert>
-    );
+    return <Alert variant="success">{t('sent')}</Alert>;
   }
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="app-name">Full name</Label>
+          <Label htmlFor="app-name">{t('fullName')}</Label>
           <Input id="app-name" name="fullName" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="app-email">Email</Label>
+          <Label htmlFor="app-email">{t('email')}</Label>
           <Input id="app-email" name="email" type="email" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="app-phone">Phone</Label>
+          <Label htmlFor="app-phone">{t('phone')}</Label>
           <Input id="app-phone" name="phone" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="app-category">Category</Label>
+          <Label htmlFor="app-category">{t('category')}</Label>
           <Select id="app-category" name="category" defaultValue="TOUR_GUIDE">
-            <option value="TOUR_GUIDE">Tour guide</option>
-            <option value="PRIVATE_DRIVER">Private driver</option>
-            <option value="HOMESTAY_HOST">Homestay host</option>
-            <option value="TRANSLATOR">Translator</option>
+            {CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {t(`categories.${category}`)}
+              </option>
+            ))}
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="app-provinces">Provinces (comma-separated)</Label>
+          <Label htmlFor="app-provinces">{t('provinces')}</Label>
           <Input
             id="app-provinces"
             name="provincesActive"
             required
-            placeholder="La Habana, Matanzas"
+            placeholder={t('provincesPlaceholder')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="app-license">RTN licence number</Label>
+          <Label htmlFor="app-license">{t('license')}</Label>
           <Input id="app-license" name="rtnLicenseNumber" required />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="app-message">Tell us about your work (optional)</Label>
+        <Label htmlFor="app-message">{t('message')}</Label>
         <textarea
           id="app-message"
           name="message"
@@ -110,7 +112,7 @@ export function ApplicationForm() {
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
       <Button type="submit" disabled={status === 'sending'}>
-        {status === 'sending' ? 'Sending…' : 'Apply to join'}
+        {status === 'sending' ? t('applying') : t('apply')}
       </Button>
     </form>
   );

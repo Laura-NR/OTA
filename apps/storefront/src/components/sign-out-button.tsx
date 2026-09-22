@@ -1,11 +1,13 @@
 'use client';
 
 import { Button } from '@ota/ui';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
+import { useRouter } from '@/i18n/navigation';
 import { authClient } from '@/lib/auth-client';
 
 export function SignOutButton() {
+  const t = useTranslations('account');
   const router = useRouter();
 
   return (
@@ -18,7 +20,7 @@ export function SignOutButton() {
         router.refresh();
       }}
     >
-      Sign out
+      {t('signOut')}
     </Button>
   );
 }

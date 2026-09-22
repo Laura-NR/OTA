@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from '@ota/i18n';
 import type { MyReservationDetailDto } from '@ota/schemas';
 import {
   Alert,
@@ -14,9 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
-import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
+import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 
 export default async function AccountReservationPage({
@@ -27,7 +29,8 @@ export default async function AccountReservationPage({
   const { id } = await params;
   const session = await getServerSession();
   if (!session) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(locale === DEFAULT_LOCALE ? '/login' : `/${locale}/login`);
   }
 
   const reservation = await apiFetch<MyReservationDetailDto>(
@@ -37,6 +40,12 @@ export default async function AccountReservationPage({
     notFound();
   }
 
+  const t = await getTranslations('account');
+  const tr = await getTranslations('status.reservation');
+  const tsi = await getTranslations('status.serviceItem');
+  const tst = await getTranslations('status.serviceType');
+  const td = await getTranslations('status.document');
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-12">
       <div className="flex flex-wrap items-center gap-3">
@@ -44,17 +53,17 @@ export default async function AccountReservationPage({
           href="/account"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← My trips
+          ← {t('back')}
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           {reservation.bookingCode}
         </h1>
-        <Badge variant="secondary">{reservation.status.replaceAll('_', ' ')}</Badge>
+        <Badge variant="secondary">{tr(reservation.status)}</Badge>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Booking</CardTitle>
+          <CardTitle>{t('booking')}</CardTitle>
           <CardDescription>
             {new Date(reservation.startDate).toLocaleDateString()} →{' '}
             {new Date(reservation.endDate).toLocaleDateString()}
@@ -67,31 +76,31 @@ export default async function AccountReservationPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Itinerary</CardTitle>
-          <CardDescription>{reservation.serviceItems.length} service(s)</CardDescription>
+          <CardTitle>{t('itinerary')}</CardTitle>
+          <CardDescription>
+            {t('serviceCount', { count: reservation.serviceItems.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {reservation.serviceItems.length === 0 ? (
-            <Alert>Your itinerary is being assembled.</Alert>
+            <Alert>{t('itineraryAssembling')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Province</TableHead>
-                  <TableHead>Starts</TableHead>
-                  <TableHead>Ends</TableHead>
+                  <TableHead>{t('columns.type')}</TableHead>
+                  <TableHead>{t('columns.status')}</TableHead>
+                  <TableHead>{t('columns.province')}</TableHead>
+                  <TableHead>{t('columns.starts')}</TableHead>
+                  <TableHead>{t('columns.ends')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {reservation.serviceItems.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.serviceType.replaceAll('_', ' ')}</TableCell>
+                    <TableCell>{tst(item.serviceType)}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
-                        {item.status.replaceAll('_', ' ')}
-                      </Badge>
+                      <Badge variant="secondary">{tsi(item.status)}</Badge>
                     </TableCell>
                     <TableCell>{item.province ?? '—'}</TableCell>
                     <TableCell>
@@ -110,26 +119,26 @@ export default async function AccountReservationPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Documents</CardTitle>
-          <CardDescription>{reservation.documents.length} file(s)</CardDescription>
+          <CardTitle>{t('documents')}</CardTitle>
+          <CardDescription>
+            {t('documentCount', { count: reservation.documents.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {reservation.documents.length === 0 ? (
-            <Alert>
-              Vouchers and invoices appear here once your booking is confirmed.
-            </Alert>
+            <Alert>{t('documentsEmpty')}</Alert>
           ) : (
             <ul className="space-y-2 text-sm">
               {reservation.documents.map((document) => (
                 <li key={document.id} className="flex items-center gap-3">
-                  <Badge variant="outline">{document.type.replaceAll('_', ' ')}</Badge>
+                  <Badge variant="outline">{td(document.type)}</Badge>
                   <a
                     className="font-medium text-primary underline-offset-4 hover:underline"
                     href={`/api/ota/documents/${document.id}/download`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Download PDF
+                    {t('download')}
                   </a>
                 </li>
               ))}

@@ -2,10 +2,12 @@
 
 import type { InventoryItemDto } from '@ota/schemas';
 import { Alert, Badge, Button, Card, CardContent, Input, Label } from '@ota/ui';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 
-const STEPS = ['Dates', 'Stays', 'Transport', 'Experiences', 'Review'] as const;
+import { useRouter } from '@/i18n/navigation';
+
+const STEP_KEYS = ['dates', 'stays', 'transport', 'experiences', 'review'] as const;
 
 function ItemPicker({
   items,
@@ -16,8 +18,11 @@ function ItemPicker({
   selected: string[];
   onToggle: (id: string) => void;
 }) {
+  const t = useTranslations('build');
+  const tc = useTranslations('catalog');
+
   if (items.length === 0) {
-    return <Alert>No options in this category yet — continue to the next step.</Alert>;
+    return <Alert>{t('noOptions')}</Alert>;
   }
   return (
     <ul className="space-y-2">
@@ -39,7 +44,9 @@ function ItemPicker({
                 />
               ) : null}
               <span className="flex-1 font-medium">{item.name}</span>
-              <span className="text-muted-foreground">{item.province ?? 'Cuba'}</span>
+              <span className="text-muted-foreground">
+                {item.province ?? tc('provinceFallback')}
+              </span>
               <span>
                 {item.currency} {Number(item.basePrice).toFixed(2)}
               </span>
@@ -57,6 +64,8 @@ function ItemPicker({
  * an ITINERARY_SUBMITTED booking for the signed-in traveler.
  */
 export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
+  const t = useTranslations('build');
+  const tc = useTranslations('catalog');
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [startDate, setStartDate] = useState('');
@@ -101,19 +110,12 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
         }),
       });
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as {
-          message?: string;
-        } | null;
-        throw new Error(body?.message ?? `Request failed (${response.status})`);
+        throw new Error(t('error'));
       }
       const reservation = (await response.json()) as { id: string };
       router.push(`/account/reservations/${reservation.id}`);
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : 'Could not build the itinerary',
-      );
+      setError(submitError instanceof Error ? submitError.message : t('error'));
     } finally {
       setBusy(false);
     }
@@ -123,10 +125,10 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
     <Card>
       <CardContent className="space-y-6 pt-6">
         <ol className="flex flex-wrap gap-2 text-xs">
-          {STEPS.map((label, index) => (
-            <li key={label}>
+          {STEP_KEYS.map((key, index) => (
+            <li key={key}>
               <Badge variant={index === step ? 'default' : 'outline'}>
-                {index + 1}. {label}
+                {index + 1}. {t(`steps.${key}`)}
               </Badge>
             </li>
           ))}
@@ -135,7 +137,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
         {step === 0 ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="build-start">Start date</Label>
+              <Label htmlFor="build-start">{t('startDate')}</Label>
               <Input
                 id="build-start"
                 type="date"
@@ -144,7 +146,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="build-end">End date</Label>
+              <Label htmlFor="build-end">{t('endDate')}</Label>
               <Input
                 id="build-end"
                 type="date"
@@ -153,9 +155,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
               />
             </div>
             {startDate && endDate && !datesValid ? (
-              <Alert variant="destructive">
-                The end date must be on or after the start date.
-              </Alert>
+              <Alert variant="destructive">{t('dateError')}</Alert>
             ) : null}
           </div>
         ) : null}
@@ -177,7 +177,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
         {step === 4 ? (
           <div className="space-y-3">
             {selectedItems.length === 0 ? (
-              <Alert>Add at least one service before submitting.</Alert>
+              <Alert>{t('addAtLeastOne')}</Alert>
             ) : (
               <ul className="space-y-2 text-sm">
                 {selectedItems.map((item) => (
@@ -185,7 +185,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
                     <span>
                       {item.name}{' '}
                       <span className="text-muted-foreground">
-                        ({item.type.replaceAll('_', ' ')})
+                        ({tc(`types.${item.type}`)})
                       </span>
                     </span>
                     <span>
@@ -195,7 +195,9 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
                 ))}
               </ul>
             )}
-            <p className="text-sm font-medium">Estimated total: EUR {total.toFixed(2)}</p>
+            <p className="text-sm font-medium">
+              {t('estimatedTotal', { currency: 'EUR', amount: total.toFixed(2) })}
+            </p>
           </div>
         ) : null}
 
@@ -207,18 +209,18 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
             disabled={step === 0 || busy}
             onClick={() => setStep((value) => Math.max(value - 1, 0))}
           >
-            Back
+            {t('back')}
           </Button>
-          {step < STEPS.length - 1 ? (
+          {step < STEP_KEYS.length - 1 ? (
             <Button
               disabled={(step === 0 && !datesValid) || busy}
               onClick={() => setStep((value) => value + 1)}
             >
-              Continue
+              {t('continue')}
             </Button>
           ) : (
             <Button disabled={selected.length === 0 || busy} onClick={submit}>
-              {busy ? 'Submitting…' : 'Submit itinerary'}
+              {busy ? t('submitting') : t('submit')}
             </Button>
           )}
         </div>

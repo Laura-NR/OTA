@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button, Input, Label } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -10,6 +11,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 /** Traveler sign-in: request a one-time magic link to the account dashboard. */
 export function MagicLinkForm({ callbackPath = '/account' }: { callbackPath?: string }) {
+  const t = useTranslations('login');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -26,24 +28,20 @@ export function MagicLinkForm({ callbackPath = '/account' }: { callbackPath?: st
 
     if (authError) {
       setStatus('error');
-      setError(authError.message ?? 'Could not send the sign-in link.');
+      setError(authError.message ?? t('error'));
       return;
     }
     setStatus('sent');
   }
 
   if (status === 'sent') {
-    return (
-      <Alert variant="success">
-        Check your inbox — a sign-in link is on its way to {email}.
-      </Alert>
-    );
+    return <Alert variant="success">{t('sent', { email })}</Alert>;
   }
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="account-email">Email</Label>
+        <Label htmlFor="account-email">{t('email')}</Label>
         <Input
           id="account-email"
           type="email"
@@ -58,7 +56,7 @@ export function MagicLinkForm({ callbackPath = '/account' }: { callbackPath?: st
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
       <Button type="submit" className="w-full" disabled={status === 'sending'}>
-        {status === 'sending' ? 'Sending…' : 'Send sign-in link'}
+        {status === 'sending' ? t('sending') : t('send')}
       </Button>
     </form>
   );

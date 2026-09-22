@@ -1,8 +1,9 @@
 'use client';
 
 import { cn } from '@ota/ui';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
+import { useRouter } from '@/i18n/navigation';
 import { CUBA_PROVINCES } from '@/lib/cuba-provinces';
 
 /**
@@ -19,6 +20,7 @@ export function CubaMap({
   selectedProvince?: string;
   type?: string;
 }) {
+  const t = useTranslations('catalog');
   const router = useRouter();
   const available = new Set(availableProvinces);
 
@@ -34,7 +36,7 @@ export function CubaMap({
     <svg
       viewBox="0 0 1000 342"
       role="group"
-      aria-label="Map of Cuba by province"
+      aria-label={t('mapAria')}
       className="h-auto w-full"
     >
       {CUBA_PROVINCES.map((province) => {

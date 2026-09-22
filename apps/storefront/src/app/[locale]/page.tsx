@@ -1,7 +1,8 @@
 import { isFeatureEnabled } from '@ota/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
-import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
+import { Link } from '@/i18n/navigation';
 import { getCatalog } from '@/lib/catalog';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -12,38 +13,35 @@ const ctaSecondary =
 
 export default async function HomePage() {
   const tenant = getTenantConfig();
+  const t = await getTranslations('home');
+  const tc = await getTranslations('catalog');
   const catalog = await getCatalog();
   const featured = catalog.slice(0, 3);
 
   return (
     <div>
       <section className="mx-auto max-w-5xl px-4 py-16">
-        <p className="text-sm font-medium text-primary">Community-based travel · Cuba</p>
+        <p className="text-sm font-medium text-primary">{t('eyebrow')}</p>
         <h1 className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">
           {tenant.branding.agencyName}
         </h1>
-        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          Ecotourism, agrotourism, and cultural immersion beyond the resort circuits —
-          curated with Cuban communities.
-        </p>
+        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">{t('description')}</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/catalog" className={ctaPrimary}>
-            Explore experiences
+            {t('explore')}
           </Link>
           {isFeatureEnabled(tenant, 'customItineraryBuilder') ? (
             <Link href="/build" className={ctaSecondary}>
-              Build an itinerary
+              {t('build')}
             </Link>
           ) : null}
         </div>
       </section>
 
       <section className="mx-auto max-w-5xl px-4 pb-16">
-        <h2 className="text-xl font-semibold tracking-tight">Featured</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t('featured')}</h2>
         {featured.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            The catalog is being prepared. Check back soon.
-          </p>
+          <p className="mt-3 text-sm text-muted-foreground">{t('preparing')}</p>
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((item) => (
@@ -51,7 +49,7 @@ export default async function HomePage() {
                 <CardHeader>
                   <CardTitle className="text-base">{item.name}</CardTitle>
                   <CardDescription>
-                    {item.province ?? 'Cuba'} · {item.type.replaceAll('_', ' ')}
+                    {item.province ?? 'Cuba'} · {tc(`types.${item.type}`)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm font-medium">
