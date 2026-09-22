@@ -16,6 +16,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { StorageModule } from './storage/storage.module';
+import { SupplierApplicationsModule } from './supplier-applications/supplier-applications.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { TenantModule } from './tenant/tenant.module';
 
@@ -47,6 +48,7 @@ const isTest = process.env.NODE_ENV === 'test';
     ImportsModule,
     PaymentsModule,
     MeModule,
+    SupplierApplicationsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
