@@ -7,6 +7,7 @@ A–E) is done. In Wave 2a the payments mock, storefront map, traveler auth +
 dashboard, package builder, recruitment portal, and storefront i18n (es/en/fr)
 are all done. What remains of Wave 2a is the checkout page, which is gated by
 ADR 0003 (no public mark-paid route until a real signed-webhook provider).
+Phase 3 has started with the analytics/BI overview.
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
@@ -70,6 +71,13 @@ ADR 0003 (no public mark-paid route until a real signed-webhook provider).
   `es` unprefixed, `/en` and `/fr` prefixed) and a header locale switcher. Locale
   is detected from `Accept-Language`. `[locale]` routes are dynamic (the shell
   reads the session), so the header and `/account` reflect the live session.
+- Phase 3 — **analytics/BI:** pure KPI maths in `packages/domain/src/analytics`
+  (`calculateFinance/Operations/Quality/Geography`); `GET
+  /analytics/overview?from&to` (ops roles) reduces raw rows into finance (GBV,
+  payouts, net revenue, take rate, AOV, by rail), operations (acceptance/timeout,
+  avg response, funnel), quality, and geography. Back-office `/analytics`.
+  Regulatory reports (nationalities, bed-nights, ecotourism ratio) are deferred —
+  the schema has no such fields.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
@@ -78,17 +86,19 @@ ADR 0003 (no public mark-paid route until a real signed-webhook provider).
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**180**: api 99,
-  payments 3, i18n 2, domain 33, theming 9, documents 8, config 7, imports 5, ui
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**190**: api 103,
+  domain 39, payments 3, i18n 2, theming 9, documents 8, config 7, imports 5, ui
   4, email 4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
   and applied `20260922070932_inventory_media`.
-- `pnpm e2e` — 14 real-browser tests pass, including the inventory flow, the
+- `pnpm e2e` — 15 real-browser tests pass, including the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
   the storefront map province filter, traveler sign-in → dashboard, the package
-  builder submit, recruitment submit → approve, and the locale switch.
-- New coverage: `packages/i18n` test enforces identical key sets across es/en/fr;
-  `storefront-i18n.spec.ts` switches es → en → fr. Earlier:
+  builder submit, recruitment submit → approve, the locale switch, and the
+  analytics dashboard.
+- New coverage: `analytics.test.ts` (6 pure KPI cases) and
+  `analytics.e2e.test.ts` (4: overview, window, 403, 401). Earlier:
+  `packages/i18n` key-parity test, `storefront-i18n.spec.ts`,
   `supplier-applications.e2e.test.ts` (7), `me.e2e.test.ts` (8),
   `payments.test.ts` (3), `payments.e2e.test.ts` (8),
   `inventory.service.test.ts` (13), `catalog.e2e.test.ts` (3),
@@ -142,13 +152,13 @@ browser flows beyond the catalog read.
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Wave 2a remainder — checkout is blocked by ADR 0003:** it cannot self-confirm
-   until a real signed-webhook provider exists. Next unblocked work is **Phase 3
-   BI** (KPI/regulatory aggregations over existing models; no deps/migrations);
-   Phase 3 AI needs an LLM-provider dependency (Article 2).
-2. Then select a real payment rail + legal clearance (ADR 0003 open item) and add
-   signature-verified webhooks.
-3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
+1. **Phase 3 remainder:** regulatory reporting (nationalities, bed-nights,
+   ecotourism ratio, MINTUR/ONAT exports) needs structured fields → a migration
+   decision; the AI assistant needs an LLM-provider dependency (Article 2);
+   optional BI polish (scheduled weekly PDF/XLSX digests, provider scorecards).
+2. **Wave 2a checkout stays blocked by ADR 0003** until a real signed-webhook
+   provider is selected (then add signature-verified webhooks).
+3. Mobile apps (Phases 5–6) need Expo (Article 2).
 4. Extend e2e: dispatch start/candidates, import commit, intake form, live
    escalation event round-trip.
 
@@ -251,3 +261,12 @@ browser flows beyond the catalog read.
   not frozen into a static shell without a session.
 - 2026-09-22 — locale is detected from `Accept-Language`; e2e pins the browser
   locale (`test.use({ locale: 'es' })`) or navigates the `/en` prefix.
+- 2026-09-22 — BI maths is pure and lives in `packages/domain/src/analytics`; the
+  API only fetches raw rows and reduces them, so the KPI definitions are
+  unit-tested and framework-agnostic.
+- 2026-09-22 — GBV is the sum of `PAID` `PaymentReceipt.amount`; supplier payouts
+  sum `ServiceItem.payoutRate` by `payoutStatus`; `takeRate = netRevenue / GBV`.
+  The overview range filters on `createdAt`.
+- 2026-09-22 — regulatory reporting (MINTUR nationalities/bed-nights, ONAT
+  exports, ecotourism ratio) is deferred: the schema has no nationality or
+  booking-taxonomy fields, so claiming those reports would require a migration.

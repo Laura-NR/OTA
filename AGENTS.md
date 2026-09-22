@@ -229,6 +229,18 @@ locale or use the `/en` prefix. `pnpm e2e` is 10 specs / 14 tests (adds the
 locale-switch spec); 180 tests (api 99, i18n 2), 16 workspaces.
 `pnpm lint/format:check/typecheck/test/build` green.
 
+**Analytics/BI increment (2026-09-22, Phase 3 start):** a read-only KPI surface.
+`packages/domain/src/analytics/kpi.ts` holds the pure calculations
+(`calculateFinance`, `calculateOperations`, `calculateQuality`,
+`calculateGeography`); the API fetches raw rows and reduces them, exposing
+`GET /analytics/overview?from&to` (ops roles) with finance (GBV, supplier
+payouts, net revenue, take rate, AOV, by rail), operations (acceptance/timeout,
+avg response, booking funnel), quality (reviews/rating/incidents), and geography.
+The back-office has an `/analytics` dashboard. 190 tests (api 103, domain 39);
+`pnpm e2e` is 10 specs / 15 tests (adds the analytics dashboard). Regulatory
+reporting (nationalities, bed-nights, ecotourism ratio) is deliberately deferred:
+it needs structured fields, which is a migration decision.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -333,6 +345,8 @@ nothing that weakens an Article.
 - `<2026-09-22: next-intl middleware detects the locale from Accept-Language (and a cookie), so an unprefixed storefront path (/catalog) may serve a non-default locale in a browser that prefers one; e2e pins the browser locale or uses the /en prefix.>`
 - `<2026-09-22: @parcel/watcher (a next-intl transitive) has its build disabled in pnpm-workspace.yaml allowBuilds.>`
 - `<2026-09-22: after moving storefront routes under app/[locale], a stale .next holds type refs to the old /app/... paths and fails typecheck; delete apps/storefront/.next after structural route moves.>`
+- `<2026-09-22: KPI maths lives in packages/domain/src/analytics (pure, unit-tested); the API only fetches raw rows and reduces them. GET /analytics/overview is ops-roles-only and the range filters on createdAt. GBV is the sum of PAID PaymentReceipt.amount; supplier payouts sum ServiceItem.payoutRate by payoutStatus; takeRate = netRevenue / GBV.>`
+- `<2026-09-22: regulatory reporting (MINTUR nationalities/bed-nights, ONAT exports, ecotourism ratio) is NOT implementable from the current schema — User has no nationality and no booking taxonomy exists. Add structured fields (migration) before claiming those reports.>`
 
 ---
 
