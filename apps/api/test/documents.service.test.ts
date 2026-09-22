@@ -39,6 +39,7 @@ const tenantConfig: TenantConfig = {
     creditCardGatewayRail: true,
   },
   destinations: { geographyType: 'cuba_provinces' },
+  emergencyContacts: [],
 };
 
 const reservation = {

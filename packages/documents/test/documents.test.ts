@@ -6,6 +6,7 @@ import {
   buildWorkOrderModels,
   renderInvoiceHtml,
   renderVoucherHtml,
+  renderWorkOrderHtml,
   type DocumentBranding,
   type ReservationDocumentInput,
 } from '../src';
@@ -16,6 +17,7 @@ const branding: DocumentBranding = {
   primaryColor: '#0f766e',
   supportEmail: 'ops@example.test',
   supportPhone: '+53 5555 0000',
+  emergencyContacts: [{ label: 'Medical emergency', phone: '104' }],
 };
 
 const input: ReservationDocumentInput = {
@@ -66,11 +68,14 @@ describe('document models', () => {
     expect(orders[0]?.payoutRate).toBe('40.00');
   });
 
-  it('builds an invoice totalling the reservation', () => {
+  it('itemises the invoice by included service and totals the reservation', () => {
     const invoice = buildInvoiceModel(input);
 
     expect(invoice.currency).toBe('EUR');
     expect(invoice.total).toBe('250.00');
+    expect(invoice.services).toHaveLength(2);
+    expect(invoice.services[0]?.serviceType).toBe('GUIDE');
+    expect(invoice.services[0]?.providerName).toBe('Guide One');
   });
 });
 
@@ -84,11 +89,27 @@ describe('document templates', () => {
     expect(html).toContain('Guide One');
   });
 
-  it('renders the invoice total', () => {
+  it('renders the invoice total and itemised services', () => {
     const html = renderInvoiceHtml(buildInvoiceModel(input), branding);
 
     expect(html).toContain('250.00');
     expect(html).toContain('MINTUR-TEST-1234');
+    expect(html).toContain('GUIDE — La Habana');
+  });
+
+  it('adds rendezvous points and the emergency directory to the voucher', () => {
+    const html = renderVoucherHtml(buildVoucherModel(input), branding);
+
+    expect(html).toContain('Rendezvous');
+    expect(html).toContain('Medical emergency');
+    expect(html).toContain('104');
+  });
+
+  it('adds the emergency protocol to the work order', () => {
+    const html = renderWorkOrderHtml(buildWorkOrderModels(input)[0]!, branding);
+
+    expect(html).toContain('Emergency protocol');
+    expect(html).toContain('Medical emergency');
   });
 
   it('escapes HTML in user-supplied values', () => {

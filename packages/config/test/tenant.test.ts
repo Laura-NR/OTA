@@ -31,6 +31,18 @@ describe('parseTenantConfig', () => {
     expect(isFeatureEnabled(config, 'instantBooking')).toBe(true);
   });
 
+  it('defaults emergency contacts to an empty list and keeps configured ones', () => {
+    expect(parseTenantConfig(minimal).emergencyContacts).toEqual([]);
+
+    const config = parseTenantConfig({
+      ...minimal,
+      emergencyContacts: [{ label: 'Medical emergency', phone: '104' }],
+    });
+    expect(config.emergencyContacts).toEqual([
+      { label: 'Medical emergency', phone: '104' },
+    ]);
+  });
+
   it('rejects a manifest without a license number', () => {
     expect(() =>
       parseTenantConfig({

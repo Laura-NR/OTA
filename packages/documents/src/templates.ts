@@ -1,4 +1,4 @@
-import type { DocumentBranding } from './branding';
+import type { DocumentBranding, DocumentEmergencyContact } from './branding';
 import type { InvoiceModel, VoucherModel, WorkOrderModel } from './data';
 
 function escapeHtml(value: string): string {
@@ -11,6 +11,37 @@ function escapeHtml(value: string): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toISOString().slice(0, 10);
+}
+
+function formatDateTime(iso: string): string {
+  const value = new Date(iso).toISOString();
+  return `${value.slice(0, 10)} ${value.slice(11, 16)} UTC`;
+}
+
+/** Duty-of-care contacts: the agency support line first, then the tenant list. */
+function emergencyContacts(branding: DocumentBranding): DocumentEmergencyContact[] {
+  const contacts: DocumentEmergencyContact[] = [];
+  if (branding.supportPhone) {
+    contacts.push({
+      label: `${branding.agencyName} support`,
+      phone: branding.supportPhone,
+    });
+  }
+  contacts.push(...branding.emergencyContacts.filter((contact) => contact.label));
+  return contacts;
+}
+
+function emergencyBlock(branding: DocumentBranding): string {
+  const contacts = emergencyContacts(branding);
+  if (contacts.length === 0) {
+    return '<p class="muted">Emergency contacts are configured by your agency.</p>';
+  }
+  return `<ul class="contacts">${contacts
+    .map(
+      (contact) =>
+        `<li><strong>${escapeHtml(contact.label)}:</strong> ${escapeHtml(contact.phone)}</li>`,
+    )
+    .join('')}</ul>`;
 }
 
 function page(title: string, body: string, branding: DocumentBranding): string {
@@ -31,8 +62,10 @@ function page(title: string, body: string, branding: DocumentBranding): string {
   h2 { font-size: 15px; margin: 20px 0 8px; }
   .muted { color: #6b7280; }
   table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
   th { background: #f3f4f6; }
+  ul.contacts { margin: 6px 0 0; padding-left: 18px; }
+  ul.contacts li { margin: 2px 0; }
   .total { font-weight: bold; }
   footer { position: fixed; bottom: 0; left: 0; right: 0; border-top: 1px solid #e5e7eb;
     padding-top: 6px; font-size: 10px; color: #6b7280; }
@@ -59,7 +92,7 @@ export function renderVoucherHtml(
     .map(
       (service) => `<tr>
         <td>${escapeHtml(service.serviceType)}</td>
-        <td>${escapeHtml(service.province ?? '—')}</td>
+        <td>${escapeHtml(service.province ?? 'Cuba')}<br/><span class="muted">${escapeHtml(formatDateTime(service.start))}</span></td>
         <td>${escapeHtml(formatDate(service.start))} → ${escapeHtml(formatDate(service.end))}</td>
         <td>${escapeHtml(service.supplierName ?? 'To be assigned')}${service.supplierPhone ? `<br/><span class="muted">${escapeHtml(service.supplierPhone)}</span>` : ''}</td>
       </tr>`,
@@ -71,11 +104,13 @@ export function renderVoucherHtml(
 <p class="muted">Booking ${escapeHtml(model.bookingCode)} · ${escapeHtml(model.travelerName)} (${escapeHtml(model.travelerEmail)})</p>
 <p class="muted">Travel window: ${escapeHtml(formatDate(model.startDate))} → ${escapeHtml(formatDate(model.endDate))}</p>
 <table>
-  <thead><tr><th>Service</th><th>Province</th><th>Dates</th><th>Provider</th></tr></thead>
+  <thead><tr><th>Service</th><th>Rendezvous</th><th>Dates</th><th>Provider</th></tr></thead>
   <tbody>${rows || '<tr><td colspan="4" class="muted">No services scheduled.</td></tr>'}</tbody>
 </table>
 <p class="total">Total: ${escapeHtml(model.totalAmount)} ${escapeHtml(model.totalCurrency)}</p>
-<p class="muted">Present this voucher at each service. Emergency and provider contacts are listed above.</p>`;
+<h2>Emergency &amp; duty of care</h2>
+<p class="muted">Keep this voucher with you. Present it at each service, and use these contacts in an emergency.</p>
+${emergencyBlock(branding)}`;
 
   return page(`Voucher ${model.bookingCode}`, body, branding);
 }
@@ -91,11 +126,14 @@ export function renderWorkOrderHtml(
   <tbody>
     <tr><th>Provider</th><td>${escapeHtml(model.supplierName ?? '—')} (${escapeHtml(model.supplierPhone ?? '—')})</td></tr>
     <tr><th>Guest</th><td>${escapeHtml(model.travelerName)}</td></tr>
+    <tr><th>Rendezvous</th><td>${escapeHtml(model.province ?? 'Cuba')} · ${escapeHtml(formatDateTime(model.start))}</td></tr>
     <tr><th>Schedule</th><td>${escapeHtml(formatDate(model.start))} → ${escapeHtml(formatDate(model.end))}</td></tr>
     <tr><th>Agreed rate</th><td>${escapeHtml(model.payoutRate)}</td></tr>
   </tbody>
 </table>
-<p class="muted">This order confirms the assignment above. Contact the operations desk for any change.</p>`;
+<h2>Emergency protocol</h2>
+<p class="muted">In an emergency, contact the operations desk first, then the relevant service below.</p>
+${emergencyBlock(branding)}`;
 
   return page(`Work order ${model.bookingCode}`, body, branding);
 }
@@ -104,10 +142,13 @@ export function renderInvoiceHtml(
   model: InvoiceModel,
   branding: DocumentBranding,
 ): string {
-  const rows = model.lines
+  const rows = model.services
     .map(
-      (line) =>
-        `<tr><td>${escapeHtml(line.label)}</td><td>${escapeHtml(line.amount)} ${escapeHtml(model.currency)}</td></tr>`,
+      (service) => `<tr>
+        <td>${escapeHtml(service.serviceType)} — ${escapeHtml(service.province ?? 'Cuba')}</td>
+        <td>${escapeHtml(formatDate(service.start))} → ${escapeHtml(formatDate(service.end))}</td>
+        <td>${escapeHtml(service.providerName ?? 'Agency arranged')}</td>
+      </tr>`,
     )
     .join('');
 
@@ -115,10 +156,11 @@ export function renderInvoiceHtml(
 <h2>Invoice</h2>
 <p class="muted">Booking ${escapeHtml(model.bookingCode)} · Billed to ${escapeHtml(model.travelerName)}</p>
 <table>
-  <thead><tr><th>Description</th><th>Amount</th></tr></thead>
-  <tbody>${rows}</tbody>
+  <thead><tr><th>Included service</th><th>Dates</th><th>Provider</th></tr></thead>
+  <tbody>${rows || '<tr><td colspan="3" class="muted">Curated travel package.</td></tr>'}</tbody>
 </table>
-<p class="total">Total due: ${escapeHtml(model.total)} ${escapeHtml(model.currency)}</p>`;
+<p class="total">Total due: ${escapeHtml(model.total)} ${escapeHtml(model.currency)}</p>
+<p class="muted">Itemised by included service. See the voucher for rendezvous points and emergency contacts.</p>`;
 
   return page(`Invoice ${model.bookingCode}`, body, branding);
 }

@@ -13,6 +13,17 @@ export const featureFlagsSchema = z.object({
 
 export type FeatureFlags = z.infer<typeof featureFlagsSchema>;
 
+/**
+ * Duty-of-care contacts injected into generated vouchers and work orders
+ * (spec §4.4, §8.1). Agency-specific, so they live in the tenant manifest.
+ */
+export const emergencyContactSchema = z.object({
+  label: z.string().min(1),
+  phone: z.string().min(1),
+});
+
+export type EmergencyContact = z.infer<typeof emergencyContactSchema>;
+
 export const tenantConfigSchema = z.object({
   tenantId: z.string().min(1),
   branding: z.object({
@@ -36,6 +47,7 @@ export const tenantConfigSchema = z.object({
       geographyType: z.string().default('cuba_provinces'),
     })
     .prefault({}),
+  emergencyContacts: z.array(emergencyContactSchema).default([]),
 });
 
 export type TenantConfig = z.infer<typeof tenantConfigSchema>;

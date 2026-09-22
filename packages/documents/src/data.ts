@@ -55,11 +55,20 @@ export interface WorkOrderModel {
   travelerName: string;
 }
 
+/** An included service on the traveler's invoice (description, not unit price). */
+export interface InvoiceServiceLine {
+  serviceType: string;
+  province: string | null;
+  start: string;
+  end: string;
+  providerName: string | null;
+}
+
 export interface InvoiceModel {
   bookingCode: string;
   travelerName: string;
   currency: string;
-  lines: Array<{ label: string; amount: string }>;
+  services: InvoiceServiceLine[];
   total: string;
 }
 
@@ -109,7 +118,13 @@ export function buildInvoiceModel(input: ReservationDocumentInput): InvoiceModel
     bookingCode: input.bookingCode,
     travelerName: travelerName(input),
     currency: input.totalCurrency,
-    lines: [{ label: 'Travel services', amount: input.totalAmount }],
+    services: input.serviceItems.map((item) => ({
+      serviceType: item.serviceType,
+      province: item.province,
+      start: item.serviceDateStart,
+      end: item.serviceDateEnd,
+      providerName: item.supplier?.fullName ?? null,
+    })),
     total: input.totalAmount,
   };
 }

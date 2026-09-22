@@ -1,4 +1,4 @@
-export { type DocumentBranding } from './branding';
+export { type DocumentBranding, type DocumentEmergencyContact } from './branding';
 export {
   buildInvoiceModel,
   buildVoucherModel,
@@ -6,6 +6,7 @@ export {
   type DocumentServiceItem,
   type DocumentSupplier,
   type InvoiceModel,
+  type InvoiceServiceLine,
   type ReservationDocumentInput,
   type VoucherModel,
   type WorkOrderModel,

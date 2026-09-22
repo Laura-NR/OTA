@@ -86,6 +86,7 @@ export class DocumentsService {
       primaryColor: this.tenant.branding.primaryColor,
       supportEmail: this.tenant.branding.supportEmail,
       supportPhone: this.tenant.branding.supportPhone,
+      emergencyContacts: this.tenant.emergencyContacts,
     };
   }
 
