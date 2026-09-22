@@ -180,6 +180,15 @@ receipts. There is deliberately no public webhook route yet. 15 workspaces, 163
 tests (api 84, payments 3); `pnpm e2e` is 6 specs / 9 tests (adds the payment link
 → confirm browser flow). `pnpm lint/format:check/typecheck/test/build` green.
 
+**Storefront map increment (2026-09-22, Wave 2a):** the public catalog gains a
+tokenized interactive map of Cuba. `cuba-map.tsx` renders the 16 provinces as
+buttons, highlights provinces that have catalog items, honours the tenant primary
+token for the selection, and navigates `/catalog?province=…`; selecting the same
+province again clears the filter. The SVG path data is generated from
+`resources/index.html` by `tools/extract-cuba-map.mjs` into an ignored
+`cuba-provinces.ts`. `pnpm e2e` is 6 specs / 10 tests (adds a storefront map spec);
+163 unit tests, 15 workspaces; `pnpm lint/format:check/typecheck/test/build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -273,6 +282,8 @@ nothing that weakens an Article.
 - `<2026-09-22: payments are provider-agnostic in packages/payments (PaymentProvider + MockPaymentProvider); apps/api injects it behind the PAYMENT_PROVIDER token declared in payments.tokens.ts. Keep the token in its own file: importing it from payments.module.ts into payments.service.ts creates a circular import and Nest resolves the token as undefined.>`
 - `<2026-09-22: creating a payment link (POST /reservations/:id/payments) is the event that moves SECURED_AND_INVOICED -> PENDING_PAYMENT; confirming (POST .../payments/:paymentId/confirm, ops+super) sets the PaymentReceipt PAID and calls ReservationsService.transition to CONFIRMED, which issues documents. There is deliberately no public webhook route until a real provider with signature verification exists — an unauthenticated mark-paid endpoint would be a security hole.>`
 - `<2026-09-22: PaymentReceipt already existed in the schema, so the mock payments increment needed no migration. PAYMENT_PROVIDER defaults to mock; PAYMENT_CHECKOUT_BASE_URL is the mock checkout base (storefront origin) and is informational until a checkout page exists.>`
+- `<2026-09-22: the Cuba map path data lives in apps/storefront/src/lib/cuba-provinces.ts, GENERATED from resources/index.html by tools/extract-cuba-map.mjs; both are eslint/prettier ignored. The SVG's historical "Ciudad de la Habana" is aliased to "La Habana" so map clicks match the province strings catalog/supplier records use.>`
+- `<2026-09-22: pnpm build writes a production .next. If you then start next dev and the first SSR of a route throws "Application error … Digest", delete apps/storefront/.next and apps/backoffice/.next before pnpm e2e — a stale production .next can poison the first dev compile.>`
 
 ---
 

@@ -42,6 +42,11 @@ auth, i18n (es/en/fr), checkout.
   receipt `PAID` and transitions `PENDING_PAYMENT → CONFIRMED` (documents issue);
   `GET` lists receipts. A `PaymentPanel` on the reservation workbench drives it.
   No public webhook route until a real provider with signature verification.
+- Wave 2a — **storefront Cuba map:** `cuba-map.tsx` renders the 16 provinces as
+  tokenized buttons (available provinces highlighted, tenant primary on select)
+  and filters `/catalog?province=…`; the path data is generated from
+  `resources/index.html` by `tools/extract-cuba-map.mjs` into an ignored
+  `cuba-provinces.ts` (historical "Ciudad de la Habana" aliased to "La Habana").
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
@@ -55,9 +60,9 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-22):
   4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
   and applied `20260922070932_inventory_media`.
-- `pnpm e2e` — 9 real-browser tests pass, including the inventory flow, the
-  supplier availability toggle, and the new payment link → mark-paid → CONFIRMED
-  flow.
+- `pnpm e2e` — 10 real-browser tests pass, including the inventory flow, the
+  supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
+  and the storefront map province filter.
 - New unit/e2e coverage: `payments.test.ts` (3: mock intent + webhook parsing),
   `payments.e2e.test.ts` (8: link → PENDING_PAYMENT, confirm → CONFIRMED, list,
   409/404/403/401). Earlier increment coverage: `inventory.service.test.ts` (13),
@@ -103,13 +108,18 @@ browser flows beyond the catalog read.
   children are **not** torn down here — ports 3000–3002 stay listening after a
   successful run. Kill them (`ps aux | grep next`; the API `node --watch` tree)
   before `pnpm build`, which clobbers `.next`.
+- Running `pnpm build` immediately before `pnpm e2e` leaves a production `.next`;
+  the first `next dev` SSR of a route can then render "Application error … Digest"
+  once. Delete `apps/storefront/.next` and `apps/backoffice/.next` before e2e when
+  a build just ran.
 - BullMQ 6 has no `repeat` on `JobsOptions`; repeatable jobs use
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Wave 2a storefront:** SVG province map (tokenized React), dynamic package
-   builder → `ITINERARY_SUBMITTED`, recruitment portal, traveler auth + dashboard,
-   i18n (es/en/fr), and the checkout page that consumes the mock payment link.
+1. **Wave 2a storefront (map done):** dynamic package builder →
+   `ITINERARY_SUBMITTED`, recruitment portal, traveler auth + dashboard, i18n
+   (es/en/fr — needs approval for `next-intl`/`i18next`), and the checkout page
+   that consumes the mock payment link.
 2. Then select a real payment rail + legal clearance (ADR 0003 open item) and add
    signature-verified webhooks.
 3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
@@ -186,3 +196,7 @@ browser flows beyond the catalog read.
   state machine and document generation stay in one place.
 - 2026-09-22 — no public payment webhook until a real provider implements
   signature verification; the mock confirmation is an authenticated ops action.
+- 2026-09-22 — the Cuba map is a tokenized React component over path data
+  generated from `resources/index.html` (not a copied SVG blob), so provinces are
+  real buttons and the tenant primary token drives the selection; historical
+  province labels are aliased to the catalog's names.
