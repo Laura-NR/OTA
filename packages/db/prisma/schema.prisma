@@ -86,6 +86,12 @@ enum VerificationStatus {
   SUSPENDED
 }
 
+enum SupplierApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum PaymentRail {
   OPEN_BANKING_SEPA
   CARD
@@ -238,6 +244,29 @@ model SupplierProfile {
 
   @@index([verificationStatus])
   @@map("supplier_profiles")
+}
+
+// Public recruitment application (spec §4.6 supplier management). Approved
+// applications provision a User + SupplierProfile; nothing is created until an
+// operator approves, so a stray application cannot collide with Better Auth.
+model SupplierApplication {
+  id               String                    @id @default(uuid()) @db.Uuid
+  fullName         String                    @map("full_name")
+  email            String
+  phone            String
+  category         SupplierCategory
+  provincesActive  String[]                  @map("provinces_active")
+  rtnLicenseNumber String                    @map("rtn_license_number")
+  message          String?
+  status           SupplierApplicationStatus @default(PENDING)
+  reviewedByUserId String?                   @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt       DateTime?                 @map("reviewed_at")
+  createdAt        DateTime                  @default(now()) @map("created_at")
+  updatedAt        DateTime                  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([email])
+  @@map("supplier_applications")
 }
 
 // Catalog entity displayed on the storefront and used by the pricing engine.
