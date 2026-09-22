@@ -57,6 +57,11 @@ storefront, then the remaining live-socket/worker gaps.
   expiring within 30 days (`GET /suppliers/expiring`), and a daily BullMQ
   repeatable job scans them. No schema migration (content type derived from the
   key extension). New dependency: `@aws-sdk/client-s3`.
+- Back-office increment D — documents are richer: the voucher has a rendezvous
+  column (province + start) and the tenant emergency directory; the work order
+  has an emergency protocol; the invoice itemises included services. Emergency
+  contacts come from the tenant manifest (`emergencyContacts`, `packages/config`),
+  so a fork sets them in `tenant/agency.config.json`.
 - Committed: `23920d7` (reservations list), `3547317` (ui + theming),
   `87c464a` (back-office + root wiring), `e2a9058` (docs), `fc084f6`
   (dev-runner fix), `1b4304d` (e2e), `ad29d0c` (storefront), plus the
@@ -64,9 +69,14 @@ storefront, then the remaining live-socket/worker gaps.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-21):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (136: domain
-  33, api 63, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (139: domain
+  33, api 63, theming 9, documents 8, config 7, imports 5, ui 4, email 4,
   schemas 3, storage 3), `pnpm build` — green.
+- Document depth proven live: regenerating DEMO0001's documents
+  (`POST /reservations/:id/documents`) produced real PDFs whose `pdftotext`
+  output contains the voucher rendezvous column + emergency directory
+  ("Medical emergency: +53 5555 0104"), the invoice's itemised
+  "GUIDE — La Habana" line, and the work order's emergency protocol.
 - BullMQ timeout firing proven live: `REDIS_URL=… vitest
   test/dispatch.bullmq.integration.test.ts` → the delayed job fires the handler
   (~300 ms). The credential-expiry repeatable scan is proven the same way
@@ -118,6 +128,13 @@ logs; no email/push yet); the Playwright MCP still cannot launch (no system
   It does not use a separate test database.
 - The ops `POST /reservations` creates DRAFT only (no storefront builder yet);
   the storefront will submit the same shape and land at ITINERARY_SUBMITTED.
+- Documents itemise the included services, not per-service traveler prices: the
+  model has no structured booking prices yet, so the invoice lists services and
+  the booking total. `payoutRate` (internal supplier cost) is only on the work
+  order, never the traveler invoice. Voucher rendezvous is province + start time;
+  an explicit meeting-point field still needs a `ServiceItem` column/migration.
+- The demo tenant's `emergencyContacts` are placeholders (+53 5555 numbers)
+  pending agency/legal confirmation (spec §9).
 
 ## Traps
 - The API dev runner must stay swc-based (`node --watch -r @swc-node/register`).
@@ -135,11 +152,11 @@ logs; no email/push yet); the Playwright MCP still cannot launch (no system
 
 ## Next
 Sequence is fixed by `docs/adr/0002-back-office-priority.md`.
-1. **Increment D — document depth:** itemized invoice from service items, and a
-   voucher with a real emergency directory and rendezvous points.
-2. **Increment E** — inventory CMS completion (delete, availability, media).
-3. Then Wave 2a (payments mock + ADR 0003, storefront builder/map/recruitment/
-   traveler auth/i18n), Phase 3 BI/AI, and the mobile apps.
+1. **Increment E — inventory CMS completion:** delete, availability calendar,
+   media, and the storefront sync controls (final back-office increment).
+2. Then Wave 2a — payments mock + ADR 0003, storefront (SVG map, dynamic package
+   builder, recruitment portal, traveler auth, i18n, checkout).
+3. Then Phase 3 (BI/reporting, AI assistant) and the mobile apps (Phases 5–6).
 Also: extend the e2e suite to dispatch start/candidates, import commit, the
 reservation intake form, and a live escalation-event round-trip.
 
@@ -208,3 +225,11 @@ reservation intake form, and a live escalation-event round-trip.
   (`upsertJobScheduler`, daily 06:00). Auto-dispatch pausing is already enforced
   by the domain `canAutoDispatch`; the job surfaces expiring workers (logs only
   for now — email/push is a follow-up).
+- 2026-09-21 — duty-of-care contacts live in the tenant manifest
+  (`emergencyContacts`) and flow into documents via `DocumentBranding`; core
+  ships no agency phone numbers.
+- 2026-09-21 — the traveler invoice itemises included services (description) plus
+  the booking total; per-service prices do not exist, and internal `payoutRate`
+  is never shown to the traveler (only on the supplier work order).
+- 2026-09-21 — voucher "rendezvous" is province + start time; a true meeting
+  point needs a `ServiceItem` column (deferred, migration).
