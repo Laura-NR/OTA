@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@ota/ui';
 import Link from 'next/link';
 
+import { CubaMap } from '@/components/cuba-map';
 import { getCatalog, type CatalogFilters } from '@/lib/catalog';
 
 const TYPES = [
@@ -38,6 +39,14 @@ export default async function CatalogPage({
       <p className="mt-2 text-muted-foreground">
         {items.length} curated option(s) across Cuba.
       </p>
+
+      <div className="mt-6 rounded-lg border bg-card p-2">
+        <CubaMap availableProvinces={provinces} selectedProvince={province} type={type} />
+        <p className="px-2 pb-1 text-xs text-muted-foreground">
+          Select a province to filter the catalog. Filled provinces have options
+          available.
+        </p>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {TYPES.map((option) => (

@@ -14,6 +14,7 @@ export default tseslint.config(
       '**/test-results/**',
       'resources/**',
       'tools/**',
+      'apps/storefront/src/lib/cuba-provinces.ts',
     ],
   },
   js.configs.recommended,
