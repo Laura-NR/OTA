@@ -41,3 +41,16 @@ export {
   type PriceBreakdown,
   type PricingRule,
 } from './pricing/pricing';
+export {
+  calculateFinance,
+  calculateGeography,
+  calculateOperations,
+  calculateQuality,
+  type FinanceInput,
+  type FinanceKpis,
+  type GeographyKpi,
+  type OperationsInput,
+  type OperationsKpis,
+  type QualityKpis,
+  type RailTotal,
+} from './analytics/kpi';
