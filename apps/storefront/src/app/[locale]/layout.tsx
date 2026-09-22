@@ -2,6 +2,7 @@ import '@ota/ui/styles.css';
 
 import '../globals.css';
 
+import { isFeatureEnabled } from '@ota/config';
 import { isSupportedLocale } from '@ota/i18n';
 import { themeCssVariables } from '@ota/theming';
 import type { Metadata } from 'next';
@@ -10,6 +11,7 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { notFound } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { PromotionalBanner } from '@/components/promotional-banner';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { getTenantConfig } from '@/lib/tenant';
@@ -53,6 +55,9 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <SiteHeader agencyName={tenant.branding.agencyName} />
+          {isFeatureEnabled(tenant, 'culturalEventsBanner') ? (
+            <PromotionalBanner />
+          ) : null}
           <main className="flex-1">{children}</main>
           <SiteFooter tenant={tenant} />
         </NextIntlClientProvider>

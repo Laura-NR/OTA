@@ -18,6 +18,7 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
+import { MessageThread } from '@/components/message-thread';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 
@@ -146,6 +147,8 @@ export default async function AccountReservationPage({
           )}
         </CardContent>
       </Card>
+
+      <MessageThread reservationId={reservation.id} />
     </div>
   );
 }

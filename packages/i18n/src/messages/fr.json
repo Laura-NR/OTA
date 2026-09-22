@@ -88,7 +88,25 @@
       "province": "Province",
       "starts": "Début",
       "ends": "Fin"
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Discutez avec notre équipe d'opérations à propos de cette réservation.",
+      "empty": "Aucun message pour l'instant.",
+      "placeholder": "Écrivez un message…",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "loadError": "Impossible de charger les messages.",
+      "sendError": "Impossible d'envoyer votre message."
+    },
+    "sender": {
+      "TRAVELER": "Vous",
+      "OPERATIONS": "Opérations"
     }
+  },
+  "banner": {
+    "text": "Événements culturels à travers Cuba — demandez notre calendrier actuel.",
+    "cta": "Explorer les expériences"
   },
   "join": {
     "title": "Rejoignez notre réseau",

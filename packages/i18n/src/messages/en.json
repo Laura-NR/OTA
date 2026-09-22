@@ -88,7 +88,25 @@
       "province": "Province",
       "starts": "Starts",
       "ends": "Ends"
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Chat with our operations team about this booking.",
+      "empty": "No messages yet.",
+      "placeholder": "Write a message…",
+      "send": "Send",
+      "sending": "Sending…",
+      "loadError": "Could not load messages.",
+      "sendError": "Could not send your message."
+    },
+    "sender": {
+      "TRAVELER": "You",
+      "OPERATIONS": "Operations"
     }
+  },
+  "banner": {
+    "text": "Cultural events across Cuba — ask our team for the current calendar.",
+    "cta": "Explore experiences"
   },
   "join": {
     "title": "Join our network",

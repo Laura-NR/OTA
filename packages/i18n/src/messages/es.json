@@ -88,7 +88,25 @@
       "province": "Provincia",
       "starts": "Inicio",
       "ends": "Fin"
+    },
+    "messages": {
+      "title": "Mensajes",
+      "description": "Chatea con nuestro equipo de operaciones sobre esta reserva.",
+      "empty": "Aún no hay mensajes.",
+      "placeholder": "Escribe un mensaje…",
+      "send": "Enviar",
+      "sending": "Enviando…",
+      "loadError": "No se pudieron cargar los mensajes.",
+      "sendError": "No se pudo enviar tu mensaje."
+    },
+    "sender": {
+      "TRAVELER": "Tú",
+      "OPERATIONS": "Operaciones"
     }
+  },
+  "banner": {
+    "text": "Eventos culturales por toda Cuba: pide a nuestro equipo el calendario actual.",
+    "cta": "Explorar experiencias"
   },
   "join": {
     "title": "Únete a nuestra red",
