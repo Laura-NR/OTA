@@ -59,6 +59,11 @@ auth, i18n (es/en/fr), checkout.
   derived from catalog items. `/login?next=` returns the traveler to where they
   started. The booking-code generator is shared at
   `apps/api/src/common/booking-code.ts`.
+- Wave 2a — **recruitment:** new `supplier_applications` table (migration
+  `20260922122512_supplier_applications`); `POST /supplier-applications` is public
+  and only stages; ops approve/reject, and approval creates the `SERVICE_WORKER`
+  user + `PENDING_AUDIT` profile. Storefront `/join-our-network`; back-office
+  `/applications`.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
@@ -67,19 +72,20 @@ auth, i18n (es/en/fr), checkout.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**171**: api 92,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**178**: api 99,
   payments 3, domain 33, theming 9, documents 8, config 7, imports 5, ui 4, email
   4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
   and applied `20260922070932_inventory_media`.
-- `pnpm e2e` — 12 real-browser tests pass, including the inventory flow, the
+- `pnpm e2e` — 13 real-browser tests pass, including the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
-  the storefront map province filter, traveler sign-in → dashboard, and the
-  package builder submit.
-- New unit/e2e coverage: `me.e2e.test.ts` (8: profile/list/detail, ownership 404,
-  itinerary creation, unavailable item 400, inverted dates 400, 401). Earlier:
-  `payments.test.ts` (3), `payments.e2e.test.ts` (8), `inventory.service.test.ts`
-  (13), `catalog.e2e.test.ts` (3), `suppliers.e2e.test.ts` (14).
+  the storefront map province filter, traveler sign-in → dashboard, the package
+  builder submit, and recruitment submit → approve.
+- New unit/e2e coverage: `supplier-applications.e2e.test.ts` (7: public submit,
+  duplicate 409, validation 400, list/RBAC, approve provisions worker, reject,
+  404). Earlier: `me.e2e.test.ts` (8), `payments.test.ts` (3),
+  `payments.e2e.test.ts` (8), `inventory.service.test.ts` (13),
+  `catalog.e2e.test.ts` (3), `suppliers.e2e.test.ts` (14).
 
 Not verified: outbound expiry notifications; live escalation event round-trip;
 the PDF branch of the credential inspector; dispatch start/candidates and import
@@ -129,10 +135,10 @@ browser flows beyond the catalog read.
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Wave 2a storefront (map + traveler auth + builder done):** recruitment
-   portal, i18n (es/en/fr — needs approval for `next-intl`/`i18next`), and the
-   checkout page that consumes the mock payment link (traveler auth + builder now
-   unblock it).
+1. **Wave 2a storefront (map + traveler auth + builder + recruitment done):**
+   i18n (es/en/fr with `next-intl` + `i18next`, both approved), then the checkout
+   page for the mock payment link (per ADR 0003 it cannot self-confirm until a
+   real signed-webhook provider exists).
 2. Then select a real payment rail + legal clearance (ADR 0003 open item) and add
    signature-verified webhooks.
 3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
@@ -226,3 +232,8 @@ browser flows beyond the catalog read.
 - 2026-09-22 — the ops and storefront booking-code generators were unified into
   `apps/api/src/common/booking-code.ts` (retry-on-collision stays at each call
   site because only it can query the database).
+- 2026-09-22 — supplier recruitment stages a `supplier_applications` row first;
+  only operator approval creates the User + SupplierProfile, so a public
+  submission never writes to Better Auth's user table.
+- 2026-09-22 — i18n will follow the locked stack (`next-intl` + `i18next`),
+  approved by the human; implementation is the next increment.

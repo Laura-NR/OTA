@@ -209,6 +209,17 @@ from the catalog item, never the client. The booking-code generator moved to
 (api 92); `pnpm e2e` is 8 specs / 12 tests (adds the builder submit flow).
 `pnpm lint/format:check/typecheck/test/build` green.
 
+**Recruitment increment (2026-09-22, Wave 2a):** supplier recruitment via a
+staging application + invite flow. A new `supplier_applications` table (migration
+`20260922122512_supplier_applications`) stores public applications; nothing is
+provisioned until an operator approves. `POST /supplier-applications` is
+`@Public()`; `GET` (ops), `POST /:id/approve` and `/:id/reject` (ops/super).
+Approving creates a `SERVICE_WORKER` user (if none) and a `PENDING_AUDIT`
+`SupplierProfile`, then audits the decision. The storefront ships a public
+`/join-our-network` form; the back-office has an `/applications` review page. 178
+tests (api 99); `pnpm e2e` is 9 specs / 13 tests (adds submit → approve).
+`pnpm lint/format:check/typecheck/test/build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -308,6 +319,7 @@ nothing that weakens an Article.
 - `<2026-09-22: the storefront reuses better-auth as a browser client (apps/storefront/src/lib/auth-client.ts) and reads the session server-side by forwarding cookies to the API (/api/auth/get-session). The root layout calls getServerSession, which makes storefront pages dynamic; the storefront is not a security boundary — the API enforces ownership.>`
 - `<2026-09-22: the dynamic package builder is apps/storefront/src/app/build (five steps) posting to POST /me/reservations, which creates an ITINERARY_SUBMITTED booking for the caller and derives each ServiceItem's type/province/price from the catalog item. The shared booking-code generator lives in apps/api/src/common/booking-code.ts.>`
 - `<2026-09-22: /login?next=<path> (path must start with "/") makes the magic-link callbackURL return the traveler to that path after sign-in; the default is /account.>`
+- `<2026-09-22: supplier recruitment is a staging flow: POST /supplier-applications (@Public) only writes a supplier_applications row; approving (ops/super) is what creates the User (SERVICE_WORKER) + SupplierProfile (PENDING_AUDIT). Nothing touches Better Auth's user table until an operator approves, so a stray public submission cannot collide with sign-up.>`
 
 ---
 
