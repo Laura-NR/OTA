@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-22 14:40
+# Handoff — main — updated 2026-09-22 15:45
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -11,9 +11,9 @@ Phase 3 has started with the analytics/BI overview.
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
-  **15 workspace projects** (3 apps, 12 packages).
+  **16 workspace projects** (3 apps, 13 packages).
 - Apps: `api` (NestJS, CommonJS), `backoffice`, `storefront` (Next.js 15).
-- Packages: domain, schemas, db, auth, config, documents, email, imports,
+- Packages: domain, schemas, db, auth, config, documents, email, i18n, imports,
   payments, storage, theming, ui.
 - Back-office (ADR 0002):
   - **A — reservation pipeline:** list/detail/audit + ops intake (`POST
@@ -25,7 +25,7 @@ Phase 3 has started with the analytics/BI overview.
     + daily BullMQ scan.
   - **D — document depth:** voucher rendezvous + emergency directory, work-order
     emergency protocol, itemised invoice; `emergencyContacts` in the manifest.
-  - **E — inventory CMS (this increment):** full CRUD. `DELETE /inventory/:id`
+  - **E — inventory CMS:** full CRUD. `DELETE /inventory/:id`
     hard-deletes (pricing rules + media cascade, storage objects removed
     best-effort, audited); pricing rules have PATCH/DELETE at
     `/inventory/:id/pricing-rules/:ruleId`; `active=false` stays soft-disable.
@@ -81,16 +81,17 @@ Phase 3 has started with the analytics/BI overview.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 5 spec files / 8 tests (`pnpm e2e`, cached `chromium-1243`).
-- Head `7e7685f` (code), this docs commit on top; pushed to `origin/main`.
+- e2e: 12 spec files / 15 tests (`pnpm e2e`, cached `chromium-1243`).
+- Head `ae75dc3`, pushed to `origin/main`.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
 - `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**190**: api 103,
   domain 39, payments 3, i18n 2, theming 9, documents 8, config 7, imports 5, ui
   4, email 4, schemas 3, storage 3), `pnpm build` — green.
-- `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
-  and applied `20260922070932_inventory_media`.
+- `pnpm --filter @ota/db exec prisma migrate dev` created and applied
+  `20260922070932_inventory_media` and `20260922122512_supplier_applications`
+  (8 migrations total).
 - `pnpm e2e` — 15 real-browser tests pass, including the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
   the storefront map province filter, traveler sign-in → dashboard, the package
@@ -104,10 +105,12 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-22):
   `inventory.service.test.ts` (13), `catalog.e2e.test.ts` (3),
   `suppliers.e2e.test.ts` (14).
 
-Not verified: outbound expiry notifications; live escalation event round-trip;
-the PDF branch of the credential inspector; dispatch start/candidates and import
-commit UI actions; passkeys; worker accept/decline against a real DB; storefront
-browser flows beyond the catalog read.
+Not verified: outbound credential-expiry notifications (the scan logs only); a
+live escalation event round-trip (the `/ops` handshake is tested, not an event);
+the PDF branch of the credential inspector (the image branch is); dispatch
+start/candidates and import commit through the UI (covered over HTTP/unit only);
+passkeys; worker accept/decline against a real database. Storefront browser
+flows are covered (map, auth, builder, i18n, recruitment).
 
 ## Assumptions & unknowns
 - Catalog media content type is derived from the storage-key extension, so no
@@ -152,14 +155,19 @@ browser flows beyond the catalog read.
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Phase 3 remainder:** regulatory reporting (nationalities, bed-nights,
+1. **Phase 4 storefront remainder:** checkout (blocked by ADR 0003 until a real
+   signed-webhook provider is selected); a traveler ↔ ops messaging UI on the
+   storefront (the API exists, no UI); a content hub / promotional banner (the
+   `culturalEventsBanner` flag is unused); curated packages (no bundle model);
+   the catalog/map do not yet show real-time availability.
+2. **Phase 3 remainder:** regulatory reporting (nationalities, bed-nights,
    ecotourism ratio, MINTUR/ONAT exports) needs structured fields → a migration
    decision; the AI assistant needs an LLM-provider dependency (Article 2);
    optional BI polish (scheduled weekly PDF/XLSX digests, provider scorecards).
-2. **Wave 2a checkout stays blocked by ADR 0003** until a real signed-webhook
-   provider is selected (then add signature-verified webhooks).
-3. Mobile apps (Phases 5–6) need Expo (Article 2).
-4. Extend e2e: dispatch start/candidates, import commit, intake form, live
+3. **Phase 7 hardening:** security review (PII at rest, rate limiting,
+   observability), `create-tenant` fork tooling, core versioning.
+4. Mobile apps (Phases 5–6) need Expo (Article 2).
+5. Extend e2e: dispatch start/candidates, import commit, intake form, live
    escalation event round-trip.
 
 ## Decisions (append-only)

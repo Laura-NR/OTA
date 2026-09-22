@@ -186,7 +186,7 @@ buttons, highlights provinces that have catalog items, honours the tenant primar
 token for the selection, and navigates `/catalog?province=…`; selecting the same
 province again clears the filter. The SVG path data is generated from
 `resources/index.html` by `tools/extract-cuba-map.mjs` into an ignored
-`cuba-provinces.ts`. `pnpm e2e` is 6 specs / 10 tests (adds a storefront map spec);
+`cuba-provinces.ts`. `pnpm e2e` is 7 specs / 10 tests (adds a storefront map spec);
 163 unit tests, 15 workspaces; `pnpm lint/format:check/typecheck/test/build` green.
 
 **Traveler auth increment (2026-09-22, Wave 2a):** the storefront gains traveler
@@ -196,7 +196,7 @@ scoped to the caller; documents omit the storage key). The storefront ships
 `/login`, `/account` (trips list), and `/account/reservations/[id]` (itinerary +
 document vault); the root header reads the session, so storefront pages are
 dynamic. `better-auth` is reused as the browser client (already in the repo).
-168 tests (api 89); `pnpm e2e` is 7 specs / 11 tests (adds storefront traveler
+168 tests (api 89); `pnpm e2e` is 8 specs / 11 tests (adds storefront traveler
 sign-in → dashboard). `pnpm lint/format:check/typecheck/test/build` green.
 
 **Package builder increment (2026-09-22, Wave 2a):** the storefront gains the
@@ -206,7 +206,7 @@ booking for the signed-in traveler; service type, province, and price are derive
 from the catalog item, never the client. The booking-code generator moved to
 `apps/api/src/common/booking-code.ts` and is shared with the ops intake path.
 `/login?next=…` returns the traveler to the page they came from. 171 tests
-(api 92); `pnpm e2e` is 8 specs / 12 tests (adds the builder submit flow).
+(api 92); `pnpm e2e` is 9 specs / 12 tests (adds the builder submit flow).
 `pnpm lint/format:check/typecheck/test/build` green.
 
 **Recruitment increment (2026-09-22, Wave 2a):** supplier recruitment via a
@@ -217,7 +217,7 @@ provisioned until an operator approves. `POST /supplier-applications` is
 Approving creates a `SERVICE_WORKER` user (if none) and a `PENDING_AUDIT`
 `SupplierProfile`, then audits the decision. The storefront ships a public
 `/join-our-network` form; the back-office has an `/applications` review page. 178
-tests (api 99); `pnpm e2e` is 9 specs / 13 tests (adds submit → approve).
+tests (api 99); `pnpm e2e` is 10 specs / 13 tests (adds submit → approve).
 `pnpm lint/format:check/typecheck/test/build` green.
 
 **i18n increment (2026-09-22, Wave 2a):** the storefront is localized (es/en/fr)
@@ -225,7 +225,7 @@ with `next-intl` and a shared `packages/i18n` catalog. Routes live under
 `app/[locale]` with `localePrefix: 'as-needed'` — the tenant default (`es`) is
 unprefixed, while `/en` and `/fr` are prefixed — plus a header locale switcher.
 Middleware detects the locale from `Accept-Language`, so tests pin a browser
-locale or use the `/en` prefix. `pnpm e2e` is 10 specs / 14 tests (adds the
+locale or use the `/en` prefix. `pnpm e2e` is 11 specs / 14 tests (adds the
 locale-switch spec); 180 tests (api 99, i18n 2), 16 workspaces.
 `pnpm lint/format:check/typecheck/test/build` green.
 
@@ -237,7 +237,7 @@ locale-switch spec); 180 tests (api 99, i18n 2), 16 workspaces.
 payouts, net revenue, take rate, AOV, by rail), operations (acceptance/timeout,
 avg response, booking funnel), quality (reviews/rating/incidents), and geography.
 The back-office has an `/analytics` dashboard. 190 tests (api 103, domain 39);
-`pnpm e2e` is 10 specs / 15 tests (adds the analytics dashboard). Regulatory
+`pnpm e2e` is 12 specs / 15 tests (adds the analytics dashboard). Regulatory
 reporting (nationalities, bed-nights, ecotourism ratio) is deliberately deferred:
 it needs structured fields, which is a migration decision.
 
