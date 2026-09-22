@@ -11,6 +11,7 @@ import {
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { AvailabilityCalendar } from '@/components/availability-calendar';
 import { SupplierCredential } from '@/components/supplier-credential';
 import { VerificationActions } from '@/components/verification-actions';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -144,6 +145,19 @@ export default async function SupplierDetailPage({
             contentType={supplier.credentialContentType}
             canEdit={canEdit}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Availability calendar</CardTitle>
+          <CardDescription>
+            Single-tap availability and granular blocking. Auto-dispatch respects these
+            days (spec §5.2).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AvailabilityCalendar supplierId={supplier.id} canEdit={canVerify} />
         </CardContent>
       </Card>
     </div>

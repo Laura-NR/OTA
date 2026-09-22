@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import Link from 'next/link';
 
+import { InventoryActions } from '@/components/inventory-actions';
 import { InventoryCreateForm } from '@/components/inventory-create-form';
 import { PageHeader } from '@/components/page-header';
 import { PriceQuote } from '@/components/price-quote';
@@ -39,7 +41,7 @@ export default async function InventoryPage() {
     <div className="space-y-6">
       <PageHeader
         title="Inventory"
-        description="Catalog and pricing. Seasonal rates and markups feed the pure domain pricing engine."
+        description="Catalog, media, and pricing. Seasonal rates and markups feed the pure domain pricing engine."
       />
 
       {canWrite ? (
@@ -68,18 +70,38 @@ export default async function InventoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Province</TableHead>
                   <TableHead>Base</TableHead>
                   <TableHead>Active</TableHead>
                   <TableHead>Price quote</TableHead>
+                  {canWrite ? <TableHead>Actions</TableHead> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      {item.media[0] ? (
+                        <img
+                          src={`/api/ota/inventory/media/${item.media[0].id}`}
+                          alt={item.media[0].altText ?? item.name}
+                          className="h-10 w-16 rounded object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-16 rounded bg-muted" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/inventory/${item.id}`}
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                    </TableCell>
                     <TableCell>{item.type.replaceAll('_', ' ')}</TableCell>
                     <TableCell>{item.province ?? '—'}</TableCell>
                     <TableCell>
@@ -93,6 +115,11 @@ export default async function InventoryPage() {
                     <TableCell>
                       <PriceQuote inventoryItemId={item.id} />
                     </TableCell>
+                    {canWrite ? (
+                      <TableCell>
+                        <InventoryActions inventoryItemId={item.id} name={item.name} />
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))}
               </TableBody>
