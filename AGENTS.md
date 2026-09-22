@@ -168,6 +168,18 @@ storefront `/catalog` is dynamic per filter and renders images. 152 tests (api 7
 flow and the supplier availability toggle). `pnpm lint/format:check/typecheck/test/
 build` green.
 
+**Payments mock increment (2026-09-22, Wave 2a start):** `packages/payments` added
+— a provider-agnostic `PaymentProvider` interface plus `MockPaymentProvider`, with
+no new third-party dependency. `docs/adr/0003-payments.md` fixes the approach:
+real rails wait on provider/legal clearance, so the mock is the default.
+`POST /reservations/:id/payments` creates a link and moves
+SECURED_AND_INVOICED → PENDING_PAYMENT; `POST
+/reservations/:id/payments/:paymentId/confirm` (ops/super) marks the receipt PAID
+and transitions PENDING_PAYMENT → CONFIRMED (documents issue); `GET` lists
+receipts. There is deliberately no public webhook route yet. 15 workspaces, 163
+tests (api 84, payments 3); `pnpm e2e` is 6 specs / 9 tests (adds the payment link
+→ confirm browser flow). `pnpm lint/format:check/typecheck/test/build` green.
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -258,6 +270,9 @@ nothing that weakens an Article.
 - `<2026-09-22: public GET /catalog now accepts optional type and province filters (active=true is always forced server-side); the storefront /catalog reads searchParams so it is dynamic per filter instead of a single ISR page, and renders the first image per card.>`
 - `<2026-09-22: DELETE /inventory/:id hard-deletes the row (pricing rules and media cascade), removes the media storage objects best-effort, and audits inventory.deleted; active=false remains the soft-disable path. Pricing rules have PATCH/DELETE at /inventory/:id/pricing-rules/:ruleId.>`
 - `<2026-09-22: the Availability model stays supplier-scoped (it has no inventory-item link). It is exposed at GET /suppliers/:id/availability?from&to and PUT /suppliers/:id/availability ({date,isAvailable}; upsert on supplier+date, ops+super roles, audited). The back-office calendar treats a day with no row as available.>`
+- `<2026-09-22: payments are provider-agnostic in packages/payments (PaymentProvider + MockPaymentProvider); apps/api injects it behind the PAYMENT_PROVIDER token declared in payments.tokens.ts. Keep the token in its own file: importing it from payments.module.ts into payments.service.ts creates a circular import and Nest resolves the token as undefined.>`
+- `<2026-09-22: creating a payment link (POST /reservations/:id/payments) is the event that moves SECURED_AND_INVOICED -> PENDING_PAYMENT; confirming (POST .../payments/:paymentId/confirm, ops+super) sets the PaymentReceipt PAID and calls ReservationsService.transition to CONFIRMED, which issues documents. There is deliberately no public webhook route until a real provider with signature verification exists — an unauthenticated mark-paid endpoint would be a security hole.>`
+- `<2026-09-22: PaymentReceipt already existed in the schema, so the mock payments increment needed no migration. PAYMENT_PROVIDER defaults to mock; PAYMENT_CHECKOUT_BASE_URL is the mock checkout base (storefront origin) and is informational until a checkout page exists.>`
 
 ---
 

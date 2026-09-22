@@ -1,18 +1,18 @@
-# Handoff — main — updated 2026-09-22 09:30
+# Handoff — main — updated 2026-09-22 14:05
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
-stack: `docs/adr/0001-stack.md`. Wave 1 is the back-office ERP, and
-`docs/adr/0002-back-office-priority.md` fixes the order (increments A–E before
-storefront expansion). **A–E are now done**; next is Wave 2a (payments mock +
-ADR 0003, then storefront expansion).
+stack: `docs/adr/0001-stack.md`. Wave 1 (the back-office ERP, ADR 0002 increments
+A–E) is done; **Wave 2a has started** with the payments mock (`docs/adr/0003-payments.md`).
+Next: storefront SVG map, dynamic package builder, recruitment portal, traveler
+auth, i18n (es/en/fr), checkout.
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
-  **14 workspace projects** (3 apps, 11 packages).
+  **15 workspace projects** (3 apps, 12 packages).
 - Apps: `api` (NestJS, CommonJS), `backoffice`, `storefront` (Next.js 15).
 - Packages: domain, schemas, db, auth, config, documents, email, imports,
-  storage, theming, ui.
+  payments, storage, theming, ui.
 - Back-office (ADR 0002):
   - **A — reservation pipeline:** list/detail/audit + ops intake (`POST
     /reservations` → DRAFT) and board → workbench.
@@ -35,6 +35,13 @@ ADR 0003, then storefront expansion).
     inspector. Public `GET /catalog` accepts `type`/`province` filters and carries
     media; `GET /catalog/media/:mediaId` is public but refuses inactive items.
     Storefront `/catalog` is dynamic per filter and renders images.
+- Wave 2a — **payments mock:** `packages/payments` (`PaymentProvider` +
+  `MockPaymentProvider`, no new dependency; ADR 0003). `POST
+  /reservations/:id/payments` creates a link and moves `SECURED_AND_INVOICED →
+  PENDING_PAYMENT`; `POST .../payments/:paymentId/confirm` (ops/super) marks the
+  receipt `PAID` and transitions `PENDING_PAYMENT → CONFIRMED` (documents issue);
+  `GET` lists receipts. A `PaymentPanel` on the reservation workbench drives it.
+  No public webhook route until a real provider with signature verification.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
@@ -43,18 +50,18 @@ ADR 0003, then storefront expansion).
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-22):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**152**: api 76,
-  domain 33, theming 9, documents 8, config 7, imports 5, ui 4, email 4, schemas
-  3, storage 3), `pnpm build` — green.
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**163**: api 84,
+  payments 3, domain 33, theming 9, documents 8, config 7, imports 5, ui 4, email
+  4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev --name inventory_media` created
   and applied `20260922070932_inventory_media`.
-- `pnpm e2e` — 8 real-browser tests pass, including the new inventory
-  create → detail → image upload → pricing rule → delete flow and the supplier
-  availability block/reopen toggle.
-- New unit/e2e coverage: `inventory.service.test.ts` (13: delete, pricing-rule
-  update/delete, media add/list/delete), `catalog.e2e.test.ts` (3: public +
-  type/province filters + media field), `suppliers.e2e.test.ts` (14: availability
-  set/list/upsert/403/404).
+- `pnpm e2e` — 9 real-browser tests pass, including the inventory flow, the
+  supplier availability toggle, and the new payment link → mark-paid → CONFIRMED
+  flow.
+- New unit/e2e coverage: `payments.test.ts` (3: mock intent + webhook parsing),
+  `payments.e2e.test.ts` (8: link → PENDING_PAYMENT, confirm → CONFIRMED, list,
+  409/404/403/401). Earlier increment coverage: `inventory.service.test.ts` (13),
+  `catalog.e2e.test.ts` (3), `suppliers.e2e.test.ts` (14).
 
 Not verified: outbound expiry notifications; live escalation event round-trip;
 the PDF branch of the credential inspector; dispatch start/candidates and import
@@ -69,6 +76,9 @@ browser flows beyond the catalog read.
 - The storefront `/catalog` is dynamic (reads `searchParams`), so each filter
   combination is server-rendered; the underlying `/catalog` fetch is still cached
   for 60s, so CMS edits land within ~1 minute.
+- Payments run on the mock adapter; confirmation is an authenticated ops action,
+  not a gateway webhook. The mock `checkoutUrl` base is `PAYMENT_CHECKOUT_BASE_URL`
+  (storefront origin) and stays informational until a `/checkout` page exists.
 - Authorisation stays API-only; the UI hides controls by role but is not a
   security boundary.
 - e2e writes E2E-owned fixtures to the dev DB; `global-setup.ts` resets the
@@ -86,6 +96,9 @@ browser flows beyond the catalog read.
   the browser to the API origin.
 - Inventory route order matters: static `media/:mediaId` is declared before the
   `:id` routes in `inventory.controller.ts`.
+- `PAYMENT_PROVIDER` lives in `payments.tokens.ts`, not the module: importing it
+  from `payments.module.ts` into `payments.service.ts` is a circular import that
+  resolves the token to `undefined` and breaks Nest DI.
 - `pnpm e2e` starts `pnpm dev` via Playwright's `webServer`, but its turbo-spawned
   children are **not** torn down here — ports 3000–3002 stay listening after a
   successful run. Kill them (`ps aux | grep next`; the API `node --watch` tree)
@@ -94,11 +107,13 @@ browser flows beyond the catalog read.
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Wave 2a — payments mock + `docs/adr/0003-payments.md`**, then storefront SVG
-   map, dynamic package builder, recruitment portal, traveler auth, i18n
-   (es/en/fr), checkout.
-2. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
-3. Extend e2e: dispatch start/candidates, import commit, intake form, live
+1. **Wave 2a storefront:** SVG province map (tokenized React), dynamic package
+   builder → `ITINERARY_SUBMITTED`, recruitment portal, traveler auth + dashboard,
+   i18n (es/en/fr), and the checkout page that consumes the mock payment link.
+2. Then select a real payment rail + legal clearance (ADR 0003 open item) and add
+   signature-verified webhooks.
+3. Phase 3 (BI/regulatory reporting, AI assistant) and the mobile apps (Phases 5–6).
+4. Extend e2e: dispatch start/candidates, import commit, intake form, live
    escalation event round-trip.
 
 ## Decisions (append-only)
@@ -162,3 +177,12 @@ browser flows beyond the catalog read.
   soft-disable path.
 - 2026-09-22 — availability reuses the existing supplier-scoped `Availability`
   model (worker availability, spec §5.2); no per-inventory-item availability link.
+- 2026-09-22 — payments are provider-agnostic in `packages/payments`
+  (`PaymentProvider` + `MockPaymentProvider`, ADR 0003); the mock ships first
+  because real rails wait on provider/legal clearance, and it adds no dependency.
+- 2026-09-22 — creating a payment link is the event that moves
+  `SECURED_AND_INVOICED` → `PENDING_PAYMENT`; confirming the receipt drives
+  `PENDING_PAYMENT` → `CONFIRMED` through `ReservationsService.transition`, so the
+  state machine and document generation stay in one place.
+- 2026-09-22 — no public payment webhook until a real provider implements
+  signature verification; the mock confirmation is an authenticated ops action.
