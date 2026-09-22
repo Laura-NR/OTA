@@ -8,5 +8,6 @@ import { ReservationsService } from './reservations.service';
   imports: [DocumentsModule],
   controllers: [ReservationsController],
   providers: [ReservationsService],
+  exports: [ReservationsService],
 })
 export class ReservationsModule {}
