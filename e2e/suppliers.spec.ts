@@ -48,4 +48,20 @@ test.describe('supplier compliance', () => {
 
     await expect(page.getByAltText('Supplier credential')).toBeVisible();
   });
+
+  test('blocks and reopens a worker availability day', async ({ page }) => {
+    await page.getByRole('link', { name: 'Example Guide' }).click();
+    await expect(page.getByRole('heading', { name: 'Example Guide' })).toBeVisible();
+
+    const date = new Date();
+    date.setUTCDate(15);
+    const key = date.toISOString().slice(0, 10);
+    const day = page.locator(`[data-date="${key}"]`);
+
+    await expect(day).toHaveAttribute('title', 'Available');
+    await day.click();
+    await expect(day).toHaveAttribute('title', 'Blocked');
+    await day.click();
+    await expect(day).toHaveAttribute('title', 'Available');
+  });
 });

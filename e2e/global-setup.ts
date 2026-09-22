@@ -52,6 +52,16 @@ export default async function globalSetup(): Promise<void> {
       where: { id: guide.supplierProfile.id },
       data: { verificationStatus: 'VERIFIED', isAvailable: true },
     });
+
+    // Inventory CMS fixtures: drop items the e2e run created (media rows
+    // cascade) and any availability override it left on the seeded guide.
+    const availabilityDate = new Date();
+    availabilityDate.setUTCDate(15);
+    availabilityDate.setUTCHours(0, 0, 0, 0);
+    await prisma.availability.deleteMany({
+      where: { supplierId: guide.supplierProfile.id, date: availabilityDate },
+    });
+    await prisma.inventoryItem.deleteMany({ where: { name: { startsWith: 'E2E ' } } });
   } finally {
     await prisma.$disconnect();
   }
