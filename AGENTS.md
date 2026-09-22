@@ -133,6 +133,15 @@ re-dispatch) and a `/messages` inbox on the `/conversations` socket. The API add
 `REDIS_URL`). 129 tests; e2e is 5 specs (escalation socket, messaging,
 reservations, suppliers). New dependency: `socket.io-client` (back-office).
 
+**Compliance increment (2026-09-21, ADR 0002 increment C):** `packages/storage`
+(S3/MinIO via `@aws-sdk/client-s3`, in-memory fallback) added; suppliers gain
+credential upload/download (`POST|GET /suppliers/:id/credential`), a visual
+inspector at `/suppliers/[id]`, an expiring-credentials endpoint, and a daily
+BullMQ repeatable scan. No schema migration: the credential content type is
+derived from the storage-key extension. 136 tests; e2e is 6 (adds a credential
+upload/inspector spec). Live-proven: an S3 round-trip against MinIO and the
+repeatable expiry scan, both gated on their env (`S3_*`, `REDIS_URL`).
+
 **Slow or expensive:** `pnpm build` (cold turbo cache), `pnpm e2e` (Playwright +
 Docker), `docker compose up -d` (first run pulls images), and any integration test
 that starts Testcontainers take >2 min or need Docker. During development run
@@ -214,6 +223,8 @@ nothing that weakens an Article.
 - `<2026-09-21: the back-office reservation workbench is board (/) -> detail (/reservations/[id]) -> audit. GET /reservations returns ReservationListItemDto (traveler + service-item count); POST /reservations is the ops intake (creates DRAFT with an 8-char booking code, audited). This is increment A of docs/adr/0002-back-office-priority.md.>`
 - `<2026-09-21: the escalation desk (/escalation) and messaging inbox (/messages) connect the browser directly to the API over Socket.IO (NEXT_PUBLIC_API_ORIGIN, default <host>:3001) because Next rewrites do not proxy WebSockets. The /ops and /conversations gateways authenticate via the host-only session cookie (socket.io is configured origin:true, credentials:true); the cookie is shared across localhost ports.>`
 - `<2026-09-21: BullMQ timeout firing is verified by apps/api/test/dispatch.bullmq.integration.test.ts, gated on REDIS_URL (skipped in the default unit suite); it constructs the scheduler with a unique queue name so it does not race the running API's worker.>`
+- `<2026-09-21: supplier credentials live in object storage behind packages/storage (S3/MinIO when S3_ENDPOINT + keys are set, else in-memory). Keys are credentials/<supplierId>/<uuid>.<ext>; the DTO derives credentialContentType from the extension, so no schema column/migration was needed. Reads stream through GET /suppliers/:id/credential (ops roles), never a public URL.>`
+- `<2026-09-21: BullMQ 6 has no repeat option on JobsOptions; repeatable jobs use queue.upsertJobScheduler(id, { pattern | every }, template). The credential-expiry scan is daily at 06:00 and auto-dispatch already pauses within 30 days via the domain canAutoDispatch.>`
 - `<2026-09-21: the Playwright MCP is pinned to the chrome channel and cannot launch here (no system Chrome, no passwordless sudo). Use the repo's pnpm e2e for real-browser checks: @playwright/test 1.63.0 drives the cached chromium-1243 bundle, and its webServer starts pnpm dev.>`
 
 ---

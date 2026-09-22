@@ -51,6 +51,12 @@ storefront, then the remaining live-socket/worker gaps.
   the dispatch item. The BullMQ timeout **firing** is proven live
   (`dispatch.bullmq.integration.test.ts`, gated on `REDIS_URL`). New dependency:
   `socket.io-client`.
+- Back-office increment C — `packages/storage` (S3/MinIO) backs supplier
+  credential upload/download (`POST|GET /suppliers/:id/credential`); the
+  back-office inspector is `/suppliers/[id]`, the list flags credentials
+  expiring within 30 days (`GET /suppliers/expiring`), and a daily BullMQ
+  repeatable job scans them. No schema migration (content type derived from the
+  key extension). New dependency: `@aws-sdk/client-s3`.
 - Committed: `23920d7` (reservations list), `3547317` (ui + theming),
   `87c464a` (back-office + root wiring), `e2a9058` (docs), `fc084f6`
   (dev-runner fix), `1b4304d` (e2e), `ad29d0c` (storefront), plus the
@@ -58,12 +64,18 @@ storefront, then the remaining live-socket/worker gaps.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-21):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (129: domain
-  33, api 59, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
-  schemas 3), `pnpm build` (14 tasks) — green.
-- BullMQ timeout firing proven live: `REDIS_URL=redis://localhost:6379 pnpm
-  --filter @ota/api exec vitest run test/dispatch.bullmq.integration.test.ts`
-  → the delayed job fires the handler (~300 ms). Skipped without `REDIS_URL`.
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (136: domain
+  33, api 63, theming 9, config 6, documents 6, imports 5, ui 4, email 4,
+  schemas 3, storage 3), `pnpm build` — green.
+- BullMQ timeout firing proven live: `REDIS_URL=… vitest
+  test/dispatch.bullmq.integration.test.ts` → the delayed job fires the handler
+  (~300 ms). The credential-expiry repeatable scan is proven the same way
+  (`test/compliance.bullmq.integration.test.ts`). Both skipped without
+  `REDIS_URL`.
+- S3 round-trip proven live: `S3_ENDPOINT=http://localhost:9000
+  S3_ACCESS_KEY_ID=minio S3_SECRET_ACCESS_KEY=minio123 pnpm --filter
+  @ota/storage exec vitest run test/s3.integration.test.ts` → put/get/delete
+  against MinIO. Skipped without the `S3_*` env.
 - Live back-office smoke (API from `dist`; back-office `next dev` on :3002):
   `POST /api/auth/sign-in/magic-link` through the Next proxy → 200; the link in
   Mailpit verified via 302 → `http://localhost:3002/`; `GET /api/ota/reservations`
@@ -78,11 +90,12 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
   (`Restarting 'src/main.ts'`) and `/health` stays 200. The full magic-link →
   session → reservations → SSR dashboard smoke test was repeated against this
   `pnpm dev` stack.
-- `pnpm e2e` — 5 real-browser tests pass: the `/ops` escalation socket connects,
+- `pnpm e2e` — 6 real-browser tests pass: the `/ops` escalation socket connects,
   a message is sent into the conversation, board → detail → transition, supplier
-  suspend/reinstate, and sign-out. Green both against an already-running
-  `pnpm dev` and with Playwright starting the stack itself (webServer → `pnpm dev`
-  → API `/health`). Docker (Postgres/Redis/Mailpit) and the seed are required.
+  suspend/reinstate, a credential upload + inspector render, and sign-out. Green
+  both against an already-running `pnpm dev` and with Playwright starting the
+  stack itself (webServer → `pnpm dev` → API `/health`). Docker
+  (Postgres/Redis/Mailpit/MinIO) and the seed are required.
 - Storefront smoke (`pnpm dev`, :3000): `/` and `/catalog` → 200 with the agency
   name, `--ota-primary:175 77% 26%`, and all three active inventory items from
   the public `GET /catalog` (reachable through `/api/ota/catalog` with no
@@ -90,9 +103,10 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-21):
 
 Not verified: storefront browser flows; dispatch start/candidates and import
 commit UI actions; receiving a live escalation event in the browser (the `/ops`
-socket *connect* is verified, not an event round-trip); the Playwright MCP still
-cannot launch (no system `chrome`); and passkeys + worker accept/decline over a
-real DB.
+socket *connect* is verified, not an event round-trip); the credential inspector
+PDF path (only an image is exercised); outbound expiry notifications (the scan
+logs; no email/push yet); the Playwright MCP still cannot launch (no system
+`chrome`); and passkeys + worker accept/decline over a real DB.
 
 ## Assumptions & unknowns
 - Back-office routes are `export const dynamic = 'force-dynamic'`; each request
@@ -121,12 +135,9 @@ real DB.
 
 ## Next
 Sequence is fixed by `docs/adr/0002-back-office-priority.md`.
-1. **Increment C — compliance:** `packages/storage` (S3/MinIO) credential
-   uploads, a visual document inspector, and a 30-day expiry job that pauses
-   auto-dispatch.
-2. **Increment D** — document depth (itemized invoice, voucher emergency/
-   rendezvous); **Increment E** — inventory CMS completion (delete, availability,
-   media).
+1. **Increment D — document depth:** itemized invoice from service items, and a
+   voucher with a real emergency directory and rendezvous points.
+2. **Increment E** — inventory CMS completion (delete, availability, media).
 3. Then Wave 2a (payments mock + ADR 0003, storefront builder/map/recruitment/
    traveler auth/i18n), Phase 3 BI/AI, and the mobile apps.
 Also: extend the e2e suite to dispatch start/candidates, import commit, the
@@ -188,3 +199,12 @@ reservation intake form, and a live escalation-event round-trip.
   domain `escalationAlert`.
 - 2026-09-21 — the BullMQ timeout-firing integration test constructs the
   scheduler with a unique queue name so it does not race the running API worker.
+- 2026-09-21 — credentials live in `packages/storage` behind an `ObjectStorage`
+  interface (S3/MinIO when configured, in-memory otherwise) and are served only
+  through an authorised API route — no public URLs.
+- 2026-09-21 — credential content type is derived from the storage-key extension
+  so no `SupplierProfile` column or migration was needed.
+- 2026-09-21 — the 30-day credential scan is a BullMQ repeatable job
+  (`upsertJobScheduler`, daily 06:00). Auto-dispatch pausing is already enforced
+  by the domain `canAutoDispatch`; the job surfaces expiring workers (logs only
+  for now — email/push is a follow-up).
