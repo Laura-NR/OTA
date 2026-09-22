@@ -26,7 +26,7 @@ test.describe('storefront package builder', () => {
   test('builds and submits an itinerary', async ({ page }) => {
     await signIn(page, 'traveler@example.test', {
       origin: STOREFRONT_URL,
-      callbackPath: '/build',
+      callbackPath: '/en/build',
     });
     await expect(
       page.getByRole('heading', { name: 'Build your itinerary' }),

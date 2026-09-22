@@ -8,7 +8,7 @@ test.describe('storefront traveler account', () => {
   test('signs a traveler in and shows their bookings and vouchers', async ({ page }) => {
     await signIn(page, 'traveler@example.test', {
       origin: STOREFRONT_URL,
-      callbackPath: '/account',
+      callbackPath: '/en/account',
     });
 
     await expect(page.getByRole('heading', { name: 'My trips' })).toBeVisible();

@@ -30,7 +30,7 @@ test.describe('supplier recruitment', () => {
   });
 
   test('a public application can be submitted and approved', async ({ page }) => {
-    await page.goto(`${STOREFRONT_URL}/join-our-network`);
+    await page.goto(`${STOREFRONT_URL}/en/join-our-network`);
     await expect(page.getByRole('heading', { name: 'Join our network' })).toBeVisible();
 
     await page.getByLabel('Full name').fill('E2E Applicant');

@@ -4,7 +4,7 @@ const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000'
 
 test.describe('storefront catalog map', () => {
   test('renders every province and filters the catalog on select', async ({ page }) => {
-    await page.goto(`${STOREFRONT_URL}/catalog`);
+    await page.goto(`${STOREFRONT_URL}/en/catalog`);
     await expect(page.getByRole('heading', { name: 'Experiences' })).toBeVisible();
 
     const map = page.getByRole('group', { name: 'Map of Cuba by province' });
