@@ -1,12 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+
 import type { Prisma, SupplierProfile, User } from '@ota/db';
+import { VerificationStatus } from '@ota/domain';
+import type { ObjectStorage } from '@ota/storage';
 import type {
+  ExpiringSuppliersQuery,
   ListSuppliersQuery,
   SetVerificationRequest,
   SupplierDto,
+  UploadCredentialRequest,
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { OBJECT_STORAGE } from '../storage/storage.module';
 import { PrismaService } from '../prisma/prisma.service';
 
 type SupplierWithUser = SupplierProfile & {
@@ -14,6 +26,36 @@ type SupplierWithUser = SupplierProfile & {
 };
 
 const userSelect = { select: { email: true, fullName: true } } as const;
+
+const MAX_CREDENTIAL_BYTES = 5 * 1024 * 1024;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const CONTENT_TYPE_EXTENSION: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf',
+};
+const EXTENSION_CONTENT_TYPE: Record<string, string> = {
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  pdf: 'application/pdf',
+};
+
+function credentialKey(supplierId: string, contentType: string): string {
+  const extension = CONTENT_TYPE_EXTENSION[contentType] ?? 'bin';
+  return `credentials/${supplierId}/${randomUUID()}.${extension}`;
+}
+
+/** The DTO reports the type from the key extension, avoiding a schema column. */
+function contentTypeFromKey(key: string | null): string | null {
+  if (!key) {
+    return null;
+  }
+  const extension = key.split('.').pop()?.toLowerCase() ?? '';
+  return EXTENSION_CONTENT_TYPE[extension] ?? null;
+}
 
 function toDto(supplier: SupplierWithUser): SupplierDto {
   return {
@@ -30,12 +72,17 @@ function toDto(supplier: SupplierWithUser): SupplierDto {
     credentialExpiresAt: supplier.credentialExpiresAt
       ? supplier.credentialExpiresAt.toISOString()
       : null,
+    hasCredential: supplier.credentialDocumentUrl !== null,
+    credentialContentType: contentTypeFromKey(supplier.credentialDocumentUrl),
   };
 }
 
 @Injectable()
 export class SuppliersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+  ) {}
 
   async list(filters: ListSuppliersQuery): Promise<SupplierDto[]> {
     const where: Prisma.SupplierProfileWhereInput = {};
@@ -50,6 +97,21 @@ export class SuppliersService {
       where,
       include: { user: userSelect },
       orderBy: { createdAt: 'asc' },
+    });
+
+    return suppliers.map(toDto);
+  }
+
+  /** Suppliers whose credential is within `days` of expiry (or already expired). */
+  async listExpiring(query: ExpiringSuppliersQuery): Promise<SupplierDto[]> {
+    const until = new Date(Date.now() + query.days * DAY_MS);
+    const suppliers = await this.prisma.supplierProfile.findMany({
+      where: {
+        credentialExpiresAt: { not: null, lte: until },
+        verificationStatus: { not: VerificationStatus.Rejected },
+      },
+      include: { user: userSelect },
+      orderBy: { credentialExpiresAt: 'asc' },
     });
 
     return suppliers.map(toDto);
@@ -107,5 +169,84 @@ export class SuppliersService {
     });
 
     return toDto(updated);
+  }
+
+  /**
+   * Store a supplier's credential document and point the profile at it. The
+   * previous object, if any, is removed. The bucket is private; reads go through
+   * the authorised download route.
+   */
+  async uploadCredential(
+    id: string,
+    input: UploadCredentialRequest,
+    actor: AuthUser,
+  ): Promise<SupplierDto> {
+    const existing = await this.prisma.supplierProfile.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Supplier ${id} not found`);
+    }
+
+    const data = Buffer.from(input.contentBase64, 'base64');
+    if (data.length === 0) {
+      throw new BadRequestException('Credential file is empty');
+    }
+    if (data.length > MAX_CREDENTIAL_BYTES) {
+      throw new BadRequestException('Credential file exceeds 5 MB');
+    }
+
+    const key = credentialKey(id, input.contentType);
+    await this.storage.put(key, data, input.contentType);
+
+    if (existing.credentialDocumentUrl) {
+      await this.storage.delete(existing.credentialDocumentUrl).catch(() => undefined);
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.supplierProfile.update({
+        where: { id },
+        data: {
+          credentialDocumentUrl: key,
+          ...(input.expiresAt ? { credentialExpiresAt: input.expiresAt } : {}),
+        },
+        include: { user: userSelect },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: 'supplier.credential_uploaded',
+          entityType: 'SupplierProfile',
+          entityId: id,
+          metadata: {
+            contentType: input.contentType,
+            expiresAt: input.expiresAt ? input.expiresAt.toISOString() : null,
+          },
+        },
+      });
+
+      return result;
+    });
+
+    return toDto(updated);
+  }
+
+  async readCredential(id: string): Promise<{ data: Uint8Array; contentType: string }> {
+    const supplier = await this.prisma.supplierProfile.findUnique({
+      where: { id },
+      select: { credentialDocumentUrl: true },
+    });
+    if (!supplier) {
+      throw new NotFoundException(`Supplier ${id} not found`);
+    }
+    if (!supplier.credentialDocumentUrl) {
+      throw new NotFoundException('No credential on file for this supplier');
+    }
+
+    const object = await this.storage.get(supplier.credentialDocumentUrl);
+    if (!object) {
+      throw new NotFoundException('Credential object is missing from storage');
+    }
+
+    return { data: object.body, contentType: object.contentType };
   }
 }

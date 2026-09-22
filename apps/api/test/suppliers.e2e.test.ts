@@ -50,19 +50,27 @@ function createFakePrisma(store: Map<string, ReturnType<typeof makeSupplier>>) {
         where,
       }: {
         where?: {
-          verificationStatus?: string;
+          verificationStatus?: string | { not: string };
           provincesActive?: { has: string };
+          credentialExpiresAt?: { not: null; lte: Date };
         };
       }) => {
         let rows = [...store.values()];
-        if (where?.verificationStatus) {
-          rows = rows.filter(
-            (row) => row.verificationStatus === where.verificationStatus,
-          );
+        const status = where?.verificationStatus;
+        if (typeof status === 'string') {
+          rows = rows.filter((row) => row.verificationStatus === status);
+        } else if (status?.not) {
+          rows = rows.filter((row) => row.verificationStatus !== status.not);
         }
         if (where?.provincesActive?.has) {
           const province = where.provincesActive.has;
           rows = rows.filter((row) => row.provincesActive.includes(province));
+        }
+        if (where?.credentialExpiresAt) {
+          const { lte } = where.credentialExpiresAt;
+          rows = rows.filter(
+            (row) => row.credentialExpiresAt !== null && row.credentialExpiresAt <= lte,
+          );
         }
         return rows;
       },
@@ -73,13 +81,13 @@ function createFakePrisma(store: Map<string, ReturnType<typeof makeSupplier>>) {
         data,
       }: {
         where: { id: string };
-        data: { verificationStatus: SupplierProfile['verificationStatus'] };
+        data: Partial<SupplierProfile>;
       }) => {
         const existing = store.get(where.id);
         if (!existing) {
           throw new Error(`Supplier ${where.id} not found`);
         }
-        const updated = { ...existing, verificationStatus: data.verificationStatus };
+        const updated = { ...existing, ...data } as ReturnType<typeof makeSupplier>;
         store.set(where.id, updated);
         return updated;
       },
@@ -193,6 +201,64 @@ describe('suppliers', () => {
     const response = await request(app.getHttpServer())
       .get('/suppliers')
       .set('x-test-user', TRAVELER.email);
+
+    expect(response.status).toBe(403);
+  });
+
+  it('uploads a credential and serves it back to the inspector', async () => {
+    const contentBase64 = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]).toString(
+      'base64',
+    );
+
+    const upload = await request(app.getHttpServer())
+      .post(`/suppliers/${GUIDE_ID}/credential`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ filename: 'formatur.png', contentType: 'image/png', contentBase64 });
+
+    expect(upload.status).toBe(200);
+    expect(upload.body.hasCredential).toBe(true);
+    expect(upload.body.credentialContentType).toBe('image/png');
+
+    const download = await request(app.getHttpServer())
+      .get(`/suppliers/${GUIDE_ID}/credential`)
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(download.status).toBe(200);
+    expect(download.headers['content-type']).toContain('image/png');
+  });
+
+  it('returns 404 when no credential is on file', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/suppliers/${GUIDE_ID}/credential`)
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(response.status).toBe(404);
+  });
+
+  it('flags suppliers whose credential is within the expiry window', async () => {
+    store.set(
+      GUIDE_ID,
+      makeSupplier({
+        id: GUIDE_ID,
+        verificationStatus: 'VERIFIED',
+        credentialDocumentUrl: 'credentials/x.jpg',
+        credentialExpiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .get('/suppliers/expiring?days=30')
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(response.status).toBe(200);
+    expect(response.body.map((row: { id: string }) => row.id)).toContain(GUIDE_ID);
+  });
+
+  it('returns 403 when a traveler uploads a credential', async () => {
+    const response = await request(app.getHttpServer())
+      .post(`/suppliers/${GUIDE_ID}/credential`)
+      .set('x-test-user', TRAVELER.email)
+      .send({ filename: 'x.png', contentType: 'image/png', contentBase64: 'AAAA' });
 
     expect(response.status).toBe(403);
   });

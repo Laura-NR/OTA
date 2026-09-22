@@ -13,6 +13,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { MessagesModule } from './messages/messages.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { StorageModule } from './storage/storage.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { TenantModule } from './tenant/tenant.module';
 
@@ -33,6 +34,7 @@ const isTest = process.env.NODE_ENV === 'test';
     AuthModule,
     TenantModule,
     EmailModule,
+    StorageModule,
     PrismaModule,
     ReservationsModule,
     SuppliersModule,

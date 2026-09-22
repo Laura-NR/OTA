@@ -1,5 +1,6 @@
 import { Queue, Worker, type Job } from 'bullmq';
 
+import { parseRedisUrl } from '../common/redis';
 import type { DispatchScheduler, DispatchTimeoutHandler } from './dispatch.scheduler';
 
 const QUEUE_NAME = 'dispatch';
@@ -7,18 +8,6 @@ const TIMEOUT_JOB = 'dispatch-timeout';
 
 interface TimeoutJobData {
   serviceItemId: string;
-}
-
-function parseRedisUrl(redisUrl: string) {
-  const url = new URL(redisUrl);
-  return {
-    host: url.hostname,
-    port: Number(url.port || 6379),
-    username: url.username || undefined,
-    password: url.password || undefined,
-    // Required by BullMQ workers so blocking commands are not aborted.
-    maxRetriesPerRequest: null as null,
-  };
 }
 
 /**

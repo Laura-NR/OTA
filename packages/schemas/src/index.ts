@@ -18,14 +18,19 @@ export {
   type TransitionReservationRequest,
 } from './reservation';
 export {
+  credentialContentTypeSchema,
+  expiringSuppliersQuerySchema,
   listSuppliersQuerySchema,
   setVerificationSchema,
   supplierCategorySchema,
   supplierSchema,
+  uploadCredentialSchema,
   verificationStatusSchema,
+  type ExpiringSuppliersQuery,
   type ListSuppliersQuery,
   type SetVerificationRequest,
   type SupplierDto,
+  type UploadCredentialRequest,
 } from './supplier';
 export {
   declineServiceItemSchema,

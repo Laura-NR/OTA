@@ -24,6 +24,7 @@
     "@ota/email": "workspace:*",
     "@ota/imports": "workspace:*",
     "@ota/schemas": "workspace:*",
+    "@ota/storage": "workspace:*",
     "bullmq": "^6.3.8",
     "express": "^5.2.1",
     "ioredis": "^6.0.0",

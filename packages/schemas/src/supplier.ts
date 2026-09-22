@@ -41,6 +41,32 @@ export const supplierSchema = z.object({
   verificationStatus: verificationStatusSchema,
   isAvailable: z.boolean(),
   credentialExpiresAt: z.string().nullable(),
+  hasCredential: z.boolean(),
+  credentialContentType: z.string().nullable(),
 });
 
 export type SupplierDto = z.infer<typeof supplierSchema>;
+
+/** Credential images are shown inline; PDFs are linked. Kept in sync with the
+ * key extension so the DTO can report the type without a schema column. */
+export const credentialContentTypeSchema = z.enum([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+]);
+
+export const uploadCredentialSchema = z.object({
+  filename: z.string().trim().min(1).max(255),
+  contentType: credentialContentTypeSchema,
+  contentBase64: z.string().min(1),
+  expiresAt: z.coerce.date().optional(),
+});
+
+export type UploadCredentialRequest = z.infer<typeof uploadCredentialSchema>;
+
+export const expiringSuppliersQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(365).default(30),
+});
+
+export type ExpiringSuppliersQuery = z.infer<typeof expiringSuppliersQuerySchema>;
