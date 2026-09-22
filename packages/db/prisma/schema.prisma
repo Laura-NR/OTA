@@ -258,11 +258,29 @@ model InventoryItem {
 
   supplier     SupplierProfile? @relation(fields: [supplierId], references: [id])
   pricingRules PricingRule[]
+  media        InventoryMedia[]
 
   @@index([type])
   @@index([province])
   @@index([active])
   @@map("inventory_items")
+}
+
+// Gallery images for a catalog item (spec §4.6). The binary lives in object
+// storage; only the private key is kept here — the content type is derived from
+// the key extension, as with supplier credentials.
+model InventoryMedia {
+  id              String   @id @default(uuid()) @db.Uuid
+  inventoryItemId String   @map("inventory_item_id") @db.Uuid
+  storageKey      String   @map("storage_key")
+  altText         String?  @map("alt_text")
+  position        Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId])
+  @@map("inventory_media")
 }
 
 // Seasonal rate overrides and agency markups. A null inventoryItemId on a
