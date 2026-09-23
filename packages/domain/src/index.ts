@@ -54,3 +54,15 @@ export {
   type QualityKpis,
   type RailTotal,
 } from './analytics/kpi';
+export {
+  SPECIALISED_TOURISM_CATEGORIES,
+  TOURISM_CATEGORIES,
+  TourismCategory,
+  calculateRegulatory,
+  type CategoryCount,
+  type CircuitCount,
+  type NationalityCount,
+  type RegulatoryReservation,
+  type RegulatoryServiceItem,
+  type RegulatorySummary,
+} from './analytics/regulatory';

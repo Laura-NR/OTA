@@ -5,6 +5,17 @@ export {
   type AnalyticsRangeQuery,
 } from './analytics';
 export {
+  classifyReservationSchema,
+  nationalitySchema,
+  regulatoryRangeSchema,
+  regulatorySummarySchema,
+  tourismCategorySchema,
+  type ClassifyReservationRequest,
+  type RegulatoryRangeQuery,
+  type RegulatorySummaryDto,
+  type TourismCategoryDto,
+} from './regulatory';
+export {
   auditLogEntrySchema,
   createReservationSchema,
   listReservationsQuerySchema,

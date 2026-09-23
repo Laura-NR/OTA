@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { nationalitySchema } from './regulatory';
 import { reservationServiceItemSchema, reservationStatusSchema } from './reservation';
 
 /** The signed-in traveler's own profile (storefront self-service). */
@@ -52,6 +53,8 @@ export const createMyReservationSchema = z
   .object({
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
+    /** Optional traveler nationality to record for statutory reporting (§4.9.2). */
+    nationality: nationalitySchema.optional(),
     serviceItems: z
       .array(
         z.object({

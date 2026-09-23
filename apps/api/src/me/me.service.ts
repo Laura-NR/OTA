@@ -155,6 +155,13 @@ export class MeService {
       }
 
       createdId = await this.prisma.$transaction(async (tx) => {
+        if (input.nationality) {
+          await tx.user.update({
+            where: { id: userId },
+            data: { nationality: input.nationality },
+          });
+        }
+
         const reservation = await tx.reservation.create({
           data: {
             userId,

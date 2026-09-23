@@ -10,6 +10,7 @@ import type { Prisma, Reservation } from '@ota/db';
 import { ReservationStatus, assertTransition } from '@ota/domain';
 import type {
   AuditLogEntryDto,
+  ClassifyReservationRequest,
   CreateReservationRequest,
   ListReservationsQuery,
   ReservationDetailDto,
@@ -47,6 +48,7 @@ function toDto(reservation: Reservation): ReservationDto {
     id: reservation.id,
     bookingCode: reservation.bookingCode,
     status: reservation.status as ReservationStatus,
+    tourismCategory: reservation.tourismCategory,
     startDate: reservation.startDate.toISOString(),
     endDate: reservation.endDate.toISOString(),
     totalCurrency: reservation.totalCurrency,
@@ -197,6 +199,13 @@ export class ReservationsService {
       }
 
       createdId = await this.prisma.$transaction(async (tx) => {
+        if (input.nationality) {
+          await tx.user.update({
+            where: { id: traveler.id },
+            data: { nationality: input.nationality },
+          });
+        }
+
         const reservation = await tx.reservation.create({
           data: {
             userId: traveler.id,
@@ -204,6 +213,7 @@ export class ReservationsService {
             startDate: input.startDate,
             endDate: input.endDate,
             status: ReservationStatus.Draft,
+            tourismCategory: input.tourismCategory,
             totalCurrency: input.totalCurrency,
             totalAmount: input.totalAmount,
             customItineraryPayload: input.customItineraryPayload as
@@ -285,6 +295,46 @@ export class ReservationsService {
         );
       }
     }
+
+    return toDto(updated);
+  }
+
+  /**
+   * Record or revise the statutory tourism classification of a booking
+   * (spec §4.9.2). The regulatory reports read this; unclassified bookings are
+   * GENERAL, so every booking stays reportable.
+   */
+  async classify(
+    id: string,
+    input: ClassifyReservationRequest,
+    actor: AuthUser,
+  ): Promise<ReservationDto> {
+    const reservation = await this.prisma.reservation.findUnique({ where: { id } });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation ${id} not found`);
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.reservation.update({
+        where: { id },
+        data: { tourismCategory: input.tourismCategory },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: 'reservation.classified',
+          entityType: 'Reservation',
+          entityId: id,
+          metadata: {
+            from: reservation.tourismCategory,
+            to: input.tourismCategory,
+          },
+        },
+      });
+
+      return result;
+    });
 
     return toDto(updated);
   }

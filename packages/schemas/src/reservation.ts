@@ -6,6 +6,8 @@ import {
 } from '@ota/domain';
 import { z } from 'zod';
 
+import { nationalitySchema, tourismCategorySchema } from './regulatory';
+
 /**
  * Reservation status as accepted over the wire. Derived from the canonical
  * domain list so the two can never drift.
@@ -32,6 +34,7 @@ export const reservationSchema = z.object({
   id: z.string().uuid(),
   bookingCode: z.string(),
   status: reservationStatusSchema,
+  tourismCategory: tourismCategorySchema,
   startDate: z.string(),
   endDate: z.string(),
   totalCurrency: z.string(),
@@ -44,10 +47,13 @@ export type ReservationDto = z.infer<typeof reservationSchema>;
 /** Ops-created booking. The storefront builder will adopt the same payload. */
 export const createReservationSchema = z.object({
   travelerEmail: z.string().email(),
+  /** Optional traveler nationality to record for statutory reporting (§4.9.2). */
+  nationality: nationalitySchema.optional(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
   totalCurrency: z.string().trim().length(3).default('EUR'),
   totalAmount: z.coerce.number().nonnegative().default(0),
+  tourismCategory: tourismCategorySchema.optional(),
   customItineraryPayload: z.record(z.string(), z.unknown()).optional(),
 });
 

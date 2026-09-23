@@ -31,6 +31,7 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     startDate: new Date('2026-11-01T00:00:00Z'),
     endDate: new Date('2026-11-05T00:00:00Z'),
     status: 'SECURED_AND_INVOICED',
+    tourismCategory: 'GENERAL',
     totalCurrency: 'EUR',
     totalAmount: new Prisma.Decimal('321.00'),
     customItineraryPayload: null,

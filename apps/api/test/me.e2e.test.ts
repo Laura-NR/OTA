@@ -44,6 +44,7 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     startDate: new Date('2026-11-01T00:00:00Z'),
     endDate: new Date('2026-11-05T00:00:00Z'),
     status: 'CONFIRMED',
+    tourismCategory: 'GENERAL',
     totalCurrency: 'EUR',
     totalAmount: new Prisma.Decimal('321.00'),
     customItineraryPayload: null,
@@ -76,6 +77,12 @@ function createFakePrisma(state: FakeState) {
     user: {
       findUnique: async (args: { where: { id: string } }) =>
         state.users.find((user) => user.id === args.where.id) ?? null,
+      update: async (args: { where: { id: string }; data: { nationality?: string } }) => {
+        const user = state.users.find((candidate) => candidate.id === args.where.id);
+        if (!user) throw new Error(`User ${args.where.id} not found`);
+        Object.assign(user, args.data);
+        return user;
+      },
     },
     inventoryItem: {
       findMany: async (args: { where: { id: { in: string[] }; active?: boolean } }) =>
@@ -124,6 +131,7 @@ function createFakePrisma(state: FakeState) {
           startDate: Date;
           endDate: Date;
           status: string;
+          tourismCategory?: Reservation['tourismCategory'];
           totalCurrency: string;
           totalAmount: number;
           customItineraryPayload?: unknown;
@@ -139,6 +147,7 @@ function createFakePrisma(state: FakeState) {
           startDate: args.data.startDate,
           endDate: args.data.endDate,
           status: args.data.status as Reservation['status'],
+          tourismCategory: args.data.tourismCategory ?? 'GENERAL',
           totalCurrency: args.data.totalCurrency,
           totalAmount: new Prisma.Decimal(args.data.totalAmount),
           customItineraryPayload: null,

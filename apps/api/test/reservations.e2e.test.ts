@@ -13,6 +13,7 @@ interface FakeUser {
   email: string;
   fullName: string | null;
   role: string;
+  nationality?: string | null;
 }
 
 interface FakeAudit {
@@ -48,6 +49,7 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     startDate: new Date('2026-11-01T00:00:00Z'),
     endDate: new Date('2026-11-05T00:00:00Z'),
     status: 'DRAFT',
+    tourismCategory: 'GENERAL',
     totalCurrency: 'EUR',
     totalAmount: new Prisma.Decimal('250.00'),
     customItineraryPayload: null,
@@ -74,6 +76,7 @@ interface CreateArgs {
     startDate: Date;
     endDate: Date;
     status: Reservation['status'];
+    tourismCategory?: Reservation['tourismCategory'];
     totalCurrency: string;
     totalAmount: Prisma.Decimal.Value;
     customItineraryPayload?: Prisma.InputJsonValue;
@@ -112,6 +115,12 @@ function createFakePrisma(state: {
         state.users.find((user) =>
           args.where.id ? user.id === args.where.id : user.email === args.where.email,
         ) ?? null,
+      update: async (args: { where: { id: string }; data: { nationality?: string } }) => {
+        const existing = state.users.find((user) => user.id === args.where.id);
+        if (!existing) throw new Error(`User ${args.where.id} not found`);
+        Object.assign(existing, args.data);
+        return existing;
+      },
     },
     reservation: {
       findUnique: async (args: FindUniqueArgs) => {
@@ -135,11 +144,20 @@ function createFakePrisma(state: {
       },
       update: async (args: {
         where: { id: string };
-        data: { status: Reservation['status'] };
+        data: {
+          status?: Reservation['status'];
+          tourismCategory?: Reservation['tourismCategory'];
+        };
       }) => {
         const existing = state.reservations.get(args.where.id);
         if (!existing) throw new Error(`Reservation ${args.where.id} not found`);
-        const updated: Reservation = { ...existing, status: args.data.status };
+        const updated: Reservation = {
+          ...existing,
+          ...(args.data.status ? { status: args.data.status } : {}),
+          ...(args.data.tourismCategory
+            ? { tourismCategory: args.data.tourismCategory }
+            : {}),
+        };
         state.reservations.set(args.where.id, updated);
         return updated;
       },
@@ -152,6 +170,7 @@ function createFakePrisma(state: {
           startDate: args.data.startDate,
           endDate: args.data.endDate,
           status: args.data.status,
+          tourismCategory: args.data.tourismCategory ?? 'GENERAL',
           totalCurrency: args.data.totalCurrency,
           totalAmount: new Prisma.Decimal(args.data.totalAmount),
           customItineraryPayload: args.data.customItineraryPayload ?? null,
@@ -431,6 +450,23 @@ describe('reservations API', () => {
       ).toBe(true);
     });
 
+    it('records the traveler nationality for statutory reporting', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/reservations')
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({
+          travelerEmail: TRAVELER.email,
+          nationality: 'gb',
+          startDate: '2026-12-01',
+          endDate: '2026-12-07',
+          tourismCategory: 'ECOTOURISM',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.tourismCategory).toBe('ECOTOURISM');
+      expect(state.users.find((user) => user.id === TRAVELER.id)?.nationality).toBe('GB');
+    });
+
     it('returns 404 for an unknown traveler', async () => {
       const response = await request(app.getHttpServer())
         .post('/reservations')
@@ -466,6 +502,46 @@ describe('reservations API', () => {
           startDate: '2026-12-01',
           endDate: '2026-12-07',
         });
+
+      expect(response.status).toBe(403);
+    });
+  });
+
+  describe('PATCH /reservations/:id/tourism-category', () => {
+    it('classifies a booking and records the change in the audit log', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/reservations/${RESERVATION_ID}/tourism-category`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ tourismCategory: 'ECOTOURISM' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.tourismCategory).toBe('ECOTOURISM');
+      expect(state.reservations.get(RESERVATION_ID)?.tourismCategory).toBe('ECOTOURISM');
+
+      const audit = await request(app.getHttpServer())
+        .get(`/reservations/${RESERVATION_ID}/audit`)
+        .set('x-test-user', SUPER_ADMIN.email);
+      expect(
+        audit.body.some(
+          (entry: { action: string }) => entry.action === 'reservation.classified',
+        ),
+      ).toBe(true);
+    });
+
+    it('rejects an unknown category with 400', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/reservations/${RESERVATION_ID}/tourism-category`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ tourismCategory: 'MADE_UP' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('returns 403 for a traveler', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/reservations/${RESERVATION_ID}/tourism-category`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ tourismCategory: 'NATURE' });
 
       expect(response.status).toBe(403);
     });

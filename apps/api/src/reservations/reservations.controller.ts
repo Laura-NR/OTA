@@ -6,16 +6,19 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseFilters,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
+  classifyReservationSchema,
   createReservationSchema,
   listReservationsQuerySchema,
   transitionReservationSchema,
   type AuditLogEntryDto,
+  type ClassifyReservationRequest,
   type CreateReservationRequest,
   type ListReservationsQuery,
   type ReservationDetailDto,
@@ -71,6 +74,17 @@ export class ReservationsController {
   @Roles(...READ_ROLES)
   audit(@Param('id', ParseUUIDPipe) id: string): Promise<AuditLogEntryDto[]> {
     return this.reservations.listAudit(id);
+  }
+
+  @Patch(':id/tourism-category')
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  classify(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(classifyReservationSchema))
+    body: ClassifyReservationRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<ReservationDto> {
+    return this.reservations.classify(id, body, actor);
   }
 
   @Post(':id/transition')

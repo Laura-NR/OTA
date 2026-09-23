@@ -16,12 +16,13 @@ async function main(): Promise<void> {
 
   const traveler = await prisma.user.upsert({
     where: { email: 'traveler@example.test' },
-    update: {},
+    update: { nationality: 'ES' },
     create: {
       email: 'traveler@example.test',
       fullName: 'Example Traveler',
       role: Role.TRAVELER,
       locale: 'en',
+      nationality: 'ES',
     },
   });
 
@@ -48,13 +49,14 @@ async function main(): Promise<void> {
 
   const reservation = await prisma.reservation.upsert({
     where: { bookingCode: 'DEMO0001' },
-    update: {},
+    update: { tourismCategory: 'ECOTOURISM' },
     create: {
       userId: traveler.id,
       bookingCode: 'DEMO0001',
       startDate: new Date('2026-11-01T00:00:00Z'),
       endDate: new Date('2026-11-05T00:00:00Z'),
       status: 'DRAFT',
+      tourismCategory: 'ECOTOURISM',
       totalCurrency: 'EUR',
       totalAmount: '250.00',
     },
