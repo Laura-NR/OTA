@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
+import { DOCUMENT_RENDERER } from '../src/documents/document-renderer';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const SUPER_ADMIN = {
@@ -101,6 +102,8 @@ describe('reports API', () => {
       .useValue(createFakePrisma())
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
+      .overrideProvider(DOCUMENT_RENDERER)
+      .useValue({ render: async () => Buffer.from('%PDF-1.4 fake') })
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -124,6 +127,19 @@ describe('reports API', () => {
     expect(Buffer.isBuffer(response.body)).toBe(true);
     // XLSX is a zip archive; the first bytes are the local file header.
     expect((response.body as Buffer).subarray(0, 2).toString()).toBe('PK');
+  });
+
+  it('exports the digest as a PDF', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/analytics/export/pdf')
+      .set('x-test-user', SUPER_ADMIN.email)
+      .buffer(true)
+      .parse(binaryParser);
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toContain('application/pdf');
+    expect(response.headers['content-disposition']).toContain('.pdf');
+    expect((response.body as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
   });
 
   it('returns 403 for a traveler', async () => {

@@ -20,6 +20,6 @@ import { DocumentsService } from './documents.service';
         ),
     },
   ],
-  exports: [DocumentsService],
+  exports: [DocumentsService, DOCUMENT_RENDERER],
 })
 export class DocumentsModule {}

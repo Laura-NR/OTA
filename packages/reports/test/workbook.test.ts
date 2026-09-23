@@ -1,7 +1,11 @@
 import ExcelJS from 'exceljs';
 import { describe, expect, it } from 'vitest';
 
-import { buildAnalyticsWorkbook, type AnalyticsReportInput } from '../src';
+import {
+  buildAnalyticsHtml,
+  buildAnalyticsWorkbook,
+  type AnalyticsReportInput,
+} from '../src';
 
 const input: AnalyticsReportInput = {
   range: { from: '2026-01-01T00:00:00.000Z', to: '2026-12-31T00:00:00.000Z' },
@@ -89,5 +93,27 @@ describe('buildAnalyticsWorkbook', () => {
 
     expect(workbook.getWorksheet('Regulatory')).toBeUndefined();
     expect(workbook.getWorksheet('Finance')).toBeDefined();
+  });
+});
+
+describe('buildAnalyticsHtml', () => {
+  it('renders the digest, branding, and figures as HTML', () => {
+    const html = buildAnalyticsHtml(input);
+
+    expect(html).toContain('Authentic Cuba Expeditions');
+    expect(html).toContain('MINTUR-2026-XXXX');
+    expect(html).toContain('<h2>Finance</h2>');
+    expect(html).toContain('PACKAGE');
+    expect(html).toContain('Regulatory');
+  });
+
+  it('escapes values from the report', () => {
+    const html = buildAnalyticsHtml({
+      ...input,
+      branding: { agencyName: '<script>Bad</script>', licenseNumber: 'X' },
+    });
+
+    expect(html).not.toContain('<script>Bad</script>');
+    expect(html).toContain('&lt;script&gt;Bad&lt;/script&gt;');
   });
 });

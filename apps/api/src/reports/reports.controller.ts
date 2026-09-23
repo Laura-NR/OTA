@@ -30,4 +30,16 @@ export class ReportsController {
     response.setHeader('content-disposition', `attachment; filename="${filename}"`);
     response.send(data);
   }
+
+  @Get('pdf')
+  @Roles(...READ_ROLES)
+  async exportPdf(
+    @Query(new ZodValidationPipe(analyticsRangeSchema)) query: AnalyticsRangeQuery,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { filename, data } = await this.reports.buildPdfDigest(query);
+    response.setHeader('content-type', 'application/pdf');
+    response.setHeader('content-disposition', `attachment; filename="${filename}"`);
+    response.send(data);
+  }
 }

@@ -40,22 +40,27 @@ export class ReportsDigestService implements OnModuleInit, OnModuleDestroy {
 
   async sendDigest(): Promise<void> {
     const to = process.env.ANALYTICS_DIGEST_EMAIL ?? process.env.OPS_NOTIFY_EMAIL;
-    const { filename, data } = await this.reports.buildDigest({});
+    const [xlsx, pdf] = await Promise.all([
+      this.reports.buildDigest({}),
+      this.reports.buildPdfDigest({}),
+    ]);
+    const names = `${xlsx.filename}, ${pdf.filename}`;
 
     if (!to) {
-      this.logger.log(
-        `BI digest built (${filename}, ${data.length} bytes); no recipient configured`,
-      );
+      this.logger.log(`BI digest built (${names}); no recipient configured`);
       return;
     }
 
     await this.mailer.send({
       to,
-      subject: `Weekly BI digest — ${filename}`,
+      subject: `Weekly BI digest — ${xlsx.filename}`,
       text: 'Attached is the weekly operations, finance, quality, and regulatory digest.',
       html: '<p>Attached is the weekly operations, finance, quality, and regulatory digest.</p>',
-      attachments: [{ filename, content: data, contentType: XLSX_CONTENT_TYPE }],
+      attachments: [
+        { filename: xlsx.filename, content: xlsx.data, contentType: XLSX_CONTENT_TYPE },
+        { filename: pdf.filename, content: pdf.data, contentType: 'application/pdf' },
+      ],
     });
-    this.logger.log(`BI digest emailed to ${to} (${filename})`);
+    this.logger.log(`BI digest emailed to ${to} (${names})`);
   }
 }
