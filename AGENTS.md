@@ -359,6 +359,11 @@ nothing that weakens an Article.
 - `<2026-09-22: regulatory reporting (MINTUR nationalities/bed-nights, ONAT exports, ecotourism ratio) is NOT implementable from the current schema — User has no nationality and no booking taxonomy exists. Add structured fields (migration) before claiming those reports.>`
 - `<2026-09-22: the storefront message thread reloads on send and does NOT open the /conversations socket (that socket is a back-office concern); every send still triggers the API's async email fallback.>`
 - `<2026-09-22: the storefront promotional banner is gated by the tenant culturalEventsBanner feature flag and its copy lives in packages/i18n (banner.text/cta), not in code.>`
+- `<2026-09-23: statutory reporting (spec §4.9.2) rides on migration 20260923063425_regulatory_reporting, which adds User.nationality (ISO 3166-1 alpha-2, nullable) and Reservation.tourismCategory (enum ECOTOURISM/AGROTOURISM/NATURE/CULTURAL/GENERAL, default GENERAL). It is additive; existing bookings default to GENERAL so they stay reportable.>`
+- `<2026-09-23: GET /analytics/regulatory?from&to and GET /analytics/regulatory/fiscal-export?from&to are ops-roles-only. The summary (bookings, distinct travelers, bed-nights, specialised ratio, category/nationality/circuit breakdowns) is reduced by the pure calculateRegulatory in packages/domain/src/analytics/regulatory.ts.>`
+- `<2026-09-23: the specialised-tourism ratio counts ECOTOURISM + AGROTOURISM + NATURE over all bookings. There is still no party-size field, so bed-nights are per booking (accommodation service-item nights); a true guests x nights figure needs a further migration decision.>`
+- `<2026-09-23: the fiscal CSV is a plain ledger export (booking_code,paid_at,rail,currency,amount) of PAID receipts, not an ONAT-formatted filing; commission/withholding formatting still needs finance input. Nationality/category are captured via the ops intake form, the storefront builder, and PATCH /reservations/:id/tourism-category (audited as reservation.classified).>`
+- `<2026-09-23: e2e/global-setup.ts resets E2E0001.tourismCategory to GENERAL each run so the classify spec is idempotent; the regulatory spec asserts on getByRole('cell', {name:'ECOTOURISM'}) because the word also appears in page copy.>`
 
 ---
 

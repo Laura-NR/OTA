@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-22 16:40
+# Handoff — main — updated 2026-09-23 09:05
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -7,7 +7,11 @@ A–E) is done. In Wave 2a the payments mock, storefront map, traveler auth +
 dashboard, package builder, recruitment portal, and storefront i18n (es/en/fr)
 are all done. What remains of Wave 2a is the checkout page, which is gated by
 ADR 0003 (no public mark-paid route until a real signed-webhook provider).
-Phase 3 has started with the analytics/BI overview.
+Phase 3 has started with the analytics/BI overview and now statutory regulatory
+reporting (§4.9.2). Four open decisions were resolved 2026-09-23: curated
+packages use a real bundle model, the regulatory migration is approved, the AI
+assistant ships as an abstraction + mock before any real LLM SDK, and checkout
+will be a traveler-facing mock that only creates the link (never self-confirms).
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
@@ -76,8 +80,17 @@ Phase 3 has started with the analytics/BI overview.
   /analytics/overview?from&to` (ops roles) reduces raw rows into finance (GBV,
   payouts, net revenue, take rate, AOV, by rail), operations (acceptance/timeout,
   avg response, funnel), quality, and geography. Back-office `/analytics`.
-  Regulatory reports (nationalities, bed-nights, ecotourism ratio) are deferred —
-  the schema has no such fields.
+- Phase 3 — **regulatory reporting (§4.9.2):** migration
+  `20260923063425_regulatory_reporting` adds `User.nationality` (ISO alpha-2) and
+  `Reservation.tourismCategory` (enum, default `GENERAL`); both are additive.
+  Pure `calculateRegulatory` in `packages/domain/src/analytics/regulatory.ts`
+  reduces bookings into bookings/travelers/bed-nights/specialised ratio, the
+  category and nationality breakdowns, and geographic circuits. API (ops roles):
+  `GET /analytics/regulatory?from&to` and
+  `GET /analytics/regulatory/fiscal-export?from&to` (Paid ledger CSV). Capture:
+  the ops intake form and the storefront builder accept a nationality, and
+  `PATCH /reservations/:id/tourism-category` (audited `reservation.classified`)
+  classifies a booking from the workbench control. Back-office `/regulatory`.
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -86,25 +99,28 @@ Phase 3 has started with the analytics/BI overview.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 12 spec files / 16 tests (`pnpm e2e`, cached `chromium-1243`).
-- Head `d2c7df2`, pushed to `origin/main`.
+- e2e: 13 spec files / 18 tests (`pnpm e2e`, cached `chromium-1243`).
+- Head `849ea73` was the base; this regulatory increment is committed on top.
 
 ## Verified
-Node 22.22.3, pnpm 12.4.2 (2026-09-22):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**190**: api 103,
-  domain 39, payments 3, i18n 2, theming 9, documents 8, config 7, imports 5, ui
-  4, email 4, schemas 3, storage 3), `pnpm build` — green.
+Node 22.22.3, pnpm 12.4.2 (2026-09-23):
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**203**: api
+  112, domain 43, payments 3, i18n 2, theming 9, documents 8, config 7, imports
+  5, ui 4, email 4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
-  `20260922070932_inventory_media` and `20260922122512_supplier_applications`
-  (8 migrations total).
-- `pnpm e2e` — 16 real-browser tests pass, including the inventory flow, the
+  `20260923063425_regulatory_reporting` (9 migrations total).
+- `pnpm e2e` — 18 real-browser tests pass, including the two new regulatory
+  specs (report render + workbench classification), the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
   the storefront map province filter (and banner), traveler sign-in → dashboard,
   the traveler message send, the package builder submit, recruitment submit →
   approve, the locale switch, and the analytics dashboard.
-- New coverage: the storefront message send and the cultural-events banner
-  assertion (both in `storefront-auth.spec.ts` / `storefront.spec.ts`).
-  Earlier: `analytics.test.ts` (6 pure KPI cases) and
+- New coverage: `regulatory.test.ts` (4 pure cases), `regulatory.e2e.test.ts`
+  (5: summary, window, CSV, 403, 401), the reservations classify/nationality
+  tests, and the `regulatory.spec.ts` browser spec (report + classification).
+  Earlier: the storefront message send and the cultural-events banner
+  assertion (both in `storefront-auth.spec.ts` / `storefront.spec.ts`);
+  `analytics.test.ts` (6 pure KPI cases) and
   `analytics.e2e.test.ts` (4: overview, window, 403, 401),
   `packages/i18n` key-parity test, `storefront-i18n.spec.ts`,
   `supplier-applications.e2e.test.ts` (7), `me.e2e.test.ts` (8),
@@ -138,6 +154,13 @@ flows are covered (map, auth, builder, i18n, recruitment).
   override.
 - Documents still itemise included services without per-service prices; voucher
   rendezvous is province + start time.
+- Regulatory bed-nights are per booking (accommodation service-item nights): there
+  is no party-size field, so a true guests × nights figure needs a further
+  migration decision. The fiscal CSV is a plain PAID-receipt ledger, not an
+  ONAT-formatted filing; commission/withholding formatting needs finance input.
+- `Reservation.tourismCategory` defaults to GENERAL; there is no automatic
+  classifier yet, so operators classify specialised bookings by hand (intake
+  form or the workbench control).
 
 ## Traps
 - API dev must stay swc-based (`node --watch -r @swc-node/register`); tsx/esbuild
@@ -162,13 +185,17 @@ flows are covered (map, auth, builder, i18n, recruitment).
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Phase 4 storefront remainder:** checkout (blocked by ADR 0003 until a real
-   signed-webhook provider is selected); curated packages (no bundle model);
-   the catalog/map do not yet show real-time availability.
-2. **Phase 3 remainder:** regulatory reporting (nationalities, bed-nights,
-   ecotourism ratio, MINTUR/ONAT exports) needs structured fields → a migration
-   decision; the AI assistant needs an LLM-provider dependency (Article 2);
-   optional BI polish (scheduled weekly PDF/XLSX digests, provider scorecards).
+1. **Phase 4 storefront remainder:** checkout (decided 2026-09-23: traveler
+   mock, link-only — needs a traveler-scoped payment-link path and a
+   `/checkout/mock/:reference` page, never a public mark-paid route); curated
+   packages (decided: real `Package`/`PackageService` bundle model that expands
+   into the existing Reservation/ServiceItem pipeline); the catalog/map do not
+   yet show real-time availability.
+2. **Phase 3 remainder:** the AI assistant (decided: `packages/ai`
+   `LlmProvider` abstraction + deterministic mock first, real SDK deferred under
+   Article 2); optional BI polish (scheduled weekly PDF/XLSX digests, provider
+   scorecards). The MINTUR/ONAT regulatory slice shipped 2026-09-23; a true
+   guests × nights bed-nights figure still needs a party-size migration.
 3. **Phase 7 hardening:** security review (PII at rest, rate limiting,
    observability), `create-tenant` fork tooling, core versioning.
 4. Mobile apps (Phases 5–6) need Expo (Article 2).
@@ -288,3 +315,18 @@ flows are covered (map, auth, builder, i18n, recruitment).
   async email fallback still fires on every send.
 - 2026-09-22 — the promotional banner is gated by the tenant
   `culturalEventsBanner` flag; its copy lives in `packages/i18n`, not in code.
+- 2026-09-23 — curated packages will be a real `Package`/`PackageService` bundle
+  model (migration) that expands into the existing Reservation/ServiceItem
+  pipeline, not tagged inventory via `attributes` (owner decision).
+- 2026-09-23 — the regulatory migration is approved: `User.nationality` +
+  `Reservation.tourismCategory` only; bed-nights derive from accommodation
+  service-item dates. Party size is deferred.
+- 2026-09-23 — the AI assistant ships as a provider-agnostic
+  `packages/ai` abstraction plus a deterministic mock first; a real LLM SDK is
+  deferred to a separate Article 2 decision (owner decision).
+- 2026-09-23 — checkout will be a traveler-facing mock that only creates the
+  payment link; confirmation stays the authenticated ops action, so ADR 0003's
+  no-public-mark-paid rule holds (owner decision).
+- 2026-09-23 — regulatory reporting (§4.9.2) shipped as a read-only ops surface:
+  pure `calculateRegulatory`, `GET /analytics/regulatory` + `fiscal-export`,
+  capture at intake/builder and via `PATCH /reservations/:id/tourism-category`.
