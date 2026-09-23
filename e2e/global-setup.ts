@@ -48,6 +48,7 @@ export default async function globalSetup(): Promise<void> {
       where: { entityType: 'Reservation', entityId: reservation.id },
     });
     await prisma.message.deleteMany({ where: { reservationId: reservation.id } });
+    await prisma.incident.deleteMany({ where: { reservationId: reservation.id } });
 
     await prisma.supplierProfile.update({
       where: { id: guide.supplierProfile.id },
