@@ -18,6 +18,7 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
+import { CheckoutButton } from '@/components/checkout-button';
 import { MessageThread } from '@/components/message-thread';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -42,6 +43,7 @@ export default async function AccountReservationPage({
   }
 
   const t = await getTranslations('account');
+  const tc = await getTranslations('checkout');
   const tr = await getTranslations('status.reservation');
   const tsi = await getTranslations('status.serviceItem');
   const tst = await getTranslations('status.serviceType');
@@ -74,6 +76,19 @@ export default async function AccountReservationPage({
           {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}
         </CardContent>
       </Card>
+
+      {reservation.status === 'SECURED_AND_INVOICED' ||
+      reservation.status === 'PENDING_PAYMENT' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{tc('title')}</CardTitle>
+            <CardDescription>{tc('description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CheckoutButton reservationId={reservation.id} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

@@ -59,6 +59,18 @@
     "back": "Todos los paquetes",
     "day": "Día {day}"
   },
+  "checkout": {
+    "pay": "Continuar al pago",
+    "creating": "Preparando…",
+    "error": "No se pudo iniciar el pago.",
+    "title": "Pago",
+    "description": "Generaremos un enlace de pago seguro para esta reserva.",
+    "mockTitle": "Pago (simulado)",
+    "mockDescription": "Este es un sustituto de desarrollo de la pasarela de pago.",
+    "reference": "Referencia",
+    "mockNotice": "No se realiza ningún pago real. Nuestro equipo de operaciones confirmará el recibo cuando se acrediten los fondos.",
+    "backToAccount": "Volver a mis viajes"
+  },
   "build": {
     "title": "Crea tu itinerario",
     "description": "Elige tus fechas y los alojamientos, transportes y experiencias que quieras. Armaremos el itinerario y empezaremos a asegurar proveedores.",

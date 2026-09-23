@@ -59,6 +59,18 @@
     "back": "All packages",
     "day": "Day {day}"
   },
+  "checkout": {
+    "pay": "Proceed to payment",
+    "creating": "Preparing…",
+    "error": "Could not start the payment.",
+    "title": "Payment",
+    "description": "We will generate a secure payment link for this booking.",
+    "mockTitle": "Payment (mock)",
+    "mockDescription": "This is a development stand-in for the payment gateway.",
+    "reference": "Reference",
+    "mockNotice": "No real payment is taken. Our operations team will confirm the receipt once funds clear.",
+    "backToAccount": "Back to my trips"
+  },
   "build": {
     "title": "Build your itinerary",
     "description": "Pick your dates and the stays, transport, and experiences you want. We will assemble the itinerary and start securing providers.",

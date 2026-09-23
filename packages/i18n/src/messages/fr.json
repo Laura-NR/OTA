@@ -59,6 +59,18 @@
     "back": "Tous les forfaits",
     "day": "Jour {day}"
   },
+  "checkout": {
+    "pay": "Passer au paiement",
+    "creating": "Préparation…",
+    "error": "Impossible de lancer le paiement.",
+    "title": "Paiement",
+    "description": "Nous générerons un lien de paiement sécurisé pour cette réservation.",
+    "mockTitle": "Paiement (simulé)",
+    "mockDescription": "Ceci remplace la passerelle de paiement en développement.",
+    "reference": "Référence",
+    "mockNotice": "Aucun paiement réel n'est effectué. Notre équipe des opérations confirmera le reçu dès réception des fonds.",
+    "backToAccount": "Retour à mes voyages"
+  },
   "build": {
     "title": "Créez votre itinéraire",
     "description": "Choisissez vos dates ainsi que les hébergements, transports et expériences souhaités. Nous assemblerons l'itinéraire et commencerons à réserver les prestataires.",
