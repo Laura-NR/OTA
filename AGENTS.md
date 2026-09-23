@@ -385,6 +385,9 @@ nothing that weakens an Article.
 - `<2026-09-23: calculateFinance now also returns byPackageType (PACKAGE vs CUSTOM), bucketing each PAID receipt and payout by Reservation.packageId. AnalyticsService selects reservation.packageId on both paymentReceipt and serviceItem; the finance schema and /analytics Revenue-by-package-type card surface it. AOV per type = amount / count.>`
 - `<2026-09-23: the back-office /packages/[id] editor replaces a package's itinerary wholesale via the existing PATCH (services array), so no service-level endpoints exist. The packages list links rows to the editor.>`
 - `<2026-09-23: accommodation-tier selection and package media are still open; both need a migration (Article 2), so curated packages remain a fixed itinerary for now.>`
+- `<2026-09-23: packages/reports is a new workspace package that builds the BI XLSX digest with exceljs — already a repo dependency (packages/imports), so no new third-party package. buildAnalyticsWorkbook is pure: the API fetches the figures.>`
+- `<2026-09-23: GET /analytics/export/xlsx (ops) streams the workbook; a weekly BullMQ digest job (queue analytics-digest, upsertJobScheduler, Monday 07:00) emails it to ANALYTICS_DIGEST_EMAIL or OPS_NOTIFY_EMAIL. The scheduler is a Noop when NODE_ENV=test or REDIS_URL is unset (same pattern as the compliance scan). The digest is XLSX only; a PDF variant is not built yet.>`
+- `<2026-09-23: EmailMessage gained an optional attachments array; SmtpMailer forwards it to nodemailer and ConsoleMailer logs the filenames. Existing template helpers are unaffected (the field is optional).>`
 
 ---
 
