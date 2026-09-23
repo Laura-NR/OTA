@@ -11,9 +11,13 @@ around as data.
 
 ## Forking for a new agency
 
+See `docs/forking.md` for the full workflow. In short:
+
 1. Fork the repository.
-2. Edit `tenant/agency.config.json` (branding, license, locales, feature flags,
-   theme) and add brand assets under `tenant/`.
+2. `pnpm install && pnpm build`, then scaffold the manifest with
+   `pnpm create:tenant --name "Agency Name" --license MINTUR-YYYY-XXXX` and edit
+   `tenant/agency.config.json` (branding, locales, feature flags, theme); add
+   brand assets under `tenant/assets/`.
 3. Copy `.env.example` to `.env` and fill in secrets/services.
 4. Deploy. Core updates merge from `upstream`; conflicts stay inside `tenant/`.
 

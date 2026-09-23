@@ -14,12 +14,14 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev": "turbo run dev",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "create:tenant": "node tools/create-tenant.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
     "@eslint/js": "^10.0.1",
+    "@ota/config": "workspace:*",
     "@ota/db": "workspace:*",
     "@playwright/test": "^1.63.0",
     "eslint": "^10.11.0",
