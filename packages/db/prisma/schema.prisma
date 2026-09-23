@@ -299,14 +299,57 @@ model InventoryItem {
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
-  supplier     SupplierProfile? @relation(fields: [supplierId], references: [id])
-  pricingRules PricingRule[]
-  media        InventoryMedia[]
+  supplier        SupplierProfile? @relation(fields: [supplierId], references: [id])
+  pricingRules    PricingRule[]
+  media           InventoryMedia[]
+  packageServices PackageService[]
 
   @@index([type])
   @@index([province])
   @@index([active])
   @@map("inventory_items")
+}
+
+// Curated multi-day package (spec §3.3): a fixed-schedule template of catalog
+// services that expands into a Reservation's ServiceItems when booked. Kept
+// separate from InventoryItem because a bundle is not a single sellable SKU.
+model Package {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String   @unique
+  description String?
+  province    String?
+  durationDays Int     @map("duration_days")
+  currency    String   @default("EUR")
+  basePrice   Decimal  @map("base_price") @db.Decimal(10, 2)
+  active      Boolean  @default(true)
+  attributes  Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  services     PackageService[]
+  reservations Reservation[]
+
+  @@index([active])
+  @@index([province])
+  @@map("packages")
+}
+
+// One catalog item inside a package itinerary. `dayOffset` is the day within
+// the package (day 0 = first day); `position` orders items on the same day.
+model PackageService {
+  id              String   @id @default(uuid()) @db.Uuid
+  packageId       String   @map("package_id") @db.Uuid
+  inventoryItemId String   @map("inventory_item_id") @db.Uuid
+  dayOffset       Int      @default(0) @map("day_offset")
+  position        Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  package       Package       @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@index([packageId])
+  @@map("package_services")
 }
 
 // Gallery images for a catalog item (spec §4.6). The binary lives in object
@@ -370,6 +413,9 @@ model ImportBatch {
 model Reservation {
   id                      String            @id @default(uuid()) @db.Uuid
   userId                  String            @map("user_id") @db.Uuid
+  // Set when the booking was created from a curated package (spec §3.3); null
+  // for custom dynamic-builder itineraries. Drives the package-type AOV split.
+  packageId               String?           @map("package_id") @db.Uuid
   bookingCode             String            @unique @map("booking_code")
   startDate               DateTime          @map("start_date") @db.Date
   endDate                 DateTime          @map("end_date") @db.Date
@@ -382,6 +428,7 @@ model Reservation {
   updatedAt               DateTime          @updatedAt @map("updated_at")
 
   user        User            @relation(fields: [userId], references: [id])
+  package     Package?        @relation(fields: [packageId], references: [id])
   serviceItems ServiceItem[]
   payments    PaymentReceipt[]
   documents   Document[]
@@ -391,6 +438,7 @@ model Reservation {
 
   @@index([userId])
   @@index([status])
+  @@index([packageId])
   @@map("reservations")
 }
 

@@ -10,7 +10,9 @@ import {
 } from '@nestjs/common';
 import {
   createMyReservationSchema,
+  createPackageBookingSchema,
   type CreateMyReservationRequest,
+  type CreatePackageBookingRequest,
   type MeProfileDto,
   type MyReservationDetailDto,
   type MyReservationListItemDto,
@@ -47,6 +49,16 @@ export class MeController {
     @CurrentUser() actor: AuthUser,
   ): Promise<MyReservationDetailDto> {
     return this.me.createReservation(actor.id, body);
+  }
+
+  @Post('reservations/from-package')
+  @HttpCode(HttpStatus.CREATED)
+  bookPackage(
+    @Body(new ZodValidationPipe(createPackageBookingSchema))
+    body: CreatePackageBookingRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<MyReservationDetailDto> {
+    return this.me.createPackageReservation(actor.id, body);
   }
 
   @Get('reservations/:id')

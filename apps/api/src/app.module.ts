@@ -13,6 +13,7 @@ import { ImportsModule } from './imports/imports.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { MeModule } from './me/me.module';
 import { MessagesModule } from './messages/messages.module';
+import { PackagesModule } from './packages/packages.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RegulatoryModule } from './regulatory/regulatory.module';
@@ -49,6 +50,7 @@ const isTest = process.env.NODE_ENV === 'test';
     MessagesModule,
     ImportsModule,
     PaymentsModule,
+    PackagesModule,
     MeModule,
     SupplierApplicationsModule,
     AnalyticsModule,

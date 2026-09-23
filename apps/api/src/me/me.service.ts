@@ -8,6 +8,7 @@ import type { InventoryType, Prisma } from '@ota/db';
 import { ReservationStatus, ServiceType } from '@ota/domain';
 import type {
   CreateMyReservationRequest,
+  CreatePackageBookingRequest,
   MeProfileDto,
   MyDocumentDto,
   MyReservationDetailDto,
@@ -68,6 +69,25 @@ function toDetailDto(row: DetailRow): MyReservationDetailDto {
       generatedAt: document.generatedAt.toISOString(),
     })),
   };
+}
+
+interface SubmissionServiceItem {
+  serviceType: ServiceType;
+  serviceDateStart: Date;
+  serviceDateEnd: Date;
+  province: string | null;
+}
+
+interface SubmissionParams {
+  startDate: Date;
+  endDate: Date;
+  totalCurrency: string;
+  totalAmount: number;
+  customItineraryPayload: Prisma.InputJsonValue;
+  serviceItems: SubmissionServiceItem[];
+  auditMetadata?: Record<string, unknown>;
+  packageId?: string;
+  nationality?: string;
 }
 
 /**
@@ -143,8 +163,90 @@ export class MeService {
     const totalAmount = items.reduce((sum, item) => sum + Number(item.basePrice), 0);
     const currency = items[0]?.currency ?? 'EUR';
 
-    let createdId: string | null = null;
-    for (let attempt = 0; attempt < 5 && !createdId; attempt += 1) {
+    const createdId = await this.createSubmission(userId, {
+      startDate: input.startDate,
+      endDate: input.endDate,
+      totalCurrency: currency,
+      totalAmount,
+      customItineraryPayload: { notes: input.notes ?? null, inventoryItemIds: ids },
+      nationality: input.nationality,
+      serviceItems: input.serviceItems.map((selection) => {
+        const item = byId.get(selection.inventoryItemId)!;
+        return {
+          serviceType: INVENTORY_TO_SERVICE[item.type],
+          serviceDateStart: selection.serviceDateStart ?? input.startDate,
+          serviceDateEnd: selection.serviceDateEnd ?? input.endDate,
+          province: item.province,
+        };
+      }),
+    });
+
+    return this.getReservation(userId, createdId);
+  }
+
+  /**
+   * Book a curated package (spec §3.3): expand its itinerary into service items
+   * and land the booking at ITINERARY_SUBMITTED. Price, service type, and
+   * province come from the package and catalog, never the client.
+   */
+  async createPackageReservation(
+    userId: string,
+    input: CreatePackageBookingRequest,
+  ): Promise<MyReservationDetailDto> {
+    if (input.endDate < input.startDate) {
+      throw new BadRequestException('endDate must be on or after startDate');
+    }
+
+    const pkg = await this.prisma.package.findUnique({
+      where: { id: input.packageId },
+      include: {
+        services: {
+          include: { inventoryItem: true },
+          orderBy: [{ dayOffset: 'asc' }, { position: 'asc' }],
+        },
+      },
+    });
+    if (!pkg || !pkg.active) {
+      throw new NotFoundException(`Package ${input.packageId} not found`);
+    }
+
+    const serviceItems: SubmissionServiceItem[] = pkg.services.map((service) => {
+      const serviceDate = new Date(input.startDate);
+      serviceDate.setUTCDate(serviceDate.getUTCDate() + service.dayOffset);
+      return {
+        serviceType: INVENTORY_TO_SERVICE[service.inventoryItem.type],
+        serviceDateStart: serviceDate,
+        serviceDateEnd: serviceDate,
+        province: service.inventoryItem.province,
+      };
+    });
+
+    const createdId = await this.createSubmission(userId, {
+      startDate: input.startDate,
+      endDate: input.endDate,
+      totalCurrency: pkg.currency,
+      totalAmount: Number(pkg.basePrice),
+      customItineraryPayload: { packageId: pkg.id, packageSlug: pkg.slug },
+      packageId: pkg.id,
+      nationality: input.nationality,
+      serviceItems,
+      auditMetadata: { packageId: pkg.id, packageSlug: pkg.slug },
+    });
+
+    return this.getReservation(userId, createdId);
+  }
+
+  /**
+   * Shared submission path for both the dynamic builder and curated packages:
+   * allocate a unique booking code, persist the reservation and its service
+   * items atomically, record the audit entry, and stamp the traveler's
+   * nationality when supplied.
+   */
+  private async createSubmission(
+    userId: string,
+    params: SubmissionParams,
+  ): Promise<string> {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       const bookingCode = generateBookingCode();
       const clash = await this.prisma.reservation.findUnique({
         where: { bookingCode },
@@ -154,11 +256,11 @@ export class MeService {
         continue;
       }
 
-      createdId = await this.prisma.$transaction(async (tx) => {
-        if (input.nationality) {
+      return this.prisma.$transaction(async (tx) => {
+        if (params.nationality) {
           await tx.user.update({
             where: { id: userId },
-            data: { nationality: input.nationality },
+            data: { nationality: params.nationality },
           });
         }
 
@@ -166,27 +268,22 @@ export class MeService {
           data: {
             userId,
             bookingCode,
-            startDate: input.startDate,
-            endDate: input.endDate,
+            packageId: params.packageId ?? null,
+            startDate: params.startDate,
+            endDate: params.endDate,
             status: ReservationStatus.ItinerarySubmitted,
-            totalCurrency: currency,
-            totalAmount,
-            customItineraryPayload: {
-              notes: input.notes ?? null,
-              inventoryItemIds: ids,
-            } as Prisma.InputJsonValue,
+            totalCurrency: params.totalCurrency,
+            totalAmount: params.totalAmount,
+            customItineraryPayload: params.customItineraryPayload,
             serviceItems: {
-              create: input.serviceItems.map((selection) => {
-                const item = byId.get(selection.inventoryItemId)!;
-                return {
-                  serviceType: INVENTORY_TO_SERVICE[item.type],
-                  serviceDateStart: selection.serviceDateStart ?? input.startDate,
-                  serviceDateEnd: selection.serviceDateEnd ?? input.endDate,
-                  province: item.province,
-                  status: 'UNASSIGNED' as const,
-                  payoutRate: 0,
-                };
-              }),
+              create: params.serviceItems.map((item) => ({
+                serviceType: item.serviceType,
+                serviceDateStart: item.serviceDateStart,
+                serviceDateEnd: item.serviceDateEnd,
+                province: item.province,
+                status: 'UNASSIGNED' as const,
+                payoutRate: 0,
+              })),
             },
           },
         });
@@ -199,8 +296,9 @@ export class MeService {
             entityId: reservation.id,
             metadata: {
               bookingCode,
-              serviceItemCount: input.serviceItems.length,
-            },
+              serviceItemCount: params.serviceItems.length,
+              ...(params.auditMetadata ?? {}),
+            } as Prisma.InputJsonValue,
           },
         });
 
@@ -208,9 +306,6 @@ export class MeService {
       });
     }
 
-    if (!createdId) {
-      throw new ConflictException('Could not allocate a unique booking code');
-    }
-    return this.getReservation(userId, createdId);
+    throw new ConflictException('Could not allocate a unique booking code');
   }
 }

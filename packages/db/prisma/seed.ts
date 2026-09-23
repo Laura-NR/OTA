@@ -1,6 +1,28 @@
-import { PrismaClient, Role, SupplierCategory, VerificationStatus } from '@prisma/client';
+import {
+  InventoryType,
+  PrismaClient,
+  Role,
+  SupplierCategory,
+  VerificationStatus,
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+async function ensureInventoryItem(
+  name: string,
+  data: {
+    type: InventoryType;
+    province: string;
+    basePrice: string;
+    description: string;
+  },
+) {
+  const existing = await prisma.inventoryItem.findFirst({ where: { name } });
+  if (existing) {
+    return existing;
+  }
+  return prisma.inventoryItem.create({ data: { name, ...data } });
+}
 
 async function main(): Promise<void> {
   const superAdmin = await prisma.user.upsert({
@@ -78,8 +100,46 @@ async function main(): Promise<void> {
     });
   }
 
+  // A curated package (spec §3.3) built from two catalog items so the
+  // storefront package pages and the booking path have demo data.
+  const stay = await ensureInventoryItem('Casa Colonial Trinidad', {
+    type: InventoryType.ACCOMMODATION,
+    province: 'Sancti Spíritus',
+    basePrice: '90.00',
+    description: 'Restored colonial guesthouse in the historic centre.',
+  });
+  const walk = await ensureInventoryItem('Trinidad Heritage Walk', {
+    type: InventoryType.EXPERIENCE,
+    province: 'Sancti Spíritus',
+    basePrice: '45.00',
+    description: 'Guided walking tour of the UNESCO-listed old town.',
+  });
+
+  const curatedPackage = await prisma.package.upsert({
+    where: { slug: 'trinidad-heritage-trail' },
+    update: {},
+    create: {
+      name: 'Trinidad Heritage Trail',
+      slug: 'trinidad-heritage-trail',
+      description:
+        'A three-day colonial heritage and mountain immersion through Trinidad.',
+      province: 'Sancti Spíritus',
+      durationDays: 3,
+      currency: 'EUR',
+      basePrice: '240.00',
+      active: true,
+      services: {
+        create: [
+          { inventoryItemId: stay.id, dayOffset: 0, position: 0 },
+          { inventoryItemId: walk.id, dayOffset: 1, position: 0 },
+          { inventoryItemId: stay.id, dayOffset: 2, position: 0 },
+        ],
+      },
+    },
+  });
+
   console.log(
-    `Seeded ${superAdmin.email}, ${worker.email}, and reservation ${reservation.bookingCode} (${reservation.id})`,
+    `Seeded ${superAdmin.email}, ${worker.email}, reservation ${reservation.bookingCode} (${reservation.id}), and package ${curatedPackage.slug}`,
   );
 }
 

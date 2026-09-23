@@ -5,6 +5,20 @@ export {
   type AnalyticsRangeQuery,
 } from './analytics';
 export {
+  createPackageBookingSchema,
+  createPackageSchema,
+  listPackagesQuerySchema,
+  packageSchema,
+  packageServiceSchema,
+  updatePackageSchema,
+  type CreatePackageBookingRequest,
+  type CreatePackageRequest,
+  type ListPackagesQuery,
+  type PackageDto,
+  type PackageServiceDto,
+  type UpdatePackageRequest,
+} from './package';
+export {
   classifyReservationSchema,
   nationalitySchema,
   regulatoryRangeSchema,

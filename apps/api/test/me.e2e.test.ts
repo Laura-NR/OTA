@@ -35,6 +35,8 @@ const OTHER_RESERVATION = '44444444-4444-4444-8444-444444444444';
 const SERVICE_ITEM = '55555555-5555-4555-8555-555555555555';
 const DOCUMENT = '66666666-6666-4666-8666-666666666666';
 const CATALOG_ITEM = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const PACKAGE_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const INACTIVE_PACKAGE_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 
 function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
   return {
@@ -60,6 +62,7 @@ interface FakeState {
   serviceItems: Record<string, unknown>[];
   documents: Record<string, unknown>[];
   inventoryItems: Record<string, unknown>[];
+  packages: Record<string, unknown>[];
   audits: { action: string }[];
   counter: { value: number };
 }
@@ -91,6 +94,10 @@ function createFakePrisma(state: FakeState) {
             args.where.id.in.includes(item.id as string) &&
             (args.where.active === undefined || item.active === args.where.active),
         ),
+    },
+    package: {
+      findUnique: async (args: { where: { id: string } }) =>
+        state.packages.find((pkg) => pkg.id === args.where.id) ?? null,
     },
     reservation: {
       findMany: async (args: { where: { userId: string } }) =>
@@ -241,6 +248,49 @@ describe('me API', () => {
           active: true,
         },
       ],
+      packages: [
+        {
+          id: PACKAGE_ID,
+          name: 'Vinales Agro-Ecology Trail',
+          slug: 'vinales-agro-ecology-trail',
+          active: true,
+          currency: 'EUR',
+          basePrice: new Prisma.Decimal('180.00'),
+          services: [
+            {
+              id: 'ps-1',
+              inventoryItemId: CATALOG_ITEM,
+              dayOffset: 0,
+              position: 0,
+              inventoryItem: {
+                id: CATALOG_ITEM,
+                type: 'ACCOMMODATION',
+                province: 'La Habana',
+              },
+            },
+            {
+              id: 'ps-2',
+              inventoryItemId: CATALOG_ITEM,
+              dayOffset: 2,
+              position: 0,
+              inventoryItem: {
+                id: CATALOG_ITEM,
+                type: 'ACCOMMODATION',
+                province: 'La Habana',
+              },
+            },
+          ],
+        },
+        {
+          id: INACTIVE_PACKAGE_ID,
+          name: 'Retired Trail',
+          slug: 'retired-trail',
+          active: false,
+          currency: 'EUR',
+          basePrice: new Prisma.Decimal('99.00'),
+          services: [],
+        },
+      ],
       audits: [],
       counter: { value: 0 },
     };
@@ -357,6 +407,54 @@ describe('me API', () => {
       });
 
     expect(response.status).toBe(400);
+  });
+
+  describe('POST /me/reservations/from-package', () => {
+    it('expands a curated package into service items at ITINERARY_SUBMITTED', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/me/reservations/from-package')
+        .set('x-test-user', TRAVELER.email)
+        .send({
+          packageId: PACKAGE_ID,
+          startDate: '2027-02-01',
+          endDate: '2027-02-03',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.status).toBe('ITINERARY_SUBMITTED');
+      expect(response.body.totalAmount).toBe('180');
+      expect(response.body.serviceItems).toHaveLength(2);
+      expect(response.body.serviceItems[0].serviceType).toBe('ACCOMMODATION');
+      expect(response.body.serviceItems[0].province).toBe('La Habana');
+      expect(response.body.serviceItems[0].serviceDateStart).toContain('2027-02-01');
+      expect(response.body.serviceItems[1].serviceDateStart).toContain('2027-02-03');
+    });
+
+    it('returns 404 for an inactive package', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/me/reservations/from-package')
+        .set('x-test-user', TRAVELER.email)
+        .send({
+          packageId: INACTIVE_PACKAGE_ID,
+          startDate: '2027-02-01',
+          endDate: '2027-02-03',
+        });
+
+      expect(response.status).toBe(404);
+    });
+
+    it('returns 404 for an unknown package', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/me/reservations/from-package')
+        .set('x-test-user', TRAVELER.email)
+        .send({
+          packageId: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+          startDate: '2027-02-01',
+          endDate: '2027-02-03',
+        });
+
+      expect(response.status).toBe(404);
+    });
   });
 
   it('returns 401 when unauthenticated', async () => {
