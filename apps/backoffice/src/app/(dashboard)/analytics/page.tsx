@@ -63,12 +63,20 @@ export default async function AnalyticsPage({
         description="Financial, operational, and quality KPIs (spec §4.9). Bounds are by record creation date."
       />
 
-      <a
-        href={`/api/ota/analytics/export/xlsx${query}`}
-        className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-      >
-        Download XLSX digest
-      </a>
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={`/api/ota/analytics/export/xlsx${query}`}
+          className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          Download XLSX digest
+        </a>
+        <a
+          href={`/api/ota/analytics/export/pdf${query}`}
+          className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          Download PDF digest
+        </a>
+      </div>
 
       {loadError || !overview ? (
         <Alert variant="destructive">{loadError ?? 'No data.'}</Alert>
