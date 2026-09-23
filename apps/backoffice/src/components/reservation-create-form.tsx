@@ -1,7 +1,8 @@
 'use client';
 
+import { TOURISM_CATEGORIES } from '@ota/domain';
 import type { ReservationDetailDto } from '@ota/schemas';
-import { Alert, Button, Input, Label } from '@ota/ui';
+import { Alert, Button, Input, Label, Select } from '@ota/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -25,10 +26,12 @@ export function ReservationCreateForm() {
         method: 'POST',
         body: JSON.stringify({
           travelerEmail: form.get('travelerEmail'),
+          nationality: form.get('nationality') || undefined,
           startDate: form.get('startDate'),
           endDate: form.get('endDate'),
           totalCurrency: form.get('totalCurrency') || 'EUR',
           totalAmount: Number(form.get('totalAmount') || 0),
+          tourismCategory: form.get('tourismCategory') || undefined,
         }),
       });
       router.push(`/reservations/${reservation.id}`);
@@ -82,6 +85,26 @@ export function ReservationCreateForm() {
             defaultValue="EUR"
             maxLength={3}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="nationality">Traveler nationality</Label>
+          <Input
+            id="nationality"
+            name="nationality"
+            placeholder="ES"
+            maxLength={2}
+            className="uppercase"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="tourism-category">Tourism classification</Label>
+          <Select id="tourism-category" name="tourismCategory" defaultValue="GENERAL">
+            {TOURISM_CATEGORIES.map((option) => (
+              <option key={option} value={option}>
+                {option.replaceAll('_', ' ')}
+              </option>
+            ))}
+          </Select>
         </div>
       </div>
 

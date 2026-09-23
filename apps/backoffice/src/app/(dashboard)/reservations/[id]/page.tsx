@@ -25,6 +25,7 @@ import { notFound } from 'next/navigation';
 
 import { PaymentPanel } from '@/components/payment-panel';
 import { ReservationActions } from '@/components/reservation-actions';
+import { TourismCategoryControl } from '@/components/tourism-category-control';
 import { StatusBadge } from '@/components/status-badge';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
@@ -115,6 +116,12 @@ export default async function ReservationDetailPage({
           <ReservationActions
             reservationId={reservation.id}
             status={reservation.status}
+            canManage={canManage}
+          />
+
+          <TourismCategoryControl
+            reservationId={reservation.id}
+            category={reservation.tourismCategory}
             canManage={canManage}
           />
         </CardContent>

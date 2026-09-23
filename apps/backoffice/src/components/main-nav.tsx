@@ -15,6 +15,7 @@ const ITEMS = [
   { href: '/imports', label: 'Imports' },
   { href: '/documents', label: 'Documents' },
   { href: '/analytics', label: 'Analytics' },
+  { href: '/regulatory', label: 'Regulatory' },
 ] as const;
 
 export function MainNav() {
