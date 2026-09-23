@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-23 09:05
+# Handoff — main — updated 2026-09-23 12:10
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -7,11 +7,12 @@ A–E) is done. In Wave 2a the payments mock, storefront map, traveler auth +
 dashboard, package builder, recruitment portal, and storefront i18n (es/en/fr)
 are all done. What remains of Wave 2a is the checkout page, which is gated by
 ADR 0003 (no public mark-paid route until a real signed-webhook provider).
-Phase 3 has started with the analytics/BI overview and now statutory regulatory
-reporting (§4.9.2). Four open decisions were resolved 2026-09-23: curated
-packages use a real bundle model, the regulatory migration is approved, the AI
-assistant ships as an abstraction + mock before any real LLM SDK, and checkout
-will be a traveler-facing mock that only creates the link (never self-confirms).
+Phase 3 has started with the analytics/BI overview and statutory regulatory
+reporting (§4.9.2). Curated packages (Phase 4) now ship too. Four open decisions
+were resolved 2026-09-23: curated packages use a real bundle model, the
+regulatory migration is approved, the AI assistant ships as an abstraction +
+mock before any real LLM SDK, and checkout will be a traveler-facing mock that
+only creates the link (never self-confirms).
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
@@ -91,6 +92,16 @@ will be a traveler-facing mock that only creates the link (never self-confirms).
   the ops intake form and the storefront builder accept a nationality, and
   `PATCH /reservations/:id/tourism-category` (audited `reservation.classified`)
   classifies a booking from the workbench control. Back-office `/regulatory`.
+- Phase 4 — **curated packages (§3.3):** migration
+  `20260923091856_curated_packages` adds `Package` + `PackageService` (services
+  FK catalog items) and `Reservation.packageId`. Ops CRUD at `/packages`
+  (read: ops roles, write: ops+super; a `services` array replaces the
+  itinerary); public `GET /catalog/packages` and `/catalog/packages/:slug`
+  (active only). Storefront `/packages` list + `/packages/[slug]` detail with a
+  booking form that posts `POST /me/reservations/from-package`; the server
+  expands the package into service items and lands `ITINERARY_SUBMITTED`.
+  Back-office `/packages` creates/lists/toggles/deletes. No service-editing UI
+  and no package-type analytics split yet.
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -99,25 +110,31 @@ will be a traveler-facing mock that only creates the link (never self-confirms).
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 13 spec files / 18 tests (`pnpm e2e`, cached `chromium-1243`).
-- Head `849ea73` was the base; this regulatory increment is committed on top.
+- e2e: 15 spec files / 20 tests (`pnpm e2e`, cached `chromium-1243`).
+- Head `849ea73` was the base; the regulatory and curated-package increments are
+  committed on top.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-23):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**203**: api
-  112, domain 43, payments 3, i18n 2, theming 9, documents 8, config 7, imports
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**214**: api
+  123, domain 43, payments 3, i18n 2, theming 9, documents 8, config 7, imports
   5, ui 4, email 4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
-  `20260923063425_regulatory_reporting` (9 migrations total).
-- `pnpm e2e` — 18 real-browser tests pass, including the two new regulatory
+  `20260923063425_regulatory_reporting` and `20260923091856_curated_packages`
+  (10 migrations total).
+- `pnpm e2e` — 20 real-browser tests pass, including the new curated-package
+  specs (back-office list/create, storefront list → book), the two regulatory
   specs (report render + workbench classification), the inventory flow, the
   supplier availability toggle, the payment link → mark-paid → CONFIRMED flow,
   the storefront map province filter (and banner), traveler sign-in → dashboard,
   the traveler message send, the package builder submit, recruitment submit →
   approve, the locale switch, and the analytics dashboard.
 - New coverage: `regulatory.test.ts` (4 pure cases), `regulatory.e2e.test.ts`
-  (5: summary, window, CSV, 403, 401), the reservations classify/nationality
-  tests, and the `regulatory.spec.ts` browser spec (report + classification).
+  (5: summary, window, CSV, 403, 401), `packages.e2e.test.ts` (8: public
+  active-only, slug, ops list, create+slug, unknown item, delete, 403, 401), the
+  `me.e2e.test.ts` from-package booking cases (3), the reservations
+  classify/nationality tests, and the `regulatory.spec.ts` +
+  `storefront-packages.spec.ts` + `packages.spec.ts` browser specs.
   Earlier: the storefront message send and the cultural-events banner
   assertion (both in `storefront-auth.spec.ts` / `storefront.spec.ts`);
   `analytics.test.ts` (6 pure KPI cases) and
@@ -187,10 +204,11 @@ flows are covered (map, auth, builder, i18n, recruitment).
 ## Next
 1. **Phase 4 storefront remainder:** checkout (decided 2026-09-23: traveler
    mock, link-only — needs a traveler-scoped payment-link path and a
-   `/checkout/mock/:reference` page, never a public mark-paid route); curated
-   packages (decided: real `Package`/`PackageService` bundle model that expands
-   into the existing Reservation/ServiceItem pipeline); the catalog/map do not
-   yet show real-time availability.
+   `/checkout/mock/:reference` page, never a public mark-paid route); package
+   follow-ups (service-editing UI on the back-office, the §4.9.1 AOV/take-rate
+   split by package type using `Reservation.packageId`, accommodation-tier
+   selection, package media); the catalog/map do not yet show real-time
+   availability.
 2. **Phase 3 remainder:** the AI assistant (decided: `packages/ai`
    `LlmProvider` abstraction + deterministic mock first, real SDK deferred under
    Article 2); optional BI polish (scheduled weekly PDF/XLSX digests, provider
@@ -330,3 +348,13 @@ flows are covered (map, auth, builder, i18n, recruitment).
 - 2026-09-23 — regulatory reporting (§4.9.2) shipped as a read-only ops surface:
   pure `calculateRegulatory`, `GET /analytics/regulatory` + `fiscal-export`,
   capture at intake/builder and via `PATCH /reservations/:id/tourism-category`.
+- 2026-09-23 — curated packages shipped as `Package`/`PackageService` +
+  `Reservation.packageId`; booking expands services into the existing
+  Reservation/ServiceItem pipeline via the shared `MeService.createSubmission`,
+  so dispatch and documents are untouched. `attributes` JSON was not used.
+- 2026-09-23 — package itineraries are replaced wholesale on PATCH (delete +
+  recreate services) rather than diffed, because the editor submits the full
+  list at once; service-level PATCH endpoints were not added.
+- 2026-09-23 — accommodation-tier selection, package media, the service-editing
+  UI, and the package-type analytics split are deferred follow-ups, not
+  half-built features.
