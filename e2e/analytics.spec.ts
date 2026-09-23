@@ -20,16 +20,19 @@ test.describe('analytics dashboard', () => {
     ).toBeVisible();
   });
 
-  test('downloads the BI workbook', async ({ page }) => {
+  test('downloads the BI digests', async ({ page }) => {
     await page.goto('/analytics');
 
-    const link = page.getByRole('link', { name: 'Download XLSX digest' });
-    await expect(link).toBeVisible();
-    const href = await link.getAttribute('href');
-    expect(href).toBeTruthy();
+    const xlsx = page.getByRole('link', { name: 'Download XLSX digest' });
+    await expect(xlsx).toBeVisible();
+    const xlsxResponse = await page.request.get((await xlsx.getAttribute('href')) ?? '');
+    expect(xlsxResponse.status()).toBe(200);
+    expect(xlsxResponse.headers()['content-type']).toContain('spreadsheetml');
 
-    const response = await page.request.get(href ?? '');
-    expect(response.status()).toBe(200);
-    expect(response.headers()['content-type']).toContain('spreadsheetml');
+    const pdf = page.getByRole('link', { name: 'Download PDF digest' });
+    await expect(pdf).toBeVisible();
+    const pdfResponse = await page.request.get((await pdf.getAttribute('href')) ?? '');
+    expect(pdfResponse.status()).toBe(200);
+    expect(pdfResponse.headers()['content-type']).toContain('application/pdf');
   });
 });
