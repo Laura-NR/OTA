@@ -379,6 +379,9 @@ nothing that weakens an Article.
 - `<2026-09-23: supplier reliability is reduced from the dispatch-offer ledger by the pure calculateSupplierReliability (packages/domain/src/dispatch/reliability.ts); the API joins supplierProfile.user.fullName for the label, falling back to email. Back-office /quality lists incidents and scorecards, and the reservation workbench has a Duty-of-care card to log/resolve.>`
 - `<2026-09-23: React form gotcha — do NOT call event.currentTarget.reset() after an await in a submit handler; React nulls currentTarget, so it throws and aborts the post-submit refresh. Capture the element before awaiting (fixed in incident-log-form.tsx and package-create-form.tsx).>`
 - `<2026-09-23: e2e/global-setup.ts now also clears E2E0001 incidents each run so the quality spec is idempotent.>`
+- `<2026-09-23: calculateQuality now takes incidents: {severity, resolved}[] (not a count) and returns incidentCount, openIncidentCount, and highSeverityCount (HIGH+CRITICAL); AnalyticsService fetches incident rows and the analytics qualitySchema gained the two fields.>`
+- `<2026-09-23: traveler CSAT reviews needed no migration — the Review model already existed. POST /me/reservations/:id/reviews is ownership-scoped, allowed only when the reservation is COMPLETED, one review per booking (409 otherwise), audited as review.submitted; ops GET /reviews?reservationId&limit. The me reservation detail gained a nullable review field; the storefront shows a review form on COMPLETED and /quality lists recent reviews.>`
+- `<2026-09-23: the review i18n namespace must exist in all three catalogs (es/en/fr) or the key-parity test fails.>`
 
 ---
 
