@@ -12,6 +12,7 @@ const ITEMS = [
   { href: '/applications', label: 'Applications' },
   { href: '/dispatch', label: 'Dispatch' },
   { href: '/inventory', label: 'Inventory' },
+  { href: '/packages', label: 'Packages' },
   { href: '/imports', label: 'Imports' },
   { href: '/documents', label: 'Documents' },
   { href: '/analytics', label: 'Analytics' },
