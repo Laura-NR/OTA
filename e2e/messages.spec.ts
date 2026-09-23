@@ -21,4 +21,18 @@ test.describe('operations messaging', () => {
 
     await expect(page.getByText(body)).toBeVisible();
   });
+
+  test('drafts a contextual reply with the AI assistant', async ({ page }) => {
+    await signIn(page);
+
+    const response = await page.request.get('/api/ota/reservations');
+    const reservations = (await response.json()) as { id: string; bookingCode: string }[];
+    const target = reservations.find((row) => row.bookingCode === 'E2E0001');
+    expect(target).toBeTruthy();
+
+    await page.goto(`/messages?reservation=${target?.id}`);
+    await page.getByRole('button', { name: 'Draft with AI' }).click();
+
+    await expect(page.getByLabel('Message')).toHaveValue(/E2E0001/);
+  });
 });
