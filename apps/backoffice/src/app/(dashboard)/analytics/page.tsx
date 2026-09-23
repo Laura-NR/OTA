@@ -1,4 +1,4 @@
-import type { AnalyticsOverviewDto } from '@ota/schemas';
+import type { AnalyticsOverviewDto, AssistantSummaryDto } from '@ota/schemas';
 import {
   Alert,
   Card,
@@ -50,6 +50,12 @@ export default async function AnalyticsPage({
     loadError = error instanceof Error ? error.message : 'Could not load analytics.';
   }
 
+  const assistant = overview
+    ? await apiFetch<AssistantSummaryDto>(`/assistant/ops-summary${query}`).catch(
+        () => null,
+      )
+    : null;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -85,6 +91,18 @@ export default async function AnalyticsPage({
               value={`${overview.operations.averageResponseMinutes} min`}
             />
           </div>
+
+          {assistant ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>AI operations summary</CardTitle>
+                <CardDescription>
+                  Generated from this window&apos;s KPIs (spec §4.8).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm">{assistant.text}</CardContent>
+            </Card>
+          ) : null}
 
           <Card>
             <CardHeader>

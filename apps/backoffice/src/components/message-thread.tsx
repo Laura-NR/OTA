@@ -18,6 +18,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
   const [body, setBody] = useState('');
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +82,24 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
     }
   }
 
+  async function draftWithAi() {
+    setDrafting(true);
+    setError(null);
+    try {
+      const draft = await apiRequest<{ subject: string; body: string }>(
+        '/assistant/draft-reply',
+        { method: 'POST', body: JSON.stringify({ reservationId }) },
+      );
+      setBody(draft.body);
+    } catch (draftError) {
+      setError(
+        draftError instanceof Error ? draftError.message : 'Could not draft a reply',
+      );
+    } finally {
+      setDrafting(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -129,6 +148,14 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
           placeholder="Write a reply…"
           aria-label="Message"
         />
+        <Button
+          type="button"
+          variant="outline"
+          disabled={drafting || busy}
+          onClick={draftWithAi}
+        >
+          {drafting ? 'Drafting…' : 'Draft with AI'}
+        </Button>
         <Button type="submit" disabled={busy || !body.trim()}>
           {busy ? 'Sending…' : 'Send'}
         </Button>
