@@ -9,13 +9,17 @@ import { ReservationStatus, ServiceType } from '@ota/domain';
 import type {
   CreateMyReservationRequest,
   CreatePackageBookingRequest,
+  CreatePaymentIntentRequest,
   MeProfileDto,
   MyDocumentDto,
   MyReservationDetailDto,
   MyReservationListItemDto,
+  PaymentIntentDto,
 } from '@ota/schemas';
 
+import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
+import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Catalog types map onto the dispatch service types (inventory has no GUIDE). */
@@ -97,7 +101,10 @@ interface SubmissionParams {
  */
 @Injectable()
 export class MeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly payments: PaymentsService,
+  ) {}
 
   async getProfile(userId: string): Promise<MeProfileDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -307,5 +314,25 @@ export class MeService {
     }
 
     throw new ConflictException('Could not allocate a unique booking code');
+  }
+
+  /**
+   * Create a payment link for the caller's own secured booking (spec §7.1,
+   * ADR 0003). The traveler only ever receives the checkout URL; confirming the
+   * receipt stays an authenticated operations action.
+   */
+  async createPaymentLink(
+    actor: AuthUser,
+    reservationId: string,
+    input: CreatePaymentIntentRequest,
+  ): Promise<PaymentIntentDto> {
+    const reservation = await this.prisma.reservation.findFirst({
+      where: { id: reservationId, userId: actor.id },
+      select: { id: true },
+    });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation ${reservationId} not found`);
+    }
+    return this.payments.createIntent(reservationId, input, actor);
   }
 }

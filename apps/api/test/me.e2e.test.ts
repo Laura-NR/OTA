@@ -63,6 +63,7 @@ interface FakeState {
   documents: Record<string, unknown>[];
   inventoryItems: Record<string, unknown>[];
   packages: Record<string, unknown>[];
+  receipts: Record<string, unknown>[];
   audits: { action: string }[];
   counter: { value: number };
 }
@@ -99,6 +100,23 @@ function createFakePrisma(state: FakeState) {
       findUnique: async (args: { where: { id: string } }) =>
         state.packages.find((pkg) => pkg.id === args.where.id) ?? null,
     },
+    paymentReceipt: {
+      create: async (args: { data: Record<string, unknown> }) => {
+        const receipt = {
+          id: `receipt-${state.counter.value + 1}`,
+          status: 'PENDING',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...args.data,
+        };
+        state.receipts.push(receipt);
+        return receipt;
+      },
+      findMany: async (args: { where: { reservationId: string } }) =>
+        state.receipts.filter(
+          (receipt) => receipt.reservationId === args.where.reservationId,
+        ),
+    },
     reservation: {
       findMany: async (args: { where: { userId: string } }) =>
         [...state.reservations.values()]
@@ -130,6 +148,18 @@ function createFakePrisma(state: FakeState) {
           documents: state.documents.filter((doc) => doc.reservationId === row.id),
           _count: counts(row.id),
         };
+      },
+      update: async (args: {
+        where: { id: string };
+        data: { status?: Reservation['status'] };
+      }) => {
+        const row = state.reservations.get(args.where.id);
+        if (!row) throw new Error(`Reservation ${args.where.id} not found`);
+        const updated: Reservation = args.data.status
+          ? { ...row, status: args.data.status }
+          : row;
+        state.reservations.set(args.where.id, updated);
+        return updated;
       },
       create: async (args: {
         data: {
@@ -291,6 +321,7 @@ describe('me API', () => {
           services: [],
         },
       ],
+      receipts: [],
       audits: [],
       counter: { value: 0 },
     };
@@ -452,6 +483,43 @@ describe('me API', () => {
           startDate: '2027-02-01',
           endDate: '2027-02-03',
         });
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('POST /me/reservations/:id/payments', () => {
+    it('creates a payment link for the caller secured booking', async () => {
+      state.reservations.set(
+        MY_RESERVATION,
+        makeReservation({ status: 'SECURED_AND_INVOICED' }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .post(`/me/reservations/${MY_RESERVATION}/payments`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ rail: 'OPEN_BANKING_SEPA' });
+
+      expect(response.status).toBe(201);
+      expect(response.body.checkoutUrl).toContain('/checkout/mock/');
+      expect(state.reservations.get(MY_RESERVATION)?.status).toBe('PENDING_PAYMENT');
+      expect(state.receipts).toHaveLength(1);
+    });
+
+    it('returns 409 when the booking is not secured and invoiced', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/me/reservations/${MY_RESERVATION}/payments`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ rail: 'CARD' });
+
+      expect(response.status).toBe(409);
+    });
+
+    it('returns 404 for another traveler reservation', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/me/reservations/${OTHER_RESERVATION}/payments`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ rail: 'CARD' });
 
       expect(response.status).toBe(404);
     });

@@ -11,11 +11,14 @@ import {
 import {
   createMyReservationSchema,
   createPackageBookingSchema,
+  createPaymentIntentSchema,
   type CreateMyReservationRequest,
   type CreatePackageBookingRequest,
+  type CreatePaymentIntentRequest,
   type MeProfileDto,
   type MyReservationDetailDto,
   type MyReservationListItemDto,
+  type PaymentIntentDto,
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
@@ -59,6 +62,17 @@ export class MeController {
     @CurrentUser() actor: AuthUser,
   ): Promise<MyReservationDetailDto> {
     return this.me.createPackageReservation(actor.id, body);
+  }
+
+  @Post('reservations/:id/payments')
+  @HttpCode(HttpStatus.CREATED)
+  createPaymentLink(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(createPaymentIntentSchema))
+    body: CreatePaymentIntentRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<PaymentIntentDto> {
+    return this.me.createPaymentLink(actor, id, body);
   }
 
   @Get('reservations/:id')

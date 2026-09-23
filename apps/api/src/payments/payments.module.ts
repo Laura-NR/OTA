@@ -25,5 +25,6 @@ import { PAYMENT_PROVIDER } from './payments.tokens';
         }),
     },
   ],
+  exports: [PaymentsService],
 })
 export class PaymentsModule {}
