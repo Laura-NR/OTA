@@ -6,5 +6,6 @@ import { RegulatoryService } from './regulatory.service';
 @Module({
   controllers: [RegulatoryController],
   providers: [RegulatoryService],
+  exports: [RegulatoryService],
 })
 export class RegulatoryModule {}

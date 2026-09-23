@@ -241,6 +241,9 @@ importers:
       '@ota/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@ota/reports':
+        specifier: workspace:*
+        version: link:../../packages/reports
       '@ota/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
@@ -564,6 +567,22 @@ importers:
         version: 4.6.5
 
   packages/payments:
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.1
+        version: 26.6.2
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/reports:
+    dependencies:
+      exceljs:
+        specifier: ^4.4.0
+        version: 4.4.0
     devDependencies:
       '@types/node':
         specifier: ^26.6.1
