@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { isFeatureEnabled, parseTenantConfig } from '../src';
+import {
+  buildTenantManifest,
+  isFeatureEnabled,
+  parseTenantConfig,
+  slugifyTenantId,
+} from '../src';
 
 const minimal = {
   tenantId: 'cuba-eco-travel',
@@ -50,5 +55,48 @@ describe('parseTenantConfig', () => {
         branding: { agencyName: 'Agency' },
       }),
     ).toThrowError(/licenseNumber/);
+  });
+});
+
+describe('slugifyTenantId', () => {
+  it('lowercases and kebab-cases a name', () => {
+    expect(slugifyTenantId('Viñales Eco Travel')).toBe('vinales-eco-travel');
+  });
+
+  it('falls back for an empty name', () => {
+    expect(slugifyTenantId('  ✈  ')).toBe('tenant');
+  });
+});
+
+describe('buildTenantManifest', () => {
+  it('builds a complete, validated manifest with defaults', () => {
+    const config = buildTenantManifest({
+      tenantId: 'new-agency',
+      agencyName: 'New Agency',
+    });
+
+    expect(config.tenantId).toBe('new-agency');
+    expect(config.branding.agencyName).toBe('New Agency');
+    expect(config.branding.licenseNumber).toBe('MINTUR-YYYY-XXXX');
+    expect(config.primaryLocale).toBe('es');
+    expect(config.supportedLocales).toEqual(['es', 'en', 'fr']);
+    expect(config.features.instantBooking).toBe(false);
+  });
+
+  it('honours overrides and merges feature flags', () => {
+    const config = buildTenantManifest({
+      tenantId: 'new-agency',
+      agencyName: 'New Agency',
+      licenseNumber: 'MINTUR-2027-0001',
+      primaryColor: '#123456',
+      palette: 'sunset',
+      features: { instantBooking: true },
+    });
+
+    expect(config.branding.licenseNumber).toBe('MINTUR-2027-0001');
+    expect(config.branding.primaryColor).toBe('#123456');
+    expect(config.theme.palette).toBe('sunset');
+    expect(config.features.instantBooking).toBe(true);
+    expect(config.features.interactiveSvgMap).toBe(true);
   });
 });

@@ -71,3 +71,58 @@ export function isFeatureEnabled(
 ): boolean {
   return config.features[flag];
 }
+
+/** Turn an agency name into a safe tenant id (lower-case kebab-case). */
+export function slugifyTenantId(value: string): string {
+  const slug = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+  return slug || 'tenant';
+}
+
+export interface TenantManifestOptions {
+  tenantId: string;
+  agencyName: string;
+  licenseNumber?: string;
+  primaryColor?: string;
+  palette?: string;
+  borderRadius?: string;
+  primaryLocale?: string;
+  supportedLocales?: string[];
+  features?: Partial<FeatureFlags>;
+  emergencyContacts?: EmergencyContact[];
+}
+
+/**
+ * Build a validated agency manifest for a new fork (the `create-tenant` tool).
+ * Everything omitted falls back to the schema defaults, so the result is always
+ * a complete, loadable manifest.
+ */
+export function buildTenantManifest(options: TenantManifestOptions): TenantConfig {
+  return parseTenantConfig({
+    tenantId: options.tenantId,
+    branding: {
+      agencyName: options.agencyName,
+      licenseNumber: options.licenseNumber ?? 'MINTUR-YYYY-XXXX',
+      ...(options.primaryColor ? { primaryColor: options.primaryColor } : {}),
+    },
+    ...(options.primaryLocale ? { primaryLocale: options.primaryLocale } : {}),
+    ...(options.supportedLocales ? { supportedLocales: options.supportedLocales } : {}),
+    ...(options.palette || options.borderRadius
+      ? {
+          theme: {
+            ...(options.palette ? { palette: options.palette } : {}),
+            ...(options.borderRadius ? { borderRadius: options.borderRadius } : {}),
+          },
+        }
+      : {}),
+    ...(options.features ? { features: options.features } : {}),
+    ...(options.emergencyContacts
+      ? { emergencyContacts: options.emergencyContacts }
+      : {}),
+  });
+}
