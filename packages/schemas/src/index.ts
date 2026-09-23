@@ -5,6 +5,20 @@ export {
   type AnalyticsRangeQuery,
 } from './analytics';
 export {
+  createIncidentSchema,
+  incidentSchema,
+  incidentSeveritySchema,
+  listIncidentsQuerySchema,
+  resolveIncidentSchema,
+  supplierReliabilitySchema,
+  type CreateIncidentRequest,
+  type IncidentDto,
+  type IncidentSeverity,
+  type ListIncidentsQuery,
+  type ResolveIncidentRequest,
+  type SupplierReliabilityDto,
+} from './quality';
+export {
   assistantSummarySchema,
   draftReplyRequestSchema,
   draftReplySchema,

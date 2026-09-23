@@ -17,6 +17,7 @@ import { MessagesModule } from './messages/messages.module';
 import { PackagesModule } from './packages/packages.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { QualityModule } from './quality/quality.module';
 import { RegulatoryModule } from './regulatory/regulatory.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { StorageModule } from './storage/storage.module';
@@ -57,6 +58,7 @@ const isTest = process.env.NODE_ENV === 'test';
     AnalyticsModule,
     RegulatoryModule,
     AssistantModule,
+    QualityModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],

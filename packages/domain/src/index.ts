@@ -26,6 +26,11 @@ export {
 } from './dispatch/policy';
 export { SERVICE_TYPE_TO_SUPPLIER_CATEGORIES } from './dispatch/assignment';
 export {
+  calculateSupplierReliability,
+  type ReliabilityOffer,
+  type SupplierReliability,
+} from './dispatch/reliability';
+export {
   CREDENTIAL_EXPIRY_WINDOW_DAYS,
   SupplierCategory,
   VerificationStatus,
