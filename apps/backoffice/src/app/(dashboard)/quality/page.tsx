@@ -1,4 +1,4 @@
-import type { IncidentDto, SupplierReliabilityDto } from '@ota/schemas';
+import type { IncidentDto, ReviewDto, SupplierReliabilityDto } from '@ota/schemas';
 import {
   Alert,
   Badge,
@@ -40,12 +40,17 @@ function Kpi({ label, value }: { label: string; value: string }) {
 }
 
 export default async function QualityPage() {
-  const [incidents, reliability] = await Promise.all([
+  const [incidents, reliability, reviews] = await Promise.all([
     apiFetch<IncidentDto[]>('/incidents?limit=100').catch(() => []),
     apiFetch<SupplierReliabilityDto[]>('/quality/supplier-reliability').catch(() => []),
+    apiFetch<ReviewDto[]>('/reviews?limit=20').catch(() => []),
   ]);
 
   const openCount = incidents.filter((incident) => !incident.resolvedAt).length;
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -54,10 +59,11 @@ export default async function QualityPage() {
         description="Incident log and worker reliability scorecards (spec §4.9.4)."
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi label="Open incidents" value={String(openCount)} />
         <Kpi label="Incidents logged" value={String(incidents.length)} />
         <Kpi label="Suppliers scored" value={String(reliability.length)} />
+        <Kpi label="Average rating" value={`${averageRating.toFixed(2)} / 5`} />
       </div>
 
       <Card>
@@ -144,6 +150,39 @@ export default async function QualityPage() {
                     <TableCell>{percent(row.acceptanceRate)}</TableCell>
                     <TableCell>{percent(row.timeoutRate)}</TableCell>
                     <TableCell>{row.averageResponseMinutes} min</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent reviews</CardTitle>
+          <CardDescription>Traveler CSAT, newest first</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {reviews.length === 0 ? (
+            <Alert>No reviews yet.</Alert>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Booking</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Comment</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reviews.map((review) => (
+                  <TableRow key={review.id}>
+                    <TableCell className="font-medium">{review.bookingCode}</TableCell>
+                    <TableCell>{review.rating} / 5</TableCell>
+                    <TableCell className="max-w-md truncate">
+                      {review.comment ?? '—'}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
