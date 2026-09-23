@@ -36,7 +36,8 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const element = event.currentTarget;
+    const form = new FormData(element);
     setBusy(true);
     setError(null);
 
@@ -57,7 +58,7 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
           })),
         }),
       });
-      event.currentTarget.reset();
+      element.reset();
       setSelected([]);
       setDays({});
       router.refresh();
