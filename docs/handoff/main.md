@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-23 23:25
+# Handoff — main — updated 2026-09-23 23:35
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -145,6 +145,11 @@ CSAT reviews and incident severity in the analytics quality KPIs.
   (`analytics-digest`, Monday 07:00) emails both to
   `ANALYTICS_DIGEST_EMAIL`/`OPS_NOTIFY_EMAIL` via the new optional
   `EmailMessage.attachments`.
+- Phase 7 — **fork tooling:** `pnpm create:tenant --name …` scaffolds
+  `tenant/agency.config.json` (validated by `buildTenantManifest` in
+  `packages/config`) plus `tenant/assets/`, refusing to overwrite without
+  `--force`; `docs/forking.md` documents the upstream-remote workflow. No new
+  third-party dependency (`tools/**` is lint/format-ignored like the map tool).
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -160,10 +165,13 @@ CSAT reviews and incident severity in the analytics quality KPIs.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-23):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**249**: api
-  148, domain 45, ai 4, payments 3, reports 4, i18n 2, theming 9, documents 8,
-  config 7, imports 5, ui 4, email 4, schemas 3, storage 3), `pnpm build` —
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**253**: api
+  148, domain 45, config 11, ai 4, payments 3, reports 4, i18n 2, theming 9,
+  documents 8, imports 5, ui 4, email 4, schemas 3, storage 3), `pnpm build` —
   green.
+- `pnpm create:tenant --name "Viñales Eco Travel" --license … --out /tmp/…`
+  wrote a valid manifest + `assets/README.md`, and refused a re-run without
+  `--force` (exit 1) — verified manually.
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260923063425_regulatory_reporting` and `20260923091856_curated_packages`
   (10 migrations total).
@@ -187,7 +195,8 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-23):
   the reservations classify/nationality tests, `packages/ai` mock tests (4),
   `assistant.e2e.test.ts` (6), `quality.e2e.test.ts` (8) + `reliability.test.ts`
   (2), the `me.e2e.test.ts` review cases (4), `reports.e2e.test.ts` (4) +
-  `packages/reports` workbook/HTML tests (4), the `analytics.test.ts` /
+  `packages/reports` workbook/HTML tests (4), the `packages/config`
+  `buildTenantManifest`/`slugifyTenantId` tests (4), the `analytics.test.ts` /
   `analytics.e2e.test.ts` package-type assertions, and the `regulatory.spec.ts` +
   `storefront-packages.spec.ts` + `packages.spec.ts` + `packages-edit.spec.ts` +
   `storefront-checkout.spec.ts` + `storefront-review.spec.ts` + `quality.spec.ts`
@@ -268,8 +277,10 @@ flows are covered (map, auth, builder, i18n, recruitment).
    `packages/ai`'s `LlmProvider` (new dependency → Article 2). The weekly
    XLSX + PDF BI digests shipped 2026-09-23. A true guests × nights bed-nights
    figure still needs a party-size migration.
-3. **Phase 7 hardening:** security review (PII at rest, rate limiting,
-   observability), `create-tenant` fork tooling, core versioning.
+3. **Phase 7 hardening:** `create-tenant` + fork docs shipped 2026-09-23;
+   remaining — security review (PII at rest, rate limiting, an RBAC matrix test
+   proving billing data never reaches worker endpoints), observability/runbooks,
+   load tests, and Changesets core versioning (deferred; would add a dev tool).
 4. Mobile apps (Phases 5–6) need Expo (Article 2).
 5. Extend e2e: dispatch start/candidates, import commit, intake form, live
    escalation event round-trip.
@@ -447,3 +458,9 @@ flows are covered (map, auth, builder, i18n, recruitment).
   (`buildAnalyticsHtml`) and the `DOCUMENT_RENDERER` (Playwright Chromium)
   rather than a second templating path; the weekly email now attaches both
   formats, and the API test overrides the renderer to avoid launching a browser.
+- 2026-09-23 — `create-tenant` keeps the CLI in `tools/` (lint/format-ignored,
+  like the map tool) and the pure, validated manifest builder in
+  `packages/config`; the root gains `@ota/config` as a devDependency so a
+  `pnpm build` makes the tool resolvable.
+- 2026-09-23 — Changesets-based core versioning stays deferred (it would add a
+  dev-time dependency); forks pin the upstream commit they last merged.
