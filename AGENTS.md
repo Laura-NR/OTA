@@ -375,6 +375,10 @@ nothing that weakens an Article.
 - `<2026-09-23: the storefront account reservation page shows a Proceed to payment button for SECURED_AND_INVOICED/PENDING_PAYMENT (checkout-button.tsx), and /checkout/mock/[reference] is a landing page with NO confirm action. PAYMENT_CHECKOUT_BASE_URL may be unset, in which case the mock checkoutUrl is relative and resolves on the storefront origin.>`
 - `<2026-09-23: e2e/storefront-checkout.spec.ts creates its own E2ECHK01 SECURED_AND_INVOICED reservation and deletes it (with receipts/audit) in afterAll, so it never depends on E2E0001's status.>`
 - `<2026-09-23: TypeScript is pinned to 6.x and packages/ai uses the same Node-types setup as packages/payments; add new internal packages to apps/api/package.json as @ota/<name>: workspace:* and run pnpm install so the workspace symlink exists.>`
+- `<2026-09-23: the quality/duty-of-care desk needed no migration — the Incident model already existed and only analytics read it. API: GET /incidents?reservationId&resolved&limit, POST /reservations/:id/incidents, PATCH /incidents/:id/resolve (all ops; writes ops+super), and GET /quality/supplier-reliability. Incidents are audited as incident.logged / incident.resolved.>`
+- `<2026-09-23: supplier reliability is reduced from the dispatch-offer ledger by the pure calculateSupplierReliability (packages/domain/src/dispatch/reliability.ts); the API joins supplierProfile.user.fullName for the label, falling back to email. Back-office /quality lists incidents and scorecards, and the reservation workbench has a Duty-of-care card to log/resolve.>`
+- `<2026-09-23: React form gotcha — do NOT call event.currentTarget.reset() after an await in a submit handler; React nulls currentTarget, so it throws and aborts the post-submit refresh. Capture the element before awaiting (fixed in incident-log-form.tsx and package-create-form.tsx).>`
+- `<2026-09-23: e2e/global-setup.ts now also clears E2E0001 incidents each run so the quality spec is idempotent.>`
 
 ---
 

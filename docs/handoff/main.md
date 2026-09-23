@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-23 13:30
+# Handoff — main — updated 2026-09-23 22:10
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -12,7 +12,8 @@ reporting (§4.9.2). Curated packages (Phase 4), the AI assistant abstraction +
 mock, and the traveler mock checkout now ship too, so all four 2026-09-23
 decisions are implemented. The only remaining AI decision is which real LLM
 vendor to wire (a separate Article 2 call); checkout stays link-only until a
-signed-webhook provider exists.
+signed-webhook provider exists. While those two decisions are pending, the
+back-office quality/duty-of-care desk (§4.9.4) was added.
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
@@ -115,6 +116,15 @@ signed-webhook provider exists.
   `POST /reservations/:id/payments/:paymentId/confirm`. Storefront shows
   "Proceed to payment" on the account reservation and lands on
   `/checkout/mock/[reference]`, which has no confirm action.
+- Phase 3 — **quality & duty of care (§4.9.4):** no migration — the `Incident`
+  model already existed and only analytics counted it. API (ops; writes
+  ops+super): `GET /incidents?reservationId&resolved&limit`,
+  `POST /reservations/:id/incidents`, `PATCH /incidents/:id/resolve`, and
+  `GET /quality/supplier-reliability`. Reliability is reduced from the
+  dispatch-offer ledger by the pure `calculateSupplierReliability`
+  (`packages/domain/src/dispatch/reliability.ts`). Incidents are audited
+  (`incident.logged` / `incident.resolved`). Back-office `/quality` (incidents +
+  scorecards) and a Duty-of-care card on the reservation workbench.
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -123,22 +133,23 @@ signed-webhook provider exists.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 16 spec files / 22 tests (`pnpm e2e`, cached `chromium-1243`).
+- e2e: 17 spec files / 23 tests (`pnpm e2e`, cached `chromium-1243`).
 - Head `849ea73` was the base; the regulatory, curated-package, AI-assistant,
-  and mock-checkout increments are committed on top.
+  mock-checkout, and quality increments are committed on top.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-23):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**227**: api
-  132, domain 43, ai 4, payments 3, i18n 2, theming 9, documents 8, config 7,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**236**: api
+  139, domain 45, ai 4, payments 3, i18n 2, theming 9, documents 8, config 7,
   imports 5, ui 4, email 4, schemas 3, storage 3), `pnpm build` — green.
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260923063425_regulatory_reporting` and `20260923091856_curated_packages`
   (10 migrations total).
-- `pnpm e2e` — 22 real-browser tests pass, including the AI reply draft from the
-  messaging inbox and the traveler mock checkout (link only, no confirm action),
-  plus the curated-package specs (back-office list/create, storefront list →
-  book), the two regulatory specs (report render + workbench classification),
+- `pnpm e2e` — 23 real-browser tests pass, including the quality spec (log →
+  surface → resolve an incident), the AI reply draft from the messaging inbox,
+  and the traveler mock checkout (link only, no confirm action), plus the
+  curated-package specs (back-office list/create, storefront list → book), the
+  two regulatory specs (report render + workbench classification),
   the inventory flow, the supplier availability toggle, the payment link →
   mark-paid → CONFIRMED flow, the storefront map province filter (and banner),
   traveler sign-in → dashboard, the traveler message send, the package builder
@@ -149,9 +160,10 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-23):
   active-only, slug, ops list, create+slug, unknown item, delete, 403, 401), the
   `me.e2e.test.ts` from-package booking cases (3) and payment-link cases (3),
   the reservations classify/nationality tests, `packages/ai` mock tests (4),
-  `assistant.e2e.test.ts` (6), and the `regulatory.spec.ts` +
-  `storefront-packages.spec.ts` + `packages.spec.ts` + `storefront-checkout.spec.ts`
-  + `messages.spec.ts` (AI draft) browser specs.
+  `assistant.e2e.test.ts` (6), `quality.e2e.test.ts` (7) + `reliability.test.ts`
+  (2), and the `regulatory.spec.ts` + `storefront-packages.spec.ts` +
+  `packages.spec.ts` + `storefront-checkout.spec.ts` + `quality.spec.ts` +
+  `messages.spec.ts` (AI draft) browser specs.
   Earlier: the storefront message send and the cultural-events banner
   assertion (both in `storefront-auth.spec.ts` / `storefront.spec.ts`);
   `analytics.test.ts` (6 pure KPI cases) and
@@ -226,9 +238,11 @@ flows are covered (map, auth, builder, i18n, recruitment).
    until a real signed-webhook provider is selected.
 2. **Phase 3 remainder:** select a real LLM vendor and wire it behind
    `packages/ai`'s `LlmProvider` (new dependency → Article 2); optional BI
-   polish (scheduled weekly PDF/XLSX digests, provider scorecards). The
-   MINTUR/ONAT regulatory slice shipped 2026-09-23; a true guests × nights
-   bed-nights figure still needs a party-size migration.
+   polish (scheduled weekly PDF/XLSX digests). Quality follow-ups: a storefront
+   review/CSAT submission flow (Reviews are read-only today) and folding
+   incident counts/severity into the analytics quality KPIs. The MINTUR/ONAT
+   regulatory slice shipped 2026-09-23; a true guests × nights bed-nights figure
+   still needs a party-size migration.
 3. **Phase 7 hardening:** security review (PII at rest, rate limiting,
    observability), `create-tenant` fork tooling, core versioning.
 4. Mobile apps (Phases 5–6) need Expo (Article 2).
@@ -383,3 +397,8 @@ flows are covered (map, auth, builder, i18n, recruitment).
   the intent and moves the booking to PENDING_PAYMENT, but confirmation stays
   the authenticated ops action and `/checkout/mock/[reference]` has no confirm
   control (ADR 0003 holds).
+- 2026-09-23 — the quality/duty-of-care desk reuses the existing `Incident`
+  model (no migration); incident writes are audited and reliability scorecards
+  are derived from the dispatch-offer ledger by a pure domain function.
+- 2026-09-23 — Reviews stay read-only for now: a traveler review/CSAT submission
+  flow is a storefront concern and a separate increment.
