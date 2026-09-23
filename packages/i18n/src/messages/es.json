@@ -6,6 +6,7 @@
   "nav": {
     "home": "Inicio",
     "experiences": "Experiencias",
+    "packages": "Paquetes",
     "workWithUs": "Trabaja con nosotros",
     "account": "Mi cuenta",
     "signIn": "Iniciar sesión"
@@ -36,6 +37,27 @@
       "TRANSPORT": "Transporte",
       "EXPERIENCE": "Experiencias"
     }
+  },
+  "packages": {
+    "title": "Paquetes curados",
+    "description": "Itinerarios de varios días armados por nuestro equipo, listos para reservar.",
+    "count": "{count, plural, =0 {Sin paquetes curados} =1 {1 paquete curado} other {# paquetes curados}}",
+    "empty": "Aún no hay paquetes curados publicados.",
+    "days": "{count, plural, =1 {1 día} other {# días}}",
+    "from": "Desde {currency} {amount}",
+    "included": "Qué incluye",
+    "bookTitle": "Reserva este paquete",
+    "bookDescription": "Elige tus fechas; armaremos la reserva y empezaremos a asegurar proveedores.",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de fin",
+    "dateError": "La fecha de fin debe ser igual o posterior a la de inicio.",
+    "book": "Reservar paquete",
+    "booking": "Reservando…",
+    "error": "No se pudo reservar el paquete",
+    "signInPrompt": "Inicia sesión para reservar este paquete.",
+    "signIn": "Iniciar sesión",
+    "back": "Todos los paquetes",
+    "day": "Día {day}"
   },
   "build": {
     "title": "Crea tu itinerario",

@@ -21,6 +21,9 @@ export async function SiteHeader({ agencyName }: { agencyName: string }) {
           <Link href="/catalog" className="hover:text-primary">
             {t('experiences')}
           </Link>
+          <Link href="/packages" className="hover:text-primary">
+            {t('packages')}
+          </Link>
           <Link href="/join-our-network" className="hover:text-primary">
             {t('workWithUs')}
           </Link>

@@ -6,6 +6,7 @@
   "nav": {
     "home": "Accueil",
     "experiences": "Expériences",
+    "packages": "Forfaits",
     "workWithUs": "Travaillez avec nous",
     "account": "Mon compte",
     "signIn": "Se connecter"
@@ -36,6 +37,27 @@
       "TRANSPORT": "Transport",
       "EXPERIENCE": "Expériences"
     }
+  },
+  "packages": {
+    "title": "Forfaits organisés",
+    "description": "Des itinéraires de plusieurs jours préparés par notre équipe, prêts à réserver.",
+    "count": "{count, plural, =0 {Aucun forfait} =1 {1 forfait} other {# forfaits}}",
+    "empty": "Aucun forfait publié pour le moment.",
+    "days": "{count, plural, =1 {1 jour} other {# jours}}",
+    "from": "À partir de {currency} {amount}",
+    "included": "Ce qui est inclus",
+    "bookTitle": "Réserver ce forfait",
+    "bookDescription": "Choisissez vos dates ; nous monterons la réservation et commencerons à sécuriser les prestataires.",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "dateError": "La date de fin doit être postérieure ou égale à la date de début.",
+    "book": "Réserver le forfait",
+    "booking": "Réservation…",
+    "error": "Impossible de réserver le forfait",
+    "signInPrompt": "Connectez-vous pour réserver ce forfait.",
+    "signIn": "Se connecter",
+    "back": "Tous les forfaits",
+    "day": "Jour {day}"
   },
   "build": {
     "title": "Créez votre itinéraire",

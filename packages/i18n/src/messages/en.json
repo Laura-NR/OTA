@@ -6,6 +6,7 @@
   "nav": {
     "home": "Home",
     "experiences": "Experiences",
+    "packages": "Packages",
     "workWithUs": "Work with us",
     "account": "My account",
     "signIn": "Sign in"
@@ -36,6 +37,27 @@
       "TRANSPORT": "Transport",
       "EXPERIENCE": "Experiences"
     }
+  },
+  "packages": {
+    "title": "Curated packages",
+    "description": "Multi-day itineraries assembled by our team, ready to book.",
+    "count": "{count, plural, =0 {No curated packages} =1 {1 curated package} other {# curated packages}}",
+    "empty": "No curated packages published right now.",
+    "days": "{count, plural, =1 {1 day} other {# days}}",
+    "from": "From {currency} {amount}",
+    "included": "What's included",
+    "bookTitle": "Book this package",
+    "bookDescription": "Choose your dates; we will assemble the booking and start securing providers.",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "dateError": "The end date must be on or after the start date.",
+    "book": "Book package",
+    "booking": "Booking…",
+    "error": "Could not book the package",
+    "signInPrompt": "Sign in to book this package.",
+    "signIn": "Sign in",
+    "back": "All packages",
+    "day": "Day {day}"
   },
   "build": {
     "title": "Build your itinerary",
