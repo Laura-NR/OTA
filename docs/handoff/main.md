@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-23 23:05
+# Handoff — main — updated 2026-09-23 23:25
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -139,10 +139,12 @@ CSAT reviews and incident severity in the analytics quality KPIs.
   `/analytics`.
 - Phase 3 — **BI exports (§4.9.5):** new `packages/reports` builds the digest
   workbook with exceljs (already a repo dependency; no new third-party).
-  `GET /analytics/export/xlsx?from&to` (ops) streams it, the `/analytics` page
-  links to it, and a weekly BullMQ job (`analytics-digest`, Monday 07:00) emails
-  it to `ANALYTICS_DIGEST_EMAIL`/`OPS_NOTIFY_EMAIL` via the new optional
-  `EmailMessage.attachments`. XLSX only — no PDF variant yet.
+  `GET /analytics/export/xlsx` and `/analytics/export/pdf` (ops) stream both
+  formats (the PDF is `buildAnalyticsHtml` rendered through `DOCUMENT_RENDERER`),
+  the `/analytics` page links to them, and a weekly BullMQ job
+  (`analytics-digest`, Monday 07:00) emails both to
+  `ANALYTICS_DIGEST_EMAIL`/`OPS_NOTIFY_EMAIL` via the new optional
+  `EmailMessage.attachments`.
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -158,16 +160,17 @@ CSAT reviews and incident severity in the analytics quality KPIs.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-23):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**246**: api
-  147, domain 45, ai 4, payments 3, reports 2, i18n 2, theming 9, documents 8,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**249**: api
+  148, domain 45, ai 4, payments 3, reports 4, i18n 2, theming 9, documents 8,
   config 7, imports 5, ui 4, email 4, schemas 3, storage 3), `pnpm build` —
   green.
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260923063425_regulatory_reporting` and `20260923091856_curated_packages`
   (10 migrations total).
-- `pnpm e2e` — 26 real-browser tests pass, including the BI workbook download
-  (session-authenticated request), the curated-package editor (open → save
-  itinerary), the storefront CSAT review, the quality spec (log →
+- `pnpm e2e` — 26 real-browser tests pass, including the BI XLSX + PDF digest
+  downloads (session-authenticated requests; the PDF renders through Chromium),
+  the curated-package editor (open → save itinerary), the storefront CSAT
+  review, the quality spec (log →
   surface → resolve an incident), the AI reply draft from the messaging inbox,
   and the traveler mock checkout (link only, no confirm action), plus the
   curated-package specs (back-office list/create, storefront list → book), the
@@ -183,8 +186,8 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-23):
   `me.e2e.test.ts` from-package booking cases (3) and payment-link cases (3),
   the reservations classify/nationality tests, `packages/ai` mock tests (4),
   `assistant.e2e.test.ts` (6), `quality.e2e.test.ts` (8) + `reliability.test.ts`
-  (2), the `me.e2e.test.ts` review cases (4), `reports.e2e.test.ts` (3) +
-  `packages/reports` workbook tests (2), the `analytics.test.ts` /
+  (2), the `me.e2e.test.ts` review cases (4), `reports.e2e.test.ts` (4) +
+  `packages/reports` workbook/HTML tests (4), the `analytics.test.ts` /
   `analytics.e2e.test.ts` package-type assertions, and the `regulatory.spec.ts` +
   `storefront-packages.spec.ts` + `packages.spec.ts` + `packages-edit.spec.ts` +
   `storefront-checkout.spec.ts` + `storefront-review.spec.ts` + `quality.spec.ts`
@@ -262,9 +265,9 @@ flows are covered (map, auth, builder, i18n, recruitment).
    signed-webhook provider is selected. The back-office package editor and the
    §4.9.1 package-type revenue/margin split shipped 2026-09-23.
 2. **Phase 3 remainder:** select a real LLM vendor and wire it behind
-   `packages/ai`'s `LlmProvider` (new dependency → Article 2). The weekly XLSX
-   BI digest shipped 2026-09-23; an optional PDF variant is still open. A true
-   guests × nights bed-nights figure still needs a party-size migration.
+   `packages/ai`'s `LlmProvider` (new dependency → Article 2). The weekly
+   XLSX + PDF BI digests shipped 2026-09-23. A true guests × nights bed-nights
+   figure still needs a party-size migration.
 3. **Phase 7 hardening:** security review (PII at rest, rate limiting,
    observability), `create-tenant` fork tooling, core versioning.
 4. Mobile apps (Phases 5–6) need Expo (Article 2).
@@ -440,3 +443,7 @@ flows are covered (map, auth, builder, i18n, recruitment).
   workbook is the single source of the layout, the API only fetches figures.
 - 2026-09-23 — `EmailMessage.attachments` was added as an optional field so the
   weekly digest can be attached; existing mailers and templates are unaffected.
+- 2026-09-23 — the PDF digest reuses the existing HTML layout
+  (`buildAnalyticsHtml`) and the `DOCUMENT_RENDERER` (Playwright Chromium)
+  rather than a second templating path; the weekly email now attaches both
+  formats, and the API test overrides the renderer to avoid launching a browser.

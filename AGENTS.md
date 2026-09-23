@@ -386,7 +386,8 @@ nothing that weakens an Article.
 - `<2026-09-23: the back-office /packages/[id] editor replaces a package's itinerary wholesale via the existing PATCH (services array), so no service-level endpoints exist. The packages list links rows to the editor.>`
 - `<2026-09-23: accommodation-tier selection and package media are still open; both need a migration (Article 2), so curated packages remain a fixed itinerary for now.>`
 - `<2026-09-23: packages/reports is a new workspace package that builds the BI XLSX digest with exceljs — already a repo dependency (packages/imports), so no new third-party package. buildAnalyticsWorkbook is pure: the API fetches the figures.>`
-- `<2026-09-23: GET /analytics/export/xlsx (ops) streams the workbook; a weekly BullMQ digest job (queue analytics-digest, upsertJobScheduler, Monday 07:00) emails it to ANALYTICS_DIGEST_EMAIL or OPS_NOTIFY_EMAIL. The scheduler is a Noop when NODE_ENV=test or REDIS_URL is unset (same pattern as the compliance scan). The digest is XLSX only; a PDF variant is not built yet.>`
+- `<2026-09-23: GET /analytics/export/xlsx and /analytics/export/pdf (ops) stream the digest; a weekly BullMQ digest job (queue analytics-digest, upsertJobScheduler, Monday 07:00) emails both to ANALYTICS_DIGEST_EMAIL or OPS_NOTIFY_EMAIL. The scheduler is a Noop when NODE_ENV=test or REDIS_URL is unset (same pattern as the compliance scan).>`
+- `<2026-09-23: the PDF digest is buildAnalyticsHtml (packages/reports) rendered through the injected DOCUMENT_RENDERER; DocumentsModule now exports that token. The reports API test overrides DOCUMENT_RENDERER with a fake so it never launches Chromium — the browser path is exercised by the analytics e2e instead.>`
 - `<2026-09-23: EmailMessage gained an optional attachments array; SmtpMailer forwards it to nodemailer and ConsoleMailer logs the filenames. Existing template helpers are unaffected (the field is optional).>`
 
 ---
