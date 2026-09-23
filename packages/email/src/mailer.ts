@@ -1,10 +1,18 @@
 import { createTransport, type Transporter } from 'nodemailer';
 
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+}
+
 export interface EmailMessage {
   to: string;
   subject: string;
   html: string;
   text: string;
+  /** Optional attachments (e.g. a scheduled BI digest). */
+  attachments?: EmailAttachment[];
 }
 
 export interface Mailer {
@@ -45,6 +53,7 @@ export class SmtpMailer implements Mailer {
       subject: message.subject,
       html: message.html,
       text: message.text,
+      attachments: message.attachments,
     });
   }
 }
@@ -56,6 +65,13 @@ export class SmtpMailer implements Mailer {
 export class ConsoleMailer implements Mailer {
   async send(message: EmailMessage): Promise<void> {
     console.log(`[email] to=${message.to} subject=${message.subject}`);
+    if (message.attachments?.length) {
+      console.log(
+        `[email] attachments=${message.attachments
+          .map((attachment) => attachment.filename)
+          .join(', ')}`,
+      );
+    }
     console.log(message.text);
   }
 }
