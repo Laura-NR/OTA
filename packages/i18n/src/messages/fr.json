@@ -71,6 +71,16 @@
     "mockNotice": "Aucun paiement réel n'est effectué. Notre équipe des opérations confirmera le reçu dès réception des fonds.",
     "backToAccount": "Retour à mes voyages"
   },
+  "review": {
+    "title": "Notez votre voyage",
+    "yourRating": "Votre note",
+    "stars": "{count, plural, =1 {1 étoile} other {# étoiles}}",
+    "rating": "Note",
+    "comment": "Commentaire (facultatif)",
+    "submit": "Envoyer l'avis",
+    "submitting": "Envoi…",
+    "error": "Impossible d'envoyer votre avis"
+  },
   "build": {
     "title": "Créez votre itinéraire",
     "description": "Choisissez vos dates ainsi que les hébergements, transports et expériences souhaités. Nous assemblerons l'itinéraire et commencerons à réserver les prestataires.",

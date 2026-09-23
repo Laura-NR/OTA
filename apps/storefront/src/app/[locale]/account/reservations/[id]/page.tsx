@@ -20,6 +20,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { CheckoutButton } from '@/components/checkout-button';
 import { MessageThread } from '@/components/message-thread';
+import { ReviewForm } from '@/components/review-form';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 
@@ -44,6 +45,7 @@ export default async function AccountReservationPage({
 
   const t = await getTranslations('account');
   const tc = await getTranslations('checkout');
+  const trv = await getTranslations('review');
   const tr = await getTranslations('status.reservation');
   const tsi = await getTranslations('status.serviceItem');
   const tst = await getTranslations('status.serviceType');
@@ -162,6 +164,17 @@ export default async function AccountReservationPage({
           )}
         </CardContent>
       </Card>
+
+      {reservation.status === 'COMPLETED' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{trv('title')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ReviewForm reservationId={reservation.id} review={reservation.review} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <MessageThread reservationId={reservation.id} />
     </div>

@@ -71,6 +71,16 @@
     "mockNotice": "No real payment is taken. Our operations team will confirm the receipt once funds clear.",
     "backToAccount": "Back to my trips"
   },
+  "review": {
+    "title": "Rate your trip",
+    "yourRating": "Your rating",
+    "stars": "{count, plural, =1 {1 star} other {# stars}}",
+    "rating": "Rating",
+    "comment": "Comment (optional)",
+    "submit": "Submit review",
+    "submitting": "Submitting…",
+    "error": "Could not submit your review"
+  },
   "build": {
     "title": "Build your itinerary",
     "description": "Pick your dates and the stays, transport, and experiences you want. We will assemble the itinerary and start securing providers.",

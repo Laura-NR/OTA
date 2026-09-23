@@ -71,6 +71,16 @@
     "mockNotice": "No se realiza ningún pago real. Nuestro equipo de operaciones confirmará el recibo cuando se acrediten los fondos.",
     "backToAccount": "Volver a mis viajes"
   },
+  "review": {
+    "title": "Valora tu viaje",
+    "yourRating": "Tu valoración",
+    "stars": "{count, plural, =1 {1 estrella} other {# estrellas}}",
+    "rating": "Valoración",
+    "comment": "Comentario (opcional)",
+    "submit": "Enviar valoración",
+    "submitting": "Enviando…",
+    "error": "No se pudo enviar tu valoración"
+  },
   "build": {
     "title": "Crea tu itinerario",
     "description": "Elige tus fechas y los alojamientos, transportes y experiencias que quieras. Armaremos el itinerario y empezaremos a asegurar proveedores.",
