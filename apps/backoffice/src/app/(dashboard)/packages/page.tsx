@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import Link from 'next/link';
 
 import { PageHeader } from '@/components/page-header';
 import { PackageActions } from '@/components/package-actions';
@@ -66,7 +67,9 @@ export default async function PackagesPage() {
                 {packages.map((pkg) => (
                   <TableRow key={pkg.id}>
                     <TableCell className="font-medium">
-                      {pkg.name}
+                      <Link href={`/packages/${pkg.id}`} className="hover:underline">
+                        {pkg.name}
+                      </Link>
                       <div className="text-xs text-muted-foreground">{pkg.slug}</div>
                     </TableCell>
                     <TableCell>{pkg.province ?? '—'}</TableCell>
