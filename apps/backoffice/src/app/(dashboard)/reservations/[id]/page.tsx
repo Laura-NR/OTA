@@ -2,6 +2,7 @@ import { UserRole } from '@ota/domain';
 import type {
   AuditLogEntryDto,
   DocumentDto,
+  IncidentDto,
   PaymentReceiptDto,
   ReservationDetailDto,
 } from '@ota/schemas';
@@ -23,6 +24,8 @@ import {
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { IncidentLogForm } from '@/components/incident-log-form';
+import { IncidentResolveButton } from '@/components/incident-resolve-button';
 import { PaymentPanel } from '@/components/payment-panel';
 import { ReservationActions } from '@/components/reservation-actions';
 import { TourismCategoryControl } from '@/components/tourism-category-control';
@@ -50,10 +53,11 @@ export default async function ReservationDetailPage({
     },
   );
 
-  const [audit, documents, payments] = await Promise.all([
+  const [audit, documents, payments, incidents] = await Promise.all([
     apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
     apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
     apiFetch<PaymentReceiptDto[]>(`/reservations/${id}/payments`).catch(() => []),
+    apiFetch<IncidentDto[]>(`/incidents?reservationId=${id}`).catch(() => []),
   ]);
 
   return (
@@ -124,6 +128,50 @@ export default async function ReservationDetailPage({
             category={reservation.tourismCategory}
             canManage={canManage}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Duty of care</CardTitle>
+          <CardDescription>
+            Incidents logged against this booking (spec §4.9.4).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {incidents.length === 0 ? (
+            <Alert>No incidents logged.</Alert>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {incidents.map((incident) => (
+                <li key={incident.id} className="rounded-md border p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant={
+                        incident.severity === 'HIGH' || incident.severity === 'CRITICAL'
+                          ? 'destructive'
+                          : 'secondary'
+                      }
+                    >
+                      {incident.severity}
+                    </Badge>
+                    <span className="font-medium">{incident.category}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {incident.resolvedAt ? 'Resolved' : 'Open'}
+                    </span>
+                    {incident.resolvedAt ? null : (
+                      <span className="ml-auto">
+                        <IncidentResolveButton incidentId={incident.id} />
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-muted-foreground">{incident.description}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {canManage ? <IncidentLogForm reservationId={reservation.id} /> : null}
         </CardContent>
       </Card>
 
