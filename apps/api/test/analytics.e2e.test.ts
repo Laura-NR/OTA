@@ -22,13 +22,28 @@ const OFFERED_AT = new Date('2026-09-20T10:00:00Z');
 
 function createFakePrisma() {
   const payments = [
-    { amount: '100', rail: 'CARD', status: 'PAID' },
-    { amount: '50', rail: 'OPEN_BANKING_SEPA', status: 'PAID' },
-    { amount: '25', rail: 'CARD', status: 'PENDING' },
+    { amount: '100', rail: 'CARD', status: 'PAID', reservation: { packageId: 'pkg-1' } },
+    {
+      amount: '50',
+      rail: 'OPEN_BANKING_SEPA',
+      status: 'PAID',
+      reservation: { packageId: null },
+    },
+    { amount: '25', rail: 'CARD', status: 'PENDING', reservation: { packageId: null } },
   ];
   const serviceItems = [
-    { payoutRate: '30', payoutStatus: 'ACCRUED', province: 'La Habana' },
-    { payoutRate: '20', payoutStatus: 'SETTLED', province: 'Matanzas' },
+    {
+      payoutRate: '30',
+      payoutStatus: 'ACCRUED',
+      province: 'La Habana',
+      reservation: { packageId: 'pkg-1' },
+    },
+    {
+      payoutRate: '20',
+      payoutStatus: 'SETTLED',
+      province: 'Matanzas',
+      reservation: { packageId: null },
+    },
   ];
   const offers = [
     {
@@ -113,6 +128,10 @@ describe('analytics API', () => {
     expect(response.body.finance.byRail).toEqual([
       { rail: 'CARD', amount: 100, count: 1 },
       { rail: 'OPEN_BANKING_SEPA', amount: 50, count: 1 },
+    ]);
+    expect(response.body.finance.byPackageType).toEqual([
+      { type: 'PACKAGE', amount: 100, count: 1, netRevenue: 70, takeRate: 0.7 },
+      { type: 'CUSTOM', amount: 50, count: 1, netRevenue: 30, takeRate: 0.6 },
     ]);
     expect(response.body.operations).toMatchObject({
       offers: 2,

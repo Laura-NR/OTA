@@ -14,6 +14,14 @@ const railTotalSchema = z.object({
   count: z.number().int(),
 });
 
+const packageTypeSchema = z.object({
+  type: z.enum(['PACKAGE', 'CUSTOM']),
+  amount: z.number(),
+  count: z.number().int(),
+  netRevenue: z.number(),
+  takeRate: z.number(),
+});
+
 const financeSchema = z.object({
   gbv: z.number(),
   payoutsAccrued: z.number(),
@@ -23,6 +31,7 @@ const financeSchema = z.object({
   averageOrderValue: z.number(),
   paidCount: z.number().int(),
   byRail: z.array(railTotalSchema),
+  byPackageType: z.array(packageTypeSchema),
 });
 
 const operationsSchema = z.object({

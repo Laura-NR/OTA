@@ -32,11 +32,19 @@ export class AnalyticsService {
       await Promise.all([
         this.prisma.paymentReceipt.findMany({
           where: { status: 'PAID', ...where },
-          select: { amount: true, rail: true },
+          select: {
+            amount: true,
+            rail: true,
+            reservation: { select: { packageId: true } },
+          },
         }),
         this.prisma.serviceItem.findMany({
           where,
-          select: { payoutRate: true, payoutStatus: true },
+          select: {
+            payoutRate: true,
+            payoutStatus: true,
+            reservation: { select: { packageId: true } },
+          },
         }),
         this.prisma.dispatchOffer.findMany({
           where,
@@ -55,10 +63,12 @@ export class AnalyticsService {
       paid: paid.map((payment) => ({
         amount: Number(payment.amount),
         rail: payment.rail,
+        packageId: payment.reservation.packageId,
       })),
       payouts: payouts.map((payout) => ({
         payoutRate: Number(payout.payoutRate),
         payoutStatus: payout.payoutStatus,
+        packageId: payout.reservation.packageId,
       })),
     });
     const operations = calculateOperations({ offers, reservations });

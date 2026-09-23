@@ -6,6 +6,15 @@ export interface RailTotal {
   count: number;
 }
 
+/** Pre-assembled curated package vs a custom dynamic-builder itinerary. */
+export interface PackageTypeTotal {
+  type: 'PACKAGE' | 'CUSTOM';
+  amount: number;
+  count: number;
+  netRevenue: number;
+  takeRate: number;
+}
+
 export interface FinanceKpis {
   gbv: number;
   payoutsAccrued: number;
@@ -16,11 +25,12 @@ export interface FinanceKpis {
   averageOrderValue: number;
   paidCount: number;
   byRail: RailTotal[];
+  byPackageType: PackageTypeTotal[];
 }
 
 export interface FinanceInput {
-  paid: { amount: number; rail: string }[];
-  payouts: { payoutRate: number; payoutStatus: string }[];
+  paid: { amount: number; rail: string; packageId?: string | null }[];
+  payouts: { payoutRate: number; payoutStatus: string; packageId?: string | null }[];
 }
 
 export interface OperationsKpis {
@@ -94,6 +104,34 @@ export function calculateFinance(input: FinanceInput): FinanceKpis {
     .map(([rail, value]) => ({ rail, amount: round2(value.amount), count: value.count }))
     .sort((a, b) => b.amount - a.amount);
 
+  const typeOf = (packageId?: string | null): 'PACKAGE' | 'CUSTOM' =>
+    packageId ? 'PACKAGE' : 'CUSTOM';
+  const byPackageType = (['PACKAGE', 'CUSTOM'] as const).map((type) => {
+    const payments = input.paid.filter((payment) => typeOf(payment.packageId) === type);
+    const amount = round2(payments.reduce((sum, payment) => sum + payment.amount, 0));
+    const typePayouts = input.payouts.filter(
+      (payout) => typeOf(payout.packageId) === type,
+    );
+    const accrued = round2(
+      typePayouts
+        .filter((payout) => payout.payoutStatus === 'ACCRUED')
+        .reduce((sum, payout) => sum + payout.payoutRate, 0),
+    );
+    const settled = round2(
+      typePayouts
+        .filter((payout) => payout.payoutStatus === 'SETTLED')
+        .reduce((sum, payout) => sum + payout.payoutRate, 0),
+    );
+    const typeNet = round2(amount - accrued - settled);
+    return {
+      type,
+      amount,
+      count: payments.length,
+      netRevenue: typeNet,
+      takeRate: ratio(typeNet, amount),
+    };
+  });
+
   return {
     gbv,
     payoutsAccrued,
@@ -103,6 +141,7 @@ export function calculateFinance(input: FinanceInput): FinanceKpis {
     averageOrderValue: input.paid.length > 0 ? round2(gbv / input.paid.length) : 0,
     paidCount: input.paid.length,
     byRail,
+    byPackageType,
   };
 }
 

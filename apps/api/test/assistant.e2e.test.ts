@@ -38,11 +38,23 @@ function createFakePrisma() {
       findMany: async () => [{ status: 'CONFIRMED' }, { status: 'DRAFT' }],
     },
     paymentReceipt: {
-      findMany: async () => [{ amount: '100', rail: 'CARD', status: 'PAID' }],
+      findMany: async () => [
+        {
+          amount: '100',
+          rail: 'CARD',
+          status: 'PAID',
+          reservation: { packageId: null },
+        },
+      ],
     },
     serviceItem: {
       findMany: async () => [
-        { payoutRate: '30', payoutStatus: 'ACCRUED', province: 'La Habana' },
+        {
+          payoutRate: '30',
+          payoutStatus: 'ACCRUED',
+          province: 'La Habana',
+          reservation: { packageId: null },
+        },
       ],
     },
     dispatchOffer: {

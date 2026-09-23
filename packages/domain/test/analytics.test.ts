@@ -12,12 +12,12 @@ describe('calculateFinance', () => {
   it('computes GBV, margin, take rate, AOV, and the rail breakdown', () => {
     const kpis = calculateFinance({
       paid: [
-        { amount: 100, rail: 'CARD' },
-        { amount: 50, rail: 'OPEN_BANKING_SEPA' },
+        { amount: 100, rail: 'CARD', packageId: 'pkg-1' },
+        { amount: 50, rail: 'OPEN_BANKING_SEPA', packageId: null },
       ],
       payouts: [
-        { payoutRate: 30, payoutStatus: 'ACCRUED' },
-        { payoutRate: 20, payoutStatus: 'SETTLED' },
+        { payoutRate: 30, payoutStatus: 'ACCRUED', packageId: 'pkg-1' },
+        { payoutRate: 20, payoutStatus: 'SETTLED', packageId: null },
       ],
     });
 
@@ -33,6 +33,10 @@ describe('calculateFinance', () => {
     expect(kpis.byRail).toEqual([
       { rail: 'CARD', amount: 100, count: 1 },
       { rail: 'OPEN_BANKING_SEPA', amount: 50, count: 1 },
+    ]);
+    expect(kpis.byPackageType).toEqual([
+      { type: 'PACKAGE', amount: 100, count: 1, netRevenue: 70, takeRate: 0.7 },
+      { type: 'CUSTOM', amount: 50, count: 1, netRevenue: 30, takeRate: 0.6 },
     ]);
   });
 

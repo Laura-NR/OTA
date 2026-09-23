@@ -137,6 +137,41 @@ export default async function AnalyticsPage({
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue by package type</CardTitle>
+              <CardDescription>
+                Pre-assembled curated packages vs custom itineraries
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Net</TableHead>
+                    <TableHead>Take rate</TableHead>
+                    <TableHead>Payments</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {overview.finance.byPackageType.map((row) => (
+                    <TableRow key={row.type}>
+                      <TableCell className="font-medium">
+                        {row.type === 'PACKAGE' ? 'Curated package' : 'Custom itinerary'}
+                      </TableCell>
+                      <TableCell>{money(row.amount)}</TableCell>
+                      <TableCell>{money(row.netRevenue)}</TableCell>
+                      <TableCell>{percent(row.takeRate)}</TableCell>
+                      <TableCell>{row.count}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>

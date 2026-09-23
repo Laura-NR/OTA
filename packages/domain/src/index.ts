@@ -56,6 +56,7 @@ export {
   type GeographyKpi,
   type OperationsInput,
   type OperationsKpis,
+  type PackageTypeTotal,
   type QualityIncident,
   type QualityKpis,
   type RailTotal,
