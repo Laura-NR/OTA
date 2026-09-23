@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AssistantModule } from './assistant/assistant.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { DispatchModule } from './dispatch/dispatch.module';
@@ -55,6 +56,7 @@ const isTest = process.env.NODE_ENV === 'test';
     SupplierApplicationsModule,
     AnalyticsModule,
     RegulatoryModule,
+    AssistantModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],

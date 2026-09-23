@@ -5,6 +5,18 @@ export {
   type AnalyticsRangeQuery,
 } from './analytics';
 export {
+  assistantSummarySchema,
+  draftReplyRequestSchema,
+  draftReplySchema,
+  translateRequestSchema,
+  translationSchema,
+  type AssistantSummaryDto,
+  type DraftReplyDto,
+  type DraftReplyRequest,
+  type TranslateRequest,
+  type TranslationDto,
+} from './assistant';
+export {
   createPackageBookingSchema,
   createPackageSchema,
   listPackagesQuerySchema,

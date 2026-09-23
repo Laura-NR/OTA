@@ -214,6 +214,9 @@ importers:
       '@nestjs/websockets':
         specifier: ^12.0.3
         version: 12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(@nestjs/platform-socket.io@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@ota/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@ota/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -418,6 +421,18 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+
+  packages/ai:
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.1
+        version: 26.6.2
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/auth:
     dependencies:
