@@ -382,6 +382,9 @@ nothing that weakens an Article.
 - `<2026-09-23: calculateQuality now takes incidents: {severity, resolved}[] (not a count) and returns incidentCount, openIncidentCount, and highSeverityCount (HIGH+CRITICAL); AnalyticsService fetches incident rows and the analytics qualitySchema gained the two fields.>`
 - `<2026-09-23: traveler CSAT reviews needed no migration — the Review model already existed. POST /me/reservations/:id/reviews is ownership-scoped, allowed only when the reservation is COMPLETED, one review per booking (409 otherwise), audited as review.submitted; ops GET /reviews?reservationId&limit. The me reservation detail gained a nullable review field; the storefront shows a review form on COMPLETED and /quality lists recent reviews.>`
 - `<2026-09-23: the review i18n namespace must exist in all three catalogs (es/en/fr) or the key-parity test fails.>`
+- `<2026-09-23: calculateFinance now also returns byPackageType (PACKAGE vs CUSTOM), bucketing each PAID receipt and payout by Reservation.packageId. AnalyticsService selects reservation.packageId on both paymentReceipt and serviceItem; the finance schema and /analytics Revenue-by-package-type card surface it. AOV per type = amount / count.>`
+- `<2026-09-23: the back-office /packages/[id] editor replaces a package's itinerary wholesale via the existing PATCH (services array), so no service-level endpoints exist. The packages list links rows to the editor.>`
+- `<2026-09-23: accommodation-tier selection and package media are still open; both need a migration (Article 2), so curated packages remain a fixed itinerary for now.>`
 
 ---
 

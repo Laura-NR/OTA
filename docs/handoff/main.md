@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-23 22:30
+# Handoff — main — updated 2026-09-23 22:45
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -102,8 +102,11 @@ CSAT reviews and incident severity in the analytics quality KPIs.
   (active only). Storefront `/packages` list + `/packages/[slug]` detail with a
   booking form that posts `POST /me/reservations/from-package`; the server
   expands the package into service items and lands `ITINERARY_SUBMITTED`.
-  Back-office `/packages` creates/lists/toggles/deletes. No service-editing UI
-  and no package-type analytics split yet.
+  Back-office `/packages` creates/lists/toggles/deletes, and `/packages/[id]`
+  edits the details and itinerary (the services array replaces it wholesale).
+  Finance KPIs now split revenue/net/take-rate by package type (PACKAGE vs
+  CUSTOM) using `Reservation.packageId`. Accommodation-tier selection and
+  package media still need a migration (Article 2).
 - Phase 3 — **AI assistant (§4.8):** new `packages/ai` (`LlmProvider` +
   deterministic `MockLlmProvider` + `createLlmProvider`, no third-party
   dependency; mirrors the `packages/payments` pattern). Ops-only API:
@@ -142,9 +145,10 @@ CSAT reviews and incident severity in the analytics quality KPIs.
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 18 spec files / 24 tests (`pnpm e2e`, cached `chromium-1243`).
+- e2e: 19 spec files / 25 tests (`pnpm e2e`, cached `chromium-1243`).
 - Head `849ea73` was the base; the regulatory, curated-package, AI-assistant,
-  mock-checkout, quality, and CSAT increments are committed on top.
+  mock-checkout, quality, CSAT, and package-polish increments are committed on
+  top.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-23):
@@ -154,10 +158,10 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-23):
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260923063425_regulatory_reporting` and `20260923091856_curated_packages`
   (10 migrations total).
-- `pnpm e2e` — 24 real-browser tests pass, including the storefront CSAT review,
-  the quality spec (log → surface → resolve an incident), the AI reply draft
-  from the messaging inbox, and the traveler mock checkout (link only, no
-  confirm action), plus the
+- `pnpm e2e` — 25 real-browser tests pass, including the curated-package editor
+  (open → save itinerary), the storefront CSAT review, the quality spec (log →
+  surface → resolve an incident), the AI reply draft from the messaging inbox,
+  and the traveler mock checkout (link only, no confirm action), plus the
   curated-package specs (back-office list/create, storefront list → book), the
   two regulatory specs (report render + workbench classification),
   the inventory flow, the supplier availability toggle, the payment link →
@@ -171,10 +175,11 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-23):
   `me.e2e.test.ts` from-package booking cases (3) and payment-link cases (3),
   the reservations classify/nationality tests, `packages/ai` mock tests (4),
   `assistant.e2e.test.ts` (6), `quality.e2e.test.ts` (8) + `reliability.test.ts`
-  (2), the `me.e2e.test.ts` review cases (4), and the `regulatory.spec.ts` +
-  `storefront-packages.spec.ts` + `packages.spec.ts` + `storefront-checkout.spec.ts`
-  + `storefront-review.spec.ts` + `quality.spec.ts` + `messages.spec.ts` (AI
-  draft) browser specs.
+  (2), the `me.e2e.test.ts` review cases (4), the `analytics.test.ts` /
+  `analytics.e2e.test.ts` package-type assertions, and the `regulatory.spec.ts` +
+  `storefront-packages.spec.ts` + `packages.spec.ts` + `packages-edit.spec.ts` +
+  `storefront-checkout.spec.ts` + `storefront-review.spec.ts` + `quality.spec.ts`
+  + `messages.spec.ts` (AI draft) browser specs.
   Earlier: the storefront message send and the cultural-events banner
   assertion (both in `storefront-auth.spec.ts` / `storefront.spec.ts`);
   `analytics.test.ts` (6 pure KPI cases) and
@@ -242,11 +247,11 @@ flows are covered (map, auth, builder, i18n, recruitment).
   `queue.upsertJobScheduler`.
 
 ## Next
-1. **Phase 4 storefront remainder:** package follow-ups (service-editing UI on
-   the back-office, the §4.9.1 AOV/take-rate split by package type using
-   `Reservation.packageId`, accommodation-tier selection, package media); the
-   catalog/map do not yet show real-time availability. Checkout is link-only
-   until a real signed-webhook provider is selected.
+1. **Phase 4 storefront remainder:** package follow-ups that need a migration
+   (Article 2) — accommodation-tier selection and package media; the catalog/map
+   do not yet show real-time availability. Checkout is link-only until a real
+   signed-webhook provider is selected. The back-office package editor and the
+   §4.9.1 package-type revenue/margin split shipped 2026-09-23.
 2. **Phase 3 remainder:** select a real LLM vendor and wire it behind
    `packages/ai`'s `LlmProvider` (new dependency → Article 2); optional BI
    polish (scheduled weekly PDF/XLSX digests). The MINTUR/ONAT regulatory slice
@@ -415,3 +420,10 @@ flows are covered (map, auth, builder, i18n, recruitment).
   audited `review.submitted`), superseding the read-only note above;
   `calculateQuality` now takes incident rows and reports open/high-severity
   counts.
+- 2026-09-23 — the §4.9.1 package-type split buckets paid receipts and payouts
+  by `Reservation.packageId` (null = CUSTOM); per-type net = gross − that type's
+  accrued/settled payouts. Margin by type is therefore only as complete as the
+  payout ledger.
+- 2026-09-23 — the back-office package editor replaces the itinerary wholesale
+  through the existing PATCH (no service-level endpoints), consistent with the
+  earlier package PATCH decision.
