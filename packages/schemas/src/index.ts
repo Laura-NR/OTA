@@ -5,6 +5,16 @@ export {
   type AnalyticsRangeQuery,
 } from './analytics';
 export {
+  createReviewSchema,
+  listReviewsQuerySchema,
+  myReviewSchema,
+  reviewSchema,
+  type CreateReviewRequest,
+  type ListReviewsQuery,
+  type MyReviewDto,
+  type ReviewDto,
+} from './review';
+export {
   createIncidentSchema,
   incidentSchema,
   incidentSeveritySchema,

@@ -10,10 +10,12 @@ import type {
   CreateMyReservationRequest,
   CreatePackageBookingRequest,
   CreatePaymentIntentRequest,
+  CreateReviewRequest,
   MeProfileDto,
   MyDocumentDto,
   MyReservationDetailDto,
   MyReservationListItemDto,
+  MyReviewDto,
   PaymentIntentDto,
 } from '@ota/schemas';
 
@@ -37,6 +39,7 @@ type DetailRow = Prisma.ReservationGetPayload<{
   include: {
     serviceItems: true;
     documents: true;
+    reviews: true;
     _count: { select: { serviceItems: true; documents: true } };
   };
 }>;
@@ -56,8 +59,17 @@ function toListDto(row: ListRow): MyReservationListItemDto {
 }
 
 function toDetailDto(row: DetailRow): MyReservationDetailDto {
+  const review = row.reviews[0];
   return {
     ...toListDto(row),
+    review: review
+      ? {
+          id: review.id,
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.createdAt.toISOString(),
+        }
+      : null,
     serviceItems: row.serviceItems.map((item) => ({
       id: item.id,
       serviceType: item.serviceType,
@@ -135,6 +147,7 @@ export class MeService {
       include: {
         serviceItems: { orderBy: { serviceDateStart: 'asc' } },
         documents: { orderBy: { generatedAt: 'desc' } },
+        reviews: { orderBy: { createdAt: 'desc' }, take: 1 },
         _count: { select: { serviceItems: true, documents: true } },
       },
     });
@@ -334,5 +347,54 @@ export class MeService {
       throw new NotFoundException(`Reservation ${reservationId} not found`);
     }
     return this.payments.createIntent(reservationId, input, actor);
+  }
+
+  /**
+   * Record the caller's CSAT review once the trip is completed (spec §4.9.4).
+   * One review per booking; it feeds the analytics quality KPIs.
+   */
+  async createReview(
+    userId: string,
+    reservationId: string,
+    input: CreateReviewRequest,
+  ): Promise<MyReviewDto> {
+    const reservation = await this.prisma.reservation.findFirst({
+      where: { id: reservationId, userId },
+    });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation ${reservationId} not found`);
+    }
+    if (reservation.status !== ReservationStatus.Completed) {
+      throw new ConflictException('Reviews can only be left after the trip is completed');
+    }
+
+    const existing = await this.prisma.review.findFirst({ where: { reservationId } });
+    if (existing) {
+      throw new ConflictException('This booking has already been reviewed');
+    }
+
+    const review = await this.prisma.review.create({
+      data: {
+        reservationId,
+        rating: input.rating,
+        comment: input.comment ?? null,
+      },
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        actorUserId: userId,
+        action: 'review.submitted',
+        entityType: 'Reservation',
+        entityId: reservationId,
+        metadata: { rating: input.rating },
+      },
+    });
+
+    return {
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt.toISOString(),
+    };
   }
 }

@@ -12,12 +12,15 @@ import {
   createMyReservationSchema,
   createPackageBookingSchema,
   createPaymentIntentSchema,
+  createReviewSchema,
   type CreateMyReservationRequest,
   type CreatePackageBookingRequest,
   type CreatePaymentIntentRequest,
+  type CreateReviewRequest,
   type MeProfileDto,
   type MyReservationDetailDto,
   type MyReservationListItemDto,
+  type MyReviewDto,
   type PaymentIntentDto,
 } from '@ota/schemas';
 
@@ -73,6 +76,16 @@ export class MeController {
     @CurrentUser() actor: AuthUser,
   ): Promise<PaymentIntentDto> {
     return this.me.createPaymentLink(actor, id, body);
+  }
+
+  @Post('reservations/:id/reviews')
+  @HttpCode(HttpStatus.CREATED)
+  createReview(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(createReviewSchema)) body: CreateReviewRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<MyReviewDto> {
+    return this.me.createReview(actor.id, id, body);
   }
 
   @Get('reservations/:id')

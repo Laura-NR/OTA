@@ -1,12 +1,14 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 
-import type { Incident, Prisma } from '@ota/db';
+import type { Incident, Prisma, Review } from '@ota/db';
 import { calculateSupplierReliability } from '@ota/domain';
 import type {
   CreateIncidentRequest,
   IncidentDto,
   ListIncidentsQuery,
+  ListReviewsQuery,
   ResolveIncidentRequest,
+  ReviewDto,
   SupplierReliabilityDto,
 } from '@ota/schemas';
 
@@ -32,6 +34,19 @@ const INCLUDE_RESERVATION = {
   reservation: { select: { bookingCode: true } },
 };
 
+type ReviewRow = Review & { reservation: { bookingCode: string } };
+
+function toReviewDto(row: ReviewRow): ReviewDto {
+  return {
+    id: row.id,
+    reservationId: row.reservationId,
+    bookingCode: row.reservation.bookingCode,
+    rating: row.rating,
+    comment: row.comment,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
 /**
  * Quality, experience, and duty of care (spec §4.9.4): the incident/emergency
  * log and worker reliability scorecards. Incidents are audited; reliability is
@@ -55,6 +70,19 @@ export class QualityService {
       include: INCLUDE_RESERVATION,
     });
     return rows.map(toIncidentDto);
+  }
+
+  async listReviews(query: ListReviewsQuery): Promise<ReviewDto[]> {
+    const where: Prisma.ReviewWhereInput = {};
+    if (query.reservationId) where.reservationId = query.reservationId;
+
+    const rows = await this.prisma.review.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: query.limit,
+      include: INCLUDE_RESERVATION,
+    });
+    return rows.map(toReviewDto);
   }
 
   async createIncident(

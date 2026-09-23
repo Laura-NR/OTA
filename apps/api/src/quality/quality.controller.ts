@@ -15,11 +15,14 @@ import { UserRole } from '@ota/domain';
 import {
   createIncidentSchema,
   listIncidentsQuerySchema,
+  listReviewsQuerySchema,
   resolveIncidentSchema,
   type CreateIncidentRequest,
   type IncidentDto,
   type ListIncidentsQuery,
+  type ListReviewsQuery,
   type ResolveIncidentRequest,
+  type ReviewDto,
   type SupplierReliabilityDto,
 } from '@ota/schemas';
 
@@ -73,6 +76,14 @@ export class QualityController {
     @CurrentUser() actor: AuthUser,
   ): Promise<IncidentDto> {
     return this.quality.resolveIncident(id, body, actor);
+  }
+
+  @Get('reviews')
+  @Roles(...READ_ROLES)
+  listReviews(
+    @Query(new ZodValidationPipe(listReviewsQuerySchema)) query: ListReviewsQuery,
+  ): Promise<ReviewDto[]> {
+    return this.quality.listReviews(query);
   }
 
   @Get('quality/supplier-reliability')

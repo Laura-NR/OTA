@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { nationalitySchema } from './regulatory';
 import { reservationServiceItemSchema, reservationStatusSchema } from './reservation';
+import { myReviewSchema } from './review';
 
 /** The signed-in traveler's own profile (storefront self-service). */
 export const meProfileSchema = z.object({
@@ -40,6 +41,8 @@ export type MyReservationListItemDto = z.infer<typeof myReservationListItemSchem
 export const myReservationDetailSchema = myReservationListItemSchema.extend({
   serviceItems: z.array(reservationServiceItemSchema),
   documents: z.array(myDocumentSchema),
+  /** The caller's CSAT review, when the trip has been reviewed. */
+  review: myReviewSchema.nullable(),
 });
 
 export type MyReservationDetailDto = z.infer<typeof myReservationDetailSchema>;

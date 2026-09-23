@@ -20,6 +20,7 @@ const TRAVELER = {
 
 const RESERVATION_ID = '33333333-3333-4333-8333-333333333333';
 const INCIDENT_ID = '55555555-5555-4555-8555-555555555555';
+const REVIEW_ID = '77777777-7777-4777-8777-777777777777';
 const SUPPLIER_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const SUPPLIER_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
@@ -105,6 +106,18 @@ function createFakePrisma(state: {
       findMany: async () => [
         { id: SUPPLIER_A, user: { fullName: 'Guide A', email: 'a@example.test' } },
         { id: SUPPLIER_B, user: { fullName: null, email: 'b@example.test' } },
+      ],
+    },
+    review: {
+      findMany: async () => [
+        {
+          id: REVIEW_ID,
+          reservationId: RESERVATION_ID,
+          rating: 5,
+          comment: 'Wonderful trip',
+          createdAt: new Date('2026-09-22T10:00:00Z'),
+          reservation: { bookingCode: 'E2E0001' },
+        },
       ],
     },
     auditLog: { create: async () => ({}) },
@@ -250,6 +263,19 @@ describe('quality API', () => {
       supplierId: SUPPLIER_B,
       supplierName: 'b@example.test',
       timeoutRate: 1,
+    });
+  });
+
+  it('lists traveler reviews with the booking code', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/reviews')
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(response.status).toBe(200);
+    expect(response.body[0]).toMatchObject({
+      bookingCode: 'E2E0001',
+      rating: 5,
+      comment: 'Wonderful trip',
     });
   });
 

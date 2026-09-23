@@ -64,6 +64,7 @@ interface FakeState {
   inventoryItems: Record<string, unknown>[];
   packages: Record<string, unknown>[];
   receipts: Record<string, unknown>[];
+  reviews: Record<string, unknown>[];
   audits: { action: string }[];
   counter: { value: number };
 }
@@ -117,6 +118,22 @@ function createFakePrisma(state: FakeState) {
           (receipt) => receipt.reservationId === args.where.reservationId,
         ),
     },
+    review: {
+      findFirst: async (args: { where: { reservationId: string } }) =>
+        state.reviews.find(
+          (review) => review.reservationId === args.where.reservationId,
+        ) ?? null,
+      create: async (args: { data: Record<string, unknown> }) => {
+        const review = {
+          id: `review-${state.reviews.length + 1}`,
+          comment: null,
+          createdAt: new Date(),
+          ...args.data,
+        };
+        state.reviews.push(review);
+        return review;
+      },
+    },
     reservation: {
       findMany: async (args: { where: { userId: string } }) =>
         [...state.reservations.values()]
@@ -146,6 +163,7 @@ function createFakePrisma(state: FakeState) {
             (item) => item.reservationId === row.id,
           ),
           documents: state.documents.filter((doc) => doc.reservationId === row.id),
+          reviews: state.reviews.filter((review) => review.reservationId === row.id),
           _count: counts(row.id),
         };
       },
@@ -322,6 +340,7 @@ describe('me API', () => {
         },
       ],
       receipts: [],
+      reviews: [],
       audits: [],
       counter: { value: 0 },
     };
@@ -520,6 +539,72 @@ describe('me API', () => {
         .post(`/me/reservations/${OTHER_RESERVATION}/payments`)
         .set('x-test-user', TRAVELER.email)
         .send({ rail: 'CARD' });
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('POST /me/reservations/:id/reviews', () => {
+    it('records a CSAT review once the trip is completed', async () => {
+      state.reservations.set(MY_RESERVATION, makeReservation({ status: 'COMPLETED' }));
+
+      const response = await request(app.getHttpServer())
+        .post(`/me/reservations/${MY_RESERVATION}/reviews`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ rating: 5, comment: 'Wonderful trip' });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toMatchObject({ rating: 5, comment: 'Wonderful trip' });
+      expect(state.reviews).toHaveLength(1);
+
+      const detail = await request(app.getHttpServer())
+        .get(`/me/reservations/${MY_RESERVATION}`)
+        .set('x-test-user', TRAVELER.email);
+      expect(detail.body.review).toMatchObject({ rating: 5 });
+    });
+
+    it('rejects a review before the trip is completed', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/me/reservations/${MY_RESERVATION}/reviews`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ rating: 4 });
+
+      expect(response.status).toBe(409);
+    });
+
+    it('rejects a second review for the same booking', async () => {
+      state.reservations.set(MY_RESERVATION, makeReservation({ status: 'COMPLETED' }));
+      state.reviews.push({
+        id: 'existing-review',
+        reservationId: MY_RESERVATION,
+        rating: 3,
+        comment: null,
+        createdAt: new Date(),
+      });
+
+      const response = await request(app.getHttpServer())
+        .post(`/me/reservations/${MY_RESERVATION}/reviews`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ rating: 5 });
+
+      expect(response.status).toBe(409);
+    });
+
+    it('returns 404 for another traveler reservation', async () => {
+      state.reservations.set(
+        OTHER_RESERVATION,
+        makeReservation({
+          id: OTHER_RESERVATION,
+          userId: OTHER.id,
+          bookingCode: 'OTHER001',
+          status: 'COMPLETED',
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .post(`/me/reservations/${OTHER_RESERVATION}/reviews`)
+        .set('x-test-user', TRAVELER.email)
+        .send({ rating: 5 });
 
       expect(response.status).toBe(404);
     });
