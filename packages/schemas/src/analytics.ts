@@ -41,6 +41,8 @@ const qualitySchema = z.object({
   reviewCount: z.number().int(),
   averageRating: z.number(),
   incidentCount: z.number().int(),
+  openIncidentCount: z.number().int(),
+  highSeverityCount: z.number().int(),
 });
 
 const geographySchema = z.array(

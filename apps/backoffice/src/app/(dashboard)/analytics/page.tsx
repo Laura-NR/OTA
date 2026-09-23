@@ -197,8 +197,9 @@ export default async function AnalyticsPage({
             <CardHeader>
               <CardTitle>Quality & duty of care</CardTitle>
               <CardDescription>
-                {overview.quality.reviewCount} review(s) · incidents logged:{' '}
-                {overview.quality.incidentCount}
+                {overview.quality.reviewCount} review(s) · incidents:{' '}
+                {overview.quality.incidentCount} ({overview.quality.openIncidentCount}{' '}
+                open, {overview.quality.highSeverityCount} high/critical)
               </CardDescription>
             </CardHeader>
             <CardContent className="text-sm">

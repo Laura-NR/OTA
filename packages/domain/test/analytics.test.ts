@@ -82,16 +82,26 @@ describe('calculateOperations', () => {
 });
 
 describe('calculateQuality', () => {
-  it('averages ratings and counts incidents', () => {
-    expect(calculateQuality({ ratings: [4, 5], incidentCount: 1 })).toEqual({
+  it('averages ratings and breaks incidents down by state and severity', () => {
+    expect(
+      calculateQuality({
+        ratings: [4, 5],
+        incidents: [
+          { severity: 'HIGH', resolved: false },
+          { severity: 'LOW', resolved: true },
+        ],
+      }),
+    ).toEqual({
       reviewCount: 2,
       averageRating: 4.5,
-      incidentCount: 1,
+      incidentCount: 2,
+      openIncidentCount: 1,
+      highSeverityCount: 1,
     });
   });
 
   it('returns a zero rating with no reviews', () => {
-    expect(calculateQuality({ ratings: [], incidentCount: 0 }).averageRating).toBe(0);
+    expect(calculateQuality({ ratings: [], incidents: [] }).averageRating).toBe(0);
   });
 });
 

@@ -55,7 +55,7 @@ function createFakePrisma() {
       ],
     },
     review: { findMany: async () => [{ rating: 5 }] },
-    incident: { count: async () => 0 },
+    incident: { findMany: async () => [] },
   };
 }
 

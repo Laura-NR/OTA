@@ -44,7 +44,10 @@ export class AnalyticsService {
         }),
         this.prisma.reservation.findMany({ where, select: { status: true } }),
         this.prisma.review.findMany({ where, select: { rating: true } }),
-        this.prisma.incident.count({ where }),
+        this.prisma.incident.findMany({
+          where,
+          select: { severity: true, resolvedAt: true },
+        }),
         this.prisma.serviceItem.findMany({ where, select: { province: true } }),
       ]);
 
@@ -61,7 +64,10 @@ export class AnalyticsService {
     const operations = calculateOperations({ offers, reservations });
     const quality = calculateQuality({
       ratings: reviews.map((review) => review.rating),
-      incidentCount: incidents,
+      incidents: incidents.map((incident) => ({
+        severity: incident.severity,
+        resolved: incident.resolvedAt !== null,
+      })),
     });
     const geography = calculateGeography(serviceItems);
 

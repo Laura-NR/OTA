@@ -41,10 +41,18 @@ export interface OperationsInput {
   reservations: { status: string }[];
 }
 
+export interface QualityIncident {
+  severity: string;
+  resolved: boolean;
+}
+
 export interface QualityKpis {
   reviewCount: number;
   averageRating: number;
   incidentCount: number;
+  openIncidentCount: number;
+  /** HIGH and CRITICAL incidents, whatever their resolution state. */
+  highSeverityCount: number;
 }
 
 export interface GeographyKpi {
@@ -144,16 +152,21 @@ export function calculateOperations(input: OperationsInput): OperationsKpis {
 
 export function calculateQuality(input: {
   ratings: number[];
-  incidentCount: number;
+  incidents: QualityIncident[];
 }): QualityKpis {
   const reviewCount = input.ratings.length;
+  const incidents = input.incidents;
   return {
     reviewCount,
     averageRating:
       reviewCount > 0
         ? round2(input.ratings.reduce((sum, rating) => sum + rating, 0) / reviewCount)
         : 0,
-    incidentCount: input.incidentCount,
+    incidentCount: incidents.length,
+    openIncidentCount: incidents.filter((incident) => !incident.resolved).length,
+    highSeverityCount: incidents.filter(
+      (incident) => incident.severity === 'HIGH' || incident.severity === 'CRITICAL',
+    ).length,
   };
 }
 

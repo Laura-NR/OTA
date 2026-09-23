@@ -56,7 +56,9 @@ function createFakePrisma() {
     dispatchOffer: { findMany: async () => offers },
     reservation: { findMany: async () => reservations },
     review: { findMany: async () => reviews },
-    incident: { count: async () => 1 },
+    incident: {
+      findMany: async () => [{ severity: 'HIGH', resolvedAt: null }],
+    },
   };
 }
 
@@ -124,6 +126,8 @@ describe('analytics API', () => {
       reviewCount: 2,
       averageRating: 4.5,
       incidentCount: 1,
+      openIncidentCount: 1,
+      highSeverityCount: 1,
     });
     expect(response.body.geography).toEqual([
       { province: 'La Habana', count: 1 },
