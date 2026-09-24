@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-23 23:35
+# Handoff — main — updated 2026-09-24 08:15
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -150,6 +150,13 @@ CSAT reviews and incident severity in the analytics quality KPIs.
   `packages/config`) plus `tenant/assets/`, refusing to overwrite without
   `--force`; `docs/forking.md` documents the upstream-remote workflow. No new
   third-party dependency (`tools/**` is lint/format-ignored like the map tool).
+- Phase 7 — **RBAC/security hardening:** `authorization.e2e.test.ts` is a
+  table-driven matrix proving every ops/financial/customer route is 401
+  unauthenticated and 403 for each role outside its allow-list, that
+  SERVICE_WORKER passes the guard on accept/decline, and that `/health` +
+  `/tenant/config` stay public. The review also found and fixed an
+  over-exposure: the worker accept/decline response now returns only the acting
+  worker's own service item (`getView` gained an optional `onlySupplierId`).
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -165,8 +172,8 @@ CSAT reviews and incident severity in the analytics quality KPIs.
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-23):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**253**: api
-  148, domain 45, config 11, ai 4, payments 3, reports 4, i18n 2, theming 9,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**258**: api
+  153, domain 45, config 11, ai 4, payments 3, reports 4, i18n 2, theming 9,
   documents 8, imports 5, ui 4, email 4, schemas 3, storage 3), `pnpm build` —
   green.
 - `pnpm create:tenant --name "Viñales Eco Travel" --license … --out /tmp/…`
@@ -196,8 +203,9 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-23):
   `assistant.e2e.test.ts` (6), `quality.e2e.test.ts` (8) + `reliability.test.ts`
   (2), the `me.e2e.test.ts` review cases (4), `reports.e2e.test.ts` (4) +
   `packages/reports` workbook/HTML tests (4), the `packages/config`
-  `buildTenantManifest`/`slugifyTenantId` tests (4), the `analytics.test.ts` /
-  `analytics.e2e.test.ts` package-type assertions, and the `regulatory.spec.ts` +
+  `buildTenantManifest`/`slugifyTenantId` tests (4), `authorization.e2e.test.ts`
+  (4, the RBAC matrix) + the dispatch worker-scope test, the `analytics.test.ts`
+  / `analytics.e2e.test.ts` package-type assertions, and the `regulatory.spec.ts` +
   `storefront-packages.spec.ts` + `packages.spec.ts` + `packages-edit.spec.ts` +
   `storefront-checkout.spec.ts` + `storefront-review.spec.ts` + `quality.spec.ts`
   + `messages.spec.ts` (AI draft) browser specs.
@@ -277,9 +285,9 @@ flows are covered (map, auth, builder, i18n, recruitment).
    `packages/ai`'s `LlmProvider` (new dependency → Article 2). The weekly
    XLSX + PDF BI digests shipped 2026-09-23. A true guests × nights bed-nights
    figure still needs a party-size migration.
-3. **Phase 7 hardening:** `create-tenant` + fork docs shipped 2026-09-23;
-   remaining — security review (PII at rest, rate limiting, an RBAC matrix test
-   proving billing data never reaches worker endpoints), observability/runbooks,
+3. **Phase 7 hardening:** `create-tenant` + fork docs and the RBAC matrix +
+   worker-response scoping shipped (2026-09-23/24). Remaining — rate limiting,
+   a PII-at-rest review (no passport field exists yet), observability/runbooks,
    load tests, and Changesets core versioning (deferred; would add a dev tool).
 4. Mobile apps (Phases 5–6) need Expo (Article 2).
 5. Extend e2e: dispatch start/candidates, import commit, intake form, live
@@ -464,3 +472,9 @@ flows are covered (map, auth, builder, i18n, recruitment).
   `pnpm build` makes the tool resolvable.
 - 2026-09-23 — Changesets-based core versioning stays deferred (it would add a
   dev-time dependency); forks pin the upstream commit they last merged.
+- 2026-09-24 — `authorization.e2e.test.ts` is the canonical RBAC registry; a new
+  controller route is not "done" until it is in the matrix.
+- 2026-09-24 — a worker's accept/decline response is scoped to that worker's own
+  service item (privacy fix found by the review); operations views stay
+  unscoped. `POST /suppliers/:id/credential` stays `READ_ROLES` (support may
+  upload), now explicit in the matrix.

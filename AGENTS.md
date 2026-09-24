@@ -391,6 +391,10 @@ nothing that weakens an Article.
 - `<2026-09-23: EmailMessage gained an optional attachments array; SmtpMailer forwards it to nodemailer and ConsoleMailer logs the filenames. Existing template helpers are unaffected (the field is optional).>`
 - `<2026-09-23: `pnpm create:tenant --name "Agency" [--id] [--license] [--primary] [--palette] [--locales] [--out] [--force]` scaffolds tenant/agency.config.json + tenant/assets via buildTenantManifest in packages/config. tools/** is eslint/prettier-ignored (like tools/extract-cuba-map.mjs). It imports @ota/config, which is a root devDependency now, so run `pnpm build` first or the tool cannot resolve the package.>`
 - `<2026-09-23: docs/forking.md is the fork-per-agency workflow (scaffold, configure, `git remote add upstream`, merge, conflict surface = tenant/ + .env). Changesets-based core versioning is deferred (it would add a dev-time tool).>`
+- `<2026-09-24: apps/api/test/authorization.e2e.test.ts is the RBAC matrix — a route table with allow-lists; it asserts 401 unauthenticated and 403 for every role outside the allow-list on all ops/financial/customer routes, that a SERVICE_WORKER passes the guard on accept/decline, and that /health + /tenant/config stay public. Guards run before pipes, so denied requests are 403 regardless of params/body. When adding a controller route, add it to the matrix.>`
+- `<2026-09-24: the dispatch accept/decline response is scoped to the acting worker's own service item (getView takes an optional onlySupplierId) so a worker never sees a peer's supplierId or phone number. Ops views remain unscoped.>`
+- `<2026-09-24: POST /suppliers/:id/credential is deliberately @Roles(READ_ROLES) (support may upload); the authorization matrix encodes that allow-list.>`
+- `<2026-09-24: running a single api test directly (`pnpm --filter @ota/api exec vitest run`) needs the changed workspace packages built first (`pnpm build`); `pnpm test` runs turbo and builds deps automatically.>`
 
 ---
 
