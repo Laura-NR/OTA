@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-24 10:35
+# Handoff — main — updated 2026-09-24 10:45
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -62,7 +62,9 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     keep-alive notice 6 months after the latest completion and anonymizes after
     a 30-day grace with no consent; a stateless HMAC keep-alive link; ops
     `GET /retention/pending` + `POST /retention/scan`; the back-office
-    `/retention` desk. `docs/adr/0004-data-retention.md`.
+    `/retention` desk. `docs/adr/0004-data-retention.md`. A live-Postgres
+    integration test (`retention.integration.test.ts`, `RUN_DB_INTEGRATION=1`)
+    proves notice → consent → anonymize against the dev DB.
 12. **Readiness probe + runbook (Phase 7, 2026-09-24).** Split `/health`
     (liveness) from `GET /health/ready` (Postgres `SELECT 1`, plus Redis `PING`
     when `REDIS_URL` is set; 200/503, no error detail). `docs/runbook.md`
@@ -294,6 +296,11 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-24):
   in the authorization matrix. Live smoke with the stack up:
   `GET /health/ready` returns
   `{"status":"ok","checks":{"database":{"status":"up"},"redis":{"status":"up"}}}`.
+- Retention live proof: `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest
+  run test/retention.integration.test.ts` — against the dev Postgres it sent the
+  6-month notice, recorded the keep-alive consent, anonymized after the grace,
+  and left the reservation intact (fixtures cleaned up). The default `pnpm test`
+  skips it (169 api passed, 3 skipped).
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260924065637_retention_lifecycle` (11 migrations total). Read-only
   Postgres checks confirm `reservations.completed_at` and
@@ -356,10 +363,9 @@ the PDF branch of the credential inspector (the image branch is); passkeys;
 worker accept/decline through the UI and the timeout firing through the UI
 (covered at the service/unit level and over HTTP). Storefront browser flows are
 covered (map, auth, builder, i18n, recruitment), as are dispatch
-start/candidates, import commit, ops intake, and a live `/ops` event. The retention notice
-and purge are proven with a fake Prisma and the BullMQ schedule is observed live
-in Redis, but no notice or purge was run against the dev database (the
-back-office `/retention` desk rendered its empty state).
+start/candidates, import commit, ops intake, and a live `/ops` event. The
+retention notice/consent/anonymize path is now proven against the dev Postgres
+(`RUN_DB_INTEGRATION=1`); the BullMQ schedule is observed live in Redis.
 
 ## Assumptions & unknowns
 - Catalog media content type is derived from the storage-key extension, so no
@@ -651,3 +657,7 @@ back-office `/retention` desk rendered its empty state).
   PrismaClient (`e2e/fixtures.ts`) instead of mutating the shared `E2E0001`
   fixture, and retry client-component clicks with `expect(...).toPass()` so the
   first pre-hydration click does not flake.
+- 2026-09-24 — DB integration tests opt in with `RUN_DB_INTEGRATION=1` rather
+  than gating on `DATABASE_URL`, because Prisma Client auto-loads
+  `packages/db/.env` and would otherwise make the default unit suite hit
+  Postgres. `retention.integration.test.ts` follows this gate.
