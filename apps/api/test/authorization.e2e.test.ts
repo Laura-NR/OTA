@@ -179,6 +179,10 @@ const ROUTES: Route[] = [
   { method: 'patch', path: `/incidents/${INCIDENT}/resolve`, allowed: 'opsWrite' },
   { method: 'get', path: '/reviews', allowed: 'opsRead' },
   { method: 'get', path: '/quality/supplier-reliability', allowed: 'opsRead' },
+
+  // GDPR retention lifecycle (the keep-alive link itself is public).
+  { method: 'get', path: '/retention/pending', allowed: 'opsRead' },
+  { method: 'post', path: '/retention/scan', allowed: 'opsWrite' },
 ];
 
 const fakePrisma = {
@@ -270,5 +274,11 @@ describe('authorization matrix', () => {
   it('keeps public endpoints open without a session', async () => {
     expect((await request(app.getHttpServer()).get('/health')).status).toBe(200);
     expect((await request(app.getHttpServer()).get('/tenant/config')).status).toBe(200);
+    // The keep-alive link is carried by email, so it is public; an invalid
+    // token resolves to a 400 HTML page rather than a 401.
+    const keepAlive = await request(app.getHttpServer()).get(
+      '/retention/keep-alive?token=invalid',
+    );
+    expect(keepAlive.status).toBe(400);
   });
 });

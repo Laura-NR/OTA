@@ -266,7 +266,11 @@ export class ReservationsService {
     const updated = await this.prisma.$transaction(async (tx) => {
       const result = await tx.reservation.update({
         where: { id },
-        data: { status: input.to },
+        data: {
+          status: input.to,
+          // Anchor the GDPR retention clock (spec §3.5) on completion.
+          completedAt: input.to === ReservationStatus.Completed ? new Date() : undefined,
+        },
       });
 
       await tx.auditLog.create({

@@ -21,6 +21,7 @@ import { QualityModule } from './quality/quality.module';
 import { RegulatoryModule } from './regulatory/regulatory.module';
 import { ReportsModule } from './reports/reports.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { RetentionModule } from './retention/retention.module';
 import { StorageModule } from './storage/storage.module';
 import { SupplierApplicationsModule } from './supplier-applications/supplier-applications.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
@@ -61,6 +62,7 @@ const isTest = process.env.NODE_ENV === 'test';
     AssistantModule,
     QualityModule,
     ReportsModule,
+    RetentionModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
