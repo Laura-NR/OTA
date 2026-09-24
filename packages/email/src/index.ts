@@ -4,3 +4,5 @@ export { magicLinkEmail } from './templates/magic-link';
 export type { EmailBranding, MagicLinkEmailInput } from './templates/magic-link';
 export { newMessageEmail } from './templates/new-message';
 export type { NewMessageEmailInput } from './templates/new-message';
+export { retentionNoticeEmail } from './templates/retention-notice';
+export type { RetentionNoticeEmailInput } from './templates/retention-notice';

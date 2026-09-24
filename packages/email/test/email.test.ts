@@ -6,6 +6,7 @@ import {
   SmtpMailer,
   createMailer,
   magicLinkEmail,
+  retentionNoticeEmail,
   type EmailBranding,
 } from '../src';
 
@@ -27,6 +28,24 @@ describe('magicLinkEmail', () => {
     expect(email.subject).toContain('Authentic Cuba Expeditions');
     expect(email.html).toContain('token=abc');
     expect(email.html).toContain('MINTUR-TEST-1234');
+    expect(email.text).toContain('token=abc');
+  });
+});
+
+describe('retentionNoticeEmail', () => {
+  it('renders the keep-alive link, deadline, and license', () => {
+    const email = retentionNoticeEmail({
+      to: 'jane@example.test',
+      keepAliveUrl: 'https://app.example.test/retention/keep-alive?token=abc',
+      purgeAt: new Date('2026-08-09T00:00:00Z'),
+      branding,
+    });
+
+    expect(email.to).toBe('jane@example.test');
+    expect(email.subject).toContain('Authentic Cuba Expeditions');
+    expect(email.html).toContain('token=abc');
+    expect(email.html).toContain('2026-08-09');
+    expect(email.html).toContain('Keep My Account Active');
     expect(email.text).toContain('token=abc');
   });
 });
