@@ -346,6 +346,33 @@ describe('DispatchService', () => {
     expect(scheduler.cancelled).toContain(ITEM_ID);
   });
 
+  it('scopes a worker response to the worker own item (no peer leakage)', async () => {
+    store.suppliers = [
+      makeSupplier({ id: GUIDE_ONE }),
+      makeSupplier({ id: GUIDE_TWO, userId: 'user-worker-2' }),
+    ];
+    store.serviceItems = [
+      makeServiceItem({ id: ITEM_ID }),
+      makeServiceItem({
+        id: 'item-2',
+        supplierId: GUIDE_TWO,
+        status: ServiceItemStatus.Offered,
+      }),
+    ];
+
+    await service.startDispatch(RESERVATION_ID, OPERATOR);
+
+    const worker: AuthUser = {
+      id: WORKER_USER_ID,
+      email: 'guide@example.test',
+      role: 'SERVICE_WORKER',
+    };
+    const view = await service.accept(ITEM_ID, worker);
+
+    expect(view.serviceItems).toHaveLength(1);
+    expect(view.serviceItems[0]?.id).toBe(ITEM_ID);
+  });
+
   it('flags the reservation on decline and cancels the timer', async () => {
     await service.startDispatch(RESERVATION_ID, OPERATOR);
 

@@ -95,7 +95,15 @@ export class DispatchService implements OnModuleInit {
     return this.getView(reservationId);
   }
 
-  async getView(reservationId: string): Promise<DispatchViewDto> {
+  /**
+   * The dispatch view for a reservation. Operations see every service item;
+   * a worker response passes `onlySupplierId` so a supplier only ever sees
+   * their own items (never a peer's identity or phone number).
+   */
+  async getView(
+    reservationId: string,
+    onlySupplierId?: string,
+  ): Promise<DispatchViewDto> {
     const reservation = await this.loadReservation(reservationId);
     const now = new Date();
 
@@ -103,7 +111,9 @@ export class DispatchService implements OnModuleInit {
       reservationId: reservation.id,
       bookingCode: reservation.bookingCode,
       status: reservation.status as ReservationStatus,
-      serviceItems: reservation.serviceItems.map((item) => this.toItemDto(item, now)),
+      serviceItems: reservation.serviceItems
+        .filter((item) => !onlySupplierId || item.supplierId === onlySupplierId)
+        .map((item) => this.toItemDto(item, now)),
     };
   }
 
@@ -173,7 +183,7 @@ export class DispatchService implements OnModuleInit {
       occurredAt: now.toISOString(),
     });
 
-    return this.getView(item.reservationId);
+    return this.getView(item.reservationId, item.supplierId ?? undefined);
   }
 
   async decline(
@@ -223,7 +233,7 @@ export class DispatchService implements OnModuleInit {
       occurredAt: now.toISOString(),
     });
 
-    return this.getView(item.reservationId);
+    return this.getView(item.reservationId, item.supplierId ?? undefined);
   }
 
   /**
