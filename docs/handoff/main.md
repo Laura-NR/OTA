@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-24 08:30
+# Handoff — main — updated 2026-09-24 09:15
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -14,12 +14,13 @@ decisions are implemented. The only remaining AI decision is which real LLM
 vendor to wire (a separate Article 2 call); checkout stays link-only until a
 signed-webhook provider exists. While those two decisions are pending, the
 back-office quality/duty-of-care desk (§4.9.4) was added, including traveler
-CSAT reviews and incident severity in the analytics quality KPIs.
+CSAT reviews and incident severity in the analytics quality KPIs, and the GDPR
+retention lifecycle (§3.5) now ships end to end (`docs/adr/0004-data-retention.md`).
 
 ## Status analysis (2026-09-24)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-10 migrations, 258 unit tests, 26 e2e tests — all green.
+11 migrations, 277 unit tests, 27 e2e tests — all green.
 
 ### Done since upstream base `849ea73` (11 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
@@ -53,6 +54,14 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 10. **RBAC/security hardening (Phase 7).** `authorization.e2e.test.ts` route
     matrix; fixed an over-exposure so a worker's accept/decline response is
     scoped to their own service item.
+11. **GDPR retention lifecycle (§3.5, Phase 6, 2026-09-24).** Migration
+    `20260924065637_retention_lifecycle` (`Reservation.completedAt` indexed and
+    backfilled from audit, `User.retentionNoticeSentAt`); pure retention rules in
+    `packages/domain/src/retention`; a daily BullMQ scan at 05:00 that emails a
+    keep-alive notice 6 months after the latest completion and anonymizes after
+    a 30-day grace with no consent; a stateless HMAC keep-alive link; ops
+    `GET /retention/pending` + `POST /retention/scan`; the back-office
+    `/retention` desk. `docs/adr/0004-data-retention.md`.
 
 ### Remaining
 **Blocked on a human decision**
@@ -67,18 +76,15 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   regulatory figure.
 
 **Unblocked (no decision or migration needed)**
-- **GDPR retention lifecycle (spec §3.5 / Phase 6) — the biggest functional
-  gap.** The `User` model already has `retentionConsentGrantedAt` /
-  `anonymizedAt`, but nothing uses them: no 6-month trigger after COMPLETED, no
-  keep-alive email, no 30-day grace, no anonymizing purge worker.
 - **Real-time catalog/map availability (Phase 4).** Needs a product call on what
   province-level "available" means (there is no inventory ↔ availability link).
 - **Observability (Phase 7).** Structured pino logs and a liveness `/health`
   exist; no readiness probe (DB/Redis), no runbooks, no Sentry/OTel.
 - **Rate limiting (Phase 7).** Needs either a dependency (`@nestjs/throttler`) or
   a hand-rolled guard — a decision in itself.
-- **PII-at-rest review (Phase 7).** Blocked in practice by having no passport
-  field yet; revisit with the retention work.
+- **PII-at-rest review (Phase 7).** The retention purge now scrubs `User` PII,
+  but there is still no passport field and free-text PII (messages, reviews,
+  incidents) is not scrubbed; revisit before production.
 - **Load tests (Phase 7).** Not started.
 - **E2E depth.** Dispatch start/candidates and import commit are covered over
   HTTP/unit only; the live escalation event round-trip is not exercised.
@@ -229,6 +235,22 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   `/tenant/config` stay public. The review also found and fixed an
   over-exposure: the worker accept/decline response now returns only the acting
   worker's own service item (`getView` gained an optional `onlySupplierId`).
+- Phase 6 — **GDPR retention lifecycle (§3.5):** migration
+  `20260924065637_retention_lifecycle` adds `Reservation.completedAt` (indexed;
+  set when `transition` enters COMPLETED; backfilled from the
+  `reservation.transition` audit rows) and `User.retentionNoticeSentAt`. Pure
+  rules live in `packages/domain/src/retention` (6-month trigger, 30-day grace,
+  12-month extension). `apps/api/src/retention` runs a daily BullMQ scan (05:00,
+  queue `retention-lifecycle`) that emails a keep-alive notice and, after the
+  grace with no consent, anonymizes the traveler in place: email →
+  `anonymized+<userId>@anonymized.invalid`, `fullName`/`phone`/`image`/`nationality`
+  nulled, sessions/accounts/passkeys revoked, while Reservation/ServiceItem/
+  PaymentReceipt/AuditLog rows are kept for fiscal aggregates. The link is a
+  stateless HMAC-SHA256 token (AUTH_SECRET) verified at public
+  `GET /retention/keep-alive` (returns branded HTML; 400 invalid/expired, 409
+  already anonymized), which sets `retentionConsentGrantedAt`. Ops
+  `GET /retention/pending` + `POST /retention/scan`; back-office `/retention`
+  desk.
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -237,24 +259,29 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 19 spec files / 26 tests (`pnpm e2e`, cached `chromium-1243`).
+- e2e: 20 spec files / 27 tests (`pnpm e2e`, cached `chromium-1243`).
 - Head `849ea73` was the base; the regulatory, curated-package, AI-assistant,
   mock-checkout, quality, CSAT, package-polish, and BI-export increments are
   committed on top.
 
 ## Verified
-Node 22.22.3, pnpm 12.4.2 (2026-09-23):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**258**: api
-  153, domain 45, config 11, ai 4, payments 3, reports 4, i18n 2, theming 9,
-  documents 8, imports 5, ui 4, email 4, schemas 3, storage 3), `pnpm build` —
-  green.
+Node 22.22.3, pnpm 12.4.2 (2026-09-24):
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**277**: api
+  162, domain 54, config 11, theming 9, documents 8, email 5, imports 5, ai 4,
+  reports 4, ui 4, payments 3, schemas 3, storage 3, i18n 2), `pnpm build` —
+  green. (2 api integration tests skipped without `REDIS_URL`.)
+- `pnpm --filter @ota/db exec prisma migrate dev` created and applied
+  `20260924065637_retention_lifecycle` (11 migrations total). Read-only
+  Postgres checks confirm `reservations.completed_at` and
+  `users.retention_notice_sent_at` exist and the migration row is applied.
 - `pnpm create:tenant --name "Viñales Eco Travel" --license … --out /tmp/…`
   wrote a valid manifest + `assets/README.md`, and refused a re-run without
-  `--force` (exit 1) — verified manually.
-- `pnpm --filter @ota/db exec prisma migrate dev` created and applied
-  `20260923063425_regulatory_reporting` and `20260923091856_curated_packages`
-  (10 migrations total).
-- `pnpm e2e` — 26 real-browser tests pass, including the BI XLSX + PDF digest
+  `--force` (exit 1) — verified manually (earlier increment).
+- Live: after `pnpm dev` the BullMQ scheduler registered the
+  `retention-lifecycle` repeat job in Redis (`bull:retention-lifecycle:repeat`
+  with a delayed `retention-scan`).
+- `pnpm e2e` — 27 real-browser tests pass, adding the `/retention` desk spec to
+  the existing BI XLSX + PDF digest
   downloads (session-authenticated requests; the PDF renders through Chromium),
   the curated-package editor (open → save itinerary), the storefront CSAT
   review, the quality spec (log →
@@ -267,7 +294,14 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-23):
   traveler sign-in → dashboard, the traveler message send, the package builder
   submit, recruitment submit → approve, the locale switch, and the analytics
   dashboard.
-- New coverage: `regulatory.test.ts` (4 pure cases), `regulatory.e2e.test.ts`
+- New coverage (2026-09-24): `packages/domain/test/retention.test.ts` (9:
+  6-month trigger, cycle/extension, grace purge, status labels), the
+  `packages/email` retention-notice template test (deadline + keep-alive link),
+  `retention.e2e.test.ts` (5: notice at 6 months + audit, no notice before,
+  anonymize + credential revocation, keep-alive consent cancels the purge, ops
+  pending list) and `retention-token.test.ts` (4: round-trip, tampered, wrong
+  secret, expired). Earlier:
+  `regulatory.test.ts` (4 pure cases), `regulatory.e2e.test.ts`
   (5: summary, window, CSV, 403, 401), `packages.e2e.test.ts` (8: public
   active-only, slug, ops list, create+slug, unknown item, delete, 403, 401), the
   `me.e2e.test.ts` from-package booking cases (3) and payment-link cases (3),
@@ -296,7 +330,10 @@ live escalation event round-trip (the `/ops` handshake is tested, not an event);
 the PDF branch of the credential inspector (the image branch is); dispatch
 start/candidates and import commit through the UI (covered over HTTP/unit only);
 passkeys; worker accept/decline against a real database. Storefront browser
-flows are covered (map, auth, builder, i18n, recruitment).
+flows are covered (map, auth, builder, i18n, recruitment). The retention notice
+and purge are proven with a fake Prisma and the BullMQ schedule is observed live
+in Redis, but no notice or purge was run against the dev database (the
+back-office `/retention` desk rendered its empty state).
 
 ## Assumptions & unknowns
 - Catalog media content type is derived from the storage-key extension, so no
@@ -324,6 +361,12 @@ flows are covered (map, auth, builder, i18n, recruitment).
 - `Reservation.tourismCategory` defaults to GENERAL; there is no automatic
   classifier yet, so operators classify specialised bookings by hand (intake
   form or the workbench control).
+- Retention: the notice fires 6 months after the latest completion; after a
+  confirmation the next cycle is 12 months from that confirmation, not 6 from
+  completion. The keep-alive token expires at the notice + 30 days, so a click
+  after the grace and before the purge is rejected. Only TRAVELER-role users
+  enter the lifecycle. Free-text PII (messages, reviews, incidents) is not
+  scrubbed yet.
 
 ## Traps
 - API dev must stay swc-based (`node --watch -r @swc-node/register`); tsx/esbuild
@@ -346,23 +389,28 @@ flows are covered (map, auth, builder, i18n, recruitment).
   a build just ran.
 - BullMQ 6 has no `repeat` on `JobsOptions`; repeatable jobs use
   `queue.upsertJobScheduler`.
+- The retention keep-alive token is signed/verified with `AUTH_SECRET` read at
+  call time; `retention.e2e.test.ts` sets `process.env.AUTH_SECRET` before
+  compiling the Nest app. A missing secret makes `scan()` log and skip notices.
 
 ## Next
-1. **Phase 4 storefront remainder:** package follow-ups that need a migration
+1. **Phase 6 remainder:** none for retention. Optional follow-ups — scrub
+   free-text PII (messages/reviews/incidents) during the purge, and run a live
+   notice/purge smoke against the dev DB (currently fake-Prisma only).
+2. **Phase 4 storefront remainder:** package follow-ups that need a migration
    (Article 2) — accommodation-tier selection and package media; the catalog/map
    do not yet show real-time availability. Checkout is link-only until a real
    signed-webhook provider is selected. The back-office package editor and the
    §4.9.1 package-type revenue/margin split shipped 2026-09-23.
-2. **Phase 3 remainder:** select a real LLM vendor and wire it behind
-   `packages/ai`'s `LlmProvider` (new dependency → Article 2). The weekly
-   XLSX + PDF BI digests shipped 2026-09-23. A true guests × nights bed-nights
-   figure still needs a party-size migration.
-3. **Phase 7 hardening:** `create-tenant` + fork docs and the RBAC matrix +
-   worker-response scoping shipped (2026-09-23/24). Remaining — rate limiting,
-   a PII-at-rest review (no passport field exists yet), observability/runbooks,
-   load tests, and Changesets core versioning (deferred; would add a dev tool).
-4. Mobile apps (Phases 5–6) need Expo (Article 2).
-5. Extend e2e: dispatch start/candidates, import commit, intake form, live
+3. **Phase 3 remainder:** select a real LLM vendor and wire it behind
+   `packages/ai`'s `LlmProvider` (new dependency → Article 2). A true guests ×
+   nights bed-nights figure still needs a party-size migration.
+4. **Phase 7 hardening:** `create-tenant` + fork docs, the RBAC matrix, and the
+   retention purge shipped. Remaining — rate limiting (needs a decision:
+   dependency vs hand-rolled guard), a PII-at-rest review, observability/runbooks
+   (readiness probe), load tests, and Changesets core versioning (deferred).
+5. Mobile apps (Phases 5–6) need Expo (Article 2).
+6. Extend e2e: dispatch start/candidates, import commit, intake form, live
    escalation event round-trip.
 
 ## Decisions (append-only)
@@ -550,3 +598,17 @@ flows are covered (map, auth, builder, i18n, recruitment).
   service item (privacy fix found by the review); operations views stay
   unscoped. `POST /suppliers/:id/credential` stays `READ_ROLES` (support may
   upload), now explicit in the matrix.
+- 2026-09-24 — GDPR retention purges by **anonymizing in place**, not deleting:
+  PII on `User` is overwritten and credentials are revoked, while
+  Reservation/ServiceItem/PaymentReceipt/AuditLog rows are kept for fiscal
+  aggregates. Hard delete is impossible (`Reservation.user` is RESTRICT). Owner
+  approved (see `docs/adr/0004-data-retention.md`).
+- 2026-09-24 — the retention clock is anchored on new additive columns
+  `Reservation.completedAt` (backfilled from the `reservation.transition` audit
+  rows) and `User.retentionNoticeSentAt`; deriving them from the audit log would
+  have avoided a migration but is a brittle, unindexed JSON query. Owner
+  approved.
+- 2026-09-24 — the keep-alive link uses a stateless HMAC-SHA256 token signed with
+  `AUTH_SECRET` (no token column, no dependency); ops
+  `GET /retention/pending` + `POST /retention/scan` are in the matrix and
+  `/retention/keep-alive` is public (invalid token → 400 HTML). Owner approved.
