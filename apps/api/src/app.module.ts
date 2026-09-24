@@ -9,7 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { DocumentsModule } from './documents/documents.module';
 import { EmailModule } from './email/email.module';
-import { HealthController } from './health.controller';
+import { HealthModule } from './health/health.module';
 import { ImportsModule } from './imports/imports.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { MeModule } from './me/me.module';
@@ -41,6 +41,7 @@ const isTest = process.env.NODE_ENV === 'test';
             : { target: 'pino-pretty', options: { singleLine: true } },
       },
     }),
+    HealthModule,
     AuthModule,
     TenantModule,
     EmailModule,
@@ -64,7 +65,6 @@ const isTest = process.env.NODE_ENV === 'test';
     ReportsModule,
     RetentionModule,
   ],
-  controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}

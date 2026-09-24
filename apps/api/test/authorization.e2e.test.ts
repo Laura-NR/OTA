@@ -187,6 +187,7 @@ const ROUTES: Route[] = [
 
 const fakePrisma = {
   serviceItem: { findUnique: async () => null },
+  $queryRaw: async () => [{ '?column?': 1 }],
 };
 
 const fakeAuthService = {
@@ -273,6 +274,7 @@ describe('authorization matrix', () => {
 
   it('keeps public endpoints open without a session', async () => {
     expect((await request(app.getHttpServer()).get('/health')).status).toBe(200);
+    expect((await request(app.getHttpServer()).get('/health/ready')).status).toBe(200);
     expect((await request(app.getHttpServer()).get('/tenant/config')).status).toBe(200);
     // The keep-alive link is carried by email, so it is public; an invalid
     // token resolves to a 400 HTML page rather than a 401.
