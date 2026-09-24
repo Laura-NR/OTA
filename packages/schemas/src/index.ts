@@ -15,6 +15,16 @@ export {
   type ReviewDto,
 } from './review';
 export {
+  listRetentionQuerySchema,
+  retentionPendingUserSchema,
+  retentionScanResultSchema,
+  retentionStatusSchema,
+  type ListRetentionQuery,
+  type RetentionPendingUserDto,
+  type RetentionScanResultDto,
+  type RetentionStatusDto,
+} from './retention';
+export {
   createIncidentSchema,
   incidentSchema,
   incidentSeveritySchema,
