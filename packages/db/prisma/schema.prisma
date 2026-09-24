@@ -154,6 +154,7 @@ model User {
 
   // GDPR retention lifecycle (spec §3.5)
   retentionConsentGrantedAt DateTime? @map("retention_consent_granted_at")
+  retentionNoticeSentAt     DateTime? @map("retention_notice_sent_at")
   anonymizedAt              DateTime? @map("anonymized_at")
 
   supplierProfile SupplierProfile?
@@ -421,6 +422,9 @@ model Reservation {
   endDate                 DateTime          @map("end_date") @db.Date
   status                  ReservationStatus @default(DRAFT)
   tourismCategory         TourismCategory   @default(GENERAL) @map("tourism_category")
+  // Set when the booking reaches COMPLETED; anchors the GDPR retention clock
+  // (spec §3.5): 6 months later the traveler is notified, then a 30-day grace.
+  completedAt             DateTime?         @map("completed_at")
   totalCurrency           String            @default("EUR") @map("total_currency")
   totalAmount             Decimal           @default(0) @map("total_amount") @db.Decimal(10, 2)
   customItineraryPayload  Json?             @map("custom_itinerary_payload")
@@ -439,6 +443,7 @@ model Reservation {
   @@index([userId])
   @@index([status])
   @@index([packageId])
+  @@index([completedAt])
   @@map("reservations")
 }
 
