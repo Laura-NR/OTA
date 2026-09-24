@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-24 09:15
+# Handoff — main — updated 2026-09-24 09:55
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -14,15 +14,16 @@ decisions are implemented. The only remaining AI decision is which real LLM
 vendor to wire (a separate Article 2 call); checkout stays link-only until a
 signed-webhook provider exists. While those two decisions are pending, the
 back-office quality/duty-of-care desk (§4.9.4) was added, including traveler
-CSAT reviews and incident severity in the analytics quality KPIs, and the GDPR
-retention lifecycle (§3.5) now ships end to end (`docs/adr/0004-data-retention.md`).
+CSAT reviews and incident severity in the analytics quality KPIs, the GDPR
+retention lifecycle (§3.5) now ships end to end (`docs/adr/0004-data-retention.md`),
+and Phase 7 gained a readiness probe plus `docs/runbook.md`.
 
 ## Status analysis (2026-09-24)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 277 unit tests, 27 e2e tests — all green.
+11 migrations, 284 unit tests, 27 e2e tests — all green.
 
-### Done since upstream base `849ea73` (11 increments, in order)
+### Done since upstream base `849ea73` (12 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
    `20260923063425_regulatory_reporting` (`User.nationality`,
    `Reservation.tourismCategory`); pure `calculateRegulatory`;
@@ -62,6 +63,10 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     a 30-day grace with no consent; a stateless HMAC keep-alive link; ops
     `GET /retention/pending` + `POST /retention/scan`; the back-office
     `/retention` desk. `docs/adr/0004-data-retention.md`.
+12. **Readiness probe + runbook (Phase 7, 2026-09-24).** Split `/health`
+    (liveness) from `GET /health/ready` (Postgres `SELECT 1`, plus Redis `PING`
+    when `REDIS_URL` is set; 200/503, no error detail). `docs/runbook.md`
+    documents the service map, scheduled jobs, and incident playbooks.
 
 ### Remaining
 **Blocked on a human decision**
@@ -78,8 +83,9 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 **Unblocked (no decision or migration needed)**
 - **Real-time catalog/map availability (Phase 4).** Needs a product call on what
   province-level "available" means (there is no inventory ↔ availability link).
-- **Observability (Phase 7).** Structured pino logs and a liveness `/health`
-  exist; no readiness probe (DB/Redis), no runbooks, no Sentry/OTel.
+- **Observability (Phase 7).** Structured pino logs, liveness `/health`, a
+  readiness `/health/ready`, and `docs/runbook.md` exist. Still open: Sentry or
+  OpenTelemetry metrics/tracing, and alerting on readiness/queue depth.
 - **Rate limiting (Phase 7).** Needs either a dependency (`@nestjs/throttler`) or
   a hand-rolled guard — a decision in itself.
 - **PII-at-rest review (Phase 7).** The retention purge now scrubs `User` PII,
@@ -251,6 +257,14 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   already anonymized), which sets `retentionConsentGrantedAt`. Ops
   `GET /retention/pending` + `POST /retention/scan`; back-office `/retention`
   desk.
+- Phase 7 — **readiness + runbook:** `apps/api/src/health` splits
+  `GET /health` (liveness; never touches dependencies) from `GET /health/ready`
+  (Postgres `SELECT 1`, plus Redis `PING` when `REDIS_URL` is set; 200/503, no
+  error detail). The Redis probe is behind the `REDIS_HEALTH` token
+  (`IoredisHealth`, Noop in tests) and closes on module destroy.
+  `docs/runbook.md` covers the service map, scheduled jobs (retention 05:00,
+  compliance 06:00, BI digest Mon 07:00, dispatch timeouts), incident playbooks,
+  secrets, and backups.
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -266,10 +280,15 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-24):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**277**: api
-  162, domain 54, config 11, theming 9, documents 8, email 5, imports 5, ai 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**284**: api
+  169, domain 54, config 11, theming 9, documents 8, email 5, imports 5, ai 4,
   reports 4, ui 4, payments 3, schemas 3, storage 3, i18n 2), `pnpm build` —
   green. (2 api integration tests skipped without `REDIS_URL`.)
+- Health/readiness: `health.test.ts` (8: liveness ignores dependencies; ready
+  200/503; service up/down/skipped + close) and `/health/ready` asserted public
+  in the authorization matrix. Live smoke with the stack up:
+  `GET /health/ready` returns
+  `{"status":"ok","checks":{"database":{"status":"up"},"redis":{"status":"up"}}}`.
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260924065637_retention_lifecycle` (11 migrations total). Read-only
   Postgres checks confirm `reservations.completed_at` and
@@ -405,10 +424,11 @@ back-office `/retention` desk rendered its empty state).
 3. **Phase 3 remainder:** select a real LLM vendor and wire it behind
    `packages/ai`'s `LlmProvider` (new dependency → Article 2). A true guests ×
    nights bed-nights figure still needs a party-size migration.
-4. **Phase 7 hardening:** `create-tenant` + fork docs, the RBAC matrix, and the
-   retention purge shipped. Remaining — rate limiting (needs a decision:
-   dependency vs hand-rolled guard), a PII-at-rest review, observability/runbooks
-   (readiness probe), load tests, and Changesets core versioning (deferred).
+4. **Phase 7 hardening:** `create-tenant` + fork docs, the RBAC matrix, the
+   retention purge, and the readiness probe + runbook shipped. Remaining — rate
+   limiting (needs a decision: dependency vs hand-rolled guard), a PII-at-rest
+   review, Sentry/OpenTelemetry, load tests, and Changesets core versioning
+   (deferred).
 5. Mobile apps (Phases 5–6) need Expo (Article 2).
 6. Extend e2e: dispatch start/candidates, import commit, intake form, live
    escalation event round-trip.
@@ -612,3 +632,8 @@ back-office `/retention` desk rendered its empty state).
   `AUTH_SECRET` (no token column, no dependency); ops
   `GET /retention/pending` + `POST /retention/scan` are in the matrix and
   `/retention/keep-alive` is public (invalid token → 400 HTML). Owner approved.
+- 2026-09-24 — readiness is split from liveness (`/health` stays dependency-free
+  so it never flaps; `/health/ready` checks Postgres + Redis) and hand-rolled
+  rather than adding `@nestjs/terminus` (Article 2 avoided). The public body
+  carries no error detail; the Redis probe sits behind a `REDIS_HEALTH` token so
+  tests stay offline. `docs/runbook.md` is the day-2 ops guide.
