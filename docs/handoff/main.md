@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-24 09:55
+# Handoff — main — updated 2026-09-24 10:35
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -21,9 +21,9 @@ and Phase 7 gained a readiness probe plus `docs/runbook.md`.
 ## Status analysis (2026-09-24)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 284 unit tests, 27 e2e tests — all green.
+11 migrations, 284 unit tests, 31 e2e tests — all green.
 
-### Done since upstream base `849ea73` (12 increments, in order)
+### Done since upstream base `849ea73` (13 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
    `20260923063425_regulatory_reporting` (`User.nationality`,
    `Reservation.tourismCategory`); pure `calculateRegulatory`;
@@ -67,6 +67,10 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     (liveness) from `GET /health/ready` (Postgres `SELECT 1`, plus Redis `PING`
     when `REDIS_URL` is set; 200/503, no error detail). `docs/runbook.md`
     documents the service map, scheduled jobs, and incident playbooks.
+13. **Deeper e2e (2026-09-24).** Browser specs for the dispatch engine
+    (candidates + start offer), bulk import (stage → map → commit), ops intake,
+    and a live `/ops` dispatch event; shared DB fixture helpers in
+    `e2e/fixtures.ts`.
 
 ### Remaining
 **Blocked on a human decision**
@@ -92,8 +96,9 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   but there is still no passport field and free-text PII (messages, reviews,
   incidents) is not scrubbed; revisit before production.
 - **Load tests (Phase 7).** Not started.
-- **E2E depth.** Dispatch start/candidates and import commit are covered over
-  HTTP/unit only; the live escalation event round-trip is not exercised.
+- **E2E depth.** Dispatch start/candidates, bulk-import commit, ops intake, and
+  a live `/ops` dispatch event are now browser-exercised (2026-09-24). Remaining
+  UI-only gaps: worker accept/decline, timeout firing, and passkeys.
 - **Mobile apps (Phase 5–6).** `worker-app`, `traveler-app`, `admin-app` — Expo
   is a new dependency (Article 2). Nothing started.
 - **Core versioning.** Changesets deferred (dev-time tool); forks pin commits.
@@ -273,7 +278,7 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 - Web apps reach the API through same-origin Next rewrites; Socket.IO connects
   the browser **directly** to the API (`NEXT_PUBLIC_API_ORIGIN`).
 - API dev runner: `node --watch -r @swc-node/register src/main.ts`.
-- e2e: 20 spec files / 27 tests (`pnpm e2e`, cached `chromium-1243`).
+- e2e: 23 spec files / 31 tests (`pnpm e2e`, cached `chromium-1243`).
 - Head `849ea73` was the base; the regulatory, curated-package, AI-assistant,
   mock-checkout, quality, CSAT, package-polish, and BI-export increments are
   committed on top.
@@ -299,8 +304,10 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-24):
 - Live: after `pnpm dev` the BullMQ scheduler registered the
   `retention-lifecycle` repeat job in Redis (`bull:retention-lifecycle:repeat`
   with a delayed `retention-scan`).
-- `pnpm e2e` — 27 real-browser tests pass, adding the `/retention` desk spec to
-  the existing BI XLSX + PDF digest
+- `pnpm e2e` — 31 real-browser tests pass, adding the dispatch engine
+  (candidates + start offer), bulk-import commit, ops intake, and a live `/ops`
+  dispatch event to the `/retention` desk spec and the existing BI XLSX + PDF
+  digest
   downloads (session-authenticated requests; the PDF renders through Chromium),
   the curated-package editor (open → save itinerary), the storefront CSAT
   review, the quality spec (log →
@@ -344,12 +351,12 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-24):
   `inventory.service.test.ts` (13), `catalog.e2e.test.ts` (3),
   `suppliers.e2e.test.ts` (14).
 
-Not verified: outbound credential-expiry notifications (the scan logs only); a
-live escalation event round-trip (the `/ops` handshake is tested, not an event);
-the PDF branch of the credential inspector (the image branch is); dispatch
-start/candidates and import commit through the UI (covered over HTTP/unit only);
-passkeys; worker accept/decline against a real database. Storefront browser
-flows are covered (map, auth, builder, i18n, recruitment). The retention notice
+Not verified: outbound credential-expiry notifications (the scan logs only);
+the PDF branch of the credential inspector (the image branch is); passkeys;
+worker accept/decline through the UI and the timeout firing through the UI
+(covered at the service/unit level and over HTTP). Storefront browser flows are
+covered (map, auth, builder, i18n, recruitment), as are dispatch
+start/candidates, import commit, ops intake, and a live `/ops` event. The retention notice
 and purge are proven with a fake Prisma and the BullMQ schedule is observed live
 in Redis, but no notice or purge was run against the dev database (the
 back-office `/retention` desk rendered its empty state).
@@ -370,7 +377,9 @@ back-office `/retention` desk rendered its empty state).
 - e2e writes E2E-owned fixtures to the dev DB; `global-setup.ts` resets the
   reservation, clears its audit/messages, restores the guide supplier, deletes
   `E2E `-prefixed inventory items, and clears the 15th-of-month availability
-  override.
+  override. Several specs also create and delete their own fixtures through a
+  PrismaClient (`e2e/fixtures.ts`, the `E2EDSP01`/`E2EESC01` bookings, the intake
+  booking, and the imported `E2E Imported Stay` item).
 - Documents still itemise included services without per-service prices; voucher
   rendezvous is province + start time.
 - Regulatory bed-nights are per booking (accommodation service-item nights): there
@@ -430,8 +439,9 @@ back-office `/retention` desk rendered its empty state).
    review, Sentry/OpenTelemetry, load tests, and Changesets core versioning
    (deferred).
 5. Mobile apps (Phases 5–6) need Expo (Article 2).
-6. Extend e2e: dispatch start/candidates, import commit, intake form, live
-   escalation event round-trip.
+6. Extend e2e (remaining): worker accept/decline through the UI, the dispatch
+   timeout firing through the UI, and passkey sign-in. Dispatch start/candidates,
+   import commit, ops intake, and a live `/ops` event now have browser specs.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
@@ -637,3 +647,7 @@ back-office `/retention` desk rendered its empty state).
   rather than adding `@nestjs/terminus` (Article 2 avoided). The public body
   carries no error detail; the Redis probe sits behind a `REDIS_HEALTH` token so
   tests stay offline. `docs/runbook.md` is the day-2 ops guide.
+- 2026-09-24 — deeper e2e specs seed and tear down their own fixtures through a
+  PrismaClient (`e2e/fixtures.ts`) instead of mutating the shared `E2E0001`
+  fixture, and retry client-component clicks with `expect(...).toPass()` so the
+  first pre-hydration click does not flake.
