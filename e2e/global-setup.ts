@@ -29,7 +29,11 @@ export default async function globalSetup(): Promise<void> {
 
     const reservation = await prisma.reservation.upsert({
       where: { bookingCode: 'E2E0001' },
-      update: { status: 'DRAFT', tourismCategory: 'GENERAL' },
+      update: {
+        status: 'DRAFT',
+        tourismCategory: 'GENERAL',
+        completedAt: null,
+      },
       create: {
         userId: traveler.id,
         bookingCode: 'E2E0001',

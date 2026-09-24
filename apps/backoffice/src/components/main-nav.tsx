@@ -18,6 +18,7 @@ const ITEMS = [
   { href: '/analytics', label: 'Analytics' },
   { href: '/regulatory', label: 'Regulatory' },
   { href: '/quality', label: 'Quality' },
+  { href: '/retention', label: 'Retention' },
 ] as const;
 
 export function MainNav() {
