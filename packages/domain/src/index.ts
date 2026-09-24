@@ -73,3 +73,16 @@ export {
   type RegulatoryServiceItem,
   type RegulatorySummary,
 } from './analytics/regulatory';
+export {
+  RETENTION_EXTENSION_MONTHS,
+  RETENTION_GRACE_DAYS,
+  RETENTION_TRIGGER_MONTHS,
+  addDays,
+  addMonths,
+  isRetentionNoticeDue,
+  isRetentionPurgeDue,
+  retentionPurgeAt,
+  retentionStatus,
+  type RetentionClock,
+  type RetentionStatus,
+} from './retention/retention';
