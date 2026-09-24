@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-24 08:15
+# Handoff — main — updated 2026-09-24 08:30
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -15,6 +15,78 @@ vendor to wire (a separate Article 2 call); checkout stays link-only until a
 signed-webhook provider exists. While those two decisions are pending, the
 back-office quality/duty-of-care desk (§4.9.4) was added, including traveler
 CSAT reviews and incident severity in the analytics quality KPIs.
+
+## Status analysis (2026-09-24)
+
+Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
+10 migrations, 258 unit tests, 26 e2e tests — all green.
+
+### Done since upstream base `849ea73` (11 increments, in order)
+1. **Regulatory reporting (§4.9.2).** Migration
+   `20260923063425_regulatory_reporting` (`User.nationality`,
+   `Reservation.tourismCategory`); pure `calculateRegulatory`;
+   `GET /analytics/regulatory` + `/fiscal-export` CSV;
+   `PATCH /reservations/:id/tourism-category`; back-office `/regulatory`.
+2. **Curated packages (§3.3).** Migration
+   `20260923091856_curated_packages` (`Package`, `PackageService`,
+   `Reservation.packageId`); ops CRUD `/packages`; public `/catalog/packages`;
+   `POST /me/reservations/from-package`; storefront `/packages` + booking.
+3. **AI assistant, mock first (§4.8).** `packages/ai` (`LlmProvider` +
+   `MockLlmProvider`); ops `POST /assistant/draft-reply`, `GET
+   /assistant/ops-summary`, `POST /assistant/translate`; back-office draft
+   button + summary card.
+4. **Traveler mock checkout (ADR 0003).** Ownership-scoped
+   `POST /me/reservations/:id/payments`; `/checkout/mock/[reference]` with no
+   confirm action.
+5. **Quality & duty of care (§4.9.4).** Incident log/resolve + supplier
+   reliability scorecards; back-office `/quality`; workbench Duty-of-care card.
+6. **CSAT reviews + incident-aware quality KPIs.** One review per COMPLETED
+   booking (`POST /me/reservations/:id/reviews`), ops `GET /reviews`;
+   `calculateQuality` now reports open/high-severity incidents.
+7. **Package editor + package-type analytics (§4.9.1).** `/packages/[id]`
+   itinerary editor; `calculateFinance.byPackageType` (PACKAGE vs CUSTOM).
+8. **BI exports (§4.9.5).** `packages/reports` XLSX + PDF;
+   `GET /analytics/export/xlsx|pdf`; weekly BullMQ digest email with
+   attachments; optional `EmailMessage.attachments`.
+9. **Fork tooling (Phase 7).** `pnpm create:tenant` +
+   `packages/config.buildTenantManifest`; `docs/forking.md`.
+10. **RBAC/security hardening (Phase 7).** `authorization.e2e.test.ts` route
+    matrix; fixed an over-exposure so a worker's accept/decline response is
+    scoped to their own service item.
+
+### Remaining
+**Blocked on a human decision**
+- Real LLM vendor behind `packages/ai` (new dependency → Article 2).
+- Real payment provider (Cuba sanctions/legal; ADR 0003). Until then checkout is
+  link-only and confirmation is ops-only.
+
+**Blocked on a migration (Article 2)**
+- Accommodation-tier selection for packages (`PackageService.tier`).
+- Package media (a `PackageMedia` table; images already work for inventory).
+- Party-size bed-nights (`Reservation.partySize`) for a true guests × nights
+  regulatory figure.
+
+**Unblocked (no decision or migration needed)**
+- **GDPR retention lifecycle (spec §3.5 / Phase 6) — the biggest functional
+  gap.** The `User` model already has `retentionConsentGrantedAt` /
+  `anonymizedAt`, but nothing uses them: no 6-month trigger after COMPLETED, no
+  keep-alive email, no 30-day grace, no anonymizing purge worker.
+- **Real-time catalog/map availability (Phase 4).** Needs a product call on what
+  province-level "available" means (there is no inventory ↔ availability link).
+- **Observability (Phase 7).** Structured pino logs and a liveness `/health`
+  exist; no readiness probe (DB/Redis), no runbooks, no Sentry/OTel.
+- **Rate limiting (Phase 7).** Needs either a dependency (`@nestjs/throttler`) or
+  a hand-rolled guard — a decision in itself.
+- **PII-at-rest review (Phase 7).** Blocked in practice by having no passport
+  field yet; revisit with the retention work.
+- **Load tests (Phase 7).** Not started.
+- **E2E depth.** Dispatch start/candidates and import commit are covered over
+  HTTP/unit only; the live escalation event round-trip is not exercised.
+- **Mobile apps (Phase 5–6).** `worker-app`, `traveler-app`, `admin-app` — Expo
+  is a new dependency (Article 2). Nothing started.
+- **Core versioning.** Changesets deferred (dev-time tool); forks pin commits.
+- **Polish.** Per-supplier reviews / NPS, package accommodation tiers, storefront
+  messaging over a socket (today it is refresh-on-send).
 
 ## State
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
