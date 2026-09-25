@@ -28,5 +28,10 @@ export default defineConfig({
     url: `${API_URL}/health`,
     timeout: 180_000,
     reuseExistingServer: !process.env.CI,
+    // Raise the rate limits so the suite's many session checks never throttle.
+    env: {
+      RATE_LIMIT_MAX: '100000',
+      RATE_LIMIT_AUTH_MAX: '100000',
+    },
   },
 });

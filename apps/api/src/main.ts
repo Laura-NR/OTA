@@ -9,7 +9,13 @@ import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 import { setAuthRuntime } from './auth/auth.runtime';
+import { createRateLimiter } from './common/rate-limit';
 import { resolveTenantConfigPath } from './tenant/tenant.path';
+
+function positiveInt(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+}
 
 async function bootstrap(): Promise<void> {
   try {
@@ -51,8 +57,25 @@ async function bootstrap(): Promise<void> {
     bufferLogs: true,
   });
 
-  // Mount Better Auth before the JSON body parser so it receives the raw request.
+  // Trust the proxy when deployed behind one, so rate limiting keys on the real
+  // client IP rather than the proxy's.
   const expressApp = app.getHttpAdapter().getInstance();
+  const trustProxy = process.env.TRUST_PROXY;
+  if (trustProxy) {
+    expressApp.set('trust proxy', trustProxy === 'true' ? true : Number(trustProxy));
+  }
+
+  // Rate limiting runs as Express middleware (not a Nest guard) so it also
+  // covers the Better Auth routes mounted below. Limits are per process.
+  const limiter = createRateLimiter({
+    windowMs: positiveInt(process.env.RATE_LIMIT_WINDOW_MS, 60_000),
+    max: positiveInt(process.env.RATE_LIMIT_MAX, 600),
+    authMax: positiveInt(process.env.RATE_LIMIT_AUTH_MAX, 30),
+    skip: (path) => path === '/health' || path.startsWith('/health/'),
+  });
+  expressApp.use(limiter.middleware);
+
+  // Mount Better Auth before the JSON body parser so it receives the raw request.
   expressApp.use(
     (req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (!req.url.startsWith('/api/auth')) {
