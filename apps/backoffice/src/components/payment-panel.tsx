@@ -104,7 +104,7 @@ export function PaymentPanel({
               </div>
               {canManage && receipt.status === 'PENDING' ? (
                 <Button size="sm" disabled={busy} onClick={() => confirm(receipt.id)}>
-                  Mark paid (mock)
+                  Mark paid
                 </Button>
               ) : null}
             </li>

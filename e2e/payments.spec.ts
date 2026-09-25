@@ -45,9 +45,9 @@ test.describe('payment pipeline', () => {
     await expect(page.getByRole('heading', { name: 'E2E0001' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Create payment link' }).click();
-    await expect(page.getByRole('button', { name: 'Mark paid (mock)' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Mark paid' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Mark paid (mock)' }).click();
+    await page.getByRole('button', { name: 'Mark paid' }).click();
     await expect(page.getByText('CONFIRMED', { exact: true })).toBeVisible();
   });
 });
