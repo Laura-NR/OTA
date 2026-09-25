@@ -106,6 +106,15 @@ export function slugifyTenantId(value: string): string {
   return slug || 'tenant';
 }
 
+/** Bank details for the wire-transfer rail, as accepted by `create-tenant`. */
+export interface BankTransferManifestOptions {
+  accountName: string;
+  bankName: string;
+  iban: string;
+  bic?: string;
+  referenceNote?: string;
+}
+
 export interface TenantManifestOptions {
   tenantId: string;
   agencyName: string;
@@ -117,6 +126,7 @@ export interface TenantManifestOptions {
   supportedLocales?: string[];
   features?: Partial<FeatureFlags>;
   emergencyContacts?: EmergencyContact[];
+  bankTransfer?: BankTransferManifestOptions | null;
 }
 
 /**
@@ -145,6 +155,21 @@ export function buildTenantManifest(options: TenantManifestOptions): TenantConfi
     ...(options.features ? { features: options.features } : {}),
     ...(options.emergencyContacts
       ? { emergencyContacts: options.emergencyContacts }
+      : {}),
+    ...(options.bankTransfer
+      ? {
+          payments: {
+            bankTransfer: {
+              accountName: options.bankTransfer.accountName,
+              bankName: options.bankTransfer.bankName,
+              iban: options.bankTransfer.iban,
+              ...(options.bankTransfer.bic ? { bic: options.bankTransfer.bic } : {}),
+              ...(options.bankTransfer.referenceNote
+                ? { referenceNote: options.bankTransfer.referenceNote }
+                : {}),
+            },
+          },
+        }
       : {}),
   });
 }

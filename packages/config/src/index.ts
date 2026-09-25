@@ -14,6 +14,7 @@ export {
 } from './tenant';
 export type {
   BankTransferDetails,
+  BankTransferManifestOptions,
   EmergencyContact,
   FeatureFlags,
   PaymentsConfig,

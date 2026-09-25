@@ -24,6 +24,7 @@ describe('parseTenantConfig', () => {
     expect(config.destinations.geographyType).toBe('cuba_provinces');
     expect(config.features.instantBooking).toBe(false);
     expect(config.features.interactiveSvgMap).toBe(true);
+    expect(config.payments.bankTransfer).toBeNull();
   });
 
   it('honours explicit feature flags', () => {
@@ -98,5 +99,36 @@ describe('buildTenantManifest', () => {
     expect(config.theme.palette).toBe('sunset');
     expect(config.features.instantBooking).toBe(true);
     expect(config.features.interactiveSvgMap).toBe(true);
+  });
+
+  it('defaults the wire-transfer bank details to none', () => {
+    const config = buildTenantManifest({
+      tenantId: 'new-agency',
+      agencyName: 'New Agency',
+    });
+
+    expect(config.payments.bankTransfer).toBeNull();
+  });
+
+  it('includes the wire-transfer bank details when provided', () => {
+    const config = buildTenantManifest({
+      tenantId: 'new-agency',
+      agencyName: 'New Agency',
+      bankTransfer: {
+        accountName: 'New Agency S.L.',
+        bankName: 'Banco X',
+        iban: 'ES00 0000 0000 0000 0000 0000',
+        bic: 'XXXXES00',
+        referenceNote: 'Quote the booking code.',
+      },
+    });
+
+    expect(config.payments.bankTransfer).toMatchObject({
+      accountName: 'New Agency S.L.',
+      bankName: 'Banco X',
+      iban: 'ES00 0000 0000 0000 0000 0000',
+      bic: 'XXXXES00',
+      referenceNote: 'Quote the booking code.',
+    });
   });
 });

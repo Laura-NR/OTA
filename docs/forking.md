@@ -18,7 +18,9 @@ pnpm build                 # @ota/config must be built for the tool to resolve
 pnpm create:tenant --name "Viñales Eco Travel" \
   --license MINTUR-2027-0001 \
   --primary "#0f766e" --palette ecoGreen \
-  --locales es,en,fr
+  --locales es,en,fr \
+  --account-name "Viñales Eco Travel S.L." --bank "Banco X" \
+  --iban "ES00 0000 0000 0000 0000 0000" --bic "XXXXES00"
 ```
 
 The tool writes `tenant/agency.config.json` (validated by the same Zod schema
@@ -38,8 +40,12 @@ Everything agency-specific belongs in `/tenant/` or `.env`:
 - **`tenant/agency.config.json`** — `tenantId`, branding (including the MINTUR
   `licenseNumber` injected into every generated document), `primaryLocale` /
   `supportedLocales`, `theme` (palette + radius), `features.*` flags,
-  `destinations.geographyType`, and `emergencyContacts` (duty-of-care numbers on
-  vouchers and work orders).
+  `destinations.geographyType`, `emergencyContacts` (duty-of-care numbers on
+  vouchers and work orders), and `payments.bankTransfer` (the agency's account
+  for the primary wire-transfer rail: `accountName`, `bankName`, `iban`, `bic`,
+  `referenceNote`). The scaffold flags `--account-name`, `--bank`, `--iban`,
+  `--bic`, and `--reference-note` fill it; without it the storefront wire page
+  shows a "not available" message.
 - **`tenant/assets/`** — logos, favicons, illustrations, empty-state art.
 - **`.env`** — secrets and service endpoints.
 
