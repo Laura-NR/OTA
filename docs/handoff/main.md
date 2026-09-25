@@ -21,9 +21,9 @@ and Phase 7 gained a readiness probe plus `docs/runbook.md`.
 ## Status analysis (2026-09-24)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 287 unit tests, 31 e2e tests — all green.
+11 migrations, 293 unit tests, 31 e2e tests — all green.
 
-### Done since upstream base `849ea73` (14 increments, in order)
+### Done since upstream base `849ea73` (15 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
    `20260923063425_regulatory_reporting` (`User.nationality`,
    `Reservation.tourismCategory`); pure `calculateRegulatory`;
@@ -79,6 +79,12 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     bank details from `tenant/agency.config.json` `payments.bankTransfer`
     (schema in `packages/config`); ops confirmation unchanged. Card stays on the
     mock pending TropiPay.
+15. **Rate limiting (2026-09-25, Phase 7).** Dependency-free Express
+    middleware (`apps/api/src/common/rate-limit.ts`) mounted in `main.ts` before
+    the Better Auth handler, so `/api/auth` is covered too; fixed-window,
+    in-memory, per process. `/health*` skipped; `/api/auth/get-session` keeps the
+    normal limit while credential endpoints get the stricter one; `TRUST_PROXY`
+    supported.
 
 ### Remaining
 **Blocked on a human decision**
@@ -100,8 +106,8 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 - **Observability (Phase 7).** Structured pino logs, liveness `/health`, a
   readiness `/health/ready`, and `docs/runbook.md` exist. Still open: Sentry or
   OpenTelemetry metrics/tracing, and alerting on readiness/queue depth.
-- **Rate limiting (Phase 7).** Needs either a dependency (`@nestjs/throttler`) or
-  a hand-rolled guard — a decision in itself.
+- **Rate limiting (Phase 7).** Done 2026-09-25 as hand-rolled Express middleware
+  (no dependency); a shared store is still needed for multi-instance deploys.
 - **PII-at-rest review (Phase 7).** The retention purge now scrubs `User` PII,
   but there is still no passport field and free-text PII (messages, reviews,
   incidents) is not scrubbed; revisit before production.
@@ -289,6 +295,11 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   `docs/runbook.md` covers the service map, scheduled jobs (retention 05:00,
   compliance 06:00, BI digest Mon 07:00, dispatch timeouts), incident playbooks,
   secrets, and backups.
+- Phase 7 — **rate limiting:** dependency-free fixed-window Express middleware
+  (`apps/api/src/common/rate-limit.ts`) mounted in `main.ts` *before* the Better
+  Auth handler, so `/api/auth` is covered as well as Nest routes. Normal limit
+  `RATE_LIMIT_MAX` 600/min per IP; credential endpoints `RATE_LIMIT_AUTH_MAX`
+  30/min; `/health*` skipped; `TRUST_PROXY` supported. In-memory per process.
 - Wave 2a — **storefront messaging + banner:** the account reservation page has a
   traveler ↔ operations thread (`message-thread.tsx`, HTTP `GET/POST
   /reservations/:id/messages`, refresh-on-send — no storefront socket); a
@@ -304,8 +315,8 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-25):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**287**: api
-  169, domain 54, config 11, theming 9, documents 8, email 5, imports 5, ai 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**293**: api
+  175, domain 54, config 11, theming 9, documents 8, email 5, imports 5, ai 4,
   reports 4, ui 4, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
   green. (2 api integration tests skipped without `REDIS_URL`.)
 - Health/readiness: `health.test.ts` (8: liveness ignores dependencies; ready
@@ -324,6 +335,10 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-25):
   `payments.e2e.test.ts` keeps CARD → `/checkout/mock/`. `pnpm e2e` passes 31,
   including the storefront wire-instructions page (bank name, booking reference,
   no confirm action).
+- Rate limiting: `rate-limit.test.ts` (6: limit + 429, window reset, credential-
+  only strict bucket, per-client keys, `skip`, sweep). `pnpm e2e` passes 31 with
+  the limiter mounted; `playwright.config.ts` raises the limits via env so the
+  suite is never throttled.
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260924065637_retention_lifecycle` (11 migrations total). Read-only
   Postgres checks confirm `reservations.completed_at` and
@@ -463,9 +478,9 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
    `packages/ai`'s `LlmProvider` (new dependency → Article 2). A true guests ×
    nights bed-nights figure still needs a party-size migration.
 4. **Phase 7 hardening:** `create-tenant` + fork docs, the RBAC matrix, the
-   retention purge, and the readiness probe + runbook shipped. Remaining — rate
-   limiting (needs a decision: dependency vs hand-rolled guard), a PII-at-rest
-   review, Sentry/OpenTelemetry, load tests, and Changesets core versioning
+   retention purge, the readiness probe + runbook, and rate limiting shipped.
+   Remaining — a PII-at-rest review, Sentry/OpenTelemetry, load tests, a shared
+   rate-limit store for multi-instance deploys, and Changesets core versioning
    (deferred).
 5. Mobile apps (Phases 5–6) need Expo (Article 2).
 6. Extend e2e (remaining): worker accept/decline through the UI, the dispatch
@@ -706,3 +721,9 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   agency's legal documents, which do not exist yet, so the card rail stays on
   the mock and wire transfer is the only live rail. No code changes needed to
   resume; see ADR 0005 open items.
+- 2026-09-25 — rate limiting is **hand-rolled Express middleware**, not
+  `@nestjs/throttler` (Article 2 dependency avoided; matches the hand-rolled
+  readiness pattern). It is mounted in `main.ts` rather than as a Nest guard
+  because Better Auth bypasses Nest; only credential endpoints get the strict
+  limit, session reads stay normal, and `/health*` is skipped. In-memory per
+  process — a multi-instance deploy needs a shared store.

@@ -129,6 +129,24 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
   legal documents exist and a business account can be created (ADR 0005). The
   rail -> provider map is `createPaymentProviders` in `packages/payments`.
 
+## Rate limiting
+
+The API mounts a dependency-free fixed-window limiter as Express middleware
+*before* the Better Auth handler, so credential endpoints are protected too.
+
+- `RATE_LIMIT_MAX` (default 600/min per IP) for normal routes; `RATE_LIMIT_AUTH_MAX`
+  (default 30/min) for credential endpoints only — `/api/auth/sign-in*`,
+  `/api/auth/sign-up*`, `/api/auth/magic-link*`, `/api/auth/callback*`,
+  password-reset and verify-email. `/api/auth/get-session` uses the normal limit.
+- `RATE_LIMIT_WINDOW_MS` (default 60000) sets the window.
+- `/health` and `/health/ready` are never limited (orchestrator probes).
+- A throttled client gets `429` with `Retry-After` and `X-RateLimit-*` headers.
+- Counters are **in-memory and per process**: a multi-instance deployment must
+  use a shared store (e.g. Redis) or each pod limits independently. Single-instance
+  deploys are unaffected.
+- Behind a reverse proxy set `TRUST_PROXY=1` (hop count) or `TRUST_PROXY=true`,
+  otherwise every request keys on the proxy IP and shares one bucket.
+
 ## Data, migrations, backups
 
 - Migrations: `pnpm --filter @ota/db exec prisma migrate dev` (dev),
