@@ -520,7 +520,8 @@ describe('me API', () => {
         .send({ rail: 'OPEN_BANKING_SEPA' });
 
       expect(response.status).toBe(201);
-      expect(response.body.checkoutUrl).toContain('/checkout/mock/');
+      // SEPA/open banking routes to the wire-transfer rail (spec §7.1 primary).
+      expect(response.body.checkoutUrl).toContain('/checkout/wire/wire_');
       expect(state.reservations.get(MY_RESERVATION)?.status).toBe('PENDING_PAYMENT');
       expect(state.receipts).toHaveLength(1);
     });

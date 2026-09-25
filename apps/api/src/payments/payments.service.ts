@@ -8,7 +8,7 @@ import {
 
 import type { PaymentReceipt } from '@ota/db';
 import { ReservationStatus } from '@ota/domain';
-import type { PaymentProvider } from '@ota/payments';
+import type { PaymentProvider, PaymentRail } from '@ota/payments';
 import type {
   CreatePaymentIntentRequest,
   PaymentIntentDto,
@@ -19,7 +19,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
-import { PAYMENT_PROVIDER } from './payments.tokens';
+import { PAYMENT_PROVIDERS } from './payments.tokens';
 
 function toReceiptDto(receipt: PaymentReceipt): PaymentReceiptDto {
   return {
@@ -38,7 +38,8 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly reservations: ReservationsService,
-    @Inject(PAYMENT_PROVIDER) private readonly provider: PaymentProvider,
+    @Inject(PAYMENT_PROVIDERS)
+    private readonly providers: Record<PaymentRail, PaymentProvider>,
   ) {}
 
   async list(reservationId: string): Promise<PaymentReceiptDto[]> {
@@ -72,7 +73,7 @@ export class PaymentsService {
       );
     }
 
-    const intent = await this.provider.createIntent({
+    const intent = await this.providers[input.rail].createIntent({
       reference: reservation.bookingCode,
       amount: Number(reservation.totalAmount),
       currency: reservation.totalCurrency,
@@ -154,7 +155,7 @@ export class PaymentsService {
       throw new BadRequestException('Payment has no gateway reference');
     }
 
-    const event = this.provider.parseWebhook({
+    const event = this.providers[receipt.rail].parseWebhook({
       providerReference: receipt.gatewayTxId,
       status: 'PAID',
       amount: Number(receipt.amount),

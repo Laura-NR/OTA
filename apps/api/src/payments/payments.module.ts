@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
-import { createPaymentProvider } from '@ota/payments';
+import { createPaymentProviders, type PaymentProviderName } from '@ota/payments';
 
 import { ReservationsModule } from '../reservations/reservations.module';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
-import { PAYMENT_PROVIDER } from './payments.tokens';
+import { PAYMENT_PROVIDERS } from './payments.tokens';
 
 /**
- * Payment intents and confirmation. The concrete gateway is injected behind the
- * `PaymentProvider` token so the mock can be swapped for a real rail without
- * touching this module's consumers (ADR 0003).
+ * Payment intents and confirmation. Concrete gateways are injected behind the
+ * `PAYMENT_PROVIDERS` map so a rail can be swapped without touching consumers
+ * (ADR 0003). Wire transfer is the primary rail; the card rail stays on the
+ * mock until a signed card gateway is wired.
  */
 @Module({
   imports: [ReservationsModule],
@@ -17,11 +18,14 @@ import { PAYMENT_PROVIDER } from './payments.tokens';
   providers: [
     PaymentsService,
     {
-      provide: PAYMENT_PROVIDER,
+      provide: PAYMENT_PROVIDERS,
       useFactory: () =>
-        createPaymentProvider({
-          provider: (process.env.PAYMENT_PROVIDER as 'mock' | undefined) ?? 'mock',
+        createPaymentProviders({
           checkoutBaseUrl: process.env.PAYMENT_CHECKOUT_BASE_URL,
+          cardProvider: process.env.PAYMENT_PROVIDER_CARD as
+            PaymentProviderName | undefined,
+          bankTransferProvider: process.env.PAYMENT_PROVIDER_BANK_TRANSFER as
+            PaymentProviderName | undefined,
         }),
     },
   ],
