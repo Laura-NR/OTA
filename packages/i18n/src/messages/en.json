@@ -69,6 +69,17 @@
     "mockDescription": "This is a development stand-in for the payment gateway.",
     "reference": "Reference",
     "mockNotice": "No real payment is taken. Our operations team will confirm the receipt once funds clear.",
+    "wireTitle": "Bank transfer",
+    "wireDescription": "Make the transfer using the details below. Your booking is confirmed once the funds clear.",
+    "wireAmount": "Amount to transfer",
+    "wireBankName": "Bank",
+    "wireAccountName": "Account holder",
+    "wireIban": "IBAN",
+    "wireBic": "BIC / SWIFT",
+    "wireReferenceLabel": "Payment reference",
+    "wireReferenceNote": "Quote this reference on the transfer so we can match your payment.",
+    "wireNotice": "No automatic charge is made. Our operations team will confirm the receipt once the funds clear.",
+    "wireUnavailable": "Bank transfer is not available right now. Contact us to complete the payment.",
     "backToAccount": "Back to my trips"
   },
   "review": {

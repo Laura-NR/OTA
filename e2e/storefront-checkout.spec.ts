@@ -58,7 +58,7 @@ test.describe('storefront checkout', () => {
     await prisma.$disconnect();
   });
 
-  test('a traveler creates a link and lands on the mock gateway without a confirm action', async ({
+  test('a traveler creates a wire link and sees the bank details without a confirm action', async ({
     page,
   }) => {
     await signIn(page, 'traveler@example.test', {
@@ -69,8 +69,13 @@ test.describe('storefront checkout', () => {
 
     await page.getByRole('button', { name: 'Proceed to payment' }).click();
 
-    await expect(page).toHaveURL(/\/checkout\/mock\//);
-    await expect(page.getByText('No real payment is taken')).toBeVisible();
+    await expect(page).toHaveURL(/\/checkout\/wire\//);
+    // The primary rail is a manual wire transfer: bank details, the booking
+    // reference, and no self-confirm control (ADR 0003).
+    await expect(page.getByText('Bank transfer')).toBeVisible();
+    await expect(page.getByText('Demo Bank (placeholder)')).toBeVisible();
+    await expect(page.getByText(BOOKING_CODE)).toBeVisible();
+    await expect(page.getByText('No automatic charge is made')).toBeVisible();
     await expect(page.getByRole('button', { name: /confirm/i })).toHaveCount(0);
   });
 });

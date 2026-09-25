@@ -69,6 +69,17 @@
     "mockDescription": "Ceci remplace la passerelle de paiement en développement.",
     "reference": "Référence",
     "mockNotice": "Aucun paiement réel n'est effectué. Notre équipe des opérations confirmera le reçu dès réception des fonds.",
+    "wireTitle": "Virement bancaire",
+    "wireDescription": "Effectuez le virement avec les coordonnées ci-dessous. Votre réservation est confirmée dès réception des fonds.",
+    "wireAmount": "Montant à virer",
+    "wireBankName": "Banque",
+    "wireAccountName": "Titulaire du compte",
+    "wireIban": "IBAN",
+    "wireBic": "BIC / SWIFT",
+    "wireReferenceLabel": "Référence du paiement",
+    "wireReferenceNote": "Indiquez cette référence sur le virement afin que nous puissions identifier votre paiement.",
+    "wireNotice": "Aucun débit automatique n'est effectué. Notre équipe des opérations confirmera le reçu dès réception des fonds.",
+    "wireUnavailable": "Le virement bancaire n'est pas disponible pour le moment. Contactez-nous pour finaliser le paiement.",
     "backToAccount": "Retour à mes voyages"
   },
   "review": {
