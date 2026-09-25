@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-25 14:55
+# Handoff — main — updated 2026-09-25 15:35
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -21,7 +21,7 @@ and Phase 7 gained a readiness probe plus `docs/runbook.md`.
 ## Status analysis (2026-09-24)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 293 unit tests, 31 e2e tests — all green.
+11 migrations, 295 unit tests, 31 e2e tests — all green.
 
 ### Done since upstream base `849ea73` (15 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
@@ -78,7 +78,9 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     "Proceed to payment" now lands on `/checkout/wire/<ref>` with the agency's
     bank details from `tenant/agency.config.json` `payments.bankTransfer`
     (schema in `packages/config`); ops confirmation unchanged. Card stays on the
-    mock pending TropiPay.
+    mock pending TropiPay. `pnpm create:tenant` /
+    `buildTenantManifest` scaffold the block via
+    `--account-name/--bank/--iban/--bic/--reference-note`.
 15. **Rate limiting (2026-09-25, Phase 7).** Dependency-free Express
     middleware (`apps/api/src/common/rate-limit.ts`) mounted in `main.ts` before
     the Better Auth handler, so `/api/auth` is covered too; fixed-window,
@@ -315,8 +317,8 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-25):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**293**: api
-  175, domain 54, config 11, theming 9, documents 8, email 5, imports 5, ai 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**295**: api
+  175, domain 54, config 13, theming 9, documents 8, email 5, imports 5, ai 4,
   reports 4, ui 4, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
   green. (2 api integration tests skipped without `REDIS_URL`.)
 - Health/readiness: `health.test.ts` (8: liveness ignores dependencies; ready
@@ -345,7 +347,9 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-25):
   `users.retention_notice_sent_at` exist and the migration row is applied.
 - `pnpm create:tenant --name "Viñales Eco Travel" --license … --out /tmp/…`
   wrote a valid manifest + `assets/README.md`, and refused a re-run without
-  `--force` (exit 1) — verified manually (earlier increment).
+  `--force` (exit 1) — verified manually (earlier increment). Re-verified with
+  `--account-name/--bank/--iban/--bic/--reference-note`: the manifest carries
+  `payments.bankTransfer`; without them it is `null`; a partial set errors.
 - Live: after `pnpm dev` the BullMQ scheduler registered the
   `retention-lifecycle` repeat job in Redis (`bull:retention-lifecycle:repeat`
   with a delayed `retention-scan`).
@@ -727,3 +731,7 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   because Better Auth bypasses Nest; only credential endpoints get the strict
   limit, session reads stay normal, and `/health*` is skipped. In-memory per
   process — a multi-instance deploy needs a shared store.
+- 2026-09-25 — `create-tenant`/`buildTenantManifest` accept the wire-transfer
+  bank details (`--account-name/--bank/--iban/--bic/--reference-note`), so a new
+  fork scaffolds a working `/checkout/wire` page instead of editing the manifest
+  by hand. All three of account-name/bank/iban are required together.
