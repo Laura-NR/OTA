@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-24 10:45
+# Handoff — main — updated 2026-09-25 10:55
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -21,9 +21,9 @@ and Phase 7 gained a readiness probe plus `docs/runbook.md`.
 ## Status analysis (2026-09-24)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 284 unit tests, 31 e2e tests — all green.
+11 migrations, 287 unit tests, 31 e2e tests — all green.
 
-### Done since upstream base `849ea73` (13 increments, in order)
+### Done since upstream base `849ea73` (14 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
    `20260923063425_regulatory_reporting` (`User.nationality`,
    `Reservation.tourismCategory`); pure `calculateRegulatory`;
@@ -73,12 +73,20 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     (candidates + start offer), bulk import (stage → map → commit), ops intake,
     and a live `/ops` dispatch event; shared DB fixture helpers in
     `e2e/fixtures.ts`.
+14. **Wire-transfer payment rail (2026-09-25, ADR 0005).** `BankTransferProvider`
+    + a rail→provider map (`createPaymentProviders`); the storefront's
+    "Proceed to payment" now lands on `/checkout/wire/<ref>` with the agency's
+    bank details from `tenant/agency.config.json` `payments.bankTransfer`
+    (schema in `packages/config`); ops confirmation unchanged. Card stays on the
+    mock pending TropiPay.
 
 ### Remaining
 **Blocked on a human decision**
 - Real LLM vendor behind `packages/ai` (new dependency → Article 2).
-- Real payment provider (Cuba sanctions/legal; ADR 0003). Until then checkout is
-  link-only and confirmation is ops-only.
+- **TropiPay card rail** (ADR 0005): chosen, but needs the owner's TropiPay app
+  credentials (`TROPIPAY_CLIENT_ID`/`TROPIPAY_CLIENT_SECRET`, dev first) and
+  confirmation of the API base URLs + webhook verification. Wire transfer is
+  live now; card stays on the mock until then.
 
 **Blocked on a migration (Article 2)**
 - Accommodation-tier selection for packages (`PackageService.tier`).
@@ -142,6 +150,15 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   receipt `PAID` and transitions `PENDING_PAYMENT → CONFIRMED` (documents issue);
   `GET` lists receipts. A `PaymentPanel` on the reservation workbench drives it.
   No public webhook route until a real provider with signature verification.
+- Phase 4 — **wire-transfer rail (ADR 0005):** `createPaymentProviders` maps
+  `OPEN_BANKING_SEPA`/`OTHER` → `BankTransferProvider` and `CARD` → the mock
+  until TropiPay. A wire intent returns `wire_<uuid>` and
+  `<base>/checkout/wire/<ref>?reference&amount&currency`; the storefront page
+  renders `tenant.payments.bankTransfer` (account name, bank, IBAN, BIC,
+  reference note). No gateway, no public callback; ops "Mark paid" confirms.
+  The storefront's "Proceed to payment" requests SEPA, so it now lands on the
+  wire page. `packages/config` validates the optional `payments.bankTransfer`
+  block; `tenant/agency.config.json` holds the demo placeholders.
 - Wave 2a — **storefront Cuba map:** `cuba-map.tsx` renders the 16 provinces as
   tokenized buttons (available provinces highlighted, tenant primary on select)
   and filters `/catalog?province=…`; the path data is generated from
@@ -286,10 +303,10 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   committed on top.
 
 ## Verified
-Node 22.22.3, pnpm 12.4.2 (2026-09-24):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**284**: api
+Node 22.22.3, pnpm 12.4.2 (2026-09-25):
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**287**: api
   169, domain 54, config 11, theming 9, documents 8, email 5, imports 5, ai 4,
-  reports 4, ui 4, payments 3, schemas 3, storage 3, i18n 2), `pnpm build` —
+  reports 4, ui 4, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
   green. (2 api integration tests skipped without `REDIS_URL`.)
 - Health/readiness: `health.test.ts` (8: liveness ignores dependencies; ready
   200/503; service up/down/skipped + close) and `/health/ready` asserted public
@@ -301,6 +318,12 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-24):
   6-month notice, recorded the keep-alive consent, anonymized after the grace,
   and left the reservation intact (fixtures cleaned up). The default `pnpm test`
   skips it (169 api passed, 3 skipped).
+- Wire-transfer rail: `packages/payments` tests (6: mock + wire intent URL,
+  operator confirmation, rail map) and `packages/config`/`i18n` green;
+  `me.e2e.test.ts` asserts SEPA → `/checkout/wire/wire_` and
+  `payments.e2e.test.ts` keeps CARD → `/checkout/mock/`. `pnpm e2e` passes 31,
+  including the storefront wire-instructions page (bank name, booking reference,
+  no confirm action).
 - `pnpm --filter @ota/db exec prisma migrate dev` created and applied
   `20260924065637_retention_lifecycle` (11 migrations total). Read-only
   Postgres checks confirm `reservations.completed_at` and
@@ -319,7 +342,7 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-24):
   the curated-package editor (open → save itinerary), the storefront CSAT
   review, the quality spec (log →
   surface → resolve an incident), the AI reply draft from the messaging inbox,
-  and the traveler mock checkout (link only, no confirm action), plus the
+  and the traveler wire-instructions checkout (no confirm action), plus the
   curated-package specs (back-office list/create, storefront list → book), the
   two regulatory specs (report render + workbench classification),
   the inventory flow, the supplier availability toggle, the payment link →
@@ -433,9 +456,9 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
    notice/purge smoke against the dev DB (currently fake-Prisma only).
 2. **Phase 4 storefront remainder:** package follow-ups that need a migration
    (Article 2) — accommodation-tier selection and package media; the catalog/map
-   do not yet show real-time availability. Checkout is link-only until a real
-   signed-webhook provider is selected. The back-office package editor and the
-   §4.9.1 package-type revenue/margin split shipped 2026-09-23.
+   do not yet show real-time availability. Checkout now uses the wire-transfer
+   rail (ADR 0005); the card rail awaits TropiPay. The back-office package editor
+   and the §4.9.1 package-type revenue/margin split shipped 2026-09-23.
 3. **Phase 3 remainder:** select a real LLM vendor and wire it behind
    `packages/ai`'s `LlmProvider` (new dependency → Article 2). A true guests ×
    nights bed-nights figure still needs a party-size migration.
@@ -448,6 +471,12 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
 6. Extend e2e (remaining): worker accept/decline through the UI, the dispatch
    timeout firing through the UI, and passkey sign-in. Dispatch start/candidates,
    import commit, ops intake, and a live `/ops` event now have browser specs.
+7. **TropiPay card rail (owner-gated):** obtain a TropiPay app
+   (`TROPIPAY_CLIENT_ID`/`TROPIPAY_CLIENT_SECRET`, dev first), confirm the
+   dev/prod base URLs and whether `urlNotification` callbacks are signed, then
+   implement the adapter behind `PaymentProvider` with plain `fetch` (no SDK) and
+   add the signature-verified public webhook route (ADR 0003/0005). Also guide
+   the owner through creating the app (App Menu → Applications and credentials).
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
@@ -661,3 +690,16 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   than gating on `DATABASE_URL`, because Prisma Client auto-loads
   `packages/db/.env` and would otherwise make the default unit suite hit
   Postgres. `retention.integration.test.ts` follows this gate.
+- 2026-09-25 — **manual wire transfer is the primary payment rail** (owner
+  decision): `BankTransferProvider` + a rail→provider map, bank details in the
+  tenant manifest, a storefront `/checkout/wire/<ref>` page, and ops
+  confirmation. Card stays on the mock until TropiPay. `docs/adr/0005-payment-rails.md`.
+- 2026-09-25 — provider selection is **by rail** (`createPaymentProviders`)
+  behind the `PAYMENT_PROVIDERS` token, so TropiPay and future rails are a map
+  entry plus an adapter, not a rewrite. The mock stays default for card/tests.
+- 2026-09-25 — the agency bank details live only in
+  `tenant/agency.config.json` `payments.bankTransfer` (validated by
+  `packages/config`), not core code or `.env`; a fork edits that block.
+- 2026-09-25 — no TropiPay SDK is added; it will be implemented with plain
+  `fetch` behind `PaymentProvider` once the owner supplies credentials and the
+  webhook verification is confirmed, and only then a public webhook route.

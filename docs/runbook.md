@@ -110,6 +110,24 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
 - Anonymization is irreversible. If a traveler disputes it, there is no PII to
   restore; the reservation and fiscal rows remain.
 
+## Payments
+
+- **Primary rail: wire transfer** (spec §7.1, ADR 0005). The storefront's
+  "Proceed to payment" creates a `wire_<uuid>` receipt, moves the booking
+  `SECURED_AND_INVOICED -> PENDING_PAYMENT`, and sends the traveler to
+  `/checkout/wire/<ref>` with the agency's bank details.
+- The bank details come from `tenant/agency.config.json` `payments.bankTransfer`
+  (account name, bank, IBAN, BIC, reference wording). A fork edits that block; if
+  it is missing the wire page shows a "not available" message. Never put account
+  numbers in `.env` or core code.
+- **Confirmation is manual.** When funds arrive, an operations user marks the
+  receipt paid (workbench "Mark paid", or
+  `POST /reservations/:id/payments/:paymentId/confirm`), which moves the booking
+  to `CONFIRMED` and issues the documents. There is no public callback for this
+  rail.
+- The card rail still runs on the mock until TropiPay is wired; the rail ->
+  provider map is `createPaymentProviders` in `packages/payments`.
+
 ## Data, migrations, backups
 
 - Migrations: `pnpm --filter @ota/db exec prisma migrate dev` (dev),
