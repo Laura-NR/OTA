@@ -24,6 +24,27 @@ export const emergencyContactSchema = z.object({
 
 export type EmergencyContact = z.infer<typeof emergencyContactSchema>;
 
+/**
+ * Bank coordinates for the manual wire-transfer rail (spec §7.1). Agency
+ * specific, so they live in the tenant manifest; core never imports `tenant/`.
+ */
+export const bankTransferDetailsSchema = z.object({
+  accountName: z.string().min(1),
+  bankName: z.string().min(1),
+  iban: z.string().min(4),
+  bic: z.string().nullable().default(null),
+  /** Optional wording shown to the traveler about the reference to quote. */
+  referenceNote: z.string().nullable().default(null),
+});
+
+export type BankTransferDetails = z.infer<typeof bankTransferDetailsSchema>;
+
+export const paymentsSchema = z.object({
+  bankTransfer: bankTransferDetailsSchema.nullable().default(null),
+});
+
+export type PaymentsConfig = z.infer<typeof paymentsSchema>;
+
 export const tenantConfigSchema = z.object({
   tenantId: z.string().min(1),
   branding: z.object({
@@ -47,6 +68,7 @@ export const tenantConfigSchema = z.object({
       geographyType: z.string().default('cuba_provinces'),
     })
     .prefault({}),
+  payments: paymentsSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
 });
 

@@ -25,6 +25,15 @@
   "destinations": {
     "geographyType": "cuba_provinces"
   },
+  "payments": {
+    "bankTransfer": {
+      "accountName": "Authentic Cuba Expeditions S.L. (placeholder)",
+      "bankName": "Demo Bank (placeholder)",
+      "iban": "ES00 0000 0000 0000 0000 0000",
+      "bic": "DEMOES00",
+      "referenceNote": "Quote your booking code as the transfer reference."
+    }
+  },
   "emergencyContacts": [
     { "label": "Operations desk (24/7)", "phone": "+53 5555 0100" },
     { "label": "Medical emergency", "phone": "+53 5555 0104" },
