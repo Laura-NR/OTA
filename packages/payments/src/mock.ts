@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import { parsePaymentConfirmation } from './confirmation';
 import type {
   CreatePaymentIntentInput,
   PaymentIntent,
@@ -10,10 +11,6 @@ import type {
 export interface MockPaymentProviderOptions {
   /** Base URL the mock checkout page is served from (dev/tests only). */
   checkoutBaseUrl?: string;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 /**
@@ -38,22 +35,6 @@ export class MockPaymentProvider implements PaymentProvider {
   }
 
   parseWebhook(payload: unknown): PaymentWebhookEvent | null {
-    if (!isRecord(payload)) {
-      return null;
-    }
-    const { providerReference, status, amount, currency } = payload;
-    if (typeof providerReference !== 'string' || providerReference.length === 0) {
-      return null;
-    }
-    if (status !== 'PAID' && status !== 'FAILED') {
-      return null;
-    }
-    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 0) {
-      return null;
-    }
-    if (typeof currency !== 'string' || currency.length !== 3) {
-      return null;
-    }
-    return { providerReference, status, amount, currency };
+    return parsePaymentConfirmation(payload);
   }
 }
