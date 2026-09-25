@@ -125,8 +125,9 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
   `POST /reservations/:id/payments/:paymentId/confirm`), which moves the booking
   to `CONFIRMED` and issues the documents. There is no public callback for this
   rail.
-- The card rail still runs on the mock until TropiPay is wired; the rail ->
-  provider map is `createPaymentProviders` in `packages/payments`.
+- The card rail still runs on the mock: TropiPay is deferred until the agency's
+  legal documents exist and a business account can be created (ADR 0005). The
+  rail -> provider map is `createPaymentProviders` in `packages/payments`.
 
 ## Data, migrations, backups
 

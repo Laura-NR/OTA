@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-25 10:55
+# Handoff — main — updated 2026-09-25 14:55
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -83,10 +83,10 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 ### Remaining
 **Blocked on a human decision**
 - Real LLM vendor behind `packages/ai` (new dependency → Article 2).
-- **TropiPay card rail** (ADR 0005): chosen, but needs the owner's TropiPay app
-  credentials (`TROPIPAY_CLIENT_ID`/`TROPIPAY_CLIENT_SECRET`, dev first) and
-  confirmation of the API base URLs + webhook verification. Wire transfer is
-  live now; card stays on the mock until then.
+- **TropiPay card rail** (ADR 0005): DEFERRED — creating a TropiPay business
+  account requires the agency's legal documents, which the owner does not have
+  yet. Wire transfer remains the sole live rail; card stays on the mock. No code
+  depends on this; resume when the documents and account exist.
 
 **Blocked on a migration (Article 2)**
 - Accommodation-tier selection for packages (`PackageService.tier`).
@@ -471,12 +471,11 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
 6. Extend e2e (remaining): worker accept/decline through the UI, the dispatch
    timeout firing through the UI, and passkey sign-in. Dispatch start/candidates,
    import commit, ops intake, and a live `/ops` event now have browser specs.
-7. **TropiPay card rail (owner-gated):** obtain a TropiPay app
-   (`TROPIPAY_CLIENT_ID`/`TROPIPAY_CLIENT_SECRET`, dev first), confirm the
-   dev/prod base URLs and whether `urlNotification` callbacks are signed, then
-   implement the adapter behind `PaymentProvider` with plain `fetch` (no SDK) and
-   add the signature-verified public webhook route (ADR 0003/0005). Also guide
-   the owner through creating the app (App Menu → Applications and credentials).
+7. **TropiPay card rail — DEFERRED:** blocked until the agency's legal
+   documents exist and a TropiPay business account can be created (owner,
+   2026-09-25). Then implement behind `PaymentProvider` with plain `fetch` and
+   add the signature-verified public webhook route (ADR 0003/0005). No action
+   until the documents are available.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
@@ -703,3 +702,7 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
 - 2026-09-25 — no TropiPay SDK is added; it will be implemented with plain
   `fetch` behind `PaymentProvider` once the owner supplies credentials and the
   webhook verification is confirmed, and only then a public webhook route.
+- 2026-09-25 — **TropiPay deferred:** creating a business account needs the
+  agency's legal documents, which do not exist yet, so the card rail stays on
+  the mock and wire transfer is the only live rail. No code changes needed to
+  resume; see ADR 0005 open items.

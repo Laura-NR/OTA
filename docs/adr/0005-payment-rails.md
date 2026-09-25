@@ -64,14 +64,23 @@ provider selection by rail so TropiPay is a drop-in later.**
 - The mock stays the default for the card rail and for tests, so existing
   mock-based tests remain valid.
 
+## Consequences (deferral)
+
+Creating a TropiPay business account requires the agency's legal documents,
+which the owner does not have yet (2026-09-25). The card rail is therefore
+**postponed to a later stage**: wire transfer is the sole live rail and `CARD`
+stays on the mock. This does not change any interface — when the documents and
+account exist, the adapter is added behind `PaymentProvider` and the public
+webhook route only after signature verification (ADR 0003).
+
 ## Open items
 
-- **TropiPay onboarding (owner):** create a TropiPay account and, under App
-  Menu -> Applications and credentials, an app; provide `TROPIPAY_CLIENT_ID` and
-  `TROPIPAY_CLIENT_SECRET` (dev first). Confirm the dev/production API base URLs
-  and whether `urlNotification` callbacks are signed; if unsigned, verify each
-  callback by re-querying the payment card via the authenticated API instead of
-  trusting the body.
+- **TropiPay (deferred, owner):** blocked until the agency's legal documents
+  exist and a business account can be created. Then: create an app under App
+  Menu -> Applications and credentials, provide `TROPIPAY_CLIENT_ID` /
+  `TROPIPAY_CLIENT_SECRET` (dev first), confirm the dev/production base URLs and
+  whether `urlNotification` callbacks are signed (if unsigned, verify each
+  callback by re-querying the payment card via the authenticated API).
 - Card currency/FX for non-EUR clients (spec §7.1) at the card gateway.
 - Supplier payout settlement flows (`PayoutStatus` currently accrues only).
 - A public webhook route is added only with the signature-verified TropiPay
