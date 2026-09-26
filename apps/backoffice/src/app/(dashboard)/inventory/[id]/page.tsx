@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -26,6 +27,7 @@ export default async function InventoryDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations('backoffice.inventoryDetail');
   const session = await getServerSession();
   const canWrite = session?.user.role ? WRITE_ROLES.includes(session.user.role) : false;
 
@@ -46,21 +48,24 @@ export default async function InventoryDetailPage({
           href="/inventory"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← Inventory
+          {t('back')}
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">{item.name}</h1>
         <Badge variant="secondary">{item.type.replaceAll('_', ' ')}</Badge>
         <Badge variant={item.active ? 'success' : 'outline'}>
-          {item.active ? 'Active' : 'Inactive'}
+          {item.active ? t('activeLabel') : t('inactive')}
         </Badge>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Details</CardTitle>
+          <CardTitle>{t('details')}</CardTitle>
           <CardDescription>
-            {item.currency} {Number(item.basePrice).toFixed(2)} base ·{' '}
-            {item.province ?? 'province unset'}
+            {t('detailsDescription', {
+              currency: item.currency,
+              price: Number(item.basePrice).toFixed(2),
+              province: item.province ?? t('provinceUnset'),
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -68,7 +73,7 @@ export default async function InventoryDetailPage({
             <InventoryEditForm item={item} />
           ) : (
             <p className="text-sm text-muted-foreground">
-              {item.description ?? 'No description.'}
+              {item.description ?? t('noDescription')}
             </p>
           )}
         </CardContent>
@@ -76,10 +81,8 @@ export default async function InventoryDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Images</CardTitle>
-          <CardDescription>
-            Shown on the public catalog. Images of inactive items are not served.
-          </CardDescription>
+          <CardTitle>{t('images')}</CardTitle>
+          <CardDescription>{t('imagesDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <InventoryMediaManager inventoryItemId={item.id} media={item.media} />
@@ -88,18 +91,14 @@ export default async function InventoryDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Pricing rules</CardTitle>
-          <CardDescription>
-            Seasonal rates override the base price; markups stack on top.
-          </CardDescription>
+          <CardTitle>{t('pricingRules')}</CardTitle>
+          <CardDescription>{t('pricingRulesDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {canWrite ? (
             <PricingRulesManager inventoryItemId={item.id} rules={rules} />
           ) : rules.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No pricing rules; the base price applies year-round.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('noRules')}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {rules.map((rule) => (

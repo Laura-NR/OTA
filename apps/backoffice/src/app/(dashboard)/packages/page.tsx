@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
 import { PageHeader } from '@/components/page-header';
@@ -24,6 +25,7 @@ import { apiFetch, getServerSession } from '@/lib/api';
 const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 export default async function PackagesPage() {
+  const t = await getTranslations('backoffice.packagesPage');
   const session = await getServerSession();
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
 
@@ -34,32 +36,29 @@ export default async function PackagesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Curated packages"
-        description="Multi-day templates built from catalog items (spec §3.3). Booking a package expands it into a reservation's service items."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       {canManage ? <PackageCreateForm items={inventory} /> : null}
 
       <Card>
         <CardHeader>
-          <CardTitle>Published packages</CardTitle>
+          <CardTitle>{t('published')}</CardTitle>
         </CardHeader>
         <CardContent>
           {packages.length === 0 ? (
-            <Alert>No curated packages yet.</Alert>
+            <Alert>{t('empty')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Province</TableHead>
-                  <TableHead>Days</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Services</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('name')}</TableHead>
+                  <TableHead>{t('province')}</TableHead>
+                  <TableHead>{t('days')}</TableHead>
+                  <TableHead>{t('price')}</TableHead>
+                  <TableHead>{t('services')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
                   {canManage ? (
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">{t('actions')}</TableHead>
                   ) : null}
                 </TableRow>
               </TableHeader>
@@ -80,7 +79,7 @@ export default async function PackagesPage() {
                     <TableCell>{pkg.services.length}</TableCell>
                     <TableCell>
                       <Badge variant={pkg.active ? 'default' : 'outline'}>
-                        {pkg.active ? 'Active' : 'Inactive'}
+                        {pkg.active ? t('active') : t('inactive')}
                       </Badge>
                     </TableCell>
                     {canManage ? (

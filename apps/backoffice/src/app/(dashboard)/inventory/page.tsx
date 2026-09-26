@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
 import { InventoryActions } from '@/components/inventory-actions';
@@ -26,6 +27,7 @@ import { apiFetch, getServerSession } from '@/lib/api';
 const WRITE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 export default async function InventoryPage() {
+  const t = await getTranslations('backoffice.inventory');
   const session = await getServerSession();
   const canWrite = session?.user.role ? WRITE_ROLES.includes(session.user.role) : false;
 
@@ -34,21 +36,18 @@ export default async function InventoryPage() {
   try {
     items = await apiFetch<InventoryItemDto[]>('/inventory');
   } catch (error) {
-    loadError = error instanceof Error ? error.message : 'Could not load inventory.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Inventory"
-        description="Catalog, media, and pricing. Seasonal rates and markups feed the pure domain pricing engine."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       {canWrite ? (
         <Card>
           <CardHeader>
-            <CardTitle>Add catalog item</CardTitle>
-            <CardDescription>Accommodation, transport, or experience.</CardDescription>
+            <CardTitle>{t('addItem')}</CardTitle>
+            <CardDescription>{t('addItemDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <InventoryCreateForm />
@@ -58,26 +57,26 @@ export default async function InventoryPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Catalog</CardTitle>
-          <CardDescription>{items.length} item(s)</CardDescription>
+          <CardTitle>{t('catalog')}</CardTitle>
+          <CardDescription>{t('itemsCount', { count: items.length })}</CardDescription>
         </CardHeader>
         <CardContent>
           {loadError ? (
             <Alert variant="destructive">{loadError}</Alert>
           ) : items.length === 0 ? (
-            <Alert>No catalog items yet. Add one above or commit a bulk import.</Alert>
+            <Alert>{t('empty')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Province</TableHead>
-                  <TableHead>Base</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead>Price quote</TableHead>
-                  {canWrite ? <TableHead>Actions</TableHead> : null}
+                  <TableHead>{t('image')}</TableHead>
+                  <TableHead>{t('name')}</TableHead>
+                  <TableHead>{t('type')}</TableHead>
+                  <TableHead>{t('province')}</TableHead>
+                  <TableHead>{t('base')}</TableHead>
+                  <TableHead>{t('active')}</TableHead>
+                  <TableHead>{t('priceQuote')}</TableHead>
+                  {canWrite ? <TableHead>{t('actions')}</TableHead> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -109,7 +108,7 @@ export default async function InventoryPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={item.active ? 'success' : 'outline'}>
-                        {item.active ? 'Active' : 'Inactive'}
+                        {item.active ? t('activeLabel') : t('inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -1,4 +1,5 @@
 import type { InventoryItemDto, PackageDto } from '@ota/schemas';
+import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import { PackageEditForm } from '@/components/package-edit-form';
@@ -12,6 +13,7 @@ export default async function PackageDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations('backoffice.packageDetail');
 
   const [pkg, items] = await Promise.all([
     apiFetch<PackageDto>(`/packages/${id}`).catch((error: unknown) => {
@@ -27,9 +29,12 @@ export default async function PackageDetailPage({
     <div className="space-y-6">
       <PageHeader
         title={pkg.name}
-        description={`${pkg.slug} · ${pkg.durationDays} days · ${pkg.currency} ${Number(
-          pkg.basePrice,
-        ).toFixed(2)}`}
+        description={t('subtitle', {
+          slug: pkg.slug,
+          days: pkg.durationDays,
+          currency: pkg.currency,
+          price: Number(pkg.basePrice).toFixed(2),
+        })}
       />
       <PackageEditForm package={pkg} items={items} />
     </div>

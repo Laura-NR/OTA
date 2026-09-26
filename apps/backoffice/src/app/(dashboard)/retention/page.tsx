@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { PageHeader } from '@/components/page-header';
 import { apiFetch } from '@/lib/api';
@@ -38,38 +39,33 @@ function formatDate(value: string | null): string {
 }
 
 export default async function RetentionPage() {
+  const t = await getTranslations('backoffice.retention');
   const pending = await apiFetch<RetentionPendingUserDto[]>(
     '/retention/pending?limit=100',
   ).catch(() => []);
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Data retention"
-        description="GDPR lifecycle for travelers: a keep-alive notice 6 months after the last completed booking, a 30-day grace period, then anonymization."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Retention pipeline</CardTitle>
-          <CardDescription>
-            Travelers with a notice due, inside the grace period, or due for
-            anonymization. Anonymized records keep their reservations and fiscal totals.
-          </CardDescription>
+          <CardTitle>{t('pipeline')}</CardTitle>
+          <CardDescription>{t('pipelineDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {pending.length === 0 ? (
-            <Alert>No travelers are in the retention lifecycle.</Alert>
+            <Alert>{t('empty')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Traveler</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last completed</TableHead>
-                  <TableHead>Notice sent</TableHead>
-                  <TableHead>Consent</TableHead>
-                  <TableHead>Anonymizes</TableHead>
+                  <TableHead>{t('traveler')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  <TableHead>{t('lastCompleted')}</TableHead>
+                  <TableHead>{t('noticeSent')}</TableHead>
+                  <TableHead>{t('consent')}</TableHead>
+                  <TableHead>{t('anonymizes')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

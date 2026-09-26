@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { PageHeader } from '@/components/page-header';
 import { apiFetch } from '@/lib/api';
@@ -40,6 +41,7 @@ export default async function AnalyticsPage({
   searchParams: Promise<{ year?: string }>;
 }) {
   const { year } = await searchParams;
+  const t = await getTranslations('backoffice.analytics');
   const query = year ? `?from=${year}-01-01&to=${year}-12-31` : '';
 
   let overview: AnalyticsOverviewDto | null = null;
@@ -47,7 +49,7 @@ export default async function AnalyticsPage({
   try {
     overview = await apiFetch<AnalyticsOverviewDto>(`/analytics/overview${query}`);
   } catch (error) {
-    loadError = error instanceof Error ? error.message : 'Could not load analytics.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   const assistant = overview
@@ -58,51 +60,45 @@ export default async function AnalyticsPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Analytics"
-        description="Financial, operational, and quality KPIs (spec §4.9). Bounds are by record creation date."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <div className="flex flex-wrap gap-2">
         <a
           href={`/api/ota/analytics/export/xlsx${query}`}
           className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
-          Download XLSX digest
+          {t('downloadXlsx')}
         </a>
         <a
           href={`/api/ota/analytics/export/pdf${query}`}
           className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
-          Download PDF digest
+          {t('downloadPdf')}
         </a>
       </div>
 
       {loadError || !overview ? (
-        <Alert variant="destructive">{loadError ?? 'No data.'}</Alert>
+        <Alert variant="destructive">{loadError ?? t('noData')}</Alert>
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Kpi label="Gross booking value" value={money(overview.finance.gbv)} />
-            <Kpi label="Net revenue" value={money(overview.finance.netRevenue)} />
-            <Kpi label="Take rate" value={percent(overview.finance.takeRate)} />
+            <Kpi label={t('gbv')} value={money(overview.finance.gbv)} />
+            <Kpi label={t('netRevenue')} value={money(overview.finance.netRevenue)} />
+            <Kpi label={t('takeRate')} value={percent(overview.finance.takeRate)} />
+            <Kpi label={t('aov')} value={money(overview.finance.averageOrderValue)} />
+            <Kpi label={t('paidBookings')} value={String(overview.finance.paidCount)} />
             <Kpi
-              label="Average order value"
-              value={money(overview.finance.averageOrderValue)}
-            />
-            <Kpi label="Paid bookings" value={String(overview.finance.paidCount)} />
-            <Kpi
-              label="Supplier payouts"
+              label={t('supplierPayouts')}
               value={money(
                 overview.finance.payoutsAccrued + overview.finance.payoutsSettled,
               )}
             />
             <Kpi
-              label="Acceptance rate"
+              label={t('acceptanceRate')}
               value={percent(overview.operations.acceptanceRate)}
             />
             <Kpi
-              label="Avg dispatch response"
+              label={t('avgResponse')}
               value={`${overview.operations.averageResponseMinutes} min`}
             />
           </div>
@@ -110,10 +106,8 @@ export default async function AnalyticsPage({
           {assistant ? (
             <Card>
               <CardHeader>
-                <CardTitle>AI operations summary</CardTitle>
-                <CardDescription>
-                  Generated from this window&apos;s KPIs (spec §4.8).
-                </CardDescription>
+                <CardTitle>{t('aiSummary')}</CardTitle>
+                <CardDescription>{t('aiSummaryDescription')}</CardDescription>
               </CardHeader>
               <CardContent className="text-sm">{assistant.text}</CardContent>
             </Card>
@@ -121,19 +115,19 @@ export default async function AnalyticsPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Revenue by payment rail</CardTitle>
-              <CardDescription>Paid receipts only</CardDescription>
+              <CardTitle>{t('revenueByRail')}</CardTitle>
+              <CardDescription>{t('paidOnly')}</CardDescription>
             </CardHeader>
             <CardContent>
               {overview.finance.byRail.length === 0 ? (
-                <Alert>No paid receipts in this window.</Alert>
+                <Alert>{t('noPaid')}</Alert>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Rail</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Payments</TableHead>
+                      <TableHead>{t('rail')}</TableHead>
+                      <TableHead>{t('amount')}</TableHead>
+                      <TableHead>{t('payments')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -154,27 +148,27 @@ export default async function AnalyticsPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Revenue by package type</CardTitle>
-              <CardDescription>
-                Pre-assembled curated packages vs custom itineraries
-              </CardDescription>
+              <CardTitle>{t('revenueByPackage')}</CardTitle>
+              <CardDescription>{t('packageDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Net</TableHead>
-                    <TableHead>Take rate</TableHead>
-                    <TableHead>Payments</TableHead>
+                    <TableHead>{t('type')}</TableHead>
+                    <TableHead>{t('amount')}</TableHead>
+                    <TableHead>{t('net')}</TableHead>
+                    <TableHead>{t('takeRate')}</TableHead>
+                    <TableHead>{t('payments')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {overview.finance.byPackageType.map((row) => (
                     <TableRow key={row.type}>
                       <TableCell className="font-medium">
-                        {row.type === 'PACKAGE' ? 'Curated package' : 'Custom itinerary'}
+                        {row.type === 'PACKAGE'
+                          ? t('curatedPackage')
+                          : t('customItinerary')}
                       </TableCell>
                       <TableCell>{money(row.amount)}</TableCell>
                       <TableCell>{money(row.netRevenue)}</TableCell>
@@ -190,15 +184,15 @@ export default async function AnalyticsPage({
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Booking funnel</CardTitle>
-                <CardDescription>Reservations by status</CardDescription>
+                <CardTitle>{t('funnel')}</CardTitle>
+                <CardDescription>{t('funnelDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Count</TableHead>
+                      <TableHead>{t('status')}</TableHead>
+                      <TableHead>{t('count')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -215,18 +209,18 @@ export default async function AnalyticsPage({
 
             <Card>
               <CardHeader>
-                <CardTitle>Service geography</CardTitle>
-                <CardDescription>Booked services by province</CardDescription>
+                <CardTitle>{t('geography')}</CardTitle>
+                <CardDescription>{t('geographyDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {overview.geography.length === 0 ? (
-                  <Alert>No services booked in this window.</Alert>
+                  <Alert>{t('noServices')}</Alert>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Province</TableHead>
-                        <TableHead>Services</TableHead>
+                        <TableHead>{t('province')}</TableHead>
+                        <TableHead>{t('services')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -245,15 +239,18 @@ export default async function AnalyticsPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Quality & duty of care</CardTitle>
+              <CardTitle>{t('quality')}</CardTitle>
               <CardDescription>
-                {overview.quality.reviewCount} review(s) · incidents:{' '}
-                {overview.quality.incidentCount} ({overview.quality.openIncidentCount}{' '}
-                open, {overview.quality.highSeverityCount} high/critical)
+                {t('qualitySummary', {
+                  reviews: overview.quality.reviewCount,
+                  incidents: overview.quality.incidentCount,
+                  open: overview.quality.openIncidentCount,
+                  high: overview.quality.highSeverityCount,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-sm">
-              Average rating: {overview.quality.averageRating.toFixed(2)} / 5
+              {t('averageRating', { value: overview.quality.averageRating.toFixed(2) })}
             </CardContent>
           </Card>
         </>

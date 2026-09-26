@@ -1,22 +1,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { PageHeader } from '@/components/page-header';
 import { ReservationCreateForm } from '@/components/reservation-create-form';
 
-export default function NewReservationPage() {
+export default async function NewReservationPage() {
+  const t = await getTranslations('backoffice.intake');
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="New reservation"
-        description="Ops-side intake. The storefront builder will submit the same shape at ITINERARY_SUBMITTED."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Booking details</CardTitle>
-          <CardDescription>
-            Bookings start in DRAFT and advance through legal transitions.
-          </CardDescription>
+          <CardTitle>{t('bookingDetails')}</CardTitle>
+          <CardDescription>{t('bookingDetailsDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ReservationCreateForm />

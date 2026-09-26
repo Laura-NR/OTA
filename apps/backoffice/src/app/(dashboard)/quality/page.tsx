@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { IncidentResolveButton } from '@/components/incident-resolve-button';
 import { PageHeader } from '@/components/page-header';
@@ -40,6 +41,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 }
 
 export default async function QualityPage() {
+  const t = await getTranslations('backoffice.quality');
   const [incidents, reliability, reviews] = await Promise.all([
     apiFetch<IncidentDto[]>('/incidents?limit=100').catch(() => []),
     apiFetch<SupplierReliabilityDto[]>('/quality/supplier-reliability').catch(() => []),
@@ -54,36 +56,33 @@ export default async function QualityPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Quality & duty of care"
-        description="Incident log and worker reliability scorecards (spec §4.9.4)."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="Open incidents" value={String(openCount)} />
-        <Kpi label="Incidents logged" value={String(incidents.length)} />
-        <Kpi label="Suppliers scored" value={String(reliability.length)} />
-        <Kpi label="Average rating" value={`${averageRating.toFixed(2)} / 5`} />
+        <Kpi label={t('openIncidents')} value={String(openCount)} />
+        <Kpi label={t('incidentsLogged')} value={String(incidents.length)} />
+        <Kpi label={t('suppliersScored')} value={String(reliability.length)} />
+        <Kpi label={t('averageRating')} value={`${averageRating.toFixed(2)} / 5`} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Incident log</CardTitle>
-          <CardDescription>Newest first</CardDescription>
+          <CardTitle>{t('incidentLog')}</CardTitle>
+          <CardDescription>{t('newestFirst')}</CardDescription>
         </CardHeader>
         <CardContent>
           {incidents.length === 0 ? (
-            <Alert>No incidents logged.</Alert>
+            <Alert>{t('noIncidents')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Booking</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Severity</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('booking')}</TableHead>
+                  <TableHead>{t('category')}</TableHead>
+                  <TableHead>{t('severity')}</TableHead>
+                  <TableHead>{t('descriptionCol')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  <TableHead className="text-right">{t('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -101,9 +100,9 @@ export default async function QualityPage() {
                     </TableCell>
                     <TableCell>
                       {incident.resolvedAt ? (
-                        <Badge variant="success">Resolved</Badge>
+                        <Badge variant="success">{t('resolved')}</Badge>
                       ) : (
-                        <Badge variant="outline">Open</Badge>
+                        <Badge variant="outline">{t('open')}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -121,23 +120,21 @@ export default async function QualityPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Worker reliability</CardTitle>
-          <CardDescription>
-            Derived from the dispatch-offer ledger; best acceptance first.
-          </CardDescription>
+          <CardTitle>{t('workerReliability')}</CardTitle>
+          <CardDescription>{t('reliabilityDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {reliability.length === 0 ? (
-            <Alert>No dispatch history yet.</Alert>
+            <Alert>{t('noHistory')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Offers</TableHead>
-                  <TableHead>Acceptance</TableHead>
-                  <TableHead>Timeout</TableHead>
-                  <TableHead>Avg response</TableHead>
+                  <TableHead>{t('supplier')}</TableHead>
+                  <TableHead>{t('offers')}</TableHead>
+                  <TableHead>{t('acceptance')}</TableHead>
+                  <TableHead>{t('timeout')}</TableHead>
+                  <TableHead>{t('avgResponse')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -160,19 +157,19 @@ export default async function QualityPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent reviews</CardTitle>
-          <CardDescription>Traveler CSAT, newest first</CardDescription>
+          <CardTitle>{t('recentReviews')}</CardTitle>
+          <CardDescription>{t('recentReviewsDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {reviews.length === 0 ? (
-            <Alert>No reviews yet.</Alert>
+            <Alert>{t('noReviews')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Booking</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Comment</TableHead>
+                  <TableHead>{t('booking')}</TableHead>
+                  <TableHead>{t('rating')}</TableHead>
+                  <TableHead>{t('comment')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -1,23 +1,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { ImportWizard } from '@/components/import-wizard';
 import { PageHeader } from '@/components/page-header';
 
-export default function ImportsPage() {
+export default async function ImportsPage() {
+  const t = await getTranslations('backoffice.imports');
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Imports"
-        description="Stage a CSV or XLSX, map its columns, then commit the batch as inventory."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Bulk inventory import</CardTitle>
-          <CardDescription>
-            Commit validates the whole batch atomically — a single bad row imports
-            nothing.
-          </CardDescription>
+          <CardTitle>{t('bulkImport')}</CardTitle>
+          <CardDescription>{t('bulkImportDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ImportWizard />

@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { PageHeader } from '@/components/page-header';
 import { apiFetch } from '@/lib/api';
@@ -37,6 +38,7 @@ export default async function RegulatoryPage({
   searchParams: Promise<{ year?: string }>;
 }) {
   const { year } = await searchParams;
+  const t = await getTranslations('backoffice.regulatory');
   const query = year ? `?from=${year}-01-01&to=${year}-12-31` : '';
 
   let summary: RegulatorySummaryDto | null = null;
@@ -44,71 +46,67 @@ export default async function RegulatoryPage({
   try {
     summary = await apiFetch<RegulatorySummaryDto>(`/analytics/regulatory${query}`);
   } catch (error) {
-    loadError =
-      error instanceof Error ? error.message : 'Could not load the regulatory report.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Regulatory reporting"
-        description="MINTUR annual activity summary and ecotourism ratio (spec §4.9.2). Bounds filter by booking creation date; bed-nights are per booking until a party size is recorded."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       {loadError || !summary ? (
-        <Alert variant="destructive">{loadError ?? 'No data.'}</Alert>
+        <Alert variant="destructive">{loadError ?? t('noData')}</Alert>
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-3">
             <form className="flex items-end gap-2">
               <label className="space-y-1 text-sm">
                 <span className="block text-xs uppercase tracking-wide text-muted-foreground">
-                  Year
+                  {t('year')}
                 </span>
                 <input
                   type="number"
                   name="year"
                   defaultValue={year ?? ''}
-                  placeholder="All time"
+                  placeholder={t('allTime')}
                   min={2000}
                   max={2100}
                   className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-ota-1"
                 />
               </label>
               <Button type="submit" size="sm" variant="outline">
-                Apply
+                {t('apply')}
               </Button>
             </form>
             <a
               href={`/api/ota/analytics/regulatory/fiscal-export${query}`}
               className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              Download fiscal ledger (CSV)
+              {t('downloadCsv')}
             </a>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Kpi label="Bookings" value={String(summary.bookings)} />
-            <Kpi label="Travelers" value={String(summary.travelers)} />
-            <Kpi label="Bed-nights" value={String(summary.bedNights)} />
-            <Kpi label="Specialised ratio" value={percent(summary.specialisedRatio)} />
+            <Kpi label={t('bookings')} value={String(summary.bookings)} />
+            <Kpi label={t('travelers')} value={String(summary.travelers)} />
+            <Kpi label={t('bedNights')} value={String(summary.bedNights)} />
+            <Kpi
+              label={t('specialisedRatio')}
+              value={percent(summary.specialisedRatio)}
+            />
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Tourism classification</CardTitle>
-              <CardDescription>
-                Ecotourism, agrotourism, and nature qualify for the specialised-traffic
-                ratio (Resolución 193/2026).
-              </CardDescription>
+              <CardTitle>{t('classification')}</CardTitle>
+              <CardDescription>{t('classificationDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Bookings</TableHead>
-                    <TableHead>Share</TableHead>
+                    <TableHead>{t('category')}</TableHead>
+                    <TableHead>{t('bookings')}</TableHead>
+                    <TableHead>{t('share')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -129,18 +127,18 @@ export default async function RegulatoryPage({
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Nationalities</CardTitle>
-                <CardDescription>Bookings by traveler nationality</CardDescription>
+                <CardTitle>{t('nationalities')}</CardTitle>
+                <CardDescription>{t('nationalitiesDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {summary.nationalities.length === 0 ? (
-                  <Alert>No bookings in this window.</Alert>
+                  <Alert>{t('noBookings')}</Alert>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Nationality</TableHead>
-                        <TableHead>Bookings</TableHead>
+                        <TableHead>{t('nationality')}</TableHead>
+                        <TableHead>{t('bookings')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -158,18 +156,18 @@ export default async function RegulatoryPage({
 
             <Card>
               <CardHeader>
-                <CardTitle>Geographic circuits</CardTitle>
-                <CardDescription>Booked services by province</CardDescription>
+                <CardTitle>{t('circuits')}</CardTitle>
+                <CardDescription>{t('circuitsDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {summary.circuits.length === 0 ? (
-                  <Alert>No services booked in this window.</Alert>
+                  <Alert>{t('noServices')}</Alert>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Province</TableHead>
-                        <TableHead>Services</TableHead>
+                        <TableHead>{t('province')}</TableHead>
+                        <TableHead>{t('services')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
