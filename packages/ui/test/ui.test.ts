@@ -10,6 +10,7 @@ const preset = (await import('../tailwind-preset.mjs')).default as {
         { DEFAULT: string; foreground?: string; accent?: { DEFAULT: string } }
       >;
       borderRadius: Record<string, string>;
+      boxShadow: Record<string, string>;
     };
   };
 };
@@ -40,7 +41,14 @@ describe('tailwind preset', () => {
     );
   });
 
-  it('maps the radius token', () => {
-    expect(preset.theme.extend.borderRadius.lg).toBe('var(--ota-radius)');
+  it('maps the design radius steps', () => {
+    expect(preset.theme.extend.borderRadius.sm).toBe('var(--ota-radius-sm)');
+    expect(preset.theme.extend.borderRadius.md).toBe('var(--ota-radius-md)');
+    expect(preset.theme.extend.borderRadius.lg).toBe('var(--ota-radius-lg)');
+  });
+
+  it('exposes the two warm-tinted elevation levels', () => {
+    expect(preset.theme.extend.boxShadow['ota-1']).toContain('rgba(36, 30, 25, 0.08)');
+    expect(preset.theme.extend.boxShadow['ota-2']).toContain('0.16');
   });
 });

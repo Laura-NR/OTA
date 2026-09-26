@@ -43,7 +43,12 @@ export function themeCssVariables(config: TenantConfig): Record<string, string> 
   for (const token of THEME_TOKEN_KEYS) {
     variables[`--ota-${token}`] = palette[token];
   }
+  // A single legacy radius (selected by the tenant) plus the fixed design steps
+  // from `docs/design.md`.
   variables['--ota-radius'] = radius!;
+  variables['--ota-radius-sm'] = RADIUS_SCALE.sm!;
+  variables['--ota-radius-md'] = RADIUS_SCALE.md!;
+  variables['--ota-radius-lg'] = RADIUS_SCALE.lg!;
 
   return variables;
 }

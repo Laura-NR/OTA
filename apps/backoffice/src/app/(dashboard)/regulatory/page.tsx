@@ -72,7 +72,7 @@ export default async function RegulatoryPage({
                   placeholder="All time"
                   min={2000}
                   max={2100}
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm"
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-ota-1"
                 />
               </label>
               <Button type="submit" size="sm" variant="outline">

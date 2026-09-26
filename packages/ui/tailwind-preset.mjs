@@ -67,9 +67,18 @@ const preset = {
         },
       },
       borderRadius: {
-        lg: 'var(--ota-radius)',
-        md: 'calc(var(--ota-radius) - 2px)',
-        sm: 'calc(var(--ota-radius) - 4px)',
+        DEFAULT: 'var(--ota-radius)',
+        sm: 'var(--ota-radius-sm)',
+        md: 'var(--ota-radius-md)',
+        lg: 'var(--ota-radius-lg)',
+      },
+      // `docs/design.md`: two warm-tinted elevation levels only. `ota-1` for
+      // interactive/alert surfaces, `ota-2` for modals/hero panels; dense data
+      // stays flat with hairline dividers.
+      boxShadow: {
+        'ota-1': '0 1px 2px 0 rgba(36, 30, 25, 0.08)',
+        'ota-2':
+          '0 12px 32px -8px rgba(36, 30, 25, 0.16), 0 2px 6px -2px rgba(36, 30, 25, 0.08)',
       },
       fontFamily: {
         sans: ['var(--ota-font-sans, ui-sans-serif)', 'system-ui', 'sans-serif'],

@@ -224,5 +224,39 @@
       "INVOICE": "Facture",
       "EMERGENCY_CONTACT": "Contact d'urgence"
     }
+  },
+  "backoffice": {
+    "nav": {
+      "reservations": "Réservations",
+      "escalation": "Escalade",
+      "messages": "Messages",
+      "suppliers": "Fournisseurs",
+      "applications": "Candidatures",
+      "dispatch": "Répartition",
+      "inventory": "Inventaire",
+      "packages": "Forfaits",
+      "imports": "Importations",
+      "documents": "Documents",
+      "analytics": "Analytique",
+      "regulatory": "Réglementaire",
+      "quality": "Qualité",
+      "retention": "Rétention"
+    },
+    "shell": {
+      "signOut": "Se déconnecter"
+    },
+    "locale": {
+      "label": "Langue"
+    },
+    "login": {
+      "title": "Connexion",
+      "description": "Saisissez votre e-mail professionnel et nous vous enverrons un lien de connexion à usage unique.",
+      "sent": "Vérifiez votre boîte de réception : un lien de connexion est en route vers {email}. En local, il arrive dans Mailpit sur http://localhost:8025.",
+      "email": "E-mail",
+      "emailPlaceholder": "vous@agence.test",
+      "sending": "Envoi…",
+      "send": "Envoyer le lien de connexion",
+      "error": "Impossible d'envoyer le lien de connexion."
+    }
   }
 }

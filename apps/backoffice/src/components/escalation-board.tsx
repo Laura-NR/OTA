@@ -11,6 +11,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  cn,
 } from '@ota/ui';
 import { useEffect, useState } from 'react';
 
@@ -173,9 +174,14 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
                 return (
                   <div
                     key={item.id}
-                    className={`flex flex-wrap items-center gap-3 rounded-md border p-3 text-sm ${
-                      alert === 'RED' ? 'border-destructive bg-destructive/5' : ''
-                    }`}
+                    className={cn(
+                      'flex flex-wrap items-center gap-3 rounded-md border p-3 text-sm',
+                      // Design.md §3/§5: reserve elevation for the alert surface,
+                      // and keep amber distinct from red.
+                      alert === 'RED' &&
+                        'border-destructive bg-destructive/5 shadow-ota-1',
+                      alert === 'AMBER' && 'border-warning bg-warning/5 shadow-ota-1',
+                    )}
                   >
                     <span className="font-medium">
                       {item.serviceType.replaceAll('_', ' ')}

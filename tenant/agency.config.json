@@ -1,7 +1,7 @@
 {
-  "tenantId": "cuba-eco-travel",
+  "tenantId": "vereda-expeditions",
   "branding": {
-    "agencyName": "Authentic Cuba Expeditions",
+    "agencyName": "Vereda Expeditions",
     "licenseNumber": "MINTUR-2026-XXXX",
     "primaryColor": "#2C5F52",
     "supportEmail": null,
@@ -27,7 +27,7 @@
   },
   "payments": {
     "bankTransfer": {
-      "accountName": "Authentic Cuba Expeditions S.L. (placeholder)",
+      "accountName": "Vereda Expeditions S.L. (placeholder)",
       "bankName": "Demo Bank (placeholder)",
       "iban": "ES00 0000 0000 0000 0000 0000",
       "bic": "DEMOES00",

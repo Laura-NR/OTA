@@ -34,5 +34,8 @@
   --ota-sidebar-foreground: 172 20% 92%;
   --ota-sidebar-accent: 174 30% 22%;
   --ota-sidebar-accent-foreground: 0 0% 100%;
-  --ota-radius: 0.5rem;
+  --ota-radius: 0.625rem;
+  --ota-radius-sm: 0.25rem;
+  --ota-radius-md: 0.625rem;
+  --ota-radius-lg: 1.25rem;
 }

@@ -11,6 +11,7 @@ import {
   Input,
   Label,
 } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -19,6 +20,7 @@ import { authClient } from '@/lib/auth-client';
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 export default function LoginPage() {
+  const t = useTranslations('backoffice.login');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function LoginPage() {
 
     if (authError) {
       setStatus('error');
-      setError(authError.message ?? 'Could not send the sign-in link.');
+      setError(authError.message ?? t('error'));
       return;
     }
     setStatus('sent');
@@ -45,21 +47,16 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>
-            Enter your work email and we will send you a one-time sign-in link.
-          </CardDescription>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {status === 'sent' ? (
-            <Alert variant="success">
-              Check your inbox — a sign-in link is on its way to {email}. Locally it lands
-              in Mailpit at http://localhost:8025.
-            </Alert>
+            <Alert variant="success">{t('sent', { email })}</Alert>
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -67,14 +64,14 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@agency.test"
+                  placeholder={t('emailPlaceholder')}
                 />
               </div>
 
               {error ? <Alert variant="destructive">{error}</Alert> : null}
 
               <Button type="submit" className="w-full" disabled={status === 'sending'}>
-                {status === 'sending' ? 'Sending…' : 'Send magic link'}
+                {status === 'sending' ? t('sending') : t('send')}
               </Button>
             </form>
           )}

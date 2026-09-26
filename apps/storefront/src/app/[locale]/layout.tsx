@@ -14,6 +14,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { PromotionalBanner } from '@/components/promotional-banner';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { bricolage } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
 
 export async function generateMetadata({
@@ -51,7 +52,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body
         style={tokens}
-        className="flex min-h-screen flex-col bg-background text-foreground antialiased"
+        className={`${bricolage.variable} flex min-h-screen flex-col bg-background font-sans text-foreground antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <SiteHeader agencyName={tenant.branding.agencyName} />

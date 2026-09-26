@@ -42,12 +42,17 @@ export type ThemeToken = (typeof THEME_TOKEN_KEYS)[number];
 
 export type ThemePalette = Readonly<Record<ThemeToken, string>>;
 
+/**
+ * Fixed design radii from `docs/design.md` — `radius-sm` 4px, `radius-md` 10px,
+ * `radius-lg` 20px. The tenant's `theme.borderRadius` still selects the single
+ * legacy `--ota-radius` (used by the bare `rounded` utility); the named steps
+ * below always follow the design so components don't drift per fork.
+ */
 export const RADIUS_SCALE: Readonly<Record<string, string>> = {
   none: '0rem',
   sm: '0.25rem',
-  md: '0.5rem',
-  lg: '0.75rem',
-  xl: '1rem',
+  md: '0.625rem',
+  lg: '1.25rem',
   full: '9999px',
 };
 

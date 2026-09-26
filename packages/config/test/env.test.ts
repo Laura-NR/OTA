@@ -13,7 +13,7 @@ describe('parseEnv', () => {
     const env = parseEnv(validEnv);
 
     expect(env.PORT).toBe(3001);
-    expect(env.TENANT_ID).toBe('cuba-eco-travel');
+    expect(env.TENANT_ID).toBe('vereda-expeditions');
     expect(env.REDIS_URL).toBe('redis://localhost:6379');
     expect(env.S3_BUCKET).toBe('ota-documents');
   });

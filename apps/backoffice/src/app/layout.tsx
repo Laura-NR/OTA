@@ -4,8 +4,11 @@ import './globals.css';
 
 import { themeCssVariables } from '@ota/theming';
 import type { Metadata } from 'next';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { bricolage } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
 
 // The tenant manifest is read from disk and the session from cookies, so every
@@ -20,17 +23,21 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   const tenant = getTenantConfig();
   const tokens = themeCssVariables(tenant) as CSSProperties;
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
-    <html lang={tenant.primaryLocale}>
+    <html lang={locale}>
       <body
         style={tokens}
-        className="min-h-screen bg-background text-foreground antialiased"
+        className={`${bricolage.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
       >
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

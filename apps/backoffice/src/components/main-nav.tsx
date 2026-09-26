@@ -1,28 +1,30 @@
 'use client';
 
 import { cn } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const ITEMS = [
-  { href: '/', label: 'Reservations' },
-  { href: '/escalation', label: 'Escalation' },
-  { href: '/messages', label: 'Messages' },
-  { href: '/suppliers', label: 'Suppliers' },
-  { href: '/applications', label: 'Applications' },
-  { href: '/dispatch', label: 'Dispatch' },
-  { href: '/inventory', label: 'Inventory' },
-  { href: '/packages', label: 'Packages' },
-  { href: '/imports', label: 'Imports' },
-  { href: '/documents', label: 'Documents' },
-  { href: '/analytics', label: 'Analytics' },
-  { href: '/regulatory', label: 'Regulatory' },
-  { href: '/quality', label: 'Quality' },
-  { href: '/retention', label: 'Retention' },
+  { href: '/', key: 'reservations' },
+  { href: '/escalation', key: 'escalation' },
+  { href: '/messages', key: 'messages' },
+  { href: '/suppliers', key: 'suppliers' },
+  { href: '/applications', key: 'applications' },
+  { href: '/dispatch', key: 'dispatch' },
+  { href: '/inventory', key: 'inventory' },
+  { href: '/packages', key: 'packages' },
+  { href: '/imports', key: 'imports' },
+  { href: '/documents', key: 'documents' },
+  { href: '/analytics', key: 'analytics' },
+  { href: '/regulatory', key: 'regulatory' },
+  { href: '/quality', key: 'quality' },
+  { href: '/retention', key: 'retention' },
 ] as const;
 
 export function MainNav() {
   const pathname = usePathname();
+  const t = useTranslations('backoffice.nav');
 
   return (
     <nav className="flex flex-col gap-1 px-3">
@@ -40,7 +42,7 @@ export function MainNav() {
                 : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
             )}
           >
-            {item.label}
+            {t(item.key)}
           </Link>
         );
       })}

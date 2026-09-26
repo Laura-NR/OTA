@@ -26,7 +26,7 @@ export default async function PackagesPage() {
             )?.itemMediaId;
             return (
               <Link key={pkg.id} href={`/packages/${pkg.slug}`} className="group">
-                <Card className="h-full overflow-hidden transition-shadow group-hover:shadow-md">
+                <Card className="h-full overflow-hidden transition-shadow group-hover:shadow-ota-1">
                   {mediaId ? (
                     <img
                       src={`/api/ota/catalog/media/${mediaId}`}

@@ -46,7 +46,10 @@ describe('themeCssVariables', () => {
     for (const token of THEME_TOKEN_KEYS) {
       expect(variables[`--ota-${token}`]).toBeTruthy();
     }
-    expect(variables['--ota-radius']).toBe('0.5rem');
+    expect(variables['--ota-radius']).toBe('0.625rem');
+    expect(variables['--ota-radius-sm']).toBe('0.25rem');
+    expect(variables['--ota-radius-md']).toBe('0.625rem');
+    expect(variables['--ota-radius-lg']).toBe('1.25rem');
   });
 
   it('overrides the preset primary with the tenant brand colour', () => {
@@ -108,6 +111,6 @@ describe('themeCssVariables', () => {
     );
 
     expect(variables['--ota-primary']).toBeTruthy();
-    expect(variables['--ota-radius']).toBe('0.5rem');
+    expect(variables['--ota-radius']).toBe('0.625rem');
   });
 });

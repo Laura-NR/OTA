@@ -224,5 +224,39 @@
       "RECEIPT": "Recibo",
       "EMERGENCY_CONTACT": "Contacto de emergencia"
     }
+  },
+  "backoffice": {
+    "nav": {
+      "reservations": "Reservas",
+      "escalation": "Escalado",
+      "messages": "Mensajes",
+      "suppliers": "Proveedores",
+      "applications": "Solicitudes",
+      "dispatch": "Despacho",
+      "inventory": "Inventario",
+      "packages": "Paquetes",
+      "imports": "Importaciones",
+      "documents": "Documentos",
+      "analytics": "Analítica",
+      "regulatory": "Regulatorio",
+      "quality": "Calidad",
+      "retention": "Retención"
+    },
+    "shell": {
+      "signOut": "Cerrar sesión"
+    },
+    "locale": {
+      "label": "Idioma"
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "description": "Introduce tu correo de trabajo y te enviaremos un enlace de acceso de un solo uso.",
+      "sent": "Revisa tu bandeja de entrada: un enlace de acceso va en camino a {email}. En local llega a Mailpit, en http://localhost:8025.",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@agencia.test",
+      "sending": "Enviando…",
+      "send": "Enviar enlace de acceso",
+      "error": "No se pudo enviar el enlace de acceso."
+    }
   }
 }

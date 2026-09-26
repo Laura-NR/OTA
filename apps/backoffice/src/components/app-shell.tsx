@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import type { ServerSession } from '@/lib/api';
 
+import { LocaleSwitcher } from './locale-switcher';
 import { MainNav } from './main-nav';
 import { SignOutButton } from './sign-out-button';
 
@@ -21,7 +22,10 @@ export function AppShell({ user, agencyName, children }: AppShellProps) {
       <div className="flex min-w-0 flex-col">
         <header className="flex h-14 items-center justify-between border-b bg-background px-6">
           <span className="truncate text-sm text-muted-foreground">{user.email}</span>
-          <SignOutButton />
+          <div className="flex items-center gap-2">
+            <LocaleSwitcher />
+            <SignOutButton />
+          </div>
         </header>
         <main className="flex-1 bg-background p-6">{children}</main>
       </div>

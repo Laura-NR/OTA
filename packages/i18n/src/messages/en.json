@@ -224,5 +224,39 @@
       "RECEIPT": "Receipt",
       "EMERGENCY_CONTACT": "Emergency contact"
     }
+  },
+  "backoffice": {
+    "nav": {
+      "reservations": "Reservations",
+      "escalation": "Escalation",
+      "messages": "Messages",
+      "suppliers": "Suppliers",
+      "applications": "Applications",
+      "dispatch": "Dispatch",
+      "inventory": "Inventory",
+      "packages": "Packages",
+      "imports": "Imports",
+      "documents": "Documents",
+      "analytics": "Analytics",
+      "regulatory": "Regulatory",
+      "quality": "Quality",
+      "retention": "Retention"
+    },
+    "shell": {
+      "signOut": "Sign out"
+    },
+    "locale": {
+      "label": "Language"
+    },
+    "login": {
+      "title": "Sign in",
+      "description": "Enter your work email and we will send you a one-time sign-in link.",
+      "sent": "Check your inbox — a sign-in link is on its way to {email}. Locally it lands in Mailpit at http://localhost:8025.",
+      "email": "Email",
+      "emailPlaceholder": "you@agency.test",
+      "sending": "Sending…",
+      "send": "Send magic link",
+      "error": "Could not send the sign-in link."
+    }
   }
 }

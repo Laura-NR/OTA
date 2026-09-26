@@ -11,7 +11,7 @@ import { z } from 'zod';
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
-  TENANT_ID: z.string().min(1).default('cuba-eco-travel'),
+  TENANT_ID: z.string().min(1).default('vereda-expeditions'),
 
   DATABASE_URL: z.string().url(),
   DATABASE_READONLY_URL: z.string().url().optional(),

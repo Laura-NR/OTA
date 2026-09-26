@@ -52,7 +52,7 @@ export function PipelineBoard({
                   <Link
                     key={reservation.id}
                     href={`/reservations/${reservation.id}`}
-                    className="block rounded-md border bg-card p-3 text-sm shadow-sm transition-colors hover:border-primary"
+                    className="block rounded-md border bg-card p-3 text-sm transition-colors hover:border-primary"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">{reservation.bookingCode}</span>
