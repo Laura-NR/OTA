@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-26 17:20
+# Handoff — main — updated 2026-09-26 18:40
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform — a fork-per-agency white-label
@@ -480,12 +480,11 @@ they should be added.
   escalation state, Bricolage Grotesque is self-hosted in `tenant/assets/fonts/`
   and loaded via `next/font/local` in both apps (`--ota-font-sans`), the design
   radii (4/10/20px) and two warm-tinted elevation levels are in the token
-  contract, and the back-office is localized (cookie → `Accept-Language` →
-  tenant locale) across the shell/nav/login, every ops page, and the
-  reservation/inventory action forms. Remaining hardcoded copy is confined to a
-  few form components (inventory edit/media, pricing rules, availability,
-  supplier credential, import wizard, package create/edit). Still open: the 1.25
-  type scale, a dark `/ops` surface, and the storefront hero/imagery layout.
+  contract, and the back-office is fully localized (cookie → `Accept-Language` →
+  tenant locale) — shell, login, metadata, every ops page, and every
+  form/manager component in es/en/fr (only domain enum identifiers render raw).
+  Still open: the 1.25 type scale, a dark `/ops` surface, and the storefront
+  hero/imagery layout.
 
 ## Traps
 - API dev must stay swc-based (`node --watch -r @swc-node/register`); tsx/esbuild
@@ -543,12 +542,9 @@ they should be added.
 8. **Design rollout (`docs/design.md`) — continue.** Owner decisions of
    2026-09-26: rename to Vereda Expeditions, self-host Bricolage, implement
    radii/elevation, localize the back-office. Done: naming, palette, alert
-   tokens, font, geometry, and back-office i18n across the shell, every ops page,
-   and the reservation/inventory action forms. Next, in order: localize the
-   remaining form components (inventory edit/media, pricing rules, availability,
-   supplier credential, import wizard, package create/edit) — es/en/fr, no output
-   change for `en`; encode the 1.25 type scale; a dark `/ops` desk surface; then
-   the storefront hero/imagery layout.
+   tokens, font, geometry, and back-office i18n — the entire ops surface (shell,
+   pages, forms, metadata) is es/en/fr. Next, in order: encode the 1.25 type
+   scale; a dark `/ops` desk surface; then the storefront hero/imagery layout.
 9. **Authorization-matrix gaps:** add the `/me/*`, `GET /documents/:id/download`,
    `GET /inventory/media/:mediaId`, and public `/catalog*` /
    `POST /supplier-applications` routes to

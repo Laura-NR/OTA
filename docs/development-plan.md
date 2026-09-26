@@ -73,11 +73,9 @@ typecheck, test, build green.
 - **Design system rollout** — owner decisions taken 2026-09-26 (rename the tenant,
   self-host Bricolage, implement radii/elevation, localize ops). The palette,
   identity, font, radii, elevation, alert tokens, and the back-office i18n
-  plumbing, shell, all ops pages, and the reservation/inventory action forms are
-  done; still open: a handful of back-office form components (inventory
-  edit/media, pricing rules, availability calendar, supplier credential, import
-  wizard, package create/edit), the 1.25 type scale, a dark `/ops` surface, and
-  the storefront hero/imagery layout — see "Design gap" below.
+  plumbing and the full back-office copy (shell, pages, forms) are done; still
+  open: the 1.25 type scale, a dark `/ops` surface, and the storefront
+  hero/imagery layout — see "Design gap" below.
 
 **Blocked on a schema migration (Article 2 — ask first)**
 
@@ -118,7 +116,7 @@ editorial), back-office (`apps/backoffice`, dense ops), worker app (not built).
 | 4 | **Geometry/elevation.** Design radii (4/10/20px) differ from `RADIUS_SCALE` (4/8/12/16px), which also derives md/lg from one `--ota-radius`; `Card` always carries the default grey `shadow-sm` instead of the two warm-tinted levels. | **Done 2026-09-26:** fixed `--ota-radius-sm/md/lg` (4/10/20px), added two warm-tinted shadows (`shadow-ota-1/2`), made `Card` flat with a hairline border, and reserved elevation for inputs and the escalation alert card. |
 | 5 | **Iconography/imagery.** No real-photography pipeline; the map fills provinces with primary (token-driven, acceptable) but has no geometric pins. | **Open** — content/asset work. |
 | 6 | **Motion.** Design asks for minimal, state-change-only motion. | **Compliant** (only transition utilities are used). |
-| 7 | **Voice/copy.** Storefront copy lives in `packages/i18n` (es/en/fr). The back-office copy was hardcoded English. | **Mostly done 2026-09-26:** back-office i18n plumbing (cookie → `Accept-Language` → tenant locale) plus the shell/nav/login, all ops pages, and the reservation/inventory action forms are localized es/en/fr. Remaining hardcoded copy: the inventory edit/media, pricing-rules, availability, supplier-credential, import-wizard, and package create/edit components. |
+| 7 | **Voice/copy.** Storefront copy lives in `packages/i18n` (es/en/fr). The back-office copy was hardcoded English. | **Done 2026-09-26:** back-office i18n (cookie → `Accept-Language` → tenant locale) covers the shell, login, metadata, every ops page, and every form/manager component, in es/en/fr. Only domain enum identifiers (statuses, types, categories) render raw, because they are data the e2e suite asserts on. |
 | 8 | **Layout per surface.** Storefront hero is text + catalog cards, not the interactive map/photo, and uses an eyebrow label the design bans; the ops desk is light, not the design's Tinta dark surface. | **Open** — screen-level work. |
 | 9 | **Accessibility.** Tokens are contrast-checked and focus rings exist; the amber→red change is conveyed by label and colour. | **Pass** — re-verify any new token pairing. |
 
