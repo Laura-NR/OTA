@@ -698,6 +698,37 @@
       "noRules": "No pricing rules; the base price applies year-round.",
       "activeLabel": "Active",
       "inactive": "Inactive"
+    },
+    "forms": {
+      "deleteConfirm": "Delete “{name}”? This also removes its images and pricing rules.",
+      "deleting": "Deleting…",
+      "delete": "Delete",
+      "deleteFailed": "Could not delete item",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "actionFailed": "Action failed",
+      "travelerEmail": "Traveler email",
+      "totalAmount": "Total amount",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "currency": "Currency",
+      "nationality": "Traveler nationality",
+      "tourismClassification": "Tourism classification",
+      "creating": "Creating…",
+      "createBooking": "Create booking",
+      "createBookingFailed": "Could not create booking",
+      "type": "Type",
+      "accommodation": "Accommodation",
+      "transport": "Transport",
+      "experience": "Experience",
+      "name": "Name",
+      "province": "Province",
+      "basePrice": "Base price",
+      "description": "Description",
+      "catalogCreated": "Catalog item created.",
+      "saving": "Saving…",
+      "addItem": "Add item",
+      "createItemFailed": "Could not create item"
     }
   }
 }

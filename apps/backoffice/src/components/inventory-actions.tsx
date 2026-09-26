@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -14,14 +15,13 @@ export function InventoryActions({
   inventoryItemId: string;
   name: string;
 }) {
+  const t = useTranslations('backoffice.forms');
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function remove() {
-    if (
-      !window.confirm(`Delete “${name}”? This also removes its images and pricing rules.`)
-    ) {
+    if (!window.confirm(t('deleteConfirm', { name }))) {
       return;
     }
     setPending(true);
@@ -30,9 +30,7 @@ export function InventoryActions({
       await apiRequest(`/inventory/${inventoryItemId}`, { method: 'DELETE' });
       router.refresh();
     } catch (deleteError) {
-      setError(
-        deleteError instanceof Error ? deleteError.message : 'Could not delete item',
-      );
+      setError(deleteError instanceof Error ? deleteError.message : t('deleteFailed'));
     } finally {
       setPending(false);
     }
@@ -42,7 +40,7 @@ export function InventoryActions({
     <div className="space-y-1">
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       <Button size="sm" variant="destructive" disabled={pending} onClick={remove}>
-        {pending ? 'Deleting…' : 'Delete'}
+        {pending ? t('deleting') : t('delete')}
       </Button>
     </div>
   );

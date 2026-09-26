@@ -698,6 +698,37 @@
       "noRules": "Sin reglas de precio; el precio base se aplica todo el año.",
       "activeLabel": "Activo",
       "inactive": "Inactivo"
+    },
+    "forms": {
+      "deleteConfirm": "¿Eliminar «{name}»? También se eliminarán sus imágenes y reglas de precio.",
+      "deleting": "Eliminando…",
+      "delete": "Eliminar",
+      "deleteFailed": "No se pudo eliminar el artículo",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "actionFailed": "Falló la acción",
+      "travelerEmail": "Correo del viajero",
+      "totalAmount": "Importe total",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "currency": "Moneda",
+      "nationality": "Nacionalidad del viajero",
+      "tourismClassification": "Clasificación turística",
+      "creating": "Creando…",
+      "createBooking": "Crear reserva",
+      "createBookingFailed": "No se pudo crear la reserva",
+      "type": "Tipo",
+      "accommodation": "Alojamiento",
+      "transport": "Transporte",
+      "experience": "Experiencia",
+      "name": "Nombre",
+      "province": "Provincia",
+      "basePrice": "Precio base",
+      "description": "Descripción",
+      "catalogCreated": "Artículo de catálogo creado.",
+      "saving": "Guardando…",
+      "addItem": "Añadir artículo",
+      "createItemFailed": "No se pudo crear el artículo"
     }
   }
 }

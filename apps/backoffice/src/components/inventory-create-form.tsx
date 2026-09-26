@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button, Input, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -8,6 +9,7 @@ import type { FormEvent } from 'react';
 import { apiRequest } from '@/lib/client-api';
 
 export function InventoryCreateForm() {
+  const t = useTranslations('backoffice.forms');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function InventoryCreateForm() {
       router.refresh();
     } catch (createError) {
       setError(
-        createError instanceof Error ? createError.message : 'Could not create item',
+        createError instanceof Error ? createError.message : t('createItemFailed'),
       );
     } finally {
       setBusy(false);
@@ -49,15 +51,15 @@ export function InventoryCreateForm() {
     <form className="space-y-4" onSubmit={onSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="inventory-type">Type</Label>
+          <Label htmlFor="inventory-type">{t('type')}</Label>
           <Select id="inventory-type" name="type" defaultValue="ACCOMMODATION" required>
-            <option value="ACCOMMODATION">Accommodation</option>
-            <option value="TRANSPORT">Transport</option>
-            <option value="EXPERIENCE">Experience</option>
+            <option value="ACCOMMODATION">{t('accommodation')}</option>
+            <option value="TRANSPORT">{t('transport')}</option>
+            <option value="EXPERIENCE">{t('experience')}</option>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="inventory-name">Name</Label>
+          <Label htmlFor="inventory-name">{t('name')}</Label>
           <Input
             id="inventory-name"
             name="name"
@@ -66,11 +68,11 @@ export function InventoryCreateForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="inventory-province">Province</Label>
+          <Label htmlFor="inventory-province">{t('province')}</Label>
           <Input id="inventory-province" name="province" placeholder="La Habana" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="inventory-base-price">Base price</Label>
+          <Label htmlFor="inventory-base-price">{t('basePrice')}</Label>
           <Input
             id="inventory-base-price"
             name="basePrice"
@@ -82,7 +84,7 @@ export function InventoryCreateForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="inventory-currency">Currency</Label>
+          <Label htmlFor="inventory-currency">{t('currency')}</Label>
           <Input
             id="inventory-currency"
             name="currency"
@@ -91,7 +93,7 @@ export function InventoryCreateForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="inventory-description">Description</Label>
+          <Label htmlFor="inventory-description">{t('description')}</Label>
           <Input
             id="inventory-description"
             name="description"
@@ -101,10 +103,10 @@ export function InventoryCreateForm() {
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      {saved ? <Alert variant="success">Catalog item created.</Alert> : null}
+      {saved ? <Alert variant="success">{t('catalogCreated')}</Alert> : null}
 
       <Button type="submit" disabled={busy}>
-        {busy ? 'Saving…' : 'Add item'}
+        {busy ? t('saving') : t('addItem')}
       </Button>
     </form>
   );

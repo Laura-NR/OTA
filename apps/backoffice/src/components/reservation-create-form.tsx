@@ -3,6 +3,7 @@
 import { TOURISM_CATEGORIES } from '@ota/domain';
 import type { ReservationDetailDto } from '@ota/schemas';
 import { Alert, Button, Input, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -11,6 +12,7 @@ import { apiRequest } from '@/lib/client-api';
 
 /** Ops-side booking intake. Lands the new reservation on its workbench. */
 export function ReservationCreateForm() {
+  const t = useTranslations('backoffice.forms');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function ReservationCreateForm() {
       router.refresh();
     } catch (createError) {
       setError(
-        createError instanceof Error ? createError.message : 'Could not create booking',
+        createError instanceof Error ? createError.message : t('createBookingFailed'),
       );
     } finally {
       setBusy(false);
@@ -49,7 +51,7 @@ export function ReservationCreateForm() {
     <form className="space-y-4" onSubmit={onSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="traveler-email">Traveler email</Label>
+          <Label htmlFor="traveler-email">{t('travelerEmail')}</Label>
           <Input
             id="traveler-email"
             name="travelerEmail"
@@ -59,7 +61,7 @@ export function ReservationCreateForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="total-amount">Total amount</Label>
+          <Label htmlFor="total-amount">{t('totalAmount')}</Label>
           <Input
             id="total-amount"
             name="totalAmount"
@@ -70,15 +72,15 @@ export function ReservationCreateForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="start-date">Start date</Label>
+          <Label htmlFor="start-date">{t('startDate')}</Label>
           <Input id="start-date" name="startDate" type="date" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="end-date">End date</Label>
+          <Label htmlFor="end-date">{t('endDate')}</Label>
           <Input id="end-date" name="endDate" type="date" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="total-currency">Currency</Label>
+          <Label htmlFor="total-currency">{t('currency')}</Label>
           <Input
             id="total-currency"
             name="totalCurrency"
@@ -87,7 +89,7 @@ export function ReservationCreateForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="nationality">Traveler nationality</Label>
+          <Label htmlFor="nationality">{t('nationality')}</Label>
           <Input
             id="nationality"
             name="nationality"
@@ -97,7 +99,7 @@ export function ReservationCreateForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="tourism-category">Tourism classification</Label>
+          <Label htmlFor="tourism-category">{t('tourismClassification')}</Label>
           <Select id="tourism-category" name="tourismCategory" defaultValue="GENERAL">
             {TOURISM_CATEGORIES.map((option) => (
               <option key={option} value={option}>
@@ -111,7 +113,7 @@ export function ReservationCreateForm() {
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
       <Button type="submit" disabled={busy}>
-        {busy ? 'Creating…' : 'Create booking'}
+        {busy ? t('creating') : t('createBooking')}
       </Button>
     </form>
   );

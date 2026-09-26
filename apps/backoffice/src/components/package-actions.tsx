@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -14,6 +15,7 @@ export interface PackageActionsProps {
 
 /** Activate/deactivate and delete a curated package from the list. */
 export function PackageActions({ packageId, active, canManage }: PackageActionsProps) {
+  const t = useTranslations('backoffice.forms');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function PackageActions({ packageId, active, canManage }: PackageActionsP
       await action();
       router.refresh();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Action failed');
+      setError(actionError instanceof Error ? actionError.message : t('actionFailed'));
     } finally {
       setBusy(false);
     }
@@ -52,7 +54,7 @@ export function PackageActions({ packageId, active, canManage }: PackageActionsP
             )
           }
         >
-          {active ? 'Deactivate' : 'Activate'}
+          {active ? t('deactivate') : t('activate')}
         </Button>
         <Button
           size="sm"
@@ -62,7 +64,7 @@ export function PackageActions({ packageId, active, canManage }: PackageActionsP
             run(() => apiRequest(`/packages/${packageId}`, { method: 'DELETE' }))
           }
         >
-          Delete
+          {t('delete')}
         </Button>
       </div>
     </div>

@@ -698,6 +698,37 @@
       "noRules": "Aucune règle de prix ; le prix de base s'applique toute l'année.",
       "activeLabel": "Actif",
       "inactive": "Inactif"
+    },
+    "forms": {
+      "deleteConfirm": "Supprimer « {name} » ? Cela supprime aussi ses images et règles de prix.",
+      "deleting": "Suppression…",
+      "delete": "Supprimer",
+      "deleteFailed": "Impossible de supprimer l'article",
+      "deactivate": "Désactiver",
+      "activate": "Activer",
+      "actionFailed": "Échec de l'action",
+      "travelerEmail": "E-mail du voyageur",
+      "totalAmount": "Montant total",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "currency": "Devise",
+      "nationality": "Nationalité du voyageur",
+      "tourismClassification": "Classification touristique",
+      "creating": "Création…",
+      "createBooking": "Créer la réservation",
+      "createBookingFailed": "Impossible de créer la réservation",
+      "type": "Type",
+      "accommodation": "Hébergement",
+      "transport": "Transport",
+      "experience": "Expérience",
+      "name": "Nom",
+      "province": "Province",
+      "basePrice": "Prix de base",
+      "description": "Description",
+      "catalogCreated": "Article de catalogue créé.",
+      "saving": "Enregistrement…",
+      "addItem": "Ajouter un article",
+      "createItemFailed": "Impossible de créer l'article"
     }
   }
 }
