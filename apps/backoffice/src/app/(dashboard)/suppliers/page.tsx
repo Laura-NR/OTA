@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
 import { PageHeader } from '@/components/page-header';
@@ -17,6 +18,7 @@ import { apiFetch, getServerSession } from '@/lib/api';
 const VERIFY_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 export default async function SuppliersPage() {
+  const t = await getTranslations('backoffice.suppliers');
   const session = await getServerSession();
   const canVerify = session?.user.role ? VERIFY_ROLES.includes(session.user.role) : false;
 
@@ -27,22 +29,16 @@ export default async function SuppliersPage() {
     suppliers = await apiFetch<SupplierDto[]>('/suppliers');
     expiring = await apiFetch<SupplierDto[]>('/suppliers/expiring');
   } catch (error) {
-    loadError = error instanceof Error ? error.message : 'Could not load suppliers.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Suppliers"
-        description="Worker and provider compliance. A verified, in-province supplier is eligible for dispatch."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       {expiring.length > 0 ? (
         <Alert variant="destructive">
-          <p className="mb-1 font-medium">
-            {expiring.length} credential(s) expiring within 30 days — auto-dispatch is
-            paused:
-          </p>
+          <p className="mb-1 font-medium">{t('expiring', { count: expiring.length })}</p>
           <ul className="list-inside list-disc space-y-1">
             {expiring.map((supplier) => (
               <li key={supplier.id}>
@@ -55,7 +51,7 @@ export default async function SuppliersPage() {
                 —{' '}
                 {supplier.credentialExpiresAt
                   ? new Date(supplier.credentialExpiresAt).toLocaleDateString()
-                  : 'no expiry'}
+                  : t('noExpiry')}
               </li>
             ))}
           </ul>
@@ -64,8 +60,10 @@ export default async function SuppliersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Compliance register</CardTitle>
-          <CardDescription>{suppliers.length} supplier(s)</CardDescription>
+          <CardTitle>{t('register')}</CardTitle>
+          <CardDescription>
+            {t('suppliersCount', { count: suppliers.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadError ? (

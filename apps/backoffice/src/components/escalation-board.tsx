@@ -13,6 +13,7 @@ import {
   CardTitle,
   cn,
 } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
@@ -61,6 +62,7 @@ export interface EscalationBoardProps {
  * the deadline so the countdown keeps ticking between events.
  */
 export function EscalationBoard({ initialViews, canManage }: EscalationBoardProps) {
+  const t = useTranslations('backoffice.escalationBoard');
   const [views, setViews] = useState(initialViews);
   const [events, setEvents] = useState<EscalationSocketEvent[]>([]);
   const [connected, setConnected] = useState(false);
@@ -105,7 +107,9 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
       await refresh();
     } catch (redispatchError) {
       setError(
-        redispatchError instanceof Error ? redispatchError.message : 'Re-dispatch failed',
+        redispatchError instanceof Error
+          ? redispatchError.message
+          : t('redispatchFailed'),
       );
     } finally {
       setBusyItemId(null);
@@ -117,7 +121,7 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            Live dispatch
+            {t('liveDispatch')}
             <span
               className={`inline-block h-2 w-2 rounded-full ${
                 connected ? 'bg-success' : 'bg-destructive'
@@ -125,20 +129,18 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
               aria-hidden
             />
             <span className="text-xs font-normal text-muted-foreground">
-              {connected ? 'socket connected' : 'socket offline'}
+              {connected ? t('connected') : t('offline')}
             </span>
           </CardTitle>
-          <CardDescription>
-            Amber at 75% of the deadline, red at 100% or on decline/timeout.
-          </CardDescription>
+          <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button size="sm" variant="outline" onClick={() => void refresh()}>
-            Refresh
+            {t('refresh')}
           </Button>
           {error ? <Alert variant="destructive">{error}</Alert> : null}
           {events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No live events yet.</p>
+            <p className="text-sm text-muted-foreground">{t('noEvents')}</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {events.map((event) => (
@@ -149,7 +151,7 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
                   <Badge variant={alertVariant(event.alert)}>{event.alert}</Badge>
                   <span className="font-medium">{event.type}</span>
                   <span className="text-xs text-muted-foreground">
-                    {event.province ?? 'any province'} ·{' '}
+                    {event.province ?? t('anyProvince')} ·{' '}
                     {new Date(event.occurredAt).toLocaleTimeString()}
                   </span>
                 </li>
@@ -160,7 +162,7 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
       </Card>
 
       {views.length === 0 ? (
-        <Alert>Nothing is in the dispatch or escalation flow right now.</Alert>
+        <Alert>{t('nothing')}</Alert>
       ) : (
         views.map((view) => (
           <Card key={view.reservationId}>
@@ -189,7 +191,7 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
                     <Badge variant="outline">{item.status.replaceAll('_', ' ')}</Badge>
                     <Badge variant={alertVariant(alert)}>{alert}</Badge>
                     <span className="text-xs text-muted-foreground">
-                      {item.province ?? 'any province'} · deadline{' '}
+                      {item.province ?? t('anyProvince')} · {t('deadline')}{' '}
                       {remainingLabel(item.deadline, now)}
                     </span>
 
@@ -198,7 +200,7 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
                         className="text-xs font-medium text-primary underline-offset-4 hover:underline"
                         href={`tel:${item.workerPhone}`}
                       >
-                        Call {item.workerPhone}
+                        {t('call', { phone: item.workerPhone })}
                       </a>
                     ) : null}
 
@@ -210,7 +212,7 @@ export function EscalationBoard({ initialViews, canManage }: EscalationBoardProp
                         disabled={busyItemId === item.id}
                         onClick={() => void redispatch(item.id)}
                       >
-                        {busyItemId === item.id ? 'Re-dispatching…' : 'Re-dispatch'}
+                        {busyItemId === item.id ? t('redispatching') : t('redispatch')}
                       </Button>
                     ) : null}
                   </div>

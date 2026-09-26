@@ -387,6 +387,139 @@
       "seasonal": "saison",
       "markup": "marge",
       "failed": "Impossible d'estimer la prestation"
+    },
+    "suppliers": {
+      "title": "Fournisseurs",
+      "description": "Conformité des travailleurs et fournisseurs. Un fournisseur vérifié et actif dans la province est éligible à la répartition.",
+      "expiring": "{count} justificatif(s) expirant sous 30 jours — la répartition automatique est en pause :",
+      "noExpiry": "sans expiration",
+      "register": "Registre de conformité",
+      "suppliersCount": "{count} fournisseur(s)",
+      "loadError": "Impossible de charger les fournisseurs."
+    },
+    "suppliersTable": {
+      "empty": "Aucun fournisseur pour l'instant.",
+      "supplier": "Fournisseur",
+      "category": "Catégorie",
+      "provinces": "Provinces",
+      "rtnLicence": "Licence RTN",
+      "credential": "Justificatif",
+      "status": "Statut",
+      "available": "Disponible",
+      "verification": "Vérification",
+      "onFile": "Au dossier",
+      "missing": "Manquant",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "applications": {
+      "title": "Candidatures",
+      "description": "Recrutement des fournisseurs. Approuver une candidature crée le compte travailleur et le profil de conformité.",
+      "recruitment": "Recrutement",
+      "applicationsCount": "{count} candidature(s)",
+      "empty": "Aucune candidature pour l'instant. Le formulaire public est sur /join-our-network.",
+      "loadError": "Impossible de charger les candidatures.",
+      "applicant": "Candidat",
+      "category": "Catégorie",
+      "provinces": "Provinces",
+      "rtnLicence": "Licence RTN",
+      "status": "Statut",
+      "review": "Examen"
+    },
+    "applicationActions": {
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "failed": "Impossible de mettre à jour la candidature"
+    },
+    "dispatch": {
+      "title": "Répartition",
+      "description": "Offres, échéances et état d'escalade des prestations d'une réservation.",
+      "reservationStatus": "Statut de la réservation : {status}",
+      "serviceItems": "{count} prestation(s)",
+      "noServiceItems": "Aucune prestation sur cette réservation.",
+      "anyProvince": "Toute province",
+      "deadline": "échéance :",
+      "escalation": "Escalade",
+      "supplier": "Fournisseur",
+      "unassigned": "Non attribué",
+      "loadError": "Impossible de charger les données de répartition."
+    },
+    "escalation": {
+      "title": "Escalade",
+      "description": "Suivi en direct de la répartition et des délais pour le poste d'opérations. Ambre à 75 %, rouge à 100 % ou en cas de refus."
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Conversations voyageur↔opérations. Les réponses parviennent au voyageur en direct, avec un repli e-mail hors ligne.",
+      "conversation": "Conversation",
+      "reservationLabel": "Réservation {id}"
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Bons, ordres de travail et factures générés à partir des modèles aux couleurs du tenant.",
+      "generated": "Documents générés",
+      "documentsCount": "{count} document(s)",
+      "empty": "Aucun document pour l'instant. Confirmer une réservation les génère, ou utilisez régénérer.",
+      "type": "Type",
+      "generatedAt": "Généré",
+      "download": "Télécharger",
+      "downloadPdf": "Télécharger le PDF",
+      "loadError": "Impossible de charger les documents."
+    },
+    "escalationBoard": {
+      "liveDispatch": "Répartition en direct",
+      "connected": "socket connecté",
+      "offline": "socket hors ligne",
+      "description": "Ambre à 75 % du délai, rouge à 100 % ou en cas de refus/dépassement.",
+      "refresh": "Actualiser",
+      "noEvents": "Aucun événement en direct pour l'instant.",
+      "anyProvince": "toute province",
+      "deadline": "échéance",
+      "call": "Appeler {phone}",
+      "redispatching": "Nouvelle répartition…",
+      "redispatch": "Redistribuer",
+      "redispatchFailed": "Échec de la nouvelle répartition",
+      "nothing": "Rien dans le flux de répartition ou d'escalade pour l'instant."
+    },
+    "messageThread": {
+      "live": "en direct",
+      "offline": "hors ligne — les messages sont enregistrés et envoyés par e-mail",
+      "none": "Aucun message pour l'instant.",
+      "placeholder": "Écrire une réponse…",
+      "message": "Message",
+      "drafting": "Rédaction…",
+      "draftWithAi": "Rédiger avec l'IA",
+      "sending": "Envoi…",
+      "send": "Envoyer",
+      "loadFailed": "Impossible de charger les messages",
+      "sendFailed": "Impossible d'envoyer le message",
+      "draftFailed": "Impossible de rédiger une réponse"
+    },
+    "verification": {
+      "verify": "Vérifier",
+      "reject": "Rejeter",
+      "suspend": "Suspendre",
+      "reAudit": "Réauditer",
+      "reinstate": "Réintégrer",
+      "failed": "Échec de la mise à jour"
+    },
+    "supplierDetail": {
+      "back": "← Fournisseurs",
+      "profile": "Profil de conformité",
+      "contact": "Contact",
+      "provinces": "Provinces",
+      "rtnLicence": "Licence RTN",
+      "credentialExpiry": "Expiration du justificatif",
+      "available": "Disponible pour la répartition : {value}",
+      "yes": "oui",
+      "no": "non",
+      "credentialDocument": "Document justificatif",
+      "credentialDescription": "Justificatif Formatur, licence d'exploitation de transport ou carte RTN.",
+      "availability": "Calendrier de disponibilité",
+      "availabilityDescription": "Disponibilité en un tap et blocage granulaire. La répartition automatique respecte ces jours (spec §5.2).",
+      "noExpiry": "Aucune expiration suivie",
+      "expired": "Expiré il y a {days} j",
+      "expiresIn": "Expire dans {days} j"
     }
   }
 }

@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { CandidatesList } from '@/components/candidates-list';
 import { StartDispatchButton } from '@/components/dispatch-controls';
@@ -32,6 +33,7 @@ export default async function DispatchPage({
   searchParams: Promise<{ reservation?: string }>;
 }) {
   const { reservation } = await searchParams;
+  const t = await getTranslations('backoffice.dispatch');
   const session = await getServerSession();
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
 
@@ -45,15 +47,12 @@ export default async function DispatchPage({
       view = await apiFetch<DispatchViewDto>(`/reservations/${reservation}/dispatch`);
     }
   } catch (error) {
-    loadError = error instanceof Error ? error.message : 'Could not load dispatch data.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dispatch"
-        description="Offers, deadlines, and escalation state for a reservation's service items."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <ReservationPicker
         id="dispatch-reservation"
@@ -67,8 +66,12 @@ export default async function DispatchPage({
       {view ? (
         <Card>
           <CardHeader>
-            <CardTitle>Reservation status: {view.status.replaceAll('_', ' ')}</CardTitle>
-            <CardDescription>{view.serviceItems.length} service item(s)</CardDescription>
+            <CardTitle>
+              {t('reservationStatus', { status: view.status.replaceAll('_', ' ') })}
+            </CardTitle>
+            <CardDescription>
+              {t('serviceItems', { count: view.serviceItems.length })}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <StartDispatchButton
@@ -77,7 +80,7 @@ export default async function DispatchPage({
             />
 
             {view.serviceItems.length === 0 ? (
-              <Alert>No service items on this reservation.</Alert>
+              <Alert>{t('noServiceItems')}</Alert>
             ) : (
               view.serviceItems.map((item) => (
                 <Card key={item.id}>
@@ -87,18 +90,18 @@ export default async function DispatchPage({
                       {item.status.replaceAll('_', ' ')}
                     </CardTitle>
                     <CardDescription>
-                      {item.province ?? 'Any province'} · deadline:{' '}
+                      {item.province ?? t('anyProvince')} · {t('deadline')}{' '}
                       {item.deadline ? new Date(item.deadline).toLocaleString() : '—'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">Escalation</span>
+                      <span className="text-muted-foreground">{t('escalation')}</span>
                       <Badge variant={escalationVariant(item.escalation)}>
                         {item.escalation}
                       </Badge>
-                      <span className="text-muted-foreground">Supplier</span>
-                      <span>{item.supplierId ?? 'Unassigned'}</span>
+                      <span className="text-muted-foreground">{t('supplier')}</span>
+                      <span>{item.supplierId ?? t('unassigned')}</span>
                     </div>
                     {item.status === 'UNASSIGNED' || item.status === 'DECLINED' ? (
                       <CandidatesList serviceItemId={item.id} />

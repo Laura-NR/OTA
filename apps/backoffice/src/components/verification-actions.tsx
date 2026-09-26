@@ -2,6 +2,7 @@
 
 import type { VerificationStatus } from '@ota/domain';
 import { Alert, Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -9,15 +10,15 @@ import { apiRequest } from '@/lib/client-api';
 
 export const VERIFICATION_ACTIONS: Record<
   VerificationStatus,
-  { label: string; to: VerificationStatus }[]
+  { labelKey: string; to: VerificationStatus }[]
 > = {
   PENDING_AUDIT: [
-    { label: 'Verify', to: 'VERIFIED' },
-    { label: 'Reject', to: 'REJECTED' },
+    { labelKey: 'verify', to: 'VERIFIED' },
+    { labelKey: 'reject', to: 'REJECTED' },
   ],
-  VERIFIED: [{ label: 'Suspend', to: 'SUSPENDED' }],
-  REJECTED: [{ label: 'Re-audit', to: 'PENDING_AUDIT' }],
-  SUSPENDED: [{ label: 'Reinstate', to: 'VERIFIED' }],
+  VERIFIED: [{ labelKey: 'suspend', to: 'SUSPENDED' }],
+  REJECTED: [{ labelKey: 'reAudit', to: 'PENDING_AUDIT' }],
+  SUSPENDED: [{ labelKey: 'reinstate', to: 'VERIFIED' }],
 };
 
 export interface VerificationActionsProps {
@@ -31,6 +32,7 @@ export function VerificationActions({
   status,
   canVerify,
 }: VerificationActionsProps) {
+  const t = useTranslations('backoffice.verification');
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export function VerificationActions({
       router.refresh();
     } catch (verificationError) {
       setError(
-        verificationError instanceof Error ? verificationError.message : 'Update failed',
+        verificationError instanceof Error ? verificationError.message : t('failed'),
       );
     } finally {
       setPending(false);
@@ -69,7 +71,7 @@ export function VerificationActions({
             disabled={pending}
             onClick={() => setVerification(action.to)}
           >
-            {action.label}
+            {t(action.labelKey)}
           </Button>
         ))}
       </div>

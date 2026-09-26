@@ -1,5 +1,6 @@
 import type { ReservationListItemDto } from '@ota/schemas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { MessageThread } from '@/components/message-thread';
 import { PageHeader } from '@/components/page-header';
@@ -12,6 +13,7 @@ export default async function MessagesPage({
   searchParams: Promise<{ reservation?: string }>;
 }) {
   const { reservation } = await searchParams;
+  const t = await getTranslations('backoffice.messages');
 
   let reservations: ReservationListItemDto[];
   try {
@@ -22,10 +24,7 @@ export default async function MessagesPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Messages"
-        description="Traveler↔operations conversations. Replies reach the traveler live, with an email fallback when they are offline."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <ReservationPicker
         id="messages-reservation"
@@ -37,8 +36,10 @@ export default async function MessagesPage({
       {reservation ? (
         <Card>
           <CardHeader>
-            <CardTitle>Conversation</CardTitle>
-            <CardDescription>Reservation {reservation}</CardDescription>
+            <CardTitle>{t('conversation')}</CardTitle>
+            <CardDescription>
+              {t('reservationLabel', { id: reservation })}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <MessageThread reservationId={reservation} />

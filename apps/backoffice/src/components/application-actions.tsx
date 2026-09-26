@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -16,6 +17,7 @@ export function ApplicationActions({
   status: string;
   canReview: boolean;
 }) {
+  const t = useTranslations('backoffice.applicationActions');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +35,7 @@ export function ApplicationActions({
       });
       router.refresh();
     } catch (reviewError) {
-      setError(
-        reviewError instanceof Error
-          ? reviewError.message
-          : 'Could not update application',
-      );
+      setError(reviewError instanceof Error ? reviewError.message : t('failed'));
     } finally {
       setBusy(false);
     }
@@ -48,7 +46,7 @@ export function ApplicationActions({
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       <div className="flex gap-2">
         <Button size="sm" disabled={busy} onClick={() => review('approve')}>
-          Approve
+          {t('approve')}
         </Button>
         <Button
           size="sm"
@@ -56,7 +54,7 @@ export function ApplicationActions({
           disabled={busy}
           onClick={() => review('reject')}
         >
-          Reject
+          {t('reject')}
         </Button>
       </div>
     </div>

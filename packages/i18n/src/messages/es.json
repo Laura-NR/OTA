@@ -387,6 +387,139 @@
       "seasonal": "temporada",
       "markup": "recargo",
       "failed": "No se pudo cotizar el servicio"
+    },
+    "suppliers": {
+      "title": "Proveedores",
+      "description": "Cumplimiento de trabajadores y proveedores. Un proveedor verificado y activo en su provincia es elegible para despacho.",
+      "expiring": "{count} credencial(es) que vencen en 30 días — el auto-despacho está en pausa:",
+      "noExpiry": "sin vencimiento",
+      "register": "Registro de cumplimiento",
+      "suppliersCount": "{count} proveedor(es)",
+      "loadError": "No se pudieron cargar los proveedores."
+    },
+    "suppliersTable": {
+      "empty": "Aún no hay proveedores.",
+      "supplier": "Proveedor",
+      "category": "Categoría",
+      "provinces": "Provincias",
+      "rtnLicence": "Licencia RTN",
+      "credential": "Credencial",
+      "status": "Estado",
+      "available": "Disponible",
+      "verification": "Verificación",
+      "onFile": "En archivo",
+      "missing": "Falta",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "applications": {
+      "title": "Solicitudes",
+      "description": "Reclutamiento de proveedores. Aprobar una solicitud crea la cuenta de trabajador y el perfil de cumplimiento.",
+      "recruitment": "Reclutamiento",
+      "applicationsCount": "{count} solicitud(es)",
+      "empty": "Aún no hay solicitudes. El formulario público está en /join-our-network.",
+      "loadError": "No se pudieron cargar las solicitudes.",
+      "applicant": "Solicitante",
+      "category": "Categoría",
+      "provinces": "Provincias",
+      "rtnLicence": "Licencia RTN",
+      "status": "Estado",
+      "review": "Revisión"
+    },
+    "applicationActions": {
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "failed": "No se pudo actualizar la solicitud"
+    },
+    "dispatch": {
+      "title": "Despacho",
+      "description": "Ofertas, plazos y estado de escalado de los servicios de una reserva.",
+      "reservationStatus": "Estado de la reserva: {status}",
+      "serviceItems": "{count} servicio(s)",
+      "noServiceItems": "Esta reserva no tiene servicios.",
+      "anyProvince": "Cualquier provincia",
+      "deadline": "plazo:",
+      "escalation": "Escalado",
+      "supplier": "Proveedor",
+      "unassigned": "Sin asignar",
+      "loadError": "No se pudieron cargar los datos de despacho."
+    },
+    "escalation": {
+      "title": "Escalado",
+      "description": "Monitoreo en vivo de despacho y vencimientos para el equipo de operaciones. Ámbar al 75%, rojo al 100% o al rechazar."
+    },
+    "messages": {
+      "title": "Mensajes",
+      "description": "Conversaciones viajero↔operaciones. Las respuestas llegan al viajero en vivo, con respaldo por correo si está desconectado.",
+      "conversation": "Conversación",
+      "reservationLabel": "Reserva {id}"
+    },
+    "documents": {
+      "title": "Documentos",
+      "description": "Bonos, órdenes de trabajo y facturas generados desde las plantillas con la marca del tenant.",
+      "generated": "Documentos generados",
+      "documentsCount": "{count} documento(s)",
+      "empty": "Aún no hay documentos. Confirmar una reserva los genera, o usa regenerar.",
+      "type": "Tipo",
+      "generatedAt": "Generado",
+      "download": "Descargar",
+      "downloadPdf": "Descargar PDF",
+      "loadError": "No se pudieron cargar los documentos."
+    },
+    "escalationBoard": {
+      "liveDispatch": "Despacho en vivo",
+      "connected": "socket conectado",
+      "offline": "socket desconectado",
+      "description": "Ámbar al 75% del plazo, rojo al 100% o al rechazar/agotar.",
+      "refresh": "Actualizar",
+      "noEvents": "Aún no hay eventos en vivo.",
+      "anyProvince": "cualquier provincia",
+      "deadline": "plazo",
+      "call": "Llamar a {phone}",
+      "redispatching": "Redespachando…",
+      "redispatch": "Redespachar",
+      "redispatchFailed": "Falló el redespacho",
+      "nothing": "Ahora mismo no hay nada en el flujo de despacho o escalado."
+    },
+    "messageThread": {
+      "live": "en vivo",
+      "offline": "desconectado — los mensajes se guardan y se envían por correo",
+      "none": "Aún no hay mensajes.",
+      "placeholder": "Escribe una respuesta…",
+      "message": "Mensaje",
+      "drafting": "Redactando…",
+      "draftWithAi": "Redactar con IA",
+      "sending": "Enviando…",
+      "send": "Enviar",
+      "loadFailed": "No se pudieron cargar los mensajes",
+      "sendFailed": "No se pudo enviar el mensaje",
+      "draftFailed": "No se pudo redactar una respuesta"
+    },
+    "verification": {
+      "verify": "Verificar",
+      "reject": "Rechazar",
+      "suspend": "Suspender",
+      "reAudit": "Reauditar",
+      "reinstate": "Reactivar",
+      "failed": "Falló la actualización"
+    },
+    "supplierDetail": {
+      "back": "← Proveedores",
+      "profile": "Perfil de cumplimiento",
+      "contact": "Contacto",
+      "provinces": "Provincias",
+      "rtnLicence": "Licencia RTN",
+      "credentialExpiry": "Vencimiento de credencial",
+      "available": "Disponible para despacho: {value}",
+      "yes": "sí",
+      "no": "no",
+      "credentialDocument": "Documento de credencial",
+      "credentialDescription": "Credencial Formatur, licencia de operación de transporte o tarjeta RTN.",
+      "availability": "Calendario de disponibilidad",
+      "availabilityDescription": "Disponibilidad con un toque y bloqueo granular. El auto-despacho respeta estos días (spec §5.2).",
+      "noExpiry": "Sin vencimiento registrado",
+      "expired": "Venció hace {days}d",
+      "expiresIn": "Vence en {days}d"
     }
   }
 }

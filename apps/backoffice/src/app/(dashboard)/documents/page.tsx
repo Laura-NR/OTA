@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { RegenerateDocumentsButton } from '@/components/documents-controls';
 import { PageHeader } from '@/components/page-header';
@@ -29,6 +30,7 @@ export default async function DocumentsPage({
   searchParams: Promise<{ reservation?: string }>;
 }) {
   const { reservation } = await searchParams;
+  const t = await getTranslations('backoffice.documents');
   const session = await getServerSession();
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
 
@@ -42,15 +44,12 @@ export default async function DocumentsPage({
       documents = await apiFetch<DocumentDto[]>(`/reservations/${reservation}/documents`);
     }
   } catch (error) {
-    loadError = error instanceof Error ? error.message : 'Could not load documents.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Documents"
-        description="Vouchers, work orders, and invoices generated from the tenant-branded templates."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <ReservationPicker
         id="documents-reservation"
@@ -64,8 +63,10 @@ export default async function DocumentsPage({
       {reservation ? (
         <Card>
           <CardHeader>
-            <CardTitle>Generated documents</CardTitle>
-            <CardDescription>{documents.length} document(s)</CardDescription>
+            <CardTitle>{t('generated')}</CardTitle>
+            <CardDescription>
+              {t('documentsCount', { count: documents.length })}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <RegenerateDocumentsButton
@@ -74,17 +75,14 @@ export default async function DocumentsPage({
             />
 
             {documents.length === 0 ? (
-              <Alert>
-                No documents yet. Confirming a reservation generates them, or use
-                regenerate.
-              </Alert>
+              <Alert>{t('empty')}</Alert>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Generated</TableHead>
-                    <TableHead>Download</TableHead>
+                    <TableHead>{t('type')}</TableHead>
+                    <TableHead>{t('generatedAt')}</TableHead>
+                    <TableHead>{t('download')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -105,7 +103,7 @@ export default async function DocumentsPage({
                           target="_blank"
                           rel="noreferrer"
                         >
-                          Download PDF
+                          {t('downloadPdf')}
                         </a>
                       </TableCell>
                     </TableRow>

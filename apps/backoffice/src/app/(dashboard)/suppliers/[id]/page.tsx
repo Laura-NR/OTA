@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -26,28 +27,13 @@ const EDIT_ROLES: readonly string[] = [
 
 type ExpiryBadge = { label: string; variant: 'success' | 'destructive' | 'outline' };
 
-function expiryBadge(expiresAt: string | null): ExpiryBadge {
-  if (!expiresAt) {
-    return { label: 'No expiry tracked', variant: 'outline' };
-  }
-  const days = Math.ceil(
-    (new Date(expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000),
-  );
-  if (days < 0) {
-    return { label: `Expired ${Math.abs(days)}d ago`, variant: 'destructive' };
-  }
-  if (days <= 30) {
-    return { label: `Expires in ${days}d`, variant: 'destructive' };
-  }
-  return { label: new Date(expiresAt).toLocaleDateString(), variant: 'success' };
-}
-
 export default async function SupplierDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations('backoffice.supplierDetail');
   const session = await getServerSession();
   const role = session?.user.role ?? '';
   const canVerify = VERIFY_ROLES.includes(role);
@@ -62,7 +48,17 @@ export default async function SupplierDetailPage({
     },
   );
 
-  const expiry = expiryBadge(supplier.credentialExpiresAt);
+  const expiresAt = supplier.credentialExpiresAt;
+  const expiryDays = expiresAt
+    ? Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+    : null;
+  const expiry: ExpiryBadge = !expiresAt
+    ? { label: t('noExpiry'), variant: 'outline' }
+    : expiryDays! < 0
+      ? { label: t('expired', { days: Math.abs(expiryDays!) }), variant: 'destructive' }
+      : expiryDays! <= 30
+        ? { label: t('expiresIn', { days: expiryDays! }), variant: 'destructive' }
+        : { label: new Date(expiresAt).toLocaleDateString(), variant: 'success' };
 
   return (
     <div className="space-y-6">
@@ -71,7 +67,7 @@ export default async function SupplierDetailPage({
           href="/suppliers"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← Suppliers
+          {t('back')}
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           {supplier.fullName ?? supplier.email}
@@ -83,21 +79,21 @@ export default async function SupplierDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Compliance profile</CardTitle>
+          <CardTitle>{t('profile')}</CardTitle>
           <CardDescription>{supplier.category.replaceAll('_', ' ')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                Contact
+                {t('contact')}
               </dt>
               <dd className="mt-1 text-sm">{supplier.email}</dd>
               <dd className="text-xs text-muted-foreground">{supplier.primaryPhone}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                Provinces
+                {t('provinces')}
               </dt>
               <dd className="mt-1 text-sm">
                 {supplier.provincesActive.join(', ') || '—'}
@@ -105,13 +101,13 @@ export default async function SupplierDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                RTN licence
+                {t('rtnLicence')}
               </dt>
               <dd className="mt-1 text-sm">{supplier.rtnLicenseNumber}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                Credential expiry
+                {t('credentialExpiry')}
               </dt>
               <dd className="mt-1">
                 <Badge variant={expiry.variant}>{expiry.label}</Badge>
@@ -120,7 +116,7 @@ export default async function SupplierDetailPage({
           </dl>
 
           <div className="text-sm text-muted-foreground">
-            Available for dispatch: {supplier.isAvailable ? 'yes' : 'no'}
+            {t('available', { value: supplier.isAvailable ? t('yes') : t('no') })}
           </div>
 
           <VerificationActions
@@ -133,10 +129,8 @@ export default async function SupplierDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Credential document</CardTitle>
-          <CardDescription>
-            Formatur credential, transport operating licence, or RTN card.
-          </CardDescription>
+          <CardTitle>{t('credentialDocument')}</CardTitle>
+          <CardDescription>{t('credentialDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <SupplierCredential
@@ -150,11 +144,8 @@ export default async function SupplierDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Availability calendar</CardTitle>
-          <CardDescription>
-            Single-tap availability and granular blocking. Auto-dispatch respects these
-            days (spec §5.2).
-          </CardDescription>
+          <CardTitle>{t('availability')}</CardTitle>
+          <CardDescription>{t('availabilityDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <AvailabilityCalendar supplierId={supplier.id} canEdit={canVerify} />

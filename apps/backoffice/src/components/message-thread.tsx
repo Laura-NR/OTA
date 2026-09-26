@@ -2,6 +2,7 @@
 
 import type { MessageDto } from '@ota/schemas';
 import { Alert, Button, Input } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -14,6 +15,7 @@ import { connectConversation, type MessageSocketEvent } from '@/lib/socket';
  * email fallback hangs off.
  */
 export function MessageThread({ reservationId }: { reservationId: string }) {
+  const t = useTranslations('backoffice.messageThread');
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [body, setBody] = useState('');
   const [connected, setConnected] = useState(false);
@@ -36,9 +38,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
     apiRequest<MessageDto[]>(`/reservations/${reservationId}/messages`)
       .then(setMessages)
       .catch((loadError: unknown) =>
-        setError(
-          loadError instanceof Error ? loadError.message : 'Could not load messages',
-        ),
+        setError(loadError instanceof Error ? loadError.message : t('loadFailed')),
       );
   }, [reservationId]);
 
@@ -76,7 +76,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
       upsert(message);
       setBody('');
     } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : 'Could not send message');
+      setError(sendError instanceof Error ? sendError.message : t('sendFailed'));
     } finally {
       setBusy(false);
     }
@@ -92,9 +92,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
       );
       setBody(draft.body);
     } catch (draftError) {
-      setError(
-        draftError instanceof Error ? draftError.message : 'Could not draft a reply',
-      );
+      setError(draftError instanceof Error ? draftError.message : t('draftFailed'));
     } finally {
       setDrafting(false);
     }
@@ -109,14 +107,14 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
           }`}
           aria-hidden
         />
-        {connected ? 'live' : 'offline — messages still save and email'}
+        {connected ? t('live') : t('offline')}
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
       <div className="max-h-96 space-y-3 overflow-y-auto rounded-md border p-4">
         {messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No messages yet.</p>
+          <p className="text-sm text-muted-foreground">{t('none')}</p>
         ) : (
           messages.map((message) => (
             <div
@@ -145,8 +143,8 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         <Input
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          placeholder="Write a reply…"
-          aria-label="Message"
+          placeholder={t('placeholder')}
+          aria-label={t('message')}
         />
         <Button
           type="button"
@@ -154,10 +152,10 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
           disabled={drafting || busy}
           onClick={draftWithAi}
         >
-          {drafting ? 'Drafting…' : 'Draft with AI'}
+          {drafting ? t('drafting') : t('draftWithAi')}
         </Button>
         <Button type="submit" disabled={busy || !body.trim()}>
-          {busy ? 'Sending…' : 'Send'}
+          {busy ? t('sending') : t('send')}
         </Button>
       </form>
     </div>

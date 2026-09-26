@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { VerificationActions } from './verification-actions';
@@ -29,24 +30,24 @@ export function SuppliersTable({
   suppliers: SupplierDto[];
   canVerify: boolean;
 }) {
+  const t = useTranslations('backoffice.suppliersTable');
+
   if (suppliers.length === 0) {
-    return (
-      <Alert>No suppliers yet. Recruitment intake is not built in this increment.</Alert>
-    );
+    return <Alert>{t('empty')}</Alert>;
   }
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Supplier</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Provinces</TableHead>
-          <TableHead>RTN licence</TableHead>
-          <TableHead>Credential</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Available</TableHead>
-          {canVerify ? <TableHead>Verification</TableHead> : null}
+          <TableHead>{t('supplier')}</TableHead>
+          <TableHead>{t('category')}</TableHead>
+          <TableHead>{t('provinces')}</TableHead>
+          <TableHead>{t('rtnLicence')}</TableHead>
+          <TableHead>{t('credential')}</TableHead>
+          <TableHead>{t('status')}</TableHead>
+          <TableHead>{t('available')}</TableHead>
+          {canVerify ? <TableHead>{t('verification')}</TableHead> : null}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -66,7 +67,7 @@ export function SuppliersTable({
             <TableCell>{supplier.rtnLicenseNumber}</TableCell>
             <TableCell>
               <Badge variant={supplier.hasCredential ? 'success' : 'outline'}>
-                {supplier.hasCredential ? 'On file' : 'Missing'}
+                {supplier.hasCredential ? t('onFile') : t('missing')}
               </Badge>
             </TableCell>
             <TableCell>
@@ -74,7 +75,7 @@ export function SuppliersTable({
                 {supplier.verificationStatus.replaceAll('_', ' ')}
               </Badge>
             </TableCell>
-            <TableCell>{supplier.isAvailable ? 'Yes' : 'No'}</TableCell>
+            <TableCell>{supplier.isAvailable ? t('yes') : t('no')}</TableCell>
             {canVerify ? (
               <TableCell>
                 <VerificationActions

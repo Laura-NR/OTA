@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 
 import { ApplicationActions } from '@/components/application-actions';
 import { PageHeader } from '@/components/page-header';
@@ -29,6 +30,7 @@ function statusVariant(status: string) {
 }
 
 export default async function ApplicationsPage() {
+  const t = await getTranslations('backoffice.applications');
   const session = await getServerSession();
   const canReview = session?.user.role ? WRITE_ROLES.includes(session.user.role) : false;
 
@@ -37,38 +39,35 @@ export default async function ApplicationsPage() {
   try {
     applications = await apiFetch<SupplierApplicationDto[]>('/supplier-applications');
   } catch (error) {
-    loadError = error instanceof Error ? error.message : 'Could not load applications.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Applications"
-        description="Supplier recruitment. Approving an application creates the worker account and compliance profile."
-      />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Recruitment</CardTitle>
-          <CardDescription>{applications.length} application(s)</CardDescription>
+          <CardTitle>{t('recruitment')}</CardTitle>
+          <CardDescription>
+            {t('applicationsCount', { count: applications.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadError ? (
             <Alert variant="destructive">{loadError}</Alert>
           ) : applications.length === 0 ? (
-            <Alert>
-              No applications yet. The public form lives at /join-our-network.
-            </Alert>
+            <Alert>{t('empty')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Applicant</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Provinces</TableHead>
-                  <TableHead>RTN licence</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Review</TableHead>
+                  <TableHead>{t('applicant')}</TableHead>
+                  <TableHead>{t('category')}</TableHead>
+                  <TableHead>{t('provinces')}</TableHead>
+                  <TableHead>{t('rtnLicence')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  <TableHead>{t('review')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -387,6 +387,139 @@
       "seasonal": "seasonal",
       "markup": "markup",
       "failed": "Could not price item"
+    },
+    "suppliers": {
+      "title": "Suppliers",
+      "description": "Worker and provider compliance. A verified, in-province supplier is eligible for dispatch.",
+      "expiring": "{count} credential(s) expiring within 30 days — auto-dispatch is paused:",
+      "noExpiry": "no expiry",
+      "register": "Compliance register",
+      "suppliersCount": "{count} supplier(s)",
+      "loadError": "Could not load suppliers."
+    },
+    "suppliersTable": {
+      "empty": "No suppliers yet.",
+      "supplier": "Supplier",
+      "category": "Category",
+      "provinces": "Provinces",
+      "rtnLicence": "RTN licence",
+      "credential": "Credential",
+      "status": "Status",
+      "available": "Available",
+      "verification": "Verification",
+      "onFile": "On file",
+      "missing": "Missing",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "applications": {
+      "title": "Applications",
+      "description": "Supplier recruitment. Approving an application creates the worker account and compliance profile.",
+      "recruitment": "Recruitment",
+      "applicationsCount": "{count} application(s)",
+      "empty": "No applications yet. The public form lives at /join-our-network.",
+      "loadError": "Could not load applications.",
+      "applicant": "Applicant",
+      "category": "Category",
+      "provinces": "Provinces",
+      "rtnLicence": "RTN licence",
+      "status": "Status",
+      "review": "Review"
+    },
+    "applicationActions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "failed": "Could not update application"
+    },
+    "dispatch": {
+      "title": "Dispatch",
+      "description": "Offers, deadlines, and escalation state for a reservation's service items.",
+      "reservationStatus": "Reservation status: {status}",
+      "serviceItems": "{count} service item(s)",
+      "noServiceItems": "No service items on this reservation.",
+      "anyProvince": "Any province",
+      "deadline": "deadline:",
+      "escalation": "Escalation",
+      "supplier": "Supplier",
+      "unassigned": "Unassigned",
+      "loadError": "Could not load dispatch data."
+    },
+    "escalation": {
+      "title": "Escalation",
+      "description": "Live dispatch and timeout monitoring for the operations desk. Amber at 75%, red at 100% or on decline."
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Traveler↔operations conversations. Replies reach the traveler live, with an email fallback when they are offline.",
+      "conversation": "Conversation",
+      "reservationLabel": "Reservation {id}"
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Vouchers, work orders, and invoices generated from the tenant-branded templates.",
+      "generated": "Generated documents",
+      "documentsCount": "{count} document(s)",
+      "empty": "No documents yet. Confirming a reservation generates them, or use regenerate.",
+      "type": "Type",
+      "generatedAt": "Generated",
+      "download": "Download",
+      "downloadPdf": "Download PDF",
+      "loadError": "Could not load documents."
+    },
+    "escalationBoard": {
+      "liveDispatch": "Live dispatch",
+      "connected": "socket connected",
+      "offline": "socket offline",
+      "description": "Amber at 75% of the deadline, red at 100% or on decline/timeout.",
+      "refresh": "Refresh",
+      "noEvents": "No live events yet.",
+      "anyProvince": "any province",
+      "deadline": "deadline",
+      "call": "Call {phone}",
+      "redispatching": "Re-dispatching…",
+      "redispatch": "Re-dispatch",
+      "redispatchFailed": "Re-dispatch failed",
+      "nothing": "Nothing is in the dispatch or escalation flow right now."
+    },
+    "messageThread": {
+      "live": "live",
+      "offline": "offline — messages still save and email",
+      "none": "No messages yet.",
+      "placeholder": "Write a reply…",
+      "message": "Message",
+      "drafting": "Drafting…",
+      "draftWithAi": "Draft with AI",
+      "sending": "Sending…",
+      "send": "Send",
+      "loadFailed": "Could not load messages",
+      "sendFailed": "Could not send message",
+      "draftFailed": "Could not draft a reply"
+    },
+    "verification": {
+      "verify": "Verify",
+      "reject": "Reject",
+      "suspend": "Suspend",
+      "reAudit": "Re-audit",
+      "reinstate": "Reinstate",
+      "failed": "Update failed"
+    },
+    "supplierDetail": {
+      "back": "← Suppliers",
+      "profile": "Compliance profile",
+      "contact": "Contact",
+      "provinces": "Provinces",
+      "rtnLicence": "RTN licence",
+      "credentialExpiry": "Credential expiry",
+      "available": "Available for dispatch: {value}",
+      "yes": "yes",
+      "no": "no",
+      "credentialDocument": "Credential document",
+      "credentialDescription": "Formatur credential, transport operating licence, or RTN card.",
+      "availability": "Availability calendar",
+      "availabilityDescription": "Single-tap availability and granular blocking. Auto-dispatch respects these days (spec §5.2).",
+      "noExpiry": "No expiry tracked",
+      "expired": "Expired {days}d ago",
+      "expiresIn": "Expires in {days}d"
     }
   }
 }
