@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type { TenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import type { Mailer } from '@ota/email';
@@ -65,9 +67,54 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
         completedAt: new Date(Date.now() - 200 * DAY_MS),
         totalCurrency: 'EUR',
         totalAmount: '321.00',
+        customItineraryPayload: { notes: 'PII itinerary notes' },
+        serviceItems: {
+          create: [
+            {
+              serviceType: 'GUIDE',
+              serviceDateStart: new Date(Date.now() - 215 * DAY_MS),
+              serviceDateEnd: new Date(Date.now() - 215 * DAY_MS),
+              province: 'La Habana',
+              status: 'DECLINED',
+              declineReason: 'PII supplier decline reason',
+            },
+          ],
+        },
       },
     });
     reservationId = reservation.id;
+
+    // Tier 1 free-text PII that the purge must scrub.
+    await prisma.message.create({
+      data: { reservationId, sender: 'TRAVELER', body: 'My passport is P1234567' },
+    });
+    await prisma.review.create({
+      data: { reservationId, rating: 5, comment: 'PII review comment' },
+    });
+    await prisma.incident.create({
+      data: {
+        reservationId,
+        category: 'MEDICAL',
+        description: 'PII incident description',
+        severity: 'HIGH',
+      },
+    });
+    await prisma.auditLog.create({
+      data: {
+        action: 'reservation.transition',
+        entityType: 'Reservation',
+        entityId: reservationId,
+        metadata: { from: 'A', to: 'B', reason: 'PII audit reason' },
+      },
+    });
+    await prisma.verification.create({
+      data: {
+        id: randomUUID(),
+        identifier: `magic-link:${email}`,
+        value: 'token',
+        expiresAt: new Date(Date.now() + 3_600_000),
+      },
+    });
   });
 
   afterAll(async () => {
@@ -82,6 +129,10 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
         ],
       },
     });
+    await prisma.verification.deleteMany({
+      where: { identifier: { contains: email } },
+    });
+    // Messages, reviews, incidents, and service items cascade with the booking.
     await prisma.reservation.deleteMany({ where: { id: reservationId } });
     await prisma.user.deleteMany({ where: { id: userId } });
     await prisma.$disconnect();
@@ -130,5 +181,43 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     });
     expect(reservation).not.toBeNull();
     expect(reservation?.totalAmount.toString()).toBe('321');
+
+    // Tier 1: reservation-scoped free text is redacted.
+    expect(reservation?.customItineraryPayload).toBeNull();
+
+    const storedMessage = await prisma.message.findFirstOrThrow({
+      where: { reservationId },
+    });
+    expect(storedMessage.body).toBe('[redacted]');
+
+    const review = await prisma.review.findFirstOrThrow({
+      where: { reservationId },
+    });
+    expect(review.comment).toBeNull();
+    expect(review.rating).toBe(5);
+
+    const incident = await prisma.incident.findFirstOrThrow({
+      where: { reservationId },
+    });
+    expect(incident.description).toBe('[redacted]');
+    expect(incident.severity).toBe('HIGH');
+
+    const serviceItem = await prisma.serviceItem.findFirstOrThrow({
+      where: { reservationId },
+    });
+    expect(serviceItem.declineReason).toBeNull();
+
+    // Better Auth tokens for the old address are gone.
+    const verifications = await prisma.verification.count({
+      where: { identifier: { contains: email } },
+    });
+    expect(verifications).toBe(0);
+
+    // Audit metadata keeps its non-PII context but loses the free text.
+    const audit = await prisma.auditLog.findFirstOrThrow({
+      where: { entityId: reservationId, action: 'reservation.transition' },
+    });
+    expect(audit.metadata).toMatchObject({ from: 'A', to: 'B' });
+    expect((audit.metadata as Record<string, unknown>).reason).toBeUndefined();
   }, 20_000);
 });

@@ -6,7 +6,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
-import { Role } from '@ota/db';
+import { Prisma, Role } from '@ota/db';
 import {
   isRetentionNoticeDue,
   isRetentionPurgeDue,
@@ -58,6 +58,31 @@ function escapeHtml(value: string): string {
 
 function iso(date: Date | null): string | null {
   return date ? date.toISOString() : null;
+}
+
+/** Free-text keys that must not survive anonymization in audit metadata. */
+const PII_AUDIT_KEYS = ['reason', 'note', 'email', 'declineReason'];
+
+/**
+ * Remove free-text PII keys from an audit metadata object. Returns undefined
+ * when there is nothing to change, so the caller can skip the write.
+ */
+function redactAuditMetadata(
+  metadata: Prisma.JsonValue | null,
+): Prisma.JsonObject | undefined {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    return undefined;
+  }
+  let changed = false;
+  const cleaned: Prisma.JsonObject = {};
+  for (const [key, value] of Object.entries(metadata)) {
+    if (PII_AUDIT_KEYS.includes(key)) {
+      changed = true;
+      continue;
+    }
+    cleaned[key] = value as Prisma.JsonValue;
+  }
+  return changed ? cleaned : undefined;
 }
 
 /**
@@ -291,7 +316,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       if (!isRetentionPurgeDue(clock, now)) {
         continue;
       }
-      await this.anonymize(user.id, now);
+      await this.anonymize(user.id, user.email, now);
       purged += 1;
     }
 
@@ -300,11 +325,77 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Scrub the traveler's PII and revoke their credentials in one transaction.
-   * Reservations, service items, payment receipts, and audit rows are kept so
-   * the fiscal aggregates survive (spec §3.5).
+   * Fiscal rows (reservation totals, service items, payment receipts, audit
+   * trail) are kept, but free-text PII on the traveler's bookings is redacted
+   * (`docs/pii-at-rest-review.md`, Tier 1).
    */
-  private async anonymize(userId: string, now: Date): Promise<void> {
+  private async anonymize(userId: string, email: string, now: Date): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
+      const reservations = await tx.reservation.findMany({
+        where: { userId },
+        select: { id: true, serviceItems: { select: { id: true } } },
+      });
+      const reservationIds = reservations.map((reservation) => reservation.id);
+      const serviceItemIds = reservations.flatMap((reservation) =>
+        reservation.serviceItems.map((item) => item.id),
+      );
+
+      // Redact reservation-scoped free text; keep the rows (sender, rating,
+      // severity, dates) so aggregate metrics survive.
+      await tx.reservation.updateMany({
+        where: { userId },
+        data: { customItineraryPayload: Prisma.DbNull },
+      });
+      await tx.message.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: { body: '[redacted]' },
+      });
+      await tx.review.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: { comment: null },
+      });
+      await tx.incident.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: { description: '[redacted]' },
+      });
+      await tx.serviceItem.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: { declineReason: null },
+      });
+      if (serviceItemIds.length > 0) {
+        await tx.dispatchOffer.updateMany({
+          where: { serviceItemId: { in: serviceItemIds } },
+          data: { declineReason: null },
+        });
+      }
+
+      // Better Auth verification rows are keyed by the old address.
+      await tx.verification.deleteMany({
+        where: { identifier: { contains: email } },
+      });
+
+      // Strip free-text PII keys from the traveler's audit metadata.
+      if (reservationIds.length > 0 || serviceItemIds.length > 0) {
+        const audits = await tx.auditLog.findMany({
+          where: {
+            OR: [
+              { entityType: 'Reservation', entityId: { in: reservationIds } },
+              { entityType: 'ServiceItem', entityId: { in: serviceItemIds } },
+            ],
+          },
+          select: { id: true, metadata: true },
+        });
+        for (const audit of audits) {
+          const cleaned = redactAuditMetadata(audit.metadata);
+          if (cleaned) {
+            await tx.auditLog.update({
+              where: { id: audit.id },
+              data: { metadata: cleaned },
+            });
+          }
+        }
+      }
+
       await tx.user.update({
         where: { id: userId },
         data: {

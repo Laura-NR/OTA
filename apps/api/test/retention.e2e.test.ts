@@ -59,10 +59,21 @@ function makeUser(overrides: Partial<FakeUser> = {}): FakeUser {
 }
 
 function createFakePrisma(state: RetentionState) {
+  const noopWrite = async () => ({ count: 0 });
   const prisma: Record<string, unknown> = {
     reservation: {
       groupBy: async () => state.completions,
+      // This suite's traveler has no bookings in the fake; Tier 1 scrubbing is
+      // proven against a real database in retention.integration.test.ts.
+      findMany: async () => [],
+      updateMany: noopWrite,
     },
+    message: { updateMany: noopWrite },
+    review: { updateMany: noopWrite },
+    incident: { updateMany: noopWrite },
+    serviceItem: { updateMany: noopWrite },
+    dispatchOffer: { updateMany: noopWrite },
+    verification: { deleteMany: noopWrite },
     user: {
       findUnique: async (args: { where: { id: string } }) =>
         state.users.find((user) => user.id === args.where.id) ?? null,
@@ -115,6 +126,8 @@ function createFakePrisma(state: RetentionState) {
         });
         return args.data;
       },
+      findMany: async () => [],
+      update: async () => ({}),
     },
     $transaction: async (callback: (tx: unknown) => Promise<unknown>) => callback(prisma),
   };
