@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
 import { PageHeader } from '@/components/page-header';
@@ -17,6 +18,7 @@ import { apiFetch, getServerSession } from '@/lib/api';
 const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 export default async function ReservationsPage() {
+  const t = await getTranslations('backoffice.board');
   const session = await getServerSession();
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
 
@@ -25,29 +27,28 @@ export default async function ReservationsPage() {
   try {
     reservations = await apiFetch<ReservationListItemDto[]>('/reservations');
   } catch (error) {
-    loadError = error instanceof Error ? error.message : 'Could not load reservations.';
+    loadError = error instanceof Error ? error.message : t('loadError');
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Reservations"
-        description="The operations pipeline, grouped by status. Open a booking to transition, inspect, and audit it."
-      >
+      <PageHeader title={t('title')} description={t('description')}>
         {canManage ? (
           <Link
             href="/reservations/new"
             className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            New reservation
+            {t('newReservation')}
           </Link>
         ) : null}
       </PageHeader>
 
       <Card>
         <CardHeader>
-          <CardTitle>Pipeline</CardTitle>
-          <CardDescription>{reservations.length} booking(s)</CardDescription>
+          <CardTitle>{t('pipeline')}</CardTitle>
+          <CardDescription>
+            {t('bookings', { count: reservations.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadError ? (

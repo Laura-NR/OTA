@@ -2,11 +2,13 @@
 
 import type { PriceQuoteDto } from '@ota/schemas';
 import { Alert, Button, Input, Label } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
 
 export function PriceQuote({ inventoryItemId }: { inventoryItemId: string }) {
+  const t = useTranslations('backoffice.priceQuote');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [quote, setQuote] = useState<PriceQuoteDto | null>(null);
   const [busy, setBusy] = useState(false);
@@ -22,7 +24,7 @@ export function PriceQuote({ inventoryItemId }: { inventoryItemId: string }) {
         ),
       );
     } catch (quoteError) {
-      setError(quoteError instanceof Error ? quoteError.message : 'Could not price item');
+      setError(quoteError instanceof Error ? quoteError.message : t('failed'));
     } finally {
       setBusy(false);
     }
@@ -32,7 +34,7 @@ export function PriceQuote({ inventoryItemId }: { inventoryItemId: string }) {
     <div className="space-y-2">
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1">
-          <Label htmlFor={`price-date-${inventoryItemId}`}>Price on</Label>
+          <Label htmlFor={`price-date-${inventoryItemId}`}>{t('priceOn')}</Label>
           <Input
             id={`price-date-${inventoryItemId}`}
             type="date"
@@ -41,15 +43,15 @@ export function PriceQuote({ inventoryItemId }: { inventoryItemId: string }) {
           />
         </div>
         <Button size="sm" variant="outline" disabled={busy} onClick={load}>
-          {busy ? '…' : 'Quote'}
+          {busy ? '…' : t('quote')}
         </Button>
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       {quote ? (
         <p className="text-xs text-muted-foreground">
-          base {quote.base.toFixed(2)} · seasonal {quote.seasonal.toFixed(2)} · markup{' '}
-          {quote.markup.toFixed(2)} →{' '}
+          {t('base')} {quote.base.toFixed(2)} · {t('seasonal')}{' '}
+          {quote.seasonal.toFixed(2)} · {t('markup')} {quote.markup.toFixed(2)} →{' '}
           <span className="font-medium text-foreground">{quote.total.toFixed(2)}</span>
         </p>
       ) : null}

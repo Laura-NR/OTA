@@ -2,17 +2,15 @@
 
 import type { PaymentIntentDto, PaymentReceiptDto } from '@ota/schemas';
 import { Alert, Badge, Button, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
 
-const RAILS = [
-  { value: 'CARD', label: 'Credit / debit card' },
-  { value: 'OPEN_BANKING_SEPA', label: 'SEPA / open banking' },
-] as const;
+const RAILS = ['CARD', 'OPEN_BANKING_SEPA'] as const;
 
-type Rail = (typeof RAILS)[number]['value'];
+type Rail = (typeof RAILS)[number];
 
 const PAYABLE_STATUSES = ['SECURED_AND_INVOICED', 'PENDING_PAYMENT'];
 
@@ -32,6 +30,7 @@ export function PaymentPanel({
   canManage: boolean;
   receipts: PaymentReceiptDto[];
 }) {
+  const t = useTranslations('backoffice.payments');
   const router = useRouter();
   const [rail, setRail] = useState<Rail>('CARD');
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
@@ -51,11 +50,7 @@ export function PaymentPanel({
       setCheckoutUrl(intent.checkoutUrl);
       router.refresh();
     } catch (createError) {
-      setError(
-        createError instanceof Error
-          ? createError.message
-          : 'Could not create payment link',
-      );
+      setError(createError instanceof Error ? createError.message : t('createFailed'));
     } finally {
       setBusy(false);
     }
@@ -70,11 +65,7 @@ export function PaymentPanel({
       });
       router.refresh();
     } catch (confirmError) {
-      setError(
-        confirmError instanceof Error
-          ? confirmError.message
-          : 'Could not confirm payment',
-      );
+      setError(confirmError instanceof Error ? confirmError.message : t('confirmFailed'));
     } finally {
       setBusy(false);
     }
@@ -85,7 +76,7 @@ export function PaymentPanel({
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
       {receipts.length === 0 ? (
-        <Alert>No payment links yet.</Alert>
+        <Alert>{t('none')}</Alert>
       ) : (
         <ul className="space-y-2">
           {receipts.map((receipt) => (
@@ -104,7 +95,7 @@ export function PaymentPanel({
               </div>
               {canManage && receipt.status === 'PENDING' ? (
                 <Button size="sm" disabled={busy} onClick={() => confirm(receipt.id)}>
-                  Mark paid
+                  {t('markPaid')}
                 </Button>
               ) : null}
             </li>
@@ -115,28 +106,28 @@ export function PaymentPanel({
       {canCreate ? (
         <div className="flex flex-wrap items-end gap-2 border-t pt-4">
           <div className="space-y-1">
-            <Label htmlFor="payment-rail">Rail</Label>
+            <Label htmlFor="payment-rail">{t('rail')}</Label>
             <Select
               id="payment-rail"
               value={rail}
               onChange={(event) => setRail(event.target.value as Rail)}
             >
               {RAILS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option} value={option}>
+                  {option === 'CARD' ? t('railCard') : t('railSepa')}
                 </option>
               ))}
             </Select>
           </div>
           <Button disabled={busy} onClick={createLink}>
-            {busy ? 'Working…' : 'Create payment link'}
+            {busy ? t('working') : t('createLink')}
           </Button>
         </div>
       ) : null}
 
       {checkoutUrl ? (
         <p className="text-xs text-muted-foreground">
-          Checkout link: <span className="break-all font-mono">{checkoutUrl}</span>
+          {t('checkoutLink')} <span className="break-all font-mono">{checkoutUrl}</span>
         </p>
       ) : null}
     </div>

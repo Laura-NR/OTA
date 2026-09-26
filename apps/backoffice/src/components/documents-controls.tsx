@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -13,6 +14,7 @@ export function RegenerateDocumentsButton({
   reservationId: string;
   canManage: boolean;
 }) {
+  const t = useTranslations('backoffice.documentsControls');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,16 +39,14 @@ export function RegenerateDocumentsButton({
             router.refresh();
           } catch (generateError) {
             setError(
-              generateError instanceof Error
-                ? generateError.message
-                : 'Generation failed',
+              generateError instanceof Error ? generateError.message : t('failed'),
             );
           } finally {
             setBusy(false);
           }
         }}
       >
-        {busy ? 'Generating…' : 'Regenerate documents'}
+        {busy ? t('generating') : t('regenerate')}
       </Button>
     </div>
   );

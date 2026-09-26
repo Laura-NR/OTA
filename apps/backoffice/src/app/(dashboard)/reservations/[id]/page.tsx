@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -41,6 +42,7 @@ export default async function ReservationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations('backoffice.reservation');
   const session = await getServerSession();
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
 
@@ -64,7 +66,7 @@ export default async function ReservationDetailPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Pipeline
+          {t('backToPipeline')}
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           {reservation.bookingCode}
@@ -74,16 +76,14 @@ export default async function ReservationDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Booking</CardTitle>
-          <CardDescription>
-            Status transitions are governed by the domain state machine.
-          </CardDescription>
+          <CardTitle>{t('booking')}</CardTitle>
+          <CardDescription>{t('bookingDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                Traveler
+                {t('traveler')}
               </dt>
               <dd className="mt-1 text-sm">
                 {reservation.travelerName ?? reservation.travelerEmail}
@@ -94,7 +94,7 @@ export default async function ReservationDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                Dates
+                {t('dates')}
               </dt>
               <dd className="mt-1 text-sm">
                 {new Date(reservation.startDate).toLocaleDateString()} →{' '}
@@ -103,7 +103,7 @@ export default async function ReservationDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                Total
+                {t('total')}
               </dt>
               <dd className="mt-1 text-sm font-medium">
                 {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}
@@ -111,7 +111,7 @@ export default async function ReservationDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                Services
+                {t('services')}
               </dt>
               <dd className="mt-1 text-sm">{reservation.serviceItems.length}</dd>
             </div>
@@ -133,14 +133,12 @@ export default async function ReservationDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Duty of care</CardTitle>
-          <CardDescription>
-            Incidents logged against this booking (spec §4.9.4).
-          </CardDescription>
+          <CardTitle>{t('dutyOfCare')}</CardTitle>
+          <CardDescription>{t('dutyOfCareDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {incidents.length === 0 ? (
-            <Alert>No incidents logged.</Alert>
+            <Alert>{t('noIncidents')}</Alert>
           ) : (
             <ul className="space-y-2 text-sm">
               {incidents.map((incident) => (
@@ -157,7 +155,7 @@ export default async function ReservationDetailPage({
                     </Badge>
                     <span className="font-medium">{incident.category}</span>
                     <span className="text-xs text-muted-foreground">
-                      {incident.resolvedAt ? 'Resolved' : 'Open'}
+                      {incident.resolvedAt ? t('resolved') : t('open')}
                     </span>
                     {incident.resolvedAt ? null : (
                       <span className="ml-auto">
@@ -177,11 +175,8 @@ export default async function ReservationDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Payments</CardTitle>
-          <CardDescription>
-            Payment links are generated at SECURED_AND_INVOICED; confirming clears funds
-            and confirms the booking.
-          </CardDescription>
+          <CardTitle>{t('payments')}</CardTitle>
+          <CardDescription>{t('paymentsDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <PaymentPanel
@@ -195,24 +190,24 @@ export default async function ReservationDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Service items</CardTitle>
+          <CardTitle>{t('serviceItems')}</CardTitle>
           <CardDescription>
-            {reservation.serviceItems.length} component(s)
+            {t('components', { count: reservation.serviceItems.length })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {reservation.serviceItems.length === 0 ? (
-            <Alert>No service items on this booking yet.</Alert>
+            <Alert>{t('noServiceItems')}</Alert>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Province</TableHead>
-                  <TableHead>Starts</TableHead>
-                  <TableHead>Ends</TableHead>
-                  <TableHead>Supplier</TableHead>
+                  <TableHead>{t('type')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  <TableHead>{t('province')}</TableHead>
+                  <TableHead>{t('starts')}</TableHead>
+                  <TableHead>{t('ends')}</TableHead>
+                  <TableHead>{t('supplier')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -232,7 +227,7 @@ export default async function ReservationDetailPage({
                       {new Date(item.serviceDateEnd).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {item.supplierId ?? 'Unassigned'}
+                      {item.supplierId ?? t('unassigned')}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -244,15 +239,14 @@ export default async function ReservationDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Documents</CardTitle>
-          <CardDescription>{documents.length} generated file(s)</CardDescription>
+          <CardTitle>{t('documents')}</CardTitle>
+          <CardDescription>
+            {t('generatedFiles', { count: documents.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
-            <Alert>
-              No documents yet. Confirm the booking, or use the Documents page to
-              regenerate.
-            </Alert>
+            <Alert>{t('noDocuments')}</Alert>
           ) : (
             <ul className="space-y-2 text-sm">
               {documents.map((document) => (
@@ -264,7 +258,7 @@ export default async function ReservationDetailPage({
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Download PDF
+                    {t('downloadPdf')}
                   </a>
                 </li>
               ))}
@@ -275,19 +269,19 @@ export default async function ReservationDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Audit trail</CardTitle>
-          <CardDescription>{audit.length} event(s), newest first</CardDescription>
+          <CardTitle>{t('auditTrail')}</CardTitle>
+          <CardDescription>{t('auditEvents', { count: audit.length })}</CardDescription>
         </CardHeader>
         <CardContent>
           {audit.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No audit events recorded.</p>
+            <p className="text-sm text-muted-foreground">{t('noAudit')}</p>
           ) : (
             <ol className="space-y-3">
               {audit.map((entry) => (
                 <li key={entry.id} className="border-l-2 border-border pl-3 text-sm">
                   <div className="font-medium">{entry.action}</div>
                   <div className="text-xs text-muted-foreground">
-                    {entry.actorEmail ?? 'system'} ·{' '}
+                    {entry.actorEmail ?? t('system')} ·{' '}
                     {new Date(entry.createdAt).toLocaleString()}
                   </div>
                   {entry.metadata ? (

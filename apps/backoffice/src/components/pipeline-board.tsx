@@ -2,6 +2,7 @@ import { RESERVATION_STATUSES } from '@ota/domain';
 import type { ReservationStatus } from '@ota/domain';
 import type { ReservationListItemDto } from '@ota/schemas';
 import { Alert } from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
 function formatDate(value: string): string {
@@ -12,17 +13,15 @@ function formatDate(value: string): string {
  * The operations pipeline as a status board (spec §4.1). Server-rendered; each
  * card deep-links to the reservation workbench.
  */
-export function PipelineBoard({
+export async function PipelineBoard({
   reservations,
 }: {
   reservations: ReservationListItemDto[];
 }) {
+  const t = await getTranslations('backoffice.board');
+
   if (reservations.length === 0) {
-    return (
-      <Alert>
-        No reservations yet. Create one, or run the seed, to populate the pipeline.
-      </Alert>
-    );
+    return <Alert>{t('empty')}</Alert>;
   }
 
   const byStatus = new Map<ReservationStatus, ReservationListItemDto[]>(
@@ -57,7 +56,7 @@ export function PipelineBoard({
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">{reservation.bookingCode}</span>
                       <span className="text-xs text-muted-foreground">
-                        {reservation.serviceItemCount} item(s)
+                        {t('serviceItems', { count: reservation.serviceItemCount })}
                       </span>
                     </div>
                     <div className="mt-1 truncate text-xs text-muted-foreground">

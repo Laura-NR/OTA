@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -8,6 +9,7 @@ import { apiRequest } from '@/lib/client-api';
 
 /** Close an open duty-of-care incident (spec §4.9.4). */
 export function IncidentResolveButton({ incidentId }: { incidentId: string }) {
+  const t = useTranslations('backoffice.incidents');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +24,7 @@ export function IncidentResolveButton({ incidentId }: { incidentId: string }) {
       });
       router.refresh();
     } catch (resolveError) {
-      setError(
-        resolveError instanceof Error ? resolveError.message : 'Could not resolve',
-      );
+      setError(resolveError instanceof Error ? resolveError.message : t('resolveFailed'));
     } finally {
       setBusy(false);
     }
@@ -34,7 +34,7 @@ export function IncidentResolveButton({ incidentId }: { incidentId: string }) {
     <div className="space-y-1">
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
       <Button size="sm" variant="outline" disabled={busy} onClick={resolve}>
-        {busy ? 'Resolving…' : 'Resolve'}
+        {busy ? t('resolving') : t('resolve')}
       </Button>
     </div>
   );

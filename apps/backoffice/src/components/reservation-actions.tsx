@@ -3,6 +3,7 @@
 import { nextStatuses } from '@ota/domain';
 import type { ReservationStatus } from '@ota/domain';
 import { Alert, Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -20,21 +21,18 @@ export function ReservationActions({
   status,
   canManage,
 }: ReservationActionsProps) {
+  const t = useTranslations('backoffice.reservationActions');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const options = nextStatuses(status);
 
   if (!canManage) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Your role can view this reservation but not change its status.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{t('viewOnly')}</p>;
   }
 
   if (options.length === 0) {
-    return <p className="text-sm text-muted-foreground">This reservation is terminal.</p>;
+    return <p className="text-sm text-muted-foreground">{t('terminal')}</p>;
   }
 
   async function transition(to: ReservationStatus) {
@@ -47,9 +45,7 @@ export function ReservationActions({
       });
       router.refresh();
     } catch (transitionError) {
-      setError(
-        transitionError instanceof Error ? transitionError.message : 'Transition failed',
-      );
+      setError(transitionError instanceof Error ? transitionError.message : t('failed'));
     } finally {
       setBusy(false);
     }

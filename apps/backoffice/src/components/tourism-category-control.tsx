@@ -2,6 +2,7 @@
 
 import { TOURISM_CATEGORIES, type TourismCategory } from '@ota/domain';
 import { Alert, Button, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -19,6 +20,8 @@ export function TourismCategoryControl({
   category,
   canManage,
 }: TourismCategoryControlProps) {
+  const t = useTranslations('backoffice.tourism');
+  const tc = useTranslations('backoffice.common');
   const router = useRouter();
   const [value, setValue] = useState<TourismCategory>(category);
   const [busy, setBusy] = useState(false);
@@ -27,7 +30,7 @@ export function TourismCategoryControl({
   if (!canManage) {
     return (
       <p className="text-sm text-muted-foreground">
-        Tourism classification: {category.replaceAll('_', ' ')}
+        {t('viewLabel', { category: category.replaceAll('_', ' ') })}
       </p>
     );
   }
@@ -42,7 +45,7 @@ export function TourismCategoryControl({
       });
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Classification failed');
+      setError(saveError instanceof Error ? saveError.message : t('failed'));
     } finally {
       setBusy(false);
     }
@@ -53,7 +56,7 @@ export function TourismCategoryControl({
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       <div className="flex items-end gap-2">
         <div className="w-56 space-y-1">
-          <Label htmlFor="tourism-category">Tourism classification</Label>
+          <Label htmlFor="tourism-category">{t('classification')}</Label>
           <Select
             id="tourism-category"
             value={value}
@@ -73,7 +76,7 @@ export function TourismCategoryControl({
           disabled={busy || value === category}
           onClick={save}
         >
-          Save
+          {tc('save')}
         </Button>
       </div>
     </div>

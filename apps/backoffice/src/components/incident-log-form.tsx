@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button, Input, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -11,6 +12,7 @@ const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
 
 /** Log an incident against a booking (spec §4.9.4 duty of care). */
 export function IncidentLogForm({ reservationId }: { reservationId: string }) {
+  const t = useTranslations('backoffice.incidents');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function IncidentLogForm({ reservationId }: { reservationId: string }) {
       element.reset();
       router.refresh();
     } catch (logError) {
-      setError(logError instanceof Error ? logError.message : 'Could not log incident');
+      setError(logError instanceof Error ? logError.message : t('failed'));
     } finally {
       setBusy(false);
     }
@@ -44,17 +46,17 @@ export function IncidentLogForm({ reservationId }: { reservationId: string }) {
     <form className="space-y-3" onSubmit={onSubmit}>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="incident-category">Category</Label>
+          <Label htmlFor="incident-category">{t('category')}</Label>
           <Input
             id="incident-category"
             name="category"
             required
             maxLength={100}
-            placeholder="MEDICAL, TRANSPORT…"
+            placeholder={t('categoryPlaceholder')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="incident-severity">Severity</Label>
+          <Label htmlFor="incident-severity">{t('severity')}</Label>
           <Select id="incident-severity" name="severity" defaultValue="MEDIUM">
             {SEVERITIES.map((severity) => (
               <option key={severity} value={severity}>
@@ -65,12 +67,12 @@ export function IncidentLogForm({ reservationId }: { reservationId: string }) {
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="incident-description">Description</Label>
+        <Label htmlFor="incident-description">{t('description')}</Label>
         <Input id="incident-description" name="description" required maxLength={2000} />
       </div>
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       <Button type="submit" disabled={busy}>
-        {busy ? 'Logging…' : 'Log incident'}
+        {busy ? t('logging') : t('log')}
       </Button>
     </form>
   );

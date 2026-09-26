@@ -257,6 +257,136 @@
       "sending": "Enviando…",
       "send": "Enviar enlace de acceso",
       "error": "No se pudo enviar el enlace de acceso."
+    },
+    "common": {
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "create": "Crear",
+      "creating": "Creando…",
+      "delete": "Eliminar",
+      "deleting": "Eliminando…",
+      "edit": "Editar",
+      "open": "Abrir",
+      "refresh": "Actualizar",
+      "back": "Volver",
+      "none": "Ninguno",
+      "booking": "Reserva",
+      "status": "Estado",
+      "traveler": "Viajero",
+      "dates": "Fechas",
+      "total": "Total"
+    },
+    "board": {
+      "title": "Reservas",
+      "description": "El flujo de operaciones, agrupado por estado. Abre una reserva para gestionarla, inspeccionarla y auditar sus cambios.",
+      "newReservation": "Nueva reserva",
+      "pipeline": "Flujo",
+      "bookings": "{count} reserva(s)",
+      "serviceItems": "{count} servicio(s)",
+      "empty": "Aún no hay reservas. Crea una o ejecuta el seed para poblar el flujo.",
+      "loadError": "No se pudieron cargar las reservas."
+    },
+    "picker": {
+      "label": "Reserva",
+      "placeholder": "Selecciona una reserva…",
+      "open": "Abrir"
+    },
+    "reservation": {
+      "backToPipeline": "← Flujo",
+      "booking": "Reserva",
+      "bookingDescription": "Las transiciones de estado las gobierna la máquina de estados del dominio.",
+      "traveler": "Viajero",
+      "dates": "Fechas",
+      "total": "Total",
+      "services": "Servicios",
+      "dutyOfCare": "Deber de diligencia",
+      "dutyOfCareDescription": "Incidencias registradas en esta reserva (spec §4.9.4).",
+      "noIncidents": "No hay incidencias registradas.",
+      "resolved": "Resuelta",
+      "open": "Abierta",
+      "payments": "Pagos",
+      "paymentsDescription": "Los enlaces de pago se generan en SECURED_AND_INVOICED; confirmar acredita los fondos y confirma la reserva.",
+      "serviceItems": "Servicios",
+      "components": "{count} componente(s)",
+      "noServiceItems": "Esta reserva aún no tiene servicios.",
+      "type": "Tipo",
+      "status": "Estado",
+      "province": "Provincia",
+      "starts": "Inicio",
+      "ends": "Fin",
+      "supplier": "Proveedor",
+      "unassigned": "Sin asignar",
+      "documents": "Documentos",
+      "generatedFiles": "{count} archivo(s) generado(s)",
+      "noDocuments": "Aún no hay documentos. Confirma la reserva o usa la página Documentos para regenerarlos.",
+      "downloadPdf": "Descargar PDF",
+      "auditTrail": "Registro de auditoría",
+      "auditEvents": "{count} evento(s), del más reciente al más antiguo",
+      "noAudit": "No hay eventos de auditoría.",
+      "system": "sistema"
+    },
+    "reservationActions": {
+      "viewOnly": "Tu rol puede ver esta reserva pero no cambiar su estado.",
+      "terminal": "Esta reserva es terminal.",
+      "failed": "Falló la transición"
+    },
+    "tourism": {
+      "classification": "Clasificación turística",
+      "viewLabel": "Clasificación turística: {category}",
+      "failed": "Falló la clasificación"
+    },
+    "documentsControls": {
+      "generating": "Generando…",
+      "regenerate": "Regenerar documentos",
+      "failed": "Falló la generación"
+    },
+    "incidents": {
+      "category": "Categoría",
+      "categoryPlaceholder": "MÉDICO, TRANSPORTE…",
+      "severity": "Gravedad",
+      "description": "Descripción",
+      "logging": "Registrando…",
+      "log": "Registrar incidencia",
+      "failed": "No se pudo registrar la incidencia",
+      "resolving": "Resolviendo…",
+      "resolve": "Resolver",
+      "resolveFailed": "No se pudo resolver"
+    },
+    "payments": {
+      "none": "Aún no hay enlaces de pago.",
+      "markPaid": "Marcar como pagado",
+      "rail": "Carril",
+      "railCard": "Tarjeta de crédito / débito",
+      "railSepa": "SEPA / open banking",
+      "working": "Procesando…",
+      "createLink": "Crear enlace de pago",
+      "checkoutLink": "Enlace de pago:",
+      "createFailed": "No se pudo crear el enlace de pago",
+      "confirmFailed": "No se pudo confirmar el pago"
+    },
+    "candidates": {
+      "loading": "Cargando…",
+      "show": "Mostrar proveedores elegibles",
+      "empty": "No hay proveedor elegible para este servicio.",
+      "supplier": "Proveedor",
+      "category": "Categoría",
+      "phone": "Teléfono",
+      "credentialExpires": "Credencial vence",
+      "loadFailed": "No se pudieron cargar los proveedores"
+    },
+    "dispatchControls": {
+      "dispatching": "Despachando…",
+      "start": "Iniciar despacho",
+      "failed": "Falló el despacho"
+    },
+    "priceQuote": {
+      "priceOn": "Precio en",
+      "quote": "Cotizar",
+      "base": "base",
+      "seasonal": "temporada",
+      "markup": "recargo",
+      "failed": "No se pudo cotizar el servicio"
     }
   }
 }

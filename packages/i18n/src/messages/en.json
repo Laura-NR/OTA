@@ -257,6 +257,136 @@
       "sending": "Sending…",
       "send": "Send magic link",
       "error": "Could not send the sign-in link."
+    },
+    "common": {
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating…",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "edit": "Edit",
+      "open": "Open",
+      "refresh": "Refresh",
+      "back": "Back",
+      "none": "None",
+      "booking": "Booking",
+      "status": "Status",
+      "traveler": "Traveler",
+      "dates": "Dates",
+      "total": "Total"
+    },
+    "board": {
+      "title": "Reservations",
+      "description": "The operations pipeline, grouped by status. Open a booking to transition, inspect, and audit it.",
+      "newReservation": "New reservation",
+      "pipeline": "Pipeline",
+      "bookings": "{count} booking(s)",
+      "serviceItems": "{count} item(s)",
+      "empty": "No reservations yet. Create one, or run the seed, to populate the pipeline.",
+      "loadError": "Could not load reservations."
+    },
+    "picker": {
+      "label": "Reservation",
+      "placeholder": "Select a reservation…",
+      "open": "Open"
+    },
+    "reservation": {
+      "backToPipeline": "← Pipeline",
+      "booking": "Booking",
+      "bookingDescription": "Status transitions are governed by the domain state machine.",
+      "traveler": "Traveler",
+      "dates": "Dates",
+      "total": "Total",
+      "services": "Services",
+      "dutyOfCare": "Duty of care",
+      "dutyOfCareDescription": "Incidents logged against this booking (spec §4.9.4).",
+      "noIncidents": "No incidents logged.",
+      "resolved": "Resolved",
+      "open": "Open",
+      "payments": "Payments",
+      "paymentsDescription": "Payment links are generated at SECURED_AND_INVOICED; confirming clears funds and confirms the booking.",
+      "serviceItems": "Service items",
+      "components": "{count} component(s)",
+      "noServiceItems": "No service items on this booking yet.",
+      "type": "Type",
+      "status": "Status",
+      "province": "Province",
+      "starts": "Starts",
+      "ends": "Ends",
+      "supplier": "Supplier",
+      "unassigned": "Unassigned",
+      "documents": "Documents",
+      "generatedFiles": "{count} generated file(s)",
+      "noDocuments": "No documents yet. Confirm the booking, or use the Documents page to regenerate.",
+      "downloadPdf": "Download PDF",
+      "auditTrail": "Audit trail",
+      "auditEvents": "{count} event(s), newest first",
+      "noAudit": "No audit events recorded.",
+      "system": "system"
+    },
+    "reservationActions": {
+      "viewOnly": "Your role can view this reservation but not change its status.",
+      "terminal": "This reservation is terminal.",
+      "failed": "Transition failed"
+    },
+    "tourism": {
+      "classification": "Tourism classification",
+      "viewLabel": "Tourism classification: {category}",
+      "failed": "Classification failed"
+    },
+    "documentsControls": {
+      "generating": "Generating…",
+      "regenerate": "Regenerate documents",
+      "failed": "Generation failed"
+    },
+    "incidents": {
+      "category": "Category",
+      "categoryPlaceholder": "MEDICAL, TRANSPORT…",
+      "severity": "Severity",
+      "description": "Description",
+      "logging": "Logging…",
+      "log": "Log incident",
+      "failed": "Could not log incident",
+      "resolving": "Resolving…",
+      "resolve": "Resolve",
+      "resolveFailed": "Could not resolve"
+    },
+    "payments": {
+      "none": "No payment links yet.",
+      "markPaid": "Mark paid",
+      "rail": "Rail",
+      "railCard": "Credit / debit card",
+      "railSepa": "SEPA / open banking",
+      "working": "Working…",
+      "createLink": "Create payment link",
+      "checkoutLink": "Checkout link:",
+      "createFailed": "Could not create payment link",
+      "confirmFailed": "Could not confirm payment"
+    },
+    "candidates": {
+      "loading": "Loading…",
+      "show": "Show eligible candidates",
+      "empty": "No eligible supplier for this item.",
+      "supplier": "Supplier",
+      "category": "Category",
+      "phone": "Phone",
+      "credentialExpires": "Credential expires",
+      "loadFailed": "Could not load candidates"
+    },
+    "dispatchControls": {
+      "dispatching": "Dispatching…",
+      "start": "Start dispatch",
+      "failed": "Dispatch failed"
+    },
+    "priceQuote": {
+      "priceOn": "Price on",
+      "quote": "Quote",
+      "base": "base",
+      "seasonal": "seasonal",
+      "markup": "markup",
+      "failed": "Could not price item"
     }
   }
 }

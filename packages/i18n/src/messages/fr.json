@@ -257,6 +257,136 @@
       "sending": "Envoi…",
       "send": "Envoyer le lien de connexion",
       "error": "Impossible d'envoyer le lien de connexion."
+    },
+    "common": {
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "cancel": "Annuler",
+      "create": "Créer",
+      "creating": "Création…",
+      "delete": "Supprimer",
+      "deleting": "Suppression…",
+      "edit": "Modifier",
+      "open": "Ouvrir",
+      "refresh": "Actualiser",
+      "back": "Retour",
+      "none": "Aucun",
+      "booking": "Réservation",
+      "status": "Statut",
+      "traveler": "Voyageur",
+      "dates": "Dates",
+      "total": "Total"
+    },
+    "board": {
+      "title": "Réservations",
+      "description": "Le pipeline des opérations, groupé par statut. Ouvrez une réservation pour la faire évoluer, l'inspecter et l'auditer.",
+      "newReservation": "Nouvelle réservation",
+      "pipeline": "Pipeline",
+      "bookings": "{count} réservation(s)",
+      "serviceItems": "{count} service(s)",
+      "empty": "Aucune réservation pour l'instant. Créez-en une ou lancez le seed pour remplir le pipeline.",
+      "loadError": "Impossible de charger les réservations."
+    },
+    "picker": {
+      "label": "Réservation",
+      "placeholder": "Sélectionnez une réservation…",
+      "open": "Ouvrir"
+    },
+    "reservation": {
+      "backToPipeline": "← Pipeline",
+      "booking": "Réservation",
+      "bookingDescription": "Les transitions de statut sont régies par la machine à états du domaine.",
+      "traveler": "Voyageur",
+      "dates": "Dates",
+      "total": "Total",
+      "services": "Services",
+      "dutyOfCare": "Devoir de diligence",
+      "dutyOfCareDescription": "Incidents enregistrés sur cette réservation (spec §4.9.4).",
+      "noIncidents": "Aucun incident enregistré.",
+      "resolved": "Résolu",
+      "open": "Ouvert",
+      "payments": "Paiements",
+      "paymentsDescription": "Les liens de paiement sont générés à SECURED_AND_INVOICED ; la confirmation encaisse les fonds et confirme la réservation.",
+      "serviceItems": "Prestations",
+      "components": "{count} composant(s)",
+      "noServiceItems": "Aucune prestation sur cette réservation pour l'instant.",
+      "type": "Type",
+      "status": "Statut",
+      "province": "Province",
+      "starts": "Début",
+      "ends": "Fin",
+      "supplier": "Fournisseur",
+      "unassigned": "Non attribué",
+      "documents": "Documents",
+      "generatedFiles": "{count} fichier(s) généré(s)",
+      "noDocuments": "Aucun document pour l'instant. Confirmez la réservation ou utilisez la page Documents pour les régénérer.",
+      "downloadPdf": "Télécharger le PDF",
+      "auditTrail": "Piste d'audit",
+      "auditEvents": "{count} événement(s), du plus récent au plus ancien",
+      "noAudit": "Aucun événement d'audit.",
+      "system": "système"
+    },
+    "reservationActions": {
+      "viewOnly": "Votre rôle peut consulter cette réservation mais pas changer son statut.",
+      "terminal": "Cette réservation est terminale.",
+      "failed": "Échec de la transition"
+    },
+    "tourism": {
+      "classification": "Classification touristique",
+      "viewLabel": "Classification touristique : {category}",
+      "failed": "Échec de la classification"
+    },
+    "documentsControls": {
+      "generating": "Génération…",
+      "regenerate": "Régénérer les documents",
+      "failed": "Échec de la génération"
+    },
+    "incidents": {
+      "category": "Catégorie",
+      "categoryPlaceholder": "MÉDICAL, TRANSPORT…",
+      "severity": "Gravité",
+      "description": "Description",
+      "logging": "Enregistrement…",
+      "log": "Enregistrer l'incident",
+      "failed": "Impossible d'enregistrer l'incident",
+      "resolving": "Résolution…",
+      "resolve": "Résoudre",
+      "resolveFailed": "Impossible de résoudre"
+    },
+    "payments": {
+      "none": "Aucun lien de paiement pour l'instant.",
+      "markPaid": "Marquer comme payé",
+      "rail": "Rail",
+      "railCard": "Carte de crédit / débit",
+      "railSepa": "SEPA / open banking",
+      "working": "Traitement…",
+      "createLink": "Créer un lien de paiement",
+      "checkoutLink": "Lien de paiement :",
+      "createFailed": "Impossible de créer le lien de paiement",
+      "confirmFailed": "Impossible de confirmer le paiement"
+    },
+    "candidates": {
+      "loading": "Chargement…",
+      "show": "Afficher les fournisseurs éligibles",
+      "empty": "Aucun fournisseur éligible pour cette prestation.",
+      "supplier": "Fournisseur",
+      "category": "Catégorie",
+      "phone": "Téléphone",
+      "credentialExpires": "Credential expire",
+      "loadFailed": "Impossible de charger les fournisseurs"
+    },
+    "dispatchControls": {
+      "dispatching": "Répartition…",
+      "start": "Lancer la répartition",
+      "failed": "Échec de la répartition"
+    },
+    "priceQuote": {
+      "priceOn": "Prix au",
+      "quote": "Estimer",
+      "base": "base",
+      "seasonal": "saison",
+      "markup": "marge",
+      "failed": "Impossible d'estimer la prestation"
     }
   }
 }

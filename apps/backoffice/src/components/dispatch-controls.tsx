@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -13,6 +14,7 @@ export function StartDispatchButton({
   reservationId: string;
   canManage: boolean;
 }) {
+  const t = useTranslations('backoffice.dispatchControls');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,14 +39,14 @@ export function StartDispatchButton({
             router.refresh();
           } catch (dispatchError) {
             setError(
-              dispatchError instanceof Error ? dispatchError.message : 'Dispatch failed',
+              dispatchError instanceof Error ? dispatchError.message : t('failed'),
             );
           } finally {
             setBusy(false);
           }
         }}
       >
-        {busy ? 'Dispatching…' : 'Start dispatch'}
+        {busy ? t('dispatching') : t('start')}
       </Button>
     </div>
   );
