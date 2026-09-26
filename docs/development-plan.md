@@ -21,7 +21,7 @@ Verified against the code, tests, migrations, and ADRs. Counts are from a green
 therefore listed under Remains.
 
 **Baseline counts:** 18 workspace projects (3 apps, 15 packages) · 11 migrations
-· 299 unit tests passed / 4 skipped · 23 e2e spec files / 31 tests · lint,
+· 300 unit tests passed / 4 skipped · 23 e2e spec files / 31 tests · lint,
 typecheck, test, build green.
 
 ### (a) DONE — verified
@@ -48,6 +48,7 @@ typecheck, test, build green.
 | Storefront | Content home, catalog + Cuba map, traveler auth/dashboard, five-step builder, recruitment portal, i18n es/en/fr, wire checkout | `apps/storefront/src/app/[locale]/*`, `packages/i18n`, migration `20260922122512_supplier_applications` |
 | GDPR retention (§3.5) | Daily BullMQ scan, HMAC keep-alive link, in-place anonymize, Tier 1 free-text scrub | migration `20260924065637_retention_lifecycle`; `apps/api/src/retention`; `packages/domain/src/retention`; `docs/adr/0004-data-retention.md`; `docs/pii-at-rest-review.md` |
 | Hardening | Liveness/readiness split, runbook, hand-rolled rate limiting, RBAC matrix, fork tooling | `apps/api/src/health`, `docs/runbook.md`, `apps/api/src/common/rate-limit.ts`, `apps/api/test/{health,rate-limit}.e2e.test.ts`, `tools/create-tenant.mjs` |
+| Design system (partial) | Vereda tenant identity + palette, `warning`/`timeout` alert tokens, self-hosted Bricolage Grotesque, design radii + two elevation levels, back-office i18n plumbing (shell/nav/app-shell/login) | `packages/theming/src/tokens.ts`, `packages/ui/{styles.css,tailwind-preset.mjs,src/components}`, `tenant/agency.config.json`, `tenant/assets/fonts/BricolageGrotesque.woff2`, `apps/{storefront,backoffice}/src/lib/font.ts`, `packages/i18n/src/messages/*.json`, `apps/backoffice/src/i18n/request.ts` |
 
 ### (b) REMAINS
 
@@ -69,9 +70,12 @@ typecheck, test, build green.
 - **Changesets core versioning** — deferred (dev-time tool).
 - **Deployment topology** — single vs multi API instance, which decides whether
   the in-memory rate-limit store must move to Redis.
-- **Design system rollout** — `docs/design.md` (Vereda Expeditions) exists but is
-  only partially applied; see "Design gap" below. The default tenant's brand name
-  and the palette/typography/shadow rollout need an owner decision.
+- **Design system rollout** — owner decisions taken 2026-09-26 (rename the tenant,
+  self-host Bricolage, implement radii/elevation, localize ops). The palette,
+  identity, font, radii, elevation, alert tokens, and the back-office i18n
+  plumbing/shell are done; still open: the back-office page-body copy across ~20
+  ops pages, the 1.25 type scale, a dark `/ops` surface, and the storefront
+  hero/imagery layout — see "Design gap" below.
 
 **Blocked on a schema migration (Article 2 — ask first)**
 
@@ -107,22 +111,24 @@ editorial), back-office (`apps/backoffice`, dense ops), worker app (not built).
 | # | Gap | Status |
 |---|---|---|
 | 1 | **Alert semantics.** The design gives distinct `warning`/`color-error` and a dispatch `timeout` (Amber) token; the escalation UI mapped AMBER to `secondary`. | **Done 2026-09-26:** added `warning`/`timeout` tokens to `THEME_TOKEN_KEYS`, the Tailwind preset, `styles.css` and `Badge`; the escalation board and dispatch page now use `timeout` for AMBER. |
-| 2 | **Palette.** The six named colours are not in `THEME_PRESETS`; only a preset + a single `primaryColor` are overridable. | **Done 2026-09-26:** added a `vereda` preset and pointed the default tenant at it (Verdín primary). The design's "Vereda Expeditions" name vs the manifest's "Authentic Cuba Expeditions" is an **owner decision**. |
-| 3 | **Typography.** Design mandates Bricolage Grotesque and a 1.25 scale; no font is loaded and `--ota-font-sans` is never set. | **Open** — needs a decision (Next `next/font` fetches at build) plus a font token in theming. |
-| 4 | **Geometry/elevation.** Design radii (4/10/20px) differ from `RADIUS_SCALE` (4/8/12/16px), which also derives md/lg from one `--ota-radius`; `Card` always carries the default grey `shadow-sm` instead of the two warm-tinted levels. | **Open** — needs a token scheme and a decision. |
+| 2 | **Palette.** The six named colours are not in `THEME_PRESETS`; only a preset + a single `primaryColor` are overridable. | **Done 2026-09-26:** added a `vereda` preset, pointed the tenant at it (Verdín primary), and renamed the tenant to `vereda-expeditions` / "Vereda Expeditions" per the owner. |
+| 3 | **Typography.** Design mandates Bricolage Grotesque and a 1.25 scale; no font is loaded and `--ota-font-sans` is never set. | **Done 2026-09-26 (font):** the variable font is self-hosted in `tenant/assets/fonts/` and loaded via `next/font/local` in both apps, setting `--ota-font-sans`. The 1.25 type scale still uses Tailwind defaults — **open**. |
+| 4 | **Geometry/elevation.** Design radii (4/10/20px) differ from `RADIUS_SCALE` (4/8/12/16px), which also derives md/lg from one `--ota-radius`; `Card` always carries the default grey `shadow-sm` instead of the two warm-tinted levels. | **Done 2026-09-26:** fixed `--ota-radius-sm/md/lg` (4/10/20px), added two warm-tinted shadows (`shadow-ota-1/2`), made `Card` flat with a hairline border, and reserved elevation for inputs and the escalation alert card. |
 | 5 | **Iconography/imagery.** No real-photography pipeline; the map fills provinces with primary (token-driven, acceptable) but has no geometric pins. | **Open** — content/asset work. |
 | 6 | **Motion.** Design asks for minimal, state-change-only motion. | **Compliant** (only transition utilities are used). |
-| 7 | **Voice/copy.** Storefront copy lives in `packages/i18n` (es/en/fr). The back-office copy is hardcoded English across components. | **Open** — localizing ops is a large follow-up; new copy in this increment stays token/i18n-based. |
+| 7 | **Voice/copy.** Storefront copy lives in `packages/i18n` (es/en/fr). The back-office copy is hardcoded English across page bodies. | **Partial 2026-09-26:** back-office i18n plumbing + shell/nav/app-shell/login localized (cookie → `Accept-Language` → tenant locale). Page-body copy across the ~20 ops pages remains. |
 | 8 | **Layout per surface.** Storefront hero is text + catalog cards, not the interactive map/photo, and uses an eyebrow label the design bans; the ops desk is light, not the design's Tinta dark surface. | **Open** — screen-level work. |
 | 9 | **Accessibility.** Tokens are contrast-checked and focus rings exist; the amber→red change is conveyed by label and colour. | **Pass** — re-verify any new token pairing. |
 
 **Contradictions flagged to the owner:** (a) the design names the default tenant
-"Vereda Expeditions" while the manifest is "Authentic Cuba Expeditions"
-(`tenant/agency.config.json`); (b) design.md §9 says a fork changes only the
-`theme` block, but the six named colours, typography, and radii cannot all be
-expressed by the current `theme` schema (`palette` + `borderRadius` +
-`primaryColor`) — extending the contract is core work; (c) design.md describes a
-worker-app surface that does not exist yet.
+"Vereda Expeditions" vs the manifest's old "Authentic Cuba Expeditions" —
+**resolved 2026-09-26** by renaming the tenant; (b) design.md §9 says a fork
+changes only the `theme` block, but the six named colours, typography, and radii
+are not all expressible by the current `theme` schema (`palette` + `borderRadius`
++ `primaryColor`) — the palette/font/radius defaults now live in core, and a fork
+swaps the font file in `tenant/assets/`; extending the tenant schema with more
+theme knobs is a further option; (c) design.md describes a worker-app surface that
+does not exist yet.
 
 ## 0. Security note recorded at planning time
 
@@ -329,7 +335,7 @@ variable fails fast. Key variables: `DATABASE_URL`, `REDIS_URL`, `S3_*`,
 
 ## 7. Testing, CI, and definition of done
 
-- **Unit/domain:** Vitest (pure state machine, pricing, policies) — 299 tests.
+- **Unit/domain:** Vitest (pure state machine, pricing, policies) — 300 tests.
 - **API integration:** Supertest against the Nest app (fakes for Prisma/Auth, no DB).
 - **Database integration:** opt-in with `RUN_DB_INTEGRATION=1` (e.g.
   `apps/api/test/retention.integration.test.ts`); Redis-gated BullMQ tests skip by

@@ -25,7 +25,7 @@ availability, load tests, and observability.
 ## Status analysis (2026-09-26)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 299 unit tests, 31 e2e tests — all green.
+11 migrations, 300 unit tests, 31 e2e tests — all green.
 
 ### Done since upstream base `849ea73` (16 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
@@ -333,9 +333,9 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-25):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**299**: api
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**300**: api
   177, domain 54, config 13, theming 11, documents 8, email 5, imports 5, ai 4,
-  reports 4, ui 4, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
+  reports 4, ui 5, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
   green. (3 api tests skipped without Redis/DB — compliance + dispatch BullMQ and
   the retention DB integration — plus 1 storage test skipped without S3.)
 - Health/readiness: `health.test.ts` (8: liveness ignores dependencies; ready
@@ -474,13 +474,16 @@ they should be added.
   enter the lifecycle. Reservation-scoped free-text PII is now scrubbed on
   anonymization (Tier 1, 2026-09-26); generated PDFs (Tier 2) and supplier
   PII / import batches (Tier 3) are not (`docs/pii-at-rest-review.md` §5).
-- `docs/design.md` (design system — "Vereda Expeditions") was added 2026-09-26 and
-  is only partially applied. The immediate gaps are the missing `warning`/`timeout`
-  alert tokens (the escalation UI maps AMBER to `secondary`), typography
-  (Bricolage Grotesque is not loaded; no `--ota-font-sans` is set), geometry
-  (design radii/shadow levels differ from `RADIUS_SCALE` and `Card`'s uniform
-  `shadow-sm`), and the fact that the design palette/typography/shadow rollout and
-  the default tenant's brand identity are owner decisions.
+- `docs/design.md` (design system — "Vereda Expeditions") was added 2026-09-26.
+  Applied so far: the tenant is renamed to `vereda-expeditions` / "Vereda
+  Expeditions", the `vereda` palette + `warning`/`timeout` alert tokens drive the
+  escalation state, Bricolage Grotesque is self-hosted in `tenant/assets/fonts/`
+  and loaded via `next/font/local` in both apps (`--ota-font-sans`), the design
+  radii (4/10/20px) and two warm-tinted elevation levels are in the token
+  contract, and the back-office has i18n plumbing plus localized
+  shell/nav/app-shell/login (cookie → `Accept-Language` → tenant locale). Still
+  open: back-office page-body copy across ~20 ops pages, the 1.25 type scale, a
+  dark `/ops` surface, and the storefront hero/imagery layout.
 
 ## Traps
 - API dev must stay swc-based (`node --watch -r @swc-node/register`); tsx/esbuild
@@ -535,13 +538,13 @@ they should be added.
    2026-09-25). Then implement behind `PaymentProvider` with plain `fetch` and
    add the signature-verified public webhook route (ADR 0003/0005). No action
    until the documents are available.
-8. **Design rollout (`docs/design.md`).** Apply the design system in increments.
-   No-decision first step: add the `warning`/`timeout` alert tokens and use them
-   for the escalation state (done 2026-09-26). Owner decisions still needed
-   before the rest: adopt Bricolage Grotesque via `next/font` (network at build),
-   the design radii/shadow scheme (separate radius tokens + a warm-tinted shadow,
-   removing the uniform `Card` shadow), the Vereda palette as the default tenant
-   identity, localizing the back-office copy, and a dark `/ops` desk surface.
+8. **Design rollout (`docs/design.md`) — continue.** Owner decisions of
+   2026-09-26: rename to Vereda Expeditions, self-host Bricolage, implement
+   radii/elevation, localize the back-office. Done: naming, palette, alert
+   tokens, font, geometry, back-office i18n plumbing + shell/nav/app-shell/login.
+   Next, in order: localize the remaining back-office page bodies (es/en/fr, no
+   output change for `en`); encode the 1.25 type scale; a dark `/ops` desk
+   surface; then the storefront hero/imagery layout.
 9. **Authorization-matrix gaps:** add the `/me/*`, `GET /documents/:id/download`,
    `GET /inventory/media/:mediaId`, and public `/catalog*` /
    `POST /supplier-applications` routes to
@@ -803,3 +806,21 @@ they should be added.
   (unguessable capability URL; unknown → 404; rate-limited). The checkout URL
   now carries only `wire_<uuid>`, so nothing is spoofable in the URL and nothing
   sensitive leaks. Still no state-changing public callback (ADR 0003).
+- 2026-09-26 — the default tenant is renamed to **Vereda Expeditions**
+  (`tenantId: vereda-expeditions`), aligning the manifest with `docs/design.md`
+  (owner decision). The `TENANT_ID` env default follows.
+- 2026-09-26 — the design typeface **Bricolage Grotesque** is self-hosted as a
+  variable woff2 in `tenant/assets/fonts/` and loaded with `next/font/local` in
+  both apps (owner decision), rather than `next/font/google` (build-time network)
+  or a core font package. This is a build-time asset path, not a tenant config
+  import; a fork swaps the file.
+- 2026-09-26 — the design radii (`radius-sm/md/lg` = 4/10/20px) and two
+  warm-tinted elevation levels are part of the core token contract; `Card` is
+  flat (hairline border) and elevation is reserved for inputs and the escalation
+  alert card. The tenant's `theme.borderRadius` still selects the legacy single
+  `--ota-radius` used by the bare `rounded` utility.
+- 2026-09-26 — the back-office is internationalized with `next-intl` **without
+  URL prefixes**: locale resolves cookie → `Accept-Language` → tenant primary
+  locale; a header switcher pins the cookie. English output is unchanged so the
+  e2e suite is unaffected. Shell/nav/app-shell/login are migrated; the remaining
+  page bodies are a tracked follow-up.
