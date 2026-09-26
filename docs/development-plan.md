@@ -95,6 +95,35 @@ typecheck, test, build green.
 - **Operational items** the review already recommended: stop logging supplier
   emails in the expiry scan, redact email bodies, document TLS termination.
 
+### Design gap — `docs/design.md` (Vereda Expeditions) vs the current UI
+
+**How it maps.** `docs/design.md` is the default tenant's visual identity. Its
+tokens are compiled by `packages/theming` into `--ota-*` CSS variables set on
+`<body>` by both apps; `packages/ui/tailwind-preset.mjs` maps semantic utilities
+onto those names and `packages/ui` holds the components (Button, Card, Input,
+Label, Select, Table, Alert, Badge). Surfaces: storefront (`apps/storefront`,
+editorial), back-office (`apps/backoffice`, dense ops), worker app (not built).
+
+| # | Gap | Status |
+|---|---|---|
+| 1 | **Alert semantics.** The design gives distinct `warning`/`color-error` and a dispatch `timeout` (Amber) token; the escalation UI mapped AMBER to `secondary`. | **Done 2026-09-26:** added `warning`/`timeout` tokens to `THEME_TOKEN_KEYS`, the Tailwind preset, `styles.css` and `Badge`; the escalation board and dispatch page now use `timeout` for AMBER. |
+| 2 | **Palette.** The six named colours are not in `THEME_PRESETS`; only a preset + a single `primaryColor` are overridable. | **Done 2026-09-26:** added a `vereda` preset and pointed the default tenant at it (Verdín primary). The design's "Vereda Expeditions" name vs the manifest's "Authentic Cuba Expeditions" is an **owner decision**. |
+| 3 | **Typography.** Design mandates Bricolage Grotesque and a 1.25 scale; no font is loaded and `--ota-font-sans` is never set. | **Open** — needs a decision (Next `next/font` fetches at build) plus a font token in theming. |
+| 4 | **Geometry/elevation.** Design radii (4/10/20px) differ from `RADIUS_SCALE` (4/8/12/16px), which also derives md/lg from one `--ota-radius`; `Card` always carries the default grey `shadow-sm` instead of the two warm-tinted levels. | **Open** — needs a token scheme and a decision. |
+| 5 | **Iconography/imagery.** No real-photography pipeline; the map fills provinces with primary (token-driven, acceptable) but has no geometric pins. | **Open** — content/asset work. |
+| 6 | **Motion.** Design asks for minimal, state-change-only motion. | **Compliant** (only transition utilities are used). |
+| 7 | **Voice/copy.** Storefront copy lives in `packages/i18n` (es/en/fr). The back-office copy is hardcoded English across components. | **Open** — localizing ops is a large follow-up; new copy in this increment stays token/i18n-based. |
+| 8 | **Layout per surface.** Storefront hero is text + catalog cards, not the interactive map/photo, and uses an eyebrow label the design bans; the ops desk is light, not the design's Tinta dark surface. | **Open** — screen-level work. |
+| 9 | **Accessibility.** Tokens are contrast-checked and focus rings exist; the amber→red change is conveyed by label and colour. | **Pass** — re-verify any new token pairing. |
+
+**Contradictions flagged to the owner:** (a) the design names the default tenant
+"Vereda Expeditions" while the manifest is "Authentic Cuba Expeditions"
+(`tenant/agency.config.json`); (b) design.md §9 says a fork changes only the
+`theme` block, but the six named colours, typography, and radii cannot all be
+expressed by the current `theme` schema (`palette` + `borderRadius` +
+`primaryColor`) — extending the contract is core work; (c) design.md describes a
+worker-app surface that does not exist yet.
+
 ## 0. Security note recorded at planning time
 
 `opencode.jsonc:21` contained a hardcoded GitHub Personal Access Token in plaintext.
