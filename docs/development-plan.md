@@ -1,6 +1,9 @@
 # OTA — Master Development Plan & Architecture Analysis
 
-**Status:** Approved (2026-09-20)
+**Status:** Approved (2026-09-20) — this is the original baseline plan. The
+authoritative done/remaining snapshot is `docs/handoff/main.md`, and
+`docs/next-session-prompt.md` asks the next session to **rework this plan**
+against actual status. Phase statuses below are historical.
 **Owners:** Project founders / lead engineer
 **Source material:** `OTA - Specifications Document.pdf` / `.docx`, `resources/index.html`
 (SVG Cuba map), `resources/cuban_map_svg - Pinar del Rio.svg`, `START-HERE.md`,

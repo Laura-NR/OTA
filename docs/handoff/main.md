@@ -1,24 +1,28 @@
 # Handoff — main — updated 2026-09-26 11:35
 
 ## Goal
-Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
-stack: `docs/adr/0001-stack.md`. Wave 1 (the back-office ERP, ADR 0002 increments
-A–E) is done. In Wave 2a the payments mock, storefront map, traveler auth +
-dashboard, package builder, recruitment portal, and storefront i18n (es/en/fr)
-are all done. What remains of Wave 2a is the checkout page, which is gated by
-ADR 0003 (no public mark-paid route until a real signed-webhook provider).
-Phase 3 has started with the analytics/BI overview and statutory regulatory
-reporting (§4.9.2). Curated packages (Phase 4), the AI assistant abstraction +
-mock, and the traveler mock checkout now ship too, so all four 2026-09-23
-decisions are implemented. The only remaining AI decision is which real LLM
-vendor to wire (a separate Article 2 call); checkout stays link-only until a
-signed-webhook provider exists. While those two decisions are pending, the
-back-office quality/duty-of-care desk (§4.9.4) was added, including traveler
-CSAT reviews and incident severity in the analytics quality KPIs, the GDPR
-retention lifecycle (§3.5) now ships end to end (`docs/adr/0004-data-retention.md`),
-and Phase 7 gained a readiness probe plus `docs/runbook.md`.
+Build the Cuban inbound-tourism OTA platform — a fork-per-agency white-label
+monorepo. Plan: `docs/development-plan.md` (the original baseline; the next
+session is asked to **rework it against actual status** — see
+`docs/next-session-prompt.md`); stack: `docs/adr/0001-stack.md`.
 
-## Status analysis (2026-09-24)
+Waves 1 and 2a are done: the back-office ERP (ADR 0002 A–E), the recurring
+reservation/dispatch/escalation pipeline, inventory CMS, legal documents,
+messaging, bulk import, compliance, analytics/BI + statutory regulatory
+reporting, curated packages, quality/duty-of-care + CSAT, the AI assistant mock,
+and the storefront (catalog + Cuba map, traveler auth/dashboard, package
+builder, recruitment portal, i18n es/en/fr). Phase 6's GDPR retention lifecycle
+ships end to end (`docs/adr/0004-data-retention.md`), including Tier 1 free-text
+PII scrubbing (`docs/pii-at-rest-review.md`). Phase 7 has a readiness probe,
+`docs/runbook.md`, rate limiting, and the RBAC matrix.
+
+Payments: manual **wire transfer** is the primary rail
+(`docs/adr/0005-payment-rails.md`); the TropiPay card rail is deferred until the
+agency's legal documents exist. Open decisions: a real LLM vendor, PII purge
+Tiers 2–3, migration-gated package items, Expo mobile, real-time map
+availability, load tests, and observability.
+
+## Status analysis (2026-09-26)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 11 migrations, 297 unit tests, 31 e2e tests — all green.
@@ -88,7 +92,7 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     in-memory, per process. `/health*` skipped; `/api/auth/get-session` keeps the
     normal limit while credential endpoints get the stricter one; `TRUST_PROXY`
     supported.
-16. **PII-at-rest review + Tier 1 purge (2026-09-25, Phase 7).**
+16. **PII-at-rest review + Tier 1 purge (review 2026-09-25, Tier 1 2026-09-26).**
     `docs/pii-at-rest-review.md` maps every PII location and recommends a tiered
     scope (G1–G10); Tier 1 is implemented in `RetentionService.anonymize`:
     reservation-scoped free text (messages/reviews/incidents/decline reasons/
@@ -100,6 +104,8 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 ### Remaining
 **Blocked on a human decision**
 - Real LLM vendor behind `packages/ai` (new dependency → Article 2).
+- **Real-time catalog/map availability (Phase 4).** A product call on what
+  province-level "available" means; there is no inventory ↔ availability link.
 - **TropiPay card rail** (ADR 0005): DEFERRED — creating a TropiPay business
   account requires the agency's legal documents, which the owner does not have
   yet. Wire transfer remains the sole live rail; card stays on the mock. No code
@@ -112,8 +118,6 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   regulatory figure.
 
 **Unblocked (no decision or migration needed)**
-- **Real-time catalog/map availability (Phase 4).** Needs a product call on what
-  province-level "available" means (there is no inventory ↔ availability link).
 - **Observability (Phase 7).** Structured pino logs, liveness `/health`, a
   readiness `/health/ready`, and `docs/runbook.md` exist. Still open: Sentry or
   OpenTelemetry metrics/tracing, and alerting on readiness/queue depth.

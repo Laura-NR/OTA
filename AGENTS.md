@@ -32,6 +32,11 @@ backoffice, worker-app, traveler-app, admin-app). Shared packages in `packages/`
 storage, auth, testing). `tenant/` is the ONLY fork-specific directory. Infra in
 `infra/`; decisions in `docs/adr/`; handoffs in `docs/handoff/`.
 
+**Current status:** the living done/remaining snapshot is `docs/handoff/main.md`.
+The "Verification status" notes below are historical (start at 2026-09-21) and
+predate later increments — read the handoff for the live state. To start a new
+session, use `docs/next-session-prompt.md`.
+
 **Commands** (use exactly these; do not invent variants):
 
 | Purpose | Command |
