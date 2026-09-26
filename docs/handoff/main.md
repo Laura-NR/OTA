@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-26 11:35
+# Handoff — main — updated 2026-09-26 15:30
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform — a fork-per-agency white-label
@@ -141,8 +141,8 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 - Monorepo: pnpm + Turborepo, TS 6.0.3, ESLint/Prettier, Vitest, GitHub Actions;
   **18 workspace projects** (3 apps, 15 packages).
 - Apps: `api` (NestJS, CommonJS), `backoffice`, `storefront` (Next.js 15).
-- Packages: domain, schemas, db, auth, config, documents, email, i18n, imports,
-  payments, storage, theming, ui.
+- Packages (15): domain, schemas, db, auth, config, documents, email, i18n,
+  imports, payments, reports, ai, storage, theming, ui.
 - Back-office (ADR 0002):
   - **A — reservation pipeline:** list/detail/audit + ops intake (`POST
     /reservations` → DRAFT) and board → workbench.
@@ -336,7 +336,8 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-25):
 - `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**297**: api
   177, domain 54, config 13, theming 9, documents 8, email 5, imports 5, ai 4,
   reports 4, ui 4, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
-  green. (2 api integration tests skipped without `REDIS_URL`.)
+  green. (3 api tests skipped without Redis/DB — compliance + dispatch BullMQ and
+  the retention DB integration — plus 1 storage test skipped without S3.)
 - Health/readiness: `health.test.ts` (8: liveness ignores dependencies; ready
   200/503; service up/down/skipped + close) and `/health/ready` asserted public
   in the authorization matrix. Live smoke with the stack up:
@@ -350,7 +351,7 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-25):
   `[redacted]` (severity kept), service-item decline reason → null,
   `customItineraryPayload` → null, `Verification` rows for the old email
   deleted, and audit `metadata.reason` stripped. The default `pnpm test` skips
-  it (175 api passed, 3 skipped).
+  it (177 api passed, 3 skipped).
 - Wire-transfer rail: `packages/payments` tests (6: mock + wire intent URL,
   operator confirmation, rail map) and `packages/config`/`i18n` green;
   `me.e2e.test.ts` asserts SEPA → `/checkout/wire/wire_`; `payments.e2e.test.ts`
@@ -430,6 +431,13 @@ start/candidates, import commit, ops intake, and a live `/ops` event. The
 retention notice/consent/anonymize path is now proven against the dev Postgres
 (`RUN_DB_INTEGRATION=1`); the BullMQ schedule is observed live in Redis.
 
+Not asserted in `apps/api/test/authorization.e2e.test.ts` (the canonical RBAC
+matrix): the `/me/*` self-service routes, `GET /documents/:id/download`,
+`GET /inventory/media/:mediaId`, and the public `POST /supplier-applications` /
+`GET /catalog*` routes. They are covered by other specs and over HTTP, but the
+working rule ("a controller route is not done until it is in the matrix") says
+they should be added.
+
 ## Assumptions & unknowns
 - Catalog media content type is derived from the storage-key extension, so no
   content-type column exists (same precedent as credentials).
@@ -438,9 +446,10 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
 - The storefront `/catalog` is dynamic (reads `searchParams`), so each filter
   combination is server-rendered; the underlying `/catalog` fetch is still cached
   for 60s, so CMS edits land within ~1 minute.
-- Payments run on the mock adapter; confirmation is an authenticated ops action,
-  not a gateway webhook. The mock `checkoutUrl` base is `PAYMENT_CHECKOUT_BASE_URL`
-  (storefront origin) and stays informational until a `/checkout` page exists.
+- The **wire-transfer** rail is the live primary rail; the **card** rail runs on
+  the mock (ADR 0005). Confirmation is an authenticated ops action, not a gateway
+  webhook; there is no public callback. The mock `checkoutUrl` base is
+  `PAYMENT_CHECKOUT_BASE_URL` (storefront origin).
 - Authorisation stays API-only; the UI hides controls by role but is not a
   security boundary.
 - e2e writes E2E-owned fixtures to the dev DB; `global-setup.ts` resets the
@@ -462,8 +471,16 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   confirmation the next cycle is 12 months from that confirmation, not 6 from
   completion. The keep-alive token expires at the notice + 30 days, so a click
   after the grace and before the purge is rejected. Only TRAVELER-role users
-  enter the lifecycle. Free-text PII (messages, reviews, incidents) is not
-  scrubbed yet.
+  enter the lifecycle. Reservation-scoped free-text PII is now scrubbed on
+  anonymization (Tier 1, 2026-09-26); generated PDFs (Tier 2) and supplier
+  PII / import batches (Tier 3) are not (`docs/pii-at-rest-review.md` §5).
+- `docs/design.md` (design system — "Vereda Expeditions") was added 2026-09-26 and
+  is only partially applied. The immediate gaps are the missing `warning`/`timeout`
+  alert tokens (the escalation UI maps AMBER to `secondary`), typography
+  (Bricolage Grotesque is not loaded; no `--ota-font-sans` is set), geometry
+  (design radii/shadow levels differ from `RADIUS_SCALE` and `Card`'s uniform
+  `shadow-sm`), and the fact that the design palette/typography/shadow rollout and
+  the default tenant's brand identity are owner decisions.
 
 ## Traps
 - API dev must stay swc-based (`node --watch -r @swc-node/register`); tsx/esbuild
@@ -518,6 +535,17 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
    2026-09-25). Then implement behind `PaymentProvider` with plain `fetch` and
    add the signature-verified public webhook route (ADR 0003/0005). No action
    until the documents are available.
+8. **Design rollout (`docs/design.md`).** Apply the design system in increments.
+   No-decision first step: add the `warning`/`timeout` alert tokens and use them
+   for the escalation state (done 2026-09-26). Owner decisions still needed
+   before the rest: adopt Bricolage Grotesque via `next/font` (network at build),
+   the design radii/shadow scheme (separate radius tokens + a warm-tinted shadow,
+   removing the uniform `Card` shadow), the Vereda palette as the default tenant
+   identity, localizing the back-office copy, and a dark `/ops` desk surface.
+9. **Authorization-matrix gaps:** add the `/me/*`, `GET /documents/:id/download`,
+   `GET /inventory/media/:mediaId`, and public `/catalog*` /
+   `POST /supplier-applications` routes to
+   `apps/api/test/authorization.e2e.test.ts`.
 
 ## Decisions (append-only)
 - 2026-09-20 — fork-per-agency template over runtime multi-tenancy.
