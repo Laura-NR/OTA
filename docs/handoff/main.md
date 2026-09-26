@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-25 15:35
+# Handoff — main — updated 2026-09-25 16:05
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -23,7 +23,7 @@ and Phase 7 gained a readiness probe plus `docs/runbook.md`.
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 11 migrations, 295 unit tests, 31 e2e tests — all green.
 
-### Done since upstream base `849ea73` (15 increments, in order)
+### Done since upstream base `849ea73` (16 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
    `20260923063425_regulatory_reporting` (`User.nationality`,
    `Reservation.tourismCategory`); pure `calculateRegulatory`;
@@ -87,6 +87,10 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     in-memory, per process. `/health*` skipped; `/api/auth/get-session` keeps the
     normal limit while credential endpoints get the stricter one; `TRUST_PROXY`
     supported.
+16. **PII-at-rest review (2026-09-25, Phase 7).**
+    `docs/pii-at-rest-review.md` maps every PII location, records the current
+    purge coverage, and recommends a tiered scrub scope (G1–G10). Analysis only;
+    no code or schema change.
 
 ### Remaining
 **Blocked on a human decision**
@@ -110,9 +114,11 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   OpenTelemetry metrics/tracing, and alerting on readiness/queue depth.
 - **Rate limiting (Phase 7).** Done 2026-09-25 as hand-rolled Express middleware
   (no dependency); a shared store is still needed for multi-instance deploys.
-- **PII-at-rest review (Phase 7).** The retention purge now scrubs `User` PII,
-  but there is still no passport field and free-text PII (messages, reviews,
-  incidents) is not scrubbed; revisit before production.
+- **PII purge scope (Phase 7) — pending owner decision.** The review is written
+  (`docs/pii-at-rest-review.md`); the retention purge still scrubs only `User`
+  PII, and free-text PII (messages/reviews/incidents/customItineraryPayload
+  notes/decline reasons/audit metadata), generated PDFs, `Verification` rows,
+  and supplier applications are not scrubbed. Tier 1/2/3 scope is the call.
 - **Load tests (Phase 7).** Not started.
 - **E2E depth.** Dispatch start/candidates, bulk-import commit, ops intake, and
   a live `/ops` dispatch event are now browser-exercised (2026-09-24). Remaining
@@ -470,9 +476,10 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   compiling the Nest app. A missing secret makes `scan()` log and skip notices.
 
 ## Next
-1. **Phase 6 remainder:** none for retention. Optional follow-ups — scrub
-   free-text PII (messages/reviews/incidents) during the purge, and run a live
-   notice/purge smoke against the dev DB (currently fake-Prisma only).
+1. **Phase 6 remainder:** retention is functionally complete and live-proven.
+   The one open item is the **purge scope** (free-text PII, PDFs, supplier
+   applications) — see `docs/pii-at-rest-review.md`; owner decision, then a
+   small `RetentionService.anonymize` change.
 2. **Phase 4 storefront remainder:** package follow-ups that need a migration
    (Article 2) — accommodation-tier selection and package media; the catalog/map
    do not yet show real-time availability. Checkout now uses the wire-transfer
@@ -482,10 +489,10 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
    `packages/ai`'s `LlmProvider` (new dependency → Article 2). A true guests ×
    nights bed-nights figure still needs a party-size migration.
 4. **Phase 7 hardening:** `create-tenant` + fork docs, the RBAC matrix, the
-   retention purge, the readiness probe + runbook, and rate limiting shipped.
-   Remaining — a PII-at-rest review, Sentry/OpenTelemetry, load tests, a shared
-   rate-limit store for multi-instance deploys, and Changesets core versioning
-   (deferred).
+   retention purge, the readiness probe + runbook, rate limiting, and the
+   PII-at-rest review shipped. Remaining — act on the review's purge scope
+   (owner decision), Sentry/OpenTelemetry, load tests, a shared rate-limit store
+   for multi-instance deploys, and Changesets core versioning (deferred).
 5. Mobile apps (Phases 5–6) need Expo (Article 2).
 6. Extend e2e (remaining): worker accept/decline through the UI, the dispatch
    timeout firing through the UI, and passkey sign-in. Dispatch start/candidates,
@@ -735,3 +742,8 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   bank details (`--account-name/--bank/--iban/--bic/--reference-note`), so a new
   fork scaffolds a working `/checkout/wire` page instead of editing the manifest
   by hand. All three of account-name/bank/iban are required together.
+- 2026-09-25 — wrote `docs/pii-at-rest-review.md` (analysis only): it maps PII
+  across the schema, object storage, email, and logs; documents what the purge
+  covers; and recommends a tiered scrub scope. No code changed. Tier 1 (scrub
+  reservation-scoped free text + Verification rows) is recommended; Tier 2
+  (generated PDFs) needs legal input.
