@@ -115,7 +115,10 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
 - **Primary rail: wire transfer** (spec §7.1, ADR 0005). The storefront's
   "Proceed to payment" creates a `wire_<uuid>` receipt, moves the booking
   `SECURED_AND_INVOICED -> PENDING_PAYMENT`, and sends the traveler to
-  `/checkout/wire/<ref>` with the agency's bank details.
+  `/checkout/wire/<ref>`. The page reads the agency's bank details from the
+  tenant manifest and the authoritative amount/booking reference from the
+  public, PII-free `GET /payments/intents/:ref` (an unguessable capability URL;
+  unknown refs are 404). The URL carries only `wire_<uuid>`.
 - The bank details come from `tenant/agency.config.json` `payments.bankTransfer`
   (account name, bank, IBAN, BIC, reference wording). A fork edits that block; if
   it is missing the wire page shows a "not available" message. Never put account

@@ -32,11 +32,13 @@ provider selection by rail so TropiPay is a drop-in later.**
   The API injects the map behind the `PAYMENT_PROVIDERS` token and resolves by
   the request's rail, so adding a rail is one map entry plus one adapter.
 - **Wire transfer has no gateway.** `BankTransferProvider.createIntent` returns
-  a `wire_<uuid>` reference and a storefront `/checkout/wire/<ref>` URL carrying
-  the booking reference, amount, and currency for display. The traveler pays
-  from their own bank; an authenticated operations user confirms the receipt
-  through the existing `POST /reservations/:id/payments/:paymentId/confirm`.
-  There is **no public callback** for this rail.
+  a `wire_<uuid>` reference and a storefront `/checkout/wire/<ref>` URL (no
+  query params). The page reads the authoritative amount and booking reference
+  from a public, PII-free `GET /payments/intents/:ref` capability lookup, and
+  the bank details from the tenant manifest. The traveler pays from their own
+  bank; an authenticated operations user confirms the receipt through the
+  existing `POST /reservations/:id/payments/:paymentId/confirm`. There is **no
+  public callback** (state-changing) for this rail.
 - **Bank details are tenant data.** The agency's account name, bank, IBAN, BIC,
   and reference wording live in the tenant manifest under `payments.bankTransfer`
   (`packages/config` schema), so core never imports `tenant/`. A fork points the

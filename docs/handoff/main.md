@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-26 10:55
+# Handoff — main — updated 2026-09-26 11:35
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -21,7 +21,7 @@ and Phase 7 gained a readiness probe plus `docs/runbook.md`.
 ## Status analysis (2026-09-24)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 295 unit tests, 31 e2e tests — all green.
+11 migrations, 297 unit tests, 31 e2e tests — all green.
 
 ### Done since upstream base `849ea73` (16 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
@@ -77,9 +77,10 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     + a rail→provider map (`createPaymentProviders`); the storefront's
     "Proceed to payment" now lands on `/checkout/wire/<ref>` with the agency's
     bank details from `tenant/agency.config.json` `payments.bankTransfer`
-    (schema in `packages/config`); ops confirmation unchanged. Card stays on the
-    mock pending TropiPay. `pnpm create:tenant` /
-    `buildTenantManifest` scaffold the block via
+    (schema in `packages/config`); ops confirmation unchanged. The page gets the
+    authoritative amount/booking code from the public PII-free
+    `GET /payments/intents/:ref`. Card stays on the mock pending TropiPay.
+    `pnpm create:tenant` / `buildTenantManifest` scaffold the block via
     `--account-name/--bank/--iban/--bic/--reference-note`.
 15. **Rate limiting (2026-09-25, Phase 7).** Dependency-free Express
     middleware (`apps/api/src/common/rate-limit.ts`) mounted in `main.ts` before
@@ -170,9 +171,11 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 - Phase 4 — **wire-transfer rail (ADR 0005):** `createPaymentProviders` maps
   `OPEN_BANKING_SEPA`/`OTHER` → `BankTransferProvider` and `CARD` → the mock
   until TropiPay. A wire intent returns `wire_<uuid>` and
-  `<base>/checkout/wire/<ref>?reference&amount&currency`; the storefront page
-  renders `tenant.payments.bankTransfer` (account name, bank, IBAN, BIC,
-  reference note). No gateway, no public callback; ops "Mark paid" confirms.
+  `<base>/checkout/wire/<ref>` (no query params); the storefront page reads the
+  authoritative amount/booking code from the public PII-free
+  `GET /payments/intents/:ref` and renders `tenant.payments.bankTransfer`
+  (account name, bank, IBAN, BIC, reference note). No gateway, no state-changing
+  public callback; ops "Mark paid" confirms.
   The storefront's "Proceed to payment" requests SEPA, so it now lands on the
   wire page. `packages/config` validates the optional `payments.bankTransfer`
   block; `tenant/agency.config.json` holds the demo placeholders.
@@ -326,8 +329,8 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-25):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**295**: api
-  175, domain 54, config 13, theming 9, documents 8, email 5, imports 5, ai 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**297**: api
+  177, domain 54, config 13, theming 9, documents 8, email 5, imports 5, ai 4,
   reports 4, ui 4, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
   green. (2 api integration tests skipped without `REDIS_URL`.)
 - Health/readiness: `health.test.ts` (8: liveness ignores dependencies; ready
@@ -346,10 +349,11 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-25):
   it (175 api passed, 3 skipped).
 - Wire-transfer rail: `packages/payments` tests (6: mock + wire intent URL,
   operator confirmation, rail map) and `packages/config`/`i18n` green;
-  `me.e2e.test.ts` asserts SEPA → `/checkout/wire/wire_` and
-  `payments.e2e.test.ts` keeps CARD → `/checkout/mock/`. `pnpm e2e` passes 31,
-  including the storefront wire-instructions page (bank name, booking reference,
-  no confirm action).
+  `me.e2e.test.ts` asserts SEPA → `/checkout/wire/wire_`; `payments.e2e.test.ts`
+  keeps CARD → `/checkout/mock/` and covers the public intent lookup (200 by
+  reference, 404 unknown) plus the auth-matrix public assertion. `pnpm e2e`
+  passes 31; the storefront wire page asserts the authoritative `EUR 200.00`,
+  the booking reference, the bank details, and no confirm action.
 - Rate limiting: `rate-limit.test.ts` (6: limit + 429, window reset, credential-
   only strict bucket, per-client keys, `skip`, sweep). `pnpm e2e` passes 31 with
   the limiter mounted; `playwright.config.ts` raises the limits via env so the
@@ -762,3 +766,8 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   `Verification` rows for the old email are deleted — all inside the existing
   purge transaction. Proven live in `retention.integration.test.ts`. Tier 2
   (PDFs) and Tier 3 (suppliers/imports) remain.
+- 2026-09-26 — the wire-instructions page reads the amount/booking code from the
+  persisted receipt via a new **public, PII-free** `GET /payments/intents/:ref`
+  (unguessable capability URL; unknown → 404; rate-limited). The checkout URL
+  now carries only `wire_<uuid>`, so nothing is spoofable in the URL and nothing
+  sensitive leaks. Still no state-changing public callback (ADR 0003).
