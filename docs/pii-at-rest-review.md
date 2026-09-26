@@ -1,8 +1,10 @@
 # PII-at-rest review
 
 - **Date:** 2026-09-25
-- **Status:** Analysis only — no code changed. Feeds the retention-purge scope
-  decision and the Phase 7 security work.
+- **Status:** Analysis, with **Tier 1 implemented** (2026-09-26) in
+  `RetentionService.anonymize`: reservation-scoped free text is redacted and
+  Better Auth `Verification` rows are deleted on anonymization. Tiers 2–3 remain
+  open.
 - **Scope:** where personal data lives across the OTA stack, what the current
   retention purge covers, what it does not, and recommended next controls.
 - **Sources:** `packages/db/prisma/schema.prisma`,
@@ -103,9 +105,9 @@ not enforce it (Caddy/proxy config does). Document it in the runbook.
 
 ## 5. Recommended purge scope
 
-Ordered by risk; Tier 1 is the recommendation.
+Ordered by risk; Tier 1 is implemented, Tiers 2–3 are recommendations.
 
-**Tier 1 — reservation-scoped free text (recommended now).** During
+**Tier 1 — reservation-scoped free text (implemented 2026-09-26).** During
 anonymization, for every reservation owned by the traveler, overwrite free text
 that is not a fiscal record:
 - `Message.body` → `[redacted]` (keep the row: sender + timestamp are aggregate
@@ -152,6 +154,7 @@ engineering one — flag to counsel before Tier 2.
 ## 8. What this review does not do
 
 - It changes no code and no schema.
-- It does not decide the purge scope; that is the owner's call (Tier 1/2/3).
+- It does not decide Tiers 2–3; those remain the owner's call (Tier 1 shipped
+  2026-09-26).
 - It does not cover personal data held by third parties the agency may add later
   (payment gateway, mail provider) beyond the noted provider-retention gap.

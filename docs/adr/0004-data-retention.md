@@ -82,6 +82,11 @@ stateless tokenized confirmation, and anonymizes in place.**
 
 ## Open items
 
-- Decide whether free-text PII (messages, reviews, incidents) is in scope for
-  scrubbing; this ADR leaves it intact.
+- Free-text PII scrubbing shipped in two steps: `docs/pii-at-rest-review.md`
+  inventories it and **Tier 1 (2026-09-26)** now redacts reservation-scoped free
+  text (messages, reviews, incidents, decline reasons, `customItineraryPayload`
+  notes, PII keys in audit metadata) and deletes Better Auth `Verification` rows
+  during anonymization. Tier 2 (generated PDFs) and Tier 3 (supplier
+  applications, supplier PII/credentials, import batches) are still open — Tier 2
+  needs legal input on fiscal-retention requirements.
 - Confirm the retention windows (6/30/12) against counsel before production.

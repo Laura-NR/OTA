@@ -1,4 +1,4 @@
-# Handoff — main — updated 2026-09-25 16:05
+# Handoff — main — updated 2026-09-26 10:55
 
 ## Goal
 Build the Cuban inbound-tourism OTA platform. Plan: `docs/development-plan.md`;
@@ -87,10 +87,14 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
     in-memory, per process. `/health*` skipped; `/api/auth/get-session` keeps the
     normal limit while credential endpoints get the stricter one; `TRUST_PROXY`
     supported.
-16. **PII-at-rest review (2026-09-25, Phase 7).**
-    `docs/pii-at-rest-review.md` maps every PII location, records the current
-    purge coverage, and recommends a tiered scrub scope (G1–G10). Analysis only;
-    no code or schema change.
+16. **PII-at-rest review + Tier 1 purge (2026-09-25, Phase 7).**
+    `docs/pii-at-rest-review.md` maps every PII location and recommends a tiered
+    scope (G1–G10); Tier 1 is implemented in `RetentionService.anonymize`:
+    reservation-scoped free text (messages/reviews/incidents/decline reasons/
+    `customItineraryPayload` notes/PII keys in audit metadata) is redacted and
+    Better Auth `Verification` rows for the old email are deleted. Tier 2
+    (generated PDFs) and Tier 3 (supplier applications/PII/credentials, import
+    batches) remain.
 
 ### Remaining
 **Blocked on a human decision**
@@ -114,11 +118,10 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
   OpenTelemetry metrics/tracing, and alerting on readiness/queue depth.
 - **Rate limiting (Phase 7).** Done 2026-09-25 as hand-rolled Express middleware
   (no dependency); a shared store is still needed for multi-instance deploys.
-- **PII purge scope (Phase 7) — pending owner decision.** The review is written
-  (`docs/pii-at-rest-review.md`); the retention purge still scrubs only `User`
-  PII, and free-text PII (messages/reviews/incidents/customItineraryPayload
-  notes/decline reasons/audit metadata), generated PDFs, `Verification` rows,
-  and supplier applications are not scrubbed. Tier 1/2/3 scope is the call.
+- **PII purge scope (Phase 7) — Tier 1 done, Tiers 2–3 open.** Tier 1 free-text
+  scrubbing shipped 2026-09-25 (`docs/pii-at-rest-review.md`). Remaining:
+  generated PDFs (Tier 2, needs legal input on fiscal retention), supplier
+  applications / supplier PII + credentials, and import batches (Tier 3).
 - **Load tests (Phase 7).** Not started.
 - **E2E depth.** Dispatch start/candidates, bulk-import commit, ops intake, and
   a live `/ops` dispatch event are now browser-exercised (2026-09-24). Remaining
@@ -335,8 +338,12 @@ Node 22.22.3, pnpm 12.4.2 (2026-09-25):
 - Retention live proof: `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest
   run test/retention.integration.test.ts` — against the dev Postgres it sent the
   6-month notice, recorded the keep-alive consent, anonymized after the grace,
-  and left the reservation intact (fixtures cleaned up). The default `pnpm test`
-  skips it (169 api passed, 3 skipped).
+  and left the reservation intact. It now also asserts **Tier 1**: message body
+  → `[redacted]`, review comment → null (rating kept), incident description →
+  `[redacted]` (severity kept), service-item decline reason → null,
+  `customItineraryPayload` → null, `Verification` rows for the old email
+  deleted, and audit `metadata.reason` stripped. The default `pnpm test` skips
+  it (175 api passed, 3 skipped).
 - Wire-transfer rail: `packages/payments` tests (6: mock + wire intent URL,
   operator confirmation, rail map) and `packages/config`/`i18n` green;
   `me.e2e.test.ts` asserts SEPA → `/checkout/wire/wire_` and
@@ -476,10 +483,11 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   compiling the Nest app. A missing secret makes `scan()` log and skip notices.
 
 ## Next
-1. **Phase 6 remainder:** retention is functionally complete and live-proven.
-   The one open item is the **purge scope** (free-text PII, PDFs, supplier
-   applications) — see `docs/pii-at-rest-review.md`; owner decision, then a
-   small `RetentionService.anonymize` change.
+1. **Phase 6 remainder:** retention is functionally complete and live-proven,
+   including Tier 1 free-text scrubbing (2026-09-25). Remaining purge scope:
+   generated PDFs (Tier 2 — needs legal input on fiscal retention) and supplier
+   applications / supplier PII / import batches (Tier 3) — see
+   `docs/pii-at-rest-review.md`.
 2. **Phase 4 storefront remainder:** package follow-ups that need a migration
    (Article 2) — accommodation-tier selection and package media; the catalog/map
    do not yet show real-time availability. Checkout now uses the wire-transfer
@@ -747,3 +755,10 @@ retention notice/consent/anonymize path is now proven against the dev Postgres
   covers; and recommends a tiered scrub scope. No code changed. Tier 1 (scrub
   reservation-scoped free text + Verification rows) is recommended; Tier 2
   (generated PDFs) needs legal input.
+- 2026-09-26 — applied the PII review's **Tier 1** in
+  `RetentionService.anonymize`: reservation-scoped free text is redacted
+  (messages, reviews, incidents, decline reasons, `customItineraryPayload`), PII
+  keys are stripped from the traveler's audit metadata, and Better Auth
+  `Verification` rows for the old email are deleted — all inside the existing
+  purge transaction. Proven live in `retention.integration.test.ts`. Tier 2
+  (PDFs) and Tier 3 (suppliers/imports) remain.
