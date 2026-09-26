@@ -12,6 +12,7 @@ import type { PaymentProvider, PaymentRail } from '@ota/payments';
 import type {
   CreatePaymentIntentRequest,
   PaymentIntentDto,
+  PaymentIntentLookupDto,
   PaymentReceiptDto,
   ReservationDto,
 } from '@ota/schemas';
@@ -50,6 +51,28 @@ export class PaymentsService {
       orderBy: { createdAt: 'desc' },
     });
     return receipts.map(toReceiptDto);
+  }
+
+  /**
+   * Minimal public lookup for the wire-instructions page, keyed by the
+   * unguessable provider reference (capability URL). Deliberately returns no
+   * traveler PII — just the booking reference, amount, rail, and status.
+   */
+  async lookupIntent(reference: string): Promise<PaymentIntentLookupDto> {
+    const receipt = await this.prisma.paymentReceipt.findFirst({
+      where: { gatewayTxId: reference },
+      include: { reservation: { select: { bookingCode: true } } },
+    });
+    if (!receipt) {
+      throw new NotFoundException('Payment intent not found');
+    }
+    return {
+      reference: receipt.reservation.bookingCode,
+      rail: receipt.rail,
+      amount: receipt.amount.toString(),
+      currency: receipt.currency,
+      status: receipt.status,
+    };
   }
 
   /**

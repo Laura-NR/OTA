@@ -5,6 +5,7 @@ import { ReservationsModule } from '../reservations/reservations.module';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
+import { PublicPaymentController } from './public-payment.controller';
 
 /**
  * Payment intents and confirmation. Concrete gateways are injected behind the
@@ -14,7 +15,7 @@ import { PAYMENT_PROVIDERS } from './payments.tokens';
  */
 @Module({
   imports: [ReservationsModule],
-  controllers: [PaymentsController],
+  controllers: [PaymentsController, PublicPaymentController],
   providers: [
     PaymentsService,
     {

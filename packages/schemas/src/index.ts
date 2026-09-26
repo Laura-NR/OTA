@@ -184,12 +184,14 @@ export {
 } from './me';
 export {
   createPaymentIntentSchema,
+  paymentIntentLookupSchema,
   paymentIntentSchema,
   paymentRailSchema,
   paymentReceiptSchema,
   paymentStatusSchema,
   type CreatePaymentIntentRequest,
   type PaymentIntentDto,
+  type PaymentIntentLookupDto,
   type PaymentReceiptDto,
 } from './payment';
 export { documentSchema, documentTypeSchema, type DocumentDto } from './document';

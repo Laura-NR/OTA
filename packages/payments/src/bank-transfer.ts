@@ -26,16 +26,13 @@ export class BankTransferProvider implements PaymentProvider {
   async createIntent(input: CreatePaymentIntentInput): Promise<PaymentIntent> {
     const providerReference = `wire_${randomUUID()}`;
     const base = this.options.checkoutBaseUrl ?? '';
-    const params = new URLSearchParams({
-      reference: input.reference,
-      amount: input.amount.toFixed(2),
-      currency: input.currency,
-    });
 
     return {
       providerReference,
       status: 'PENDING',
-      checkoutUrl: `${base}/checkout/wire/${providerReference}?${params.toString()}`,
+      // The page fetches the authoritative amount/reference by this reference,
+      // so nothing sensitive is carried in the URL.
+      checkoutUrl: `${base}/checkout/wire/${providerReference}`,
       amount: input.amount,
       currency: input.currency,
       rail: input.rail,

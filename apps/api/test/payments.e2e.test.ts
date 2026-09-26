@@ -80,6 +80,12 @@ function createFakePrisma(state: {
     paymentReceipt: {
       findUnique: async (args: { where: { id: string } }) =>
         state.receipts.get(args.where.id) ?? null,
+      findFirst: async (args: { where: { gatewayTxId?: string } }) => {
+        const receipt = [...state.receipts.values()].find(
+          (row) => row.gatewayTxId === args.where.gatewayTxId,
+        );
+        return receipt ? { ...receipt, reservation: { bookingCode: 'PAY00001' } } : null;
+      },
       findMany: async (args: { where: { reservationId: string } }) =>
         [...state.receipts.values()].filter(
           (receipt) => receipt.reservationId === args.where.reservationId,
@@ -204,6 +210,33 @@ describe('payments API', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
     expect(response.body[0].rail).toBe('CARD');
+  });
+
+  it('looks up a payment intent by reference without a session', async () => {
+    await createIntent();
+    const reference = [...state.receipts.values()][0]?.gatewayTxId;
+    expect(reference).toBeTruthy();
+
+    const response = await request(app.getHttpServer()).get(
+      `/payments/intents/${reference}`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      reference: 'PAY00001',
+      rail: 'CARD',
+      amount: '321',
+      currency: 'EUR',
+      status: 'PENDING',
+    });
+  });
+
+  it('returns 404 for an unknown intent reference', async () => {
+    const response = await request(app.getHttpServer()).get(
+      '/payments/intents/does-not-exist',
+    );
+
+    expect(response.status).toBe(404);
   });
 
   it('rejects a payment link before the booking is secured', async () => {

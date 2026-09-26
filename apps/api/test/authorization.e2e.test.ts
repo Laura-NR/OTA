@@ -187,6 +187,7 @@ const ROUTES: Route[] = [
 
 const fakePrisma = {
   serviceItem: { findUnique: async () => null },
+  paymentReceipt: { findFirst: async () => null },
   $queryRaw: async () => [{ '?column?': 1 }],
 };
 
@@ -282,5 +283,12 @@ describe('authorization matrix', () => {
       '/retention/keep-alive?token=invalid',
     );
     expect(keepAlive.status).toBe(400);
+
+    // The wire page's PII-free intent lookup is public; an unknown reference is
+    // a 404, not a 401.
+    const intent = await request(app.getHttpServer()).get(
+      '/payments/intents/unknown-reference',
+    );
+    expect(intent.status).toBe(404);
   });
 });

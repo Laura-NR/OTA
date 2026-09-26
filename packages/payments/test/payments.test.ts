@@ -93,12 +93,9 @@ describe('BankTransferProvider', () => {
 
     expect(intent.status).toBe('PENDING');
     expect(intent.providerReference).toMatch(/^wire_/);
-    expect(intent.checkoutUrl).toContain(
+    expect(intent.checkoutUrl).toBe(
       `http://localhost:3000/checkout/wire/${intent.providerReference}`,
     );
-    expect(intent.checkoutUrl).toContain('reference=DEMO0001');
-    expect(intent.checkoutUrl).toContain('amount=321.00');
-    expect(intent.checkoutUrl).toContain('currency=EUR');
     expect(intent).toMatchObject({
       amount: 321,
       currency: 'EUR',

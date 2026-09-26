@@ -35,3 +35,17 @@ export const paymentIntentSchema = paymentReceiptSchema.extend({
 });
 
 export type PaymentIntentDto = z.infer<typeof paymentIntentSchema>;
+
+/**
+ * Minimal, PII-free view of an intent for the wire-instructions page, looked up
+ * by its unguessable provider reference (capability URL).
+ */
+export const paymentIntentLookupSchema = z.object({
+  reference: z.string(),
+  rail: paymentRailSchema,
+  amount: z.string(),
+  currency: z.string(),
+  status: paymentStatusSchema,
+});
+
+export type PaymentIntentLookupDto = z.infer<typeof paymentIntentLookupSchema>;
