@@ -21,7 +21,7 @@ Verified against the code, tests, migrations, and ADRs. Counts are from a green
 therefore listed under Remains.
 
 **Baseline counts:** 18 workspace projects (3 apps, 15 packages) · 11 migrations
-· 297 unit tests passed / 4 skipped · 23 e2e spec files / 31 tests · lint,
+· 299 unit tests passed / 4 skipped · 23 e2e spec files / 31 tests · lint,
 typecheck, test, build green.
 
 ### (a) DONE — verified
@@ -329,7 +329,7 @@ variable fails fast. Key variables: `DATABASE_URL`, `REDIS_URL`, `S3_*`,
 
 ## 7. Testing, CI, and definition of done
 
-- **Unit/domain:** Vitest (pure state machine, pricing, policies) — 297 tests.
+- **Unit/domain:** Vitest (pure state machine, pricing, policies) — 299 tests.
 - **API integration:** Supertest against the Nest app (fakes for Prisma/Auth, no DB).
 - **Database integration:** opt-in with `RUN_DB_INTEGRATION=1` (e.g.
   `apps/api/test/retention.integration.test.ts`); Redis-gated BullMQ tests skip by

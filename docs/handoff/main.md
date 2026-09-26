@@ -25,7 +25,7 @@ availability, load tests, and observability.
 ## Status analysis (2026-09-26)
 
 Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
-11 migrations, 297 unit tests, 31 e2e tests — all green.
+11 migrations, 299 unit tests, 31 e2e tests — all green.
 
 ### Done since upstream base `849ea73` (16 increments, in order)
 1. **Regulatory reporting (§4.9.2).** Migration
@@ -333,8 +333,8 @@ Detailed done/remaining snapshot. Counts: 18 workspaces (3 apps, 15 packages),
 
 ## Verified
 Node 22.22.3, pnpm 12.4.2 (2026-09-25):
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**297**: api
-  177, domain 54, config 13, theming 9, documents 8, email 5, imports 5, ai 4,
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (**299**: api
+  177, domain 54, config 13, theming 11, documents 8, email 5, imports 5, ai 4,
   reports 4, ui 4, payments 6, schemas 3, storage 3, i18n 2), `pnpm build` —
   green. (3 api tests skipped without Redis/DB — compliance + dispatch BullMQ and
   the retention DB integration — plus 1 storage test skipped without S3.)
