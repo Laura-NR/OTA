@@ -97,7 +97,7 @@ export function InventoryCreateForm() {
           <Input
             id="inventory-description"
             name="description"
-            placeholder="Optional notes"
+            placeholder={t('notesPlaceholder')}
           />
         </div>
       </div>

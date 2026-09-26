@@ -732,7 +732,8 @@
       "visible": "Visible en el catálogo del escaparate",
       "catalogSaved": "Artículo de catálogo guardado.",
       "saveChanges": "Guardar cambios",
-      "updateItemFailed": "No se pudo actualizar el artículo"
+      "updateItemFailed": "No se pudo actualizar el artículo",
+      "notesPlaceholder": "Notas opcionales"
     },
     "media": {
       "chooseImage": "Elige una imagen para subir.",
@@ -846,6 +847,10 @@
       "saved": "Paquete guardado.",
       "saving": "Guardando…",
       "save": "Guardar paquete"
+    },
+    "metadata": {
+      "title": "{agency} — Back office",
+      "description": "Back office de operaciones de {agency}"
     }
   }
 }

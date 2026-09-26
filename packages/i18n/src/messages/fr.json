@@ -732,7 +732,8 @@
       "visible": "Visible dans le catalogue de la vitrine",
       "catalogSaved": "Article de catalogue enregistré.",
       "saveChanges": "Enregistrer les modifications",
-      "updateItemFailed": "Impossible de mettre à jour l'article"
+      "updateItemFailed": "Impossible de mettre à jour l'article",
+      "notesPlaceholder": "Notes facultatives"
     },
     "media": {
       "chooseImage": "Choisissez une image à téléverser.",
@@ -846,6 +847,10 @@
       "saved": "Forfait enregistré.",
       "saving": "Enregistrement…",
       "save": "Enregistrer le forfait"
+    },
+    "metadata": {
+      "title": "{agency} — Back-office",
+      "description": "Back-office des opérations de {agency}"
     }
   }
 }

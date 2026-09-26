@@ -5,7 +5,7 @@ import './globals.css';
 import { themeCssVariables } from '@ota/theming';
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import type { CSSProperties, ReactNode } from 'react';
 
 import { bricolage } from '@/lib/font';
@@ -15,11 +15,12 @@ import { getTenantConfig } from '@/lib/tenant';
 // route is rendered per request rather than prerendered at build time.
 export const dynamic = 'force-dynamic';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
   const tenant = getTenantConfig();
+  const t = await getTranslations('backoffice.metadata');
   return {
-    title: `${tenant.branding.agencyName} — Back-office`,
-    description: `Operations back-office for ${tenant.branding.agencyName}`,
+    title: t('title', { agency: tenant.branding.agencyName }),
+    description: t('description', { agency: tenant.branding.agencyName }),
   };
 }
 

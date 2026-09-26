@@ -732,7 +732,8 @@
       "visible": "Visible in the storefront catalog",
       "catalogSaved": "Catalog item saved.",
       "saveChanges": "Save changes",
-      "updateItemFailed": "Could not update item"
+      "updateItemFailed": "Could not update item",
+      "notesPlaceholder": "Optional notes"
     },
     "media": {
       "chooseImage": "Choose an image to upload.",
@@ -846,6 +847,10 @@
       "saved": "Package saved.",
       "saving": "Saving…",
       "save": "Save package"
+    },
+    "metadata": {
+      "title": "{agency} — Back-office",
+      "description": "Operations back-office for {agency}"
     }
   }
 }
