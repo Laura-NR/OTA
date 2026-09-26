@@ -9,7 +9,15 @@ import {
 import { getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
+import { apiFetch } from '@/lib/api';
 import { getTenantConfig } from '@/lib/tenant';
+
+interface WireIntent {
+  reference: string;
+  amount: string;
+  currency: string;
+  status: string;
+}
 
 function Row({
   label,
@@ -29,26 +37,28 @@ function Row({
 }
 
 /**
- * Wire-transfer instructions (spec §7.1 primary rail). The traveler pays from
- * their own bank and operations confirms the receipt; there is deliberately no
- * self-confirm action here (ADR 0003). Amount/currency come from the checkout
- * URL for display only — the persisted receipt is the source of truth.
+ * Wire-transfer instructions (spec §7.1 primary rail). The amount and booking
+ * reference are read from the persisted receipt through a public, PII-free
+ * lookup keyed by the unguessable reference, so the URL carries nothing
+ * sensitive. There is deliberately no self-confirm action here (ADR 0003).
  */
 export default async function WireCheckoutPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ reference: string }>;
-  searchParams: Promise<{
-    reference?: string;
-    amount?: string;
-    currency?: string;
-  }>;
 }) {
-  const { reference: providerReference } = await params;
-  const { reference, amount, currency } = await searchParams;
+  const { reference } = await params;
   const t = await getTranslations('checkout');
   const bank = getTenantConfig().payments.bankTransfer;
+
+  let intent: WireIntent | null = null;
+  try {
+    intent = await apiFetch<WireIntent>(
+      `/payments/intents/${encodeURIComponent(reference)}`,
+    );
+  } catch {
+    // Unknown reference or API unavailable: fall through to the "not found" panel.
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
@@ -58,36 +68,33 @@ export default async function WireCheckoutPage({
           <CardDescription>{t('wireDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
-          {bank ? (
+          {!bank ? (
+            <Alert>{t('wireUnavailable')}</Alert>
+          ) : !intent ? (
+            <Alert>{t('wireNotFound')}</Alert>
+          ) : (
             <>
-              {amount ? (
-                <p>
-                  <span className="text-muted-foreground">{t('wireAmount')}:</span>{' '}
-                  <strong>
-                    {currency} {amount}
-                  </strong>
-                </p>
-              ) : null}
+              <p>
+                <span className="text-muted-foreground">{t('wireAmount')}:</span>{' '}
+                <strong>
+                  {intent.currency} {Number(intent.amount).toFixed(2)}
+                </strong>
+              </p>
 
               <dl className="grid gap-1">
                 <Row label={t('wireBankName')} value={bank.bankName} />
                 <Row label={t('wireAccountName')} value={bank.accountName} />
                 <Row label={t('wireIban')} value={bank.iban} mono />
                 {bank.bic ? <Row label={t('wireBic')} value={bank.bic} mono /> : null}
-                <Row
-                  label={t('wireReferenceLabel')}
-                  value={reference ?? providerReference}
-                  mono
-                />
+                <Row label={t('wireReferenceLabel')} value={intent.reference} mono />
               </dl>
 
               <p className="text-muted-foreground">
                 {bank.referenceNote ?? t('wireReferenceNote')}
               </p>
               <Alert>{t('wireNotice')}</Alert>
+              <p className="text-muted-foreground">{t('wireNextSteps')}</p>
             </>
-          ) : (
-            <Alert>{t('wireUnavailable')}</Alert>
           )}
 
           <Link

@@ -80,6 +80,8 @@
     "wireReferenceNote": "Indiquez cette référence sur le virement afin que nous puissions identifier votre paiement.",
     "wireNotice": "Aucun débit automatique n'est effectué. Notre équipe des opérations confirmera le reçu dès réception des fonds.",
     "wireUnavailable": "Le virement bancaire n'est pas disponible pour le moment. Contactez-nous pour finaliser le paiement.",
+    "wireNotFound": "Nous n'avons pas trouvé ce lien de paiement. Vérifiez l'adresse ou contactez-nous.",
+    "wireNextSteps": "Une fois le virement effectué, notre équipe confirmera la réception et votre réservation sera confirmée.",
     "backToAccount": "Retour à mes voyages"
   },
   "review": {

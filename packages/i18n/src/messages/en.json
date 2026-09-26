@@ -80,6 +80,8 @@
     "wireReferenceNote": "Quote this reference on the transfer so we can match your payment.",
     "wireNotice": "No automatic charge is made. Our operations team will confirm the receipt once the funds clear.",
     "wireUnavailable": "Bank transfer is not available right now. Contact us to complete the payment.",
+    "wireNotFound": "We couldn't find this payment link. Check the address or contact us.",
+    "wireNextSteps": "Once you have sent the transfer, our team will confirm the receipt and your booking will be confirmed.",
     "backToAccount": "Back to my trips"
   },
   "review": {

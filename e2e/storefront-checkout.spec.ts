@@ -71,11 +71,14 @@ test.describe('storefront checkout', () => {
 
     await expect(page).toHaveURL(/\/checkout\/wire\//);
     // The primary rail is a manual wire transfer: bank details, the booking
-    // reference, and no self-confirm control (ADR 0003).
+    // reference, and no self-confirm control (ADR 0003). The amount/reference
+    // come from the receipt via the public lookup, not the URL.
     await expect(page.getByText('Bank transfer')).toBeVisible();
     await expect(page.getByText('Demo Bank (placeholder)')).toBeVisible();
     await expect(page.getByText(BOOKING_CODE)).toBeVisible();
+    await expect(page.getByText('EUR 200.00')).toBeVisible();
     await expect(page.getByText('No automatic charge is made')).toBeVisible();
+    await expect(page.getByText('Once you have sent the transfer')).toBeVisible();
     await expect(page.getByRole('button', { name: /confirm/i })).toHaveCount(0);
   });
 });

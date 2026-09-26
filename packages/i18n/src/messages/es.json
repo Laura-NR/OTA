@@ -80,6 +80,8 @@
     "wireReferenceNote": "Indique esta referencia en el concepto de la transferencia para que podamos identificar su pago.",
     "wireNotice": "No se realiza ningún cargo automático. Nuestro equipo de operaciones confirmará el recibo cuando se acrediten los fondos.",
     "wireUnavailable": "La transferencia bancaria no está disponible en este momento. Contacte con nosotros para completar el pago.",
+    "wireNotFound": "No encontramos este enlace de pago. Compruebe la dirección o contacte con nosotros.",
+    "wireNextSteps": "Cuando haya realizado la transferencia, nuestro equipo confirmará el recibo y su reserva pasará a confirmada.",
     "backToAccount": "Volver a mis viajes"
   },
   "review": {
