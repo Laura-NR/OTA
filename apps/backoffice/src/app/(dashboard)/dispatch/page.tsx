@@ -22,7 +22,7 @@ function escalationVariant(
   escalation: DispatchViewDto['serviceItems'][number]['escalation'],
 ) {
   if (escalation === 'RED') return 'destructive' as const;
-  if (escalation === 'AMBER') return 'secondary' as const;
+  if (escalation === 'AMBER') return 'timeout' as const;
   return 'outline' as const;
 }
 

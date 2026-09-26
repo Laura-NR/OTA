@@ -33,6 +33,14 @@ const preset = {
           DEFAULT: 'hsl(var(--ota-success) / <alpha-value>)',
           foreground: 'hsl(var(--ota-success-foreground) / <alpha-value>)',
         },
+        warning: {
+          DEFAULT: 'hsl(var(--ota-warning) / <alpha-value>)',
+          foreground: 'hsl(var(--ota-warning-foreground) / <alpha-value>)',
+        },
+        timeout: {
+          DEFAULT: 'hsl(var(--ota-timeout) / <alpha-value>)',
+          foreground: 'hsl(var(--ota-timeout-foreground) / <alpha-value>)',
+        },
         muted: {
           DEFAULT: 'hsl(var(--ota-muted) / <alpha-value>)',
           foreground: 'hsl(var(--ota-muted-foreground) / <alpha-value>)',

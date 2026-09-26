@@ -3,14 +3,14 @@
   "branding": {
     "agencyName": "Authentic Cuba Expeditions",
     "licenseNumber": "MINTUR-2026-XXXX",
-    "primaryColor": "#0f766e",
+    "primaryColor": "#2C5F52",
     "supportEmail": null,
     "supportPhone": null
   },
   "primaryLocale": "es",
   "supportedLocales": ["es", "en", "fr"],
   "theme": {
-    "palette": "ecoGreen",
+    "palette": "vereda",
     "borderRadius": "md"
   },
   "features": {

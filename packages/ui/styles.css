@@ -23,6 +23,10 @@
   --ota-destructive-foreground: 0 0% 100%;
   --ota-success: 142 71% 40%;
   --ota-success-foreground: 0 0% 100%;
+  --ota-warning: 38 92% 50%;
+  --ota-warning-foreground: 26 30% 12%;
+  --ota-timeout: 27 90% 55%;
+  --ota-timeout-foreground: 26 30% 12%;
   --ota-border: 172 20% 88%;
   --ota-input: 172 20% 88%;
   --ota-ring: 174 77% 30%;

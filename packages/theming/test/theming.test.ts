@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { hexToHslTriple, relativeLuminance } from '../src/color';
 import { themeCssVariables } from '../src/css';
-import { THEME_TOKEN_KEYS } from '../src/tokens';
+import { THEME_PRESETS, THEME_TOKEN_KEYS } from '../src/tokens';
 
 const base = {
   tenantId: 'cuba-eco-travel',
@@ -79,6 +79,24 @@ describe('themeCssVariables', () => {
 
     // Primary is overridden by the brand colour, so assert on a preset token.
     expect(variables['--ota-sidebar']).toBe('215 40% 16%');
+  });
+
+  it('emits the distinct warning and timeout alert tokens', () => {
+    const variables = themeCssVariables(
+      parseTenantConfig({ ...base, theme: { palette: 'vereda' } }),
+    );
+
+    // Tabaco doubles as the general accent and the Warning token; timeout is the
+    // dispatch Amber Alert, deliberately a different hue.
+    expect(variables['--ota-warning']).toBe('36 64% 48%');
+    expect(variables['--ota-timeout']).toBe('27 71% 51%');
+    expect(variables['--ota-warning']).not.toBe(variables['--ota-timeout']);
+  });
+
+  it('ships the default design palette from docs/design.md', () => {
+    const vereda = THEME_PRESETS.vereda;
+    expect(vereda?.palette.primary).toBe('165 37% 27%');
+    expect(vereda?.palette.background).toBe('41 35% 89%');
   });
 
   it('falls back for an unknown palette and radius', () => {

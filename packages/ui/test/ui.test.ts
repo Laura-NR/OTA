@@ -32,6 +32,12 @@ describe('tailwind preset', () => {
     expect(preset.theme.extend.colors.sidebar.accent.DEFAULT).toBe(
       'hsl(var(--ota-sidebar-accent) / <alpha-value>)',
     );
+    expect(preset.theme.extend.colors.warning.DEFAULT).toBe(
+      'hsl(var(--ota-warning) / <alpha-value>)',
+    );
+    expect(preset.theme.extend.colors.timeout.DEFAULT).toBe(
+      'hsl(var(--ota-timeout) / <alpha-value>)',
+    );
   });
 
   it('maps the radius token', () => {

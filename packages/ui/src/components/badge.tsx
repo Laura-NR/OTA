@@ -3,7 +3,13 @@ import type { HTMLAttributes } from 'react';
 import { cn } from '../cn';
 
 export type BadgeVariant =
-  'default' | 'secondary' | 'outline' | 'destructive' | 'success';
+  | 'default'
+  | 'secondary'
+  | 'outline'
+  | 'destructive'
+  | 'success'
+  | 'warning'
+  | 'timeout';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
@@ -15,6 +21,8 @@ const variants: Record<BadgeVariant, string> = {
   outline: 'text-foreground',
   destructive: 'border-transparent bg-destructive text-destructive-foreground',
   success: 'border-transparent bg-success text-success-foreground',
+  warning: 'border-transparent bg-warning text-warning-foreground',
+  timeout: 'border-transparent bg-timeout text-timeout-foreground',
 };
 
 export function Badge({ className, variant = 'default', ...props }: BadgeProps) {

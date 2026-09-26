@@ -23,7 +23,7 @@ import {
 
 function alertVariant(alert: EscalationAlert) {
   if (alert === 'RED') return 'destructive' as const;
-  if (alert === 'AMBER') return 'secondary' as const;
+  if (alert === 'AMBER') return 'timeout' as const;
   return 'outline' as const;
 }
 
