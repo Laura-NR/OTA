@@ -2,6 +2,7 @@
 
 import type { PricingRuleDto } from '@ota/schemas';
 import { Alert, Badge, Button, Input, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -16,6 +17,7 @@ export function PricingRulesManager({
   inventoryItemId: string;
   rules: PricingRuleDto[];
 }) {
+  const t = useTranslations('backoffice.pricingRules');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function PricingRulesManager({
       setKind('SEASONAL_RATE');
       router.refresh();
     } catch (ruleError) {
-      setError(ruleError instanceof Error ? ruleError.message : 'Could not add rule');
+      setError(ruleError instanceof Error ? ruleError.message : t('addFailed'));
     } finally {
       setBusy(false);
     }
@@ -66,9 +68,7 @@ export function PricingRulesManager({
       });
       router.refresh();
     } catch (deleteError) {
-      setError(
-        deleteError instanceof Error ? deleteError.message : 'Could not delete rule',
-      );
+      setError(deleteError instanceof Error ? deleteError.message : t('deleteFailed'));
     } finally {
       setBusy(false);
     }
@@ -84,9 +84,7 @@ export function PricingRulesManager({
       });
       router.refresh();
     } catch (toggleError) {
-      setError(
-        toggleError instanceof Error ? toggleError.message : 'Could not update rule',
-      );
+      setError(toggleError instanceof Error ? toggleError.message : t('updateFailed'));
     } finally {
       setBusy(false);
     }
@@ -97,7 +95,7 @@ export function PricingRulesManager({
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
       {rules.length === 0 ? (
-        <Alert>No pricing rules yet; the base price applies year-round.</Alert>
+        <Alert>{t('none')}</Alert>
       ) : (
         <ul className="space-y-2">
           {rules.map((rule) => (
@@ -110,13 +108,13 @@ export function PricingRulesManager({
                   <span className="font-medium">{rule.label}</span>
                   <Badge variant="secondary">{rule.kind.replaceAll('_', ' ')}</Badge>
                   <Badge variant={rule.active ? 'success' : 'outline'}>
-                    {rule.active ? 'Active' : 'Paused'}
+                    {rule.active ? t('active') : t('paused')}
                   </Badge>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {rule.kind === 'SEASONAL_RATE'
-                    ? `${rule.amount} · ${rule.startDate?.slice(0, 10) ?? 'any'} → ${
-                        rule.endDate?.slice(0, 10) ?? 'any'
+                    ? `${rule.amount} · ${rule.startDate?.slice(0, 10) ?? t('any')} → ${
+                        rule.endDate?.slice(0, 10) ?? t('any')
                       }`
                     : `${rule.percent}%`}
                 </div>
@@ -128,7 +126,7 @@ export function PricingRulesManager({
                   disabled={busy}
                   onClick={() => toggle(rule)}
                 >
-                  {rule.active ? 'Pause' : 'Resume'}
+                  {rule.active ? t('pause') : t('resume')}
                 </Button>
                 <Button
                   size="sm"
@@ -136,7 +134,7 @@ export function PricingRulesManager({
                   disabled={busy}
                   onClick={() => remove(rule.id)}
                 >
-                  Delete
+                  {t('delete')}
                 </Button>
               </div>
             </li>
@@ -147,7 +145,7 @@ export function PricingRulesManager({
       <form className="space-y-3 border-t pt-4" onSubmit={onAdd}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="rule-kind">Kind</Label>
+            <Label htmlFor="rule-kind">{t('kind')}</Label>
             <Select
               id="rule-kind"
               name="kind"
@@ -156,25 +154,30 @@ export function PricingRulesManager({
                 setKind(event.target.value as 'SEASONAL_RATE' | 'MARKUP')
               }
             >
-              <option value="SEASONAL_RATE">Seasonal rate</option>
-              <option value="MARKUP">Markup</option>
+              <option value="SEASONAL_RATE">{t('seasonalRate')}</option>
+              <option value="MARKUP">{t('markup')}</option>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="rule-label">Label</Label>
-            <Input id="rule-label" name="label" required placeholder="High season" />
+            <Label htmlFor="rule-label">{t('label')}</Label>
+            <Input
+              id="rule-label"
+              name="label"
+              required
+              placeholder={t('labelPlaceholder')}
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="rule-start">Start date</Label>
+            <Label htmlFor="rule-start">{t('startDate')}</Label>
             <Input id="rule-start" name="startDate" type="date" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="rule-end">End date</Label>
+            <Label htmlFor="rule-end">{t('endDate')}</Label>
             <Input id="rule-end" name="endDate" type="date" />
           </div>
           {kind === 'SEASONAL_RATE' ? (
             <div className="space-y-2">
-              <Label htmlFor="rule-amount">Nightly / unit amount</Label>
+              <Label htmlFor="rule-amount">{t('amount')}</Label>
               <Input
                 id="rule-amount"
                 name="amount"
@@ -186,7 +189,7 @@ export function PricingRulesManager({
             </div>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="rule-percent">Markup percent</Label>
+              <Label htmlFor="rule-percent">{t('percentLabel')}</Label>
               <Input
                 id="rule-percent"
                 name="percent"
@@ -200,7 +203,7 @@ export function PricingRulesManager({
           )}
         </div>
         <Button type="submit" disabled={busy}>
-          {busy ? 'Saving…' : 'Add rule'}
+          {busy ? t('saving') : t('addRule')}
         </Button>
       </form>
     </div>

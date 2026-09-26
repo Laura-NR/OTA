@@ -12,6 +12,7 @@ import {
   Label,
   Select,
 } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -31,6 +32,7 @@ export function PackageEditForm({
   package: PackageDto;
   items: InventoryItemDto[];
 }) {
+  const t = useTranslations('backoffice.packageEdit');
   const router = useRouter();
   const [name, setName] = useState(pkg.name);
   const [description, setDescription] = useState(pkg.description ?? '');
@@ -96,7 +98,7 @@ export function PackageEditForm({
       setSaved(true);
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Could not save package');
+      setError(saveError instanceof Error ? saveError.message : t('saveFailed'));
     } finally {
       setBusy(false);
     }
@@ -106,12 +108,12 @@ export function PackageEditForm({
     <form className="space-y-6" onSubmit={onSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>Details</CardTitle>
+          <CardTitle>{t('details')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="edit-name">Name</Label>
+              <Label htmlFor="edit-name">{t('name')}</Label>
               <Input
                 id="edit-name"
                 value={name}
@@ -121,7 +123,7 @@ export function PackageEditForm({
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">{t('description')}</Label>
               <Input
                 id="edit-description"
                 value={description}
@@ -130,7 +132,7 @@ export function PackageEditForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-province">Province</Label>
+              <Label htmlFor="edit-province">{t('province')}</Label>
               <Input
                 id="edit-province"
                 value={province}
@@ -139,7 +141,7 @@ export function PackageEditForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-days">Duration (days)</Label>
+              <Label htmlFor="edit-days">{t('duration')}</Label>
               <Input
                 id="edit-days"
                 type="number"
@@ -151,7 +153,7 @@ export function PackageEditForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-price">Base price</Label>
+              <Label htmlFor="edit-price">{t('basePrice')}</Label>
               <Input
                 id="edit-price"
                 type="number"
@@ -163,7 +165,7 @@ export function PackageEditForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-currency">Currency</Label>
+              <Label htmlFor="edit-currency">{t('currency')}</Label>
               <Input
                 id="edit-currency"
                 value={currency}
@@ -177,7 +179,7 @@ export function PackageEditForm({
                 checked={active}
                 onChange={(event) => setActive(event.target.checked)}
               />
-              Active
+              {t('active')}
             </label>
           </div>
         </CardContent>
@@ -185,11 +187,11 @@ export function PackageEditForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Itinerary</CardTitle>
+          <CardTitle>{t('itinerary')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {rows.length === 0 ? (
-            <Alert>A package needs at least one service.</Alert>
+            <Alert>{t('needsService')}</Alert>
           ) : (
             <ul className="space-y-2">
               {rows.map((row, index) => (
@@ -201,7 +203,7 @@ export function PackageEditForm({
                     {itemName(row.inventoryItemId)}
                   </span>
                   <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                    Day
+                    {t('day')}
                     <Input
                       type="number"
                       min="1"
@@ -219,7 +221,7 @@ export function PackageEditForm({
                     variant="ghost"
                     onClick={() => removeService(index)}
                   >
-                    Remove
+                    {t('remove')}
                   </Button>
                 </li>
               ))}
@@ -228,7 +230,7 @@ export function PackageEditForm({
 
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-1">
-              <Label htmlFor="edit-add-item">Add a service</Label>
+              <Label htmlFor="edit-add-item">{t('addService')}</Label>
               <Select
                 id="edit-add-item"
                 value={newItemId}
@@ -247,17 +249,17 @@ export function PackageEditForm({
               onClick={addService}
               disabled={!newItemId}
             >
-              Add
+              {t('add')}
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      {saved ? <Alert>Package saved.</Alert> : null}
+      {saved ? <Alert>{t('saved')}</Alert> : null}
 
       <Button type="submit" disabled={busy || rows.length === 0}>
-        {busy ? 'Saving…' : 'Save package'}
+        {busy ? t('saving') : t('save')}
       </Button>
     </form>
   );

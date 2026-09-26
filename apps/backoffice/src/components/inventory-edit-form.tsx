@@ -2,6 +2,7 @@
 
 import type { InventoryItemDto } from '@ota/schemas';
 import { Alert, Button, Input, Label, Select } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -10,6 +11,7 @@ import { apiRequest } from '@/lib/client-api';
 
 /** Edit a catalog item and toggle its storefront visibility (spec §4.6). */
 export function InventoryEditForm({ item }: { item: InventoryItemDto }) {
+  const t = useTranslations('backoffice.forms');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function InventoryEditForm({ item }: { item: InventoryItemDto }) {
       router.refresh();
     } catch (updateError) {
       setError(
-        updateError instanceof Error ? updateError.message : 'Could not update item',
+        updateError instanceof Error ? updateError.message : t('updateItemFailed'),
       );
     } finally {
       setBusy(false);
@@ -50,23 +52,23 @@ export function InventoryEditForm({ item }: { item: InventoryItemDto }) {
     <form className="space-y-4" onSubmit={onSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="edit-type">Type</Label>
+          <Label htmlFor="edit-type">{t('type')}</Label>
           <Select id="edit-type" name="type" defaultValue={item.type} required>
-            <option value="ACCOMMODATION">Accommodation</option>
-            <option value="TRANSPORT">Transport</option>
-            <option value="EXPERIENCE">Experience</option>
+            <option value="ACCOMMODATION">{t('accommodation')}</option>
+            <option value="TRANSPORT">{t('transport')}</option>
+            <option value="EXPERIENCE">{t('experience')}</option>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-name">Name</Label>
+          <Label htmlFor="edit-name">{t('name')}</Label>
           <Input id="edit-name" name="name" defaultValue={item.name} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-province">Province</Label>
+          <Label htmlFor="edit-province">{t('province')}</Label>
           <Input id="edit-province" name="province" defaultValue={item.province ?? ''} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-base-price">Base price</Label>
+          <Label htmlFor="edit-base-price">{t('basePrice')}</Label>
           <Input
             id="edit-base-price"
             name="basePrice"
@@ -78,7 +80,7 @@ export function InventoryEditForm({ item }: { item: InventoryItemDto }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-currency">Currency</Label>
+          <Label htmlFor="edit-currency">{t('currency')}</Label>
           <Input
             id="edit-currency"
             name="currency"
@@ -87,7 +89,7 @@ export function InventoryEditForm({ item }: { item: InventoryItemDto }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-description">Description</Label>
+          <Label htmlFor="edit-description">{t('description')}</Label>
           <Input
             id="edit-description"
             name="description"
@@ -98,14 +100,14 @@ export function InventoryEditForm({ item }: { item: InventoryItemDto }) {
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="active" defaultChecked={item.active} />
-        Visible in the storefront catalog
+        {t('visible')}
       </label>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      {saved ? <Alert variant="success">Catalog item saved.</Alert> : null}
+      {saved ? <Alert variant="success">{t('catalogSaved')}</Alert> : null}
 
       <Button type="submit" disabled={busy}>
-        {busy ? 'Saving…' : 'Save changes'}
+        {busy ? t('saving') : t('saveChanges')}
       </Button>
     </form>
   );

@@ -2,11 +2,10 @@
 
 import type { AvailabilityDayDto } from '@ota/schemas';
 import { Alert, Button, cn } from '@ota/ui';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
-
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -23,6 +22,8 @@ export function AvailabilityCalendar({
   supplierId: string;
   canEdit: boolean;
 }) {
+  const t = useTranslations('backoffice.availability');
+  const locale = useLocale();
   const [cursor, setCursor] = useState(
     () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)),
   );
@@ -44,13 +45,24 @@ export function AvailabilityCalendar({
       to: isoDate(last),
       lead: (first.getUTCDay() + 6) % 7,
       cells: dates,
-      label: first.toLocaleDateString('en-GB', {
+      label: first.toLocaleDateString(locale, {
         month: 'long',
         year: 'numeric',
         timeZone: 'UTC',
       }),
     };
-  }, [cursor]);
+  }, [cursor, locale]);
+
+  const weekdays = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, {
+      weekday: 'short',
+      timeZone: 'UTC',
+    });
+    const monday = Date.UTC(2024, 0, 1);
+    return Array.from({ length: 7 }, (_, index) =>
+      formatter.format(new Date(monday + index * 86_400_000)),
+    );
+  }, [locale]);
 
   useEffect(() => {
     let active = true;
@@ -69,11 +81,7 @@ export function AvailabilityCalendar({
       })
       .catch((loadError: unknown) => {
         if (active) {
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : 'Could not load availability',
-          );
+          setError(loadError instanceof Error ? loadError.message : t('loadFailed'));
         }
       })
       .finally(() => {
@@ -97,11 +105,7 @@ export function AvailabilityCalendar({
       });
       setDays((previous) => ({ ...previous, [key]: next }));
     } catch (toggleError) {
-      setError(
-        toggleError instanceof Error
-          ? toggleError.message
-          : 'Could not update availability',
-      );
+      setError(toggleError instanceof Error ? toggleError.message : t('updateFailed'));
     } finally {
       setBusy(false);
     }
@@ -144,7 +148,7 @@ export function AvailabilityCalendar({
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
       <div className="grid grid-cols-7 gap-1 text-center text-xs">
-        {WEEKDAYS.map((weekday) => (
+        {weekdays.map((weekday) => (
           <div key={weekday} className="py-1 font-medium text-muted-foreground">
             {weekday}
           </div>
@@ -162,7 +166,7 @@ export function AvailabilityCalendar({
               disabled={!canEdit || busy}
               onClick={() => toggle(day)}
               data-date={key}
-              title={available ? 'Available' : 'Blocked'}
+              title={available ? t('available') : t('blocked')}
               className={cn(
                 'rounded py-2 transition-colors',
                 available
@@ -177,9 +181,7 @@ export function AvailabilityCalendar({
         })}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Green = available · red = blocked. A day with no override is available.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('legend')}</p>
     </div>
   );
 }

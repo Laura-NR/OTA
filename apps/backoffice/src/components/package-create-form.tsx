@@ -11,6 +11,7 @@ import {
   Input,
   Label,
 } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -19,6 +20,7 @@ import { apiRequest } from '@/lib/client-api';
 
 /** Build a curated package from catalog items (spec §3.3). */
 export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
+  const t = useTranslations('backoffice.packageCreate');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +65,7 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
       setDays({});
       router.refresh();
     } catch (createError) {
-      setError(
-        createError instanceof Error ? createError.message : 'Could not create package',
-      );
+      setError(createError instanceof Error ? createError.message : t('createFailed'));
     } finally {
       setBusy(false);
     }
@@ -74,21 +74,21 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>New curated package</CardTitle>
+        <CardTitle>{t('title')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="package-name">Name</Label>
+              <Label htmlFor="package-name">{t('name')}</Label>
               <Input id="package-name" name="name" required maxLength={200} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="package-province">Province</Label>
+              <Label htmlFor="package-province">{t('province')}</Label>
               <Input id="package-province" name="province" maxLength={100} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="package-days">Duration (days)</Label>
+              <Label htmlFor="package-days">{t('duration')}</Label>
               <Input
                 id="package-days"
                 name="durationDays"
@@ -100,7 +100,7 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="package-price">Base price</Label>
+              <Label htmlFor="package-price">{t('basePrice')}</Label>
               <Input
                 id="package-price"
                 name="basePrice"
@@ -111,7 +111,7 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="package-currency">Currency</Label>
+              <Label htmlFor="package-currency">{t('currency')}</Label>
               <Input
                 id="package-currency"
                 name="currency"
@@ -120,15 +120,15 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="package-description">Description</Label>
+              <Label htmlFor="package-description">{t('description')}</Label>
               <Input id="package-description" name="description" maxLength={2000} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Included services</Label>
+            <Label>{t('includedServices')}</Label>
             {items.length === 0 ? (
-              <Alert>Create catalog items first — a package is built from them.</Alert>
+              <Alert>{t('emptyItems')}</Alert>
             ) : (
               <ul className="max-h-64 space-y-1 overflow-y-auto rounded-md border p-2">
                 {items.map((item) => {
@@ -143,11 +143,11 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
                       <span className="flex-1">
                         {item.name}{' '}
                         <span className="text-muted-foreground">
-                          · {item.province ?? 'Cuba'}
+                          · {item.province ?? t('cuba')}
                         </span>
                       </span>
                       <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                        Day
+                        {t('day')}
                         <Input
                           type="number"
                           min="1"
@@ -173,7 +173,7 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
           {error ? <Alert variant="destructive">{error}</Alert> : null}
 
           <Button type="submit" disabled={busy || selected.length === 0}>
-            {busy ? 'Creating…' : 'Create package'}
+            {busy ? t('creating') : t('create')}
           </Button>
         </form>
       </CardContent>

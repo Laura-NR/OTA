@@ -2,6 +2,7 @@
 
 import type { InventoryMediaDto } from '@ota/schemas';
 import { Alert, Button, Input, Label } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
@@ -19,6 +20,7 @@ export function InventoryMediaManager({
   inventoryItemId: string;
   media: InventoryMediaDto[];
 }) {
+  const t = useTranslations('backoffice.media');
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -28,11 +30,11 @@ export function InventoryMediaManager({
     event.preventDefault();
     const file = fileRef.current?.files?.[0];
     if (!file) {
-      setError('Choose an image to upload.');
+      setError(t('chooseImage'));
       return;
     }
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('Use a JPEG, PNG, or WebP image.');
+      setError(t('useImageType'));
       return;
     }
 
@@ -57,7 +59,7 @@ export function InventoryMediaManager({
       }
       router.refresh();
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : 'Upload failed');
+      setError(uploadError instanceof Error ? uploadError.message : t('uploadFailed'));
     } finally {
       setBusy(false);
     }
@@ -72,9 +74,7 @@ export function InventoryMediaManager({
       });
       router.refresh();
     } catch (deleteError) {
-      setError(
-        deleteError instanceof Error ? deleteError.message : 'Could not remove image',
-      );
+      setError(deleteError instanceof Error ? deleteError.message : t('removeFailed'));
     } finally {
       setBusy(false);
     }
@@ -83,19 +83,19 @@ export function InventoryMediaManager({
   return (
     <div className="space-y-4">
       {media.length === 0 ? (
-        <Alert>No images yet. Upload one to show this item on the storefront.</Alert>
+        <Alert>{t('none')}</Alert>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-3">
           {media.map((image) => (
             <li key={image.id} className="space-y-2 rounded-md border p-2">
               <img
                 src={`/api/ota/inventory/media/${image.id}`}
-                alt={image.altText ?? 'Catalog image'}
+                alt={image.altText ?? t('catalogImage')}
                 className="h-32 w-full rounded object-cover"
               />
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-muted-foreground">
-                  {image.altText ?? `Image ${image.position + 1}`}
+                  {image.altText ?? t('imageN', { position: image.position + 1 })}
                 </span>
                 <Button
                   size="sm"
@@ -103,7 +103,7 @@ export function InventoryMediaManager({
                   disabled={busy}
                   onClick={() => remove(image.id)}
                 >
-                  Remove
+                  {t('remove')}
                 </Button>
               </div>
             </li>
@@ -113,7 +113,7 @@ export function InventoryMediaManager({
 
       <form className="space-y-3 border-t pt-4" onSubmit={onUpload}>
         <div className="space-y-2">
-          <Label htmlFor="media-file">Upload image (JPEG, PNG, WebP)</Label>
+          <Label htmlFor="media-file">{t('uploadLabel')}</Label>
           <Input
             id="media-file"
             ref={fileRef}
@@ -122,12 +122,12 @@ export function InventoryMediaManager({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="media-alt">Alt text (optional)</Label>
-          <Input id="media-alt" name="altText" placeholder="Casa Colonial terrace" />
+          <Label htmlFor="media-alt">{t('altText')}</Label>
+          <Input id="media-alt" name="altText" placeholder={t('altPlaceholder')} />
         </div>
         {error ? <Alert variant="destructive">{error}</Alert> : null}
         <Button type="submit" disabled={busy}>
-          {busy ? 'Uploading…' : 'Upload image'}
+          {busy ? t('uploading') : t('uploadImage')}
         </Button>
       </form>
     </div>

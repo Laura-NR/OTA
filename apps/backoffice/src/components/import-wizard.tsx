@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 
@@ -21,12 +22,12 @@ import { apiRequest } from '@/lib/client-api';
 import { ApiError } from '@/lib/errors';
 
 const TARGET_FIELDS = [
-  { key: 'type', label: 'Type', required: true },
-  { key: 'name', label: 'Name', required: true },
-  { key: 'basePrice', label: 'Base price', required: true },
-  { key: 'province', label: 'Province', required: false },
-  { key: 'description', label: 'Description', required: false },
-  { key: 'currency', label: 'Currency', required: false },
+  { key: 'type', labelKey: 'fieldType', required: true },
+  { key: 'name', labelKey: 'fieldName', required: true },
+  { key: 'basePrice', labelKey: 'fieldBasePrice', required: true },
+  { key: 'province', labelKey: 'fieldProvince', required: false },
+  { key: 'description', labelKey: 'fieldDescription', required: false },
+  { key: 'currency', labelKey: 'fieldCurrency', required: false },
 ] as const;
 
 interface RowError {
@@ -34,14 +35,17 @@ interface RowError {
   message: string;
 }
 
+/** Marker for a local file-read failure, so the UI can translate it. */
+class ReadError extends Error {}
+
 function readBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Could not read the file'));
+    reader.onerror = () => reject(new ReadError());
     reader.onload = () => {
       const result = reader.result;
       if (typeof result !== 'string') {
-        reject(new Error('Could not read the file'));
+        reject(new ReadError());
         return;
       }
       const comma = result.indexOf(',');
@@ -66,6 +70,7 @@ function guessMapping(columns: string[]): Record<string, string> {
 }
 
 export function ImportWizard() {
+  const t = useTranslations('backoffice.importWizard');
   const [preview, setPreview] = useState<ImportPreviewDto | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [result, setResult] = useState<ImportCommitResultDto | null>(null);
@@ -93,7 +98,11 @@ export function ImportWizard() {
       setPreview(response);
       setMapping(guessMapping(response.columns));
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : 'Upload failed');
+      if (uploadError instanceof ReadError) {
+        setError(t('readFailed'));
+      } else {
+        setError(uploadError instanceof Error ? uploadError.message : t('uploadFailed'));
+      }
     } finally {
       setBusy(null);
       event.target.value = '';
@@ -119,7 +128,7 @@ export function ImportWizard() {
         const details = commitError.details as { errors?: RowError[] } | undefined;
         setRowErrors(details?.errors ?? []);
       } else {
-        setError(commitError instanceof Error ? commitError.message : 'Commit failed');
+        setError(commitError instanceof Error ? commitError.message : t('commitFailed'));
       }
     } finally {
       setBusy(null);
@@ -133,7 +142,7 @@ export function ImportWizard() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="import-file">Spreadsheet (.csv or .xlsx)</Label>
+        <Label htmlFor="import-file">{t('spreadsheet')}</Label>
         <Input
           id="import-file"
           type="file"
@@ -141,10 +150,7 @@ export function ImportWizard() {
           disabled={busy === 'upload'}
           onChange={onUpload}
         />
-        <p className="text-xs text-muted-foreground">
-          The file is read in the browser and sent as base64; nothing is stored until you
-          commit.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('hint')}</p>
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
@@ -152,15 +158,18 @@ export function ImportWizard() {
       {preview ? (
         <div className="space-y-4">
           <Alert>
-            {preview.filename}: {preview.rowCount} row(s), {preview.columns.length}{' '}
-            column(s).
+            {t('summary', {
+              filename: preview.filename,
+              rows: preview.rowCount,
+              columns: preview.columns.length,
+            })}
           </Alert>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {TARGET_FIELDS.map((field) => (
               <div key={field.key} className="space-y-1">
                 <Label htmlFor={`mapping-${field.key}`}>
-                  {field.label}
+                  {t(field.labelKey)}
                   {field.required ? ' *' : ''}
                 </Label>
                 <Select
@@ -173,7 +182,7 @@ export function ImportWizard() {
                     }))
                   }
                 >
-                  <option value="">— not mapped —</option>
+                  <option value="">{t('notMapped')}</option>
                   {preview.columns.map((column) => (
                     <option key={column} value={column}>
                       {column}
@@ -204,24 +213,27 @@ export function ImportWizard() {
           </Table>
 
           <Button onClick={onCommit} disabled={busy === 'commit' || missingRequired}>
-            {busy === 'commit' ? 'Committing…' : 'Commit import'}
+            {busy === 'commit' ? t('committing') : t('commit')}
           </Button>
         </div>
       ) : null}
 
       {result ? (
         <Alert variant="success">
-          Imported {result.importedCount} inventory item(s) from batch {result.batchId}.
+          {t('imported', {
+            count: result.importedCount,
+            batchId: result.batchId,
+          })}
         </Alert>
       ) : null}
 
       {rowErrors.length > 0 ? (
         <Alert variant="destructive">
-          <p className="mb-2 font-medium">Validation failed — no rows were imported:</p>
+          <p className="mb-2 font-medium">{t('validationFailed')}</p>
           <ul className="list-inside list-disc space-y-1">
             {rowErrors.map((rowError) => (
               <li key={`${rowError.row}-${rowError.message}`}>
-                Row {rowError.row}: {rowError.message}
+                {t('rowError', { row: rowError.row, message: rowError.message })}
               </li>
             ))}
           </ul>
