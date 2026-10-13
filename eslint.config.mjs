@@ -13,6 +13,7 @@ export default tseslint.config(
       '**/playwright-report/**',
       '**/test-results/**',
       'resources/**',
+      'design/**',
       'tools/**',
       'apps/storefront/src/lib/cuba-provinces.ts',
     ],

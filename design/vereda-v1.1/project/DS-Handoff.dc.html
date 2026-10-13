@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Developer handoff · tokens, specs, accessibility</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+pre{margin:0;padding:20px;background:#1F1B17;color:#F3EEE6;border-radius:12px;font:400 13px/20px "IBM Plex Mono",ui-monospace,monospace;overflow-x:auto;white-space:pre}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;line-height:20px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.rule{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:20px;color:#4A433D}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+
+  <header style="display: flex; flex-direction: column; gap: 12px; max-width: 860px">
+    <p class="ov">Vereda design system · Developer handoff</p>
+    <h1 class="disp" style="font-size: 40px; line-height: 48px">Tokens, component specs &amp; accessibility contract</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Tokens follow the three-tier model from the Isla Abierta spec (global → alias → component) and the white-label theming engine in the technical specification §10.1: everything below is a CSS variable or a JSON value a tenant config can override, never a hard-coded hex in a component.</p>
+  </header>
+
+  <!-- TOKENS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">01 · Design tokens</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">CSS variables (global + alias)</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 16px">
+<pre>:root {
+  /* brand */
+  --color-primary-700: #083B50;  --color-primary-600: #0B4F6C;
+  --color-primary-500: #0E6B8C;  --color-primary-100: #E6F0F4;
+  --color-secondary-700: #7A2A16; --color-secondary-600: #A83E24;
+  --color-secondary-500: #C75B39; --color-secondary-100: #F7E4DC;
+  --color-accent-600: #D99A1F;   --color-accent-500: #F2B134;
+  --color-accent-100: #FEF3D6;
+  /* neutrals (warm) */
+  --color-neutral-900: #1F1B17;  --color-neutral-700: #4A433D;
+  --color-neutral-500: #6E665E;  --color-neutral-300: #D6CEC3;
+  --color-neutral-200: #E8E2D9;  --color-neutral-100: #F3EEE6;
+  --color-neutral-50:  #FBF8F3;  --color-neutral-0:   #FFFFFF;
+  /* semantic fg / bg */
+  --color-success-600: #2E7D32;  --color-success-100: #E8F5E9;
+  --color-warning-600: #B45309;  --color-warning-100: #FEF3C7;
+  --color-error-600:   #C62828;  --color-error-100:   #FDECEA;
+  --color-info-600:    #1565C0;  --color-info-100:    #E3F2FD;
+  --color-timeout-600: #C62828;  /* spec §10.1 "Timeout" alert token */
+
+  /* alias */
+  --color-text-default: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-700);
+  --color-text-muted: var(--color-neutral-500);
+  --color-bg-page: var(--color-neutral-50);
+  --color-bg-surface: var(--color-neutral-0);
+  --color-bg-sunken: var(--color-neutral-100);
+  --color-border: var(--color-neutral-200);
+  --color-border-input: var(--color-neutral-300);
+  --color-action-primary: var(--color-primary-600);
+  --color-action-primary-hover: var(--color-primary-500);
+  --color-action-primary-active: var(--color-primary-700);
+  --color-focus-ring: var(--color-primary-500); /* light surfaces; accent-500 on dark */
+}</pre>
+<pre>:root {
+  /* type */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --text-display-1: 600 56px/64px var(--font-display);
+  --text-display-2: 600 48px/56px var(--font-display);
+  --text-h1: 600 40px/48px var(--font-display);
+  --text-h2: 600 32px/40px var(--font-display);
+  --text-h3: 600 24px/32px var(--font-body);
+  --text-h4: 600 20px/28px var(--font-body);
+  --text-body-lg: 400 18px/28px var(--font-body);
+  --text-body: 400 16px/24px var(--font-body);
+  --text-body-sm: 400 14px/20px var(--font-body);
+  --text-caption: 500 12px/16px var(--font-body);
+  --text-button: 600 16px/24px var(--font-body);
+  --text-overline: 700 12px/16px var(--font-body); /* +.08em tracking, uppercase */
+
+  /* space (4px base) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px; --space-20: 80px;
+
+  /* geometry */
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px rgba(31,27,23,.08);
+  --shadow-md: 0 4px 12px rgba(31,27,23,.10);
+  --shadow-lg: 0 12px 32px rgba(31,27,23,.16);
+
+  /* motion */
+  --motion-fast: 120ms ease-out;
+  --motion-base: 200ms cubic-bezier(.2,.8,.2,1);
+  --motion-slow: 320ms cubic-bezier(.2,.8,.2,1);
+
+  /* layout */
+  --container-max: 1280px;
+  --gutter: 24px;
+  --margin-xs: 24px; --margin-md: 32px; --margin-lg: 40px;
+  --touch-min: 44px; --touch-base: 48px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0ms; --motion-base: 0ms; --motion-slow: 0ms; }
+}</pre>
+    </div>
+    <div class="sheet" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 16px; line-height: 24px">Tenant override (spec §10.2 agency manifest)</h3>
+      <p class="sm" style="color: #4A433D">The manifest's <span class="mono">theme.palette</span> preset maps to the global tier only. Alias and component tokens never change per tenant, so a "coral CTA" variant is one line: <span class="mono">--color-action-primary: var(--color-secondary-600)</span>. Fonts load through <span class="mono">font-display: swap</span> with the system fallbacks above; subset Latin + Latin Extended for ñ, ç and accents.</p>
+    </div>
+  </section>
+
+  <!-- COMPONENT SPECS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · Component specs</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Sizes, padding, states, ARIA</h2>
+    </div>
+    <div class="sheet" style="padding: 8px 24px 16px; overflow-x: auto">
+      <table class="tbl" style="min-width: 1000px">
+        <thead><tr><th>Component</th><th>Size / padding</th><th>Tokens</th><th>States</th><th>Keyboard &amp; ARIA</th><th>Analytics attr</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Button</strong></td><td>h 32 / 40 / 48 · px 12 / 16 / 20 · gap 8 · radius md · min touch 44</td><td>primary: action-primary → hover 500 → active 700; secondary: surface + border-input; destructive: error-600</td><td>default, hover, focus-visible, active, disabled, loading (aria-busy, label kept, spinner 18)</td><td>Native button; Space/Enter; disabled buttons that must explain themselves use aria-disabled + helper text</td><td class="mono">data-analytics-event="cta_click"</td></tr>
+          <tr><td><strong>Text field</strong></td><td>h 40 · px 12 · label 14/20 500 above · helper 12/16 · gap 6</td><td>border-input; focus border primary-600 + ring primary-500 2px/2px (accent-500 on dark surfaces); error border error-600</td><td>default, focus, filled, error, disabled, read-only</td><td>label for/id; aria-describedby → helper + error; aria-invalid; error role="alert"; never placeholder-only</td><td class="mono">data-analytics-event="form_field_error"</td></tr>
+          <tr><td><strong>Select</strong></td><td>h 40 · native element, custom chevron 20 at right 12</td><td>as text field</td><td>as text field</td><td>Native select; options grouped with optgroup where long (nationality)</td><td>—</td></tr>
+          <tr><td><strong>Checkbox / radio</strong></td><td>20 × 20 · row min-height 44 · gap 12</td><td>accent-color primary-600</td><td>unchecked, checked, focus, disabled, error (group)</td><td>Native inputs inside label; radiogroup with aria-label; arrow keys move within group</td><td>—</td></tr>
+          <tr><td><strong>Toggle</strong></td><td>track 44 × 24 · knob 20 · row min-height 44</td><td>on primary-600, off neutral-300</td><td>off, on, focus, disabled</td><td>button role="switch" aria-checked; Space toggles</td><td class="mono">data-analytics-event="setting_toggled"</td></tr>
+          <tr><td><strong>Counter</strong></td><td>− / + buttons 44 × 44 · value 24 wide mono</td><td>secondary button tokens</td><td>min reached (− disabled), max reached</td><td>aria-label "Add one adult"; value in aria-live="polite" span</td><td class="mono">data-analytics-event="travelers_changed"</td></tr>
+          <tr><td><strong>Date range picker</strong></td><td>cell 44 × 44 · gap 2 · popover radius lg shadow md · mobile: full-height sheet</td><td>range primary-100, endpoints primary-600, sold-out neutral-500 line-through, season badge accent-100</td><td>default, hover, in-range, start/end, today, sold-out, past (disabled), focus</td><td>role="grid"; arrow keys, Home/End, PageUp/Down months; Esc closes, focus returns; sold-out days aria-disabled with reason</td><td class="mono">data-analytics-event="dates_selected"</td></tr>
+          <tr><td><strong>Currency / language menu</strong></td><td>trigger h 32–40 · menu w 260 · item py 10 px 12</td><td>surface, border, shadow md; selected primary-100</td><td>closed, open, item hover, selected</td><td>button aria-haspopup="listbox" aria-expanded; ul role="listbox", li button role="option" aria-selected; Esc closes</td><td class="mono">data-analytics-event="currency_changed"</td></tr>
+          <tr><td><strong>Filter chip</strong></td><td>h 32 · pl 12 pr 10 · remove button 20 inside</td><td>primary-100 / primary-700 text</td><td>default, hover (remove), focus</td><td>Remove button aria-label "Remove filter X"; "Clear all" link after chips; live region announces result count</td><td class="mono">data-analytics-event="filter_removed"</td></tr>
+          <tr><td><strong>Status badge</strong></td><td>h 24 (sm) / 32 (lg) · px 10 / 12 · icon 14 · radius full</td><td>semantic-100 bg + semantic-700-ish text (see sheet 03); "Ready to pay" accent-500 + neutral-900 text</td><td>one per status; never color-only</td><td>Plain text; icon aria-hidden; the label is the status</td><td>—</td></tr>
+          <tr><td><strong>Alert</strong></td><td>p 14 16 · gap 12 · icon 20 · radius md · border 1 semantic-200</td><td>semantic-100 bg, semantic-700 text</td><td>info, success, warning, error; dismissible variant (not for error)</td><td>role="status" (info/success) or role="alert" (warning/error); dismiss button aria-label "Dismiss"</td><td class="mono">data-analytics-event="alert_shown"</td></tr>
+          <tr><td><strong>Crisis banner</strong></td><td>sticky top · py 10–14 px 16–24 · 2 lines max on phone</td><td>info-100, warning-100, error-600 (critical, white text)</td><td>info, warning, critical (acknowledge, no ✕), acknowledged (collapses to dot)</td><td>role="region" aria-label "Travel alert"; critical role="alert" once; acknowledgment stored per advisory id</td><td class="mono">data-analytics-event="advisory_acknowledged"</td></tr>
+          <tr><td><strong>Stepper</strong></td><td>dot 32 · connector 2 · label 13/16 · mobile: label + 8 px bar</td><td>done primary-600, current accent-500 + halo accent-100, upcoming surface + border-input</td><td>done, current, upcoming, error on step</td><td>ol with aria-current="step"; done steps are links back; upcoming are not focusable</td><td class="mono">data-analytics-event="checkout_step_completed"</td></tr>
+          <tr><td><strong>Pipeline tracker</strong></td><td>node 28 · line 2 · gap 16 · sub-items 14/20</td><td>as stepper; sub-item success / warning icons</td><td>per booking state (sheet 03 table)</td><td>ol; current node aria-current="step"; SLA deadline as &lt;time datetime&gt;</td><td class="mono">data-analytics-event="booking_status_viewed"</td></tr>
+          <tr><td><strong>Tabs</strong></td><td>h 48 · gap 24 · underline 3 · scrollable on phone</td><td>on: primary-700 text + primary-600 underline</td><td>default, hover, selected, focus</td><td>role="tablist"/"tab"/"tabpanel"; Left/Right arrows, Home/End; aria-selected; panel labelled by tab</td><td class="mono">data-analytics-event="tab_switch"</td></tr>
+          <tr><td><strong>Accordion</strong></td><td>header min-height 56 · py 16 · chevron 20 rotates 180</td><td>border-bottom neutral-200</td><td>collapsed, expanded, hover, focus</td><td>button aria-expanded controls region; Enter/Space; headings wrap buttons (h3 &gt; button)</td><td class="mono">data-analytics-event="amenity_expanded"</td></tr>
+          <tr><td><strong>Card (package)</strong></td><td>radius lg · media 16:9 · body p 16 20 20 · gap 12 · shadow sm → md on hover</td><td>surface, border, shadow</td><td>default, hover (lift 2), focus-within, sold-out (media veil 55 % + dark pill), loading skeleton</td><td>article aria-labelledby title; the title link is the primary target; save button aria-label; price and model badge are text</td><td class="mono">data-analytics-event="search_result_clicked" data-position</td></tr>
+          <tr><td><strong>Booking summary</strong></td><td>p 24 · gap 16 · sticky top 88 on ≥1024; phone: 64 px bar + sheet</td><td>surface, shadow md; deposit box accent-100</td><td>default, updating (lines skeleton), error (price changed)</td><td>aside aria-label "Booking summary"; totals in a dl; price change announced via aria-live</td><td class="mono">data-analytics-event="summary_expanded"</td></tr>
+          <tr><td><strong>Payment method card</strong></td><td>p 16 · gap 12 · radio 20 · selected border 2 primary-600</td><td>surface; selected primary-50</td><td>default, selected, disabled (ineligible, with reason), focus-within</td><td>radiogroup; hosted card fields iframe gets its own label and error region; descriptor and fee read as text</td><td class="mono">data-analytics-event="payment_method_selected"</td></tr>
+          <tr><td><strong>Modal</strong></td><td>w 480 / 640 / 960 · p 20 24 · footer border-top · overlay rgba(31,27,23,.5); phone: bottom sheet</td><td>surface, radius lg, shadow lg</td><td>open, closing; destructive variant</td><td>role="dialog" aria-modal aria-labelledby; focus trap; Esc; focus returns to trigger; body scroll locked</td><td class="mono">data-analytics-event="modal_opened"</td></tr>
+          <tr><td><strong>Toast</strong></td><td>p 12 16 · radius md · shadow md · bottom-centre (phone, above nav) / bottom-right</td><td>neutral-900 bg, white text, action accent-500</td><td>enter, visible 6 s (pauses on hover/focus), exit</td><td>role="status" aria-live="polite"; never the only place an error is shown</td><td>—</td></tr>
+          <tr><td><strong>Bottom nav</strong></td><td>h 64 + safe-area · 5 items · icon 24 · label 11/14</td><td>surface, border-top; active primary-700</td><td>default, active, badge (red dot 10)</td><td>nav aria-label "Main"; aria-current="page"; badge has aria-label</td><td class="mono">data-analytics-event="tab_switch"</td></tr>
+          <tr><td><strong>Table</strong></td><td>th py 10 px 12 · td py 12 px 12 · row hover neutral-50; phone: stacked cards</td><td>header neutral-100; border neutral-200</td><td>default, hover, selected, sorted</td><td>caption or aria-label; th scope; sortable buttons with aria-sort; numeric right-aligned mono</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY CONTRACT -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">03 · Accessibility contract · WCAG 2.2 AA</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">What every PR is checked against</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px"><h3 style="margin: 0; font-size: 16px; line-height: 24px">Perceivable</h3><ul class="rule"><li>Text 4.5:1, large text and UI parts 3:1; tokens pre-validated (sheet 01 figures).</li><li>Every image has alt copy written by content, not auto-generated; decorative images alt="".</li><li>Body never below 16 px; layouts survive 200 % zoom and 320 px width.</li><li>Status = icon + label + colour; charts in admin add patterns or labels.</li><li>Video captioned; no autoplay with sound.</li></ul></div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px"><h3 style="margin: 0; font-size: 16px; line-height: 24px">Operable</h3><ul class="rule"><li>Skip-to-content is the first focusable element.</li><li>Focus ring 2 px primary-500 (teal) with 2 px offset on light surfaces, accent-500 (ochre) on dark ones; never removed; 3:1 against adjacent colours (ochre on cream measured 1.78:1, hence the change on 6 Oct).</li><li>Touch targets ≥ 44 px (48 px baseline), 8 px apart.</li><li>No time limits on sessions during booking; the 48 h payment window is a business deadline, not a UI timer that logs you out.</li><li>Drag (map, gallery) always has a button alternative.</li></ul></div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px"><h3 style="margin: 0; font-size: 16px; line-height: 24px">Understandable</h3><ul class="rule"><li>lang per page and per switched passage (Spanish host names inside English copy don't need it; a Spanish paragraph does).</li><li>Error summary at the top of long forms, linked to fields; errors stay until fixed.</li><li>Consistent nav order across pages; the same label means the same thing in traveler and admin UI.</li><li>Legal pages open with a plain-language summary.</li></ul></div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px"><h3 style="margin: 0; font-size: 16px; line-height: 24px">Robust &amp; tested</h3><ul class="rule"><li>Semantic HTML first; ARIA only where native falls short (listbox menu, tabs, dialog).</li><li>axe in CI, Lighthouse accessibility ≥ 95 as a release gate.</li><li>Screen-reader pass per flow with VoiceOver (iOS), TalkBack (Android), NVDA; in English and Spanish.</li><li>Accessibility statement (EN/ES) in the footer with known issues and a contact.</li></ul></div>
+    </div>
+  </section>
+
+  <!-- INTERACTION NOTES -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">04 · Interaction &amp; content notes</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Rules that are easy to lose in a sprint</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px"><h3 style="margin: 0; font-size: 16px; line-height: 24px">Booking model &amp; price</h3><ul class="rule"><li>The model badge (Instant / Request · 24 h) appears on the card, the detail hero and the review step. Never first revealed at payment.</li><li>Displayed price always includes mandatory fees; optional extras itemised; processing fee shown per method.</li><li>Prices round up to the whole unit; rate locked at deposit; show "Prices set in EUR" when another currency is displayed.</li><li>"Confirming availability…" never reads "Booked" until the gateway and supplier both answer.</li></ul></div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px"><h3 style="margin: 0; font-size: 16px; line-height: 24px">Low bandwidth</h3><ul class="rule"><li>Initial page &lt; 1 MB, &lt; 3 s on 3G; hero ≤ 100 KB, thumbnails ≤ 20–40 KB, AVIF/WebP with JPEG fallback, srcset.</li><li>Text and prices render server-side before any script.</li><li>Text-only mode auto-prompted under 200 kbps; "Load photo · size" buttons.</li><li>Offline kit: IndexedDB, read-only; writes queue with a visible "will send when online".</li></ul></div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px"><h3 style="margin: 0; font-size: 16px; line-height: 24px">Localisation</h3><ul class="rule"><li>Strings live in /locales/{lang}.json; no copy in components (spec §10.3).</li><li>Dates per locale; ISO stored. Numbers: 1,234.56 € (EN), 1.234,56 € (ES/FR/DE).</li><li>Neutral Latin-American Spanish; Quebec French for CA; German Sie in booking, du in blog.</li><li>Cuban terms (casa particular, paladar, almendrón, guagua) keep the Spanish word with a one-line gloss on first use.</li><li>Banned phrases enforced in content review: "the real Cuba", "off the beaten path", "hidden gem", "before it changes", "gritty", "raw".</li></ul></div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

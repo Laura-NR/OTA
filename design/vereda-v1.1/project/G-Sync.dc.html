@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Offline-first sync · worker app · spec §7.2 · flow</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:18px;-webkit-font-smoothing:antialiased}
+</style>
+</helmet>
+<div style="position: relative; width: 1200px; height: 520px; background: #FBF8F3">
+<svg width="63" height="8" viewBox="0 0 63 8" preserveAspectRatio="none" style="position: absolute; left: 284px; top: 172px; width: 63px; height: 8px; overflow: visible; fill: none; stroke: #6E665E; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#6E665E" stroke="none" style="stroke: none; fill: #6E665E; fill: context-stroke"/></marker></defs><path d="M 0 4 L 59 4" marker-end="url(#dc-arrow-head-filled-1)"></path></svg>
+<svg width="63" height="8" viewBox="0 0 63 8" preserveAspectRatio="none" style="position: absolute; left: 548px; top: 172px; width: 63px; height: 8px; overflow: visible; fill: none; stroke: #2E7D32; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#2E7D32" stroke="none" style="stroke: none; fill: #2E7D32; fill: context-stroke"/></marker></defs><path d="M 0 4 L 59 4" marker-end="url(#dc-arrow-head-filled-2)"></path></svg>
+<svg width="8" height="83" viewBox="0 0 8 83" preserveAspectRatio="none" style="position: absolute; left: 444px; top: 236px; width: 8px; height: 83px; overflow: visible; fill: none; stroke: #B45309; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#B45309" stroke="none" style="stroke: none; fill: #B45309; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 79" marker-end="url(#dc-arrow-head-filled-3)"></path></svg>
+<svg width="63" height="8" viewBox="0 0 63 8" preserveAspectRatio="none" style="position: absolute; left: 548px; top: 360px; width: 63px; height: 8px; overflow: visible; fill: none; stroke: #B45309; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#B45309" stroke="none" style="stroke: none; fill: #B45309; fill: context-stroke"/></marker></defs><path d="M 0 4 L 59 4" marker-end="url(#dc-arrow-head-filled-4)"></path></svg>
+<svg width="8" height="107" viewBox="0 0 8 107" preserveAspectRatio="none" style="position: absolute; left: 718px; top: 213px; width: 8px; height: 107px; overflow: visible; fill: none; stroke: #B45309; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-5" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#B45309" stroke="none" style="stroke: none; fill: #B45309; fill: context-stroke"/></marker></defs><path d="M 4 107 L 4 4" marker-end="url(#dc-arrow-head-filled-5)"></path></svg>
+<svg width="63" height="8" viewBox="0 0 63 8" preserveAspectRatio="none" style="position: absolute; left: 832px; top: 172px; width: 63px; height: 8px; overflow: visible; fill: none; stroke: #2E7D32; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-6" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#2E7D32" stroke="none" style="stroke: none; fill: #2E7D32; fill: context-stroke"/></marker></defs><path d="M 0 4 L 59 4" marker-end="url(#dc-arrow-head-filled-6)"></path></svg>
+<div style="position: absolute; left: 64px; top: 140px; width: 220px; height: 72px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; line-height: 18px; background: #ffffff; border: 1px solid #D6CEC3; border-radius: 10px; color: #1F1B17"><span><b>Worker taps Accept</b><br><span style="font-size: 12px; line-height: 16px; color: #6E665E">or Decline, or blocks a day</span></span></div>
+<div style="position: absolute; left: 348px; top: 116px; width: 200px; height: 120px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; line-height: 18px; background: #FEF3D6; color: #1F1B17; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%)"><span>Network?</span></div>
+<div style="position: absolute; left: 612px; top: 140px; width: 220px; height: 72px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; line-height: 18px; background: #ffffff; border: 1.5px solid #0B4F6C; border-radius: 10px; color: #1F1B17"><span><b>POST /dispatch/accept</b><br><span style="font-size: 12px; line-height: 16px; color: #6E665E">direct API call</span></span></div>
+<div style="position: absolute; left: 896px; top: 140px; width: 240px; height: 72px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; line-height: 18px; background: #E8F5E9; border: 1.5px solid #2E7D32; border-radius: 10px; color: #1F1B17"><span><b>Server reconciles</b> by original timestamp<br><span style="font-size: 12px; line-height: 16px; color: #6E665E">conflicts go to the desk</span></span></div>
+<div style="position: absolute; left: 348px; top: 320px; width: 200px; height: 88px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; line-height: 18px; background: #FFFBEB; border: 1.5px solid #F59E0B; border-radius: 10px; color: #1F1B17"><span><b>Local queue</b><br><span style="font-size: 12px; line-height: 16px; color: #6E665E">status PENDING_SYNC</span></span></div>
+<div style="position: absolute; left: 612px; top: 320px; width: 220px; height: 88px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; line-height: 18px; background: #ffffff; border: 1px solid #D6CEC3; border-radius: 10px; color: #1F1B17"><span><b>Background worker</b><br><span style="font-size: 12px; line-height: 16px; color: #6E665E">resend with the original timestamp · exponential backoff</span></span></div>
+<div style="position: absolute; left: 64px; top: 40px; font-family: Fraunces, Georgia, serif; font-size: 28px; line-height: 35px; font-weight: 600; color: #1F1B17">Offline-first sync · worker app · spec §7.2</div>
+<div style="position: absolute; left: 564px; top: 148px; width: 30px; text-align: center; font-size: 13px; line-height: 16px; color: #4A433D">yes</div>
+<div style="position: absolute; left: 460px; top: 269px; width: 23px; text-align: left; font-size: 13px; line-height: 16px; color: #4A433D">no</div>
+<div style="position: absolute; left: 64px; top: 448px; width: 1100px; font-family: Inter, system-ui, sans-serif; font-size: 13px; line-height: 16px; font-weight: 400; color: #6E665E">Inbound: a delta payload of state changes since last_synced_at on every reconnect. The app shows "guardado sin conexión · se enviará al volver la señal" on anything queued.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":520}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

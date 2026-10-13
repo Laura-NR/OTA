@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>App de colaboradores · inicio · disponibilidad, oferta pendiente, trabajo de hoy</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 18px;border-radius:10px;font:600 15px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C;height:44px;padding:0 10px}
+.btn:focus-visible,.sw:focus-visible,.bn a:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.sw{width:52px;height:30px;border-radius:9999px;border:0;position:relative;cursor:pointer;flex:none;padding:0}
+.sw span{position:absolute;top:3px;width:24px;height:24px;border-radius:9999px;background:#fff;box-shadow:0 1px 2px rgba(31,27,23,.2)}
+.job{display:flex;gap:12px;align-items:flex-start;padding:14px;text-decoration:none;color:inherit}
+.job .t{font:500 13px/18px "IBM Plex Mono",ui-monospace,monospace;color:#083B50;width:48px;flex:none;padding-top:2px}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E665E;font:500 11px/14px Inter,system-ui,sans-serif;position:relative}
+.bn a.on{color:#083B50;font-weight:700}
+.bn .dot{position:absolute;top:8px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:9999px;background:#C62828;color:#fff;font:700 10px/16px Inter,system-ui,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box}
+.tmr{height:6px;border-radius:9999px;background:#E8E2D9;overflow:hidden;display:block}
+.tmr span{display:block;height:100%}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 12px; padding: 14px 20px 6px">
+    <span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #0B4F6C; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">RS</span>
+    <div style="display: flex; flex-direction: column; min-width: 0"><h1 class="disp" style="font-size: 22px; line-height: 26px">Hola, Reinier</h1><span class="cap">Mar 6 oct · 14:32 · La Habana</span></div>
+    <sc-if value="{{online}}" hint-placeholder-val="{{ true }}"><button class="pill" type="button" onClick="{{toggleNet}}" style="margin-left: auto; background: #E8F5E9; color: #1B5E20; border: 0; cursor: pointer" aria-label="Conectado, pulsa para simular sin conexión"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01"/></svg>Sincronizado</button></sc-if>
+    <sc-if value="{{offline}}" hint-placeholder-val="{{ false }}"><button class="pill" type="button" onClick="{{toggleNet}}" style="margin-left: auto; background: #1F1B17; color: #fff; border: 0; cursor: pointer" aria-label="Sin conexión, pulsa para simular conexión"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M12 20h.01"/></svg>Sin conexión · {{queue}} pendiente</button></sc-if>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 24px; flex: 1">
+
+    <!-- Credencial -->
+    <a href="W-Credentials.dc.html" style="display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: #E8F5E9; color: #1B5E20; text-decoration: none"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span style="font-size: 14px; line-height: 20px; flex: 1"><strong>Licencia activa</strong> · vence 12 jun 2027 · fiabilidad 95</span><svg class="ic" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+
+    <!-- Disponibilidad -->
+    <div class="card" style="padding: 14px; display: flex; gap: 12px; align-items: center">
+      <div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><strong style="font-size: 16px; line-height: 22px">{{availLabel}}</strong><span class="cap">{{availNote}}</span></div>
+      <button class="sw" type="button" role="switch" aria-checked="{{avail}}" aria-label="Disponible hoy" onClick="{{toggleAvail}}" style="background: {{swBg}}"><span style="left: {{swKnob}}"></span></button>
+    </div>
+    <sc-if value="{{availQueued}}" hint-placeholder-val="{{ false }}"><p class="cap" style="margin-top: -6px; padding-left: 4px">Cambio guardado en el teléfono · se enviará al volver la señal.</p></sc-if>
+
+    <!-- Oferta pendiente -->
+    <a class="card" href="W-Offer.dc.html" style="padding: 14px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: inherit; border-color: #F59E0B; background: #FFFBEB">
+      <div style="display: flex; align-items: center; gap: 8px"><span class="pill" style="background: #F59E0B; color: #1F1B17">1 oferta esperando</span><span class="mono" style="margin-left: auto; font-weight: 500; color: #92400E">quedan 0:29</span></div>
+      <span class="tmr" aria-label="76 % del tiempo consumido"><span style="width: 76%; background: #B45309"></span></span>
+      <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px; line-height: 20px">Traslado Aeropuerto → Viñales · ida y vuelta</strong><span class="cap">13 feb 15:40 y 20 feb · Margaret +1 · inglés · € 180</span></div>
+      <span style="font-size: 14px; color: #083B50; font-weight: 600; display: inline-flex; align-items: center; gap: 6px">Responder ahora <svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+    </a>
+
+    <!-- Hoy -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px"><p class="ov">Hoy</p><a href="W-Job.dc.html" class="cap" style="margin-left: auto">Ver trabajos</a></div>
+      <a class="card job" href="W-Job.dc.html" style="border-color: #0B4F6C"><span class="t">15:50</span><div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0"><strong style="font-size: 15px; line-height: 20px">Aeropuerto José Martí T3 → Casa Lis, Vedado</strong><span class="cap">Ingrid +1 · español / inglés · vuelo IB 6621 llega 16:35 · 2 maletas</span><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px"><span class="tag">Asignado</span><span class="tag">€ 25</span><span class="tag">Guardado sin conexión</span></div></div><svg class="ic" style="color: #6E665E; margin-top: 4px" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+    </section>
+
+    <!-- Esta semana -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">Esta semana</p>
+      <div class="card" style="display: flex; flex-direction: column">
+        <a class="job" href="W-Job.dc.html" style="border-bottom: 1px solid #E8E2D9"><span class="t">Jue 8</span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px">Aeropuerto → Vedado · 21:40</span><span class="cap">Luis +3 · familia · español · € 25</span></div><span class="tag">Asignado</span></a>
+        <a class="job" href="W-Job.dc.html" style="border-bottom: 1px solid #E8E2D9"><span class="t">Sáb 10</span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px">La Habana → Playa Larga · 08:00</span><span class="cap">Klaus +1 · alemán / inglés · € 90</span></div><span class="tag">Asignado</span></a>
+        <div class="job"><span class="t">Dom 11</span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px">Libre</span><span class="cap">Bloqueado por ti · "familia"</span></div><a class="btn btn-t" href="W-Calendar.dc.html">Cambiar</a></div>
+      </div>
+    </section>
+
+    <!-- Combustible y pagos -->
+    <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <a class="card" href="W-Calendar.dc.html" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit"><span class="cap">Combustible declarado</span><strong class="mono" style="font-size: 20px; line-height: 26px">40 L</strong><span class="cap">3 oct · actualizar cada semana</span></a>
+      <a class="card" href="W-Earnings.dc.html" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit"><span class="cap">Pendiente de pago</span><strong class="mono" style="font-size: 20px; line-height: 26px">€ 360</strong><span class="cap">próximo pago 10 oct · efectivo</span></a>
+    </section>
+
+    <!-- Central -->
+    <a class="btn btn-s" href="tel:+5372042516" style="justify-content: flex-start"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg>Central 24/7 · +53 7 204 2516</a>
+    <div style="height: 72px"></div>
+  </main>
+
+  <!-- Marca del primer viewport + barra inferior fija -->
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24">primer viewport · 844</span></div>
+  <nav class="bn" aria-label="Principal" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="W-Home.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/><path d="M9 21v-6h6v6"/></svg>Inicio</a>
+    <a href="W-Offer.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>Ofertas<span class="dot">1</span></a>
+    <a href="W-Calendar.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Calendario</a>
+    <a href="W-Job.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M8 7V5h8v2M3 12h18"/></svg>Trabajos</a>
+    <a href="W-Earnings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1160}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { avail: true, online: true, queue: 0 };
+  }
+  renderVals() {
+    const s = this.state;
+    return {
+      avail: s.avail, availLabel: s.avail ? 'Disponible hoy' : 'No disponible hoy', availNote: s.avail ? 'Recibes ofertas para hoy y mañana · toca para pausar' : 'No recibirás ofertas hasta que vuelvas a activarlo',
+      swBg: s.avail ? '#0B4F6C' : '#D6CEC3', swKnob: s.avail ? '25px' : '3px',
+      toggleAvail: () => this.setState({ avail: !s.avail, queue: s.online ? s.queue : s.queue + 1 }),
+      online: s.online, offline: !s.online, queue: s.queue, availQueued: !s.online && s.queue > 0,
+      toggleNet: () => this.setState({ online: !s.online, queue: s.online ? s.queue : 0 })
+    };
+  }
+}
+</script>
+</body>
+</html>

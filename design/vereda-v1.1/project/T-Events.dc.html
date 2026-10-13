@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Analytics · event taxonomy · every component, its event and payload</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.ev{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;white-space:nowrap;color:#083B50}
+.tbl td.pl{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:#4A433D}
+.grp td{background:#FBF8F3;font-weight:600;color:#083B50;padding:8px 12px}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;white-space:nowrap}
+.pre{margin:0;padding:14px 16px;border-radius:8px;background:#1F1B17;color:#F3EEE6;font:400 12px/18px "IBM Plex Mono",ui-monospace,monospace;overflow-x:auto;white-space:pre}
+.stage{display:grid;grid-template-columns:36px 1fr;gap:4px 12px;padding:12px 0;border-top:1px solid #E8E2D9}
+.stage:first-child{border-top:0;padding-top:0}
+.stage .n{font:600 20px/24px Fraunces,Georgia,serif;color:#A83E24}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 960px">
+    <p class="ov">Handoff · analytics · 10 Oct 2026 · from UI/UX doc 13 §3, adapted to request-to-book</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">Every component, its event, its payload</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Doc 13 asks for an event taxonomy before pixel work. This sheet is that taxonomy for the screens on this canvas: the seven funnel stages mapped to artboards, the parameters that ride on every event, one row per instrumented component, and the empty and error states that must be measured because that is where people leave. Names are <span class="mono">snake_case</span>, one event per user intention, fired on commit (click, submit, change), never on hover or keystroke.</p>
+  </header>
+
+  <!-- 01 funnel -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+      <p class="ov">01 · Funnel stages → screens</p>
+      <p class="p">Doc 13's seven stages, renamed for a product where nothing is charged until the hosts confirm. Each screen knows its stage; the stage is a parameter on every event it emits.</p>
+      <div>
+        <div class="stage"><span class="n">1</span><div><strong>Visit</strong> · <span class="mono" style="font-size: 12px">page_view</span><br><span class="cap"><a href="Home.dc.html">Home</a>, <a href="M-Home.dc.html">M-Home</a>, Blog, About · KPI: bounce, search_started rate</span></div></div>
+        <div class="stage"><span class="n">2</span><div><strong>Discover</strong> · <span class="mono" style="font-size: 12px">search_submitted · map_province_selected · filter_applied</span><br><span class="cap"><a href="Destinations.dc.html">Destinations</a>, <a href="Packages.dc.html">Packages</a> · KPI: zero-result rate, provinces asked for that we do not cover</span></div></div>
+        <div class="stage"><span class="n">3</span><div><strong>Consider</strong> · <span class="mono" style="font-size: 12px">package_viewed · tier_selected · compare_viewed</span><br><span class="cap"><a href="Package.dc.html">Package</a>, <a href="Compare.dc.html">Compare</a>, <a href="Destination.dc.html">Destination</a> · KPI: view → start rate</span></div></div>
+        <div class="stage"><span class="n">4</span><div><strong>Configure</strong> · <span class="mono" style="font-size: 12px">builder_step_completed · booking_step_completed</span><br><span class="cap"><a href="Custom.dc.html">Custom</a>, <a href="Booking.dc.html">Booking</a> steps 1–4 · KPI: step drop-off, time per step, field errors</span></div></div>
+        <div class="stage"><span class="n">5</span><div><strong>Request</strong> · <span class="mono" style="font-size: 12px">booking_submitted · proposal_requested</span><br><span class="cap">Booking step 5, <a href="Confirmation.dc.html">Confirmation</a> "request sent" · state ITINERARY_SUBMITTED · KPI: requests per day, OFAC gate blocks</span></div></div>
+        <div class="stage"><span class="n">6</span><div><strong>Pay</strong> · <span class="mono" style="font-size: 12px">payment_window_viewed · payment_attempted · payment_succeeded</span><br><span class="cap"><a href="Payment.dc.html">Payment</a> inside the 48 h window · SECURED → CONFIRMED · KPI: window conversion, hours-to-pay, failures by rail</span></div></div>
+        <div class="stage"><span class="n">7</span><div><strong>Confirmed &amp; travelled</strong> · <span class="mono" style="font-size: 12px">booking_confirmed · voucher_downloaded · nps_submitted</span><br><span class="cap"><a href="Confirmation.dc.html">Confirmation</a>, <a href="Account.dc.html">Account</a>, <a href="E-Confirmed.dc.html">E-Confirmed</a>, <a href="E-NPS.dc.html">E-NPS</a> · KPI: room-nights (north star), CSAT, NPS</span></div></div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <p class="ov">02 · Parameters on every event</p>
+        <p class="p">Added by the shell, never by the component. Identity is a salted hash; no names, emails, passport numbers or free text ever enter an event (spec §8.2, doc 12).</p>
+        <pre class="pre">{
+  "event":        "package_viewed",
+  "ts":           "2026-10-10T13:42:07Z",     // origin time; worker app: queued offline
+  "session_id":   "s_…",  "user_id": "h_…",   // user_id only when signed in, hashed
+  "app":          "web | mobile_web | worker | ops_lite | admin",
+  "screen":       "Package",                   // artboard name = screen id
+  "funnel_stage": 3,
+  "locale":       "en | es | fr",  "currency": "EUR",
+  "market":       "DE",                        // country of the visitor, not nationality
+  "device_type":  "desktop | tablet | phone",
+  "viewport":     "xs | sm | md | lg | xl",   // DS sheet 07 breakpoints
+  "network":      "4g | 3g | 2g | offline | unknown",
+  "consent":      "essential | analytics | marketing",
+  "ab_variant":   null,
+  "role":         null                          // admin apps: super_admin | ops_admin | support | worker
+}</pre>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <p class="ov">03 · How a component declares its event</p>
+        <p class="p">The attribute pattern already used on DS sheet 06. The shell reads the attributes on commit and adds the common parameters; developers never hand-write a tracking call inside a component.</p>
+        <pre class="pre">&lt;button class="btn btn-p"
+  data-analytics-event="cta_click"
+  data-analytics-cta="request_proposal"
+  data-analytics-step="5"&gt;Request proposal&lt;/button&gt;
+
+&lt;a href="/packages/eco-vinales"
+  data-analytics-event="search_result_clicked"
+  data-analytics-package="PKG-ECO-VIN"
+  data-analytics-position="2"&gt;…&lt;/a&gt;</pre>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 18px; color: #4A433D">
+          <li>Analytics events fire only after the analytics cookie is accepted (DS sheet 04 consent). Essential events (<span class="mono">api_error</span>, <span class="mono">payment_*</span>, <span class="mono">booking_*</span>) are logged first-party regardless, without the session id.</li>
+          <li><span class="mono">page_view</span> once per screen render; tab and step changes are their own events, not new page views.</li>
+          <li>Worker app and Ops Lite queue events with the sync queue (G-Sync) and keep the origin timestamp.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 event table -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">04 · Events by surface</p>
+      <p class="p">One row per instrumented component. "Payload" lists what the component adds on top of section 02. Artboards link to the screen where the component lives.</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>Event</th><th>Trigger</th><th>Payload (component-specific)</th><th>Artboard · component</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="4">Shell · every app</td></tr>
+        <tr><td class="ev">page_view</td><td>Screen rendered</td><td class="pl">referrer, utm_*, entry (bool)</td><td>Global shell</td></tr>
+        <tr><td class="ev">nav_clicked</td><td>Primary nav, bottom nav, admin sidebar</td><td class="pl">from_screen, to_screen, nav (top | bottom | sidebar | footer)</td><td><a href="Home.dc.html">Home</a> header · <a href="M-Home.dc.html">M-Home</a> bottom bar · admin sidebar</td></tr>
+        <tr><td class="ev">locale_changed</td><td>Language or currency menu commit</td><td class="pl">from, to, kind (locale | currency)</td><td>Header language and currency buttons</td></tr>
+        <tr><td class="ev">cta_click</td><td>Any primary or secondary button that starts a flow</td><td class="pl">cta (id), step, context_id (package | booking | province)</td><td>DS 02 Button</td></tr>
+        <tr><td class="ev">consent_set</td><td>Cookie banner or Legal › Cookie settings saved</td><td class="pl">analytics (bool), marketing (bool), source (banner | settings)</td><td><a href="DS-Cards-Content.dc.html">DS 04</a> consent · <a href="Legal.dc.html">Legal</a></td></tr>
+        <tr><td class="ev">offline_mode_entered / offline_mode_left</td><td>Connectivity change detected by the shell</td><td class="pl">duration_s (on leave), queued_actions</td><td><a href="M-PreTrip.dc.html">M-PreTrip</a> · <a href="W-Home.dc.html">W-Home</a> · <a href="Errors.dc.html">Errors</a> offline</td></tr>
+
+        <tr class="grp"><td colspan="4">Discover · Destinations, map, catalogue</td></tr>
+        <tr><td class="ev">search_submitted</td><td>Home search bar "Find your Cuba trip"</td><td class="pl">destination, month, travelers, results_count, response_ms</td><td><a href="Home.dc.html">Home</a> search · <a href="M-Home.dc.html">M-Home</a> sheet</td></tr>
+        <tr><td class="ev">map_province_selected</td><td>Province tapped on the map or strip</td><td class="pl">province_id, state (active | limited | not_yet), casas, tours, source (map | strip | list)</td><td><a href="Destinations.dc.html">Destinations</a> map · <a href="M-Destinations.dc.html">M-Destinations</a> strip</td></tr>
+        <tr><td class="ev">map_province_unavailable</td><td>A greyed province tapped (not yet covered)</td><td class="pl">province_id, nearest_active, action (none | notify_me | custom_trip)</td><td>Destinations map · the demand signal for expansion</td></tr>
+        <tr><td class="ev">map_route_added</td><td>Province added to a route from the map</td><td class="pl">province_id, route_length, order</td><td>Destinations › "Plan by region" · <a href="Custom.dc.html">Custom</a> step 1</td></tr>
+        <tr><td class="ev">filter_applied / filter_removed</td><td>Filter chip, theme, price, duration, power</td><td class="pl">filter_name, filter_value, active_filters_count, results_count</td><td><a href="Packages.dc.html">Packages</a> rail · Destinations themes</td></tr>
+        <tr><td class="ev">sort_changed</td><td>Results toolbar</td><td class="pl">sort_field, direction</td><td>Packages toolbar</td></tr>
+        <tr><td class="ev">search_results_loaded</td><td>Results rendered</td><td class="pl">results_count, zero_results (bool), load_ms</td><td>Packages, Destinations grids</td></tr>
+        <tr><td class="ev">search_result_clicked</td><td>Card opened</td><td class="pl">package_id, position, price_from, currency, badge (limited | power)</td><td>DS 04 trip card</td></tr>
+        <tr><td class="ev">save_toggled</td><td>Heart on a card or detail page</td><td class="pl">package_id, saved (bool)</td><td>Trip card · <a href="Package.dc.html">Package</a> header</td></tr>
+        <tr><td class="ev">compare_added / compare_viewed</td><td>Compare checkbox; Compare page opened</td><td class="pl">package_ids[], count, differences_only (bool)</td><td><a href="Compare.dc.html">Compare</a></td></tr>
+        <tr><td class="ev">event_banner_clicked</td><td>Promotional banner action</td><td class="pl">event_id, action (request_access | all_events)</td><td>Home banner · <a href="Concierge.dc.html">Concierge</a></td></tr>
+
+        <tr class="grp"><td colspan="4">Consider · Package, Destination, Blog</td></tr>
+        <tr><td class="ev">package_viewed</td><td>Detail page rendered</td><td class="pl">package_id, type, booking_model (request | instant), price_from, currency, next_departure, availability</td><td><a href="Package.dc.html">Package</a> · <a href="M-Package.dc.html">M-Package</a></td></tr>
+        <tr><td class="ev">tier_selected</td><td>Accommodation tier radio</td><td class="pl">package_id, tier (standard | mid | heritage | eco | boutique), delta</td><td>Package tiers · Booking step 2</td></tr>
+        <tr><td class="ev">departure_selected</td><td>Date row chosen</td><td class="pl">package_id, departure_date, seats_left, season</td><td>Package departures</td></tr>
+        <tr><td class="ev">section_viewed</td><td>Tab or anchor: itinerary, included, conditions, reviews</td><td class="pl">package_id, section, scroll_depth</td><td>Package tabs · DS 03 tabs (<span class="mono">tab_switch</span> alias)</td></tr>
+        <tr><td class="ev">gallery_opened</td><td>Photo tapped</td><td class="pl">package_id | destination_id, photo_index, photo_count</td><td>Package, Destination galleries</td></tr>
+        <tr><td class="ev">conditions_viewed</td><td>"Power, fuel and roads" block expanded or Travel info opened</td><td class="pl">province_id, advisory_level, source (package | pretrip | banner)</td><td>Package conditions · <a href="PreTrip.dc.html">PreTrip</a></td></tr>
+        <tr><td class="ev">article_read</td><td>75 % of a blog article scrolled</td><td class="pl">article_id, read_s</td><td><a href="BlogPost.dc.html">BlogPost</a></td></tr>
+        <tr><td class="ev">specialist_contacted</td><td>WhatsApp or "Talk to a specialist" link</td><td class="pl">channel (whatsapp | form | phone), context_id</td><td>Header · <a href="Support.dc.html">Support</a> · builder header</td></tr>
+
+        <tr class="grp"><td colspan="4">Configure · Custom builder</td></tr>
+        <tr><td class="ev">builder_started</td><td>Step 1 rendered</td><td class="pl">entry (home | destinations | package | banner | concierge), prefilled (bool)</td><td><a href="Custom.dc.html">Custom</a> · <a href="M-Custom.dc.html">M-Custom</a></td></tr>
+        <tr><td class="ev">builder_step_completed</td><td>Continue pressed and accepted</td><td class="pl">from_step, to_step, time_on_step_ms, nights, provinces_count</td><td>Builder stepper</td></tr>
+        <tr><td class="ev">route_changed</td><td>Province added or removed, nights moved</td><td class="pl">province_id, action (add | remove | nights), route_length, long_drive (bool)</td><td>Step 1 provinces</td></tr>
+        <tr><td class="ev">transport_selected · stay_tier_selected · activity_toggled · guide_option_selected</td><td>Option committed on steps 2–4</td><td class="pl">option_id, province_id, price_delta, on (bool)</td><td>Steps 2, 3, 4</td></tr>
+        <tr><td class="ev">estimate_viewed</td><td>Sticky estimate expanded (mobile) or breakdown opened</td><td class="pl">est_low, est_high, currency, step</td><td>Builder summary rail · M-Custom sheet</td></tr>
+        <tr><td class="ev">proposal_requested</td><td>Step 5 "Request proposal" accepted</td><td class="pl">proposal_id, nights, provinces[], pace, interests[], est_low, est_high, proposal_locale</td><td>Step 5 · state VX-C-… created</td></tr>
+
+        <tr class="grp"><td colspan="4">Request · Booking flow</td></tr>
+        <tr><td class="ev">booking_started</td><td>Step 1 rendered from a package</td><td class="pl">package_id, departure_date, booking_model, travelers</td><td><a href="Booking.dc.html">Booking</a> · <a href="M-Booking.dc.html">M-Booking</a></td></tr>
+        <tr><td class="ev">booking_step_completed</td><td>Step advanced</td><td class="pl">from_step, to_step, time_on_step_ms, total, currency</td><td>Booking stepper · DS 06 <span class="mono">checkout_step_completed</span> alias</td></tr>
+        <tr><td class="ev">travelers_changed</td><td>Counter commit</td><td class="pl">adults, children, infants, rooms</td><td>DS 02 counter</td></tr>
+        <tr><td class="ev">insurance_tier_selected · extra_toggled</td><td>Radio or checkbox commit on step 3</td><td class="pl">option_id, price</td><td>Booking step 3</td></tr>
+        <tr><td class="ev">form_field_error</td><td>Validation error shown</td><td class="pl">form, field, error_type (required | format | range | server), step</td><td>DS 02 text field · <a href="T-Forms.dc.html">T-Forms</a> rules</td></tr>
+        <tr><td class="ev">form_abandoned</td><td>Leaves a step with unsaved input</td><td class="pl">form, step, last_field, time_in_form_ms</td><td>Booking, Custom, Join, Payment</td></tr>
+        <tr><td class="ev">ofac_gate_shown · ofac_category_selected · affidavit_signed</td><td>US nationality chosen; category picked; typed signature accepted</td><td class="pl">category (12 general licences), blocked (bool)</td><td>Booking step 4 OFAC gate</td></tr>
+        <tr><td class="ev">booking_submitted</td><td>Step 5 accepted</td><td class="pl">booking_code, package_id, total, currency, travelers, booking_model, plan (deposit | full)</td><td>Booking step 5 → ITINERARY_SUBMITTED · <a href="E-Received.dc.html">E-Received</a></td></tr>
+
+        <tr class="grp"><td colspan="4">Pay · within the 48-hour window</td></tr>
+        <tr><td class="ev">payment_window_viewed</td><td>Payment page rendered after SECURED</td><td class="pl">booking_code, hours_left, amount_due, currency, source (email | account | sms)</td><td><a href="Payment.dc.html">Payment</a> · <a href="E-Invoice.dc.html">E-Invoice</a> link</td></tr>
+        <tr><td class="ev">payment_plan_selected</td><td>Deposit or pay in full</td><td class="pl">plan, amount</td><td>Payment plan cards</td></tr>
+        <tr><td class="ev">payment_method_selected</td><td>Rail chosen</td><td class="pl">method (sepa | open_banking | card | transfer), fee, currency</td><td>DS 06 · Payment rails</td></tr>
+        <tr><td class="ev">payment_attempted · payment_succeeded · payment_failed · payment_retry</td><td>Submit; gateway result; retry</td><td class="pl">method, amount, currency, gateway, latency_ms, error_code (failed), retry_count</td><td>Payment · gateway hosted page returns</td></tr>
+        <tr><td class="ev">proof_uploaded</td><td>Bank transfer proof attached</td><td class="pl">booking_code, file_type, size_kb</td><td>Payment transfer panel · <a href="A-Payments.dc.html">A-Payments</a> pending proofs</td></tr>
+        <tr><td class="ev">window_extension_requested</td><td>HOLD reply or "Need more time?"</td><td class="pl">booking_code, hours_left, channel (sms | email | account)</td><td><a href="S-Messages.dc.html">S-Messages</a> · <a href="E-Reminder.dc.html">E-Reminder</a></td></tr>
+
+        <tr class="grp"><td colspan="4">Confirmed, on trip, after</td></tr>
+        <tr><td class="ev">booking_status_viewed</td><td>Pipeline tracker rendered</td><td class="pl">booking_code, status, days_to_departure</td><td><a href="Account.dc.html">Account</a> · <a href="M-Account.dc.html">M-Account</a></td></tr>
+        <tr><td class="ev">document_downloaded</td><td>Voucher, receipt, offline kit, work order</td><td class="pl">booking_code, doc_type, format, offline (bool)</td><td>Account › Documents · <a href="Confirmation.dc.html">Confirmation</a></td></tr>
+        <tr><td class="ev">message_sent</td><td>In-app message to the desk</td><td class="pl">booking_code, length_bucket, has_attachment</td><td>Account › Messages</td></tr>
+        <tr><td class="ev">checkin_replied</td><td>Morning SMS answered</td><td class="pl">booking_code, reply (ok | text), minutes_to_reply</td><td>S-Messages check-in</td></tr>
+        <tr><td class="ev">advisory_acknowledged</td><td>Advisory or crisis banner dismissed or opened</td><td class="pl">advisory_id, level, channel (banner | email | sms | push)</td><td>DS 06 · <a href="E-Advisory.dc.html">E-Advisory</a></td></tr>
+        <tr><td class="ev">disruption_option_chosen</td><td>Option A–D tapped before the deadline</td><td class="pl">case_id, option, minutes_before_deadline, channel</td><td><a href="E-Options.dc.html">E-Options</a> · <a href="A-Disruption.dc.html">A-Disruption</a> status board</td></tr>
+        <tr><td class="ev">csat_submitted · nps_submitted</td><td>Inline CSAT on confirmation; NPS email at +24 h</td><td class="pl">booking_code, score, part (guide | casa | driver | desk), comment (bool)</td><td>Confirmation · <a href="E-NPS.dc.html">E-NPS</a></td></tr>
+        <tr><td class="ev">retention_choice</td><td>Keep-my-account or delete-now link</td><td class="pl">choice (keep | delete | expired), days_into_grace</td><td><a href="E-Retention.dc.html">E-Retention</a> · Account › Data</td></tr>
+
+        <tr class="grp"><td colspan="4">Recruitment and concierge</td></tr>
+        <tr><td class="ev">join_started · join_category_selected · join_credential_uploaded · join_submitted</td><td>Supplier portal steps</td><td class="pl">category, municipalities_count, credential_type, application_id (no identity fields)</td><td><a href="Join.dc.html">Join</a> · <a href="M-Join.dc.html">M-Join</a> → PENDING_AUDIT</td></tr>
+        <tr><td class="ev">concierge_request_started · concierge_request_submitted</td><td>Event access flow</td><td class="pl">event_id, path (add_to_trip | build_around), tickets, nights, request_id</td><td><a href="Concierge.dc.html">Concierge</a> · <a href="M-Concierge.dc.html">M-Concierge</a></td></tr>
+
+        <tr class="grp"><td colspan="4">Operations · admin, Ops Lite, worker app (feeds spec §4.9.3 metrics)</td></tr>
+        <tr><td class="ev">booking_state_changed</td><td>Any state-machine transition</td><td class="pl">booking_code, from, to, actor (system | ops_admin | support | traveler), reason</td><td><a href="G-StateMachine.dc.html">G-StateMachine</a> · <a href="A-Bookings.dc.html">A-Bookings</a></td></tr>
+        <tr><td class="ev">offer_sent · offer_viewed · offer_accepted · offer_declined · offer_timeout</td><td>Dispatch engine and worker app</td><td class="pl">service_item_id, worker_id (hashed), service_type, minutes_to_answer, decline_reason, timer_h</td><td><a href="G-Dispatch.dc.html">G-Dispatch</a> · <a href="W-Offer.dc.html">W-Offer</a></td></tr>
+        <tr><td class="ev">redispatch_triggered</td><td>One-click fallback or manual assignment</td><td class="pl">service_item_id, mode (one_click | manual), candidates_shown, position_chosen, from (dashboard | booking | ops_lite)</td><td><a href="A-Dashboard.dc.html">A-Dashboard</a> matrix · <a href="AL-Alerts.dc.html">AL-Alerts</a></td></tr>
+        <tr><td class="ev">alert_acknowledged · alert_muted</td><td>Red alert strip or push</td><td class="pl">alert_id, seconds_to_ack, channel (desk | ops_lite), muted_for_s</td><td>Dashboard red strip · <a href="A-A11y.dc.html">A-A11y</a> three channels</td></tr>
+        <tr><td class="ev">document_generated</td><td>Voucher, work order, invoice, offline kit, MINTUR summary</td><td class="pl">booking_code, doc_type, locale, pages, trigger (auto | manual)</td><td><a href="A-Booking.dc.html">A-Booking</a> › Documents · page 06</td></tr>
+        <tr><td class="ev">import_committed</td><td>Bulk import step 4</td><td class="pl">rows, errors, warnings, duration_ms, reverted (bool, within 24 h)</td><td><a href="A-Packages.dc.html">A-Packages</a> import</td></tr>
+        <tr><td class="ev">approval_decided</td><td>Refund, discount, advisory, manifest</td><td class="pl">kind, amount, tier (single | dual | super_admin), decision, hours_waiting</td><td><a href="A-Payments.dc.html">A-Payments</a> · <a href="A-Settings.dc.html">A-Settings</a> thresholds</td></tr>
+        <tr><td class="ev">ai_draft_used</td><td>Assistant draft sent, edited or discarded</td><td class="pl">context (reply | summary | translation), edited_ratio, locale, discarded (bool)</td><td><a href="A-Assistant.dc.html">A-Assistant</a> · A-Booking AI draft</td></tr>
+        <tr><td class="ev">availability_changed · sync_queue_flushed · emergency_pressed</td><td>Worker app actions</td><td class="pl">days_blocked, queued_items, backoff_attempts, offline_s · case_id, gps (bool)</td><td><a href="W-Calendar.dc.html">W-Calendar</a> · <a href="W-Home.dc.html">W-Home</a> · <a href="W-Job.dc.html">W-Job</a></td></tr>
+
+        <tr class="grp"><td colspan="4">Errors and performance · always logged first-party</td></tr>
+        <tr><td class="ev">api_error · client_error · slow_page_load · supplier_timeout</td><td>Backend failure; JS error; load &gt; 3 s; dispatch or allotment API over threshold</td><td class="pl">endpoint, status, error_type, latency_ms · stack_hash · load_ms, network · supplier_id, timeout_ms</td><td>Global · <a href="Errors.dc.html">Errors</a> · <a href="A-States.dc.html">A-States</a> degraded</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 05 empty & error states + 06 ownership -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+        <p class="ov">05 · Empty and error states to instrument</p>
+        <p class="p">Doc 13's sixth checklist item: these are where people leave, so each one is an event with the state as its payload, not a silent render.</p>
+      </div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>State</th><th>Event · payload</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td>Zero results for a search or filter set</td><td class="pl">search_results_loaded · zero_results=true, filters[]</td><td>Packages, Destinations</td></tr>
+          <tr><td>"Nothing in that province for that theme yet"</td><td class="pl">empty_state_shown · kind=province_theme, province_id, theme</td><td>Destinations grid</td></tr>
+          <tr><td>Greyed province tapped</td><td class="pl">map_province_unavailable · province_id, action</td><td>Destinations map</td></tr>
+          <tr><td>Builder: nights not placed, long drive warning</td><td class="pl">builder_warning_shown · kind=nights_mismatch | long_drive</td><td>Custom step 1</td></tr>
+          <tr><td>OFAC gate blocks Continue</td><td class="pl">ofac_gate_shown · blocked=true</td><td>Booking step 4</td></tr>
+          <tr><td>Payment failed, US-issued card, 3DS fail</td><td class="pl">payment_failed · error_code, method</td><td>Payment</td></tr>
+          <tr><td>Window expired, hosts released</td><td class="pl">payment_window_expired · booking_code, extension_used</td><td>Payment, E-Reminder</td></tr>
+          <tr><td>Offline, 404, 500, maintenance, compliance hold</td><td class="pl">error_page_shown · kind, from_path</td><td>Errors, M-Errors</td></tr>
+          <tr><td>Admin empty queues, denied actions, locked PC, degraded feeds</td><td class="pl">admin_state_shown · kind (empty | denied | locked | degraded), screen</td><td>A-States</td></tr>
+          <tr><td>Worker: no offers, credential paused, queue not synced</td><td class="pl">worker_state_shown · kind, queued_items</td><td>W-Home, W-Credentials</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <p class="ov">06 · Which report each group feeds</p>
+        <div style="overflow-x: auto"><table class="tbl">
+          <thead><tr><th>Events</th><th>Report on <a href="A-Reports.dc.html">A-Reports</a></th></tr></thead>
+          <tbody>
+            <tr><td class="pl">page_view → booking_confirmed</td><td>Funnel, conversion by market and device</td></tr>
+            <tr><td class="pl">map_province_* , filter_*, empty_state_shown</td><td>Demand by province, coverage gaps to recruit for</td></tr>
+            <tr><td class="pl">payment_*</td><td>Window conversion, failures by rail, GBV by rail (§4.9.1)</td></tr>
+            <tr><td class="pl">offer_*, redispatch_triggered, alert_*</td><td>Dispatch latency, acceptance, timeout and fallback rates (§4.9.3)</td></tr>
+            <tr><td class="pl">csat_submitted, nps_submitted, disruption_option_chosen</td><td>Service quality and duty of care (§4.9.4)</td></tr>
+            <tr><td class="pl">join_*</td><td>Supplier pipeline, time to VERIFIED</td></tr>
+            <tr><td class="pl">api_error, slow_page_load, offline_mode_*</td><td>Low-bandwidth health (§5.1), Sentry</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px">
+        <p class="ov">Naming and ownership rules</p>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 18px; color: #4A433D">
+          <li><strong>object_verb_past</strong>: <span class="mono">package_viewed</span>, <span class="mono">offer_declined</span>. No screen names in event names; the screen is a parameter.</li>
+          <li>A new component gets its event in this table before it is built; the row is the ticket's acceptance criterion.</li>
+          <li>Identifiers in payloads are ids (<span class="mono">package_id</span>, <span class="mono">booking_code</span>), never titles, never free text typed by a person.</li>
+          <li>Retention of raw events follows the traveler retention clock (6 months after the last COMPLETED trip, then anonymised; spec §3.5).</li>
+          <li>Owner: product analytics, reviewed with the quarterly KPI review (doc 13 §6). The stack is doc 13 §5: GA4 + BigQuery + Metabase at minimum.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

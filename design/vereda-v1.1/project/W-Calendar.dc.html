@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>App de colaboradores · calendario de disponibilidad · bloquear días · combustible</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 18px;border-radius:10px;font:600 15px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C;height:44px;padding:0 10px}
+.btn:focus-visible,.day:focus-visible,.inp:focus-visible,.chip:focus-visible,.bn a:focus-visible,.ibtn:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.inp{height:48px;padding:0 12px;border:1px solid #D6CEC3;border-radius:10px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;box-sizing:border-box}
+.ibtn{width:44px;height:44px;border:1px solid #D6CEC3;background:#fff;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#083B50;flex:none}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dow{text-align:center;font:600 11px/14px Inter,system-ui,sans-serif;color:#6E665E;padding:4px 0}
+.day{height:46px;border-radius:10px;border:1px solid transparent;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:500 14px/18px Inter,system-ui,sans-serif;color:#1F1B17;padding:0}
+.day .d{width:6px;height:6px;border-radius:9999px}
+.chip{display:inline-flex;align-items:center;height:36px;padding:0 12px;border-radius:9999px;border:1px solid #D6CEC3;background:#fff;color:#1F1B17;font:500 13px/18px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.chip.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.lg{display:inline-flex;gap:6px;align-items:center;font-size:12px;line-height:16px;color:#4A433D}
+.lg span{width:12px;height:12px;border-radius:4px;flex:none}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E665E;font:500 11px/14px Inter,system-ui,sans-serif;position:relative}
+.bn a.on{color:#083B50;font-weight:700}
+.bn .dot{position:absolute;top:8px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:9999px;background:#C62828;color:#fff;font:700 10px/16px Inter,system-ui,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 14px 20px 4px">
+    <h1 class="disp" style="font-size: 24px; line-height: 30px; flex: 1">Calendario</h1>
+    <span class="pill" style="background: #E8F5E9; color: #1B5E20">Sincronizado</span>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 24px; flex: 1">
+
+    <!-- Mes -->
+    <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 8px"><button class="ibtn" type="button" aria-label="Mes anterior"><svg class="ic" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><strong style="flex: 1; text-align: center; font-size: 17px">Octubre 2026</strong><button class="ibtn" type="button" aria-label="Mes siguiente"><svg class="ic" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button></div>
+      <div class="grid" aria-hidden="true"><span class="dow">L</span><span class="dow">M</span><span class="dow">X</span><span class="dow">J</span><span class="dow">V</span><span class="dow">S</span><span class="dow">D</span></div>
+      <div class="grid" role="grid" aria-label="Días de octubre">
+        <span></span><span></span><span></span>
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="31"><button class="day" type="button" aria-pressed="{{d.sel}}" aria-label="{{d.aria}}" onClick="{{d.pick}}" style="background: {{d.bg}}; color: {{d.fg}}; border-color: {{d.bd}}">{{d.n}}<span class="d" style="background: {{d.dot}}"></span></button></sc-for>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap"><span class="lg"><span style="background: #fff; border: 1px solid #D6CEC3"></span>Disponible</span><span class="lg"><span style="background: #E8E2D9"></span>Bloqueado</span><span class="lg"><span style="background: #0B4F6C"></span>Trabajo</span><span class="lg"><span style="background: #B45309"></span>Oferta pendiente</span></div>
+      <p class="cap">Toca un día para bloquearlo o liberarlo. Los días con trabajo asignado no se pueden bloquear desde aquí: llama a la central.</p>
+    </div>
+
+    <!-- Día seleccionado -->
+    <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap"><strong style="font-size: 17px; line-height: 22px">{{sel.title}}</strong><span class="pill" style="background: {{sel.pbg}}; color: {{sel.pfg}}; margin-left: auto">{{sel.state}}</span></div>
+      <sc-if value="{{sel.hasJob}}" hint-placeholder-val="{{ true }}">
+        <a href="W-Job.dc.html" style="display: flex; gap: 10px; align-items: flex-start; text-decoration: none; color: inherit; padding: 10px 12px; border-radius: 10px; background: #FBF8F3"><span class="mono" style="color: #083B50; font-size: 13px; padding-top: 2px">{{sel.time}}</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px">{{sel.job}}</span><span class="cap">{{sel.jobNote}}</span></span><svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+        <a class="btn btn-s" href="tel:+5372042516">Llamar a la central para cambiarlo</a>
+      </sc-if>
+      <sc-if value="{{sel.hasOffer}}" hint-placeholder-val="{{ false }}">
+        <a href="W-Offer.dc.html" style="display: flex; gap: 10px; align-items: center; text-decoration: none; color: inherit; padding: 10px 12px; border-radius: 10px; background: #FFFBEB; border: 1px solid #F59E0B"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px">Oferta: Viñales → La Habana · 10:00 · € 90</span><span class="cap">Responde antes de las 16:02</span></span><svg class="ic" style="color: #92400E" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+      </sc-if>
+      <sc-if value="{{sel.free}}" hint-placeholder-val="{{ false }}">
+        <p class="p">{{sel.text}}</p>
+        <sc-if value="{{sel.isBlocked}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="cap" style="align-self: center">Motivo:</span><sc-for list="{{reasons}}" as="r" hint-placeholder-count="4"><button class="chip {{r.cls}}" type="button" aria-pressed="{{r.on}}" onClick="{{r.pick}}">{{r.label}}</button></sc-for></div>
+          <button class="btn btn-p" type="button" onClick="{{sel.toggle}}">Volver a estar disponible</button>
+        </sc-if>
+        <sc-if value="{{sel.isFree}}" hint-placeholder-val="{{ true }}">
+          <button class="btn btn-s" type="button" onClick="{{sel.toggle}}">Bloquear este día</button>
+        </sc-if>
+      </sc-if>
+    </div>
+
+    <!-- Varios días -->
+    <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <strong style="font-size: 15px; line-height: 20px">Bloquear varios días</strong>
+      <div style="display: flex; gap: 8px"><label style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span class="cap">Desde</span><input class="inp mono" type="text" value="25 oct" style="width: 100%"></label><label style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span class="cap">Hasta</span><input class="inp mono" type="text" value="26 oct" style="width: 100%"></label></div>
+      <div style="display: flex; gap: 8px"><button class="btn btn-s" type="button" style="flex: 1">Bloquear 2 días</button></div>
+      <p class="cap">Si bloqueas más de 14 días seguidos, la central te marca como inactivo y te llama antes de la temporada alta.</p>
+    </div>
+
+    <!-- Combustible -->
+    <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 8px"><strong style="font-size: 15px; line-height: 20px">Combustible en reserva</strong><span class="cap" style="margin-left: auto">{{fuelNote}}</span></div>
+      <div style="display: flex; gap: 8px; align-items: center"><input class="inp mono" type="number" inputmode="numeric" value="{{fuel}}" aria-label="Litros en reserva" style="width: 110px"><span class="cap">litros</span><button class="btn btn-p" type="button" onClick="{{saveFuel}}" style="margin-left: auto">Actualizar</button></div>
+      <p class="cap">Lo usa la central para la lista de choferes de apoyo cuando hay escasez. Declara cada semana, aunque no cambie.</p>
+    </div>
+    <div style="height: 72px"></div>
+  </main>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24">primer viewport · 844</span></div>
+  <nav class="bn" aria-label="Principal" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="W-Home.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/><path d="M9 21v-6h6v6"/></svg>Inicio</a>
+    <a href="W-Offer.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>Ofertas<span class="dot">1</span></a>
+    <a href="W-Calendar.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Calendario</a>
+    <a href="W-Job.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M8 7V5h8v2M3 12h18"/></svg>Trabajos</a>
+    <a href="W-Earnings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 6, blocked: { 11: 'familia', 25: 'carro', 26: 'carro' }, reasonOf: {}, fuel: 40, fuelSaved: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const jobs = { 6: ['15:50', 'Aeropuerto T3 → Casa Lis, Vedado', 'Ingrid +1 · vuelo IB 6621 · € 25'], 8: ['21:40', 'Aeropuerto T3 → Vedado', 'Luis +3 · familia · € 25'], 10: ['08:00', 'La Habana → Playa Larga', 'Klaus +1 · € 90'], 3: ['09:00', 'La Habana → Viñales (hecho)', 'Hannah +2 · € 90 · pagado'] };
+    const offers = { 17: true };
+    const DOW = ['jueves', 'viernes', 'sábado', 'domingo', 'lunes', 'martes', 'miércoles'];
+    const days = [];
+    for (let n = 1; n <= 31; n++) {
+      const isJob = !!jobs[n], isOffer = !!offers[n], isBlk = !!s.blocked[n], isSel = s.sel === n, today = n === 6;
+      let bg = '#fff', fg = '#1F1B17', dot = 'transparent', bd = today ? '#0B4F6C' : 'transparent';
+      if (isBlk) { bg = '#E8E2D9'; fg = '#6E665E'; }
+      if (isJob) { dot = '#0B4F6C'; }
+      if (isOffer) { dot = '#B45309'; }
+      if (n < 6 && !isJob) { fg = '#A89F94'; }
+      if (isSel) { bg = '#E6F0F4'; bd = '#0B4F6C'; fg = '#083B50'; }
+      const dow = DOW[(n - 1) % 7];
+      days.push({ n, sel: isSel, bg, fg, dot, bd, aria: dow + ' ' + n + (isJob ? ', trabajo asignado' : isOffer ? ', oferta pendiente' : isBlk ? ', bloqueado' : ', disponible'), pick: () => this.setState({ sel: n }) });
+    }
+    const n = s.sel; const dow = DOW[(n - 1) % 7];
+    const title = dow.charAt(0).toUpperCase() + dow.slice(1) + ' ' + n + ' de octubre' + (n === 6 ? ' · hoy' : '');
+    const job = jobs[n]; const isBlk = !!s.blocked[n]; const isOffer = !!offers[n];
+    const sel = job ? { title, state: 'Trabajo asignado', pbg: '#E6F0F4', pfg: '#083B50', hasJob: true, hasOffer: false, free: false, time: job[0], job: job[1], jobNote: job[2] }
+      : isOffer ? { title, state: 'Oferta pendiente', pbg: '#FEF3C7', pfg: '#92400E', hasJob: false, hasOffer: true, free: false }
+      : { title, state: isBlk ? 'Bloqueado' : 'Disponible', pbg: isBlk ? '#F3EEE6' : '#E8F5E9', pfg: isBlk ? '#4A433D' : '#1B5E20', hasJob: false, hasOffer: false, free: true, isBlocked: isBlk, isFree: !isBlk, text: isBlk ? 'No recibirás ofertas para este día.' : 'Recibes ofertas para este día. Si no vas a estar, bloquéalo: así la central no cuenta contigo.', toggle: () => { const b = { ...s.blocked }; if (isBlk) delete b[n]; else b[n] = 'otro'; this.setState({ blocked: b }); } };
+    const reasons = [['familia', 'Familia'], ['carro', 'Carro en taller'], ['otro_trabajo', 'Otro trabajo'], ['otro', 'Otro']].map(([k, label]) => ({ key: k, label, on: s.blocked[n] === k, cls: s.blocked[n] === k ? 'on' : '', pick: () => this.setState({ blocked: { ...s.blocked, [n]: k } }) }));
+    return { days, sel, reasons, fuel: s.fuel, fuelNote: s.fuelSaved ? 'actualizado hoy 14:35' : 'declarado el 3 oct', saveFuel: () => this.setState({ fuelSaved: true }) };
+  }
+}
+</script>
+</body>
+</html>

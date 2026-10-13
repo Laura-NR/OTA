@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Event access · ticket concierge · Havana Jazz Festival · request in 3 steps</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:1280px;margin:0 auto;padding:0 40px;box-sizing:border-box}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.p{margin:0;font-size:16px;line-height:24px;color:#4A433D}
+.nav a{color:#1F1B17;text-decoration:none;font:500 15px/20px Inter,system-ui,sans-serif;padding:10px 4px;border-bottom:2px solid transparent}
+.nav a:hover{color:#083B50;border-bottom-color:#D6CEC3}
+.nav a[aria-current]{color:#083B50;border-bottom-color:#0B4F6C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:32px;padding:0 12px;font-size:14px}.btn-lg{height:48px;padding:0 20px}
+.btn:disabled{background:#E8E2D9;color:#6E665E;border-color:transparent;cursor:not-allowed}
+.btn:focus-visible,.inp:focus-visible,.ck:focus-visible,.tier:focus-within,.ibtn:focus-visible,.chip:focus-visible,.night:focus-within,.evc:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.inp{height:40px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp::placeholder{color:#6E665E}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.ibtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #D6CEC3;background:#fff;cursor:pointer;color:#083B50}
+.ibtn:disabled{color:#6E665E;background:#F3EEE6;cursor:not-allowed}
+.tier{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer}
+.tier.on{border:2px solid #0B4F6C;padding:15px;background:#F1F6F8}
+.night{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid #D6CEC3;border-radius:10px;background:#fff;cursor:pointer}
+.night.on{border-color:#0B4F6C;background:#F1F6F8}
+.evc{display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer;text-align:left;font:inherit;color:inherit;min-width:0}
+.evc.on{border:2px solid #0B4F6C;padding:13px;background:#F1F6F8}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.ph{position:relative;background:#DCC9B6;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box}
+.ph .alt{font:500 11px/14px Inter,system-ui,sans-serif;color:#4A433D;background:rgba(255,255,255,.85);padding:3px 6px;border-radius:4px}
+.step{display:flex;align-items:center;gap:10px;font:600 14px/20px Inter,system-ui,sans-serif;color:#6E665E;background:transparent;border:0;padding:0;cursor:pointer}
+.step .n{width:28px;height:28px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font:600 13px/16px "IBM Plex Mono",ui-monospace,monospace;box-sizing:border-box}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid;font-size:14px;line-height:20px}
+.alert p{margin:0}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;line-height:20px;margin:0}
+.dl dt{color:#6E665E}.dl dd{margin:0;text-align:right;font-weight:600}
+</style>
+</helmet>
+
+<div style="display: flex; flex-direction: column; min-height: 100vh; background: #FBF8F3">
+  <a href="#main" style="position: absolute; left: -9999px; top: 8px; background: #0B4F6C; color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 10">Skip to content</a>
+
+  <!-- Event banner · the same strip as Home, now pointing here -->
+  <div style="background: #1F1B17; color: #fff"><div class="wrap" style="display: flex; gap: 16px; align-items: center; padding-top: 10px; padding-bottom: 10px; font-size: 14px; line-height: 20px; flex-wrap: wrap"><span class="pill" style="background: #F2B134; color: #1F1B17">Event</span><span style="flex: 1; min-width: 260px"><strong>Havana Jazz Festival · 18–24 Jan 2027.</strong> You are on the event access page; the concierge request is below.</span><a href="Packages.dc.html" style="color: #F2B134; font-weight: 600; white-space: nowrap">All events</a></div></div>
+
+  <header style="background: #FBF8F3; border-bottom: 1px solid #E8E2D9; position: sticky; top: 0; z-index: 5"><div class="wrap" style="display: flex; align-items: center; gap: 24px; height: 72px; flex-wrap: wrap">
+    <a href="Home.dc.html" aria-label="Vereda Expeditions home" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #083B50"><svg width="117.37" height="28" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#A83E24"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#1F1B17"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#1F1B17"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#1F1B17"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#1F1B17"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#1F1B17"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg></a>
+    <nav class="nav" aria-label="Primary" style="display: flex; gap: 20px; flex: 1; flex-wrap: wrap"><a href="Destinations.dc.html">Destinations</a><a href="Packages.dc.html">Packages</a><a href="Concierge.dc.html" aria-current="page">Events</a><a href="PreTrip.dc.html">Travel info</a><a href="Blog.dc.html">Blog &amp; guides</a><a href="Support.dc.html">Support</a></nav>
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+      <button class="btn btn-t btn-sm" type="button" aria-label="Language: English" style="gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>EN</button>
+      <button class="btn btn-t btn-sm" type="button" aria-label="Currency: Euro">EUR €</button>
+      <a class="btn btn-t btn-sm" href="Auth.dc.html">Sign in</a>
+      <a class="btn btn-s" href="Support.dc.html" style="gap: 8px"><svg class="ic" style="width: 18px; height: 18px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"/></svg>Talk to a specialist</a>
+    </div>
+  </div></header>
+
+  <main id="main" style="flex: 1">
+    <!-- Hero -->
+    <section class="wrap" style="padding-top: 32px; padding-bottom: 40px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; align-items: stretch">
+      <div style="display: flex; flex-direction: column; gap: 18px; justify-content: center">
+        <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6E665E"><a href="Home.dc.html">Home</a><span aria-hidden="true">›</span><a href="Packages.dc.html">Events</a><span aria-hidden="true">›</span><span style="color: #1F1B17">Havana Jazz Festival</span></nav>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="pill" style="background: #F2B134; color: #1F1B17">Event access</span><span class="pill" style="background: #E6F0F4; color: #083B50">18–24 Jan 2027 · Havana</span><span class="pill" style="background: #E8F5E9; color: #1B5E20">Tickets via concierge · request only</span></div>
+        <h1 class="disp" style="font-size: 48px; line-height: 56px">Havana Jazz Festival, with a seat that is actually yours</h1>
+        <p class="p" style="font-size: 18px; line-height: 28px">Seven nights of concerts across Vedado and Old Havana. Tickets for the main venues are allocated late and sell through channels you cannot reach from abroad. Our concierge requests them for you through licensed sellers, confirms by a date you know in advance, and adds them to your booking. Nothing is charged until the seats are confirmed.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center">
+          <a class="btn btn-p btn-lg" href="#request" data-analytics-event="cta_click" data-analytics-cta="concierge_request">Request event access</a>
+          <a class="btn btn-s btn-lg" href="Custom.dc.html" data-analytics-event="cta_click" data-analytics-cta="concierge_add_to_builder">Add it to a trip I'm building</a>
+        </div>
+        <p class="cap">Programme and venues are published by the organiser in December; we confirm seats by <strong>[confirmation date]</strong>. If tickets fall through, <strong>[cancellation rule if tickets are not confirmed]</strong>.</p>
+      </div>
+      <div class="ph" style="min-height: 360px; border-radius: 16px; background: #B9CFD6"><span class="alt">alt: Son trio playing at Casa de la Trova, Santiago de Cuba</span></div>
+    </section>
+
+    <!-- How it works -->
+    <section style="background: #fff; border-top: 1px solid #E8E2D9; border-bottom: 1px solid #E8E2D9"><div class="wrap" style="padding-top: 32px; padding-bottom: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 24px">
+      <div style="display: flex; gap: 14px"><span class="disp" style="font-size: 32px; line-height: 36px; color: #A83E24">1</span><div><p class="sm" style="font-weight: 600">Tell us the nights and the seats</p><p class="sm" style="color: #4A433D">Which festival nights, how many people, which category. Two minutes, below.</p></div></div>
+      <div style="display: flex; gap: 14px"><span class="disp" style="font-size: 32px; line-height: 36px; color: #A83E24">2</span><div><p class="sm" style="font-weight: 600">The desk confirms availability</p><p class="sm" style="color: #4A433D">Within 48 hours for the request; seats are confirmed by [confirmation date] once the organiser releases allocations. You see the status in your account.</p></div></div>
+      <div style="display: flex; gap: 14px"><span class="disp" style="font-size: 32px; line-height: 36px; color: #A83E24">3</span><div><p class="sm" style="font-weight: 600">Tickets join your booking</p><p class="sm" style="color: #4A433D">Paid with your deposit, printed on your voucher, collected with your guide at the venue. Concierge fee <strong>[fee per seat]</strong>, shown before you pay.</p></div></div>
+    </div></section>
+
+    <!-- Request flow -->
+    <section id="request" class="wrap" style="padding-top: 40px; padding-bottom: 56px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; align-items: start">
+      <div style="display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">Request event access</p><h2 class="disp" style="font-size: 32px; line-height: 40px">{{heading}}</h2></div>
+
+        <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; gap: 20px; flex-wrap: wrap" role="list" aria-label="Steps">
+          <sc-for list="{{steps}}" as="st" hint-placeholder-count="3"><button class="step" type="button" role="listitem" aria-current="{{st.cur}}" onClick="{{st.go}}" disabled="{{st.locked}}" style="color: {{st.fg}}"><span class="n" style="background: {{st.bg}}; color: {{st.nfg}}; border: {{st.border}}">{{st.glyph}}</span>{{st.label}}</button></sc-for>
+        </div>
+        </sc-if>
+
+        <!-- STEP 1 · event, nights, seats -->
+        <sc-if value="{{s1}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <p class="lbl">Event</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 10px" role="radiogroup" aria-label="Event">
+              <sc-for list="{{events}}" as="ev" hint-placeholder-count="5"><button class="evc {{ev.cls}}" type="button" role="radio" aria-checked="{{ev.on}}" onClick="{{ev.pick}}" data-analytics-event="concierge_event_selected" data-analytics-context="{{ev.id}}"><span class="pill" style="background: {{ev.bg}}; color: {{ev.fg}}; align-self: flex-start">{{ev.when}}</span><span style="font-weight: 600; font-size: 15px; line-height: 20px">{{ev.name}}</span><span class="cap">{{ev.place}} · {{ev.status}}</span></button></sc-for>
+            </div>
+            <p class="hlp">Dates in brackets are not yet announced by the organiser; you can still request and we confirm when they are.</p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <p class="lbl">Festival nights · {{nightsOn}} selected</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 8px">
+              <sc-for list="{{nights}}" as="n" hint-placeholder-count="7"><label class="night {{n.cls}}"><input class="ck" type="checkbox" checked="{{n.on}}" onChange="{{n.toggle}}"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 600; font-size: 15px; line-height: 20px">{{n.day}}</span><span class="cap">{{n.prog}}</span></span></label></sc-for>
+            </div>
+            <p class="hlp">Programme by venue is published in December; opening and closing galas are the first to sell out.</p>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px; align-items: start">
+            <div class="fld"><p class="lbl">Seats</p><div style="display: flex; align-items: center; gap: 6px"><button class="ibtn" type="button" aria-label="One seat fewer" onClick="{{decSeats}}" disabled="{{seatsMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 28px; text-align: center" aria-live="polite">{{seats}}</span><button class="ibtn" type="button" aria-label="One seat more" onClick="{{incSeats}}" disabled="{{seatsMax}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><p class="hlp">Up to 8 per request; groups over 8 talk to a specialist.</p></div>
+            <div class="fld" style="grid-column: span 2"><p class="lbl">Category</p><div style="display: flex; flex-direction: column; gap: 8px" role="radiogroup" aria-label="Ticket category"><sc-for list="{{cats}}" as="c" hint-placeholder-count="3"><label class="tier {{c.cls}}" style="padding: 12px 14px"><input class="ck" type="radio" name="cat" checked="{{c.on}}" onChange="{{c.pick}}"><span style="flex: 1; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap"><span><span style="font-weight: 600">{{c.name}}</span><br><span class="cap">{{c.desc}}</span></span><span class="mono" style="font-size: 14px; white-space: nowrap">{{c.price}}</span></span></label></sc-for></div></div>
+          </div>
+          <sc-if value="{{noNights}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><p>Pick at least one night, or the all-festival pass.</p></div></sc-if>
+          <div style="display: flex; gap: 12px; justify-content: flex-end"><button class="btn btn-p btn-lg" type="button" onClick="{{next}}" disabled="{{s1Blocked}}" data-analytics-event="concierge_step_completed" data-analytics-step="1">Continue to your trip</button></div>
+        </sc-if>
+
+        <!-- STEP 2 · the trip around it -->
+        <sc-if value="{{s2}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 10px" role="radiogroup" aria-label="Your trip">
+            <p class="lbl">Where do the tickets go?</p>
+            <sc-for list="{{paths}}" as="pt" hint-placeholder-count="3"><label class="tier {{pt.cls}}"><input class="ck" type="radio" name="path" checked="{{pt.on}}" onChange="{{pt.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span style="font-weight: 600">{{pt.name}}</span><span class="sm" style="color: #4A433D">{{pt.desc}}</span></span></label></sc-for>
+          </div>
+          <sc-if value="{{pathExisting}}" hint-placeholder-val="{{ false }}">
+            <div class="fld" style="max-width: 420px"><label class="lbl" for="code">Your booking or proposal code</label><input class="inp mono" id="code" type="text" placeholder="VX-7K2M9Q or VX-C-4R8T" autocomplete="off"><p class="hlp">The desk attaches the tickets to that trip; the itinerary moves to Havana on the festival nights if it isn't there already.</p></div>
+          </sc-if>
+          <sc-if value="{{pathBuild}}" hint-placeholder-val="{{ true }}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 16px">
+              <div class="fld"><label class="lbl" for="arr">Arrival in Cuba</label><input class="inp" id="arr" type="text" value="Sat 16 Jan 2027"><p class="hlp">Two nights before the opening gala; jet lag is real.</p></div>
+              <div class="fld"><p class="lbl">Nights in total</p><div style="display: flex; align-items: center; gap: 6px"><button class="ibtn" type="button" aria-label="One night fewer" onClick="{{decN}}" disabled="{{nMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 28px; text-align: center" aria-live="polite">{{nightsTotal}}</span><button class="ibtn" type="button" aria-label="One night more" onClick="{{incN}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><p class="hlp">Havana for the festival, then {{afterCopy}}</p></div>
+              <div class="fld"><p class="lbl">After the festival</p><div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{afters}}" as="af" hint-placeholder-count="3"><button class="chip {{af.cls}}" type="button" aria-pressed="{{af.on}}" onClick="{{af.pick}}" style="height: 36px; padding: 0 14px; border-radius: 9999px; border: 1px solid #D6CEC3; background: {{af.bg}}; color: {{af.fg}}; font: 500 14px/20px Inter, system-ui, sans-serif; cursor: pointer">{{af.label}}</button></sc-for></div></div>
+            </div>
+            <div class="alert" role="status" style="background: #E6F0F4; border-color: #C9DDE6; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><p>Festival week casas in Vedado fill early. We hold a room at Casa Lis (balcony rooms, battery 8 h) for concierge requests until [hold date]; the custom builder opens with these dates and Havana already placed.</p></div>
+          </sc-if>
+          <sc-if value="{{pathOnly}}" hint-placeholder-val="{{ false }}">
+            <div class="alert" role="status" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><p>We only arrange tickets as part of a trip we operate (MINTUR licence rules). If you already have your stay sorted, a one-night Havana package with the concerts is the smallest option; we'll propose it.</p></div>
+          </sc-if>
+          <div style="display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap"><button class="btn btn-t btn-lg" type="button" onClick="{{back}}">Back</button><button class="btn btn-p btn-lg" type="button" onClick="{{next}}" data-analytics-event="concierge_step_completed" data-analytics-step="2">Continue to contact</button></div>
+        </sc-if>
+
+        <!-- STEP 3 · contact & send -->
+        <sc-if value="{{s3}}" hint-placeholder-val="{{ false }}">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px">
+            <div class="fld"><label class="lbl" for="name">Your name</label><input class="inp" id="name" type="text" autocomplete="name"></div>
+            <div class="fld"><label class="lbl" for="email">Email</label><input class="inp" id="email" type="email" autocomplete="email"></div>
+            <div class="fld"><label class="lbl" for="tel">WhatsApp or phone</label><input class="inp" id="tel" type="tel" autocomplete="tel" placeholder="+49 151 2345678"></div>
+            <div class="fld"><label class="lbl" for="nat">Nationality</label><select class="inp" id="nat" onChange="{{pickNat}}"><option value="DE">Germany</option><option value="FR">France</option><option value="ES">Spain</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="US">United States</option></select></div>
+          </div>
+          <sc-if value="{{natUS}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #E6F0F4; border-color: #C9DDE6; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><p>US travelers: concerts count as "Support for the Cuban People" activities when booked through independent venues; the OFAC affidavit comes with the booking, not now.</p></div></sc-if>
+          <div class="fld"><label class="lbl" for="notes">Anything else · optional</label><textarea class="inp" id="notes" style="height: 88px; padding: 10px 12px; resize: vertical" placeholder="Artists you'd travel for, accessibility needs, a birthday…"></textarea></div>
+          <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 20px; color: #4A433D"><input class="ck" type="checkbox" checked="{{consent}}" onChange="{{toggleConsent}}"><span>Send my request to the Vereda desk and keep it for 90 days. Tickets are requested only through licensed sellers; nothing is charged until seats are confirmed. <a href="Legal.dc.html">Privacy notice</a>.</span></label>
+          <div style="display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap"><button class="btn btn-t btn-lg" type="button" onClick="{{back}}">Back</button><button class="btn btn-p btn-lg" type="button" onClick="{{send}}" disabled="{{sendBlocked}}" data-analytics-event="concierge_request_submitted">Send request</button></div>
+        </sc-if>
+
+        <!-- SENT -->
+        <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+          <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; border-color: #0B4F6C">
+            <div style="display: flex; gap: 12px; align-items: center"><span style="width: 40px; height: 40px; border-radius: 9999px; background: #E8F5E9; color: #1B5E20; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg></span><div><p class="sm" style="font-weight: 600">Request <span class="mono">CR-2027-0007</span> received · nothing is charged</p><p class="cap">Havana Jazz Festival · {{nightsOn}} nights · {{seats}} seats · {{catName}}</p></div></div>
+            <ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 22px; color: #4A433D">
+              <li><strong>Within 48 h:</strong> a specialist confirms we can request these seats and sends your trip proposal (or attaches the request to your booking).</li>
+              <li><strong>By [confirmation date]:</strong> seats confirmed or not. Confirmed seats are added to your invoice at <strong>[price per seat]</strong> + <strong>[fee per seat]</strong>; you pay them with the deposit.</li>
+              <li><strong>If tickets fall through:</strong> [cancellation rule if tickets are not confirmed].</li>
+            </ol>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap"><a class="btn btn-p" href="Account.dc.html">Track it in your account</a><a class="btn btn-s" href="Custom.dc.html">Keep building the trip</a><button class="btn btn-t" type="button" onClick="{{restart}}">New request</button></div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- Summary rail -->
+      <aside class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 14px; position: sticky; top: 88px">
+        <p class="ov">Your request</p>
+        <dl class="dl">
+          <dt>Event</dt><dd>{{evName}}</dd>
+          <dt>Nights</dt><dd>{{nightsOn}} of 7</dd>
+          <dt>Seats</dt><dd>{{seats}} · {{catName}}</dd>
+          <dt>Tickets</dt><dd>[price per seat] × {{ticketCount}}</dd>
+          <dt>Concierge fee</dt><dd>[fee per seat] × {{ticketCount}}</dd>
+          <dt>Trip</dt><dd>{{pathName}}</dd>
+        </dl>
+        <div style="border-top: 1px solid #E8E2D9; padding-top: 12px; display: flex; flex-direction: column; gap: 8px">
+          <p class="sm" style="font-weight: 600">What you are not paying for yet</p>
+          <p class="sm" style="color: #4A433D">Nothing. The request is free; seats and the fee appear on the invoice only once confirmed, and the deposit covers them.</p>
+        </div>
+        <div style="border-top: 1px solid #E8E2D9; padding-top: 12px; display: flex; flex-direction: column; gap: 8px">
+          <p class="sm" style="font-weight: 600">Honest notes</p>
+          <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 20px; color: #4A433D">
+            <li>Seat numbers are rarely given in advance; categories are.</li>
+            <li>Programme changes happen; your guide tracks them on the day.</li>
+            <li>Power cuts do not stop the main venues (generators) but may move smaller gigs.</li>
+          </ul>
+        </div>
+        <a class="btn btn-t" href="https://wa.me/" style="gap: 6px; align-self: flex-start"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"/></svg>Prefer to talk? WhatsApp a specialist</a>
+      </aside>
+    </section>
+
+    <!-- All events -->
+    <section style="background: #fff; border-top: 1px solid #E8E2D9"><div class="wrap" style="padding-top: 40px; padding-bottom: 56px; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap"><div><p class="ov">All events</p><h2 class="disp" style="font-size: 32px; line-height: 40px">What the concierge can request this season</h2></div><p class="cap">Dates in brackets await the organiser's announcement. Status changes as allocations open.</p></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 16px">
+        <sc-for list="{{allEvents}}" as="ae" hint-placeholder-count="5"><article class="card" style="display: flex; flex-direction: column; overflow: hidden"><div class="ph" style="height: 120px; background: {{ae.tint}}"><span class="alt">alt: {{ae.alt}}</span></div><div style="padding: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1"><span class="pill" style="background: {{ae.bg}}; color: {{ae.fg}}; align-self: flex-start">{{ae.when}}</span><h3 style="margin: 0; font: 600 16px/22px Inter, system-ui, sans-serif">{{ae.name}}</h3><p class="cap">{{ae.place}} · {{ae.status}}</p><a href="#request" class="btn btn-s btn-sm" style="align-self: flex-start; margin-top: auto" data-analytics-event="event_banner_clicked" data-analytics-context="{{ae.id}}">Request access</a></div></article></sc-for>
+      </div>
+    </div></section>
+  </main>
+
+  <footer style="background: #083B50; color: #E8E2D9"><div class="wrap" style="display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding-top: 20px; padding-bottom: 20px; font-size: 13px"><span>© 2026 Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]</span><a href="Legal.dc.html" style="color: #E8E2D9">Privacy</a><a href="About.dc.html" style="color: #E8E2D9">About Vereda</a><a href="Legal.dc.html" style="color: #E8E2D9">Terms</a><a href="Legal.dc.html" style="color: #E8E2D9">Sanctions notice</a><span style="margin-left: auto">Emergency line 24/7 · +53 7 204 2516</span></div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 1, ev: 'jazz', nights: { n1: false, n2: true, n3: true, n4: false, n5: false, n6: true, n7: false }, seats: 2, cat: 'num', path: 'build', nightsTotal: 9, after: 'vinales', nat: 'DE', consent: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const evDefs = [
+      ['jazz', 'Havana Jazz Festival', '18–24 Jan 2027', 'Havana · Vedado & Old Havana', 'allocations open', '#F2B134', '#1F1B17', 'Rumba at Callejón de Hamel', '#E3B9A6'],
+      ['habano', 'Festival del Habano', 'Feb 2027 · [dates tbc]', 'Havana · Pinar del Río farms', 'request only', '#E6F0F4', '#083B50', 'Tobacco drying house, Viñales', '#DCC9B6'],
+      ['romerias', 'Romerías de Mayo', 'May 2027 · [dates tbc]', 'Holguín', 'free events · guide only', '#E6F0F4', '#083B50', 'Street procession with drums, Holguín', '#B9CFD6'],
+      ['fuego', 'Fiesta del Fuego', 'Jul 2027 · [dates tbc]', 'Santiago de Cuba', 'request only', '#E6F0F4', '#083B50', 'Conga drummers in the street, Santiago', '#E3B9A6'],
+      ['cine', 'Festival del Nuevo Cine Latinoamericano', 'Dec 2027 · [dates tbc]', 'Havana cinemas', 'passes via concierge', '#E6F0F4', '#083B50', 'Queue outside Cine Yara at dusk', '#B9CFD6']
+    ];
+    const events = evDefs.map(([id, name, when, place, status, bg, fg]) => ({ id, name, when, place, status, bg, fg, on: s.ev === id, cls: s.ev === id ? 'on' : '', pick: () => this.setState({ ev: id }) }));
+    const allEvents = evDefs.map(([id, name, when, place, status, bg, fg, alt, tint]) => ({ id, name, when, place, status, bg, fg, alt, tint }));
+    const evSel = evDefs.find((e) => e[0] === s.ev);
+    const nightDefs = [['n1', 'Mon 18 Jan · opening gala', 'Teatro Nacional · [programme tbc]'], ['n2', 'Tue 19 Jan', 'Fábrica de Arte Cubano · late set'], ['n3', 'Wed 20 Jan', 'Jazz Café, Vedado'], ['n4', 'Thu 21 Jan', 'Casa de la Cultura de Plaza'], ['n5', 'Fri 22 Jan', 'Teatro Mella'], ['n6', 'Sat 23 Jan · headline night', 'Teatro Nacional · [programme tbc]'], ['n7', 'Sun 24 Jan · closing', 'Old Havana open-air stage']];
+    const nights = nightDefs.map(([id, day, prog]) => ({ id, day, prog, on: !!s.nights[id], cls: s.nights[id] ? 'on' : '', toggle: () => this.setState({ nights: { ...s.nights, [id]: !s.nights[id] } }) }));
+    const nightsOn = nightDefs.filter((n) => s.nights[n[0]]).length;
+    const catDefs = [['gen', 'General admission', 'Standing or unreserved; first come at the venue', '[price per seat]'], ['num', 'Numbered seat', 'Reserved seat in the main hall; best for galas', '[price per seat]'], ['pass', 'All-festival pass', 'Every night, every main venue; limited allocation', '[pass price]']];
+    const cats = catDefs.map(([id, name, desc, price]) => ({ id, name, desc, price, on: s.cat === id, cls: s.cat === id ? 'on' : '', pick: () => this.setState({ cat: id }) }));
+    const catName = catDefs.find((c) => c[0] === s.cat)[1];
+    const pathDefs = [['build', 'Build a trip around the festival', 'Havana for the concerts, then the island; the custom builder opens with the festival nights already placed.'], ['existing', 'Attach to a booking or proposal I already have', 'Give us the code; the desk adds the tickets and adjusts the Havana nights if needed.'], ['only', 'Tickets only, I have my own stay', 'Not offered on its own; we propose the smallest trip that includes the concerts.']];
+    const paths = pathDefs.map(([id, name, desc]) => ({ id, name, desc, on: s.path === id, cls: s.path === id ? 'on' : '', pick: () => this.setState({ path: id }) }));
+    const afterDefs = [['vinales', 'Viñales valley', '3–4 nights in the valley.'], ['trinidad', 'Trinidad', 'colonial streets and the mountains, by road or a flight.'], ['none', 'Havana only', 'a city week; concerts, studios and paladares.']];
+    const afters = afterDefs.map(([id, label]) => ({ id, label, on: s.after === id, cls: s.after === id ? 'on' : '', bg: s.after === id ? '#0B4F6C' : '#fff', fg: s.after === id ? '#fff' : '#4A433D', pick: () => this.setState({ after: id }) }));
+    const stepDefs = ['Event & seats', 'Your trip', 'Contact & send'];
+    const steps = stepDefs.map((label, i) => { const num = i + 1; const done = num < s.step; const cur = num === s.step; return { label, glyph: done ? '✓' : String(num), cur: cur ? 'step' : false, locked: num > s.step, go: () => this.setState({ step: num }), bg: done ? '#0B4F6C' : cur ? '#F2B134' : '#fff', nfg: done ? '#fff' : cur ? '#1F1B17' : '#6E665E', border: done || cur ? '0' : '2px solid #D6CEC3', fg: cur ? '#1F1B17' : '#6E665E' }; });
+    const headings = ['Which nights, how many seats', 'Where the tickets go', 'Who we confirm to', 'Request received'];
+    const ticketCount = s.cat === 'pass' ? s.seats : s.seats * nightsOn;
+    return {
+      heading: headings[Math.min(s.step, 4) - 1], steps,
+      s1: s.step === 1, s2: s.step === 2, s3: s.step === 3, sent: s.step === 4, notSent: s.step !== 4,
+      next: () => this.setState({ step: Math.min(4, s.step + 1) }), back: () => this.setState({ step: Math.max(1, s.step - 1) }), send: () => this.setState({ step: 4 }), restart: () => this.setState({ step: 1, consent: false }),
+      events, allEvents, evName: evSel[1], nights, nightsOn, noNights: nightsOn === 0 && s.cat !== 'pass', s1Blocked: nightsOn === 0 && s.cat !== 'pass',
+      seats: s.seats, seatsMin: s.seats <= 1, seatsMax: s.seats >= 8, incSeats: () => this.setState({ seats: Math.min(8, s.seats + 1) }), decSeats: () => this.setState({ seats: Math.max(1, s.seats - 1) }),
+      cats, catName, ticketCount,
+      paths, pathExisting: s.path === 'existing', pathBuild: s.path === 'build', pathOnly: s.path === 'only', pathName: pathDefs.find((p) => p[0] === s.path)[1].split(' ')[0] === 'Build' ? 'new trip around it' : s.path === 'existing' ? 'attach to my booking' : 'smallest trip proposed',
+      nightsTotal: s.nightsTotal, incN: () => this.setState({ nightsTotal: s.nightsTotal + 1 }), decN: () => this.setState({ nightsTotal: Math.max(3, s.nightsTotal - 1) }), nMin: s.nightsTotal <= 3,
+      afters, afterCopy: afterDefs.find((a) => a[0] === s.after)[2],
+      natUS: s.nat === 'US', pickNat: (e) => this.setState({ nat: e.target.value }),
+      consent: s.consent, toggleConsent: () => this.setState({ consent: !s.consent }), sendBlocked: !s.consent
+    };
+  }
+}
+</script>
+</body>
+</html>

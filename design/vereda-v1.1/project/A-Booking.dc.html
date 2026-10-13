@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Booking detail VX-7K2M9Q · dispatch items, re-dispatch, messages, documents, audit log</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-d{background:#C62828;color:#fff}.btn-d:hover{background:#A61E1E}
+.btn-sm{height:36px;padding:0 12px;font-size:13px}
+.btn:focus-visible,.inp:focus-visible,.tab:focus-visible,.ibtn:focus-visible,.ta:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.ta{padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp{height:44px}.ta{padding:10px 12px;min-height:88px;resize:vertical}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.num{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace;white-space:nowrap}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 240px;max-width:100%;background:#083B50;color:#fff;display:flex;flex-direction:column;gap:16px;padding:20px 16px 24px;box-sizing:border-box}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:8px;color:#C9DDE6;text-decoration:none;font:500 14px/20px Inter,system-ui,sans-serif}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav a:focus-visible{outline:2px solid #F2B134;outline-offset:-2px}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:#F2B134;color:#1F1B17;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.cnt.red{background:#C62828;color:#fff}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 32px;background:#fff;border-bottom:1px solid #E8E2D9}
+.ibtn{width:44px;height:44px;border:1px solid #D6CEC3;background:#fff;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#083B50;position:relative;flex:none}
+.content{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.tab{height:44px;padding:0 14px;border:0;background:transparent;font:600 14px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C}
+.tmr{height:6px;border-radius:9999px;background:#E8E2D9;overflow:hidden;display:block}
+.tmr span{display:block;height:100%}
+.tel{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:8px;border:1px solid #D6CEC3;background:#fff;color:#083B50;text-decoration:none;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tel:hover{background:#F3EEE6}
+.msg{display:flex;flex-direction:column;gap:4px;max-width:72%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:20px}
+.msg .m{font-size:11px;line-height:14px;color:#6E665E}
+.log{display:grid;grid-template-columns:120px 1fr;gap:4px 16px;font-size:13px;line-height:18px;padding:8px 0;border-top:1px solid #E8E2D9}
+.log:first-child{border-top:0}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;line-height:18px;margin:0}
+.dl dt{color:#6E665E}.dl dd{margin:0}
+</style>
+</helmet>
+
+<div class="shell">
+
+  <nav class="side" aria-label="Admin">
+    <a href="A-Dashboard.dc.html" aria-label="Vereda operations desk" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; padding: 4px 12px 8px"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg><span class="cap" style="color: #C9DDE6; margin-left: 2px">Ops</span></a>
+    <div class="nav">
+      <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Dashboard<span class="cnt red">2</span></a>
+      <a href="A-Bookings.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>Bookings<span class="cnt">14</span></a>
+      <a href="A-Disruption.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Disruptions<span class="cnt">1</span></a>
+      <a href="A-Packages.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>Packages</a>
+      <a href="A-Customers.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>Customers</a>
+      <a href="A-Suppliers.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Suppliers<span class="cnt">1</span></a>
+      <a href="A-Payments.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments<span class="cnt">3</span></a>
+      <a href="A-Content.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Content</a>
+      <a href="A-Reports.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+      <a href="A-Settings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.08)">
+      <div style="display: flex; gap: 10px; align-items: center"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">AR</span><div style="display: flex; flex-direction: column; min-width: 0"><strong style="font-size: 13px; line-height: 18px">Ana Rodríguez</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">Operations Admin</span></div></div>
+      <a href="A-Login.dc.html" style="color: #C9DDE6; font-size: 12px; line-height: 16px">Sign out · session ends 02:33</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6E665E"><a href="A-Bookings.dc.html">Bookings</a><span aria-hidden="true">›</span><span class="mono" style="color: #1F1B17">VX-7K2M9Q</span></nav>
+      <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap">
+        <button class="btn btn-s" type="button"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Internal note</button>
+        <button class="btn btn-s" type="button"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Modify</button>
+        <button class="btn btn-s" type="button" style="color: #B71C1C; border-color: #F5B5B0">Cancel booking…</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Summary header -->
+      <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start">
+          <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 360px; min-width: 0">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap"><h1 class="disp" style="font-size: 28px; line-height: 34px">Eco-Tourism in Viñales · mid-range</h1><span class="pill" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B">Confirming with hosts</span><span class="mono cap">ASSEMBLY_&amp;_ESCALATION</span></div>
+            <p class="p">Margaret Chen +1 (David Chen) · Canada · 13–20 Feb 2027 · 7 nights · request to book · submitted 6 Oct 13:02 via web (EN, CAD display, EUR billing)</p>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="tag">Package v3.2 (locked)</span><span class="tag">Pinar del Río</span><span class="tag">Ecotourism · qualifies for 25 % rate</span><span class="tag">Owner: Ana R.</span><span class="tag">Source: organic search</span></div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; flex: 1 1 420px">
+            <div style="display: flex; flex-direction: column; gap: 2px"><span class="cap">Total · EUR</span><strong class="mono" style="font-size: 18px; line-height: 24px">€ 3,100.00</strong><span class="cap">CA$ 4,588 shown · rate locks at deposit</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span class="cap">Supplier cost</span><strong class="mono" style="font-size: 18px; line-height: 24px">€ 2,387.00</strong><span class="cap">margin 23 % · take rate ok</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span class="cap">Dispatch</span><strong style="font-size: 18px; line-height: 24px; color: #92400E">2 of 4 · 0:29 left</strong><span class="cap">SLA to traveler: 22 h 30 m left</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span class="cap">Paid</span><strong class="mono" style="font-size: 18px; line-height: 24px">€ 0.00</strong><span class="cap">invoice after all 4 accept</span></div>
+          </div>
+        </div>
+        <!-- Pipeline -->
+        <ol aria-label="Booking pipeline" style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 4px">
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #2E7D32"></span><span class="cap" style="color: #1B5E20">Submitted 13:02</span></li>
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #2E7D32"></span><span class="cap" style="color: #1B5E20">Dispatched 13:03</span></li>
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #B45309"></span><span class="cap" style="color: #92400E; font-weight: 700">Assembly · amber</span></li>
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #E8E2D9"></span><span class="cap">Secured &amp; invoiced</span></li>
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #E8E2D9"></span><span class="cap">Pending payment · 48 h</span></li>
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #E8E2D9"></span><span class="cap">Confirmed · documents</span></li>
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #E8E2D9"></span><span class="cap">On trip</span></li>
+          <li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: #E8E2D9"></span><span class="cap">Completed</span></li>
+        </ol>
+      </section>
+
+      <!-- Tabs -->
+      <div role="tablist" aria-label="Booking sections" style="display: flex; gap: 4px; border-bottom: 1px solid #E8E2D9; overflow-x: auto">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="6"><button class="tab {{t.cls}}" type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}<sc-if value="{{t.hasBadge}}" hint-placeholder-val="{{ false }}"><span class="pill" style="background: {{t.bbg}}; color: {{t.bfg}}; height: 20px; padding: 0 8px">{{t.badge}}</span></sc-if></button></sc-for>
+      </div>
+
+      <!-- TAB · Dispatch -->
+      <sc-if value="{{isDispatch}}" hint-placeholder-val="{{ true }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 20px 10px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Service items</h2><span class="cap">2 h timer started 13:02 · amber at 14:32 · red at 15:02</span><button class="btn btn-sm btn-s" type="button" style="margin-left: auto">Pause timers (reason)</button></div>
+            <div style="overflow-x: auto">
+              <table class="tbl" style="min-width: 640px">
+                <thead><tr><th scope="col">Service</th><th scope="col">Worker</th><th scope="col">Status</th><th scope="col" style="text-align: right">Payout</th><th scope="col">Act</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><strong>Stay · 7 nights</strong><span class="cap">Casa Yamilé · Viñales · 1 double, breakfast</span></div></td>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><span>Yamilé Torres</span><span class="cap">RTN valid to 2027 · generator</span></div></td>
+                    <td><div style="display: flex; flex-direction: column; gap: 4px"><span class="pill" style="background: #E8F5E9; color: #1B5E20; align-self: flex-start">Accepted · 13:21</span><span class="cap">in the worker app, 19 min after offer</span></div></td>
+                    <td class="num">€ 490.00</td>
+                    <td><a class="tel" href="tel:+5352290174"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg>Call</a></td>
+                  </tr>
+                  <tr style="background: #FFFBEB">
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><strong>Transport · 2 transfers</strong><span class="cap">HAV airport → Viñales 13 Feb · Viñales → HAV 20 Feb</span></div></td>
+                    <td>
+                      <sc-if value="{{drvOffered}}" hint-placeholder-val="{{ true }}"><div style="display: flex; flex-direction: column; gap: 2px"><span>Reinier Soto</span><span class="cap">Transport licence valid to Jun 2027 · Peugeot 7 seats</span></div></sc-if>
+                      <sc-if value="{{drvRe}}" hint-placeholder-val="{{ false }}"><div style="display: flex; flex-direction: column; gap: 2px"><span>{{drvName}}</span><span class="cap">re-dispatched 14:33 by Ana R.</span></div></sc-if>
+                    </td>
+                    <td>
+                      <sc-if value="{{drvOffered}}" hint-placeholder-val="{{ true }}"><div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px"><span class="pill" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; align-self: flex-start">Offered · 1 h 31 m · amber</span><span class="tmr" aria-label="76 % of timer elapsed"><span style="width: 76%; background: #B45309"></span></span><span class="cap">push + SMS sent 13:03 · seen 13:05 · no answer</span></div></sc-if>
+                      <sc-if value="{{drvRe}}" hint-placeholder-val="{{ false }}"><div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px"><span class="pill" style="background: #E3F2FD; color: #0D47A1; align-self: flex-start">Offered · 0 m</span><span class="tmr" aria-label="0 % of timer elapsed"><span style="width: 2%; background: #0B4F6C"></span></span><span class="cap">Reinier's offer withdrawn · he was notified</span></div></sc-if>
+                    </td>
+                    <td class="num">€ 180.00</td>
+                    <td><div style="display: flex; flex-direction: column; gap: 6px"><a class="tel" href="tel:+5352413388"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg>Call</a><sc-if value="{{drvOffered}}" hint-placeholder-val="{{ true }}"><button class="btn btn-sm btn-s" type="button" onClick="{{openRe}}" style="border-color: #F59E0B; color: #92400E">Re-dispatch</button></sc-if></div></td>
+                  </tr>
+                  <sc-if value="{{reOpen}}" hint-placeholder-val="{{ false }}">
+                    <tr><td colspan="5" style="background: #FBF8F3; padding: 14px 16px">
+                      <div style="display: flex; flex-direction: column; gap: 10px">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><strong>Nearby qualified drivers · HAV → Viñales, 13 Feb, 7-seater or larger</strong><span class="cap">verified · licence valid beyond 30 days · available on both dates</span><button class="btn btn-sm btn-t" type="button" onClick="{{closeRe}}" style="margin-left: auto">Close</button></div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 10px">
+                          <sc-for list="{{drivers}}" as="d" hint-placeholder-count="3">
+                            <div class="card" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+                              <div style="display: flex; gap: 8px; align-items: center"><strong>{{d.name}}</strong><span class="pill" style="background: #E8F5E9; color: #1B5E20; margin-left: auto">Verified</span></div>
+                              <span class="cap">{{d.meta}}</span>
+                              <div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="tag">{{d.dist}}</span><span class="tag">Reliability {{d.rel}}</span><span class="tag">{{d.rate}}</span></div>
+                              <div style="display: flex; gap: 8px"><button class="btn btn-sm btn-p" type="button" onClick="{{d.offer}}">Offer · 2 h</button><a class="tel" href="{{d.tel}}">Call</a></div>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </td></tr>
+                  </sc-if>
+                  <tr>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><strong>Guide · 4 days</strong><span class="cap">Valley hikes, Cueva del Indio, farm visits</span></div></td>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><span>Daylin Pérez</span><span class="cap">Formatur cert. to Mar 2028 · EN · FR</span></div></td>
+                    <td><div style="display: flex; flex-direction: column; gap: 4px"><span class="pill" style="background: #E8F5E9; color: #1B5E20; align-self: flex-start">Accepted · 13:09</span></div></td>
+                    <td class="num">€ 320.00</td>
+                    <td><a class="tel" href="tel:+5352778019">Call</a></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><strong>Activity · horseback</strong><span class="cap">Finca El Paraíso · half day · replaces Las Terrazas day trip</span></div></td>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><span>Osmany Lugo</span><span class="cap">Farm host · RTN valid to 2027</span></div></td>
+                    <td><div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px"><span class="pill" style="background: #E3F2FD; color: #0D47A1; align-self: flex-start">Offered · 41 m</span><span class="tmr" aria-label="34 % of timer elapsed"><span style="width: 34%; background: #0B4F6C"></span></span></div></td>
+                    <td class="num">€ 60.00</td>
+                    <td><a class="tel" href="tel:+5353357720">Call</a></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><strong>Meals · 3 dinners</strong><span class="cap">Paladar El Olivo · Casa Yamilé kitchen</span></div></td>
+                    <td><span class="cap">Fulfilled by host · no dispatch</span></td>
+                    <td><span class="pill" style="background: #F3EEE6; color: #4A433D">Fulfilled</span></td>
+                    <td class="num">€ 96.00</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display: flex; flex-direction: column; gap: 2px"><strong>Insurance · Comfort tier</strong><span class="cap">Underwriter policy via partner · issued on CONFIRMED</span></div></td>
+                    <td><span class="cap">System</span></td>
+                    <td><span class="pill" style="background: #F3EEE6; color: #4A433D">Unassigned</span></td>
+                    <td class="num">€ 84.00</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="cap" style="padding: 10px 20px 16px">States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer, notifies the worker, and writes both events to the audit log. Payout rates are the supplier's contracted net; the traveler never sees this column.</p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+              <h2 class="disp" style="font-size: 18px; line-height: 24px">Travelers</h2>
+              <dl class="dl">
+                <dt>Lead</dt><dd>Margaret Chen · 1962 · CA passport ending 4471 · margaret.chen@[provider].ca · <a href="tel:+16045550142">+1 604 555 0142</a></dd>
+                <dt>Companion</dt><dd>David Chen · 1960 · CA passport ending 9035</dd>
+                <dt>Needs</dt><dd>Gentle walking pace · no dietary restrictions · prefers email, phone ok after 15:00 Havana</dd>
+                <dt>OFAC</dt><dd><span class="pill" style="background: #F3EEE6; color: #4A433D">Not applicable · CA</span></dd>
+                <dt>Documents</dt><dd>Passports uploaded · insurance pending · e-visa not yet (reminder at T−30 d)</dd>
+                <dt>Emergency</dt><dd>Laura Chen (daughter) · <a href="tel:+16045550199">+1 604 555 0199</a></dd>
+              </dl>
+              <a class="btn btn-sm btn-s" href="A-Customers.dc.html" style="align-self: flex-start">Open customer profile</a>
+            </div>
+            <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+              <h2 class="disp" style="font-size: 18px; line-height: 24px">Itinerary · 7 nights</h2>
+              <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 18px">
+                <div style="display: flex; gap: 10px"><span class="tag mono">13 Feb</span><span>Arrive HAV 15:40 (AC 1808) · transfer · Casa Yamilé</span></div>
+                <div style="display: flex; gap: 10px"><span class="tag mono">14–15</span><span>Valley walks with Daylin · Cueva del Indio · tobacco farm</span></div>
+                <div style="display: flex; gap: 10px"><span class="tag mono">16</span><span>Horseback half day · Finca El Paraíso (swapped in by traveler)</span></div>
+                <div style="display: flex; gap: 10px"><span class="tag mono">17–18</span><span>Mogotes hike · free day · dinner at El Olivo</span></div>
+                <div style="display: flex; gap: 10px"><span class="tag mono">19</span><span>Cayo Jutías day (weather dependent) · farewell dinner</span></div>
+                <div style="display: flex; gap: 10px"><span class="tag mono">20 Feb</span><span>Transfer to HAV · depart 18:10</span></div>
+              </div>
+              <span class="cap">Locked to package v3.2 · price breakdown and policies on the Payments tab.</span>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- TAB · Messages -->
+      <sc-if value="{{isMsgs}}" hint-placeholder-val="{{ false }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="display: flex; flex-direction: column; min-height: 520px">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid #E8E2D9"><h2 class="disp" style="font-size: 20px; line-height: 26px">Messages with Margaret</h2><span class="cap">in-app thread is the record · email copy sent with every message · WhatsApp only as a click-to-chat link</span></div>
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; flex: 1">
+              <div class="msg" style="background: #F3EEE6; align-self: flex-start"><span>Hi, we'd love the horseback morning instead of the Las Terrazas day trip if that's possible. Also, is the casa ok with a late arrival around 17:30?</span><span class="m">Margaret · 6 Oct 13:14 · web</span></div>
+              <div class="msg" style="background: #E6F0F4; align-self: flex-end"><span>Done: horseback at Finca El Paraíso is in your request (total now € 3,100, nothing charged yet). Yamilé has confirmed your room; a 17:30 arrival is fine, she'll have dinner ready. Your driver is confirming now; I'll write again within the hour.</span><span class="m">Ana Rodríguez · 13:26 · desk</span></div>
+              <div class="msg" style="background: #F3EEE6; align-self: flex-start"><span>Perfect, thank you!</span><span class="m">Margaret · 13:31 · email reply</span></div>
+              <div style="align-self: center; display: flex; gap: 8px; align-items: center; color: #6E665E; font-size: 12px"><span style="width: 40px; height: 1px; background: #E8E2D9"></span>System · 14:32 · amber alert on transport (internal only)<span style="width: 40px; height: 1px; background: #E8E2D9"></span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border-top: 1px solid #E8E2D9">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-sm btn-s" type="button">Template: still confirming</button><button class="btn btn-sm btn-s" type="button">Template: alternative offered</button><button class="btn btn-sm btn-s" type="button">AI draft (reviewed before send)</button></div>
+              <label for="reply" class="cap">Reply · sent in-app + email · EN</label>
+              <textarea class="ta" id="reply" placeholder="Write to Margaret…">Quick update: your casa and guide are confirmed; we're still waiting on the driver and will have everything locked in within the day. Nothing is charged until all four pieces are secured.</textarea>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center"><button class="btn btn-p" type="button">Send</button><button class="btn btn-s" type="button">Attach</button><span class="cap" style="margin-left: auto">Worker chats are separate: workers only ever see traveler first names, languages and pickup details.</span></div>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 18px; line-height: 24px">Worker threads</h2>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #E8E2D9"><span class="pill" style="background: #E8F5E9; color: #1B5E20">Yamilé</span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 13px">"Confirmado, cena lista a las 17:30."</span><span class="cap">13:22 · worker app</span></div></div>
+              <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #E8E2D9"><span class="pill" style="background: #FEF3C7; color: #92400E">Reinier</span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 13px">Offer seen 13:05 · no reply · SMS fallback 14:02</span><span class="cap">Last accepted job: 3 Oct · typical response 20 min</span></div><a class="tel" href="tel:+5352413388">Call</a></div>
+              <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 0"><span class="pill" style="background: #E8F5E9; color: #1B5E20">Daylin</span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 13px">"Aceptado. ¿Ritmo suave? Preparo la ruta corta del valle."</span><span class="cap">13:09 · worker app · replied: yes, gentle pace</span></div></div>
+            </div>
+            <p class="cap">Worker messages are in Spanish by default; the desk sees an inline translation toggle.</p>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- TAB · Payments -->
+      <sc-if value="{{isPay}}" hint-placeholder-val="{{ false }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="padding: 16px 20px 10px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Price breakdown · EUR</h2></div>
+            <table class="tbl">
+              <tbody>
+                <tr><td>Package · mid-range · 2 travelers × € 1,395</td><td class="num">€ 2,790.00</td></tr>
+                <tr><td>Horseback half day (replaces Las Terrazas, −€ 68 +€ 60)</td><td class="num">− € 8.00</td></tr>
+                <tr><td>Insurance · Comfort tier · 2 travelers</td><td class="num">€ 168.00</td></tr>
+                <tr><td>Airport transfers (included) · Cuban tourist card × 2</td><td class="num">€ 50.00</td></tr>
+                <tr><td>Service fee (shown separately, BR-PR-01)</td><td class="num">€ 100.00</td></tr>
+                <tr><td><strong>Total</strong></td><td class="num"><strong>€ 3,100.00</strong></td></tr>
+                <tr><td class="cap">Deposit 20 % at invoice · balance 60 days before departure (Plan A)</td><td class="num cap">€ 620.00 · € 2,480.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 18px; line-height: 24px">Payment status</h2>
+            <p class="p">No invoice yet. The payment link and PDF summary are generated automatically when the last item is accepted (SECURED_&amp;_INVOICED); Margaret then has 48 h. Rails available to a Canadian card holder: card (3 % surcharge shown), SEPA not offered, invoice on request.</p>
+            <dl class="dl">
+              <dt>Rate lock</dt><dd>EUR → CAD locks at deposit; refunds use the same rate (BR-CU-08)</dd>
+              <dt>Policy</dt><dd>&gt; 46 d: full refund minus € 60–180 fee · 45–31 d: 90 % · 30–15 d: 75 % · 14–8 d: 60 %</dd>
+              <dt>Payout plan</dt><dd>Casa € 490 · driver € 180 · guide € 320 · farm € 60 · meals € 96 → released 5 business days after COMPLETED</dd>
+            </dl>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-sm btn-s" type="button" aria-disabled="true" style="color: #6E665E">Issue invoice (waits for dispatch)</button><button class="btn btn-sm btn-s" type="button">Apply discount (needs reason)</button></div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- TAB · Documents -->
+      <sc-if value="{{isDocs}}" hint-placeholder-val="{{ false }}">
+        <section class="card" style="display: flex; flex-direction: column">
+          <div style="display: flex; flex-direction: column; gap: 2px; padding: 16px 20px 10px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Documents</h2><p class="cap">Generated by the document engine on CONFIRMED; nothing here is final until then. Every PDF carries the MINTUR licence [MINTUR-2026-XXXX] in its footer.</p></div>
+          <div style="overflow-x: auto">
+            <table class="tbl" style="min-width: 720px">
+              <thead><tr><th scope="col">Document</th><th scope="col">For</th><th scope="col">Status</th><th scope="col">Language</th><th scope="col">Act</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Traveler voucher</strong> (Bono de Servicio)<br><span class="cap">itinerary, rendezvous points, emergency numbers, licence</span></td><td>Margaret Chen</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Waiting for CONFIRMED</span></td><td>EN</td><td><button class="btn btn-sm btn-s" type="button">Preview draft</button></td></tr>
+                <tr><td><strong>Supplier work orders</strong> (Orden de Trabajo) × 4<br><span class="cap">rates, schedule, guest first names, emergency protocol</span></td><td>Yamilé · driver · Daylin · Osmany</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Waiting for CONFIRMED</span></td><td>ES</td><td><button class="btn btn-sm btn-s" type="button">Preview draft</button></td></tr>
+                <tr><td><strong>Invoice / receipt</strong><br><span class="cap">itemised, EUR with CAD reference, service fee separate</span></td><td>Margaret Chen</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Issued at SECURED</span></td><td>EN</td><td></td></tr>
+                <tr><td><strong>Insurance certificate</strong></td><td>Margaret + David</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">After payment</span></td><td>EN</td><td></td></tr>
+                <tr><td><strong>Passport copies</strong> (encrypted vault)</td><td>2 of 2</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Uploaded 6 Oct</span></td><td>—</td><td><button class="btn btn-sm btn-s" type="button">View (logged)</button></td></tr>
+                <tr><td><strong>Offline kit</strong> (PDF + map tiles)</td><td>Margaret Chen</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">At travel ready</span></td><td>EN</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="cap" style="padding: 10px 20px 16px">Viewing a passport image is itself an audit event. Documents regenerate when the itinerary changes; previous versions stay attached with a strike-through.</p>
+        </section>
+      </sc-if>
+
+      <!-- TAB · Audit -->
+      <sc-if value="{{isAudit}}" hint-placeholder-val="{{ false }}">
+        <section class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><h2 class="disp" style="font-size: 20px; line-height: 26px">Audit log</h2><span class="cap">immutable · actor, time, IP, old → new, reason</span><button class="btn btn-sm btn-s" type="button" style="margin-left: auto">Export</button></div>
+          <div style="display: flex; flex-direction: column">
+            <sc-if value="{{drvRe}}" hint-placeholder-val="{{ false }}"><div class="log"><span class="mono cap">14:33:08</span><span><strong>Ana Rodríguez</strong> re-dispatched Transport: Reinier Soto (OFFERED, withdrawn) → {{drvName}} (OFFERED) · reason: amber timer, no reply · 190.92.x.x</span></div></sc-if>
+            <div class="log"><span class="mono cap">14:32:00</span><span><strong>System</strong> Transport item reached 75 % of timer → amber alert raised on the dashboard</span></div>
+            <div class="log"><span class="mono cap">14:02:10</span><span><strong>System</strong> SMS fallback sent to Reinier Soto (push unacknowledged for 60 min)</span></div>
+            <div class="log"><span class="mono cap">13:26:41</span><span><strong>Ana Rodríguez</strong> sent message to traveler (in-app + email) · template: alternative applied</span></div>
+            <div class="log"><span class="mono cap">13:21:05</span><span><strong>Yamilé Torres</strong> accepted Stay via worker app · payout € 490.00 · device Android</span></div>
+            <div class="log"><span class="mono cap">13:14:52</span><span><strong>Margaret Chen</strong> requested change: Las Terrazas day trip → Horseback half day · total € 3,108 → € 3,100 · applied automatically (pre-approved swap)</span></div>
+            <div class="log"><span class="mono cap">13:09:30</span><span><strong>Daylin Pérez</strong> accepted Guide via worker app · payout € 320.00</span></div>
+            <div class="log"><span class="mono cap">13:03:02</span><span><strong>System</strong> ITINERARY_SUBMITTED → DISPATCH_IN_PROGRESS · 4 offers pushed (push + SMS) · timer 2 h · deadline 15:02 Havana</span></div>
+            <div class="log"><span class="mono cap">13:02:47</span><span><strong>Margaret Chen</strong> submitted request from web · EN · CAD display · consent v2.3 · IP country CA</span></div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- TAB · Notes -->
+      <sc-if value="{{isNotes}}" hint-placeholder-val="{{ false }}">
+        <section class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 class="disp" style="font-size: 20px; line-height: 26px">Internal notes</h2>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="padding: 12px 14px; border-radius: 8px; background: #FBF8F3; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 14px">Margaret mentioned David's knee: Daylin to keep the valley loop under 8 km. Yamilé knows (ground-floor room).</span><span class="cap">Ana R. · 13:28</span></div>
+            <div style="padding: 12px 14px; border-radius: 8px; background: #FBF8F3; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 14px">If Reinier stays silent past 15:00, Yoel is excluded (licence rule). Try Lázaro first, he did the Dubois transfer.</span><span class="cap">Ana R. · 14:20</span></div>
+          </div>
+          <label for="note" class="cap">New note · visible to Operations Admins and Super Admins only</label>
+          <textarea class="ta" id="note" placeholder="Add a note…"></textarea>
+          <button class="btn btn-p" type="button" style="align-self: flex-start">Save note</button>
+        </section>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'dispatch', re: false, drv: 'offered', drvName: '' };
+  }
+  renderVals() {
+    const s = this.state;
+    const defs = [['dispatch', 'Dispatch', '2 / 4', '#FEF3C7', '#92400E'], ['msgs', 'Messages', '1 new', '#F2B134', '#1F1B17'], ['pay', 'Payments', '', '', ''], ['docs', 'Documents', '', '', ''], ['audit', 'Audit log', '', '', ''], ['notes', 'Notes', '2', '#F3EEE6', '#4A433D']];
+    const tabs = defs.map(([id, label, badge, bbg, bfg]) => ({ id, label, badge, bbg, bfg, hasBadge: !!badge, on: s.tab === id, cls: s.tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) }));
+    const drivers = [
+      { name: 'Lázaro Quintana', meta: 'Driver · licence to Feb 2028 · Hyundai H1 8 seats · fuel reserve on file', dist: 'Viñales based', rel: '97 %', rate: '€ 180 net', tel: 'tel:+5355113309' },
+      { name: 'Reinier Soto (retry)', meta: 'Driver · licence to Jun 2027 · Peugeot 7 seats · amber now', dist: 'Havana based', rel: '95 %', rate: '€ 180 net', tel: 'tel:+5352413388' },
+      { name: 'Transtur allotment', meta: 'State operator · instant · minibus 12 · fuel priority', dist: 'Havana airport desk', rel: '99 %', rate: '€ 240 net', tel: 'tel:+5372734545' }
+    ].map((d) => ({ ...d, offer: () => this.setState({ re: false, drv: 're', drvName: d.name }) }));
+    return {
+      tabs, isDispatch: s.tab === 'dispatch', isMsgs: s.tab === 'msgs', isPay: s.tab === 'pay', isDocs: s.tab === 'docs', isAudit: s.tab === 'audit', isNotes: s.tab === 'notes',
+      reOpen: s.re, openRe: () => this.setState({ re: true }), closeRe: () => this.setState({ re: false }),
+      drvOffered: s.drv === 'offered', drvRe: s.drv === 're', drvName: s.drvName, drivers
+    };
+  }
+}
+</script>
+</body>
+</html>

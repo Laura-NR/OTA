@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Patterns · Mobile, offline and responsive behaviour</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:focus-visible,.bn a:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.phone{width:390px;max-width:100%;background:#FBF8F3;border:1px solid #D6CEC3;border-radius:28px;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;position:relative}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#4A433D;font:500 11px/14px Inter,system-ui,sans-serif;position:relative}
+.bn a[aria-current]{color:#083B50;font-weight:700}
+.bn a[aria-current] .ic{stroke-width:2.4}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;line-height:20px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:48px;padding:0 4px;border-bottom:1px solid #E8E2D9;font-size:15px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+
+  <header style="display: flex; flex-direction: column; gap: 12px; max-width: 860px">
+    <p class="ov">Vereda design system · Patterns</p>
+    <h1 class="disp" style="font-size: 40px; line-height: 48px">Mobile, offline &amp; responsive behaviour</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Carlos books on an Android phone on 4G; Klaus opens his itinerary with no signal in the Zapata swamp. These patterns make the same booking work one-handed, offline, and in text-only mode on 1–2 Mbps. No fake status bars are drawn: the real phone renders those.</p>
+  </header>
+
+  <!-- PHONE PATTERNS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">01 · Navigation &amp; thumb zone</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Bottom bar, sticky action, sheet, drawer</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(390px, 100%), 1fr)); gap: 24px; justify-items: center; align-items: start">
+
+      <!-- Bottom nav + sticky CTA (package detail) -->
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+        <div class="phone" style="height: 520px">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 20px 20px 0; overflow: hidden">
+            <div style="height: 150px; border-radius: 12px; background: #B9CFD6; display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box"><span style="font: 500 11px/14px Inter, system-ui, sans-serif; color: #4A433D; background: rgba(255,255,255,.85); padding: 3px 6px; border-radius: 4px">alt: Mogotes from Los Jazmines viewpoint</span></div>
+            <p class="ov" style="color: #6E665E">Eco &amp; agro · 7 nights</p>
+            <h3 class="disp" style="font-size: 24px; line-height: 30px">Eco-Tourism in Viñales</h3>
+            <p class="sm" style="color: #4A433D">Two casa families, a dawn birding walk, a tobacco farm and one day at Cayo Levisa. Group of 6–12, gentle pace.</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="pill" style="background: #fff; color: #083B50; border: 1px solid #0B4F6C">Request · 24 h</span><span class="pill" style="background: #E8F5E9; color: #1B5E20">Backup power</span></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fff; border-top: 1px solid #E8E2D9; box-shadow: 0 -4px 12px rgba(31,27,23,.06)"><div style="flex: 1"><p class="cap">From, per person</p><p style="margin: 0; font-size: 20px; line-height: 24px; font-weight: 700">€ 1,290</p></div><a class="btn btn-p" href="#avail" style="flex: 1.4">Check availability</a></div>
+          <nav class="bn" aria-label="Main">
+            <a href="#home"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V11Z"/></svg>Home</a>
+            <a href="#search" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search</a>
+            <a href="#trips"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Trips<span aria-label="1 item needs your attention" style="position: absolute; top: 8px; right: calc(50% - 16px); width: 10px; height: 10px; border-radius: 9999px; background: #C62828; border: 2px solid #fff"></span></a>
+            <a href="#support"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"/></svg>Support</a>
+            <a href="#menu"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</a>
+          </nav>
+        </div>
+        <figcaption class="cap" style="max-width: 390px; text-align: center">Bottom bar: 5 items, labels always shown, 64 px + safe area. Sticky action bar sits above it with price + one CTA. Red dot = action needed on a trip.</figcaption>
+      </figure>
+
+      <!-- Bottom sheet filters -->
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+        <div class="phone" style="height: 520px; background: #8E8780">
+          <div style="height: 110px; padding: 20px; box-sizing: border-box; color: #fff; opacity: .7"><p class="sm" style="color: #fff">8 trips · Eco &amp; agro</p></div>
+          <div role="dialog" aria-modal="true" aria-labelledby="sh-t" style="flex: 1; background: #fff; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden">
+            <div style="display: flex; justify-content: center; padding: 10px 0 4px"><span style="width: 40px; height: 4px; border-radius: 9999px; background: #D6CEC3"></span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 20px 12px; border-bottom: 1px solid #E8E2D9"><h3 id="sh-t" style="margin: 0; font-size: 18px; line-height: 24px">Filters</h3><button class="btn btn-t btn-sm" type="button">Clear all</button></div>
+            <div style="flex: 1; padding: 8px 20px; display: flex; flex-direction: column; overflow: hidden">
+              <p class="ov" style="padding: 12px 0 6px; color: #6E665E">Duration</p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 8px"><span class="pill" style="height: 36px; padding: 0 14px; background: #F3EEE6; color: #4A433D">3–5 days</span><span class="pill" style="height: 36px; padding: 0 14px; background: #0B4F6C; color: #fff">6–8 days</span><span class="pill" style="height: 36px; padding: 0 14px; background: #F3EEE6; color: #4A433D">9–12 days</span></div>
+              <p class="ov" style="padding: 12px 0 6px; color: #6E665E">Stay</p>
+              <label class="row"><span>Casa particular</span><input class="ck" type="checkbox" checked></label>
+              <label class="row"><span>Boutique hotel</span><input class="ck" type="checkbox"></label>
+              <label class="row"><span>Farm stay</span><input class="ck" type="checkbox" checked></label>
+              <p class="ov" style="padding: 12px 0 6px; color: #6E665E">Conditions</p>
+              <label class="row" style="border: 0"><span>Backup power guaranteed</span><input class="ck" type="checkbox" checked></label>
+            </div>
+            <div style="padding: 12px 20px 16px; border-top: 1px solid #E8E2D9; background: #fff"><button class="btn btn-p" type="button" style="width: 100%">Show 3 trips</button></div>
+          </div>
+        </div>
+        <figcaption class="cap" style="max-width: 390px; text-align: center">Filters open as a bottom sheet: drag handle, scrolling body, sticky result count button. Live count updates on each change.</figcaption>
+      </figure>
+
+      <!-- Drawer -->
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+        <div class="phone" style="height: 520px; background: #fff">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #E8E2D9"><span class="disp" style="font-size: 22px; color: #083B50">Vereda</span><button type="button" aria-label="Close menu" style="width: 44px; height: 44px; border: 0; background: transparent; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; margin-right: -10px"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+          <nav aria-label="Menu" style="flex: 1; display: flex; flex-direction: column; padding: 8px 20px; overflow: hidden">
+            <a href="#" class="row" style="text-decoration: none; color: #1F1B17; font-weight: 500">Destinations<svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+            <a href="#" class="row" style="text-decoration: none; color: #1F1B17; font-weight: 500">Packages<svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+            <a href="#" class="row" style="text-decoration: none; color: #1F1B17; font-weight: 500">Experiences<svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+            <a href="#" class="row" style="text-decoration: none; color: #1F1B17; font-weight: 500">About Cuba<svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+            <a href="#" class="row" style="text-decoration: none; color: #1F1B17; font-weight: 500">Travel info<svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+            <a href="#" class="row" style="text-decoration: none; color: #1F1B17; font-weight: 500">Blog<svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+            <a href="#" class="row" style="text-decoration: none; color: #1F1B17; font-weight: 500; border: 0">Current conditions<span class="pill" style="background: #E3F2FD; color: #0D47A1">Level 2</span></a>
+            <div style="display: flex; gap: 8px; padding: 12px 0"><button class="btn btn-s btn-sm" type="button" style="flex: 1">English</button><button class="btn btn-s btn-sm" type="button" style="flex: 1">EUR €</button></div>
+            <a class="btn btn-p" href="#plan" style="margin-top: auto">Talk to a specialist</a>
+          </nav>
+          <div style="padding: 12px 20px 20px"><p class="cap" style="text-align: center">Emergency line 24/7 · <a href="tel:+34000000000">+34 [number]</a></p></div>
+        </div>
+        <figcaption class="cap" style="max-width: 390px; text-align: center">Drawer: focus trapped, close button top right, 48 px rows, language and currency in the drawer so the header stays clean.</figcaption>
+      </figure>
+
+      <!-- Offline kit -->
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+        <div class="phone" style="height: 520px">
+          <div style="display: flex; gap: 10px; align-items: center; padding: 10px 16px; background: #1F1B17; color: #fff; font-size: 13px; line-height: 18px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M12 20h.01M19 12.9a10 10 0 0 0-3-2"/></svg>You're offline · showing your saved trip · updated 2 h ago</div>
+          <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+            <div><p class="ov" style="color: #6E665E">Today · Tue 17 Feb · Day 5</p><h3 class="disp" style="font-size: 24px; line-height: 30px; margin-top: 4px">Cayo Levisa day trip</h3></div>
+            <div class="sheet" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; gap: 12px"><span class="mono" style="font-size: 14px; color: #4A433D; width: 48px">07:30</span><span class="sm">Pick-up at Casa Yamilé · driver Reinier · white minivan HAV 4471</span></div>
+              <div style="display: flex; gap: 12px"><span class="mono" style="font-size: 14px; color: #4A433D; width: 48px">09:00</span><span class="sm">Ferry from Palma Rubia (bring passport copy)</span></div>
+              <div style="display: flex; gap: 12px"><span class="mono" style="font-size: 14px; color: #4A433D; width: 48px">17:30</span><span class="sm">Return · dinner at the casa</span></div>
+            </div>
+            <div class="sheet" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; border-color: #F5C6C2">
+              <p class="sm" style="font-weight: 600; color: #B71C1C">Emergency · works offline</p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><a class="btn btn-s btn-sm" href="tel:104">Ambulance 104</a><a class="btn btn-s btn-sm" href="tel:106">Police 106</a><a class="btn btn-s btn-sm" href="tel:+34000000000">Vereda 24/7</a></div>
+              <p class="cap">Reinier +53 5 [number] · Yamilé +53 5 [number] · Canadian embassy Havana +53 7 204 2516</p>
+            </div>
+            <div class="sheet" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; justify-content: space-between; align-items: center"><p class="sm" style="font-weight: 600">Offline kit</p><span class="pill" style="background: #E8F5E9; color: #1B5E20">Saved · 2.3 MB</span></div>
+              <label style="display: flex; justify-content: space-between; align-items: center; min-height: 40px"><span class="sm">Itinerary, vouchers, contacts</span><input class="ck" type="checkbox" checked disabled></label>
+              <label style="display: flex; justify-content: space-between; align-items: center; min-height: 40px"><span class="sm">Include maps · + 14 MB</span><input class="ck" type="checkbox"></label>
+            </div>
+          </div>
+        </div>
+        <figcaption class="cap" style="max-width: 390px; text-align: center">Offline mode is read-only: itinerary, vouchers with QR, contacts, insurance PDF. Size is stated before download; maps are opt-in.</figcaption>
+      </figure>
+
+      <!-- Text-only / low bandwidth -->
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+        <div class="phone" style="height: 520px">
+          <div style="display: flex; gap: 10px; align-items: center; padding: 10px 16px; background: #F3EEE6; font-size: 13px; line-height: 18px; color: #4A433D"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M5 12.9a10 10 0 0 1 14 0M8.5 16.4a5 5 0 0 1 7 0M12 20h.01"/></svg><span style="flex: 1">Text-only mode on · images load on tap</span><button class="btn btn-t btn-sm" type="button" style="height: 28px">Turn off</button></div>
+          <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow: hidden">
+            <h3 class="disp" style="font-size: 22px; line-height: 28px">8 trips in Cuba</h3>
+            <article class="sheet" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+              <button class="btn btn-s btn-sm" type="button" style="align-self: flex-start; gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 15 5-5 4 4 3-3 6 6"/></svg>Load photo · 38 KB</button>
+              <p class="ov" style="color: #6E665E">Eco &amp; agro · 7 nights</p>
+              <h4 style="margin: 0; font-size: 18px; line-height: 24px">Eco-Tourism in Viñales</h4>
+              <div style="display: flex; justify-content: space-between; align-items: flex-end"><div><p class="sm" style="font-weight: 700; font-size: 18px">€ 1,290 <span class="cap" style="display: inline">pp</span></p><p class="cap">€ 2,580 for 2 · all fees in</p></div><span class="pill" style="background: #fff; color: #083B50; border: 1px solid #0B4F6C">Request · 24 h</span></div>
+            </article>
+            <article class="sheet" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+              <button class="btn btn-s btn-sm" type="button" style="align-self: flex-start; gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 15 5-5 4 4 3-3 6 6"/></svg>Load photo · 41 KB</button>
+              <p class="ov" style="color: #6E665E">Cultural · 7 nights</p>
+              <h4 style="margin: 0; font-size: 18px; line-height: 24px">Havana Cultural Immersion</h4>
+              <div style="display: flex; justify-content: space-between; align-items: flex-end"><div><p class="sm" style="font-weight: 700; font-size: 18px">€ 1,050 <span class="cap" style="display: inline">pp</span></p><p class="cap">€ 2,100 for 2 · all fees in</p></div><span class="pill" style="background: #fff; color: #083B50; border: 1px solid #0B4F6C">Request · 24 h</span></div>
+            </article>
+          </div>
+        </div>
+        <figcaption class="cap" style="max-width: 390px; text-align: center">Text-only mode keeps the full booking flow; photos become "Load photo · size" buttons. Auto-prompted under 200 kbps, switchable in Settings.</figcaption>
+      </figure>
+
+      <!-- Thumb zones -->
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+        <div class="phone" style="height: 520px; background: #fff">
+          <div style="flex: 1; display: flex; flex-direction: column">
+            <div style="flex: 1.1; background: #FDECEA; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px"><p class="sm" style="color: #B71C1C"><strong>Top zone · hard to reach</strong><br>Destructive and rare: cancel booking, account settings, close</p></div>
+            <div style="flex: 1; background: #FEF3C7; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px"><p class="sm" style="color: #92400E"><strong>Middle · reachable</strong><br>Secondary: filter, sort, share, save, tabs</p></div>
+            <div style="flex: 1.2; background: #E8F5E9; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px"><p class="sm" style="color: #1B5E20"><strong>Bottom third · thumb zone</strong><br>Primary: Check availability, Continue, Pay, Search, bottom nav</p></div>
+          </div>
+        </div>
+        <figcaption class="cap" style="max-width: 390px; text-align: center">49 % of users hold the phone one-handed. Targets 48 × 48 px with 8 px between them; 44 px absolute minimum.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- RESPONSIVE MATRIX -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · Responsive behaviour</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">What changes at 390, 768 and 1440</h2>
+    </div>
+    <div class="sheet" style="padding: 8px 24px 16px; overflow-x: auto">
+      <table class="tbl" style="min-width: 900px">
+        <thead><tr><th style="width: 200px">Component</th><th>Phone · 390 (xs)</th><th>Tablet · 768 (md)</th><th>Desktop · 1440 (xl)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Header</strong></td><td>Logo + search icon + menu; bottom bar carries Home / Search / Trips / Support / Menu</td><td>Logo + nav drawer button + CTA; no bottom bar</td><td>Full 7-item nav, language, currency, sign in, secondary CTA</td></tr>
+          <tr><td><strong>Conditions strip</strong></td><td>One line, truncates, tap to expand</td><td>One line</td><td>One line with "Details" link</td></tr>
+          <tr><td><strong>Search bar</strong></td><td>Stacked fields, full-width button; dates open a bottom sheet</td><td>2 × 2 grid</td><td>Single row of 3 fields + button</td></tr>
+          <tr><td><strong>Package listing</strong></td><td>1 column; filters in bottom sheet; "Show 12 more"</td><td>2 columns; filter chips row + "More filters" sheet</td><td>Filter rail 280 px + 3 columns; pagination</td></tr>
+          <tr><td><strong>Package detail</strong></td><td>Tabs scroll horizontally; sticky price bar; gallery swipes</td><td>Tabs inline; summary card below hero</td><td>Content 8 cols + sticky summary 4 cols</td></tr>
+          <tr><td><strong>Compare</strong></td><td>2 packages side by side, horizontal scroll for 3–4; attribute rows sticky</td><td>3 packages</td><td>Up to 4 packages, first column sticky</td></tr>
+          <tr><td><strong>Booking stepper</strong></td><td>"Step 2 of 5" + progress bar</td><td>Compact numbered stepper</td><td>Full labelled stepper</td></tr>
+          <tr><td><strong>Booking summary</strong></td><td>Collapsed bar: total + "Details" expands a sheet; CTA in bar</td><td>Card below the form</td><td>Sticky card, right column</td></tr>
+          <tr><td><strong>Payment methods</strong></td><td>Stacked radio cards; hosted card fields full width</td><td>Stacked</td><td>Stacked, 640 px max; summary beside</td></tr>
+          <tr><td><strong>Data tables (account, admin)</strong></td><td>Stacked cards, key fields first</td><td>Horizontal scroll in a box</td><td>Full table, sticky header</td></tr>
+          <tr><td><strong>Modals</strong></td><td>Bottom sheet, full width</td><td>Centered 480 / 640</td><td>Centered 480 / 640 / 960</td></tr>
+          <tr><td><strong>Support entry</strong></td><td>Bottom nav "Support" opens channel picker</td><td>Floating 56 px button, bottom right</td><td>Floating 56 px button, bottom right, 24 px margin</td></tr>
+          <tr><td><strong>Crisis banner</strong></td><td>Sticky top, 2 lines max, "Read" link; critical requires acknowledgment</td><td>Sticky top</td><td>Sticky top</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- STATES MATRIX -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">03 · State coverage</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Every screen ships with these states designed</h2>
+    </div>
+    <div class="sheet" style="padding: 8px 24px 16px; overflow-x: auto">
+      <table class="tbl" style="min-width: 900px">
+        <thead><tr><th style="width: 160px">State</th><th>Pattern</th><th>Copy formula</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Loading</strong></td><td>Text renders first; skeleton only for media and lists; button keeps width, shows spinner, aria-busy</td><td>Present progressive + reassurance</td><td>"Finding the best trips for you…" · "Confirming availability… up to 3 min"</td></tr>
+          <tr><td><strong>Empty</strong></td><td>Illustration placeholder 72 px, heading, one sentence, primary + secondary action</td><td>What's missing + how to fill it</td><td>"No trips yet. When you book, your itinerary, vouchers and offline kit live here."</td></tr>
+          <tr><td><strong>Zero results</strong></td><td>Keep filters visible; suggest removing the most restrictive one; offer custom trip</td><td>What to change + alternative</td><td>"Try removing 'Backup power guaranteed' or widening your dates."</td></tr>
+          <tr><td><strong>Error (recoverable)</strong></td><td>Inline alert, role="alert", retry + support link; data preserved</td><td>What happened + why + what to do</td><td>"Your payment didn't go through. You haven't been charged. Try another card or pay by transfer."</td></tr>
+          <tr><td><strong>Error (blocked)</strong></td><td>Full-width panel, no retry, compliance contact</td><td>Plain statement + next step</td><td>"We can't proceed with this booking. Our compliance team will email you within one business day."</td></tr>
+          <tr><td><strong>Partial success</strong></td><td>Warning alert listing confirmed vs pending items; choose to proceed, swap or wait</td><td>Count + options</td><td>"2 of 3 stays confirmed. Casa Marta is full; we've proposed Casa Osmany."</td></tr>
+          <tr><td><strong>Stale data</strong></td><td>Info chip with timestamp</td><td>Age + consequence</td><td>"Prices saved 20 minutes ago; they may be stale."</td></tr>
+          <tr><td><strong>Offline</strong></td><td>Dark pill top; writes queue with "will send when online"</td><td>Status + what still works</td><td>"You're offline. Showing your saved trip, updated 2 h ago."</td></tr>
+          <tr><td><strong>Success</strong></td><td>Green alert or confirmation page; next step always stated</td><td>What succeeded + what happens next + where to find it</td><td>"Your trip is booked. Vouchers and host details are in Documents."</td></tr>
+          <tr><td><strong>Disabled</strong></td><td>Stone fill, label kept, reason in helper text</td><td>Why + how to enable</td><td>"Continue is available once every traveler has a passport number."</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

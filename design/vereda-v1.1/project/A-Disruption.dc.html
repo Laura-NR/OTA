@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Disruption case DC-0931 · severity, scenario playbook, traveler options, status board</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-d{background:#C62828;color:#fff}.btn-d:hover{background:#A61E1E}
+.btn-sm{height:36px;padding:0 12px;font-size:13px}
+.btn:focus-visible,.inp:focus-visible,.chip:focus-visible,.ck:focus-visible,.ta:focus-visible,.ibtn:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.ta{padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp{height:44px}.ta{padding:10px 12px;min-height:96px;resize:vertical}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 240px;max-width:100%;background:#083B50;color:#fff;display:flex;flex-direction:column;gap:16px;padding:20px 16px 24px;box-sizing:border-box}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:8px;color:#C9DDE6;text-decoration:none;font:500 14px/20px Inter,system-ui,sans-serif}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav a:focus-visible{outline:2px solid #F2B134;outline-offset:-2px}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:#F2B134;color:#1F1B17;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.cnt.red{background:#C62828;color:#fff}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 32px;background:#fff;border-bottom:1px solid #E8E2D9}
+.ibtn{width:44px;height:44px;border:1px solid #D6CEC3;background:#fff;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#083B50;position:relative;flex:none}
+.content{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.chip{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:9999px;border:1px solid #D6CEC3;background:#fff;color:#1F1B17;font:500 13px/18px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.chip:hover{background:#F3EEE6}
+.chip.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.sev{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid #D6CEC3;border-radius:10px;background:#fff;cursor:pointer;flex:1 1 180px}
+.sev.on{border-color:#0B4F6C;box-shadow:inset 0 0 0 1px #0B4F6C}
+.sev input{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid #E8E2D9}
+.step:first-child{border-top:0;padding-top:0}
+.tel{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:8px;border:1px solid #D6CEC3;background:#fff;color:#083B50;text-decoration:none;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tel:hover{background:#F3EEE6}
+.log{display:grid;grid-template-columns:110px 1fr;gap:4px 14px;font-size:13px;line-height:18px;padding:8px 0;border-top:1px solid #E8E2D9}
+.log:first-child{border-top:0}
+</style>
+</helmet>
+
+<div class="shell">
+
+  <nav class="side" aria-label="Admin">
+    <a href="A-Dashboard.dc.html" aria-label="Vereda operations desk" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; padding: 4px 12px 8px"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg><span class="cap" style="color: #C9DDE6; margin-left: 2px">Ops</span></a>
+    <div class="nav">
+      <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Dashboard<span class="cnt red">2</span></a>
+      <a href="A-Bookings.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>Bookings<span class="cnt">14</span></a>
+      <a href="A-Disruption.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Disruptions<span class="cnt">1</span></a>
+      <a href="A-Packages.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>Packages</a>
+      <a href="A-Customers.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>Customers</a>
+      <a href="A-Suppliers.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Suppliers<span class="cnt">1</span></a>
+      <a href="A-Payments.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments<span class="cnt">3</span></a>
+      <a href="A-Content.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Content</a>
+      <a href="A-Reports.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+      <a href="A-Settings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.08)">
+      <div style="display: flex; gap: 10px; align-items: center"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">AR</span><div style="display: flex; flex-direction: column; min-width: 0"><strong style="font-size: 13px; line-height: 18px">Ana Rodríguez</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">Operations Admin</span></div></div>
+      <a href="A-Login.dc.html" style="color: #C9DDE6; font-size: 12px; line-height: 16px">Sign out · session ends 02:33</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6E665E"><a href="A-Dashboard.dc.html">Disruptions</a><span aria-hidden="true">›</span><span class="mono" style="color: #1F1B17">DC-0931</span></nav>
+      <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap">
+        <a class="btn btn-s" href="tel:+5372042516"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg>24/7 line · +53 7 204 2516</a>
+        <button class="btn btn-s" type="button">Escalate to Super Admin</button>
+        <button class="btn btn-p" type="button">New case</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Case header -->
+      <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+          <h1 class="disp" style="font-size: 28px; line-height: 34px">{{sc.title}}</h1>
+          <span class="pill" style="background: {{sv.bg}}; color: {{sv.fg}}; border: 1px solid {{sv.bd}}">{{sv.label}}</span>
+          <span class="pill" style="background: #E3F2FD; color: #0D47A1">Open · 14 h 10 m</span>
+          <span class="cap" style="margin-left: auto">Opened 6 Oct 00:22 by night check · owner Ana R. · province Pinar del Río</span>
+        </div>
+        <p class="p">{{sc.summary}}</p>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="tag">Affected bookings: 3</span><span class="tag">Travelers on the ground: 3</span><span class="tag">Arriving in 72 h: 2</span><span class="tag">Suppliers involved: 4</span><span class="tag">Public banner: {{bannerState}}</span></div>
+      </section>
+
+      <!-- Scenario + severity -->
+      <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start">
+        <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 18px; line-height: 24px">Scenario</h2><p class="cap">Picks the playbook, the traveler options and the compensation rule (Crisis framework §1–2).</p></div>
+          <div role="group" aria-label="Scenario" style="display: flex; gap: 8px; flex-wrap: wrap">
+            <sc-for list="{{scenarios}}" as="s" hint-placeholder-count="5"><button class="chip {{s.cls}}" type="button" aria-pressed="{{s.on}}" onClick="{{s.pick}}">{{s.label}}</button></sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 8px; background: #FBF8F3"><span class="cap">Trigger on file</span><span style="font-size: 13px; line-height: 18px">{{sc.trigger}}</span></div>
+        </div>
+        <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 18px; line-height: 24px">Severity</h2><p class="cap">Sets who is paged, how often travelers are contacted and whether the site banner needs a second approver.</p></div>
+          <div role="radiogroup" aria-label="Severity" style="display: flex; gap: 10px; flex-wrap: wrap">
+            <label class="sev {{minorCls}}"><input type="radio" name="sev" checked="{{isMinor}}" onChange="{{pickMinor}}"><span style="display: flex; flex-direction: column; gap: 2px"><strong>Minor</strong><span class="cap">Inconvenience, itinerary holds. Desk handles; travelers contacted once.</span></span></label>
+            <label class="sev {{majorCls}}"><input type="radio" name="sev" checked="{{isMajor}}" onChange="{{pickMajor}}"><span style="display: flex; flex-direction: column; gap: 2px"><strong>Major</strong><span class="cap">Services lost or relocation needed. Super Admin informed; 4-hourly contact.</span></span></label>
+            <label class="sev {{emergCls}}"><input type="radio" name="sev" checked="{{isEmerg}}" onChange="{{pickEmerg}}"><span style="display: flex; flex-direction: column; gap: 2px"><strong>Emergency</strong><span class="cap">Safety at risk. Crisis team paged, hourly contact, critical banner, insurer notified.</span></span></label>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 8px; background: {{sv.soft}}; color: {{sv.fg}}"><span class="cap" style="color: inherit">Escalation path · {{sv.label}}</span><span style="font-size: 13px; line-height: 18px">{{sv.path}}</span></div>
+        </div>
+      </section>
+
+      <!-- Playbook + options / Status board -->
+      <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 16px; align-items: start">
+
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><h2 class="disp" style="font-size: 18px; line-height: 24px">Playbook · {{sc.label}}</h2><span class="cap">{{sc.doneCount}} done · owners and due times from the crisis framework</span></div>
+            <div style="display: flex; flex-direction: column">
+              <sc-for list="{{sc.steps}}" as="st" hint-placeholder-count="6">
+                <label class="step"><input class="ck" type="checkbox" checked="{{st.done}}"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 14px">{{st.t}}</span><span class="cap">{{st.owner}} · {{st.due}}</span></span></label>
+              </sc-for>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><h2 class="disp" style="font-size: 18px; line-height: 24px">Traveler options</h2><span class="pill" style="background: #F2B134; color: #1F1B17; margin-left: auto">Reply by 18:00 Havana · 3 h 28 m</span></div>
+            <p class="cap">Sent as one message with buttons (in-app + email + SMS). Each option states the money consequence before the traveler picks. Silence past the deadline keeps Option A and the desk calls.</p>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <sc-for list="{{sc.options}}" as="o" hint-placeholder-count="4">
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid #E8E2D9; border-radius: 10px"><span class="mono" style="width: 28px; height: 28px; border-radius: 9999px; background: #E6F0F4; color: #083B50; display: inline-flex; align-items: center; justify-content: center; font-weight: 500; flex: none">{{o.k}}</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><strong>{{o.name}}</strong><span class="cap">{{o.detail}}</span></span><span class="pill" style="background: #F3EEE6; color: #4A433D; flex: none">{{o.picked}}</span></div>
+              </sc-for>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 8px; background: #FBF8F3"><span class="cap">Compensation rule · {{sc.label}}</span><span style="font-size: 13px; line-height: 18px">{{sc.policy}}</span></div>
+            <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}"><div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-p" type="button" onClick="{{send}}">Send options to 2 affected bookings</button><button class="btn btn-s" type="button">Preview as traveler</button></div></sc-if>
+            <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}"><div role="status" style="display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 8px; background: #E8F5E9; color: #1B5E20"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span style="font-size: 13px; line-height: 18px">Sent 14:33 to Holm ×2 and Bianchi ×2 (in-app, email, SMS). Emergency contacts not notified (major, not emergency). Logged.</span></div></sc-if>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 20px 10px">
+              <h2 class="disp" style="font-size: 18px; line-height: 24px">Traveler status board</h2>
+              <div style="margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap"><span class="pill" style="background: #E8F5E9; color: #1B5E20">Safe {{safeN}}</span><span class="pill" style="background: #FDECEA; color: #B71C1C">Needs help 0</span><span class="pill" style="background: #F3EEE6; color: #4A433D; border: 1px solid #D6CEC3">Unknown {{unkN}}</span></div>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="tbl" style="min-width: 560px">
+                <thead><tr><th scope="col">Traveler</th><th scope="col">Where</th><th scope="col">Status</th><th scope="col">Last contact</th><th scope="col">Act</th></tr></thead>
+                <tbody>
+                  <tr><td><div style="display: flex; flex-direction: column; gap: 2px"><span>Anders &amp; Birgit Holm · DK</span><a class="mono cap" href="A-Booking.dc.html">VX-6RQ4JD · on trip day 3</a></div></td><td>Casa Yamilé · Viñales<br><span class="cap">generator, fuel for 2 days</span></td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Safe</span></td><td><span class="cap">09:52 · SMS reply "all fine, charging phones"</span></td><td><div style="display: flex; gap: 6px"><a class="tel" href="tel:+4520555102">Call</a><a class="tel" href="A-Booking.dc.html">Message</a></div></td></tr>
+                  <tr style="background: {{kowBg}}"><td><div style="display: flex; flex-direction: column; gap: 2px"><span>Jan Kowalski · PL · solo</span><a class="mono cap" href="A-Booking.dc.html">VX-4GH9SR · day trip from Havana</a></div></td><td>En route Viñales with driver Lázaro<br><span class="cap">left Havana 08:00 · no mobile signal on the road</span></td><td><sc-if value="{{kowUnknown}}" hint-placeholder-val="{{ true }}"><span class="pill" style="background: #F3EEE6; color: #4A433D; border: 1px solid #D6CEC3">Unknown</span></sc-if><sc-if value="{{kowSafe}}" hint-placeholder-val="{{ false }}"><span class="pill" style="background: #E8F5E9; color: #1B5E20">Safe</span></sc-if></td><td><sc-if value="{{kowUnknown}}" hint-placeholder-val="{{ true }}"><span class="cap">08:00 · departure check-in · driver unreachable since 11:30</span></sc-if><sc-if value="{{kowSafe}}" hint-placeholder-val="{{ false }}"><span class="cap">14:34 · Lázaro by phone: at Finca El Paraíso, both fine</span></sc-if></td><td><div style="display: flex; gap: 6px; flex-wrap: wrap"><a class="tel" href="tel:+48600555019">Call</a><a class="tel" href="tel:+5355113309">Driver</a><sc-if value="{{kowUnknown}}" hint-placeholder-val="{{ true }}"><button class="btn btn-sm btn-p" type="button" onClick="{{markSafe}}">Mark safe</button></sc-if></div></td></tr>
+                  <tr><td><div style="display: flex; flex-direction: column; gap: 2px"><span>Marco Bianchi +1 · IT</span><a class="mono cap" href="A-Booking.dc.html">VX-8TL2VN · arrives Viñales 8 Oct</a></div></td><td>Not yet in Cuba<br><span class="cap">flight MXP→HAV 7 Oct</span></td><td><span class="pill" style="background: #E3F2FD; color: #0D47A1">Upcoming · informed</span></td><td><span class="cap">12:10 · email read · awaiting option choice</span></td><td><div style="display: flex; gap: 6px"><a class="tel" href="tel:+393405550177">Call</a><a class="tel" href="A-Booking.dc.html">Message</a></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="cap" style="padding: 10px 20px 16px">"Unknown" turns red after 4 h without contact (major) or 1 h (emergency). Marking safe records who confirmed and how.</p>
+          </div>
+
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 18px; line-height: 24px">Resources in Pinar del Río</h2>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 18px">
+              <div style="display: flex; gap: 10px; align-items: flex-start"><span class="pill" style="background: #E8F5E9; color: #1B5E20; flex: none">Backup power</span><span>Casa Yamilé · generator 6 h/day, fuel 2 days · Villa Los Pinos · solar + battery, 2 rooms free tonight · Hotel Los Jazmines · state backup, generator 24 h</span></div>
+              <div style="display: flex; gap: 10px; align-items: flex-start"><span class="pill" style="background: #E8F5E9; color: #1B5E20; flex: none">Standby drivers</span><span>Lázaro Quintana (fuel reserve 60 L, in Viñales) · Reinier Soto (Havana, 40 L)</span></div>
+              <div style="display: flex; gap: 10px; align-items: flex-start"><span class="pill" style="background: #F3EEE6; color: #4A433D; flex: none">Official</span><span>Ambulance 104 · Police 106 · Fire 105 · Unión Eléctrica outage map · Insmet bulletin 13:00 (no weather component)</span></div>
+              <div style="display: flex; gap: 10px; align-items: flex-start"><span class="pill" style="background: #F3EEE6; color: #4A433D; flex: none">Cash</span><span>Emergency cash advance available through Yamilé up to € 150 equivalent, logged against the case</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Comms + log -->
+      <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px; align-items: start">
+        <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 18px; line-height: 24px">Communications</h2><p class="cap">One public reference point: the same message on the site banner, the pre-trip hub and every channel.</p></div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border: 1px solid #E8E2D9; border-radius: 10px"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 220px"><strong>Site banner · {{sv.bannerLevel}}</strong><span class="cap">"Power outages in Pinar del Río since 5 Oct night. Casas with generators are open; we are contacting every traveler." · EN · ES · FR</span></span><span class="pill" style="background: {{sv.bannerBg}}; color: {{sv.bannerFg}}">{{bannerState}}</span><a class="btn btn-sm btn-s" href="A-Content.dc.html">{{bannerAction}}</a></div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border: 1px solid #E8E2D9; border-radius: 10px"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 220px"><strong>Travelers on the ground</strong><span class="cap">Template "outage · stay or relocate" · in-app + email + SMS · last sent 09:30</span></span><button class="btn btn-sm btn-s" type="button">Edit template</button></div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border: 1px solid #E8E2D9; border-radius: 10px"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 220px"><strong>Emergency contacts</strong><span class="cap">{{sv.contacts}}</span></span><button class="btn btn-sm btn-s" type="button" aria-disabled="{{contactsDisabled}}">Notify</button></div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border: 1px solid #E8E2D9; border-radius: 10px"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 220px"><strong>Suppliers</strong><span class="cap">Yamilé, Lázaro, Villa Los Pinos, Los Jazmines · worker app + call · ES</span></span><button class="btn btn-sm btn-s" type="button">Broadcast</button></div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border: 1px solid #E8E2D9; border-radius: 10px"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 220px"><strong>Insurer · duty of care</strong><span class="cap">{{sv.insurer}}</span></span><button class="btn btn-sm btn-s" type="button">Open file</button></div>
+          </div>
+        </div>
+        <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><h2 class="disp" style="font-size: 18px; line-height: 24px">Case log</h2><span class="cap">feeds the incident &amp; emergency report (A-Reports)</span></div>
+          <div style="display: flex; flex-direction: column">
+            <sc-if value="{{kowSafe}}" hint-placeholder-val="{{ false }}"><div class="log"><span class="mono cap">14:34</span><span><strong>Ana R.</strong> marked Jan Kowalski safe · confirmed by driver Lázaro Quintana by phone</span></div></sc-if>
+            <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}"><div class="log"><span class="mono cap">14:33</span><span><strong>Ana R.</strong> sent traveler options A–D to 2 bookings · deadline 18:00</span></div></sc-if>
+            <div class="log"><span class="mono cap">12:20</span><span><strong>Ernesto V.</strong> drafted site banner (caution) · awaiting approval</span></div>
+            <div class="log"><span class="mono cap">12:00</span><span><strong>System</strong> outage passed 12 h at Casa Yamilé → severity suggested: major · relocation threshold reached</span></div>
+            <div class="log"><span class="mono cap">09:52</span><span><strong>Holm</strong> replied to morning check-in by SMS: safe</span></div>
+            <div class="log"><span class="mono cap">09:40</span><span><strong>Ana R.</strong> phoned Yamilé: generator running 06–09 and 18–21, water ok, 2 days of fuel</span></div>
+            <div class="log"><span class="mono cap">06:05</span><span><strong>System</strong> outage passed 6 h → case DC-0931 opened as minor · Holm booking attached</span></div>
+            <div class="log"><span class="mono cap">00:22</span><span><strong>Night check</strong> Unión Eléctrica reports province-wide outage, Pinar del Río · no ETA</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sc: 'outage', sev: 'major', sent: false, kow: 'unknown' };
+  }
+  renderVals() {
+    const s = this.state;
+    const scen = {
+      outage: { label: 'Power outage > 12 h', title: 'Power outage · Viñales · 14 h and counting', summary: 'Province-wide outage in Pinar del Río since 5 Oct ~00:00. Casa Yamilé runs a generator in two windows a day. Two travelers on site, one on a day trip, two arriving in 48 h. Relocation threshold (12 h) reached at 12:00.', trigger: 'Outage > 6 h at a traveler\'s accommodation opens a case; > 12 h affecting travelers = major; > 24 h = restructure or early return.',
+        steps: [{ t: 'Confirm safety and location of every traveler on site', owner: 'Reservations', due: 'within 30 min of report', done: true }, { t: 'Confirm generator, water and food at each casa', owner: 'Local coordinator', due: 'within 2 h', done: true }, { t: 'Relocate to accommodation with backup power if outage > 12 h', owner: 'Local coordinator', due: 'within 6 h of threshold (18:00)', done: false }, { t: 'Offer cash advance for emergency expenses', owner: 'Local coordinator', due: 'as needed', done: false }, { t: 'If > 24 h: restructure itinerary or early return', owner: 'Operations Director', due: 'within 12 h of threshold', done: false }, { t: 'Document duration and impact', owner: 'Operations Director', due: 'within 48 h', done: false }],
+        options: [{ k: 'A', name: 'Stay at Casa Yamilé with generator windows', detail: 'Meal vouchers for 3 dinners · power banks delivered · no change to price', picked: 'Holm: leaning A' }, { k: 'B', name: 'Move to Villa Los Pinos (solar + battery) tonight', detail: 'Same price · Lázaro drives at 17:00 · 2 rooms held until 18:00', picked: '—' }, { k: 'C', name: 'Swap the remaining Viñales days for Trinidad', detail: 'Re-dispatch casa, driver and guide · price difference absorbed', picked: '—' }, { k: 'D', name: 'Early return to Havana + credit', detail: 'Pro-rata credit for unused Viñales services · hotel with 24 h power', picked: '—' }],
+        policy: 'Operational disruption: complimentary meal vouchers and a 10–15 % discount on a future booking for outages over 12 h. Full refunds only if services cannot be delivered at all.' },
+      hurricane: { label: 'Hurricane', title: 'Hurricane watch · western provinces', summary: 'Insmet watch issued for Pinar del Río and Artemisa. Travelers in the cone: 2 on site, 2 arriving in 48 h. Civil Defense phase not yet declared.', trigger: 'Insmet Hurricane Watch (36–48 h) or Warning (24–36 h) for any province with travelers, or Civil Defense phase 2/3.',
+        steps: [{ t: 'Activate watch protocol, brief all travelers in the cone', owner: 'Operations Director', due: 'within 1 h of watch', done: true }, { t: 'Pre-position water, food, flashlights, power banks at casas', owner: 'Local coordinator', due: 'within 12 h of watch', done: false }, { t: 'Issue warning with evacuation instructions', owner: 'Operations Director', due: 'within 1 h of warning', done: false }, { t: 'Relocate to hotel with backup power or community shelter', owner: 'Local coordinator', due: 'within 4 h of warning', done: false }, { t: 'Confirm flight status and rebooking options with airlines', owner: 'Reservations', due: 'within 2 h of warning', done: false }, { t: 'Confirm every traveler safe after passage', owner: 'All staff', due: 'within 24 h', done: false }],
+        options: [{ k: 'A', name: 'Relocate to Havana hotel with 24 h power now', detail: 'Transfer today · accommodation difference absorbed', picked: '—' }, { k: 'B', name: 'Shelter in place at the casa (if Civil Defense allows)', detail: 'Supplies pre-positioned · hourly contact', picked: '—' }, { k: 'C', name: 'Early return · pro-rata refund + free rebooking', detail: 'Airline rebooking assisted · unused services refunded', picked: '—' }],
+        policy: 'Force majeure: full refund or free date change within 30 days of departure; during the trip, pro-rata refund for unused services plus rebooking assistance.' },
+      fuel: { label: 'Fuel shortage', title: 'Fuel shortage · transfers at risk · Pinar del Río', summary: 'Queues over 2 h at Viñales stations; one driver cannot confirm fuel for tomorrow\'s transfer. Standby drivers with reserves identified.', trigger: 'Driver cannot confirm fuel 24 h before a transfer, station queues > 2 h, or Viazul route cancellations.',
+        steps: [{ t: 'Confirm fuel with every transport provider 48 h ahead', owner: 'Local coordinator', due: '48 h prior', done: true }, { t: 'Activate backup driver with independent reserve', owner: 'Local coordinator', due: 'within 1 h', done: false }, { t: 'Consolidate transfers, shift to state operator allotment if needed', owner: 'Operations Director', due: 'within 4 h', done: false }, { t: 'Offer itinerary credit for missed activities', owner: 'Operations Director', due: 'within 12 h', done: false }],
+        options: [{ k: 'A', name: 'Keep the plan with standby driver Lázaro', detail: 'Same times · no change to price', picked: '—' }, { k: 'B', name: 'Shift transfer by one day, extra night at the casa', detail: 'Night covered by Vereda', picked: '—' }, { k: 'C', name: 'Replace the day trip with a local activity', detail: 'Itinerary credit for the difference', picked: '—' }],
+        policy: 'Force majeure: itinerary credit for missed services and rebooking at no extra cost; cash refunds case by case.' },
+      casa: { label: 'Casa closure', title: 'Casa closure · host unavailable · Viñales', summary: 'Host reports a family emergency and cannot receive guests from 8 Oct. Alternative casas of equal standard are available in the valley.', trigger: 'Supplier closes, loses its licence or cannot deliver a confirmed stay.',
+        steps: [{ t: 'Source alternative of equal or higher standard', owner: 'Reservations', due: 'within 2 h', done: true }, { t: 'Communicate options with clear explanation', owner: 'Reservations', due: 'within 4 h', done: false }, { t: 'Re-dispatch stay item, regenerate vouchers', owner: 'Operations', due: 'same day', done: false }, { t: 'Document closure, update supplier reliability', owner: 'Operations Director', due: 'within 72 h', done: false }],
+        options: [{ k: 'A', name: 'Villa Los Pinos · same standard · same price', detail: 'Solar backup · 300 m from the original casa', picked: '—' }, { k: 'B', name: 'Hotel Los Jazmines · higher standard', detail: 'Difference absorbed by Vereda', picked: '—' }, { k: 'C', name: 'Cancel the Viñales nights', detail: 'Full refund of the accommodation portion', picked: '—' }],
+        policy: 'Lower-quality alternative: rate adjustment or partial refund. No alternative: full refund of the accommodation portion plus a complimentary activity.' },
+      flight: { label: 'Flight cancellation', title: 'Flight cancellation · inbound AC 1808 · 13 Feb', summary: 'Airline cancelled the inbound flight for one booking. Rebooking options exist 24 h later; land package can shift by one day.', trigger: 'Airline cancels an inbound or outbound flight affecting a booking, or a NOTAM on aviation fuel.',
+        steps: [{ t: 'Notify traveler within 2 h of the cancellation notice', owner: 'Reservations', due: 'within 2 h', done: true }, { t: 'Contact airline for rebooking options', owner: 'Reservations', due: 'within 1 h', done: true }, { t: 'Shift land services by the delay, hold suppliers', owner: 'Operations', due: 'within 6 h', done: false }, { t: 'Process refund or credit per airline policy', owner: 'Reservations', due: 'within 72 h', done: false }],
+        options: [{ k: 'A', name: 'Shift the whole trip by one day', detail: 'All suppliers re-confirmed · no change to price', picked: '—' }, { k: 'B', name: 'Keep dates, lose night 1, credit', detail: 'Night 1 credited · transfer rebooked', picked: '—' }, { k: 'C', name: 'Cancel · full refund of land package', detail: 'Help with the airline claim', picked: '—' }],
+        policy: 'Airline cancels with no alternative: full refund of the land package and help with the airline refund claim. If the traveler rebooks, the land package moves at no cost.' }
+    };
+    const sevs = {
+      minor: { label: 'Minor', bg: '#E3F2FD', fg: '#0D47A1', bd: '#E3F2FD', soft: '#E3F2FD', path: 'Desk owns it. Super Admin sees it in the daily digest. Travelers contacted once with options; no public banner unless it affects arrivals.', bannerLevel: 'info', bannerBg: '#F3EEE6', bannerFg: '#4A433D', contacts: 'Not notified for minor cases', insurer: 'No notification needed', state: 'Not needed', action: 'Draft anyway', cd: true },
+      major: { label: 'Major', bg: '#FEF3C7', fg: '#92400E', bd: '#F59E0B', soft: '#FEF3C7', path: 'Desk owns it, Super Admin informed within 1 h and approves the public banner. Travelers contacted every 4 h until resolved. Supplier broadcast. Incident logged for the MINTUR annual summary.', bannerLevel: 'caution', bannerBg: '#FEF3C7', bannerFg: '#92400E', contacts: 'Only if a traveler asks, or status is Unknown for more than 4 h', insurer: 'File opened; claim only if relocation costs exceed € 500', state: 'Awaiting approval', action: 'Review in Content', cd: true },
+      emergency: { label: 'Emergency', bg: '#C62828', fg: '#fff', bd: '#C62828', soft: '#FDECEA', path: 'Crisis team paged (Super Admin + Operations Director + local coordinator). Hourly traveler contact, emergency contacts notified, critical banner published immediately with audit, insurer and embassy lines opened. 24/7 line staffed in shifts.', bannerLevel: 'critical', bannerBg: '#C62828', bannerFg: '#fff', contacts: 'Notified now by email + SMS with the 24/7 line', insurer: 'Duty-of-care protocol activated · insurer and assistance company notified', state: 'Publishes immediately', action: 'Publish now', cd: false }
+    };
+    const sc = scen[s.sc]; const sv = sevs[s.sev];
+    const scenarios = Object.keys(scen).map((k) => ({ key: k, label: scen[k].label, on: s.sc === k, cls: s.sc === k ? 'on' : '', pick: () => this.setState({ sc: k }) }));
+    return {
+      sc: { ...sc, doneCount: sc.steps.filter((x) => x.done).length + ' of ' + sc.steps.length }, sv, scenarios,
+      isMinor: s.sev === 'minor', isMajor: s.sev === 'major', isEmerg: s.sev === 'emergency',
+      minorCls: s.sev === 'minor' ? 'on' : '', majorCls: s.sev === 'major' ? 'on' : '', emergCls: s.sev === 'emergency' ? 'on' : '',
+      pickMinor: () => this.setState({ sev: 'minor' }), pickMajor: () => this.setState({ sev: 'major' }), pickEmerg: () => this.setState({ sev: 'emergency' }),
+      bannerState: sv.state, bannerAction: sv.action, contactsDisabled: sv.cd,
+      sent: s.sent, notSent: !s.sent, send: () => this.setState({ sent: true }),
+      kowUnknown: s.kow === 'unknown', kowSafe: s.kow === 'safe', kowBg: s.kow === 'unknown' ? '#FFFBEB' : 'transparent', markSafe: () => this.setState({ kow: 'safe' }),
+      safeN: s.kow === 'safe' ? 3 : 2, unkN: s.kow === 'safe' ? 0 : 1
+    };
+  }
+}
+</script>
+</body>
+</html>
