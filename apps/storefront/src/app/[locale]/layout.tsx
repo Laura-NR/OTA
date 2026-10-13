@@ -5,6 +5,7 @@ import '../globals.css';
 import { isFeatureEnabled } from '@ota/config';
 import { isSupportedLocale } from '@ota/i18n';
 import { themeCssVariables } from '@ota/theming';
+import { IconSprite } from '@ota/ui';
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
@@ -55,6 +56,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} style={tokens} className={fontVariables}>
       <body className="flex min-h-screen flex-col antialiased">
+        <IconSprite />
         <NextIntlClientProvider messages={messages}>
           <SiteHeader agencyName={tenant.branding.agencyName} />
           {isFeatureEnabled(tenant, 'culturalEventsBanner') ? (

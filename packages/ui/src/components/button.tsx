@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 
 import { cn } from '../cn';
+import { Icon } from './icon';
 
 /** DS 02: one primary per view; destructive actions sit behind a confirm step. */
 export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'link';
@@ -12,6 +13,11 @@ export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /**
+   * Busy while an action runs (`aria-busy`, disabled, a spinner). Pass the
+   * in-progress label as the children, e.g. "Sending request…".
+   */
+  loading?: boolean;
 }
 
 const base =
@@ -46,13 +52,30 @@ export function buttonClassName({
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', type = 'button', ...props }, ref) => (
+  (
+    {
+      className,
+      variant = 'primary',
+      size = 'md',
+      type = 'button',
+      loading = false,
+      disabled,
+      children,
+      ...props
+    },
+    ref,
+  ) => (
     <button
       ref={ref}
       type={type}
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
       className={cn(buttonClassName({ variant, size }), className)}
       {...props}
-    />
+    >
+      {loading ? <Icon name="loader" className="animate-spin" /> : null}
+      {children}
+    </button>
   ),
 );
 

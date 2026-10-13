@@ -3,6 +3,7 @@ import '@ota/ui/styles.css';
 import './globals.css';
 
 import { themeCssVariables } from '@ota/theming';
+import { IconSprite } from '@ota/ui';
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages, getTranslations } from 'next-intl/server';
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={locale} style={tokens} className={fontVariables}>
       <body className="min-h-screen antialiased">
+        <IconSprite />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
