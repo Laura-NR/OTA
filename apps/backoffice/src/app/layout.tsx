@@ -8,6 +8,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { brand } from '@/lib/brand';
 import { fontVariables } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -21,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t('title', { agency: tenant.branding.agencyName }),
     description: t('description', { agency: tenant.branding.agencyName }),
+    icons: { icon: brand.favicon.src },
   };
 }
 

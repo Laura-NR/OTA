@@ -14,6 +14,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { PromotionalBanner } from '@/components/promotional-banner';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { brand } from '@/lib/brand';
 import { fontVariables } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -28,6 +29,7 @@ export async function generateMetadata({
   return {
     title: t('title', { agency: tenant.branding.agencyName }),
     description: t('description', { agency: tenant.branding.agencyName }),
+    icons: { icon: brand.favicon.src },
   };
 }
 
