@@ -13,6 +13,10 @@ export {
   CardHeader,
   CardTitle,
 } from './components/card';
+export { Icon, IconSprite } from './components/icon';
+export type { IconProps } from './components/icon';
+export { ICON_NAMES } from './icons/sprite';
+export type { IconName } from './icons/sprite';
 export { Input } from './components/input';
 export type { InputProps } from './components/input';
 export { Label } from './components/label';

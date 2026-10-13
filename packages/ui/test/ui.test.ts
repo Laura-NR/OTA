@@ -153,3 +153,35 @@ describe('tailwind preset', () => {
     );
   });
 });
+
+describe('icons', () => {
+  it('has a sprite symbol for every icon name, once', async () => {
+    const { ICON_NAMES, ICON_SPRITE_SYMBOLS } = await import('../src/icons/sprite');
+
+    expect(new Set(ICON_NAMES).size).toBe(ICON_NAMES.length);
+    for (const name of ICON_NAMES) {
+      expect(ICON_SPRITE_SYMBOLS).toContain(
+        `<symbol id="icon-${name}" viewBox="0 0 24 24">`,
+      );
+    }
+    expect(ICON_SPRITE_SYMBOLS.match(/<symbol /g)).toHaveLength(ICON_NAMES.length);
+  });
+
+  it('hides decorative icons and names meaningful ones', async () => {
+    const { createElement } = await import('react');
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { Icon } = await import('../src/components/icon');
+
+    const decorative = renderToStaticMarkup(createElement(Icon, { name: 'search' }));
+    expect(decorative).toContain('aria-hidden="true"');
+    expect(decorative).toContain('href="#icon-search"');
+    expect(decorative).not.toContain('role="img"');
+
+    const named = renderToStaticMarkup(
+      createElement(Icon, { name: 'wifi-off', label: 'Offline' }),
+    );
+    expect(named).toContain('role="img"');
+    expect(named).toContain('aria-label="Offline"');
+    expect(named).not.toContain('aria-hidden');
+  });
+});

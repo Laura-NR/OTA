@@ -16,6 +16,7 @@ export default tseslint.config(
       'design/**',
       'tools/**',
       'apps/storefront/src/lib/cuba-provinces.ts',
+      'packages/ui/src/icons/sprite.ts',
     ],
   },
   js.configs.recommended,
