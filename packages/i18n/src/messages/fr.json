@@ -203,6 +203,17 @@
       "COMPLETED": "Terminé",
       "CANCELLED": "Annulé"
     },
+    "traveler": {
+      "draft": "Brouillon",
+      "requestReceived": "Demande reçue",
+      "confirmingWithHosts": "Confirmation avec les hôtes",
+      "actionNeeded": "Action requise",
+      "readyToPay": "Prêt à payer",
+      "confirmed": "Confirmé",
+      "onTrip": "En voyage",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    },
     "serviceItem": {
       "UNASSIGNED": "Non attribué",
       "OFFERED": "Proposé",

@@ -13,6 +13,7 @@ export {
   isTerminal,
   nextStatuses,
 } from './reservation/state-machine';
+export { TravelerStatus, travelerStatus } from './reservation/traveler-status';
 export {
   AMBER_THRESHOLD,
   DEFAULT_DISPATCH_TIMEOUT_MS,

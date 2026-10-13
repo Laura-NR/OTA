@@ -1,10 +1,11 @@
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type { MyReservationListItemDto } from '@ota/schemas';
-import { Alert, Badge, Card, CardContent, CardHeader, CardTitle } from '@ota/ui';
+import { Alert, Card, CardContent, CardHeader, CardTitle } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
 import { SignOutButton } from '@/components/sign-out-button';
+import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 
@@ -16,7 +17,6 @@ export default async function AccountPage() {
   }
 
   const t = await getTranslations('account');
-  const ts = await getTranslations('status.reservation');
   const reservations = await apiFetch<MyReservationListItemDto[]>('/me/reservations');
 
   return (
@@ -47,7 +47,7 @@ export default async function AccountPage() {
                       {reservation.bookingCode}
                     </Link>
                   </CardTitle>
-                  <Badge variant="secondary">{ts(reservation.status)}</Badge>
+                  <TravelerStatusBadge status={reservation.status} />
                 </CardHeader>
                 <CardContent className="text-body-sm text-muted">
                   {new Date(reservation.startDate).toLocaleDateString()} →{' '}

@@ -203,6 +203,17 @@
       "COMPLETED": "Completado",
       "CANCELLED": "Cancelado"
     },
+    "traveler": {
+      "draft": "Borrador",
+      "requestReceived": "Solicitud recibida",
+      "confirmingWithHosts": "Confirmando con los anfitriones",
+      "actionNeeded": "Acción necesaria",
+      "readyToPay": "Listo para pagar",
+      "confirmed": "Confirmado",
+      "onTrip": "De viaje",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    },
     "serviceItem": {
       "UNASSIGNED": "Sin asignar",
       "OFFERED": "Ofrecido",

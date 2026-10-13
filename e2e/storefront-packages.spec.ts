@@ -40,6 +40,6 @@ test.describe('storefront curated packages', () => {
     await page.getByRole('button', { name: 'Book package' }).click();
 
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
-    await expect(page.getByText('ITINERARY SUBMITTED')).toBeVisible();
+    await expect(page.getByText('Request received')).toBeVisible();
   });
 });

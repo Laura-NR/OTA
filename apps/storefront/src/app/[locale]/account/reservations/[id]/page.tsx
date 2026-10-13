@@ -21,6 +21,7 @@ import { notFound, redirect } from 'next/navigation';
 import { CheckoutButton } from '@/components/checkout-button';
 import { MessageThread } from '@/components/message-thread';
 import { ReviewForm } from '@/components/review-form';
+import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 
@@ -46,7 +47,6 @@ export default async function AccountReservationPage({
   const t = await getTranslations('account');
   const tc = await getTranslations('checkout');
   const trv = await getTranslations('review');
-  const tr = await getTranslations('status.reservation');
   const tsi = await getTranslations('status.serviceItem');
   const tst = await getTranslations('status.serviceType');
   const td = await getTranslations('status.document');
@@ -60,7 +60,7 @@ export default async function AccountReservationPage({
         <h1 className="text-h3 font-semibold tracking-tight">
           {reservation.bookingCode}
         </h1>
-        <Badge variant="secondary">{tr(reservation.status)}</Badge>
+        <TravelerStatusBadge status={reservation.status} />
       </div>
 
       <Card>
