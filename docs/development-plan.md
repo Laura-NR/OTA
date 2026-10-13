@@ -70,12 +70,10 @@ typecheck, test, build green.
 - **Changesets core versioning** — deferred (dev-time tool).
 - **Deployment topology** — single vs multi API instance, which decides whether
   the in-memory rate-limit store must move to Redis.
-- **Design system rollout** — owner decisions taken 2026-09-26 (rename the tenant,
-  self-host Bricolage, implement radii/elevation, localize ops). The palette,
-  identity, font, radii, elevation, alert tokens, and the back-office i18n
-  plumbing and the full back-office copy (shell, pages, forms) are done; still
-  open: the 1.25 type scale, a dark `/ops` surface, and the storefront
-  hero/imagery layout — see "Design gap" below.
+- **Design system rollout** — superseded on 2026-10-13: the design team's
+  handoff v1.1 (`design/vereda-v1.1/`) replaces `docs/design.md`
+  (`docs/adr/0006-design-system-v1.1.md`). The build order, gap analysis and
+  decisions are in `docs/design-v1.1-plan.md`; see "Design gap" below.
 
 **Blocked on a schema migration (Article 2 — ask first)**
 
@@ -99,36 +97,12 @@ typecheck, test, build green.
 - **Operational items** the review already recommended: stop logging supplier
   emails in the expiry scan, redact email bodies, document TLS termination.
 
-### Design gap — `docs/design.md` (Vereda Expeditions) vs the current UI
+### Design gap — superseded by `docs/design-v1.1-plan.md`
 
-**How it maps.** `docs/design.md` is the default tenant's visual identity. Its
-tokens are compiled by `packages/theming` into `--ota-*` CSS variables set on
-`<body>` by both apps; `packages/ui/tailwind-preset.mjs` maps semantic utilities
-onto those names and `packages/ui` holds the components (Button, Card, Input,
-Label, Select, Table, Alert, Badge). Surfaces: storefront (`apps/storefront`,
-editorial), back-office (`apps/backoffice`, dense ops), worker app (not built).
-
-| # | Gap | Status |
-|---|---|---|
-| 1 | **Alert semantics.** The design gives distinct `warning`/`color-error` and a dispatch `timeout` (Amber) token; the escalation UI mapped AMBER to `secondary`. | **Done 2026-09-26:** added `warning`/`timeout` tokens to `THEME_TOKEN_KEYS`, the Tailwind preset, `styles.css` and `Badge`; the escalation board and dispatch page now use `timeout` for AMBER. |
-| 2 | **Palette.** The six named colours are not in `THEME_PRESETS`; only a preset + a single `primaryColor` are overridable. | **Done 2026-09-26:** added a `vereda` preset, pointed the tenant at it (Verdín primary), and renamed the tenant to `vereda-expeditions` / "Vereda Expeditions" per the owner. |
-| 3 | **Typography.** Design mandates Bricolage Grotesque and a 1.25 scale; no font is loaded and `--ota-font-sans` is never set. | **Done 2026-09-26 (font):** the variable font is self-hosted in `tenant/assets/fonts/` and loaded via `next/font/local` in both apps, setting `--ota-font-sans`. The 1.25 type scale still uses Tailwind defaults — **open**. |
-| 4 | **Geometry/elevation.** Design radii (4/10/20px) differ from `RADIUS_SCALE` (4/8/12/16px), which also derives md/lg from one `--ota-radius`; `Card` always carries the default grey `shadow-sm` instead of the two warm-tinted levels. | **Done 2026-09-26:** fixed `--ota-radius-sm/md/lg` (4/10/20px), added two warm-tinted shadows (`shadow-ota-1/2`), made `Card` flat with a hairline border, and reserved elevation for inputs and the escalation alert card. |
-| 5 | **Iconography/imagery.** No real-photography pipeline; the map fills provinces with primary (token-driven, acceptable) but has no geometric pins. | **Open** — content/asset work. |
-| 6 | **Motion.** Design asks for minimal, state-change-only motion. | **Compliant** (only transition utilities are used). |
-| 7 | **Voice/copy.** Storefront copy lives in `packages/i18n` (es/en/fr). The back-office copy was hardcoded English. | **Done 2026-09-26:** back-office i18n (cookie → `Accept-Language` → tenant locale) covers the shell, login, metadata, every ops page, and every form/manager component, in es/en/fr. Only domain enum identifiers (statuses, types, categories) render raw, because they are data the e2e suite asserts on. |
-| 8 | **Layout per surface.** Storefront hero is text + catalog cards, not the interactive map/photo, and uses an eyebrow label the design bans; the ops desk is light, not the design's Tinta dark surface. | **Open** — screen-level work. |
-| 9 | **Accessibility.** Tokens are contrast-checked and focus rings exist; the amber→red change is conveyed by label and colour. | **Pass** — re-verify any new token pairing. |
-
-**Contradictions flagged to the owner:** (a) the design names the default tenant
-"Vereda Expeditions" vs the manifest's old "Authentic Cuba Expeditions" —
-**resolved 2026-09-26** by renaming the tenant; (b) design.md §9 says a fork
-changes only the `theme` block, but the six named colours, typography, and radii
-are not all expressible by the current `theme` schema (`palette` + `borderRadius`
-+ `primaryColor`) — the palette/font/radius defaults now live in core, and a fork
-swaps the font file in `tenant/assets/`; extending the tenant schema with more
-theme knobs is a further option; (c) design.md describes a worker-app surface that
-does not exist yet.
+The 2026-09-26 gap table against the Verdín / Bricolage design (`docs/design.md`)
+is retired with that design. The gap between the code and the design team's
+handoff v1.1 is analysed surface by surface in `docs/design-v1.1-plan.md` §2, and
+the phases that close it are in §4 of that plan.
 
 ## 0. Security note recorded at planning time
 
