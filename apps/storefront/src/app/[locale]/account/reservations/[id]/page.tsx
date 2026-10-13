@@ -54,13 +54,10 @@ export default async function AccountReservationPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-12">
       <div className="flex flex-wrap items-center gap-3">
-        <Link
-          href="/account"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
+        <Link href="/account" className="text-body-sm text-muted hover:text-default">
           ← {t('back')}
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-h3 font-semibold tracking-tight">
           {reservation.bookingCode}
         </h1>
         <Badge variant="secondary">{tr(reservation.status)}</Badge>
@@ -74,7 +71,7 @@ export default async function AccountReservationPage({
             {new Date(reservation.endDate).toLocaleDateString()}
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-sm">
+        <CardContent className="text-body-sm">
           {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}
         </CardContent>
       </Card>
@@ -146,12 +143,12 @@ export default async function AccountReservationPage({
           {reservation.documents.length === 0 ? (
             <Alert>{t('documentsEmpty')}</Alert>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-body-sm">
               {reservation.documents.map((document) => (
                 <li key={document.id} className="flex items-center gap-3">
                   <Badge variant="outline">{td(document.type)}</Badge>
                   <a
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    className="font-medium text-primary-600 underline-offset-4 hover:underline"
                     href={`/api/ota/documents/${document.id}/download`}
                     target="_blank"
                     rel="noreferrer"

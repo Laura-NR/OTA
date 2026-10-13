@@ -56,11 +56,11 @@ export function SuppliersTable({
             <TableCell>
               <Link
                 href={`/suppliers/${supplier.id}`}
-                className="font-medium text-primary underline-offset-4 hover:underline"
+                className="font-medium text-primary-600 underline-offset-4 hover:underline"
               >
                 {supplier.fullName ?? supplier.email}
               </Link>
-              <div className="text-xs text-muted-foreground">{supplier.email}</div>
+              <div className="text-caption text-muted">{supplier.email}</div>
             </TableCell>
             <TableCell>{supplier.category.replaceAll('_', ' ')}</TableCell>
             <TableCell>{supplier.provincesActive.join(', ') || '—'}</TableCell>

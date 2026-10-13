@@ -75,7 +75,7 @@ export default async function ApplicationsPage() {
                   <TableRow key={application.id}>
                     <TableCell>
                       <div className="font-medium">{application.fullName}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-caption text-muted">
                         {application.email} · {application.phone}
                       </div>
                     </TableCell>

@@ -14,7 +14,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { PromotionalBanner } from '@/components/promotional-banner';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
-import { bricolage } from '@/lib/font';
+import { fontVariables } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
 
 export async function generateMetadata({
@@ -45,15 +45,14 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const tenant = getTenantConfig();
+  // Tenant tokens and font families live on <html>, where the alias tokens
+  // resolve (see themeCssVariables).
   const tokens = themeCssVariables(tenant) as CSSProperties;
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
-      <body
-        style={tokens}
-        className={`${bricolage.variable} flex min-h-screen flex-col bg-background font-sans text-foreground antialiased`}
-      >
+    <html lang={locale} style={tokens} className={fontVariables}>
+      <body className="flex min-h-screen flex-col antialiased">
         <NextIntlClientProvider messages={messages}>
           <SiteHeader agencyName={tenant.branding.agencyName} />
           {isFeatureEnabled(tenant, 'culturalEventsBanner') ? (

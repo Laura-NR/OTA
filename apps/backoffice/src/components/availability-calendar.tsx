@@ -116,7 +116,7 @@ export function AvailabilityCalendar({
       <div className="flex items-center justify-between">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           onClick={() =>
             setCursor(
               (current) =>
@@ -128,10 +128,10 @@ export function AvailabilityCalendar({
         >
           ←
         </Button>
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-body-sm font-medium">{label}</span>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           onClick={() =>
             setCursor(
               (current) =>
@@ -147,9 +147,9 @@ export function AvailabilityCalendar({
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
-      <div className="grid grid-cols-7 gap-1 text-center text-xs">
+      <div className="grid grid-cols-7 gap-1 text-center text-caption">
         {weekdays.map((weekday) => (
-          <div key={weekday} className="py-1 font-medium text-muted-foreground">
+          <div key={weekday} className="py-1 font-medium text-muted">
             {weekday}
           </div>
         ))}
@@ -170,8 +170,8 @@ export function AvailabilityCalendar({
               className={cn(
                 'rounded py-2 transition-colors',
                 available
-                  ? 'bg-success/20 hover:bg-success/30'
-                  : 'bg-destructive/20 text-muted-foreground line-through hover:bg-destructive/30',
+                  ? 'bg-success-100 hover:bg-success-600/20'
+                  : 'bg-error-100 text-muted line-through hover:bg-error-600/20',
                 (!canEdit || busy) && 'cursor-not-allowed opacity-60',
               )}
             >
@@ -181,7 +181,7 @@ export function AvailabilityCalendar({
         })}
       </div>
 
-      <p className="text-xs text-muted-foreground">{t('legend')}</p>
+      <p className="text-caption text-muted">{t('legend')}</p>
     </div>
   );
 }

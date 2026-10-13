@@ -1,5 +1,6 @@
 import {
   Alert,
+  buttonClassName,
   Card,
   CardContent,
   CardDescription,
@@ -30,7 +31,7 @@ function Row({
 }) {
   return (
     <div className="flex flex-wrap gap-x-2">
-      <dt className="text-muted-foreground">{label}:</dt>
+      <dt className="text-muted">{label}:</dt>
       <dd className={mono ? 'font-mono' : undefined}>{value}</dd>
     </div>
   );
@@ -67,7 +68,7 @@ export default async function WireCheckoutPage({
           <CardTitle>{t('wireTitle')}</CardTitle>
           <CardDescription>{t('wireDescription')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 text-body-sm">
           {!bank ? (
             <Alert>{t('wireUnavailable')}</Alert>
           ) : !intent ? (
@@ -75,7 +76,7 @@ export default async function WireCheckoutPage({
           ) : (
             <>
               <p>
-                <span className="text-muted-foreground">{t('wireAmount')}:</span>{' '}
+                <span className="text-muted">{t('wireAmount')}:</span>{' '}
                 <strong>
                   {intent.currency} {Number(intent.amount).toFixed(2)}
                 </strong>
@@ -89,18 +90,13 @@ export default async function WireCheckoutPage({
                 <Row label={t('wireReferenceLabel')} value={intent.reference} mono />
               </dl>
 
-              <p className="text-muted-foreground">
-                {bank.referenceNote ?? t('wireReferenceNote')}
-              </p>
+              <p className="text-muted">{bank.referenceNote ?? t('wireReferenceNote')}</p>
               <Alert>{t('wireNotice')}</Alert>
-              <p className="text-muted-foreground">{t('wireNextSteps')}</p>
+              <p className="text-muted">{t('wireNextSteps')}</p>
             </>
           )}
 
-          <Link
-            href="/account"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
+          <Link href="/account" className={buttonClassName({ variant: 'secondary' })}>
             {t('backToAccount')}
           </Link>
         </CardContent>

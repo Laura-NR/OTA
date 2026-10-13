@@ -38,35 +38,35 @@ export async function PipelineBoard({
         return (
           <div key={status} className="w-64 shrink-0">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <span className="text-caption font-semibold uppercase tracking-wide text-muted">
                 {status.replaceAll('_', ' ')}
               </span>
-              <span className="text-xs text-muted-foreground">{rows.length}</span>
+              <span className="text-caption text-muted">{rows.length}</span>
             </div>
             <div className="space-y-2">
               {rows.length === 0 ? (
-                <p className="text-xs text-muted-foreground">—</p>
+                <p className="text-caption text-muted">—</p>
               ) : (
                 rows.map((reservation) => (
                   <Link
                     key={reservation.id}
                     href={`/reservations/${reservation.id}`}
-                    className="block rounded-md border bg-card p-3 text-sm transition-colors hover:border-primary"
+                    className="block rounded-md border bg-surface p-3 text-body-sm transition-colors hover:border-primary-600"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">{reservation.bookingCode}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-caption text-muted">
                         {t('serviceItems', { count: reservation.serviceItemCount })}
                       </span>
                     </div>
-                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                    <div className="mt-1 truncate text-caption text-muted">
                       {reservation.travelerName ?? reservation.travelerEmail}
                     </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
+                    <div className="mt-1 text-caption text-muted">
                       {formatDate(reservation.startDate)} →{' '}
                       {formatDate(reservation.endDate)}
                     </div>
-                    <div className="mt-1 text-xs font-medium">
+                    <div className="mt-1 text-caption font-medium">
                       {reservation.totalCurrency}{' '}
                       {Number(reservation.totalAmount).toFixed(2)}
                     </div>

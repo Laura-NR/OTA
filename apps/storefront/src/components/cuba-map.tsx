@@ -57,13 +57,15 @@ export function CubaMap({
                 selectProvince(province.name);
               }
             }}
+            // Province states from T-Assets §04: active teal-100 with a teal
+            // stroke, not yet neutral-100, selected teal-600.
             className={cn(
-              'cursor-pointer stroke-border stroke-[0.5] transition-colors focus:outline-none focus-visible:stroke-2 focus-visible:stroke-primary',
+              'cursor-pointer stroke-[0.5] transition-colors focus:outline-none focus-visible:stroke-2 focus-visible:stroke-primary-500',
               isSelected
-                ? 'fill-primary'
+                ? 'fill-primary-600 stroke-primary-700'
                 : isAvailable
-                  ? 'fill-primary/25 hover:fill-primary/50'
-                  : 'fill-muted hover:fill-muted-foreground/30',
+                  ? 'fill-primary-100 stroke-primary-600 hover:fill-primary-500/40'
+                  : 'fill-neutral-100 stroke-neutral-300 hover:fill-neutral-200',
             )}
           />
         );

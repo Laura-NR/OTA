@@ -13,7 +13,7 @@ export const Table = forwardRef<HTMLTableElement, TableHTMLAttributes<HTMLTableE
     <div className="relative w-full overflow-auto">
       <table
         ref={ref}
-        className={cn('w-full caption-bottom text-sm', className)}
+        className={cn('w-full caption-bottom text-body-sm', className)}
         {...props}
       />
     </div>
@@ -44,7 +44,7 @@ export const TableRow = forwardRef<
   <tr
     ref={ref}
     className={cn(
-      'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+      'border-b transition-colors hover:bg-page data-[state=selected]:bg-primary-100',
       className,
     )}
     {...props}
@@ -59,7 +59,7 @@ export const TableHead = forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-10 px-3 text-left align-middle text-xs font-medium uppercase tracking-wide text-muted-foreground',
+      'bg-sunken px-3 py-2.5 text-left align-middle font-semibold text-secondary',
       className,
     )}
     {...props}
@@ -71,6 +71,6 @@ export const TableCell = forwardRef<
   HTMLTableCellElement,
   TdHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
-  <td ref={ref} className={cn('px-3 py-2.5 align-middle', className)} {...props} />
+  <td ref={ref} className={cn('p-3 align-middle', className)} {...props} />
 ));
 TableCell.displayName = 'TableCell';

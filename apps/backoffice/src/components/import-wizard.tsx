@@ -150,7 +150,7 @@ export function ImportWizard() {
           disabled={busy === 'upload'}
           onChange={onUpload}
         />
-        <p className="text-xs text-muted-foreground">{t('hint')}</p>
+        <p className="text-caption text-muted">{t('hint')}</p>
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}

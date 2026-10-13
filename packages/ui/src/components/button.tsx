@@ -3,10 +3,11 @@ import type { ButtonHTMLAttributes } from 'react';
 
 import { cn } from '../cn';
 
-export type ButtonVariant =
-  'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link';
+/** DS 02: one primary per view; destructive actions sit behind a confirm step. */
+export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'link';
 
-export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';
+/** 32 / 40 / 48 px, plus a 44 px square for icon-only buttons (aria-label required). */
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -14,34 +15,42 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-transparent text-button transition-colors disabled:cursor-not-allowed disabled:border-transparent disabled:bg-neutral-200 disabled:text-muted';
 
 const variants: Record<ButtonVariant, string> = {
-  default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-  outline:
-    'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-  ghost: 'hover:bg-accent hover:text-accent-foreground',
-  destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-  link: 'text-primary underline-offset-4 hover:underline',
+  primary:
+    'bg-action-primary text-on-primary hover:bg-action-primary-hover active:bg-action-primary-active',
+  secondary:
+    'border-input bg-surface text-primary-700 hover:bg-neutral-100 active:bg-neutral-200',
+  tertiary: 'bg-transparent text-primary-600 hover:bg-primary-100',
+  destructive: 'bg-error-600 text-neutral-0 hover:bg-error-600/90',
+  link: 'h-auto bg-transparent px-0 text-primary-600 underline underline-offset-[3px] hover:text-primary-700 disabled:bg-transparent',
 };
 
 const sizes: Record<ButtonSize, string> = {
-  default: 'h-9 px-4 py-2',
-  sm: 'h-8 rounded-md px-3 text-xs',
-  lg: 'h-10 rounded-md px-6',
-  icon: 'h-9 w-9',
+  sm: 'h-8 px-3 text-body-sm font-semibold',
+  md: 'h-10 px-4',
+  lg: 'h-12 px-5',
+  icon: 'h-touch w-touch px-0',
 };
 
+/**
+ * The button classes for an element that is not a `<button>`, typically a link
+ * that looks like an action (`<Link className={buttonClassName()}>`).
+ */
+export function buttonClassName({
+  variant = 'primary',
+  size = 'md',
+}: { variant?: ButtonVariant; size?: ButtonSize } = {}): string {
+  return cn(base, sizes[size], variants[variant]);
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    { className, variant = 'default', size = 'default', type = 'button', ...props },
-    ref,
-  ) => (
+  ({ className, variant = 'primary', size = 'md', type = 'button', ...props }, ref) => (
     <button
       ref={ref}
       type={type}
-      className={cn(base, variants[variant], sizes[size], className)}
+      className={cn(buttonClassName({ variant, size }), className)}
       {...props}
     />
   ),

@@ -33,9 +33,9 @@ function severityVariant(severity: string): 'secondary' | 'outline' | 'destructi
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold tracking-tight">{value}</div>
+    <div className="rounded-lg border bg-surface p-4">
+      <div className="text-caption uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1 text-h3 font-semibold tracking-tight">{value}</div>
     </div>
   );
 }

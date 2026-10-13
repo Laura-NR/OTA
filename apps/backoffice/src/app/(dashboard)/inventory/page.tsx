@@ -90,13 +90,13 @@ export default async function InventoryPage() {
                           className="h-10 w-16 rounded object-cover"
                         />
                       ) : (
-                        <div className="h-10 w-16 rounded bg-muted" />
+                        <div className="h-10 w-16 rounded bg-sunken" />
                       )}
                     </TableCell>
                     <TableCell>
                       <Link
                         href={`/inventory/${item.id}`}
-                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        className="font-medium text-primary-600 underline-offset-4 hover:underline"
                       >
                         {item.name}
                       </Link>

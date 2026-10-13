@@ -65,10 +65,10 @@ export default async function ReservationDetailPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/" className="text-body-sm text-muted hover:text-default">
           {t('backToPipeline')}
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-h3 font-semibold tracking-tight">
           {reservation.bookingCode}
         </h1>
         <StatusBadge status={reservation.status} />
@@ -82,38 +82,36 @@ export default async function ReservationDetailPage({
         <CardContent className="space-y-4">
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('traveler')}
               </dt>
-              <dd className="mt-1 text-sm">
+              <dd className="mt-1 text-body-sm">
                 {reservation.travelerName ?? reservation.travelerEmail}
               </dd>
-              <dd className="text-xs text-muted-foreground">
-                {reservation.travelerEmail}
-              </dd>
+              <dd className="text-caption text-muted">{reservation.travelerEmail}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('dates')}
               </dt>
-              <dd className="mt-1 text-sm">
+              <dd className="mt-1 text-body-sm">
                 {new Date(reservation.startDate).toLocaleDateString()} →{' '}
                 {new Date(reservation.endDate).toLocaleDateString()}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('total')}
               </dt>
-              <dd className="mt-1 text-sm font-medium">
+              <dd className="mt-1 text-body-sm font-medium">
                 {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('services')}
               </dt>
-              <dd className="mt-1 text-sm">{reservation.serviceItems.length}</dd>
+              <dd className="mt-1 text-body-sm">{reservation.serviceItems.length}</dd>
             </div>
           </dl>
 
@@ -140,7 +138,7 @@ export default async function ReservationDetailPage({
           {incidents.length === 0 ? (
             <Alert>{t('noIncidents')}</Alert>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-body-sm">
               {incidents.map((incident) => (
                 <li key={incident.id} className="rounded-md border p-3">
                   <div className="flex flex-wrap items-center gap-2">
@@ -154,7 +152,7 @@ export default async function ReservationDetailPage({
                       {incident.severity}
                     </Badge>
                     <span className="font-medium">{incident.category}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-caption text-muted">
                       {incident.resolvedAt ? t('resolved') : t('open')}
                     </span>
                     {incident.resolvedAt ? null : (
@@ -163,7 +161,7 @@ export default async function ReservationDetailPage({
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-muted-foreground">{incident.description}</p>
+                  <p className="mt-1 text-muted">{incident.description}</p>
                 </li>
               ))}
             </ul>
@@ -226,7 +224,7 @@ export default async function ReservationDetailPage({
                     <TableCell>
                       {new Date(item.serviceDateEnd).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-caption text-muted">
                       {item.supplierId ?? t('unassigned')}
                     </TableCell>
                   </TableRow>
@@ -248,12 +246,12 @@ export default async function ReservationDetailPage({
           {documents.length === 0 ? (
             <Alert>{t('noDocuments')}</Alert>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-body-sm">
               {documents.map((document) => (
                 <li key={document.id} className="flex items-center gap-3">
                   <Badge variant="outline">{document.type.replaceAll('_', ' ')}</Badge>
                   <a
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    className="font-medium text-primary-600 underline-offset-4 hover:underline"
                     href={`/api/ota/documents/${document.id}/download`}
                     target="_blank"
                     rel="noreferrer"
@@ -274,18 +272,21 @@ export default async function ReservationDetailPage({
         </CardHeader>
         <CardContent>
           {audit.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('noAudit')}</p>
+            <p className="text-body-sm text-muted">{t('noAudit')}</p>
           ) : (
             <ol className="space-y-3">
               {audit.map((entry) => (
-                <li key={entry.id} className="border-l-2 border-border pl-3 text-sm">
+                <li
+                  key={entry.id}
+                  className="border-l-2 border-neutral-200 pl-3 text-body-sm"
+                >
                   <div className="font-medium">{entry.action}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-caption text-muted">
                     {entry.actorEmail ?? t('system')} ·{' '}
                     {new Date(entry.createdAt).toLocaleString()}
                   </div>
                   {entry.metadata ? (
-                    <div className="mt-1 break-all text-xs text-muted-foreground">
+                    <div className="mt-1 break-all text-caption text-muted">
                       {JSON.stringify(entry.metadata)}
                     </div>
                   ) : null}

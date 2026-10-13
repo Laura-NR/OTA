@@ -22,8 +22,8 @@ const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.Supe
 function escalationVariant(
   escalation: DispatchViewDto['serviceItems'][number]['escalation'],
 ) {
-  if (escalation === 'RED') return 'destructive' as const;
-  if (escalation === 'AMBER') return 'timeout' as const;
+  if (escalation === 'RED') return 'timeout' as const;
+  if (escalation === 'AMBER') return 'attention' as const;
   return 'outline' as const;
 }
 
@@ -85,7 +85,7 @@ export default async function DispatchPage({
               view.serviceItems.map((item) => (
                 <Card key={item.id}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base">
+                    <CardTitle className="text-body">
                       {item.serviceType.replaceAll('_', ' ')} —{' '}
                       {item.status.replaceAll('_', ' ')}
                     </CardTitle>
@@ -95,12 +95,12 @@ export default async function DispatchPage({
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">{t('escalation')}</span>
+                    <div className="flex items-center gap-2 text-body-sm">
+                      <span className="text-muted">{t('escalation')}</span>
                       <Badge variant={escalationVariant(item.escalation)}>
                         {item.escalation}
                       </Badge>
-                      <span className="text-muted-foreground">{t('supplier')}</span>
+                      <span className="text-muted">{t('supplier')}</span>
                       <span>{item.supplierId ?? t('unassigned')}</span>
                     </div>
                     {item.status === 'UNASSIGNED' || item.status === 'DECLINED' ? (

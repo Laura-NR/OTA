@@ -50,7 +50,8 @@ export const tenantConfigSchema = z.object({
   branding: z.object({
     agencyName: z.string().min(1),
     licenseNumber: z.string().min(1),
-    primaryColor: z.string().default('#0f766e'),
+    /** The action colour (design token `color-primary-600`); the rest of the primary scale is derived from it. */
+    primaryColor: z.string().default('#0B4F6C'),
     supportEmail: z.string().email().nullable().default(null),
     supportPhone: z.string().nullable().default(null),
   }),
@@ -58,8 +59,15 @@ export const tenantConfigSchema = z.object({
   supportedLocales: z.array(z.string().min(2)).min(1).default(['es', 'en', 'fr']),
   theme: z
     .object({
-      palette: z.string().default('ecoGreen'),
+      palette: z.string().default('islaAbierta'),
+      /** Scales the radius steps: `none`, `sm`, `md` (the design) or `lg`. */
       borderRadius: z.string().default('md'),
+      /**
+       * Overrides for primitive design tokens, keyed by token name without the
+       * leading `--` (e.g. `color-secondary-600`). Alias and component tokens
+       * are not overridable and are ignored by `@ota/theming`.
+       */
+      tokens: z.record(z.string(), z.string()).default({}),
     })
     .prefault({}),
   features: featureFlagsSchema.prefault({}),

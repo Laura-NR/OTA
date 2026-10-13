@@ -29,6 +29,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@ota/theming": "workspace:*",
     "@types/node": "^26.6.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

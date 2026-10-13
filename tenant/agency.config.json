@@ -3,14 +3,14 @@
   "branding": {
     "agencyName": "Vereda Expeditions",
     "licenseNumber": "MINTUR-2026-XXXX",
-    "primaryColor": "#2C5F52",
+    "primaryColor": "#0B4F6C",
     "supportEmail": null,
     "supportPhone": null
   },
   "primaryLocale": "es",
   "supportedLocales": ["es", "en", "fr"],
   "theme": {
-    "palette": "vereda",
+    "palette": "islaAbierta",
     "borderRadius": "md"
   },
   "features": {

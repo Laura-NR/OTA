@@ -63,13 +63,10 @@ export default async function SupplierDetailPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Link
-          href="/suppliers"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
+        <Link href="/suppliers" className="text-body-sm text-muted hover:text-default">
           {t('back')}
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-h3 font-semibold tracking-tight">
           {supplier.fullName ?? supplier.email}
         </h1>
         <Badge variant="secondary">
@@ -85,28 +82,28 @@ export default async function SupplierDetailPage({
         <CardContent className="space-y-4">
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('contact')}
               </dt>
-              <dd className="mt-1 text-sm">{supplier.email}</dd>
-              <dd className="text-xs text-muted-foreground">{supplier.primaryPhone}</dd>
+              <dd className="mt-1 text-body-sm">{supplier.email}</dd>
+              <dd className="text-caption text-muted">{supplier.primaryPhone}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('provinces')}
               </dt>
-              <dd className="mt-1 text-sm">
+              <dd className="mt-1 text-body-sm">
                 {supplier.provincesActive.join(', ') || '—'}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('rtnLicence')}
               </dt>
-              <dd className="mt-1 text-sm">{supplier.rtnLicenseNumber}</dd>
+              <dd className="mt-1 text-body-sm">{supplier.rtnLicenseNumber}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              <dt className="text-caption uppercase tracking-wide text-muted">
                 {t('credentialExpiry')}
               </dt>
               <dd className="mt-1">
@@ -115,7 +112,7 @@ export default async function SupplierDetailPage({
             </div>
           </dl>
 
-          <div className="text-sm text-muted-foreground">
+          <div className="text-body-sm text-muted">
             {t('available', { value: supplier.isAvailable ? t('yes') : t('no') })}
           </div>
 

@@ -82,7 +82,7 @@ export function PaymentPanel({
           {receipts.map((receipt) => (
             <li
               key={receipt.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-body-sm"
             >
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">{receipt.rail.replaceAll('_', ' ')}</Badge>
@@ -126,7 +126,7 @@ export function PaymentPanel({
       ) : null}
 
       {checkoutUrl ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-caption text-muted">
           {t('checkoutLink')} <span className="break-all font-mono">{checkoutUrl}</span>
         </p>
       ) : null}

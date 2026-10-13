@@ -100,10 +100,10 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-caption text-muted">
         <span
           className={`inline-block h-2 w-2 rounded-full ${
-            connected ? 'bg-success' : 'bg-destructive'
+            connected ? 'bg-success-600' : 'bg-error-600'
           }`}
           aria-hidden
         />
@@ -114,7 +114,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
 
       <div className="max-h-96 space-y-3 overflow-y-auto rounded-md border p-4">
         {messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('none')}</p>
+          <p className="text-body-sm text-muted">{t('none')}</p>
         ) : (
           messages.map((message) => (
             <div
@@ -122,10 +122,10 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
               className={`flex ${message.sender === 'OPERATIONS' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                className={`max-w-[80%] rounded-lg px-3 py-2 text-body-sm ${
                   message.sender === 'OPERATIONS'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground'
+                    ? 'bg-action-primary text-on-primary'
+                    : 'bg-sunken text-default'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{message.body}</p>
@@ -148,7 +148,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         />
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           disabled={drafting || busy}
           onClick={draftWithAi}
         >

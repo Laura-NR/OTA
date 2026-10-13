@@ -40,13 +40,13 @@ export function CandidatesList({ serviceItemId }: { serviceItemId: string }) {
 
   return (
     <div className="space-y-2">
-      <Button size="sm" variant="ghost" disabled={busy} onClick={load}>
+      <Button size="sm" variant="tertiary" disabled={busy} onClick={load}>
         {busy ? t('loading') : t('show')}
       </Button>
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       {candidates ? (
         candidates.length === 0 ? (
-          <p className="text-xs text-muted-foreground">{t('empty')}</p>
+          <p className="text-caption text-muted">{t('empty')}</p>
         ) : (
           <Table>
             <TableHeader>

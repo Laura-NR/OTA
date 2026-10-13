@@ -1,19 +1,53 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import { ALIAS_TOKENS, COMPONENT_TOKENS, PRIMITIVE_TOKENS } from '@ota/theming';
 import { describe, expect, it } from 'vitest';
 
 import { cn } from '../src/cn';
 
-const preset = (await import('../tailwind-preset.mjs')).default as {
-  theme: {
-    extend: {
-      colors: Record<
-        string,
-        { DEFAULT: string; foreground?: string; accent?: { DEFAULT: string } }
-      >;
+type ColorScale = Record<string, string | Record<string, string>>;
+
+const { default: preset, TYPE_SCALE } = (await import('../tailwind-preset.mjs')) as {
+  default: {
+    theme: {
+      screens: Record<string, string>;
+      colors: Record<string, string | ColorScale>;
       borderRadius: Record<string, string>;
       boxShadow: Record<string, string>;
+      extend: {
+        backgroundColor: ColorScale;
+        textColor: ColorScale;
+        borderColor: ColorScale;
+        transitionDuration: Record<string, string>;
+      };
     };
   };
+  TYPE_SCALE: Record<string, [string, { lineHeight: string; fontWeight?: string }]>;
 };
+
+const styles = readFileSync(resolve(__dirname, '../styles.css'), 'utf8');
+
+/**
+ * Prettier rewrites CSS values (hex case, quotes, spacing, `.10` → `0.1`), so
+ * compare them normalised; numbers compare by value, hex digits as text.
+ */
+function normalized(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/'/g, '"')
+    .replace(/\s+/g, '')
+    .replace(/(?<![#\w.])(\d*\.\d+|\d+)/g, (number) => String(Number(number)));
+}
+
+function declared(css: string): Record<string, string> {
+  return Object.fromEntries(
+    [...css.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((match) => [
+      match[1]!,
+      match[2]!.trim(),
+    ]),
+  );
+}
 
 describe('cn', () => {
   it('lets the last conflicting utility win', () => {
@@ -21,34 +55,101 @@ describe('cn', () => {
   });
 
   it('drops falsy values', () => {
-    expect(cn('text-sm', undefined, null, '')).toBe('text-sm');
+    expect(cn('text-body-sm', undefined, null, '')).toBe('text-body-sm');
+  });
+
+  it('keeps a type size next to a text colour', () => {
+    expect(cn('text-h1', 'text-default')).toBe('text-h1 text-default');
+    expect(cn('text-body-sm', 'text-h3')).toBe('text-h3');
+    expect(cn('text-muted', 'text-primary-600')).toBe('text-primary-600');
+  });
+});
+
+describe('styles.css', () => {
+  it('declares every design token with the value @ota/theming holds', () => {
+    const css = declared(styles.slice(0, styles.indexOf('@media')));
+
+    for (const [name, value] of Object.entries({
+      ...PRIMITIVE_TOKENS,
+      ...ALIAS_TOKENS,
+      ...COMPONENT_TOKENS,
+    })) {
+      expect(normalized(css[name] ?? ''), name).toBe(normalized(value));
+    }
+    expect(css['color-text-on-primary']).toBe('var(--color-neutral-0)');
+  });
+
+  it('turns motion off for people who ask for reduced motion', () => {
+    const reduced = styles.slice(
+      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
+    );
+    expect(reduced).toContain('--motion-base: 0ms !important');
   });
 });
 
 describe('tailwind preset', () => {
-  it('maps semantic colours to the --ota design tokens', () => {
-    expect(preset.theme.extend.colors.primary.DEFAULT).toBe(
-      'hsl(var(--ota-primary) / <alpha-value>)',
+  it('maps palette steps and aliases onto the tokens with opacity support', () => {
+    const primary = preset.theme.colors.primary as Record<string, string>;
+    expect(primary['600']).toBe(
+      'color-mix(in srgb, var(--color-primary-600) calc(<alpha-value> * 100%), transparent)',
     );
-    expect(preset.theme.extend.colors.sidebar.accent.DEFAULT).toBe(
-      'hsl(var(--ota-sidebar-accent) / <alpha-value>)',
-    );
-    expect(preset.theme.extend.colors.warning.DEFAULT).toBe(
-      'hsl(var(--ota-warning) / <alpha-value>)',
-    );
-    expect(preset.theme.extend.colors.timeout.DEFAULT).toBe(
-      'hsl(var(--ota-timeout) / <alpha-value>)',
+    expect(preset.theme.extend.backgroundColor.page).toContain('var(--color-bg-page)');
+    expect(
+      (preset.theme.extend.backgroundColor['action-primary'] as Record<string, string>)
+        .hover,
+    ).toContain('var(--color-action-primary-hover)');
+    expect(preset.theme.extend.textColor.default).toContain('var(--color-text-default)');
+    expect(
+      (preset.theme.extend.textColor.secondary as Record<string, string>).DEFAULT,
+    ).toContain('var(--color-text-secondary)');
+    expect(preset.theme.extend.borderColor.input).toContain('var(--color-border-input)');
+  });
+
+  it('offers only the design palette', () => {
+    expect(Object.keys(preset.theme.colors).sort()).toEqual(
+      [
+        'accent',
+        'current',
+        'error',
+        'info',
+        'inherit',
+        'neutral',
+        'primary',
+        'secondary',
+        'success',
+        'timeout',
+        'transparent',
+        'warning',
+      ].sort(),
     );
   });
 
-  it('maps the design radius steps', () => {
-    expect(preset.theme.extend.borderRadius.sm).toBe('var(--ota-radius-sm)');
-    expect(preset.theme.extend.borderRadius.md).toBe('var(--ota-radius-md)');
-    expect(preset.theme.extend.borderRadius.lg).toBe('var(--ota-radius-lg)');
+  it('copies the type tokens exactly', () => {
+    for (const [name, [size, { lineHeight, fontWeight }]] of Object.entries(TYPE_SCALE)) {
+      const token =
+        (ALIAS_TOKENS as Record<string, string>)[`text-${name}`] ??
+        (COMPONENT_TOKENS as Record<string, string>)[`text-${name}`];
+      const [weight, sizeAndLine] = token!.split(' ');
+      expect(sizeAndLine, name).toBe(`${size}/${lineHeight}`);
+      expect(fontWeight ?? '400', name).toBe(weight);
+    }
   });
 
-  it('exposes the two warm-tinted elevation levels', () => {
-    expect(preset.theme.extend.boxShadow['ota-1']).toContain('rgba(36, 30, 25, 0.08)');
-    expect(preset.theme.extend.boxShadow['ota-2']).toContain('0.16');
+  it('uses the token radii, shadows, motion and DS 07 breakpoints', () => {
+    expect(preset.theme.borderRadius.md).toBe('var(--radius-md)');
+    expect(preset.theme.borderRadius.DEFAULT).toBe('var(--radius-md)');
+    expect(preset.theme.boxShadow.md).toBe('var(--shadow-md)');
+    expect(preset.theme.screens).toEqual({
+      sm: '480px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+    });
+    expect(PRIMITIVE_TOKENS['motion-fast']).toContain(
+      preset.theme.extend.transitionDuration.fast,
+    );
+    expect(PRIMITIVE_TOKENS['motion-slow']).toContain(
+      preset.theme.extend.transitionDuration.slow,
+    );
   });
 });

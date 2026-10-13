@@ -3,7 +3,7 @@
  * Scaffold a fork's tenant directory (spec §2 white-label strategy).
  *
  *   pnpm create:tenant --name "Viñales Eco Travel" [--id vinales-eco]
- *     [--license MINTUR-2027-0001] [--primary "#0f766e"] [--palette ecoGreen]
+ *     [--license MINTUR-2027-0001] [--primary "#0f766e"] [--palette islaAbierta]
  *     [--radius md] [--locale es] [--locales es,en,fr]
  *     [--account-name "..."] [--bank "..."] [--iban ES...] [--bic ...]
  *     [--reference-note "..."] [--out tenant] [--force]

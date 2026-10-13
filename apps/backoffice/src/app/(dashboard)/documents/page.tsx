@@ -98,7 +98,7 @@ export default async function DocumentsPage({
                       </TableCell>
                       <TableCell>
                         <a
-                          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                          className="text-body-sm font-medium text-primary-600 underline-offset-4 hover:underline"
                           href={`/api/ota/documents/${document.id}/download`}
                           target="_blank"
                           rel="noreferrer"

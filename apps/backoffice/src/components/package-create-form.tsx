@@ -134,7 +134,7 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
                 {items.map((item) => {
                   const checked = selected.includes(item.id);
                   return (
-                    <li key={item.id} className="flex items-center gap-3 text-sm">
+                    <li key={item.id} className="flex items-center gap-3 text-body-sm">
                       <input
                         type="checkbox"
                         checked={checked}
@@ -142,11 +142,9 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
                       />
                       <span className="flex-1">
                         {item.name}{' '}
-                        <span className="text-muted-foreground">
-                          · {item.province ?? t('cuba')}
-                        </span>
+                        <span className="text-muted">· {item.province ?? t('cuba')}</span>
                       </span>
-                      <label className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <label className="flex items-center gap-1 text-caption text-muted">
                         {t('day')}
                         <Input
                           type="number"

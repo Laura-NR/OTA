@@ -1,87 +1,143 @@
 /**
- * Tailwind preset that maps semantic utility names onto the `--ota-*` design
- * tokens. Apps consume it with `import preset from '@ota/ui/tailwind-preset'`.
+ * Tailwind preset that maps utilities onto the design tokens (ADR 0006). Apps
+ * consume it with `import preset from '@ota/ui/tailwind-preset'`.
  *
- * The token names are the contract with `@ota/theming`, which writes the values
- * (see THEME_TOKEN_KEYS). Colours are HSL triples so opacity modifiers work.
+ * The tokens are CSS custom properties declared in `styles.css` and overridden
+ * per tenant by `@ota/theming`. Utility names follow the token names with the
+ * `color-` prefix dropped:
+ *
+ * - palette steps always carry their number: `bg-primary-600`,
+ *   `text-secondary-600`, `border-neutral-200`, `bg-success-100`;
+ * - aliases are named for their role on the property they style: `bg-page`,
+ *   `bg-surface`, `bg-sunken`, `bg-action-primary` (+ `-hover`, `-active`),
+ *   `text-default`, `text-secondary`, `text-muted`, `text-on-primary`, `border`
+ *   (default) and `border-input`, `ring-focus`, `outline-focus`. Note that
+ *   `text-secondary` is the secondary *text* colour (neutral 700), while
+ *   `text-secondary-600` is the terracotta palette step;
+ * - type sizes are the type tokens: `text-caption`, `text-overline`,
+ *   `text-body-sm`, `text-body`, `text-body-lg`, `text-button`, `text-h4` …
+ *   `text-h1`, `text-display-2`, `text-display-1` (size, line height and the
+ *   token's weight); families are `font-display`, `font-body`, `font-mono`.
+ *
+ * The palette, type scale, radii, shadows and breakpoints replace Tailwind's
+ * defaults, so a value outside the design cannot be written by accident.
+ * Colours go through `color-mix` so opacity modifiers (`bg-primary-600/10`)
+ * keep working on custom properties. Type, motion and breakpoint values are
+ * literal copies of the tokens (a media query cannot read a custom property);
+ * `test/ui.test.ts` holds them to `@ota/theming`.
  *
  * @type {import('tailwindcss').Config}
  */
+
+/** A colour token as a Tailwind colour that accepts an opacity modifier. */
+const color = (token) =>
+  `color-mix(in srgb, var(--${token}) calc(<alpha-value> * 100%), transparent)`;
+
+const steps = (family, values) =>
+  Object.fromEntries(values.map((step) => [step, color(`color-${family}-${step}`)]));
+
+export const TYPE_SCALE = {
+  caption: ['12px', { lineHeight: '16px', fontWeight: '500' }],
+  overline: ['12px', { lineHeight: '16px', fontWeight: '700', letterSpacing: '0.08em' }],
+  'body-sm': ['14px', { lineHeight: '20px' }],
+  body: ['16px', { lineHeight: '24px' }],
+  'body-lg': ['18px', { lineHeight: '28px' }],
+  button: ['16px', { lineHeight: '24px', fontWeight: '600' }],
+  h4: ['20px', { lineHeight: '28px', fontWeight: '600' }],
+  h3: ['24px', { lineHeight: '32px', fontWeight: '600' }],
+  h2: ['32px', { lineHeight: '40px', fontWeight: '600' }],
+  h1: ['40px', { lineHeight: '48px', fontWeight: '600' }],
+  'display-2': ['48px', { lineHeight: '56px', fontWeight: '600' }],
+  'display-1': ['56px', { lineHeight: '64px', fontWeight: '600' }],
+};
+
 const preset = {
   darkMode: ['class'],
   theme: {
+    // DS 07 breakpoints; mobile first, no 2xl.
+    screens: { sm: '480px', md: '768px', lg: '1024px', xl: '1280px' },
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      inherit: 'inherit',
+      primary: steps('primary', [100, 500, 600, 700]),
+      secondary: steps('secondary', [100, 500, 600, 700]),
+      accent: steps('accent', [100, 500, 600]),
+      neutral: steps('neutral', [0, 50, 100, 200, 300, 500, 700, 900]),
+      success: steps('success', [100, 600]),
+      warning: steps('warning', [100, 600]),
+      error: steps('error', [100, 600]),
+      info: steps('info', [100, 600]),
+      timeout: steps('timeout', [600]),
+    },
+    fontFamily: {
+      display: ['var(--font-display)'],
+      body: ['var(--font-body)'],
+      sans: ['var(--font-body)'],
+      mono: ['var(--font-mono)'],
+    },
+    fontSize: TYPE_SCALE,
+    borderRadius: {
+      none: '0',
+      sm: 'var(--radius-sm)',
+      DEFAULT: 'var(--radius-md)',
+      md: 'var(--radius-md)',
+      lg: 'var(--radius-lg)',
+      full: 'var(--radius-full)',
+    },
+    boxShadow: {
+      none: 'none',
+      sm: 'var(--shadow-sm)',
+      DEFAULT: 'var(--shadow-sm)',
+      md: 'var(--shadow-md)',
+      lg: 'var(--shadow-lg)',
+    },
     extend: {
-      colors: {
-        border: 'hsl(var(--ota-border) / <alpha-value>)',
-        input: 'hsl(var(--ota-input) / <alpha-value>)',
-        ring: 'hsl(var(--ota-ring) / <alpha-value>)',
-        background: 'hsl(var(--ota-background) / <alpha-value>)',
-        foreground: 'hsl(var(--ota-foreground) / <alpha-value>)',
-        primary: {
-          DEFAULT: 'hsl(var(--ota-primary) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-primary-foreground) / <alpha-value>)',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--ota-secondary) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-secondary-foreground) / <alpha-value>)',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--ota-destructive) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-destructive-foreground) / <alpha-value>)',
-        },
-        success: {
-          DEFAULT: 'hsl(var(--ota-success) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-success-foreground) / <alpha-value>)',
-        },
-        warning: {
-          DEFAULT: 'hsl(var(--ota-warning) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-warning-foreground) / <alpha-value>)',
-        },
-        timeout: {
-          DEFAULT: 'hsl(var(--ota-timeout) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-timeout-foreground) / <alpha-value>)',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--ota-muted) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-muted-foreground) / <alpha-value>)',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--ota-accent) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-accent-foreground) / <alpha-value>)',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--ota-popover) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-popover-foreground) / <alpha-value>)',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--ota-card) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-card-foreground) / <alpha-value>)',
-        },
-        sidebar: {
-          DEFAULT: 'hsl(var(--ota-sidebar) / <alpha-value>)',
-          foreground: 'hsl(var(--ota-sidebar-foreground) / <alpha-value>)',
-          accent: {
-            DEFAULT: 'hsl(var(--ota-sidebar-accent) / <alpha-value>)',
-            foreground: 'hsl(var(--ota-sidebar-accent-foreground) / <alpha-value>)',
-          },
+      backgroundColor: {
+        page: color('color-bg-page'),
+        surface: color('color-bg-surface'),
+        sunken: color('color-bg-sunken'),
+        'action-primary': {
+          DEFAULT: color('color-action-primary'),
+          hover: color('color-action-primary-hover'),
+          active: color('color-action-primary-active'),
         },
       },
-      borderRadius: {
-        DEFAULT: 'var(--ota-radius)',
-        sm: 'var(--ota-radius-sm)',
-        md: 'var(--ota-radius-md)',
-        lg: 'var(--ota-radius-lg)',
+      textColor: {
+        default: color('color-text-default'),
+        secondary: { DEFAULT: color('color-text-secondary') },
+        muted: color('color-text-muted'),
+        'on-primary': color('color-text-on-primary'),
       },
-      // `docs/design.md`: two warm-tinted elevation levels only. `ota-1` for
-      // interactive/alert surfaces, `ota-2` for modals/hero panels; dense data
-      // stays flat with hairline dividers.
-      boxShadow: {
-        'ota-1': '0 1px 2px 0 rgba(36, 30, 25, 0.08)',
-        'ota-2':
-          '0 12px 32px -8px rgba(36, 30, 25, 0.16), 0 2px 6px -2px rgba(36, 30, 25, 0.08)',
+      borderColor: {
+        DEFAULT: color('color-border'),
+        input: color('color-border-input'),
       },
-      fontFamily: {
-        sans: ['var(--ota-font-sans, ui-sans-serif)', 'system-ui', 'sans-serif'],
+      ringColor: {
+        DEFAULT: color('color-focus-ring'),
+        focus: color('color-focus-ring'),
+      },
+      outlineColor: {
+        focus: color('color-focus-ring'),
+      },
+      spacing: {
+        touch: 'var(--touch-min)',
+        'touch-base': 'var(--touch-base)',
+      },
+      maxWidth: {
+        container: 'var(--container-max)',
+      },
+      // motion-fast / -base / -slow (DS-Handoff). Reduced motion is honoured
+      // globally in styles.css.
+      transitionDuration: {
+        DEFAULT: '120ms',
+        fast: '120ms',
+        base: '200ms',
+        slow: '320ms',
+      },
+      transitionTimingFunction: {
+        DEFAULT: 'ease-out',
+        standard: 'cubic-bezier(.2,.8,.2,1)',
       },
     },
   },

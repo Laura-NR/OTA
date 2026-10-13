@@ -30,7 +30,7 @@ function ItemPicker({
         const checked = selected.includes(item.id);
         return (
           <li key={item.id}>
-            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm hover:bg-accent">
+            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 text-body-sm hover:bg-neutral-100">
               <input
                 type="checkbox"
                 checked={checked}
@@ -44,7 +44,7 @@ function ItemPicker({
                 />
               ) : null}
               <span className="flex-1 font-medium">{item.name}</span>
-              <span className="text-muted-foreground">
+              <span className="text-muted">
                 {item.province ?? tc('provinceFallback')}
               </span>
               <span>
@@ -124,7 +124,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
   return (
     <Card>
       <CardContent className="space-y-6 pt-6">
-        <ol className="flex flex-wrap gap-2 text-xs">
+        <ol className="flex flex-wrap gap-2 text-caption">
           {STEP_KEYS.map((key, index) => (
             <li key={key}>
               <Badge variant={index === step ? 'default' : 'outline'}>
@@ -179,14 +179,12 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
             {selectedItems.length === 0 ? (
               <Alert>{t('addAtLeastOne')}</Alert>
             ) : (
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-2 text-body-sm">
                 {selectedItems.map((item) => (
                   <li key={item.id} className="flex justify-between gap-3">
                     <span>
                       {item.name}{' '}
-                      <span className="text-muted-foreground">
-                        ({tc(`types.${item.type}`)})
-                      </span>
+                      <span className="text-muted">({tc(`types.${item.type}`)})</span>
                     </span>
                     <span>
                       {item.currency} {Number(item.basePrice).toFixed(2)}
@@ -195,7 +193,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
                 ))}
               </ul>
             )}
-            <p className="text-sm font-medium">
+            <p className="text-body-sm font-medium">
               {t('estimatedTotal', { currency: 'EUR', amount: total.toFixed(2) })}
             </p>
           </div>
@@ -205,7 +203,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
 
         <div className="flex justify-between gap-2">
           <Button
-            variant="outline"
+            variant="secondary"
             disabled={step === 0 || busy}
             onClick={() => setStep((value) => Math.max(value - 1, 0))}
           >

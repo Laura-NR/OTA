@@ -2,6 +2,7 @@ import { UserRole } from '@ota/domain';
 import type { ReservationListItemDto } from '@ota/schemas';
 import {
   Alert,
+  buttonClassName,
   Card,
   CardContent,
   CardDescription,
@@ -34,10 +35,7 @@ export default async function ReservationsPage() {
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')}>
         {canManage ? (
-          <Link
-            href="/reservations/new"
-            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
+          <Link href="/reservations/new" className={buttonClassName()}>
             {t('newReservation')}
           </Link>
         ) : null}

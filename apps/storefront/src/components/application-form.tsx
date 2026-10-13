@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Button, Input, Label, Select } from '@ota/ui';
+import { Alert, Button, Input, Label, Select, Textarea } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -101,12 +101,7 @@ export function ApplicationForm() {
 
       <div className="space-y-2">
         <Label htmlFor="app-message">{t('message')}</Label>
-        <textarea
-          id="app-message"
-          name="message"
-          rows={4}
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-ota-1 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        />
+        <Textarea id="app-message" name="message" rows={4} />
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}

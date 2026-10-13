@@ -1,4 +1,12 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@ota/ui';
+import {
+  buttonClassName,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  cn,
+} from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
 import { CubaMap } from '@/components/cuba-map';
@@ -33,29 +41,26 @@ export default async function CatalogPage({
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
-        <Link
-          href="/build"
-          className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
+        <h1 className="text-h2 font-semibold tracking-tight">{t('title')}</h1>
+        <Link href="/build" className={buttonClassName()}>
           {t('build')}
         </Link>
       </div>
-      <p className="mt-2 text-muted-foreground">{t('count', { count: items.length })}</p>
+      <p className="mt-2 text-muted">{t('count', { count: items.length })}</p>
 
-      <div className="mt-6 rounded-lg border bg-card p-2">
+      <div className="mt-6 rounded-lg border bg-surface p-2">
         <CubaMap availableProvinces={provinces} selectedProvince={province} type={type} />
-        <p className="px-2 pb-1 text-xs text-muted-foreground">{t('mapHint')}</p>
+        <p className="px-2 pb-1 text-caption text-muted">{t('mapHint')}</p>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Link
           href={catalogHref({ type: undefined, province })}
           className={cn(
-            'rounded-full border px-3 py-1 text-sm transition-colors',
+            'rounded-full border px-3 py-1 text-body-sm transition-colors',
             !type
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-input hover:bg-accent',
+              ? 'border-primary-600 bg-action-primary text-on-primary'
+              : 'border-input hover:bg-neutral-100',
           )}
         >
           {t('all')}
@@ -65,10 +70,10 @@ export default async function CatalogPage({
             key={option}
             href={catalogHref({ type: option, province })}
             className={cn(
-              'rounded-full border px-3 py-1 text-sm transition-colors',
+              'rounded-full border px-3 py-1 text-body-sm transition-colors',
               type === option
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-input hover:bg-accent',
+                ? 'border-primary-600 bg-action-primary text-on-primary'
+                : 'border-input hover:bg-neutral-100',
             )}
           >
             {t(`types.${option}`)}
@@ -81,10 +86,10 @@ export default async function CatalogPage({
           <Link
             href={catalogHref({ type })}
             className={cn(
-              'rounded-full border px-3 py-1 text-xs transition-colors',
+              'rounded-full border px-3 py-1 text-caption transition-colors',
               !province
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-input hover:bg-accent',
+                ? 'border-primary-600 bg-action-primary text-on-primary'
+                : 'border-input hover:bg-neutral-100',
             )}
           >
             {t('allProvinces')}
@@ -94,10 +99,10 @@ export default async function CatalogPage({
               key={value}
               href={catalogHref({ type, province: value })}
               className={cn(
-                'rounded-full border px-3 py-1 text-xs transition-colors',
+                'rounded-full border px-3 py-1 text-caption transition-colors',
                 province === value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-input hover:bg-accent',
+                  ? 'border-primary-600 bg-action-primary text-on-primary'
+                  : 'border-input hover:bg-neutral-100',
               )}
             >
               {value}
@@ -107,7 +112,7 @@ export default async function CatalogPage({
       ) : null}
 
       {items.length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">{t('empty')}</p>
+        <p className="mt-6 text-body-sm text-muted">{t('empty')}</p>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
@@ -120,16 +125,16 @@ export default async function CatalogPage({
                 />
               ) : null}
               <CardHeader>
-                <CardTitle className="text-base">{item.name}</CardTitle>
+                <CardTitle className="text-body">{item.name}</CardTitle>
                 <CardDescription>
                   {item.province ?? t('provinceFallback')} · {t(`types.${item.type}`)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {item.description ? (
-                  <p className="mb-3 text-sm text-muted-foreground">{item.description}</p>
+                  <p className="mb-3 text-body-sm text-muted">{item.description}</p>
                 ) : null}
-                <p className="text-sm font-medium">
+                <p className="text-body-sm font-medium">
                   {item.currency} {Number(item.basePrice).toFixed(2)}
                 </p>
               </CardContent>

@@ -1,41 +1,144 @@
 /**
- * Fallback design tokens. `@ota/theming` overwrites these per tenant by setting
- * the same custom properties on the document root; these defaults keep
- * components renderable in isolation (tests, Storybook-style previews, a fork
- * that has not yet set a palette).
+ * Core design tokens (ADR 0006): the Vereda design system's three tiers, as
+ * exported from the canvas (`design/vereda-v1.1/handoff/tokens.css`). These are
+ * the defaults; `@ota/theming` sets a tenant's differences inline on `<html>`.
+ * Alias and component tokens are declared on `:root` so they resolve against
+ * whatever primitives the root carries.
  */
 :root {
-  --ota-background: 180 20% 99%;
-  --ota-foreground: 174 30% 12%;
-  --ota-card: 0 0% 100%;
-  --ota-card-foreground: 174 30% 12%;
-  --ota-popover: 0 0% 100%;
-  --ota-popover-foreground: 174 30% 12%;
-  --ota-primary: 174 77% 26%;
-  --ota-primary-foreground: 0 0% 100%;
-  --ota-secondary: 172 30% 94%;
-  --ota-secondary-foreground: 174 40% 20%;
-  --ota-muted: 172 25% 95%;
-  --ota-muted-foreground: 174 12% 42%;
-  --ota-accent: 160 45% 90%;
-  --ota-accent-foreground: 174 45% 18%;
-  --ota-destructive: 0 72% 51%;
-  --ota-destructive-foreground: 0 0% 100%;
-  --ota-success: 142 71% 40%;
-  --ota-success-foreground: 0 0% 100%;
-  --ota-warning: 38 92% 50%;
-  --ota-warning-foreground: 26 30% 12%;
-  --ota-timeout: 27 90% 55%;
-  --ota-timeout-foreground: 26 30% 12%;
-  --ota-border: 172 20% 88%;
-  --ota-input: 172 20% 88%;
-  --ota-ring: 174 77% 30%;
-  --ota-sidebar: 174 25% 15%;
-  --ota-sidebar-foreground: 172 20% 92%;
-  --ota-sidebar-accent: 174 30% 22%;
-  --ota-sidebar-accent-foreground: 0 0% 100%;
-  --ota-radius: 0.625rem;
-  --ota-radius-sm: 0.25rem;
-  --ota-radius-md: 0.625rem;
-  --ota-radius-lg: 1.25rem;
+  /* ===== primitive ===== */
+  /* brand */
+  --color-primary-700: #083b50;
+  --color-primary-600: #0b4f6c;
+  --color-primary-500: #0e6b8c;
+  --color-primary-100: #e6f0f4;
+  --color-secondary-700: #7a2a16;
+  --color-secondary-600: #a83e24;
+  --color-secondary-500: #c75b39;
+  --color-secondary-100: #f7e4dc;
+  --color-accent-600: #d99a1f;
+  --color-accent-500: #f2b134;
+  --color-accent-100: #fef3d6;
+  /* neutrals (warm) */
+  --color-neutral-900: #1f1b17;
+  --color-neutral-700: #4a433d;
+  --color-neutral-500: #6e665e;
+  --color-neutral-300: #d6cec3;
+  --color-neutral-200: #e8e2d9;
+  --color-neutral-100: #f3eee6;
+  --color-neutral-50: #fbf8f3;
+  --color-neutral-0: #ffffff;
+  /* semantic fg / bg */
+  --color-success-600: #2e7d32;
+  --color-success-100: #e8f5e9;
+  --color-warning-600: #b45309;
+  --color-warning-100: #fef3c7;
+  --color-error-600: #c62828;
+  --color-error-100: #fdecea;
+  --color-info-600: #1565c0;
+  --color-info-100: #e3f2fd;
+  --color-timeout-600: #c62828;
+  /* type: the font families are in the :where(:root) block below */
+  /* space (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  /* geometry */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px rgba(31, 27, 23, 0.08);
+  --shadow-md: 0 4px 12px rgba(31, 27, 23, 0.1);
+  --shadow-lg: 0 12px 32px rgba(31, 27, 23, 0.16);
+  /* motion: the DS-Handoff values (the export carries the reduced-motion 0ms) */
+  --motion-fast: 120ms ease-out;
+  --motion-base: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-slow: 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* layout */
+  --container-max: 1280px;
+  --gutter: 24px;
+  --margin-xs: 24px;
+  --margin-md: 32px;
+  --margin-lg: 40px;
+  --touch-min: 44px;
+  --touch-base: 48px;
+  /* ===== alias ===== */
+  --color-text-default: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-700);
+  --color-text-muted: var(--color-neutral-500);
+  --color-bg-page: var(--color-neutral-50);
+  --color-bg-surface: var(--color-neutral-0);
+  --color-bg-sunken: var(--color-neutral-100);
+  --color-border: var(--color-neutral-200);
+  --color-action-primary: var(--color-primary-600);
+  --color-action-primary-hover: var(--color-primary-500);
+  --color-action-primary-active: var(--color-primary-700);
+  --text-display-1: 600 56px/64px var(--font-display);
+  --text-display-2: 600 48px/56px var(--font-display);
+  --text-h1: 600 40px/48px var(--font-display);
+  --text-h2: 600 32px/40px var(--font-display);
+  --text-h3: 600 24px/32px var(--font-body);
+  --text-h4: 600 20px/28px var(--font-body);
+  --text-body-lg: 400 18px/28px var(--font-body);
+  --text-body: 400 16px/24px var(--font-body);
+  --text-body-sm: 400 14px/20px var(--font-body);
+  --text-caption: 500 12px/16px var(--font-body);
+  --text-overline: 700 12px/16px var(--font-body);
+  /* ===== component ===== */
+  --color-border-input: var(--color-neutral-300);
+  --color-focus-ring: var(--color-primary-500);
+  --text-button: 600 16px/24px var(--font-body);
+  /* build addition (change request 01, A7); @ota/theming switches it to ink on a light primary */
+  --color-text-on-primary: var(--color-neutral-0);
+}
+
+/*
+ * Font families. The apps' font loader (next/font) sets these on <html> with
+ * the self-hosted faces; these zero-specificity defaults apply only where no
+ * loader runs (tests, isolated previews).
+ */
+:where(:root) {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Focus is a 2 px ring with a 2 px offset, never removed (DS 06 §03). Dark
+   surfaces switch the colour to ochre with `outline-accent-500`. */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Every surface sets its page title in the display face (the boards' `.disp`):
+   Fraunces 600 with tightened tracking; the size comes from the page. */
+h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms !important;
+    --motion-base: 0ms !important;
+    --motion-slow: 0ms !important;
+  }
+
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
 }

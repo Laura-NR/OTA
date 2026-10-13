@@ -56,8 +56,8 @@ then drive the design work from it:
   - produce a concrete gap list between design.md and the current UI, and flag any
     place design.md contradicts the spec, the ADRs, or the tenant token contract;
   - implement the design in small, reviewable increments: reuse packages/ui
-    components and the --ota-* CSS-variable contract (packages/theming /
-    packages/ui), keep all copy in packages/i18n (es/en/fr) — no hardcoded
+    components and the design-token contract (packages/theming /
+    packages/ui, ADR 0006), keep all copy in packages/i18n (es/en/fr) — no hardcoded
     strings in components — and keep the white-label boundary intact;
   - do not redesign the domain or invent features to satisfy a visual; if a screen
     needs new data, raise it as a plan item.

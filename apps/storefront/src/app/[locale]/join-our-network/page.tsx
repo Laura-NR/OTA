@@ -8,8 +8,8 @@ export default async function JoinOurNetworkPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
-      <p className="mt-2 text-muted-foreground">{t('description')}</p>
+      <h1 className="text-h2 font-semibold tracking-tight">{t('title')}</h1>
+      <p className="mt-2 text-muted">{t('description')}</p>
 
       <Card className="mt-6">
         <CardHeader>

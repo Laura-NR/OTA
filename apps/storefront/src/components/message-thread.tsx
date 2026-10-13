@@ -94,7 +94,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
 
         <div className="max-h-80 space-y-3 overflow-y-auto rounded-md border p-4">
           {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('empty')}</p>
+            <p className="text-body-sm text-muted">{t('empty')}</p>
           ) : (
             messages.map((message) => (
               <div
@@ -108,8 +108,8 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
                 <div
                   className={
                     message.sender === 'TRAVELER'
-                      ? 'max-w-[80%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground'
-                      : 'max-w-[80%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground'
+                      ? 'max-w-[80%] rounded-lg bg-action-primary px-3 py-2 text-body-sm text-on-primary'
+                      : 'max-w-[80%] rounded-lg bg-sunken px-3 py-2 text-body-sm text-default'
                   }
                 >
                   <p className="whitespace-pre-wrap">{message.body}</p>

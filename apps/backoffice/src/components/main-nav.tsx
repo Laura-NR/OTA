@@ -35,11 +35,13 @@ export function MainNav() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? 'page' : undefined}
             className={cn(
-              'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+              // On the dark sidebar the focus ring is ochre, drawn inside the item.
+              'flex h-touch items-center rounded-md px-3 text-body-sm font-medium transition-colors focus-visible:outline-accent-500 focus-visible:-outline-offset-2',
               active
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+                ? 'bg-neutral-0/[.14] font-semibold text-neutral-0'
+                : 'text-primary-100 hover:bg-neutral-0/[.08] hover:text-neutral-0',
             )}
           >
             {t(item.key)}

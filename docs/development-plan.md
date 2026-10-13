@@ -48,7 +48,7 @@ typecheck, test, build green.
 | Storefront | Content home, catalog + Cuba map, traveler auth/dashboard, five-step builder, recruitment portal, i18n es/en/fr, wire checkout | `apps/storefront/src/app/[locale]/*`, `packages/i18n`, migration `20260922122512_supplier_applications` |
 | GDPR retention (§3.5) | Daily BullMQ scan, HMAC keep-alive link, in-place anonymize, Tier 1 free-text scrub | migration `20260924065637_retention_lifecycle`; `apps/api/src/retention`; `packages/domain/src/retention`; `docs/adr/0004-data-retention.md`; `docs/pii-at-rest-review.md` |
 | Hardening | Liveness/readiness split, runbook, hand-rolled rate limiting, RBAC matrix, fork tooling | `apps/api/src/health`, `docs/runbook.md`, `apps/api/src/common/rate-limit.ts`, `apps/api/test/{health,rate-limit}.e2e.test.ts`, `tools/create-tenant.mjs` |
-| Design system (partial) | Vereda tenant identity + palette, `warning`/`timeout` alert tokens, self-hosted Bricolage Grotesque, design radii + two elevation levels, back-office i18n plumbing (shell/nav/app-shell/login) | `packages/theming/src/tokens.ts`, `packages/ui/{styles.css,tailwind-preset.mjs,src/components}`, `tenant/agency.config.json`, `tenant/assets/fonts/BricolageGrotesque.woff2`, `apps/{storefront,backoffice}/src/lib/font.ts`, `packages/i18n/src/messages/*.json`, `apps/backoffice/src/i18n/request.ts` |
+| Design system v1.1 (foundations, in progress) | The canvas token contract (83 tokens, 3 tiers) compiled per tenant, Fraunces / Inter / IBM Plex Mono self-hosted, DS 02/03 styles on the base components, back-office i18n — see `docs/design-v1.1-plan.md` Phase 1 | `packages/theming/src/tokens.ts`, `packages/ui/{styles.css,tailwind-preset.mjs,src/components}`, `tenant/agency.config.json`, `tenant/assets/fonts/`, `apps/{storefront,backoffice}/src/lib/font.ts`, `docs/adr/0006-design-system-v1.1.md` |
 
 ### (b) REMAINS
 
@@ -288,8 +288,9 @@ variable fails fast. Key variables: `DATABASE_URL`, `REDIS_URL`, `S3_*`,
   `culturalEventsBanner`, `recruitmentPortal`, `customItineraryBuilder`,
   `instantBooking`, `directBankTransferRail`, `creditCardGatewayRail`),
   `destinations.geographyType`, `emergencyContacts`, and `payments.bankTransfer`.
-- `packages/theming` — theme presets; tokens compiled to `--ota-*` CSS variables
-  consumed by `packages/ui` and both web apps (`THEME_TOKEN_KEYS` is the contract).
+- `packages/theming` — the design-token contract (ADR 0006): primitive, alias and
+  component tokens with the default preset, compiled per tenant into CSS custom
+  properties consumed by `packages/ui` and both web apps.
 - `/tenant/assets` — logos, favicons, illustrations, empty-state art, watermarks.
   Later, when runtime tenancy is added, these can move to an asset bucket keyed by
   tenant ID.

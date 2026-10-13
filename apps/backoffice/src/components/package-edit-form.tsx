@@ -173,7 +173,7 @@ export function PackageEditForm({
                 maxLength={3}
               />
             </div>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-body-sm">
               <input
                 type="checkbox"
                 checked={active}
@@ -197,12 +197,12 @@ export function PackageEditForm({
               {rows.map((row, index) => (
                 <li
                   key={`${row.inventoryItemId}-${index}`}
-                  className="flex items-center gap-3 rounded-md border p-2 text-sm"
+                  className="flex items-center gap-3 rounded-md border p-2 text-body-sm"
                 >
                   <span className="flex-1 font-medium">
                     {itemName(row.inventoryItemId)}
                   </span>
-                  <label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <label className="flex items-center gap-1 text-caption text-muted">
                     {t('day')}
                     <Input
                       type="number"
@@ -218,7 +218,7 @@ export function PackageEditForm({
                   <Button
                     type="button"
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     onClick={() => removeService(index)}
                   >
                     {t('remove')}
@@ -245,7 +245,7 @@ export function PackageEditForm({
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={addService}
               disabled={!newItemId}
             >

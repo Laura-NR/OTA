@@ -67,7 +67,7 @@ export function VerificationActions({
           <Button
             key={action.to}
             size="sm"
-            variant={action.to === 'REJECTED' ? 'destructive' : 'outline'}
+            variant={action.to === 'REJECTED' ? 'destructive' : 'secondary'}
             disabled={pending}
             onClick={() => setVerification(action.to)}
           >

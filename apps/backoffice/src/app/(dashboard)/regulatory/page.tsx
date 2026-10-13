@@ -2,6 +2,7 @@ import type { RegulatorySummaryDto } from '@ota/schemas';
 import {
   Alert,
   Button,
+  buttonClassName,
   Card,
   CardContent,
   CardDescription,
@@ -25,9 +26,9 @@ function percent(value: number): string {
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold tracking-tight">{value}</div>
+    <div className="rounded-lg border bg-surface p-4">
+      <div className="text-caption uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1 text-h3 font-semibold tracking-tight">{value}</div>
     </div>
   );
 }
@@ -59,8 +60,8 @@ export default async function RegulatoryPage({
         <>
           <div className="flex flex-wrap items-center gap-3">
             <form className="flex items-end gap-2">
-              <label className="space-y-1 text-sm">
-                <span className="block text-xs uppercase tracking-wide text-muted-foreground">
+              <label className="space-y-1 text-body-sm">
+                <span className="block text-caption uppercase tracking-wide text-muted">
                   {t('year')}
                 </span>
                 <input
@@ -70,16 +71,16 @@ export default async function RegulatoryPage({
                   placeholder={t('allTime')}
                   min={2000}
                   max={2100}
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-ota-1"
+                  className="h-10 w-32 rounded-md border border-input bg-surface px-3 text-body focus:border-primary-600"
                 />
               </label>
-              <Button type="submit" size="sm" variant="outline">
+              <Button type="submit" size="sm" variant="secondary">
                 {t('apply')}
               </Button>
             </form>
             <a
               href={`/api/ota/analytics/regulatory/fiscal-export${query}`}
-              className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+              className={buttonClassName({ variant: 'secondary', size: 'sm' })}
             >
               {t('downloadCsv')}
             </a>

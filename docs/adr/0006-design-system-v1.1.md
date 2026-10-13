@@ -29,7 +29,8 @@ retired and now points here.**
 - **Tokens (Q1).** The core token contract is the design's three-tier set: 59 primitives, 21
   aliases and 3 component tokens, using the design's names (`--color-primary-600`,
   `--color-text-default`, `--text-h1`, `--space-4`, …).
-  - `packages/theming` holds the default values and compiles a tenant manifest into these custom
+  - `packages/theming` holds the default values, as the preset `islaAbierta` (the name A-Settings
+    gives the manifest's `theme.palette`), and compiles a tenant manifest into these custom
     properties. A tenant overrides **primitives only** (DS 06: "alias and component tokens never
     change per tenant").
   - `packages/ui`'s Tailwind preset maps utilities onto these names. The `--ota-*` HSL-triple
@@ -62,7 +63,9 @@ retired and now points here.**
 ## Consequences
 
 - **Breaking for forks.** The `theme.palette` presets `ecoGreen`, `oceanBlue`, `terracotta` and
-  `slate` no longer exist; an unknown palette falls back to `vereda`, as before. A fork restyles by
+  `slate` no longer exist; an unknown palette falls back to `islaAbierta`, as before. A-Settings
+  also lists an `ecoGreen` preset, but the design defines no values for it; that question is in
+  change request 01 (A8). A fork restyles by
   setting `branding.primaryColor` (the primary scale is derived from it) and, optionally,
   `theme.tokens` (any primitive). The default `branding.primaryColor` becomes `#0B4F6C`.
 - **`theme.borderRadius`** keeps working: it scales the radius primitives (`none`, `sm`, `md`,

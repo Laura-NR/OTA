@@ -22,12 +22,10 @@ export function ReviewForm({ reservationId, review }: ReviewFormProps) {
 
   if (review) {
     return (
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-body-sm">
         <p className="font-medium">{t('yourRating')}</p>
         <p>{t('stars', { count: review.rating })}</p>
-        {review.comment ? (
-          <p className="text-muted-foreground">{review.comment}</p>
-        ) : null}
+        {review.comment ? <p className="text-muted">{review.comment}</p> : null}
       </div>
     );
   }

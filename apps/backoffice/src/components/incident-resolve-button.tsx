@@ -32,8 +32,8 @@ export function IncidentResolveButton({ incidentId }: { incidentId: string }) {
 
   return (
     <div className="space-y-1">
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      <Button size="sm" variant="outline" disabled={busy} onClick={resolve}>
+      {error ? <p className="text-caption text-error-600">{error}</p> : null}
+      <Button size="sm" variant="secondary" disabled={busy} onClick={resolve}>
         {busy ? t('resolving') : t('resolve')}
       </Button>
     </div>

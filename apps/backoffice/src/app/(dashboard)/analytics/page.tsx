@@ -1,6 +1,7 @@
 import type { AnalyticsOverviewDto, AssistantSummaryDto } from '@ota/schemas';
 import {
   Alert,
+  buttonClassName,
   Card,
   CardContent,
   CardDescription,
@@ -28,9 +29,9 @@ function percent(value: number): string {
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold tracking-tight">{value}</div>
+    <div className="rounded-lg border bg-surface p-4">
+      <div className="text-caption uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1 text-h3 font-semibold tracking-tight">{value}</div>
     </div>
   );
 }
@@ -65,13 +66,13 @@ export default async function AnalyticsPage({
       <div className="flex flex-wrap gap-2">
         <a
           href={`/api/ota/analytics/export/xlsx${query}`}
-          className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          className={buttonClassName({ variant: 'secondary', size: 'sm' })}
         >
           {t('downloadXlsx')}
         </a>
         <a
           href={`/api/ota/analytics/export/pdf${query}`}
-          className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          className={buttonClassName({ variant: 'secondary', size: 'sm' })}
         >
           {t('downloadPdf')}
         </a>
@@ -109,7 +110,7 @@ export default async function AnalyticsPage({
                 <CardTitle>{t('aiSummary')}</CardTitle>
                 <CardDescription>{t('aiSummaryDescription')}</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm">{assistant.text}</CardContent>
+              <CardContent className="text-body-sm">{assistant.text}</CardContent>
             </Card>
           ) : null}
 
@@ -249,7 +250,7 @@ export default async function AnalyticsPage({
                 })}
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm">
+            <CardContent className="text-body-sm">
               {t('averageRating', { value: overview.quality.averageRating.toFixed(2) })}
             </CardContent>
           </Card>

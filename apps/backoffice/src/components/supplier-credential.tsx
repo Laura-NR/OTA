@@ -94,7 +94,7 @@ export function SupplierCredential({
             />
           )}
           <a
-            className="inline-block text-sm font-medium text-primary underline-offset-4 hover:underline"
+            className="inline-block text-body-sm font-medium text-primary-600 underline-offset-4 hover:underline"
             href={credentialUrl}
             target="_blank"
             rel="noreferrer"

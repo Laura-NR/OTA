@@ -69,7 +69,7 @@ export default async function PackagesPage() {
                       <Link href={`/packages/${pkg.id}`} className="hover:underline">
                         {pkg.name}
                       </Link>
-                      <div className="text-xs text-muted-foreground">{pkg.slug}</div>
+                      <div className="text-caption text-muted">{pkg.slug}</div>
                     </TableCell>
                     <TableCell>{pkg.province ?? '—'}</TableCell>
                     <TableCell>{pkg.durationDays}</TableCell>

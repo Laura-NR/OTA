@@ -94,7 +94,7 @@ export function InventoryMediaManager({
                 className="h-32 w-full rounded object-cover"
               />
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-caption text-muted">
                   {image.altText ?? t('imageN', { position: image.position + 1 })}
                 </span>
                 <Button

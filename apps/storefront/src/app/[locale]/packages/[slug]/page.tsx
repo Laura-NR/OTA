@@ -29,24 +29,21 @@ export default async function PackageDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <Link
-        href="/packages"
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
+      <Link href="/packages" className="text-body-sm text-muted hover:text-default">
         ← {t('back')}
       </Link>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">{pkg.name}</h1>
+        <h1 className="text-h2 font-semibold tracking-tight">{pkg.name}</h1>
         <Badge variant="outline">{t('days', { count: pkg.durationDays })}</Badge>
       </div>
-      <p className="mt-2 text-muted-foreground">
+      <p className="mt-2 text-muted">
         {[pkg.province, t('days', { count: pkg.durationDays })]
           .filter(Boolean)
           .join(' · ')}
       </p>
       {pkg.description ? (
-        <p className="mt-3 max-w-3xl text-muted-foreground">{pkg.description}</p>
+        <p className="mt-3 max-w-3xl text-muted">{pkg.description}</p>
       ) : null}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -57,10 +54,10 @@ export default async function PackageDetailPage({
           <CardContent className="space-y-4">
             {days.map((day) => (
               <div key={day} className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="text-caption font-semibold uppercase tracking-wide text-muted">
                   {t('day', { day: day + 1 })}
                 </p>
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2 text-body-sm">
                   {pkg.services
                     .filter((service) => service.dayOffset === day)
                     .map((service) => (
@@ -69,9 +66,7 @@ export default async function PackageDetailPage({
                         className="flex justify-between gap-3 rounded-md border p-3"
                       >
                         <span className="font-medium">{service.itemName}</span>
-                        <span className="text-muted-foreground">
-                          {service.itemProvince ?? ''}
-                        </span>
+                        <span className="text-muted">{service.itemProvince ?? ''}</span>
                       </li>
                     ))}
                 </ul>

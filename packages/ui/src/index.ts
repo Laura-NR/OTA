@@ -2,8 +2,8 @@ export { cn } from './cn';
 export { Alert } from './components/alert';
 export type { AlertProps, AlertVariant } from './components/alert';
 export { Badge } from './components/badge';
-export type { BadgeProps, BadgeVariant } from './components/badge';
-export { Button } from './components/button';
+export type { BadgeProps, BadgeSize, BadgeVariant } from './components/badge';
+export { Button, buttonClassName } from './components/button';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './components/button';
 export {
   Card,
@@ -26,3 +26,5 @@ export {
   TableHeader,
   TableRow,
 } from './components/table';
+export { Textarea } from './components/textarea';
+export type { TextareaProps } from './components/textarea';

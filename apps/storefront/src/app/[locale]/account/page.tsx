@@ -23,8 +23,8 @@ export default async function AccountPage() {
     <div className="mx-auto max-w-5xl px-4 py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="text-h2 font-semibold tracking-tight">{t('title')}</h1>
+          <p className="mt-1 text-body-sm text-muted">
             {t('signedInAs', { email: session.user.email })}
           </p>
         </div>
@@ -39,17 +39,17 @@ export default async function AccountPage() {
             <li key={reservation.id}>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-                  <CardTitle className="text-base">
+                  <CardTitle className="text-body">
                     <Link
                       href={`/account/reservations/${reservation.id}`}
-                      className="text-primary underline-offset-4 hover:underline"
+                      className="text-primary-600 underline-offset-4 hover:underline"
                     >
                       {reservation.bookingCode}
                     </Link>
                   </CardTitle>
                   <Badge variant="secondary">{ts(reservation.status)}</Badge>
                 </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
+                <CardContent className="text-body-sm text-muted">
                   {new Date(reservation.startDate).toLocaleDateString()} →{' '}
                   {new Date(reservation.endDate).toLocaleDateString()} ·{' '}
                   {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}{' '}

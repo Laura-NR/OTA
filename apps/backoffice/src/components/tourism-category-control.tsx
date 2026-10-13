@@ -29,7 +29,7 @@ export function TourismCategoryControl({
 
   if (!canManage) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body-sm text-muted">
         {t('viewLabel', { category: category.replaceAll('_', ' ') })}
       </p>
     );
@@ -72,7 +72,7 @@ export function TourismCategoryControl({
         </div>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           disabled={busy || value === category}
           onClick={save}
         >

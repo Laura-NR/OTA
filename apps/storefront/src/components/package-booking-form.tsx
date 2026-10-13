@@ -3,6 +3,7 @@
 import {
   Alert,
   Button,
+  buttonClassName,
   Card,
   CardContent,
   CardDescription,
@@ -70,14 +71,14 @@ export function PackageBookingForm({
         <CardDescription>{t('bookDescription')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-lg font-semibold">{priceLabel}</p>
+        <p className="text-body-lg font-semibold">{priceLabel}</p>
 
         {!signedIn ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">{t('signInPrompt')}</p>
+            <p className="text-body-sm text-muted">{t('signInPrompt')}</p>
             <Link
               href={`/login?next=${encodeURIComponent(`/packages/${slug}`)}`}
-              className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className={buttonClassName()}
             >
               {t('signIn')}
             </Link>

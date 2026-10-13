@@ -9,30 +9,30 @@ export async function SiteHeader({ agencyName }: { agencyName: string }) {
   const session = await getServerSession();
 
   return (
-    <header className="border-b bg-background">
+    <header className="border-b bg-surface">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
+        <Link href="/" className="text-body-lg font-semibold tracking-tight">
           {agencyName}
         </Link>
-        <nav className="flex items-center gap-4 text-sm font-medium">
-          <Link href="/" className="hover:text-primary">
+        <nav className="flex items-center gap-4 text-body-sm font-medium">
+          <Link href="/" className="hover:text-primary-600">
             {t('home')}
           </Link>
-          <Link href="/catalog" className="hover:text-primary">
+          <Link href="/catalog" className="hover:text-primary-600">
             {t('experiences')}
           </Link>
-          <Link href="/packages" className="hover:text-primary">
+          <Link href="/packages" className="hover:text-primary-600">
             {t('packages')}
           </Link>
-          <Link href="/join-our-network" className="hover:text-primary">
+          <Link href="/join-our-network" className="hover:text-primary-600">
             {t('workWithUs')}
           </Link>
           {session ? (
-            <Link href="/account" className="hover:text-primary">
+            <Link href="/account" className="hover:text-primary-600">
               {t('account')}
             </Link>
           ) : (
-            <Link href="/login" className="hover:text-primary">
+            <Link href="/login" className="hover:text-primary-600">
               {t('signIn')}
             </Link>
           )}

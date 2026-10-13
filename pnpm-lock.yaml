@@ -663,6 +663,9 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0
     devDependencies:
+      '@ota/theming':
+        specifier: workspace:*
+        version: link:../theming
       '@types/node':
         specifier: ^26.6.1
         version: 26.6.2

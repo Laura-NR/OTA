@@ -12,7 +12,7 @@ export function LocaleSwitcher() {
   const pathname = usePathname();
 
   return (
-    <div className="flex items-center gap-1 text-xs uppercase">
+    <div className="flex items-center gap-1 text-caption uppercase">
       {SUPPORTED_LOCALES.map((candidate) => (
         <Link
           key={candidate}
@@ -21,8 +21,8 @@ export function LocaleSwitcher() {
           className={cn(
             'rounded px-1.5 py-0.5 transition-colors',
             candidate === locale
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground',
+              ? 'bg-action-primary text-on-primary'
+              : 'text-muted hover:text-default',
           )}
         >
           {candidate}

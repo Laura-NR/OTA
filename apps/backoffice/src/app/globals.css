@@ -3,11 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
+  /* The desk reads at 14 px (DS 07); inputs keep 16 px to avoid zoom. */
   body {
-    @apply bg-background text-foreground;
+    @apply bg-page font-body text-body-sm text-default;
   }
 }

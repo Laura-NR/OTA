@@ -27,6 +27,26 @@ describe('parseTenantConfig', () => {
     expect(config.payments.bankTransfer).toBeNull();
   });
 
+  it('defaults the theme to the Vereda design system with no token overrides', () => {
+    const config = parseTenantConfig(minimal);
+
+    expect(config.branding.primaryColor).toBe('#0B4F6C');
+    expect(config.theme).toEqual({
+      palette: 'islaAbierta',
+      borderRadius: 'md',
+      tokens: {},
+    });
+  });
+
+  it('keeps primitive token overrides from the manifest', () => {
+    const config = parseTenantConfig({
+      ...minimal,
+      theme: { tokens: { 'color-secondary-600': '#8B2F1A' } },
+    });
+
+    expect(config.theme.tokens).toEqual({ 'color-secondary-600': '#8B2F1A' });
+  });
+
   it('honours explicit feature flags', () => {
     const config = parseTenantConfig({
       ...minimal,

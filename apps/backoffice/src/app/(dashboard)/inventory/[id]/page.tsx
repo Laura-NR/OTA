@@ -44,13 +44,10 @@ export default async function InventoryDetailPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Link
-          href="/inventory"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
+        <Link href="/inventory" className="text-body-sm text-muted hover:text-default">
           {t('back')}
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">{item.name}</h1>
+        <h1 className="text-h3 font-semibold tracking-tight">{item.name}</h1>
         <Badge variant="secondary">{item.type.replaceAll('_', ' ')}</Badge>
         <Badge variant={item.active ? 'success' : 'outline'}>
           {item.active ? t('activeLabel') : t('inactive')}
@@ -72,7 +69,7 @@ export default async function InventoryDetailPage({
           {canWrite ? (
             <InventoryEditForm item={item} />
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body-sm text-muted">
               {item.description ?? t('noDescription')}
             </p>
           )}
@@ -98,9 +95,9 @@ export default async function InventoryDetailPage({
           {canWrite ? (
             <PricingRulesManager inventoryItemId={item.id} rules={rules} />
           ) : rules.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('noRules')}</p>
+            <p className="text-body-sm text-muted">{t('noRules')}</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-body-sm">
               {rules.map((rule) => (
                 <li key={rule.id}>
                   {rule.label} — {rule.kind.replaceAll('_', ' ')}

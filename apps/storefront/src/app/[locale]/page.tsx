@@ -1,15 +1,20 @@
 import { isFeatureEnabled } from '@ota/config';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
+import {
+  buttonClassName,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
 import { getCatalog } from '@/lib/catalog';
 import { getTenantConfig } from '@/lib/tenant';
 
-const ctaPrimary =
-  'inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90';
-const ctaSecondary =
-  'inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground';
+const ctaPrimary = buttonClassName();
+const ctaSecondary = buttonClassName({ variant: 'secondary' });
 
 export default async function HomePage() {
   const tenant = getTenantConfig();
@@ -21,11 +26,11 @@ export default async function HomePage() {
   return (
     <div>
       <section className="mx-auto max-w-5xl px-4 py-16">
-        <p className="text-sm font-medium text-primary">{t('eyebrow')}</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">
+        <p className="text-body-sm font-medium text-primary-600">{t('eyebrow')}</p>
+        <h1 className="mt-2 text-h1 font-semibold tracking-tight sm:text-display-2">
           {tenant.branding.agencyName}
         </h1>
-        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">{t('description')}</p>
+        <p className="mt-4 max-w-2xl text-body-lg text-muted">{t('description')}</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/catalog" className={ctaPrimary}>
             {t('explore')}
@@ -39,20 +44,20 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 pb-16">
-        <h2 className="text-xl font-semibold tracking-tight">{t('featured')}</h2>
+        <h2 className="text-h4 font-semibold tracking-tight">{t('featured')}</h2>
         {featured.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">{t('preparing')}</p>
+          <p className="mt-3 text-body-sm text-muted">{t('preparing')}</p>
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((item) => (
               <Card key={item.id}>
                 <CardHeader>
-                  <CardTitle className="text-base">{item.name}</CardTitle>
+                  <CardTitle className="text-body">{item.name}</CardTitle>
                   <CardDescription>
                     {item.province ?? 'Cuba'} · {tc(`types.${item.type}`)}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-sm font-medium">
+                <CardContent className="text-body-sm font-medium">
                   {item.currency} {Number(item.basePrice).toFixed(2)}
                 </CardContent>
               </Card>

@@ -43,7 +43,7 @@ export function PackageActions({ packageId, active, canManage }: PackageActionsP
       <div className="flex justify-end gap-2">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           disabled={busy}
           onClick={() =>
             run(() =>
