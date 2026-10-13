@@ -134,6 +134,16 @@ The build order follows HANDOFF §7, reordered so that the work needing no migra
 
 **The e2e suite asserts on English copy**, so an increment that adopts design copy updates its specs in the same PR.
 
+### Progress
+
+| Phase | Status (2026-10-13) |
+|---|---|
+| 0 Intake | **Done** except sending the change request: design package committed (`design/vereda-v1.1/`), ADR 0006, `docs/design.md` retired, `docs/design-change-request-01.md` drafted. |
+| 1 Foundations | **Done.** Token contract and tenant compilation, Fraunces / Inter / IBM Plex Mono, brand files and favicon, Lucide sprite, the DS 02–05 component set, the DS 03 traveler vocabulary, the copy-inventory helper. Lint, typecheck, unit tests (325 passed, 4 skipped) and all 31 e2e tests pass. |
+| 2 Shells | Next. |
+
+Phase 1 differs from the text below in four places: the fonts are the Latin subset only (it covers EN/ES/FR/DE/IT; see `tenant/assets/fonts/README.md`); the default preset is `islaAbierta`, the name A-Settings uses; "Travel ready" is not mapped until document approval exists (M3); and the copy step is a read-only helper (`tools/copy-inventory.mjs`) rather than an importer, so translations are reviewed before they land.
+
 ### Phase 0: Intake (no product code)
 1. Send D1–D8 to the design team. Ask for the missing tokens (Q2), the corrected T-Matrix and T-Assets, page 06 PDFs, and acceptance of row 11.
 2. Get answers to Q1–Q4 and Q11. Commit the design package as decided.
