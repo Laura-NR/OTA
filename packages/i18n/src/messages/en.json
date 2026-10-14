@@ -20,7 +20,8 @@
     "main": "Main",
     "homeLabel": "{agency} home",
     "account": "My account",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "specialist": "Talk to a specialist"
   },
   "footer": {
     "license": "Licensed travel agency · MINTUR licence {license}",
@@ -29,7 +30,89 @@
     "joinNetwork": "Join our network",
     "paymentMethods": "Payment methods",
     "sepa": "SEPA",
-    "copyright": "© {year} {name}"
+    "copyright": "© {year} {name}",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "about": "About us",
+    "emergency": "Emergency line 24/7",
+    "entry": "E-visa & entry",
+    "money": "Money & cash",
+    "health": "Health & insurance",
+    "usTravelers": "US travelers & OFAC",
+    "privacy": "Privacy"
+  },
+  "pages": {
+    "common": {
+      "placeholderTitle": "Sample content",
+      "placeholderText": "This page shows placeholder text until {agency} publishes the final version.",
+      "onThisPage": "On this page",
+      "photoToCome": "Photo to come"
+    },
+    "support": {
+      "channelsTitle": "How to reach us",
+      "openWhatsapp": "Open WhatsApp",
+      "openTrips": "Open my trips",
+      "faq": "FAQ",
+      "faqReviewed": "Reviewed {date}",
+      "contactTitle": "Write to us",
+      "contactLede": "Anything the FAQ didn't answer",
+      "notEmergencyTitle": "Not in an emergency?",
+      "notEmergencyText": "Then this form is right. If someone is hurt, a transfer didn't show or a storm is forecast, call the line instead.",
+      "form": {
+        "name": "Name",
+        "nameHint": "We process this to reply to you.",
+        "email": "Email",
+        "topic": "Topic",
+        "topics": {
+          "planning": "A trip I'm planning",
+          "booking": "My booking",
+          "payment": "Payment or invoice",
+          "entry": "Visa, entry, US travelers",
+          "accessibility": "Accessibility",
+          "partners": "Press, partners, join the network",
+          "complaint": "Complaint",
+          "other": "Something else"
+        },
+        "bookingCode": "Booking code",
+        "bookingCodeHint": "if you have one",
+        "message": "Message",
+        "replyIn": "Reply in",
+        "languages": {
+          "en": "English",
+          "es": "Español",
+          "fr": "Français"
+        },
+        "consent": "I agree that {agency} uses these details to answer my message.",
+        "privacyNotice": "Privacy notice",
+        "send": "Send message",
+        "sending": "Sending…",
+        "sent": "Thank you. Your message is with the desk, and we reply by email.",
+        "failed": "We couldn't send your message. Try again, or use one of the channels above.",
+        "unavailable": "The form isn't available right now. Use one of the channels above.",
+        "errors": {
+          "required": "Enter your name.",
+          "email": "Enter an email address, like name@example.com.",
+          "messageShort": "Write at least 10 characters.",
+          "consent": "Tick the box so we can answer you."
+        }
+      }
+    },
+    "blog": {
+      "count": "{count, plural, one {# guide} other {# guides}}",
+      "readingTime": "{minutes} min read",
+      "published": "Published {date}",
+      "updated": "Updated {date}",
+      "allGuides": "All guides"
+    },
+    "about": {
+      "joinTitle": "Are you a licensed guide, driver or casa owner in Cuba?",
+      "join": "Join our network",
+      "licencesTitle": "Licences & company",
+      "licenceLine": "{agency} · Travel agency licence {license}",
+      "licenceNote": "These identifiers print on every voucher, invoice and confirmation.",
+      "seeTrips": "See the trips",
+      "talkToUs": "Talk to us"
+    }
   },
   "home": {
     "eyebrow": "Community-based travel · Cuba",

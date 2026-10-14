@@ -20,7 +20,8 @@
     "main": "Accès rapides",
     "homeLabel": "{agency} : accueil",
     "account": "Mon compte",
-    "signIn": "Se connecter"
+    "signIn": "Se connecter",
+    "specialist": "Parler à un spécialiste"
   },
   "footer": {
     "license": "Agence de voyages agréée · Licence MINTUR {license}",
@@ -29,7 +30,89 @@
     "joinNetwork": "Rejoignez notre réseau",
     "paymentMethods": "Moyens de paiement",
     "sepa": "SEPA",
-    "copyright": "© {year} {name}"
+    "copyright": "© {year} {name}",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "about": "À propos",
+    "emergency": "Ligne d'urgence 24/7",
+    "entry": "E-visa et entrée",
+    "money": "Argent et espèces",
+    "health": "Santé et assurance",
+    "usTravelers": "Voyageurs américains et OFAC",
+    "privacy": "Confidentialité"
+  },
+  "pages": {
+    "common": {
+      "placeholderTitle": "Contenu d'exemple",
+      "placeholderText": "Cette page affiche un texte provisoire jusqu'à ce que {agency} publie la version finale.",
+      "onThisPage": "Sur cette page",
+      "photoToCome": "Photo à venir"
+    },
+    "support": {
+      "channelsTitle": "Nous joindre",
+      "openWhatsapp": "Ouvrir WhatsApp",
+      "openTrips": "Ouvrir mes voyages",
+      "faq": "FAQ",
+      "faqReviewed": "Revu en {date}",
+      "contactTitle": "Écrivez-nous",
+      "contactLede": "Tout ce que la FAQ n'a pas couvert",
+      "notEmergencyTitle": "Pas une urgence ?",
+      "notEmergencyText": "Alors ce formulaire convient. Si quelqu'un est blessé, si un transfert n'est pas venu ou si une tempête est annoncée, appelez plutôt la ligne.",
+      "form": {
+        "name": "Nom",
+        "nameHint": "Nous l'utilisons pour vous répondre.",
+        "email": "E-mail",
+        "topic": "Sujet",
+        "topics": {
+          "planning": "Un voyage que je prépare",
+          "booking": "Ma réservation",
+          "payment": "Paiement ou facture",
+          "entry": "Visa, entrée, voyageurs américains",
+          "accessibility": "Accessibilité",
+          "partners": "Presse, partenaires, rejoindre le réseau",
+          "complaint": "Réclamation",
+          "other": "Autre chose"
+        },
+        "bookingCode": "Code de réservation",
+        "bookingCodeHint": "si vous en avez un",
+        "message": "Message",
+        "replyIn": "Réponse en",
+        "languages": {
+          "en": "English",
+          "es": "Español",
+          "fr": "Français"
+        },
+        "consent": "J'accepte que {agency} utilise ces informations pour répondre à mon message.",
+        "privacyNotice": "Avis de confidentialité",
+        "send": "Envoyer le message",
+        "sending": "Envoi…",
+        "sent": "Merci. Votre message est entre les mains de l'équipe et nous répondons par e-mail.",
+        "failed": "Nous n'avons pas pu envoyer votre message. Réessayez ou utilisez l'un des canaux ci-dessus.",
+        "unavailable": "Le formulaire n'est pas disponible pour le moment. Utilisez l'un des canaux ci-dessus.",
+        "errors": {
+          "required": "Indiquez votre nom.",
+          "email": "Indiquez une adresse e-mail, par exemple nom@exemple.com.",
+          "messageShort": "Écrivez au moins 10 caractères.",
+          "consent": "Cochez la case pour que nous puissions vous répondre."
+        }
+      }
+    },
+    "blog": {
+      "count": "{count, plural, one {# guide} other {# guides}}",
+      "readingTime": "{minutes} min de lecture",
+      "published": "Publié le {date}",
+      "updated": "Mis à jour le {date}",
+      "allGuides": "Tous les guides"
+    },
+    "about": {
+      "joinTitle": "Vous êtes guide, chauffeur ou propriétaire de casa agréé à Cuba ?",
+      "join": "Rejoignez notre réseau",
+      "licencesTitle": "Licences et société",
+      "licenceLine": "{agency} · Licence d'agence de voyages {license}",
+      "licenceNote": "Ces identifiants figurent sur chaque bon, facture et confirmation.",
+      "seeTrips": "Voir les voyages",
+      "talkToUs": "Parlez-nous"
+    }
   },
   "home": {
     "eyebrow": "Voyages communautaires · Cuba",

@@ -16,7 +16,10 @@ export function PrimaryNav() {
   const t = useTranslations('nav');
 
   return (
-    <nav aria-label={t('primary')} className="hidden flex-1 flex-wrap gap-5 lg:flex">
+    <nav
+      aria-label={t('primary')}
+      className="hidden flex-1 gap-4 whitespace-nowrap lg:flex xl:gap-5"
+    >
       {PRIMARY_NAV.map((link) => {
         if (!link.href) {
           return null;

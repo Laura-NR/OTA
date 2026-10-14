@@ -20,7 +20,8 @@
     "main": "Accesos rápidos",
     "homeLabel": "{agency}: inicio",
     "account": "Mi cuenta",
-    "signIn": "Iniciar sesión"
+    "signIn": "Iniciar sesión",
+    "specialist": "Habla con un especialista"
   },
   "footer": {
     "license": "Agencia de viajes con licencia · Licencia MINTUR {license}",
@@ -29,7 +30,89 @@
     "joinNetwork": "Únete a nuestra red",
     "paymentMethods": "Métodos de pago",
     "sepa": "SEPA",
-    "copyright": "© {year} {name}"
+    "copyright": "© {year} {name}",
+    "faq": "Preguntas frecuentes",
+    "contact": "Contacto",
+    "about": "Quiénes somos",
+    "emergency": "Línea de emergencia 24/7",
+    "entry": "Visado electrónico y entrada",
+    "money": "Dinero y efectivo",
+    "health": "Salud y seguro",
+    "usTravelers": "Viajeros de EE. UU. y OFAC",
+    "privacy": "Privacidad"
+  },
+  "pages": {
+    "common": {
+      "placeholderTitle": "Contenido de muestra",
+      "placeholderText": "Esta página muestra un texto provisional hasta que {agency} publique la versión final.",
+      "onThisPage": "En esta página",
+      "photoToCome": "Foto pendiente"
+    },
+    "support": {
+      "channelsTitle": "Cómo contactarnos",
+      "openWhatsapp": "Abrir WhatsApp",
+      "openTrips": "Abrir mis viajes",
+      "faq": "Preguntas frecuentes",
+      "faqReviewed": "Revisado en {date}",
+      "contactTitle": "Escríbenos",
+      "contactLede": "Todo lo que las preguntas frecuentes no respondieron",
+      "notEmergencyTitle": "¿No es una emergencia?",
+      "notEmergencyText": "Entonces este formulario es lo indicado. Si alguien está herido, un traslado no llegó o se pronostica una tormenta, llama a la línea.",
+      "form": {
+        "name": "Nombre",
+        "nameHint": "Lo usamos para responderte.",
+        "email": "Correo electrónico",
+        "topic": "Tema",
+        "topics": {
+          "planning": "Un viaje que estoy planificando",
+          "booking": "Mi reserva",
+          "payment": "Pago o factura",
+          "entry": "Visado, entrada, viajeros de EE. UU.",
+          "accessibility": "Accesibilidad",
+          "partners": "Prensa, socios, unirse a la red",
+          "complaint": "Reclamación",
+          "other": "Otra cosa"
+        },
+        "bookingCode": "Código de reserva",
+        "bookingCodeHint": "si tienes uno",
+        "message": "Mensaje",
+        "replyIn": "Responder en",
+        "languages": {
+          "en": "English",
+          "es": "Español",
+          "fr": "Français"
+        },
+        "consent": "Acepto que {agency} use estos datos para responder a mi mensaje.",
+        "privacyNotice": "Aviso de privacidad",
+        "send": "Enviar mensaje",
+        "sending": "Enviando…",
+        "sent": "Gracias. Tu mensaje ya está con el equipo y te responderemos por correo.",
+        "failed": "No pudimos enviar tu mensaje. Inténtalo de nuevo o usa uno de los canales de arriba.",
+        "unavailable": "El formulario no está disponible ahora. Usa uno de los canales de arriba.",
+        "errors": {
+          "required": "Escribe tu nombre.",
+          "email": "Escribe un correo electrónico, como nombre@ejemplo.com.",
+          "messageShort": "Escribe al menos 10 caracteres.",
+          "consent": "Marca la casilla para que podamos responderte."
+        }
+      }
+    },
+    "blog": {
+      "count": "{count, plural, one {# guía} other {# guías}}",
+      "readingTime": "{minutes} min de lectura",
+      "published": "Publicado el {date}",
+      "updated": "Actualizado el {date}",
+      "allGuides": "Todas las guías"
+    },
+    "about": {
+      "joinTitle": "¿Eres guía, conductor o propietario de casa con licencia en Cuba?",
+      "join": "Únete a nuestra red",
+      "licencesTitle": "Licencias y empresa",
+      "licenceLine": "{agency} · Licencia de agencia de viajes {license}",
+      "licenceNote": "Estos identificadores aparecen en cada bono, factura y confirmación.",
+      "seeTrips": "Ver los viajes",
+      "talkToUs": "Habla con nosotros"
+    }
   },
   "home": {
     "eyebrow": "Viajes comunitarios · Cuba",

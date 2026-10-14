@@ -10,8 +10,10 @@ import { brand } from '@/lib/brand';
 
 /**
  * The Home header (DS 07): sticky on the cream page. From `lg` the link row
- * and sign-in sit beside the 28 px wordmark; below it a menu button opens the
- * drawer, and sign-in stays in the header from `md`.
+ * and sign-in sit beside the 28 px wordmark, and "Talk to a specialist" joins
+ * them as a secondary button from `xl` (DS 07 also draws it as a text button at
+ * `lg`, where the six links leave no room for it); below `lg` a menu button
+ * opens the drawer, and sign-in stays in the header from `md`.
  */
 export async function SiteHeader({
   agencyName,
@@ -49,6 +51,15 @@ export async function SiteHeader({
             )}
           >
             {signedIn ? t('account') : t('signIn')}
+          </Link>
+          <Link
+            href="/support"
+            className={cn(
+              buttonClassName({ variant: 'secondary' }),
+              'hidden xl:inline-flex',
+            )}
+          >
+            {t('specialist')}
           </Link>
           <SiteMenu signedIn={signedIn} variant="header" className="lg:hidden" />
         </div>

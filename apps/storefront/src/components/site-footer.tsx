@@ -2,31 +2,45 @@ import type { TenantConfig } from '@ota/config';
 import { isFeatureEnabled } from '@ota/config';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
+import type { ComponentProps } from 'react';
 
 import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
 
-interface FooterLink {
-  key: string;
-  label: string;
-  href: string;
-  external?: boolean;
-}
+type Href = ComponentProps<typeof Link>['href'];
+
+type FooterLink =
+  | { key: string; label: string; href: Href; external?: false }
+  | { key: string; label: string; href: string; external: true };
 
 const link =
   'text-body-sm text-neutral-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500';
 
+function FooterAnchor({ item, className }: { item: FooterLink; className?: string }) {
+  return item.external ? (
+    <a href={item.href} className={className ?? link}>
+      {item.label}
+    </a>
+  ) : (
+    <Link href={item.href} className={className ?? link}>
+      {item.label}
+    </Link>
+  );
+}
+
 /**
- * The Home footer on primary 700. Columns list only pages that exist; the
- * design's Destinations and Travel info columns, About, FAQ, Contact and the
- * legal links join as those pages are built. Contact lines (WhatsApp, email)
- * come from the tenant manifest and are left out when it has none. Payment
- * marks show only the rails the tenant offers live: the wire transfer (SEPA);
- * the card marks wait for the card gateway.
+ * The Home footer on primary 700. Columns list only pages that exist: the
+ * design's Destinations column and the legal links other than Privacy join as
+ * those pages are built. Contact lines (WhatsApp, email) come from the tenant
+ * manifest and are left out when it has none; the tagline is tenant content.
+ * Payment marks show only the rails the tenant offers live: the wire transfer
+ * (SEPA); the card marks wait for the card gateway.
  */
 export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
   const t = await getTranslations('footer');
   const nav = await getTranslations('nav');
+  const content = await getTranslations('content');
+  const tagline = content.has('footer.tagline') ? content('footer.tagline') : null;
   const { whatsappNumber, supportEmail } = tenant.branding;
 
   const columns: { key: string; title: string; links: FooterLink[] }[] = [
@@ -38,16 +52,43 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
         : [],
     },
     {
+      key: 'travelInfo',
+      title: nav('travelInfo'),
+      links: [
+        {
+          key: 'entry',
+          label: t('entry'),
+          href: { pathname: '/travel-info', hash: 'entry' },
+        },
+        {
+          key: 'money',
+          label: t('money'),
+          href: { pathname: '/travel-info', hash: 'money' },
+        },
+        {
+          key: 'health',
+          label: t('health'),
+          href: { pathname: '/travel-info', hash: 'health' },
+        },
+        {
+          key: 'us',
+          label: t('usTravelers'),
+          href: { pathname: '/travel-info', hash: 'us-travelers' },
+        },
+      ],
+    },
+    {
       key: 'support',
       title: nav('support'),
       links: [
+        { key: 'faq', label: t('faq'), href: { pathname: '/support', hash: 'faq' } },
         ...(whatsappNumber
           ? [
               {
                 key: 'whatsapp',
                 label: t('whatsapp', { number: whatsappNumber }),
                 href: `https://wa.me/${whatsappNumber.replace(/\D/g, '')}`,
-                external: true,
+                external: true as const,
               },
             ]
           : []),
@@ -57,13 +98,24 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
                 key: 'email',
                 label: supportEmail,
                 href: `mailto:${supportEmail}`,
-                external: true,
+                external: true as const,
               },
             ]
           : []),
+        {
+          key: 'emergency',
+          label: t('emergency'),
+          href: { pathname: '/support', hash: 'emergency' },
+        },
+        {
+          key: 'contact',
+          label: t('contact'),
+          href: { pathname: '/support', hash: 'contact' },
+        },
         ...(isFeatureEnabled(tenant, 'recruitmentPortal')
           ? [{ key: 'join', label: t('joinNetwork'), href: '/join-our-network' }]
           : []),
+        { key: 'about', label: t('about'), href: '/about' },
       ],
     },
   ];
@@ -79,6 +131,9 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
               className="h-7 w-auto self-start"
               unoptimized
             />
+            {tagline ? (
+              <p className="max-w-[28ch] text-body-sm text-primary-200">{tagline}</p>
+            ) : null}
             <p className="text-body-sm text-primary-200">
               {t('license', { license: tenant.branding.licenseNumber })}
             </p>
@@ -88,17 +143,9 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
             .map((column) => (
               <div key={column.key} className="flex flex-col gap-2">
                 <p className="text-overline uppercase text-accent-500">{column.title}</p>
-                {column.links.map((item) =>
-                  item.external ? (
-                    <a key={item.key} href={item.href} className={link}>
-                      {item.label}
-                    </a>
-                  ) : (
-                    <Link key={item.key} href={item.href} className={link}>
-                      {item.label}
-                    </Link>
-                  ),
-                )}
+                {column.links.map((item) => (
+                  <FooterAnchor key={item.key} item={item} />
+                ))}
               </div>
             ))}
         </div>
@@ -112,12 +159,18 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
             </li>
           </ul>
         ) : null}
-        <p className="text-label font-normal text-primary-200">
-          {t('copyright', {
-            year: new Date().getFullYear(),
-            name: tenant.branding.agencyName,
-          })}
-        </p>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-label font-normal text-primary-200">
+          <span>
+            {t('copyright', {
+              year: new Date().getFullYear(),
+              name: tenant.branding.agencyName,
+            })}
+          </span>
+          <FooterAnchor
+            item={{ key: 'privacy', label: t('privacy'), href: '/legal/privacy' }}
+            className="text-label font-normal text-primary-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500"
+          />
+        </div>
       </div>
     </footer>
   );
