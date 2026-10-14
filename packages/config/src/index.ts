@@ -1,4 +1,5 @@
 export { envSchema, parseEnv } from './env';
+export { loadTenantMessages } from './messages';
 export type { Env } from './env';
 export {
   bankTransferDetailsSchema,

@@ -1,0 +1,885 @@
+{
+  "content": {
+    "footer": {
+      "tagline": "Casa-based, small-group journeys across Cuba. Your trip supports Cuban families."
+    },
+    "support": {
+      "status": "placeholder",
+      "title": "Need help? We're here 24/7.",
+      "lede": "A person in Havana answers WhatsApp or Telegram within 15 minutes. Emergencies go to a phone that is always on. Everything else, within 4 working hours.",
+      "sections": [],
+      "channels": {
+        "whatsapp": {
+          "title": "WhatsApp",
+          "text": "Replies in under 15 minutes, 07:00–23:00 CET. Not a bot."
+        },
+        "email": {
+          "title": "Email",
+          "text": "For proposals, invoices and anything long. English, Spanish, French."
+        },
+        "phone": {
+          "title": "Call to book",
+          "text": "Prefer to talk it through? A specialist builds the trip with you and sends it to confirm."
+        },
+        "account": {
+          "title": "Messages in your account",
+          "text": "Tied to your booking; replies are emailed if you're offline. Best for changes and documents."
+        }
+      },
+      "emergency": {
+        "title": "Emergency in Cuba",
+        "text": "Call us first; we call your insurer and the right hospital. Ambulance 104 · Police 106 · Fire 105."
+      },
+      "faq": {
+        "title": "Questions we get every week",
+        "items": [
+          {
+            "id": "why-not-immediate",
+            "question": "Why isn't my booking confirmed immediately?",
+            "answer": "Because Cuban casas, drivers and guides confirm by hand, on their phones, within 24 hours.",
+            "details": "Most of what we book has no reservation system. When you send a request, each provider gets it on WhatsApp or in their app and accepts or declines; you watch it in My trips. Nothing is charged until all of them say yes. Hotel allotments (Varadero) confirm instantly.",
+            "reviewed": "Sep 2026"
+          },
+          {
+            "id": "how-to-pay",
+            "question": "How do I pay, and what does it cost?",
+            "answer": "Bank transfer (no fee), card or wallet (+ 3 %), or an invoice by wire. Prices are in euros.",
+            "details": "Once hosts confirm you get an invoice and 48 hours to pay a 20 % deposit; the balance is due 30 days before departure (full payment if you book within 60 days). Your exchange rate is locked at the deposit. US-issued cards are declined by our European gateway; US travelers pay by wire.",
+            "reviewed": "Oct 2026"
+          },
+          {
+            "id": "cash",
+            "question": "How much cash should I bring?",
+            "answer": "€ 300–500 per person per week, in euros or Canadian dollars. Not US dollars, and no cards.",
+            "details": "Visa and Mastercard do not work in Cuba. Budget € 15–25 a day for meals outside the casa, tips of € 5–10 a day for the guide, and small notes for taxis and markets. Split it between people and bags.",
+            "reviewed": "Sep 2026"
+          },
+          {
+            "id": "visa",
+            "question": "Do I need a visa for Cuba?",
+            "answer": "Yes: an e-visa, applied for online 2–3 weeks ahead, plus the D'Viajeros form within 7 days of your flight.",
+            "details": "Paper tourist cards ended on 1 January 2026. Approval usually takes up to 72 business hours; cost ≈ € 22–50 depending on nationality. Passport valid 6 months beyond return. We send a checklist with your dates and check your uploads.",
+            "reviewed": "Sep 2026"
+          },
+          {
+            "id": "us-citizens",
+            "question": "Can US citizens travel with you legally?",
+            "answer": "Yes, under one of 12 OFAC general-licence categories; you certify yours before paying.",
+            "details": "Our trips are designed as a full-time schedule of activities with private hosts, which fits \"Support for the Cuban People\". We keep your certification 5 years and never book restricted state entities. Payment is by wire, outside the US banking system. Not legal advice; see the US travelers page.",
+            "reviewed": "Sep 2026"
+          },
+          {
+            "id": "hurricane",
+            "question": "What happens if there is a hurricane or a long blackout?",
+            "answer": "Free date change or full refund if an official watch covers your dates; relocation and pro-rata refunds mid-trip.",
+            "details": "June to November is hurricane season. If Insmet issues a watch or warning for your dates you choose a new date or a refund. Mid-trip we move you to safe stays, refund unused nights pro rata and give free rebooking within 12 months. Power cuts of 6–12 hours are normal and every stay we book has backup power.",
+            "reviewed": "Oct 2026"
+          },
+          {
+            "id": "casa-particular",
+            "question": "What is a casa particular, really?",
+            "answer": "A licensed room in a family home, with breakfast; the best way to meet Cubans and the backbone of our trips.",
+            "details": "Every casa we book is visited: licence, backup power (generator, battery or solar), 24 h water storage, a host who answers within 30 minutes. You'll see bed type, bathroom, A/C and the exact backup on each stay card. Three tiers change the comfort, never the itinerary.",
+            "reviewed": "Aug 2026"
+          },
+          {
+            "id": "change-cancel",
+            "question": "Can I change or cancel my trip?",
+            "answer": "Change dates once for free; cancel with a fee that grows as departure nears.",
+            "details": "More than 46 days out: full refund minus € 60. Then 10 %, 25 %, 40 %, 60 %, 80 % of the total is kept; under 24 hours, nothing is refunded. Refunds go to the original payment method within 14 business days. Force majeure is different: free change or full refund.",
+            "reviewed": "Oct 2026"
+          },
+          {
+            "id": "safety",
+            "question": "Is Cuba safe right now?",
+            "answer": "Violent crime is rare; the real risks are shortages, outages and road conditions. Most governments advise increased caution, not against travel.",
+            "details": "Canada and the US are at Level 2 (increased caution); France and the UK advise against non-essential travel because of shortages. We publish all four on the Current conditions page with dates, and our policy triggers if any is raised for your region.",
+            "reviewed": "Oct 2026"
+          },
+          {
+            "id": "bad-signal",
+            "question": "How do I reach you from Cuba with bad signal?",
+            "answer": "WhatsApp or Telegram when you have signal; the phone line always; your host or guide in person.",
+            "details": "We check in every morning when the network is best. If you don't answer by midday your guide or host checks on you. The emergency line works on any network and is on your printed card.",
+            "reviewed": "Sep 2026"
+          }
+        ]
+      }
+    },
+    "travelInfo": {
+      "status": "placeholder",
+      "eyebrow": "The honest briefing",
+      "title": "Cuba, as it is this month",
+      "lede": "Yes, outages happen. Here's how to prepare, what it costs, and why the trip is still worth it. Every page shows when it was last verified and where the facts come from.",
+      "note": "Advisories weekly · visa & money monthly · FAQ quarterly · guides every 6 months. Editor: Havana desk.",
+      "sections": [
+        {
+          "id": "entry",
+          "title": "E-visa & entry",
+          "lede": "Four steps, start three weeks out",
+          "note": "Last verified 20 Sep 2026 against the consular portal · reviewed monthly",
+          "blocks": [
+            {
+              "type": "steps",
+              "items": [
+                {
+                  "title": "Check your passport",
+                  "when": "Today",
+                  "text": "Valid at least 6 months beyond your return date. Children need their own."
+                },
+                {
+                  "title": "Apply for the e-visa",
+                  "when": "3 weeks out",
+                  "text": "Paper tourist cards ended on 1 Jan 2026. Apply on the official portal; approval usually within 72 business hours; single entry, 90 days, extendable once. Cost ≈ € 22–50 depending on your nationality and airline."
+                },
+                {
+                  "title": "Complete D'Viajeros",
+                  "when": "7 days out",
+                  "text": "Cuba's digital arrival form: passport, flight, address of your first casa (it's on your voucher), health declaration. Not earlier than 7 days before your flight. Save the QR to your phone and the offline kit."
+                },
+                {
+                  "title": "At the airport",
+                  "when": "Arrival",
+                  "text": "Show the e-visa code, the D'Viajeros QR, proof of insurance and your return flight. Keep € 300–500 in cash; nothing over the equivalent of US$ 5,000 undeclared."
+                }
+              ]
+            },
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "Dual nationals & Cuban-born travelers",
+                  "text": "Cuban-born travelers may need a Cuban passport or habilitación. Rules differ by case; tell us at booking and we'll point you to the consulate."
+                },
+                {
+                  "term": "US citizens and residents",
+                  "text": "Entry to Cuba is the same e-visa. US law adds the travel-category certification: see the US travelers page. Note that an ESTA may be affected by a Cuba visit; check the US page before you book onward travel."
+                },
+                {
+                  "term": "We help",
+                  "text": "Links, a checklist with your dates, and a reminder 21 and 7 days out. Upload the approvals in Documents and we check them before you fly."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "money",
+          "title": "Money & cash",
+          "lede": "Bring € 300–500 a week in cash. Not dollars.",
+          "note": "Last verified 28 Sep 2026 · reviewed monthly",
+          "blocks": [
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "Cards · Don't work in Cuba",
+                  "text": "Visa and Mastercard stopped functioning on the island in June 2026. No ATMs, no card terminals. Plan for cash only."
+                },
+                {
+                  "term": "Which notes · Euros or Canadian dollars",
+                  "text": "Clean, recent notes, mixed denominations. US dollars carry a penalty on exchange and are a sanctions trigger for some payments."
+                },
+                {
+                  "term": "How much · € 40–70 per person per day",
+                  "text": "Lunches and dinners out (€ 15–25), tips, taxis, souvenirs. Your package covers stays, transfers, guides and listed meals."
+                }
+              ]
+            },
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "Official rate (CADECA), launched Jan 2026",
+                  "text": "410 CUP / USD · ≈ 440 CUP / EUR"
+                },
+                {
+                  "term": "Street rate, early Jan 2026 (for reference, changes weekly)",
+                  "text": "≈ 466 CUP / USD"
+                },
+                {
+                  "term": "Where to change",
+                  "text": "CADECA, hotel desks, or ask your host: casas often prefer euros directly"
+                },
+                {
+                  "term": "Paying hosts, guides, paladares",
+                  "text": "Euros accepted almost everywhere; small notes help"
+                },
+                {
+                  "term": "Tipping",
+                  "text": "Guides € 5–10 a day · drivers € 3–5 · casa € 2–3 a night · restaurants 10 %"
+                }
+              ],
+              "title": "Exchanging and paying"
+            },
+            {
+              "type": "paragraph",
+              "text": "We refresh these figures monthly and in your 30-day Reality Briefing. Keep cash split between people and bags; hotel safes are fine, casa rooms lock."
+            }
+          ]
+        },
+        {
+          "id": "health",
+          "title": "Health & insurance",
+          "lede": "Insurance is law. Evacuation cover is sense.",
+          "note": "Last verified 1 Oct 2026",
+          "blocks": [
+            {
+              "type": "table",
+              "caption": "What your policy must cover",
+              "head": ["Cover", "Minimum we require", "Why"],
+              "rows": [
+                [
+                  "Medical treatment in Cuba",
+                  "€ 50,000",
+                  "Cuban immigration can ask for proof; without it you buy a policy from Asistur on arrival at the airport."
+                ],
+                [
+                  "Evacuation & repatriation",
+                  "€ 500,000 (we recommend € 1,000,000)",
+                  "Serious cases are flown out; air ambulance costs run to six figures."
+                ],
+                [
+                  "Trip cancellation",
+                  "100 % of the trip",
+                  "Covers you where our policy doesn't (illness, family)."
+                ],
+                [
+                  "Baggage",
+                  "€ 2,000",
+                  "Optional but useful; supplies for family especially."
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Buy at checkout (Essential € 48 · Standard € 96 · Plus € 142 per person) or upload your own; we check it names Cuba and includes evacuation. Keep a printed certificate in your passport."
+            },
+            {
+              "type": "list",
+              "items": [
+                "Routine vaccines up to date; hepatitis A and typhoid advised; no yellow-fever requirement from Europe or Canada.",
+                "Bring your own medicines for the whole trip plus a week: pharmacies are short of basics.",
+                "Dengue and Oropouche circulate: repellent with DEET, long sleeves at dusk."
+              ],
+              "title": "Before you go"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Drink bottled or filtered water; casas provide it, we add a filter bottle to your kit.",
+                "International clinics (Cira García in Havana) treat foreigners; provincial hospitals handle emergencies. Addresses are on your emergency card.",
+                "Ambulance 104 · Police 106 · Fire 105 · Vereda line 24/7 answers in 15 minutes and calls your insurer for you."
+              ],
+              "title": "In Cuba"
+            }
+          ]
+        },
+        {
+          "id": "packing",
+          "title": "Packing",
+          "lede": "Pack for outages, not for a resort",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "Power bank, 20,000 mAh or more (we lend one per room; bring your own too)",
+                "Headlamp or small torch",
+                "Multi-plug adapter (A/B sockets, 110 V and 220 V both exist)",
+                "Downloaded offline kit, maps, podcasts"
+              ],
+              "title": "Power & light"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Cash in EUR or CAD, split between people",
+                "Printed e-visa, D'Viajeros QR, insurance certificate, vouchers",
+                "Passport copy for Cayo Levisa and casa registers",
+                "Emergency card in your wallet"
+              ],
+              "title": "Money & papers"
+            },
+            {
+              "type": "list",
+              "items": [
+                "All medication plus a spare week; a basic first-aid kit",
+                "Repellent with DEET, reef-safe sunscreen (in your welcome kit)",
+                "Filter bottle (provided), electrolyte sachets",
+                "Walking shoes with grip; a light rain shell"
+              ],
+              "title": "Health & comfort"
+            },
+            {
+              "type": "callout",
+              "title": "Gifts that help (optional)",
+              "text": "If you want to bring something for your hosts: coffee filters, reading glasses, children's vitamins, school pens, guitar strings. Ask us what your specific hosts have mentioned; don't bring used clothes unasked."
+            }
+          ]
+        },
+        {
+          "id": "connectivity",
+          "title": "Connectivity",
+          "lede": "1–2 Mbps when it works. Plan to be offline.",
+          "note": "Last verified 9 Sep 2026",
+          "blocks": [
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "Getting online",
+                  "text": "ETECSA tourist SIM or eSIM (buy before you fly or at the airport; data packages change price often). 4G in cities, 3G or nothing in the countryside. Wi-Fi in casas is usually a shared ETECSA card, slow and intermittent."
+                },
+                {
+                  "term": "What works",
+                  "text": "WhatsApp and Telegram messages, light email, maps you downloaded. Video calls rarely. Many US-based services are blocked or refuse Cuban IPs; a VPN set up before departure helps."
+                },
+                {
+                  "term": "How we stay in touch",
+                  "text": "Daily WhatsApp check-in each morning, when signal is best. If you don't answer by midday, your guide or host checks on you. Emergencies: the phone line works on any network, 24/7."
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "title": "Download the offline kit before you board",
+              "text": "Itinerary, vouchers, contacts, emergency card, this briefing. 2.3 MB; maps optional, + 14 MB."
+            }
+          ]
+        },
+        {
+          "id": "etiquette",
+          "title": "Cultural etiquette",
+          "lede": "You're a guest in someone's home, and country",
+          "note": "Written with our hosts · reviewed yearly",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "Say good morning. Hosts register your passport in a book the first night; it's the law, not suspicion.",
+                "Water and power are rationed: short showers, lights off, phones charged when the grid is up.",
+                "Breakfast is generous and included; dinner at the casa is usually the best meal in town, order it in the morning.",
+                "Tip at the end, in cash, directly; it goes further than anything you can buy."
+              ],
+              "title": "In the casa"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Ask before photographing people, and show them the picture. Our hosts and guides have agreed to appear on this site; strangers haven't.",
+                "Politics: people will talk if they want to. Don't push, don't lecture, don't post about individuals.",
+                "Dress is relaxed but churches, ballet and family dinners expect shoulders covered and no swimwear.",
+                "Jineteros (street hustlers) are polite and persistent: a friendly \"no, gracias\" works."
+              ],
+              "title": "Out and about"
+            },
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "¿Qué bolá?",
+                  "text": "\"What's up?\" The everyday greeting between friends."
+                },
+                {
+                  "term": "asere",
+                  "text": "\"Mate\", \"friend\". Informal, warm."
+                },
+                {
+                  "term": "casa particular",
+                  "text": "A licensed private home with rooms for guests."
+                },
+                {
+                  "term": "paladar",
+                  "text": "A private restaurant, often in a family house."
+                },
+                {
+                  "term": "almendrón",
+                  "text": "A 1950s American car used as a shared taxi."
+                },
+                {
+                  "term": "guagua",
+                  "text": "A bus. Pronounced \"wa-wa\"."
+                },
+                {
+                  "term": "ropa vieja",
+                  "text": "Shredded beef in tomato and peppers; the national dish."
+                },
+                {
+                  "term": "congrí",
+                  "text": "Rice and black beans cooked together."
+                },
+                {
+                  "term": "apagón",
+                  "text": "A power cut. You'll hear it daily; so will we."
+                }
+              ],
+              "title": "A little Cuban Spanish"
+            }
+          ]
+        },
+        {
+          "id": "us-travelers",
+          "title": "US travelers & OFAC",
+          "lede": "Legal travel to Cuba for US persons, step by step",
+          "note": "Last verified 30 Sep 2026 · not legal advice · reviewed with counsel quarterly",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Under the Cuban Assets Control Regulations, US persons may only spend money on Cuba travel under one of 12 general-licence categories, whatever the booking channel or payment method. Tourism as such is not one of them. Vereda is a Spanish company; the rules still apply to you."
+            },
+            {
+              "type": "steps",
+              "items": [
+                {
+                  "title": "Pick your category",
+                  "text": "Most of our travelers use Support for the Cuban People: a full-time schedule of activities with private hosts, farmers, artists and guides, avoiding restricted state entities. Family visits, journalism, professional research, religious and humanitarian work are others. As of 30 Sep 2026 the people-to-people group category no longer exists."
+                },
+                {
+                  "title": "Certify at booking",
+                  "text": "A short form before payment: category, your name as on the passport, a typed signature. We store it for 5 years as the law requires and give you a PDF."
+                },
+                {
+                  "title": "Travel the schedule",
+                  "text": "Your itinerary is the schedule. Keep it, your receipts and your voucher for 5 years. We don't book GAESA or Gaviota properties, nor anything on the US restricted list."
+                },
+                {
+                  "title": "Pay in euros, outside the US banking system",
+                  "text": "US-issued cards are declined by our gateway. Pay by international wire or invoice. No transaction is cleared in US dollars."
+                }
+              ]
+            },
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "Cuban-American family visits",
+                  "text": "\"Family visits\" covers close relatives in Cuba. Our Family Visit package is built for it: airport transfers, a casa near your family, luggage for supplies, Spanish-speaking desk. Remittance and gift rules are separate; ask us."
+                },
+                {
+                  "term": "After the trip",
+                  "text": "A visit to Cuba can affect ESTA eligibility for some travelers to the US. Check the current State Department guidance before planning onward travel."
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "title": "Not sure?",
+              "text": "Three questions help you find a fitting category. If none fits, we'll say so rather than book you."
+            }
+          ]
+        }
+      ]
+    },
+    "blog": {
+      "status": "placeholder",
+      "eyebrow": "Practical Cuba · Cultural Cuba",
+      "title": "Guides we've seen with our own eyes",
+      "lede": "Written by the Havana desk and our guides, in the first person plural, and re-checked on a schedule. Each piece shows when it was last updated; the practical ones monthly.",
+      "articles": [
+        {
+          "slug": "power-outages-in-cuba",
+          "category": "Reality check",
+          "title": "Power outages in Cuba: what to expect and how we plan around them",
+          "standfirst": "Twenty-hour apagones are the baseline this year, not the exception. Here's what a cut looks like from inside a casa, what a generator does and doesn't run, and the four things we do before you arrive.",
+          "author": "Ana Rodríguez",
+          "authorRole": "Operations lead, Havana",
+          "readingMinutes": 6,
+          "published": "14 Feb 2026",
+          "updated": "1 Oct 2026",
+          "photo": {
+            "alt": "Candle, power bank and coffee on a casa table during an evening apagón, Viñales",
+            "caption": "Evening at Casa Yamilé during a scheduled cut. The generator runs the fridge and fans; the candle is for atmosphere. Photo: Vereda, with permission."
+          },
+          "sections": [
+            {
+              "id": "why-the-grid-fails",
+              "title": "Why the grid fails",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "text": "Cuba's power plants are old, fuel is short, and demand peaks in the evening when everyone cooks. The national utility publishes a daily deficit and provinces take turns going dark. In 2025 the island had several total blackouts lasting more than a day; in 2026 planned cuts of 12 to 20 hours outside Havana are normal in the hot months."
+                },
+                {
+                  "type": "paragraph",
+                  "text": "None of this is a secret in Cuba. Your hosts plan their day around it: cooking early, charging phones when the light is on, keeping a torch by the bed. You will too, and it is easier than it sounds."
+                }
+              ]
+            },
+            {
+              "id": "what-a-cut-looks-like",
+              "title": "What a cut looks like from inside a casa",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "text": "Usually the schedule is known a day ahead; Yamilé will tell you at breakfast that the light goes at four. The fan stops, the fridge hums off, and the street gets quieter. If the casa has a generator it starts within a minute and the essentials come back. If it has a battery, the lights and the Wi-Fi router stay on but the air conditioning doesn't."
+                },
+                {
+                  "type": "paragraph",
+                  "text": "Evenings are the hardest part: it is hot, and there is less to do. Our travelers' tip, repeated in every review that mentions outages, is to be out. Dinner at a paladar with its own generator, music at the Casa de la Música, a walk along the Malecón. The casa is for sleeping, and a fan on a generator is enough for that."
+                },
+                {
+                  "type": "quote",
+                  "text": "Two nights without power, ten hours each. The generator kept the fan on and Ana messaged every morning. Honest, tiring, worth it. Knowing in advance is what made it OK.",
+                  "cite": "Marion T., Lyon · Viñales, February 2026 · verified review"
+                }
+              ]
+            },
+            {
+              "id": "what-a-generator-runs",
+              "title": "What a generator does and doesn't run",
+              "blocks": [
+                {
+                  "type": "definitions",
+                  "items": [
+                    {
+                      "term": "Runs",
+                      "text": "lights, fans, the fridge, phone charging, the router. Usually for 4 to 8 hours a night; fuel for generators is also rationed."
+                    },
+                    {
+                      "term": "Doesn't run",
+                      "text": "air conditioning in most casas, electric showers, kettles. Premium stays with 24-hour generators are the exception and cost accordingly."
+                    },
+                    {
+                      "term": "Batteries and solar",
+                      "text": "quieter, no fuel, but smaller. Good for lights, charging and the router for 6 to 8 hours."
+                    },
+                    {
+                      "term": "Hot water",
+                      "text": "most casas use tanks heated when the grid is up. Shower early."
+                    }
+                  ]
+                },
+                {
+                  "type": "photo",
+                  "alt": "Osvaldo starting the generator behind the casa"
+                },
+                {
+                  "type": "paragraph",
+                  "text": "Every stay we book lists its backup explicitly: generator, battery, solar, or none. You'll see it on the stay card before you choose."
+                }
+              ]
+            },
+            {
+              "id": "what-we-do",
+              "title": "What we do before you arrive",
+              "blocks": [
+                {
+                  "type": "definitions",
+                  "items": [
+                    {
+                      "term": "We only book stays with backup power",
+                      "text": "Verified on a visit: generator with fuel, battery, or solar. It's a filter on the listing and a line on every stay card."
+                    },
+                    {
+                      "term": "We lend a 20,000 mAh power bank per room",
+                      "text": "And put a headlamp in your welcome kit."
+                    },
+                    {
+                      "term": "We schedule the important things in the morning",
+                      "text": "When the grid and the signal are most reliable, and we check in with you by WhatsApp each morning while you're in Cuba."
+                    },
+                    {
+                      "term": "If a cut runs past 12 hours and the casa can't cope",
+                      "text": "We move you (Hurricane Melissa in October 2025 was the rehearsal). Mid-trip disruption that costs you a night is refunded pro rata and you get free rebooking within 12 months."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "what-you-can-do",
+              "title": "What you can do",
+              "blocks": [
+                {
+                  "type": "list",
+                  "items": [
+                    "Bring your own power bank too, and a torch. Charge everything whenever there's light.",
+                    "Download the offline kit and offline maps before you fly; the router won't help when the tower is down.",
+                    "Keep cash in small notes: card terminals don't exist and a shop without light still sells water.",
+                    "Carry a printed itinerary and your emergency card. Paper doesn't need charging.",
+                    "Ask your host about the schedule each morning, and plan the evening out."
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "why-its-still-worth-it",
+              "title": "Why it's still worth it",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "text": "Because the outage is also when the street comes alive: neighbours on the porch, dominoes under a single bulb on a battery, someone with a guitar. We won't romanticise it, Cubans don't, and it is a real hardship for the people who live with it every day. But if you understand the reality before you go, you can handle the inconvenience, and what you can't handle is being surprised. That sentence came from a traveler, and it is the whole reason this page exists."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "about": {
+      "status": "placeholder",
+      "eyebrow": "Why Vereda",
+      "title": "Cuba is not a resort. It is a living culture.",
+      "lede": "Travel with us to engage with Cuban families, artists and communities, not to consume a packaged holiday. We are transparent about the realities of travel in Cuba today: the power cuts, the fuel, the paperwork. We think that honesty is the beginning of trust, and the beginning of a better trip.",
+      "sections": [
+        {
+          "id": "values",
+          "eyebrow": "What we stand for",
+          "title": "Reality travel: transparent, reciprocal, specific",
+          "blocks": [
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "Transparent",
+                  "text": "The total price before you click. The power schedule before you book. The 3-star review next to the 5-star one. Where every euro goes, on the invoice."
+                },
+                {
+                  "term": "Reciprocal",
+                  "text": "85 % or more of what you spend reaches Cuban families: casas, paladares, farms, guides and drivers. Guides keep their whole day rate. We publish the split per trip."
+                },
+                {
+                  "term": "Specific",
+                  "text": "Named hosts, named villages, named traditions. \"Bring € 300–500 in cash\", not \"bring sufficient cash\". We say what we mean and we date it."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "how-we-work",
+          "eyebrow": "How we work",
+          "title": "Built around people, because Cuban hosts don't have booking APIs",
+          "blocks": [
+            {
+              "type": "steps",
+              "items": [
+                {
+                  "title": "We vet in person",
+                  "text": "Every casa is visited by our Havana team: licence, backup power (generator, battery or solar), 24 h water storage, a host who answers within 30 minutes, a walk to the plaza of 15 minutes or less. Drivers hold a transport licence and a vehicle we've sat in. Guides are Formatur-certified."
+                },
+                {
+                  "title": "You request, they confirm",
+                  "text": "Your request goes to each host's phone. They answer within 24 hours, you watch it happen, and nothing is charged until all of them have said yes. If one is full, we propose up to three alternatives at the same price."
+                },
+                {
+                  "title": "We stay with you",
+                  "text": "A Reality Briefing 30 days out, reconfirmation at 7 days and 48 hours, a WhatsApp check-in every morning in Cuba, and a phone line that answers in 15 minutes, day or night. If a storm or a blackout breaks the plan, we rebook, refund or relocate, and we say which within the hour."
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "items": [
+                "Licensed casas particulares and family farm stays",
+                "Independent boutique hotels (VOYA, Paseo 206) where a hotel is wanted",
+                "Private drivers, cooperatives like PedroCarr, licensed colectivos",
+                "Paladares, community projects, Formatur guides"
+              ],
+              "title": "We book"
+            },
+            {
+              "type": "list",
+              "items": [
+                "GAESA or Gaviota hotels and resorts, nor Cubanacán as a rule",
+                "Viazul coaches: reliability is too low to put your trip on them",
+                "Anything on the US restricted-entities list",
+                "Trips we can't run well this month: we'll tell you, and why"
+              ],
+              "title": "We don't book"
+            }
+          ]
+        },
+        {
+          "id": "impact",
+          "eyebrow": "Impact",
+          "title": "What we commit to, and how we check it",
+          "blocks": [
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "85 %+ of your spending stays with Cuban families",
+                  "text": "Casas 85–90 %, guides 100 % of their rate, paladares 80–85 %, community tours 90–95 %. Published per trip."
+                },
+                {
+                  "term": "100 % of your trip's carbon offset",
+                  "text": "≈ 1.5–2.5 t CO₂ per person for a week, mostly flights. Included in the price, shown on the invoice, certified offset."
+                },
+                {
+                  "term": "5 % of profits to mangrove restoration",
+                  "text": "Community-led work in Ciénaga de Zapata with the Mi Costa programme. Annual report published here."
+                },
+                {
+                  "term": "1 farm stay in every trip of 7 nights or more",
+                  "text": "And at least 80 % of food sourced locally by the places we book."
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "items": [
+                "UNWTO Global Code of Ethics",
+                "ICOMOS Cultural Heritage Tourism Charter",
+                "RESPECT principles",
+                "Vereda Community Benefit Standard"
+              ],
+              "title": "Frameworks we follow"
+            }
+          ]
+        },
+        {
+          "id": "who-we-are",
+          "eyebrow": "Who we are",
+          "title": "A desk in Havana, a company in Spain, hosts across the island",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Vereda means \"path\" in Spanish: the narrow track between farms, the one locals use. We are a small Spanish-registered agency with an operations desk in Havana, a network of licensed casas, drivers and guides we know by name, and no interest in state hotel chains."
+            },
+            {
+              "type": "definitions",
+              "items": [
+                {
+                  "term": "Founder · Spain",
+                  "text": "Biography to come from the founders."
+                },
+                {
+                  "term": "Ana Rodríguez · Operations lead · Havana",
+                  "text": "Runs dispatch, confirmations and the 24/7 line. Writes the Reality Briefing."
+                },
+                {
+                  "term": "Administration & supplier compliance",
+                  "text": "Licence checks, credential expiries, reconciliation, invoices."
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "title": "Our hosts, drivers and guides",
+              "text": "38 households and cooperatives, and counting"
+            }
+          ]
+        },
+        {
+          "id": "sanctions",
+          "title": "Sanctions & compliance",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "We are not a US company and settle outside the US banking system. US travelers certify their travel category before paying; records kept 5 years."
+            }
+          ]
+        },
+        {
+          "id": "press",
+          "title": "Press & partners",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Trade partners earn 10–15 % commission; diaspora ambassadors 5–10 %. Press kit with consented photography on request."
+            }
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "status": "placeholder",
+      "eyebrow": "Privacy notice",
+      "title": "How we use your data",
+      "lede": "What the platform stores today, why, for how long, and how to reach us about it. A draft for review before publication.",
+      "sections": [
+        {
+          "id": "what-we-collect",
+          "title": "What we collect and why",
+          "blocks": [
+            {
+              "type": "table",
+              "head": ["Data", "Purpose", "Kept"],
+              "rows": [
+                [
+                  "Name, email, phone, nationality (optional)",
+                  "Your account, sign-in links, booking confirmations, statutory tourism statistics",
+                  "Until 6 months after your last trip, then anonymised unless you keep the account"
+                ],
+                [
+                  "Booking details: dates, services, notes you add",
+                  "Arranging the trip with the people who provide it",
+                  "Bookings stay, anonymised, for accounting and statistics"
+                ],
+                [
+                  "Messages with the desk, reviews, incident notes",
+                  "Running your trip and our duty of care",
+                  "Free text is removed when your account is anonymised"
+                ],
+                [
+                  "Payment confirmations: amount, method, date",
+                  "Invoicing, refunds and accounting",
+                  "The statutory accounting period"
+                ],
+                [
+                  "Sign-in sessions: IP address, browser",
+                  "Keeping your account secure",
+                  "Deleted when you sign out everywhere or your account is anonymised"
+                ],
+                [
+                  "Contact-form messages: name, email, message",
+                  "Replying to you",
+                  "In the desk inbox for as long as the conversation needs"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "We never store card numbers. Generated documents (vouchers, invoices) carry your name and email; how long the invoice must be kept is being confirmed with counsel."
+            }
+          ]
+        },
+        {
+          "id": "who-receives",
+          "title": "Who receives data",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "The hosts, drivers and guides who provide your services receive what they need to deliver them.",
+                "Our email provider, which sends sign-in links and messages, and our storage provider, which holds generated documents.",
+                "Authorities, where the law requires it."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "retention",
+          "title": "How long we keep it",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Six months after your latest completed trip we email you. If you do not ask us to keep your account within 30 days, we anonymise it: your name, email, phone and nationality are removed, your sign-in sessions end, and free text attached to your bookings is deleted. Keeping the account extends it by 12 months."
+            }
+          ]
+        },
+        {
+          "id": "cookies",
+          "title": "Cookies",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "We use one cookie to keep you signed in and one to remember your language. There are no analytics or advertising cookies."
+            }
+          ]
+        },
+        {
+          "id": "your-rights",
+          "title": "Your rights",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "You can ask to see, correct, export or delete your data, or object to how we use it. Write to us through the Support page; we answer within 30 days. You can also complain to your data protection authority."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -222,6 +222,26 @@ export {
   type InventoryImportRow,
 } from './import';
 export {
+  articleSchema,
+  blogContentSchema,
+  contentBlockSchema,
+  contentPageSchema,
+  contentSectionSchema,
+  contentStatusSchema,
+  faqItemSchema,
+  footerContentSchema,
+  supportContentSchema,
+  type Article,
+  type BlogContent,
+  type ContentBlock,
+  type ContentPage,
+  type ContentSection,
+  type ContentStatus,
+  type FaqItem,
+  type FooterContent,
+  type SupportContent,
+} from './content';
+export {
   contactMessageSchema,
   contactTopicSchema,
   type ContactMessageRequest,

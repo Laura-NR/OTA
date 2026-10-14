@@ -5,3 +5,4 @@ export {
   type Locale,
 } from './locales';
 export { loadMessages, type Messages } from './messages';
+export { mergeMessages, type MessageTree } from './merge';
