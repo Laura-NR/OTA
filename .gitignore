@@ -37,4 +37,5 @@ blob-report/
 .DS_Store
 
 # Design team deliveries (imported selectively into design/)
-/vereda-handoff-v1.1/
+/vereda-handoff-v*/
+/vereda-handoff-v*.zip

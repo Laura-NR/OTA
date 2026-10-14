@@ -385,7 +385,9 @@ real-time map availability (product call) and migration-gated package tiers/medi
 
 Expo worker app (phone login, credential banner, availability calendar, job
 offers with countdown, offline-first SQLite `sync_queue`, emergency button, push).
-Blocked on the Expo dependency decision.
+Decided 2026-10-14 (ADR 0007): Expo is approved, Android first, sideloaded APK
+with a self-hosted update server; SMS through a non-US provider. Built in design
+Phase 7 (`docs/design-v1.1-plan.md`).
 
 ### Phase 6 — Client & Admin mobile + GDPR — GDPR DONE, MOBILE NOT STARTED
 

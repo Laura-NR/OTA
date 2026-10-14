@@ -1,6 +1,6 @@
 # Design handoff v1.1: verification and implementation plan
 
-**Status:** Accepted 2026-10-13. The owner took every recommendation in §3 (Q7 remains open) and confirmed that the canvas replaces the 2026-09-26 design; see `docs/adr/0006-design-system-v1.1.md`.
+**Status:** Accepted 2026-10-13. The owner took every recommendation in §3; Q7 was decided on 2026-10-14 (ADR 0007) and confirmed that the canvas replaces the 2026-09-26 design; see `docs/adr/0006-design-system-v1.1.md`.
 **Input:** `vereda-handoff-v1.1/` (design team, dated 12 Oct 2026; canvas label "Handoff v1.1").
 **Scope:** whether the package is complete and consistent, how far the code is from it, which decisions block the build, and the order to build in.
 **Effect:** this plan replaces the "Design gap" section of `docs/development-plan.md`. `docs/design.md` (Verdín / Bricolage Grotesque, adopted 2026-09-26) is replaced by the canvas design system (the Vereda palette of teal, terracotta and ochre, called "Isla Abierta" on the canvas; Fraunces, Inter and IBM Plex Mono).
@@ -108,7 +108,7 @@ Legend: **R** restyle only · **E** extend on the current schema · **N** new sc
 
 ## 3. Decisions needed (Article 2): owner first, then the design team
 
-**Decided 2026-10-13:** every recommendation below is accepted. Q7 had no single recommendation and remains open. Defects D1–D8 are drafted for the design team as `docs/design-change-request-01.md` (to send).
+**Decided 2026-10-13:** every recommendation below is accepted. Q7 had no single recommendation; on 2026-10-14 the owner kept native (ADR 0007). Defects D1–D8 are drafted for the design team as `docs/design-change-request-01.md` (to send).
 
 | # | Decision | Options | Recommendation |
 |---|---|---|---|
@@ -118,10 +118,10 @@ Legend: **R** restyle only · **E** extend on the current schema · **N** new sc
 | Q4 | **Icons** (Lucide, ISC) | (a) A static SVG sprite in `packages/ui`, built once from Lucide's SVGs, as T-Assets §03 specifies. (b) The `lucide-react` package. | **(a)**. No runtime dependency, and it matches the design contract. Both are a third-party asset, so both need approval. |
 | Q5 | **Authentication** | Travelers: switch from magic link to a 6-digit email code (Better Auth's `emailOTP` plugin, already in the installed `better-auth`) and turn off email + password. Workers: phone code (needs SMS). | Approve the traveler email code. Defer the worker phone code until SMS exists, with email code as the interim. |
 | Q6 | **Guest provisioning on submit** | An account is created from the booking email without signing in (spec §3.5, Booking). | Approve, with rate limiting and an email-verification step before the account sees documents. |
-| Q7 | **Platform for the worker app and Ops Lite** | (a) Installable PWAs in a new Next app sharing `packages/ui`. (b) Expo, per ADR 0001 (which rejected "PWA-only" for offline and push reasons). | Owner call. UI_UX 11 argues PWA-first because app-store distribution for Cuba-related apps is restricted, and T-Signoff leaves it to us. If PWA: a new ADR superseding that line of ADR 0001. |
+| Q7 | **Platform for the worker app and Ops Lite** | (a) Installable PWAs. (b) Expo, per ADR 0001. | **Decided 2026-10-14: (b), Android first, sideloaded** (ADR 0007). The design's no-data features (the worker's own SMS, background resend) need native code. Ops Lite stays phone-sized screens in the back-office. |
 | Q8 | **Content management** (blog, destinations, FAQ, advisories, legal) | (a) In-house tables + A-Content, as drawn. (b) A headless CMS (new dependency). | **(a)**. Ship static content first, then move it into tables when A-Content lands. |
 | Q9 | **Schema batches M1–M9** (§4, Phase 4–5) | Approve per batch. | Review each batch's schema diff before it is generated. |
-| Q10 | **Third parties (accounts, money, or dependencies)** | Cuba-capable SMS (Twilio is blocked); open-banking provider; card gateway (TropiPay, deferred); self-hosted analytics (Matomo or Plausible); Sentry; a QR library; the ECB rate feed (display currencies). | Decide one at a time. Each sits behind an interface with a mock, as payments and AI already do, so none of them blocks UI work. |
+| Q10 | **Third parties (accounts, money, or dependencies)** | Cuba-capable SMS (Twilio is blocked); open-banking provider; card gateway (TropiPay, deferred); self-hosted analytics (Matomo or Plausible); Sentry; a QR library; the ECB rate feed (display currencies). | Decide one at a time. Each sits behind an interface with a mock, as payments and AI already do, so none of them blocks UI work. SMS research 2026-10-14 (ADR 0007): non-US provider, shortlist LINK Mobility / Messente / Bird; the Cubacel sender registration needs the legal entity; one-way only. |
 | Q11 | **Where the design package lives in git** | 79 MB in total; `exports/` is 54 MB and the research PDFs are 13 MB. | Commit `project/`, `handoff/`, `brand/` and the two markdown files (about 5 MB) under `design/vereda-v1.1/`. Keep exports and research PDFs out, or use LFS. |
 | Q12 | **Integration keys on A-Settings** ("shown once", rotation from the UI) | This conflicts with env-only secrets (Article 1, runbook). | Show status only (scope, last rotated); rotation stays a deploy operation. |
 | Q13 | **Runtime-editable thresholds** (A-Settings, dual Super Admin save) | Move the constants in `packages/domain` behind a settings table that is passed into the pure functions. | Approve. The domain functions take thresholds as parameters with the current constants as defaults. |
@@ -140,7 +140,8 @@ The build order follows HANDOFF §7, reordered so that the work needing no migra
 |---|---|
 | 0 Intake | **Done** except sending the change request: design package committed (`design/vereda-v1.1/`), ADR 0006, `docs/design.md` retired, `docs/design-change-request-01.md` drafted. |
 | 1 Foundations | **Done.** Token contract and tenant compilation, Fraunces / Inter / IBM Plex Mono, brand files and favicon, Lucide sprite, the DS 02–05 component set, the DS 03 traveler vocabulary, the copy-inventory helper. Lint, typecheck, unit tests (325 passed, 4 skipped) and all 31 e2e tests pass. |
-| 2 Shells | Next. |
+| 0b Handoff v1.2 | **Next.** The design team answered change request 01 (`docs/design-change-response-01.md`) and delivered `vereda-handoff-v1.2.zip`: new tokens (`-700` tones, 13/15 px, breakpoints), focus ring primary-600, text-on-primary ratified, a fixed T-Matrix/T-Assets, alt texts in the copy inventory. Import and verify it, then bring Phase 1 code onto it. |
+| 2 Shells | After 0b. |
 
 Phase 1 differs from the text below in four places: the fonts are the Latin subset only (it covers EN/ES/FR/DE/IT; see `tenant/assets/fonts/README.md`); the default preset is `vereda`, named for the agency (the canvas's "Isla Abierta" is a placeholder); "Travel ready" is not mapped until document approval exists (M3); and the copy step is a read-only helper (`tools/copy-inventory.mjs`) rather than an importer, so translations are reviewed before they land.
 
@@ -225,8 +226,13 @@ Every new route goes into `apps/api/test/authorization.e2e.test.ts`.
 2. Ten 600 px email templates with plain-text versions, on the C-Spec triggers (payment reminder at 2 h, T−7 reconfirmation, NPS at +24 h, advisory, options, OFAC).
 3. SMS and push behind a `NotificationChannel` interface with a console mock until a provider is chosen.
 
-### Phase 7: Worker app and Ops Lite (after Q7)
-1. **W-* (Spanish):** sign-in, home (availability, offer timer), offer accept/decline, calendar, credentials, earnings. The APIs exist. The offline job screen needs the G-Sync outbound queue.
+### Phase 7: Worker app and Ops Lite (Q7 decided: ADR 0007)
+1. **W-* (Spanish), Expo, Android first, sideloaded (ADR 0007):**
+   - the screens: sign-in, home (availability, offer timer), offer accept/decline, calendar, credentials, earnings; the APIs exist;
+   - the offline job screen, with the G-Sync `sync_queue` in SQLite and background resend;
+   - the emergency SMS from the phone (a custom Android module);
+   - distribution: the download page, the approval link, the in-app updater and self-hosted `expo-updates`, all built locally.
+   A field test with two or three workers comes first.
 2. **AL-*:** alerts with one-click re-dispatch, pipeline and inbox, on the existing `/ops` and `/conversations` sockets.
 
 ### Phase 8: Instrumentation and hardening
@@ -246,7 +252,7 @@ Every new route goes into `apps/api/test/authorization.e2e.test.ts`.
 | 4 Booking domain | Q5, Q6, Q9 | M1–M5 | — (card/open banking stay mocked) | XL |
 | 5 Admin | Phase 2, Q9, Q12, Q13 | M6–M9 | — | XL |
 | 6 Documents and notifications | Phase 1 | — | QR library, SMS provider | L |
-| 7 Worker app and Ops Lite | Q7 | — | possibly Expo | L |
+| 7 Worker app and Ops Lite | field test, SMS provider, legal entity | — | Expo (approved, ADR 0007) | L |
 | 8 Instrumentation | D4, Q10 | M10 | analytics sink, Sentry | M |
 
 Phases 1–3 need no migration and no third-party account. They can start as soon as Q1–Q4 are answered.
