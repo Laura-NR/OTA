@@ -69,6 +69,16 @@ describe('parseTenantConfig', () => {
     ]);
   });
 
+  it('has no WhatsApp line unless the manifest sets one', () => {
+    expect(parseTenantConfig(minimal).branding.whatsappNumber).toBeNull();
+    expect(
+      parseTenantConfig({
+        ...minimal,
+        branding: { ...minimal.branding, whatsappNumber: '+34 600 000 000' },
+      }).branding.whatsappNumber,
+    ).toBe('+34 600 000 000');
+  });
+
   it('rejects a manifest without a license number', () => {
     expect(() =>
       parseTenantConfig({

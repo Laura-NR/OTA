@@ -54,6 +54,8 @@ export const tenantConfigSchema = z.object({
     primaryColor: z.string().default('#0B4F6C'),
     supportEmail: z.string().email().nullable().default(null),
     supportPhone: z.string().nullable().default(null),
+    /** The WhatsApp line in international format (`+34 600 000 000`); web links open `wa.me`. */
+    whatsappNumber: z.string().nullable().default(null),
   }),
   primaryLocale: z.string().min(2).default('es'),
   supportedLocales: z.array(z.string().min(2)).min(1).default(['es', 'en', 'fr']),
