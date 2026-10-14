@@ -16,11 +16,19 @@ test.describe('admin shell (A-Dashboard)', () => {
       'aria-current',
       'page',
     );
-    for (const section of ['Bookings', 'Packages', 'Customers', 'Suppliers', 'Reports']) {
+    for (const section of [
+      'Bookings',
+      'Packages',
+      'Customers',
+      'Suppliers',
+      'Payments',
+      'Reports',
+      'Settings',
+    ]) {
       await expect(sidebar.getByRole('link', { name: section })).toBeVisible();
     }
     // Not built yet (design plan Phase 5): never a link to a missing page.
-    for (const missing of ['Disruptions', 'Payments', 'Content', 'Settings']) {
+    for (const missing of ['Disruptions', 'Content']) {
       await expect(sidebar.getByRole('link', { name: missing })).toHaveCount(0);
     }
     await expect(page.getByText('Super Admin', { exact: true })).toBeVisible();
@@ -61,5 +69,18 @@ test.describe('admin shell (A-Dashboard)', () => {
       await page.goto(from);
       await expect(page).toHaveURL(new RegExp(`${to}$`));
     }
+  });
+
+  test('shows the payment ledger and the read-only settings', async ({ page }) => {
+    const sidebar = page.getByRole('navigation', { name: 'Admin' });
+
+    await sidebar.getByRole('link', { name: 'Payments' }).click();
+    await expect(page.getByRole('heading', { name: 'Payments' })).toBeVisible();
+    await expect(page.getByLabel('Status')).toBeVisible();
+
+    await sidebar.getByRole('link', { name: 'Settings' }).click();
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+    await expect(page.getByText('Operating thresholds', { exact: true })).toBeVisible();
+    await expect(page.getByText('MINTUR licence', { exact: true })).toBeVisible();
   });
 });
