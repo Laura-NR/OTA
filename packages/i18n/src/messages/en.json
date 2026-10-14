@@ -404,9 +404,6 @@
   },
   "join": {
     "title": "Join our network",
-    "description": "Guides, drivers, homestay hosts, and translators — apply below. Our team reviews every application and will be in touch about compliance and onboarding.",
-    "cardTitle": "Supplier application",
-    "cardDescription": "We use these details only for onboarding and compliance.",
     "fullName": "Full name",
     "email": "Email",
     "phone": "Phone",
@@ -414,17 +411,60 @@
     "categories": {
       "TOUR_GUIDE": "Tour guide",
       "PRIVATE_DRIVER": "Private driver",
-      "HOMESTAY_HOST": "Homestay host",
+      "HOMESTAY_HOST": "Casa particular host",
       "TRANSLATOR": "Translator"
     },
-    "provinces": "Provinces (comma-separated)",
-    "provincesPlaceholder": "La Habana, Matanzas",
-    "license": "RTN licence number",
-    "message": "Tell us about your work (optional)",
-    "apply": "Apply to join",
+    "provinces": "Provinces where you work",
+    "message": "Anything else we should know (optional)",
+    "apply": "Send the application",
     "applying": "Sending…",
     "sent": "Thank you — your application is in. Our operations team will review it and get back to you.",
-    "error": "Could not submit your application"
+    "error": "Could not submit your application",
+    "formEyebrow": "Application",
+    "formTitle": "Join our network",
+    "steps": {
+      "category": "Category",
+      "identity": "Identity",
+      "credential": "Credential",
+      "review": "Review"
+    },
+    "stepTitles": {
+      "category": "What do you do?",
+      "identity": "Who you are and where you work",
+      "credential": "Your credential",
+      "review": "Check and send"
+    },
+    "stepProgress": "Step {step} of {total} · {label}",
+    "categoryHints": {
+      "TOUR_GUIDE": "Current Formatur credential · specialities and languages",
+      "PRIVATE_DRIVER": "Transport operating licence · own vehicle",
+      "HOMESTAY_HOST": "RTN certificate · rooms and backup power",
+      "TRANSLATOR": "The languages you work in"
+    },
+    "categoryNote": "The category sets which licence we ask for in step 3. If you do two things (a casa and driving, say), send two applications.",
+    "provincesHint": "Offers only reach you for services in these provinces or leaving from them.",
+    "licenses": {
+      "TOUR_GUIDE": "Formatur credential number",
+      "PRIVATE_DRIVER": "Transport licence number",
+      "HOMESTAY_HOST": "RTN licence number",
+      "TRANSLATOR": "Licence or accreditation number"
+    },
+    "licenseHint": "We check it with the issuing body before you receive any offer.",
+    "contact": "Contact",
+    "consentVerify": "I authorise {agency} to verify my credential with the issuing body (Formatur, the Ministry of Transport or MINTUR) and to keep my details to manage services. I can ask for them to be deleted at any time.",
+    "consentOwn": "I declare that the licence is mine and current, and I accept that no service is assigned to a partner without a verified credential.",
+    "errors": {
+      "category": "Choose what you do.",
+      "fullName": "Enter your name.",
+      "email": "Enter an email address, like name@example.com.",
+      "phone": "Enter a phone number.",
+      "provinces": "Pick at least one province.",
+      "license": "Enter the credential number.",
+      "consents": "Tick both boxes to send the application."
+    },
+    "continue": "Continue",
+    "back": "Back",
+    "sentTitle": "Application received"
   },
   "status": {
     "reservation": {

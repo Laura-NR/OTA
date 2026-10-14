@@ -404,27 +404,67 @@
   },
   "join": {
     "title": "Únete a nuestra red",
-    "description": "Guías, conductores, anfitriones y traductores — postúlate abajo. Nuestro equipo revisa cada solicitud y se pondrá en contacto para el cumplimiento y la incorporación.",
-    "cardTitle": "Solicitud de proveedor",
-    "cardDescription": "Usamos estos datos solo para la incorporación y el cumplimiento.",
     "fullName": "Nombre completo",
     "email": "Correo electrónico",
     "phone": "Teléfono",
     "category": "Categoría",
     "categories": {
       "TOUR_GUIDE": "Guía turístico",
-      "PRIVATE_DRIVER": "Conductor privado",
-      "HOMESTAY_HOST": "Anfitrión de casa particular",
+      "PRIVATE_DRIVER": "Porteador privado (chofer)",
+      "HOMESTAY_HOST": "Arrendador (casa particular)",
       "TRANSLATOR": "Traductor"
     },
-    "provinces": "Provincias (separadas por comas)",
-    "provincesPlaceholder": "La Habana, Matanzas",
-    "license": "Número de licencia RTN",
-    "message": "Cuéntanos sobre tu trabajo (opcional)",
-    "apply": "Enviar solicitud",
+    "provinces": "Provincias donde trabajas",
+    "message": "Algo más que debamos saber (opcional)",
+    "apply": "Enviar la solicitud",
     "applying": "Enviando…",
     "sent": "Gracias — recibimos tu solicitud. Nuestro equipo de operaciones la revisará y te contactará.",
-    "error": "No se pudo enviar tu solicitud"
+    "error": "No se pudo enviar tu solicitud",
+    "formEyebrow": "Solicitud",
+    "formTitle": "Únete a la red",
+    "steps": {
+      "category": "Categoría",
+      "identity": "Identidad",
+      "credential": "Credencial",
+      "review": "Revisar"
+    },
+    "stepTitles": {
+      "category": "¿Qué haces?",
+      "identity": "Quién eres y dónde trabajas",
+      "credential": "Tu credencial",
+      "review": "Revisa y envía"
+    },
+    "stepProgress": "Paso {step} de {total} · {label}",
+    "categoryHints": {
+      "TOUR_GUIDE": "Credencial Formatur vigente · especialidades y idiomas",
+      "PRIVATE_DRIVER": "Licencia de operación de transporte · vehículo propio",
+      "HOMESTAY_HOST": "Certificado RTN · habitaciones y respaldo eléctrico",
+      "TRANSLATOR": "Los idiomas con los que trabajas"
+    },
+    "categoryNote": "La categoría determina qué licencia te pedimos en el paso 3. Si haces dos cosas (por ejemplo casa y chofer), envía dos solicitudes.",
+    "provincesHint": "Las ofertas te llegan solo para servicios en estas provincias o que salen de ellas.",
+    "licenses": {
+      "TOUR_GUIDE": "Número de la credencial Formatur",
+      "PRIVATE_DRIVER": "Número de la licencia de transporte",
+      "HOMESTAY_HOST": "Número de licencia RTN",
+      "TRANSLATOR": "Número de licencia o acreditación"
+    },
+    "licenseHint": "La comprobamos con la entidad emisora antes de que recibas ninguna oferta.",
+    "contact": "Contacto",
+    "consentVerify": "Autorizo a {agency} a verificar mi credencial con la entidad emisora (Formatur, Ministerio de Transporte o MINTUR) y a guardar mis datos para gestionar servicios. Puedo pedir su borrado en cualquier momento.",
+    "consentOwn": "Declaro que la licencia es mía y está vigente, y acepto que ningún servicio se asigna a un colaborador sin credencial verificada.",
+    "errors": {
+      "category": "Elige qué haces.",
+      "fullName": "Escribe tu nombre.",
+      "email": "Escribe un correo, como nombre@ejemplo.com.",
+      "phone": "Escribe un teléfono.",
+      "provinces": "Marca al menos una provincia.",
+      "license": "Escribe el número de la credencial.",
+      "consents": "Marca las dos casillas para enviar la solicitud."
+    },
+    "continue": "Continuar",
+    "back": "Atrás",
+    "sentTitle": "Solicitud recibida"
   },
   "status": {
     "reservation": {

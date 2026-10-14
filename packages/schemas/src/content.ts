@@ -290,6 +290,28 @@ export const packagesContentSchema = z.object({
   compare: z.object({ eyebrow: text.optional(), text }).optional(),
 });
 
+/**
+ * The recruitment page's words (Join board; written for Cuban guides, drivers
+ * and hosts, Spanish first). The form itself is core.
+ */
+export const joinContentSchema = z.object({
+  status: contentStatusSchema,
+  eyebrow: text.optional(),
+  title: text,
+  lede: text,
+  /** The hero's call to the form. */
+  cta: text,
+  promises: z.array(text).max(3),
+  /** Figures on the hero; the board's are samples until the agency reports its own. */
+  stats: z.array(z.object({ value: text, text })).max(4),
+  steps: sectionHeadSchema.extend({
+    items: z.array(z.object({ title: text, text })).min(1),
+  }),
+  asks: z.object({ title: text, items: z.array(text).min(1) }),
+  gets: z.object({ title: text, items: z.array(text).min(1) }),
+  faq: z.object({ title: text, items: z.array(faqItemSchema).min(1) }).optional(),
+});
+
 export type ContentStatus = z.infer<typeof contentStatusSchema>;
 export type ContentBlock = z.infer<typeof contentBlockSchema>;
 export type ContentSection = z.infer<typeof contentSectionSchema>;
@@ -308,3 +330,4 @@ export type DestinationCard = z.infer<typeof destinationCardSchema>;
 export type DestinationDetail = z.infer<typeof destinationDetailSchema>;
 export type DestinationsContent = z.infer<typeof destinationsContentSchema>;
 export type PackagesContent = z.infer<typeof packagesContentSchema>;
+export type JoinContent = z.infer<typeof joinContentSchema>;

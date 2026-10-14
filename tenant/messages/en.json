@@ -1350,6 +1350,101 @@
         "eyebrow": "Still torn?",
         "text": "A specialist can tell you which one fits your dates, pace and budget in a 10-minute call."
       }
+    },
+    "join": {
+      "status": "placeholder",
+      "eyebrow": "Partner portal",
+      "title": "Work with travelers who come to know your Cuba.",
+      "lede": "We are looking for casa hosts, licensed drivers, Formatur-certified guides and cultural or food venues across the country. Offers reach your phone, you accept the ones that suit you, and you are paid in euros five working days after the job.",
+      "cta": "Send my application",
+      "promises": [
+        "No joining fee and no exclusivity",
+        "Casas receive 85–90 % of the rate; guides 100 % of theirs",
+        "A desk in Havana, 24/7, behind you whatever happens"
+      ],
+      "stats": [
+        {
+          "value": "38",
+          "text": "verified partners in 9 provinces"
+        },
+        {
+          "value": "5 days",
+          "text": "working days between finishing a job and being paid"
+        },
+        {
+          "value": "€ 121,000",
+          "text": "paid to Cuban families and professionals in 2026"
+        },
+        {
+          "value": "2–3 days",
+          "text": "to check your licence and sign you up"
+        }
+      ],
+      "steps": {
+        "eyebrow": "How it works",
+        "title": "Four steps, no paperwork you don't already have",
+        "items": [
+          {
+            "title": "You send the application",
+            "text": "Category, ID card, phone, the places you work and a clear photo of your licence. Ten minutes from your phone."
+          },
+          {
+            "title": "The desk checks it",
+            "text": "We verify the credential (Formatur, transport licence or RTN) and call you to meet you. 2–3 working days."
+          },
+          {
+            "title": "You install the app and mark your availability",
+            "text": "Offers arrive with every detail and two hours to accept or decline. Nothing is ever assigned without your yes."
+          },
+          {
+            "title": "You work and get paid",
+            "text": "A clear work order, informed travelers, a desk open 24/7. Paid in cash at the office or by transfer, with a receipt."
+          }
+        ]
+      },
+      "asks": {
+        "title": "What we ask",
+        "items": [
+          "A current licence: Formatur credential (guides), transport operating licence (drivers), RTN (casas) or activity licence (venues).",
+          "An ID card and a phone that gets SMS; WhatsApp helps.",
+          "Answer offers within the window (2 hours), even if only to say no.",
+          "For casas: tell us honestly whether there is a generator, solar panels or a water tank."
+        ]
+      },
+      "gets": {
+        "title": "What you get",
+        "items": [
+          "Offers with dates, travelers, language and net pay before you accept.",
+          "Paid in euros within 5 working days, with a receipt. No waiting for the end of the season.",
+          "One work order per job and a desk that answers day and night.",
+          "Your reliability score and the travelers' ratings, for your eyes only."
+        ]
+      },
+      "faq": {
+        "title": "Questions partners ask",
+        "items": [
+          {
+            "id": "cost",
+            "question": "Does it cost anything to join?",
+            "answer": "No. There is no fee and no exclusivity; you can keep working with whoever you like."
+          },
+          {
+            "id": "rate",
+            "question": "Who sets the rate?",
+            "answer": "You propose your net rate on the sign-up call; the desk reviews it with you once a year."
+          },
+          {
+            "id": "expiry",
+            "question": "What if my licence expires soon?",
+            "answer": "With less than 30 days left you get no automatic offers; upload the renewal and you are active again."
+          },
+          {
+            "id": "data",
+            "question": "What do travelers see about me?",
+            "answer": "Your name, your work phone and your licence on the voucher. Never your ID card or your home address."
+          }
+        ]
+      }
     }
   },
   "packages": {

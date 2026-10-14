@@ -404,9 +404,6 @@
   },
   "join": {
     "title": "Rejoignez notre réseau",
-    "description": "Guides, chauffeurs, hôtes et traducteurs — postulez ci-dessous. Notre équipe examine chaque candidature et vous contactera pour la conformité et l'intégration.",
-    "cardTitle": "Candidature prestataire",
-    "cardDescription": "Nous n'utilisons ces informations que pour l'intégration et la conformité.",
     "fullName": "Nom complet",
     "email": "E-mail",
     "phone": "Téléphone",
@@ -417,14 +414,57 @@
       "HOMESTAY_HOST": "Hôte de casa particular",
       "TRANSLATOR": "Traducteur"
     },
-    "provinces": "Provinces (séparées par des virgules)",
-    "provincesPlaceholder": "La Havane, Matanzas",
-    "license": "Numéro de licence RTN",
-    "message": "Parlez-nous de votre activité (facultatif)",
-    "apply": "Postuler",
+    "provinces": "Provinces où vous travaillez",
+    "message": "Autre chose à nous dire (facultatif)",
+    "apply": "Envoyer la candidature",
     "applying": "Envoi…",
     "sent": "Merci — votre candidature est reçue. Notre équipe l'examinera et vous recontactera.",
-    "error": "Impossible d'envoyer votre candidature"
+    "error": "Impossible d'envoyer votre candidature",
+    "formEyebrow": "Candidature",
+    "formTitle": "Rejoindre notre réseau",
+    "steps": {
+      "category": "Catégorie",
+      "identity": "Identité",
+      "credential": "Accréditation",
+      "review": "Vérifier"
+    },
+    "stepTitles": {
+      "category": "Que faites-vous ?",
+      "identity": "Qui vous êtes et où vous travaillez",
+      "credential": "Votre accréditation",
+      "review": "Vérifiez et envoyez"
+    },
+    "stepProgress": "Étape {step} sur {total} · {label}",
+    "categoryHints": {
+      "TOUR_GUIDE": "Accréditation Formatur en cours · spécialités et langues",
+      "PRIVATE_DRIVER": "Licence de transport · véhicule personnel",
+      "HOMESTAY_HOST": "Certificat RTN · chambres et alimentation de secours",
+      "TRANSLATOR": "Les langues dans lesquelles vous travaillez"
+    },
+    "categoryNote": "La catégorie détermine la licence demandée à l'étape 3. Si vous faites deux métiers (casa et chauffeur, par exemple), envoyez deux candidatures.",
+    "provincesHint": "Les offres ne vous parviennent que pour des services dans ces provinces ou au départ de celles-ci.",
+    "licenses": {
+      "TOUR_GUIDE": "Numéro d'accréditation Formatur",
+      "PRIVATE_DRIVER": "Numéro de licence de transport",
+      "HOMESTAY_HOST": "Numéro de licence RTN",
+      "TRANSLATOR": "Numéro de licence ou d'accréditation"
+    },
+    "licenseHint": "Nous le vérifions auprès de l'organisme émetteur avant toute offre.",
+    "contact": "Contact",
+    "consentVerify": "J'autorise {agency} à vérifier mon accréditation auprès de l'organisme émetteur (Formatur, ministère des Transports ou MINTUR) et à conserver mes données pour gérer les services. Je peux en demander la suppression à tout moment.",
+    "consentOwn": "Je déclare que la licence est la mienne et en cours de validité, et j'accepte qu'aucun service ne soit attribué à un partenaire sans accréditation vérifiée.",
+    "errors": {
+      "category": "Choisissez ce que vous faites.",
+      "fullName": "Indiquez votre nom.",
+      "email": "Indiquez une adresse e-mail, comme nom@exemple.com.",
+      "phone": "Indiquez un numéro de téléphone.",
+      "provinces": "Cochez au moins une province.",
+      "license": "Indiquez le numéro d'accréditation.",
+      "consents": "Cochez les deux cases pour envoyer la candidature."
+    },
+    "continue": "Continuer",
+    "back": "Retour",
+    "sentTitle": "Candidature reçue"
   },
   "status": {
     "reservation": {

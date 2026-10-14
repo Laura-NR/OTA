@@ -20,12 +20,13 @@ around as data.
 - `messages/<locale>.json` — the agency's own copy, merged over the core catalogs
   (`packages/i18n`) by the storefront. Any core key can be overridden (Vereda sets
   `packages.requestPill` to its 24-hour confirmation window); the agency's page
-  content (Home, Destinations and each destination, Packages and Compare, Support, Travel info, Blog,
+  content (Home, Destinations and each destination, Packages and Compare, Join, Support, Travel info, Blog,
   About, Privacy, the footer tagline, the "Cuba right now" conditions and the
   Home event strip) lives under `content`
   and is validated by the `@ota/schemas` content schemas.
-  English ships first: where a locale file has no `content`, the English content
-  is shown. A page whose content is missing is a 404, except Home, which then
+  English ships first: where a locale file has no `content` for a page, the
+  English content is shown. `messages/es.json` holds only the Join page, which
+  is written in Spanish for Cuban partners. A page whose content is missing is a 404, except Home, which then
   shows only its search and the trips under the agency name.
 
 ## Placeholders to replace before launch
@@ -40,7 +41,8 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   `docs/pii-at-rest-review.md` for the owner and counsel to review. The
   `conditions` briefing (advisory level, power, fuel) and the `event` strip are
   design samples, not current information, and show a "Sample" badge until
-  published. ES/FR content is not written yet.
+  published. Join's figures (partners, payouts, review time) are the design's
+  samples. Apart from Join, ES/FR content is not written yet.
 - `provinces.json` / `destinations.json`: the design's sample network (casas,
   guides, drivers, advisory levels, power cuts, fuel) dated 3 Oct 2026. Only
   `trinidad` links a real package (`trinidad-heritage-trail`); only `vinales`

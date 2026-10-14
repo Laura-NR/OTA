@@ -1,0 +1,99 @@
+{
+  "content": {
+    "join": {
+      "status": "placeholder",
+      "eyebrow": "Portal de colaboradores",
+      "title": "Trabaja con viajeros que vienen a conocer tu Cuba.",
+      "lede": "Buscamos arrendadores, choferes con licencia, guías certificados por Formatur y lugares culturales o gastronómicos en todo el país. Recibes ofertas en el teléfono, aceptas las que te convienen y cobras en euros a los cinco días hábiles de terminar.",
+      "cta": "Enviar mi solicitud",
+      "promises": [
+        "Sin cuota de entrada ni exclusividad",
+        "Las casas reciben el 85–90 % de la tarifa; los guías, el 100 % de la suya",
+        "Central en La Habana 24/7 que te respalda ante cualquier incidencia"
+      ],
+      "stats": [
+        {
+          "value": "38",
+          "text": "colaboradores verificados en 9 provincias"
+        },
+        {
+          "value": "5 días",
+          "text": "hábiles entre terminar un servicio y cobrarlo"
+        },
+        {
+          "value": "€ 121 000",
+          "text": "pagados a familias y profesionales cubanos en 2026"
+        },
+        {
+          "value": "2–3 días",
+          "text": "para revisar tu licencia y darte de alta"
+        }
+      ],
+      "steps": {
+        "eyebrow": "Cómo funciona",
+        "title": "Cuatro pasos, ningún papel que no tengas ya",
+        "items": [
+          {
+            "title": "Envías la solicitud",
+            "text": "Categoría, carnet, teléfono, municipios donde trabajas y una foto nítida de tu licencia. Diez minutos desde el móvil."
+          },
+          {
+            "title": "La central verifica",
+            "text": "Comprobamos la credencial (Formatur, licencia de transporte o RTN) y te llamamos para conocerte. 2–3 días laborables."
+          },
+          {
+            "title": "Instalas la app y marcas tu disponibilidad",
+            "text": "Recibes ofertas con todos los datos y dos horas para aceptar o rechazar. Nunca se te asigna nada sin tu sí."
+          },
+          {
+            "title": "Trabajas y cobras",
+            "text": "Orden de trabajo clara, viajeros informados, central 24/7. Pago en efectivo en la oficina o por transferencia, con recibo."
+          }
+        ]
+      },
+      "asks": {
+        "title": "Lo que pedimos",
+        "items": [
+          "Licencia vigente: credencial Formatur (guías), licencia de operación de transporte (choferes), RTN (casas) o licencia de actividad (lugares).",
+          "Carnet de identidad y un teléfono con SMS; WhatsApp ayuda.",
+          "Responder a las ofertas en el plazo (2 horas) aunque sea para decir que no.",
+          "Para casas: contarnos con sinceridad si hay generador, placas o tanque de agua."
+        ]
+      },
+      "gets": {
+        "title": "Lo que recibes",
+        "items": [
+          "Ofertas con fechas, viajeros, idioma y pago neto antes de aceptar.",
+          "Pago en euros a los 5 días hábiles, con recibo. Sin esperar al final de temporada.",
+          "Una orden de trabajo por servicio y una central que responde de día y de noche.",
+          "Tu puntuación de fiabilidad y las valoraciones de los viajeros, solo para ti."
+        ]
+      },
+      "faq": {
+        "title": "Preguntas frecuentes",
+        "items": [
+          {
+            "id": "coste",
+            "question": "¿Cuesta algo entrar en la red?",
+            "answer": "No. No hay cuota ni exclusividad; puedes seguir trabajando con quien quieras."
+          },
+          {
+            "id": "tarifa",
+            "question": "¿Quién fija la tarifa?",
+            "answer": "Tú propones tu tarifa neta en la llamada de alta; la central la revisa una vez al año contigo."
+          },
+          {
+            "id": "vencimiento",
+            "question": "¿Y si mi licencia vence pronto?",
+            "answer": "Con menos de 30 días de vigencia no recibes ofertas automáticas; sube la renovación y vuelves a estar activo."
+          },
+          {
+            "id": "datos",
+            "question": "¿Qué datos ven los viajeros?",
+            "answer": "Tu nombre, tu teléfono de servicio y tu licencia en el bono. Nunca tu carnet ni tu dirección personal."
+          }
+        ]
+      }
+    }
+  }
+}
