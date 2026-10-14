@@ -228,6 +228,13 @@ tokens; no token was added.
   desk starts dispatch (no auto-dispatch yet), a decline or timeout makes
   ACTION_REQUIRED, and there is no 48 h payment window, audio cue or 72 h SLA
   yet.
+- **A-Suppliers.** The list is the compliance register: category chips (All ·
+  Casas · Drivers · Guides · Translators), province and verification filters, and
+  a table with each worker's credential state, reliability (the acceptance rate
+  over the dispatch-offer ledger) and auto-dispatch state. "Add supplier" is not
+  a create form: recruitment is the `/suppliers/applications` path, so the header
+  links there. The board's **Power** and **Last job** columns wait for M6
+  (backup-power fields) and a job-history source; they are not shown.
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and

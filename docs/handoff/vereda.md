@@ -28,6 +28,12 @@ ADR 0007 (worker app).
     `/reports/regulatory` and `/reports/quality` deleted (redirect to `/reports#…`), nav tabs
     removed, `backoffice.reports` replaces `analytics`/`regulatory`/`quality` in en/es/fr. The
     dashboard revenue card uses `BarList` too.
+  - `715d216` **Suppliers** = the A-Suppliers register list: header summary, the §4.5 expiry rule
+    strip, category chips with counts, province and verification filters, and a table with each
+    worker's credential state, reliability (`/quality/supplier-reliability`) and auto-dispatch
+    state; the header links to `/suppliers/applications`. `suppliers-table.tsx` replaced by the
+    server table; `backoffice.suppliers` rewritten in en/es/fr. The detail page stays the
+    credential inspector (restyle still to do).
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
   `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
@@ -43,6 +49,11 @@ ADR 0007 (worker app).
 - Redirects confirmed: `/reports/regulatory` → `/reports#regulatory`, `/reports/quality` →
   `/reports#quality`, `/regulatory` and `/quality` likewise, `/analytics` → `/reports`; the
   section-nav anchors scroll to each section.
+- Suppliers (`715d216`): lint, format:check, typecheck, i18n parity test, `pnpm test` (29 tasks),
+  build (18/18) and `pnpm e2e` **45/45** green. Browser on `/suppliers` at 390/1024/1280: no
+  overflow, h1 Fraunces 24/32, the expiry strip renders `warning-100`/`warning-700` with a
+  `warning-500` border; the category chips and the province/verification filters update the URL
+  and the row set.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -51,7 +62,10 @@ ADR 0007 (worker app).
   figure, and its list became the A-Bookings table at `/bookings` (tab still "Pipeline").
 - Not built (data or decision missing): payment windows, owner/My queue, OFAC, disruption, audio
   cue and mute, on-the-ground panel, search, CSV export, version locks, internal notes,
-  travelers/itinerary on the booking, GBV-by-month chart, reinvestment ledger, NPS.
+  travelers/itinerary on the booking, GBV-by-month chart, reinvestment ledger, NPS. A-Suppliers'
+  **Power** and **Last job** columns await M6 (backup-power fields) and a job-history source; its
+  **Add supplier** is the `/suppliers/applications` recruitment path, not a create form. The
+  supplier detail page is still the pre-redesign inspector.
 - ES/FR for `backoffice.dashboard`, `.bookings`, `.reservation`, `.reports` are agent-drafted.
 - Earlier open items still stand (Cubacel 24/7 line, change notice, offer-SMS cost; placeholder
   tenant content).
@@ -83,14 +97,18 @@ ADR 0007 (worker app).
     ledger). Ops clocks are Havana time (`OPS_TIME_ZONE`, `@ota/domain` `time/ops-calendar`)."
   - "Reports is one page (`/reports`, anchors per §4.9 section); `/reports/regulatory` and
     `/reports/quality` redirect there."
+  - "The suppliers register (`/suppliers`) is the A-Suppliers list: category chips, province and
+    verification filters, and credential/reliability/auto-dispatch columns. Reliability is the
+    acceptance rate from `GET /quality/supplier-reliability`; auto-dispatch is the domain
+    `canAutoDispatch`. Recruitment is `/suppliers/applications`."
 
 ## Next
 1. Phase 4: generate the M1 migration on the approved draft (D1(a)–D4(a)) and build Package v2
    (tiers, departures, extras, days, media, translations, slug redirects), then M2–M5.
-2. Phase 5 continues on today's data where no migration is needed: Suppliers (applications folded
-   in, reliability; backup power waits for M6), then Payments (reconciliation, payouts; refunds and
-   proofs wait for M4) and Customers (OFAC M3, retention already there). Batches M6–M9 are asked
-   for as they come up.
+2. Phase 5 continues on today's data where no migration is needed: the supplier **detail** restyle
+   (the credential inspector), then Payments (reconciliation, payouts; refunds and proofs wait for
+   M4) and Customers (OFAC M3, retention already there). Batches M6–M9 are asked for as they come
+   up.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -161,3 +179,7 @@ ADR 0007 (worker app).
   per locale; base price + tier delta + optional departure price; `status` replaces `active`
   (backfilled); agency-wide terms in the manifest with policy keys on the package. Migration not yet
   generated.
+- 2026-10-14 — A-Suppliers is the register list; the detail page is the credential inspector.
+  "Add supplier" is the `/suppliers/applications` recruitment path, not a create form. Reliability
+  is the acceptance rate over the offer ledger; the board's Power and Last job columns wait for M6
+  and a job-history source.
