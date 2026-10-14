@@ -39,7 +39,8 @@
     "money": "Money & cash",
     "health": "Health & insurance",
     "usTravelers": "US travelers & OFAC",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "compare": "Compare"
   },
   "pages": {
     "common": {
@@ -144,7 +145,8 @@
     "allPackages": "{count, plural, one {See the package} other {All # packages}}",
     "custom": "Build a custom itinerary",
     "conditionsLink": "Read the full conditions page",
-    "guideMeta": "{category} · {minutes} min"
+    "guideMeta": "{category} · {minutes} min",
+    "compare": "Compare trips side by side"
   },
   "catalog": {
     "provinceFallback": "Cuba",
@@ -178,7 +180,46 @@
     "fromLabel": "From",
     "requestPill": "Request to book",
     "instantPill": "Instant",
-    "viewTrip": "View trip"
+    "viewTrip": "View trip",
+    "breadcrumb": "Breadcrumb",
+    "browser": {
+      "filters": "Filters",
+      "closeFilters": "Close filters",
+      "clearAll": "Clear all",
+      "results": "Results",
+      "where": "Where",
+      "duration": "Duration",
+      "price": "Price",
+      "min": "Min",
+      "max": "Max",
+      "priceNote": "Trip price in {currency}, before extras.",
+      "durations": {
+        "short": "Up to 5 days",
+        "week": "6–8 days",
+        "long": "9 days or more"
+      },
+      "sortBy": "Sort by",
+      "sorts": {
+        "recommended": "Recommended",
+        "priceAsc": "Price · low to high",
+        "priceDesc": "Price · high to low",
+        "durationAsc": "Duration · shortest first"
+      },
+      "queryChip": "“{query}”",
+      "priceFrom": "From {price}",
+      "priceTo": "Up to {price}",
+      "removeFilter": "Remove filter {label}",
+      "showing": "Showing {shown} of {total, plural, one {# trip} other {# trips}}",
+      "show": "Show {count, plural, one {# trip} other {# trips}}",
+      "empty": "No trip matches these filters.",
+      "compare": "Compare",
+      "compareFull": "You can compare up to {max} trips.",
+      "trayLabel": "Compare selection",
+      "trayTitle": "{count, plural, one {# trip} other {# trips}} selected to compare",
+      "trayClear": "Clear",
+      "trayGo": "Compare side by side",
+      "trayHint": "Pick at least {min}"
+    }
   },
   "checkout": {
     "pay": "Proceed to payment",
@@ -1203,5 +1244,36 @@
       "addToTrip": "Add to trip",
       "fromPrice": "From {price}"
     }
+  },
+  "compare": {
+    "title": "Compare trips",
+    "breadcrumb": "Compare",
+    "lede": "The same facts for every trip, side by side.",
+    "caption": "The selected trips compared",
+    "count": "{count} of {max} trips",
+    "highlight": "Highlight differences only",
+    "share": "Share this comparison",
+    "copied": "Link copied.",
+    "copyFailed": "Could not copy the link; copy it from the address bar.",
+    "emptyTitle": "Nothing to compare yet",
+    "emptyText": "Pick {min} to {max} trips from the listing with the “Compare” box on each card. We keep your selection while you browse.",
+    "browse": "Browse trips",
+    "remove": "Remove {name} from comparison",
+    "addTrip": "Add a trip",
+    "upTo": "up to {max}",
+    "request": "Request to book",
+    "from": "From {price}",
+    "rows": {
+      "booking": "Booking model",
+      "duration": "Duration",
+      "where": "Where you go",
+      "sleep": "Where you sleep",
+      "transport": "Transport",
+      "experiences": "Experiences",
+      "price": "Price"
+    },
+    "note": "Rows with identical values are dimmed when “Highlight differences only” is on. On a phone, swipe sideways for more trips; the first column stays fixed.",
+    "whatsapp": "WhatsApp us",
+    "mix": "Mix them into a custom route"
   }
 }

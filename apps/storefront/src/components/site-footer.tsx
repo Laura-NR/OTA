@@ -70,9 +70,12 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
     {
       key: 'packages',
       title: nav('packages'),
-      links: isFeatureEnabled(tenant, 'customItineraryBuilder')
-        ? [{ key: 'custom', label: t('customItinerary'), href: '/custom' }]
-        : [],
+      links: [
+        { key: 'compare', label: t('compare'), href: '/packages/compare' },
+        ...(isFeatureEnabled(tenant, 'customItineraryBuilder')
+          ? [{ key: 'custom', label: t('customItinerary'), href: '/custom' }]
+          : []),
+      ],
     },
     {
       key: 'travelInfo',

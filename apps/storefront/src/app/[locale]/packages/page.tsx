@@ -1,70 +1,65 @@
-import { searchPackages } from '@ota/domain';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
+import { isFeatureEnabled } from '@ota/config';
+import { packagesContentSchema } from '@ota/schemas';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-import { Link } from '@/i18n/navigation';
+import { Breadcrumb } from '@/components/breadcrumb';
+import { PageIntro } from '@/components/content/page-intro';
+import { PackagesBrowser } from '@/components/packages/packages-browser';
+import { getPageContent } from '@/lib/content';
+import { parsePackageQuery } from '@/lib/package-query';
 import { getPackages } from '@/lib/packages';
+import { getTenantConfig } from '@/lib/tenant';
 
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('nav');
+  return { title: t('packages') };
+}
+
+/**
+ * Packages (Packages / M-Packages boards): the live curated catalogue with
+ * filters, sort and the compare tray. Home's search and the Destinations
+ * panel land here with their filters in the URL (`?q=`, `?province=`).
+ */
 export default async function PackagesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { q } = await searchParams;
-  const t = await getTranslations('packages');
-  // Home's search lands here with `q`.
-  const packages = searchPackages(await getPackages(), { query: q });
+  const tenant = getTenantConfig();
+  const [params, content, packages, t, nav] = await Promise.all([
+    searchParams,
+    getPageContent('packages', packagesContentSchema),
+    getPackages(),
+    getTranslations('packages'),
+    getTranslations('nav'),
+  ]);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
-      <h1 className="text-h2 font-semibold tracking-tight">{t('title')}</h1>
-      <p className="mt-2 text-muted">{t('description')}</p>
-      <p className="mt-1 text-body-sm text-muted">
-        {t('count', { count: packages.length })}
-      </p>
-
+    <div className="mx-auto flex w-full max-w-container flex-col gap-8 px-6 py-8 md:px-8 lg:px-10">
+      <Breadcrumb
+        label={t('breadcrumb')}
+        items={[{ label: nav('home'), href: '/' }, { label: nav('packages') }]}
+      />
+      <PageIntro
+        status={content?.status ?? 'published'}
+        title={content?.title ?? t('title')}
+        lede={content?.lede ?? t('description')}
+        agencyName={tenant.branding.agencyName}
+      />
       {packages.length === 0 ? (
-        <p className="mt-6 text-body-sm text-muted">{t('empty')}</p>
+        <p className="text-body text-secondary">{t('empty')}</p>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {packages.map((pkg) => {
-            const mediaId = pkg.services.find(
-              (service) => service.itemMediaId,
-            )?.itemMediaId;
-            return (
-              <Link key={pkg.id} href={`/packages/${pkg.slug}`} className="group">
-                <Card className="h-full overflow-hidden transition-shadow group-hover:shadow-sm">
-                  {mediaId ? (
-                    <img
-                      src={`/api/ota/catalog/media/${mediaId}`}
-                      alt={pkg.name}
-                      className="h-40 w-full object-cover"
-                    />
-                  ) : null}
-                  <CardHeader>
-                    <CardTitle className="text-body">{pkg.name}</CardTitle>
-                    <CardDescription>
-                      {[pkg.province, t('days', { count: pkg.durationDays })]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {pkg.description ? (
-                      <p className="text-body-sm text-muted">{pkg.description}</p>
-                    ) : null}
-                    <p className="text-body-sm font-medium">
-                      {t('from', {
-                        currency: pkg.currency,
-                        amount: Number(pkg.basePrice).toFixed(2),
-                      })}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+        <PackagesBrowser
+          packages={packages}
+          initial={parsePackageQuery(params)}
+          instant={isFeatureEnabled(tenant, 'instantBooking')}
+          custom={
+            isFeatureEnabled(tenant, 'customItineraryBuilder')
+              ? (content?.custom ?? null)
+              : null
+          }
+        />
       )}
     </div>
   );

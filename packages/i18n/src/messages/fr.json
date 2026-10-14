@@ -39,7 +39,8 @@
     "money": "Argent et espèces",
     "health": "Santé et assurance",
     "usTravelers": "Voyageurs américains et OFAC",
-    "privacy": "Confidentialité"
+    "privacy": "Confidentialité",
+    "compare": "Comparer"
   },
   "pages": {
     "common": {
@@ -144,7 +145,8 @@
     "allPackages": "{count, plural, one {Voir le forfait} other {Les # forfaits}}",
     "custom": "Créer un itinéraire sur mesure",
     "conditionsLink": "Lire la page complète des conditions",
-    "guideMeta": "{category} · {minutes} min"
+    "guideMeta": "{category} · {minutes} min",
+    "compare": "Comparer les voyages côte à côte"
   },
   "catalog": {
     "provinceFallback": "Cuba",
@@ -178,7 +180,46 @@
     "fromLabel": "À partir de",
     "requestPill": "Sur demande",
     "instantPill": "Immédiate",
-    "viewTrip": "Voir le voyage"
+    "viewTrip": "Voir le voyage",
+    "breadcrumb": "Fil d'Ariane",
+    "browser": {
+      "filters": "Filtres",
+      "closeFilters": "Fermer les filtres",
+      "clearAll": "Tout effacer",
+      "results": "Résultats",
+      "where": "Où",
+      "duration": "Durée",
+      "price": "Prix",
+      "min": "Min",
+      "max": "Max",
+      "priceNote": "Prix du voyage en {currency}, hors options.",
+      "durations": {
+        "short": "Jusqu'à 5 jours",
+        "week": "6–8 jours",
+        "long": "9 jours ou plus"
+      },
+      "sortBy": "Trier par",
+      "sorts": {
+        "recommended": "Recommandés",
+        "priceAsc": "Prix · croissant",
+        "priceDesc": "Prix · décroissant",
+        "durationAsc": "Durée · les plus courts d’abord"
+      },
+      "queryChip": "« {query} »",
+      "priceFrom": "À partir de {price}",
+      "priceTo": "Jusqu'à {price}",
+      "removeFilter": "Retirer le filtre {label}",
+      "showing": "{shown} sur {total, plural, one {# voyage} other {# voyages}}",
+      "show": "Voir {count, plural, one {# voyage} other {# voyages}}",
+      "empty": "Aucun voyage ne correspond à ces filtres.",
+      "compare": "Comparer",
+      "compareFull": "Vous pouvez comparer jusqu'à {max} voyages.",
+      "trayLabel": "Sélection à comparer",
+      "trayTitle": "{count, plural, one {# voyage sélectionné} other {# voyages sélectionnés}} pour comparer",
+      "trayClear": "Effacer",
+      "trayGo": "Comparer côte à côte",
+      "trayHint": "Choisissez-en au moins {min}"
+    }
   },
   "checkout": {
     "pay": "Passer au paiement",
@@ -1203,5 +1244,36 @@
       "addToTrip": "Ajouter au voyage",
       "fromPrice": "À partir de {price}"
     }
+  },
+  "compare": {
+    "title": "Comparer les voyages",
+    "breadcrumb": "Comparer",
+    "lede": "Les mêmes informations pour chaque voyage, côte à côte.",
+    "caption": "Les voyages sélectionnés, comparés",
+    "count": "{count} sur {max} voyages",
+    "highlight": "Ne montrer que les différences",
+    "share": "Partager cette comparaison",
+    "copied": "Lien copié.",
+    "copyFailed": "Impossible de copier le lien ; copiez-le depuis la barre d'adresse.",
+    "emptyTitle": "Rien à comparer pour le moment",
+    "emptyText": "Choisissez de {min} à {max} voyages dans la liste avec la case « Comparer » de chaque carte. Nous gardons votre sélection pendant que vous naviguez.",
+    "browse": "Voir les voyages",
+    "remove": "Retirer {name} de la comparaison",
+    "addTrip": "Ajouter un voyage",
+    "upTo": "jusqu'à {max}",
+    "request": "Demander une réservation",
+    "from": "À partir de {price}",
+    "rows": {
+      "booking": "Mode de réservation",
+      "duration": "Durée",
+      "where": "Où vous allez",
+      "sleep": "Où vous dormez",
+      "transport": "Transport",
+      "experiences": "Expériences",
+      "price": "Prix"
+    },
+    "note": "Les lignes aux valeurs identiques sont atténuées quand « Ne montrer que les différences » est coché. Sur mobile, faites défiler latéralement pour voir plus de voyages ; la première colonne reste fixe.",
+    "whatsapp": "Écrivez-nous sur WhatsApp",
+    "mix": "Les combiner en un itinéraire sur mesure"
   }
 }

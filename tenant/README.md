@@ -20,7 +20,7 @@ around as data.
 - `messages/<locale>.json` — the agency's own copy, merged over the core catalogs
   (`packages/i18n`) by the storefront. Any core key can be overridden (Vereda sets
   `packages.requestPill` to its 24-hour confirmation window); the agency's page
-  content (Home, Destinations and each destination, Support, Travel info, Blog,
+  content (Home, Destinations and each destination, Packages and Compare, Support, Travel info, Blog,
   About, Privacy, the footer tagline, the "Cuba right now" conditions and the
   Home event strip) lives under `content`
   and is validated by the `@ota/schemas` content schemas.

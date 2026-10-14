@@ -238,6 +238,7 @@ export {
   faqItemSchema,
   footerContentSchema,
   homeContentSchema,
+  packagesContentSchema,
   supportContentSchema,
   type Article,
   type BlogContent,
@@ -255,6 +256,7 @@ export {
   type FaqItem,
   type FooterContent,
   type HomeContent,
+  type PackagesContent,
   type SupportContent,
 } from './content';
 export {

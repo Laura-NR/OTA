@@ -279,6 +279,17 @@ export const destinationsContentSchema = z.object({
   details: z.record(z.string(), destinationDetailSchema).default({}),
 });
 
+/** The agency's words on Packages and Compare; the trips are the live catalogue. */
+export const packagesContentSchema = z.object({
+  status: contentStatusSchema,
+  title: text,
+  lede: text.optional(),
+  /** "Not quite right?": the custom-itinerary card after the results. */
+  custom: z.object({ eyebrow: text.optional(), text, cta: text }).optional(),
+  /** "Still torn?": the closing card on Compare. */
+  compare: z.object({ eyebrow: text.optional(), text }).optional(),
+});
+
 export type ContentStatus = z.infer<typeof contentStatusSchema>;
 export type ContentBlock = z.infer<typeof contentBlockSchema>;
 export type ContentSection = z.infer<typeof contentSectionSchema>;
@@ -296,3 +307,4 @@ export type EventBannerContent = z.infer<typeof eventBannerContentSchema>;
 export type DestinationCard = z.infer<typeof destinationCardSchema>;
 export type DestinationDetail = z.infer<typeof destinationDetailSchema>;
 export type DestinationsContent = z.infer<typeof destinationsContentSchema>;
+export type PackagesContent = z.infer<typeof packagesContentSchema>;

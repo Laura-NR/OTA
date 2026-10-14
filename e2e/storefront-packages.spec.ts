@@ -29,7 +29,9 @@ test.describe('storefront curated packages', () => {
       callbackPath: '/en/packages',
     });
 
-    await expect(page.getByRole('heading', { name: 'Curated packages' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Trips to Cuba' }),
+    ).toBeVisible();
     await page.getByRole('link', { name: /Trinidad Heritage Trail/ }).click();
 
     await expect(

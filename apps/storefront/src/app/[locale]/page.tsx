@@ -209,11 +209,22 @@ export default async function HomePage() {
             ))}
           </div>
         )}
-        {builder ? (
+        {featured.length > 1 || builder ? (
           <div className="flex flex-wrap justify-center gap-3">
-            <Link href="/custom" className={buttonClassName({ variant: 'tertiary' })}>
-              {t('custom')}
-            </Link>
+            {featured.length > 1 ? (
+              <Link
+                href="/packages/compare"
+                className={buttonClassName({ variant: 'secondary' })}
+              >
+                <Icon name="columns" />
+                {t('compare')}
+              </Link>
+            ) : null}
+            {builder ? (
+              <Link href="/custom" className={buttonClassName({ variant: 'tertiary' })}>
+                {t('custom')}
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </section>

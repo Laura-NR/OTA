@@ -1336,6 +1336,20 @@
           }
         }
       }
+    },
+    "packages": {
+      "status": "placeholder",
+      "title": "Trips to Cuba",
+      "lede": "Every trip below is casa-based, small-group and priced with all mandatory fees included. Hosts confirm within 24 hours; nothing is charged until they do.",
+      "custom": {
+        "eyebrow": "Not quite right?",
+        "text": "Tell us the places and the pace, and we'll price a custom itinerary within 4 working hours.",
+        "cta": "Start a custom itinerary"
+      },
+      "compare": {
+        "eyebrow": "Still torn?",
+        "text": "A specialist can tell you which one fits your dates, pace and budget in a 10-minute call."
+      }
     }
   },
   "packages": {
