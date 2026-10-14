@@ -41,6 +41,41 @@ Two smaller issues:
 
 The boards and brand files also contain sample people: names, roles, work emails and a Havana phone number. These must not be copied into seeds or e2e fixtures (AGENTS.md Article 1).
 
+### 1.3 Handoff v1.2 (14 Oct 2026): verification on import
+
+The design team answered change request 01 (`docs/design-change-response-01.md`) with `vereda-handoff-v1.2.zip`: 476 entries, with no absolute paths, `..` segments or symlinks, and the same for the nested zip. It is imported as `design/vereda-v1.2/`, with the same subset as v1.1. Each answer below was checked against the files, not taken from the response.
+
+| Check | Result |
+|---|---|
+| Board integrity | 119 boards plus `canvas.json`; all 120 files match `tools/served_sizes.txt` byte for byte. 54 boards changed against v1.1. |
+| Token export | 106 tokens (77 primitive, 24 alias, 5 component); `tokens.css` and `tokens.json` agree on every name and value, and on the reduced-motion block. |
+| Screen manifest | 119 entries on 9 pages, version "Handoff v1.2". |
+| Copy inventory | 9,520 strings with unique keys across 87 screens. Against v1.1, 79 `alt` rows were added and nothing else changed, so no adopted copy moves. ES is still 471 strings (the worker app) and FR is still empty. |
+| Unchanged | The brand files, the spec PDF, the province map, `UI_UX/`, `Viability Studies/` and the foundations deck are identical to v1.1. |
+| Token diff vs `packages/theming` | The export adds 18 primitives (`primary-50/200`, `accent-50/700`, `neutral-600`, `success/warning/error/info-700` and `-200`, `warning-500`, `bp-sm/md/lg/xl`), 3 aliases (`text-on-primary`, `text-h1-compact`, `text-h2-compact`) and 2 component tokens (`text-label`, `text-nav`). One value changes: `color-focus-ring` moves to primary-600. |
+
+Each item of change request 01, checked against the package:
+
+| # | Verdict | Evidence |
+|---|---|---|
+| A1 | Fixed | `tokens.css` has 120/200/320 ms plus a separate `prefers-reduced-motion` block; `tokens.json` lists it under `reducedMotion`. |
+| A2 | Fixed, with a residue | The 14 primitives are added. On the 90 product boards, non-token colours fell from 40 distinct (1,318 uses) to 26 (337). 276 of those uses are the five photo-placeholder tints, which are declared as non-tokens, and 22 are the three declared snaps. **18 colours (39 uses) are not covered:** map fills (`#CDE3D1 #FDE9B5 #B8B0A6 #C9C2B8`), A-Reports chart tones (`#5B8FA6 #2F6F88 #8FB3C3 #D5E3E9`), `#A61E1E`, `#C98A00`, `#1B7F5C`, `#F7FAFB`, `#FFF8F7`, `#F3F8FA`, `#EEF3F5`, `#A89F94`, `#DCE6D5`, and `#1A0DAB` (the search-preview link blue, legitimately literal). |
+| A3 | Fixed, with a residue | `--text-label` 13/16, `--text-nav` 15/20, `--text-h1-compact` 28/34 and `--text-h2-compact` 22/28 are tokens. The snap table covers 26, 30, 36, 17, 19 and 21. T-Forms now reads 14/20 error-600. **Not covered:** 10 px (overlines and pills on the A4 documents), 11 px (A-Dashboard count badges and overline, W-Job message times, the photo alt overlays), 38 px (M-Home hero), 44 px (hero titles on Package, Destinations, Support, PreTrip, Confirmation, W-Earnings), 52 px (Join), and 72/96 px (the error-page numerals). |
+| A4 | Fixed | The snap table is in the token block. Only one 18 px and one 20 px radius remain uncovered. |
+| A5 | Fixed | `--bp-sm/md/lg/xl` are in the export. |
+| A6 | Token fixed, prose stale | `--color-focus-ring` is primary-600 and the DS boards draw `#0B4F6C`. DS-Handoff's own text still says "ring primary-500 2px/2px" (field spec) and "Focus ring 2 px primary-500" (accessibility contract). |
+| A7 | Fixed | `--color-text-on-primary` is in the alias tier. |
+| A8 | **Not as asked** | They answered "Isla Abierta only". A-Settings shows `theme.palette islaAbierta`; DS-Handoff, Main and T-Signoff still say "Isla Abierta"; `ecoGreen` is gone. The copy of request 01 inside their zip carries the **pre-rename** A8 text, so they answered a draft that never asked for the rename (our A8 was rewritten in `9e369a6`, 14 Oct). Raised again in change request 02. |
+| B1 | Fixed | There are no backreferences left. UX 13 → T-Events, A-Reports, A-Dashboard is restored. |
+| B2 | Fixed | T-Assets §01 now describes logo C, with one email logo at 360 × 122 shown at 180 × 61. |
+| B3 | Fixed | The B-Logo title is corrected in `canvas.json`, `screens.json` and `SCREENS.md`. |
+| B4 | Fixed | Row 11 is Accepted, 11 Oct 2026. Concierge, T-Events, T-Forms, DS 07 and A-Assistant are baseline. |
+| B5 | Partly | 96 of 119 boards are rendered. `pdf/06-Documents-PDF.pdf` holds 8 A4 pages. The five diagrams are PNG and PDF. **The 23 admin, worker and Ops Lite boards are not rendered**, including A-Dashboard (Phase 2's admin shell), so the `.dc.html` source stays the reference there. The nested `design-canvas/exports.zip` is byte-identical to the v1.1 exports, a stale leftover. |
+| B6 | Partly | The 79 `alt` rows are there. ES/FR translation is now Vereda's open item (T-Signoff §03), with no date. |
+| B7 | Agreed | Nothing to change. |
+
+Their `CLAUDE.md` and `HANDOFF.md` now ask for change requests as files at the repository root. That is input from the design team: our requests stay in `docs/`, and the owner sends them.
+
 ---
 
 ## 2. Where the code stands against the design
