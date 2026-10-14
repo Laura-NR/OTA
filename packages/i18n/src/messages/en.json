@@ -876,27 +876,56 @@
     },
     "suppliers": {
       "title": "Suppliers",
-      "description": "Worker and provider compliance. A verified, in-province supplier is eligible for dispatch.",
-      "expiring": "{count} credential(s) expiring within 30 days — auto-dispatch is paused:",
-      "noExpiry": "no expiry",
+      "summary": "{active} active · {pending} pending audit · {paused} paused",
+      "recruitment": "Applications",
+      "loadError": "Could not load suppliers.",
+      "rule": {
+        "title": "Expiry rule (spec §4.5):",
+        "body": "a Formatur credential, RTN card or transport licence within 30 days of expiry pauses the worker for auto-dispatch. Manual assignment stays possible with a note; no voucher is ever generated for an unlicensed provider.",
+        "pausedNow": "{count} paused now · {names}"
+      },
+      "categories": {
+        "all": "All",
+        "casa": "Casas",
+        "driver": "Drivers",
+        "guide": "Guides",
+        "translator": "Translators"
+      },
+      "filters": {
+        "province": "Province",
+        "allProvinces": "All provinces",
+        "verification": "Verification",
+        "any": "Any",
+        "clear": "Clear filters"
+      },
       "register": "Compliance register",
       "suppliersCount": "{count} supplier(s)",
-      "loadError": "Could not load suppliers."
-    },
-    "suppliersTable": {
-      "empty": "No suppliers yet.",
-      "supplier": "Supplier",
-      "category": "Category",
-      "provinces": "Provinces",
-      "rtnLicence": "RTN licence",
-      "credential": "Credential",
-      "status": "Status",
-      "available": "Available",
-      "verification": "Verification",
-      "onFile": "On file",
-      "missing": "Missing",
-      "yes": "Yes",
-      "no": "No"
+      "table": {
+        "supplier": "Supplier",
+        "credential": "Credential",
+        "reliability": "Reliability",
+        "auto": "Auto-dispatch",
+        "status": "Status",
+        "verification": "Verification",
+        "noReliability": "—"
+      },
+      "credential": {
+        "valid": "Valid to {date}",
+        "expiring": "Expires in {days} d",
+        "expired": "Expired {days} d ago",
+        "missing": "Missing"
+      },
+      "auto": {
+        "on": "On",
+        "paused": "Paused · expiry",
+        "off": "Off · not verified",
+        "unavailable": "Off · unavailable"
+      },
+      "reliabilityNote": "Reliability is the acceptance rate over the dispatch-offer ledger; below 85 % the supplier drops out of auto-dispatch.",
+      "empty": {
+        "title": "No suppliers match",
+        "hint": "Try clearing a filter."
+      }
     },
     "applications": {
       "title": "Applications",

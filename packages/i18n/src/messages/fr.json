@@ -876,27 +876,56 @@
     },
     "suppliers": {
       "title": "Fournisseurs",
-      "description": "Conformité des travailleurs et fournisseurs. Un fournisseur vérifié et actif dans la province est éligible à la répartition.",
-      "expiring": "{count} justificatif(s) expirant sous 30 jours — la répartition automatique est en pause :",
-      "noExpiry": "sans expiration",
+      "summary": "{active} actifs · {pending} en audit · {paused} en pause",
+      "recruitment": "Candidatures",
+      "loadError": "Impossible de charger les fournisseurs.",
+      "rule": {
+        "title": "Règle d'expiration (spec §4.5) :",
+        "body": "un justificatif Formatur, une carte RTN ou un permis de transport expirant sous 30 jours met le travailleur en pause pour la répartition automatique. L'affectation manuelle reste possible avec une note ; aucun bon n'est jamais généré pour un prestataire sans licence.",
+        "pausedNow": "{count} en pause · {names}"
+      },
+      "categories": {
+        "all": "Tous",
+        "casa": "Casas",
+        "driver": "Chauffeurs",
+        "guide": "Guides",
+        "translator": "Traducteurs"
+      },
+      "filters": {
+        "province": "Province",
+        "allProvinces": "Toutes les provinces",
+        "verification": "Vérification",
+        "any": "Toutes",
+        "clear": "Effacer les filtres"
+      },
       "register": "Registre de conformité",
       "suppliersCount": "{count} fournisseur(s)",
-      "loadError": "Impossible de charger les fournisseurs."
-    },
-    "suppliersTable": {
-      "empty": "Aucun fournisseur pour l'instant.",
-      "supplier": "Fournisseur",
-      "category": "Catégorie",
-      "provinces": "Provinces",
-      "rtnLicence": "Licence RTN",
-      "credential": "Justificatif",
-      "status": "Statut",
-      "available": "Disponible",
-      "verification": "Vérification",
-      "onFile": "Au dossier",
-      "missing": "Manquant",
-      "yes": "Oui",
-      "no": "Non"
+      "table": {
+        "supplier": "Fournisseur",
+        "credential": "Justificatif",
+        "reliability": "Fiabilité",
+        "auto": "Répartition auto",
+        "status": "Statut",
+        "verification": "Vérification",
+        "noReliability": "—"
+      },
+      "credential": {
+        "valid": "Valide jusqu'au {date}",
+        "expiring": "Expire dans {days} j",
+        "expired": "Expiré depuis {days} j",
+        "missing": "Manquant"
+      },
+      "auto": {
+        "on": "Actif",
+        "paused": "En pause · expiration",
+        "off": "Inactif · non vérifié",
+        "unavailable": "Inactif · indisponible"
+      },
+      "reliabilityNote": "La fiabilité est le taux d'acceptation du registre des offres de répartition ; en dessous de 85 %, le fournisseur sort de la répartition automatique.",
+      "empty": {
+        "title": "Aucun fournisseur ne correspond",
+        "hint": "Essayez d'effacer un filtre."
+      }
     },
     "applications": {
       "title": "Candidatures",

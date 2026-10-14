@@ -876,27 +876,56 @@
     },
     "suppliers": {
       "title": "Proveedores",
-      "description": "Cumplimiento de trabajadores y proveedores. Un proveedor verificado y activo en su provincia es elegible para despacho.",
-      "expiring": "{count} credencial(es) que vencen en 30 días — el auto-despacho está en pausa:",
-      "noExpiry": "sin vencimiento",
+      "summary": "{active} activos · {pending} en auditoría · {paused} en pausa",
+      "recruitment": "Solicitudes",
+      "loadError": "No se pudieron cargar los proveedores.",
+      "rule": {
+        "title": "Regla de vencimiento (spec §4.5):",
+        "body": "una credencial Formatur, tarjeta RTN o licencia de transporte que venza en 30 días pausa el auto-despacho del trabajador. La asignación manual sigue siendo posible con una nota; nunca se genera un bono para un proveedor sin licencia.",
+        "pausedNow": "{count} en pausa · {names}"
+      },
+      "categories": {
+        "all": "Todos",
+        "casa": "Casas",
+        "driver": "Conductores",
+        "guide": "Guías",
+        "translator": "Traductores"
+      },
+      "filters": {
+        "province": "Provincia",
+        "allProvinces": "Todas las provincias",
+        "verification": "Verificación",
+        "any": "Cualquiera",
+        "clear": "Limpiar filtros"
+      },
       "register": "Registro de cumplimiento",
       "suppliersCount": "{count} proveedor(es)",
-      "loadError": "No se pudieron cargar los proveedores."
-    },
-    "suppliersTable": {
-      "empty": "Aún no hay proveedores.",
-      "supplier": "Proveedor",
-      "category": "Categoría",
-      "provinces": "Provincias",
-      "rtnLicence": "Licencia RTN",
-      "credential": "Credencial",
-      "status": "Estado",
-      "available": "Disponible",
-      "verification": "Verificación",
-      "onFile": "En archivo",
-      "missing": "Falta",
-      "yes": "Sí",
-      "no": "No"
+      "table": {
+        "supplier": "Proveedor",
+        "credential": "Credencial",
+        "reliability": "Fiabilidad",
+        "auto": "Auto-despacho",
+        "status": "Estado",
+        "verification": "Verificación",
+        "noReliability": "—"
+      },
+      "credential": {
+        "valid": "Válida hasta {date}",
+        "expiring": "Vence en {days} d",
+        "expired": "Vencida hace {days} d",
+        "missing": "Falta"
+      },
+      "auto": {
+        "on": "Activo",
+        "paused": "En pausa · vencimiento",
+        "off": "Inactivo · sin verificar",
+        "unavailable": "Inactivo · no disponible"
+      },
+      "reliabilityNote": "La fiabilidad es la tasa de aceptación del registro de ofertas de despacho; por debajo del 85 % el proveedor sale del auto-despacho.",
+      "empty": {
+        "title": "Ningún proveedor coincide",
+        "hint": "Prueba a limpiar un filtro."
+      }
     },
     "applications": {
       "title": "Solicitudes",
