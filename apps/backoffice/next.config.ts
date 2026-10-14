@@ -8,8 +8,40 @@ import createNextIntlPlugin from 'next-intl/plugin';
  */
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
 
+/**
+ * The A-Dashboard information architecture (10 sections) re-homes the pages
+ * that predate it; the old paths redirect so bookmarks keep working. Query
+ * strings (`?reservation=`) pass through.
+ */
+const MOVED: ReadonlyArray<[string, string]> = [
+  ['/', '/dashboard'],
+  ['/escalation', '/dashboard'],
+  ['/dispatch', '/dashboard/dispatch'],
+  ['/reservations/:path*', '/bookings/:path*'],
+  ['/messages', '/bookings/messages'],
+  ['/documents', '/bookings/documents'],
+  ['/inventory/:path*', '/packages/inventory/:path*'],
+  ['/imports', '/packages/imports'],
+  ['/applications', '/suppliers/applications'],
+  ['/retention', '/customers/retention'],
+  ['/customers', '/customers/retention'],
+  ['/analytics', '/reports'],
+  ['/regulatory', '/reports/regulatory'],
+  ['/quality', '/reports/quality'],
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The dev-only indicator defaults to the bottom-left corner, where the
+  // sidebar's sign-out sits; there it intercepts clicks (and the e2e suite's).
+  devIndicators: { position: 'bottom-right' },
+  async redirects() {
+    return MOVED.map(([source, destination]) => ({
+      source,
+      destination,
+      permanent: false,
+    }));
+  },
   async rewrites() {
     return [
       { source: '/api/auth/:path*', destination: `${apiUrl}/api/auth/:path*` },

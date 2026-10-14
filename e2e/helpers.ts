@@ -50,7 +50,7 @@ export async function signIn(
   options: { origin?: string; callbackPath?: string } = {},
 ): Promise<void> {
   const origin = options.origin ?? BACKOFFICE_URL;
-  const callbackPath = options.callbackPath ?? '/';
+  const callbackPath = options.callbackPath ?? '/dashboard';
   const callbackURL = `${origin}${callbackPath}`;
 
   await fetch(`${MAILPIT_URL}/api/v1/messages`, { method: 'DELETE' }).catch(

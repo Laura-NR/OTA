@@ -15,7 +15,7 @@ test.describe('quality & duty of care', () => {
     const target = reservations.find((row) => row.bookingCode === 'E2E0001');
     expect(target).toBeTruthy();
 
-    await page.goto(`/reservations/${target?.id}`);
+    await page.goto(`/bookings/${target?.id}`);
     await expect(page.getByRole('heading', { name: 'Duty of care' })).toBeVisible();
 
     const description = `e2e incident ${Date.now()}`;
@@ -29,7 +29,7 @@ test.describe('quality & duty of care', () => {
     await page.getByRole('button', { name: 'Resolve' }).first().click();
     await expect(page.getByText('Resolved').first()).toBeVisible();
 
-    await page.goto('/quality');
+    await page.goto('/reports/quality');
     await expect(
       page.getByRole('heading', { name: 'Quality & duty of care' }),
     ).toBeVisible();

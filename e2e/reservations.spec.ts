@@ -10,13 +10,14 @@ test.describe('reservations pipeline', () => {
   test('opens a booking from the board and applies a legal transition', async ({
     page,
   }) => {
+    await page.goto('/bookings');
     await expect(page.getByRole('heading', { name: 'Reservations' })).toBeVisible();
 
     const card = page.getByRole('link', { name: /E2E0001/ });
     await expect(card).toBeVisible();
     await card.click();
 
-    await expect(page).toHaveURL(/\/reservations\/[0-9a-f-]+$/);
+    await expect(page).toHaveURL(/\/bookings\/[0-9a-f-]+$/);
     await expect(page.getByRole('heading', { name: 'E2E0001' })).toBeVisible();
     await expect(page.getByText('DRAFT', { exact: true })).toBeVisible();
 

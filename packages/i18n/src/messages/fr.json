@@ -238,23 +238,45 @@
   },
   "backoffice": {
     "nav": {
-      "reservations": "Réservations",
-      "escalation": "Escalade",
+      "label": "Administration",
+      "dashboard": "Tableau de bord",
+      "bookings": "Réservations",
+      "disruptions": "Perturbations",
+      "packages": "Forfaits",
+      "customers": "Clients",
+      "suppliers": "Fournisseurs",
+      "payments": "Paiements",
+      "content": "Contenu",
+      "reports": "Rapports",
+      "settings": "Paramètres"
+    },
+    "sections": {
+      "alerts": "Alertes",
+      "dispatch": "Répartition",
+      "board": "Pipeline",
       "messages": "Messages",
+      "documents": "Documents",
+      "packages": "Forfaits",
+      "inventory": "Inventaire",
+      "imports": "Importations",
+      "retention": "Rétention",
       "suppliers": "Fournisseurs",
       "applications": "Candidatures",
-      "dispatch": "Répartition",
-      "inventory": "Inventaire",
-      "packages": "Forfaits",
-      "imports": "Importations",
-      "documents": "Documents",
       "analytics": "Analytique",
       "regulatory": "Réglementaire",
-      "quality": "Qualité",
-      "retention": "Rétention"
+      "quality": "Qualité"
     },
     "shell": {
-      "signOut": "Se déconnecter"
+      "signOut": "Se déconnecter",
+      "desk": "Bureau des opérations {agency}",
+      "ops": "Ops",
+      "roles": {
+        "superAdmin": "Super administrateur",
+        "operationsAdmin": "Administration des opérations",
+        "administrativeSupport": "Support administratif",
+        "serviceWorker": "Prestataire",
+        "traveler": "Voyageur"
+      }
     },
     "locale": {
       "label": "Langue"

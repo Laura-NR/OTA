@@ -35,7 +35,7 @@ export default async function ReservationsPage() {
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')}>
         {canManage ? (
-          <Link href="/reservations/new" className={buttonClassName()}>
+          <Link href="/bookings/new" className={buttonClassName()}>
             {t('newReservation')}
           </Link>
         ) : null}

@@ -56,7 +56,7 @@ export default async function DispatchPage({
 
       <ReservationPicker
         id="dispatch-reservation"
-        action="/dispatch"
+        action="/dashboard/dispatch"
         reservations={reservations}
         selectedId={reservation}
       />

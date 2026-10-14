@@ -8,7 +8,7 @@ test.describe('regulatory reporting', () => {
   });
 
   test('renders the MINTUR summary and the fiscal export', async ({ page }) => {
-    await page.goto('/regulatory');
+    await page.goto('/reports/regulatory');
 
     await expect(
       page.getByRole('heading', { name: 'Regulatory reporting' }),
@@ -28,6 +28,7 @@ test.describe('regulatory reporting', () => {
   });
 
   test('classifies a booking from the operator workbench', async ({ page }) => {
+    await page.goto('/bookings');
     const card = page.getByRole('link', { name: /E2E0001/ });
     await expect(card).toBeVisible();
     await card.click();

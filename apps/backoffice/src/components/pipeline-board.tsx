@@ -50,7 +50,7 @@ export async function PipelineBoard({
                 rows.map((reservation) => (
                   <Link
                     key={reservation.id}
-                    href={`/reservations/${reservation.id}`}
+                    href={`/bookings/${reservation.id}`}
                     className="block rounded-md border bg-surface p-3 text-body-sm transition-colors hover:border-primary-600"
                   >
                     <div className="flex items-center justify-between gap-2">

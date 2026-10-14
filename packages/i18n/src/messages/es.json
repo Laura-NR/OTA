@@ -238,23 +238,45 @@
   },
   "backoffice": {
     "nav": {
-      "reservations": "Reservas",
-      "escalation": "Escalado",
+      "label": "Administración",
+      "dashboard": "Panel",
+      "bookings": "Reservas",
+      "disruptions": "Interrupciones",
+      "packages": "Paquetes",
+      "customers": "Clientes",
+      "suppliers": "Proveedores",
+      "payments": "Pagos",
+      "content": "Contenido",
+      "reports": "Informes",
+      "settings": "Ajustes"
+    },
+    "sections": {
+      "alerts": "Alertas",
+      "dispatch": "Despacho",
+      "board": "Flujo",
       "messages": "Mensajes",
+      "documents": "Documentos",
+      "packages": "Paquetes",
+      "inventory": "Inventario",
+      "imports": "Importaciones",
+      "retention": "Retención",
       "suppliers": "Proveedores",
       "applications": "Solicitudes",
-      "dispatch": "Despacho",
-      "inventory": "Inventario",
-      "packages": "Paquetes",
-      "imports": "Importaciones",
-      "documents": "Documentos",
       "analytics": "Analítica",
       "regulatory": "Regulatorio",
-      "quality": "Calidad",
-      "retention": "Retención"
+      "quality": "Calidad"
     },
     "shell": {
-      "signOut": "Cerrar sesión"
+      "signOut": "Cerrar sesión",
+      "desk": "Mesa de operaciones de {agency}",
+      "ops": "Ops",
+      "roles": {
+        "superAdmin": "Superadministración",
+        "operationsAdmin": "Administración de operaciones",
+        "administrativeSupport": "Soporte administrativo",
+        "serviceWorker": "Colaborador",
+        "traveler": "Viajero"
+      }
     },
     "locale": {
       "label": "Idioma"

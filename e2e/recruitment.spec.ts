@@ -42,7 +42,7 @@ test.describe('supplier recruitment', () => {
     await expect(page.getByText('your application is in')).toBeVisible();
 
     await signIn(page);
-    await page.goto('/applications');
+    await page.goto('/suppliers/applications');
     const row = page.locator('tr', { hasText: APPLICANT_EMAIL });
     await expect(row.getByText('PENDING')).toBeVisible();
     await row.getByRole('button', { name: 'Approve' }).click();

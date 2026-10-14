@@ -27,7 +27,7 @@ test.describe('bulk import', () => {
   });
 
   test('stages a CSV, maps it, and commits it into inventory', async ({ page }) => {
-    await page.goto('/imports');
+    await page.goto('/packages/imports');
 
     await page.getByLabel('Spreadsheet (.csv or .xlsx)').setInputFiles({
       name: FILENAME,
@@ -41,7 +41,7 @@ test.describe('bulk import', () => {
     await page.getByRole('button', { name: 'Commit import' }).click();
     await expect(page.getByText(/Imported 1 inventory item\(s\)/)).toBeVisible();
 
-    await page.goto('/inventory');
+    await page.goto('/packages/inventory');
     await expect(page.getByRole('link', { name: ITEM_NAME })).toBeVisible();
   });
 });

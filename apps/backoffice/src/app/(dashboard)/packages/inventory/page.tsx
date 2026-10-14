@@ -95,7 +95,7 @@ export default async function InventoryPage() {
                     </TableCell>
                     <TableCell>
                       <Link
-                        href={`/inventory/${item.id}`}
+                        href={`/packages/inventory/${item.id}`}
                         className="font-medium text-primary-600 underline-offset-4 hover:underline"
                       >
                         {item.name}

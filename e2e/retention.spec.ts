@@ -8,7 +8,7 @@ test.describe('GDPR retention lifecycle', () => {
   });
 
   test('shows the retention pipeline for operations', async ({ page }) => {
-    await page.goto('/retention');
+    await page.goto('/customers/retention');
 
     await expect(page.getByRole('heading', { name: 'Data retention' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Retention pipeline' })).toBeVisible();

@@ -65,7 +65,7 @@ export default async function ReservationDetailPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Link href="/" className="text-body-sm text-muted hover:text-default">
+        <Link href="/bookings" className="text-body-sm text-muted hover:text-default">
           {t('backToPipeline')}
         </Link>
         <h1 className="text-h3 font-semibold tracking-tight">

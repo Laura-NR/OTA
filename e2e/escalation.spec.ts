@@ -15,7 +15,7 @@ test.describe('operations escalation', () => {
 
   test('opens the live desk and connects the /ops socket', async ({ page }) => {
     await signIn(page);
-    await page.goto('/escalation');
+    await page.goto('/dashboard');
 
     await expect(page.getByRole('heading', { name: 'Escalation' })).toBeVisible();
     await expect(page.getByText('socket connected')).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('operations escalation', () => {
 
     try {
       await signIn(page);
-      await page.goto('/escalation');
+      await page.goto('/dashboard');
       // The event is published to connected sockets, so connect before firing.
       await expect(page.getByText('socket connected')).toBeVisible();
 

@@ -29,7 +29,7 @@ test.describe('operations intake', () => {
   });
 
   test('creates a booking from the intake form', async ({ page }) => {
-    await page.goto('/reservations/new');
+    await page.goto('/bookings/new');
 
     await page.getByLabel('Traveler email').fill('traveler@example.test');
     await page.getByLabel('Total amount').fill('480');
@@ -37,7 +37,7 @@ test.describe('operations intake', () => {
     await page.getByLabel('End date').fill('2027-06-06');
     await page.getByRole('button', { name: 'Create booking' }).click();
 
-    await expect(page).toHaveURL(/\/reservations\/[0-9a-f-]{36}$/);
+    await expect(page).toHaveURL(/\/bookings\/[0-9a-f-]{36}$/);
     createdId = page.url().split('/').pop() ?? null;
 
     await expect(page.getByText('reservation.created')).toBeVisible();

@@ -238,23 +238,45 @@
   },
   "backoffice": {
     "nav": {
-      "reservations": "Reservations",
-      "escalation": "Escalation",
+      "label": "Admin",
+      "dashboard": "Dashboard",
+      "bookings": "Bookings",
+      "disruptions": "Disruptions",
+      "packages": "Packages",
+      "customers": "Customers",
+      "suppliers": "Suppliers",
+      "payments": "Payments",
+      "content": "Content",
+      "reports": "Reports",
+      "settings": "Settings"
+    },
+    "sections": {
+      "alerts": "Alerts",
+      "dispatch": "Dispatch",
+      "board": "Pipeline",
       "messages": "Messages",
+      "documents": "Documents",
+      "packages": "Packages",
+      "inventory": "Inventory",
+      "imports": "Imports",
+      "retention": "Retention",
       "suppliers": "Suppliers",
       "applications": "Applications",
-      "dispatch": "Dispatch",
-      "inventory": "Inventory",
-      "packages": "Packages",
-      "imports": "Imports",
-      "documents": "Documents",
       "analytics": "Analytics",
       "regulatory": "Regulatory",
-      "quality": "Quality",
-      "retention": "Retention"
+      "quality": "Quality"
     },
     "shell": {
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "desk": "{agency} operations desk",
+      "ops": "Ops",
+      "roles": {
+        "superAdmin": "Super Admin",
+        "operationsAdmin": "Operations Admin",
+        "administrativeSupport": "Administrative Support",
+        "serviceWorker": "Worker",
+        "traveler": "Traveler"
+      }
     },
     "locale": {
       "label": "Language"

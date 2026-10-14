@@ -53,7 +53,7 @@ export default async function DocumentsPage({
 
       <ReservationPicker
         id="documents-reservation"
-        action="/documents"
+        action="/bookings/documents"
         reservations={reservations}
         selectedId={reservation}
       />

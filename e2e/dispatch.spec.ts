@@ -26,11 +26,13 @@ test.describe('dispatch engine', () => {
   });
 
   test('lists eligible candidates and starts an offer', async ({ page }) => {
-    await page.goto('/dispatch');
+    await page.goto('/dashboard/dispatch');
     await page.getByLabel('Reservation').selectOption(reservationId);
     await page.getByRole('button', { name: 'Open', exact: true }).click();
 
-    await expect(page).toHaveURL(new RegExp(`/dispatch\\?reservation=${reservationId}`));
+    await expect(page).toHaveURL(
+      new RegExp(`/dashboard/dispatch\\?reservation=${reservationId}`),
+    );
     await expect(
       page.getByRole('heading', { name: 'Reservation status: ITINERARY SUBMITTED' }),
     ).toBeVisible();

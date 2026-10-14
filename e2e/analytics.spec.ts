@@ -8,7 +8,7 @@ test.describe('analytics dashboard', () => {
   });
 
   test('renders the KPI overview for an operator', async ({ page }) => {
-    await page.goto('/analytics');
+    await page.goto('/reports');
 
     await expect(page.getByRole('heading', { name: 'Analytics' })).toBeVisible();
     await expect(page.getByText('Gross booking value')).toBeVisible();
@@ -21,7 +21,7 @@ test.describe('analytics dashboard', () => {
   });
 
   test('downloads the BI digests', async ({ page }) => {
-    await page.goto('/analytics');
+    await page.goto('/reports');
 
     const xlsx = page.getByRole('link', { name: 'Download XLSX digest' });
     await expect(xlsx).toBeVisible();

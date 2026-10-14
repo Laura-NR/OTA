@@ -28,7 +28,7 @@ export default async function MessagesPage({
 
       <ReservationPicker
         id="messages-reservation"
-        action="/messages"
+        action="/bookings/messages"
         reservations={reservations}
         selectedId={reservation}
       />
