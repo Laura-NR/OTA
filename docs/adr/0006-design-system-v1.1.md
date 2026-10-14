@@ -234,7 +234,10 @@ tokens; no token was added.
   over the dispatch-offer ledger) and auto-dispatch state. "Add supplier" is not
   a create form: recruitment is the `/suppliers/applications` path, so the header
   links there. The board's **Power** and **Last job** columns wait for M6
-  (backup-power fields) and a job-history source; they are not shown.
+  (backup-power fields) and a job-history source; they are not shown. The detail
+  is the credential inspector: the profile, the auto-dispatch state, the
+  reliability score and the availability calendar. Its backup-power, vehicle and
+  payout fields wait for M6 and the payments module.
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and

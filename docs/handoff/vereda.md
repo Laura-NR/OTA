@@ -32,8 +32,10 @@ ADR 0007 (worker app).
     strip, category chips with counts, province and verification filters, and a table with each
     worker's credential state, reliability (`/quality/supplier-reliability`) and auto-dispatch
     state; the header links to `/suppliers/applications`. `suppliers-table.tsx` replaced by the
-    server table; `backoffice.suppliers` rewritten in en/es/fr. The detail page stays the
-    credential inspector (restyle still to do).
+    server table; `backoffice.suppliers` rewritten in en/es/fr. The **detail** page is now the
+    A-Suppliers inspector: the profile, the auto-dispatch state, the reliability score and the
+    availability calendar; the credential document and availability are unchanged behind the new
+    header.
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
   `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
@@ -49,11 +51,11 @@ ADR 0007 (worker app).
 - Redirects confirmed: `/reports/regulatory` → `/reports#regulatory`, `/reports/quality` →
   `/reports#quality`, `/regulatory` and `/quality` likewise, `/analytics` → `/reports`; the
   section-nav anchors scroll to each section.
-- Suppliers (`715d216`): lint, format:check, typecheck, i18n parity test, `pnpm test` (29 tasks),
-  build (18/18) and `pnpm e2e` **45/45** green. Browser on `/suppliers` at 390/1024/1280: no
-  overflow, h1 Fraunces 24/32, the expiry strip renders `warning-100`/`warning-700` with a
-  `warning-500` border; the category chips and the province/verification filters update the URL
-  and the row set.
+- Suppliers (`715d216`, detail `1790c68`): lint, format:check, typecheck, i18n parity test,
+  `pnpm test` (29 tasks), build (18/18) and `pnpm e2e` **45/45** green. Browser on `/suppliers`
+  and a supplier detail at 390/1024/1280: no overflow, h1 Fraunces 24/32, the list's expiry strip
+  renders `warning-100`/`warning-700` with a `warning-500` border; the category chips and the
+  province/verification filters update the URL and the row set.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -65,7 +67,7 @@ ADR 0007 (worker app).
   travelers/itinerary on the booking, GBV-by-month chart, reinvestment ledger, NPS. A-Suppliers'
   **Power** and **Last job** columns await M6 (backup-power fields) and a job-history source; its
   **Add supplier** is the `/suppliers/applications` recruitment path, not a create form. The
-  supplier detail page is still the pre-redesign inspector.
+  supplier inspector's backup-power, vehicle and payout fields await M6 and the payments module.
 - ES/FR for `backoffice.dashboard`, `.bookings`, `.reservation`, `.reports` are agent-drafted.
 - Earlier open items still stand (Cubacel 24/7 line, change notice, offer-SMS cost; placeholder
   tenant content).
@@ -105,10 +107,9 @@ ADR 0007 (worker app).
 ## Next
 1. Phase 4: generate the M1 migration on the approved draft (D1(a)–D4(a)) and build Package v2
    (tiers, departures, extras, days, media, translations, slug redirects), then M2–M5.
-2. Phase 5 continues on today's data where no migration is needed: the supplier **detail** restyle
-   (the credential inspector), then Payments (reconciliation, payouts; refunds and proofs wait for
-   M4) and Customers (OFAC M3, retention already there). Batches M6–M9 are asked for as they come
-   up.
+2. Phase 5 continues on today's data where no migration is needed: Payments (reconciliation,
+   payouts; refunds and proofs wait for M4) and Customers (OFAC M3, retention already there).
+   Batches M6–M9 are asked for as they come up.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
