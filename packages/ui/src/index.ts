@@ -50,6 +50,7 @@ export {
   TableHeader,
   TableRow,
 } from './components/table';
+export type { TableRowProps, TableRowTone } from './components/table';
 export { nextTabIndex, Tabs } from './components/tabs';
 export type { TabItem, TabsProps } from './components/tabs';
 export { Textarea } from './components/textarea';

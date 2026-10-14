@@ -37,19 +37,36 @@ export const TableBody = forwardRef<
 ));
 TableBody.displayName = 'TableBody';
 
-export const TableRow = forwardRef<
-  HTMLTableRowElement,
-  HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, ref) => (
-  <tr
-    ref={ref}
-    className={cn(
-      'border-b transition-colors hover:bg-page data-[state=selected]:bg-primary-100',
-      className,
-    )}
-    {...props}
-  />
-));
+/**
+ * Admin row tints (A-Bookings, A-Content): `attention` is the ochre wash for a
+ * row whose timer runs low or that needs someone to act, `destructive` the red
+ * wash for an expired or failed one. The tint is never the only signal: the
+ * row also carries a status badge or a `-700` timer text.
+ */
+export type TableRowTone = 'attention' | 'destructive';
+
+export interface TableRowProps extends HTMLAttributes<HTMLTableRowElement> {
+  tone?: TableRowTone;
+}
+
+const rowTones: Record<TableRowTone, string> = {
+  attention: 'bg-accent-50',
+  destructive: 'bg-error-100',
+};
+
+export const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
+  ({ className, tone, ...props }, ref) => (
+    <tr
+      ref={ref}
+      className={cn(
+        'border-b transition-colors hover:bg-page data-[state=selected]:bg-primary-100',
+        tone && rowTones[tone],
+        className,
+      )}
+      {...props}
+    />
+  ),
+);
 TableRow.displayName = 'TableRow';
 
 export const TableHead = forwardRef<

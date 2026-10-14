@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AccordionItem } from '../src/components/accordion';
 import { Alert } from '../src/components/alert';
+import { Badge } from '../src/components/badge';
 import { Button } from '../src/components/button';
 import { Counter, clampCount } from '../src/components/counter';
 import { CrisisBanner } from '../src/components/crisis-banner';
@@ -12,6 +13,7 @@ import { Dialog } from '../src/components/dialog';
 import { Field } from '../src/components/field';
 import { Input } from '../src/components/input';
 import { Stepper } from '../src/components/stepper';
+import { TableRow } from '../src/components/table';
 import { Tabs, nextTabIndex } from '../src/components/tabs';
 
 const html = (element: ReactElement) => renderToStaticMarkup(element);
@@ -75,6 +77,56 @@ describe('Alert', () => {
     expect(html(createElement(Alert, { variant: 'info' }, 'x'))).toContain(
       'role="status"',
     );
+  });
+
+  it('sets its text in the -700 tone inside a -200 border (DS 03, DS 06)', () => {
+    for (const [variant, tone] of [
+      ['info', 'info'],
+      ['success', 'success'],
+      ['warning', 'warning'],
+      ['destructive', 'error'],
+    ] as const) {
+      const markup = html(createElement(Alert, { variant }, 'x'));
+      expect(markup, variant).toContain(`text-${tone}-700`);
+      expect(markup, variant).toContain(`border-${tone}-200`);
+    }
+  });
+});
+
+describe('Badge (DS 03 pills)', () => {
+  it('sets status text in the -700 tone at the 13/16 label size', () => {
+    for (const [variant, tone] of [
+      ['info', 'info'],
+      ['success', 'success'],
+      ['warning', 'warning'],
+      ['destructive', 'error'],
+    ] as const) {
+      const markup = html(createElement(Badge, { variant }, 'x'));
+      expect(markup, variant).toContain(`text-${tone}-700`);
+      expect(markup, variant).toContain('text-label');
+    }
+  });
+
+  it('borders the states that need someone to act in warning 500', () => {
+    const markup = html(createElement(Badge, { variant: 'attention' }, 'Action needed'));
+    expect(markup).toContain('border-warning-500');
+    expect(markup).toContain('text-warning-700');
+  });
+});
+
+describe('TableRow', () => {
+  it('tints rows that need attention or have failed, and no others', () => {
+    const row = (tone?: 'attention' | 'destructive') =>
+      html(
+        createElement(
+          'table',
+          null,
+          createElement('tbody', null, createElement(TableRow, { tone })),
+        ),
+      );
+    expect(row('attention')).toContain('bg-accent-50');
+    expect(row('destructive')).toContain('bg-error-100');
+    expect(row()).not.toMatch(/bg-(accent-50|error-100)/);
   });
 });
 

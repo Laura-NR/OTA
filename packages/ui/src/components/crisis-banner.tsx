@@ -28,8 +28,8 @@ export interface CrisisBannerProps {
 }
 
 const tones: Record<CrisisSeverity, string> = {
-  info: 'bg-info-100 text-info-600',
-  warning: 'bg-warning-100 text-warning-600',
+  info: 'bg-info-100 text-info-700',
+  warning: 'bg-warning-100 text-warning-700',
   critical: 'bg-error-600 text-neutral-0',
 };
 
@@ -40,9 +40,9 @@ const icons: Record<CrisisSeverity, IconName> = {
 };
 
 /**
- * DS 03 crisis banner, sticky at the top: info and warning are tinted, critical
- * is solid red with white text and must be acknowledged (no ✕). Two lines at
- * most on a phone.
+ * DS 03 crisis banner, sticky at the top: info and warning are a `-100` tint
+ * with `-700` text, critical is solid red with white text and must be
+ * acknowledged (no ✕). Two lines at most on a phone.
  */
 export function CrisisBanner({
   severity,

@@ -5,10 +5,8 @@ import { Icon } from './icon';
 import type { IconName } from '../icons/sprite';
 
 /**
- * DS 03 alert: a semantic `-100` surface with `-600` text, a 20 px icon and an
- * optional 16/24 title over 14/20 body. The boards draw a `-200` border and
- * `-700` text, neither of which is a token yet (change request 01, A2), so the
- * border is the `-600` tone at low opacity.
+ * DS 03 alert: a semantic `-100` surface with a `-200` border and `-700` text,
+ * a 20 px icon and an optional 16/24 title over 14/20 body.
  */
 export type AlertVariant = 'default' | 'info' | 'success' | 'warning' | 'destructive';
 
@@ -19,10 +17,10 @@ export interface AlertProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'
 
 const variants: Record<AlertVariant, string> = {
   default: 'border-neutral-200 bg-sunken text-neutral-700',
-  info: 'border-info-600/25 bg-info-100 text-info-600',
-  success: 'border-success-600/25 bg-success-100 text-success-600',
-  warning: 'border-warning-600/25 bg-warning-100 text-warning-600',
-  destructive: 'border-error-600/25 bg-error-100 text-error-600',
+  info: 'border-info-200 bg-info-100 text-info-700',
+  success: 'border-success-200 bg-success-100 text-success-700',
+  warning: 'border-warning-200 bg-warning-100 text-warning-700',
+  destructive: 'border-error-200 bg-error-100 text-error-700',
 };
 
 const icons: Record<AlertVariant, IconName> = {

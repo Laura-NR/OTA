@@ -29,7 +29,7 @@ const variants: Record<ButtonVariant, string> = {
   secondary:
     'border-input bg-surface text-primary-700 hover:bg-neutral-100 active:bg-neutral-200',
   tertiary: 'bg-transparent text-primary-600 hover:bg-primary-100',
-  destructive: 'bg-error-600 text-neutral-0 hover:bg-error-600/90',
+  destructive: 'bg-error-600 text-neutral-0 hover:bg-error-700',
   link: 'h-auto bg-transparent px-0 text-primary-600 underline underline-offset-[3px] hover:text-primary-700 disabled:bg-transparent',
 };
 

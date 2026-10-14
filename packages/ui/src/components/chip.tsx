@@ -11,7 +11,10 @@ export interface FilterChipProps {
   className?: string;
 }
 
-/** DS 02 applied-filter chip: 32 px, primary 100 with primary 700 text and a 20 px remove button. */
+/**
+ * DS 02 applied-filter chip: 32 px, primary 100 with primary 700 text and a
+ * 20 px remove button that hovers to primary 200.
+ */
 export function FilterChip({
   children,
   onRemove,
@@ -31,7 +34,7 @@ export function FilterChip({
           type="button"
           aria-label={removeLabel}
           onClick={onRemove}
-          className="inline-flex h-5 w-5 items-center justify-center rounded-full hover:bg-primary-500/20"
+          className="inline-flex h-5 w-5 items-center justify-center rounded-full hover:bg-primary-200"
         >
           <Icon name="x" className="h-3.5 w-3.5" />
         </button>
