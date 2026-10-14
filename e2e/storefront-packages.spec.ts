@@ -39,7 +39,7 @@ test.describe('storefront curated packages', () => {
     ).toBeVisible();
     await page.getByLabel('Start date').fill('2027-04-01');
     await page.getByLabel('End date').fill('2027-04-03');
-    await page.getByRole('button', { name: 'Book package' }).click();
+    await page.getByRole('button', { name: 'Check availability & request' }).click();
 
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
     await expect(page.getByText('Request received')).toBeVisible();
