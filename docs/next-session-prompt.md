@@ -21,27 +21,30 @@ ORIENT FIRST, in this order:
 - tenant/README.md (placeholder data and how tenant content works).
 Verify the handoff against the code; run `git log --oneline main..vereda`.
 
-WHERE WE ARE: Phases 0, 1, 0b (handoff v1.2 in design/vereda-v1.2/), 2 (shells) and 3 (customer
-pages on today's data, e134d37..30ad3af) are done. The owner decided: keep placeholder or mock
-data until real data is published (pages show a "Sample content" notice); the design team is not
-asked anything; the build resolves design gaps itself with existing tokens, recorded in the ADRs
-(ADR 0006 has a Phase 3 amendment).
+WHERE WE ARE: Phases 0, 1, 0b, 2 and 3 are done. Session of 14 Oct: Task 1 verified (44/44
+e2e after one unexplained first-run failure, see Traps); the M1 schema diff is drafted for review
+(docs/schema-m1-package-v2.md, f102a66; no migration generated); Phase 5 admin increments
+Dashboard (47ed5dd) and Bookings + Booking (fca9a4c) are committed. The Reports merge is BUILT
+BUT UNCOMMITTED in the working tree (see the handoff State). The owner decided: placeholder or
+mock data until real data is published; the design team is not asked; the build resolves design
+gaps itself with existing tokens, recorded in the ADRs.
 
-TASK 1 — VERIFY: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build`
-(dev stack stopped), then delete apps/*/.next, `pnpm e2e` (expect 44 tests), and kill what e2e
-leaves on ports 3000–3002. Fix anything red (Article 7: reproduce, name the cause).
+TASK 1 — FINISH REPORTS (uncommitted work): run `git status` and read the diff; update
+e2e/analytics.spec.ts, e2e/regulatory.spec.ts and e2e/quality.spec.ts to the merged /reports page
+(headings and anchors listed in the handoff Next); check that /reports/regulatory and
+/reports/quality redirect to /reports#regulatory and #quality; screenshots + computed styles at
+390, 1024 and 1280; commit as one increment.
 
-TASK 2 — PHASE 4 GATE: draft the M1 (Package v2) schema diff for review — departures, tiers
-with deltas, extras, booking model, group size, policies, per-locale fields, PackageMedia,
-publish status (docs/design-v1.1-plan.md Phase 4). Do NOT generate or apply a migration; present
-the diff with options and a recommendation and ask (Article 2, Q9).
+TASK 2 — DOCS: amend ADR 0006 for Phase 5 (the build's resolutions listed in the handoff
+Decisions) and the Progress table of docs/design-v1.1-plan.md; keep the handoff a snapshot.
 
-TASK 3 — PHASE 5, no-migration part (admin, one increment per commit): Dashboard (merge the board,
-escalation and dispatch pages; aging buckets), Bookings and Booking restyle (saved views, who-acts
-legend), Reports (merge analytics, regulatory and quality). Copy from tools/copy-inventory.mjs
-(A-* boards) into packages/i18n (backoffice.*) in es/en/fr, flag agent-drafted ES/FR; English
-output of existing admin pages must keep the strings the e2e specs assert, or update the specs in
-the same commit.
+TASK 3 — VERIFY: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build`
+(dev stack stopped), delete apps/*/.next, `pnpm e2e` (all specs), kill what e2e leaves on
+3000–3002. Fix anything red (Article 7).
+
+TASK 4 — ASK the owner the M1 decisions D1–D4 (docs/schema-m1-package-v2.md) if they are not
+answered yet; do not generate the migration before the answer. Then continue Phase 5 (Suppliers,
+Payments, Customers…) on today's data where no migration is needed.
 
 WORKING RULES (AGENTS.md): converge on evidence (Article 4: report Converged / Not converged);
 ask before a schema migration, a new dependency, a data change or spending money (batch questions
@@ -59,7 +62,9 @@ DECISION GATES (ask; do not assume): schema migrations (M1–M10), new dependenc
 provider and anything needing the agency's legal entity, a real LLM vendor, PII purge Tiers 2–3,
 load tests, deployment topology.
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps (tenant tokens on <html>; cn() from @ota/ui with
+KNOWN TRAPS: see docs/handoff/vereda.md Traps (ICU spaces break hydration: use the
+ops-format helpers and a serverNow prop; next-server processes survive `pkill -f 'next dev'`;
+tenant tokens on <html>; cn() from @ota/ui with
 new type sizes registered in cn.ts; e2e signIn() lands on /dashboard; getByLabel/getByText match
 case-insensitive substrings; Tailwind only emits literal class names; never import values from a
 'use client' module into a server component; grid items need min-w-0; rebuild a changed workspace

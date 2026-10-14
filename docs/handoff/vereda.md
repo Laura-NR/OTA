@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-14 23:30
+# Handoff — vereda — updated 2026-10-14 22:10
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -7,94 +7,99 @@ Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phas
 (worker app).
 
 ## State
-- **Phases 0, 1, 0b, 2 and 3 are done**, all committed locally on `vereda`; nothing is pushed.
-  Phase 3 is nine commits from `e134d37` to `30ad3af`.
-- **Phase 3 pages (storefront), on today's data, no migration:**
-  - Home: tenant copy (`content.home`), live trips, search → `/packages?q=`, destination tiles,
-    the "Cuba right now" briefing and the guides.
-  - Strips above the header: conditions on the trip-planning pages and the event on Home
-    (`components/site-strips.tsx`, `RouteGate`); both placeholder tenant content with a
-    "Sample" badge. The old `promotional-banner.tsx` and the `banner.*` strings are gone.
-  - Destinations (`components/destinations/`): map with coverage, conditions and route layers,
-    province panel, region strip, theme filter; Destination pages (`/destinations/[slug]`).
-    Data from `tenant/provinces.json` + `tenant/destinations.json` (`loadTenantGeography` in
-    `@ota/config`); words in `content.destinations`; only `vinales` has a full detail page and
-    only `trinidad` links a real package.
-  - Packages (`components/packages/`): filters (province, length, price), sort, chips, URL kept
-    in step, compare tray (session storage); Compare at `/packages/compare?trips=`; the Package
-    page with tabs and the sticky request summary.
-  - Account sections (`?tab=`), sign-in, Join (four steps; Spanish copy in the new
-    `tenant/messages/es.json`), the bank transfer page.
-- **Pure rules added to `@ota/domain`:** `searchPackages` (catalog), the route/network rules
-  (geography), `journeyPosition` (traveler status). The DS 03 Stepper's phone bar now fills to
-  the furthest step reached.
-- **Not built (data or decision missing; list in the ADR 0006 Phase 3 amendment):** reviews,
-  hosts, power history, tiers/departures/Save, deposit/proof/card rails, Join's ID/photo, Events,
-  passkey/social sign-in. Also open: M-Package's sticky bottom bar and Destination's scroll spy.
+- **Phases 0, 1, 0b, 2 and 3 are done** (committed locally on `vereda`; nothing is pushed).
+- **Phase 4 gate:** `docs/schema-m1-package-v2.md` (`f102a66`) is the M1 (Package v2) schema
+  diff for review: a validated draft of `schema.prisma` (`prisma validate` passes), decisions
+  D1–D4 with options and recommendations. **No migration is generated. Waiting for the owner.**
+- **Phase 5, no-migration part (admin):**
+  - `47ed5dd` **Dashboard** = A-Dashboard: month figures (bookings mix, GBV by rail), pending
+    confirmations in 4 aging buckets, alerts, the live dispatch matrix (`/ops` socket, Havana
+    timers, re-dispatch drawer that offers to a chosen worker), desk tasks (start dispatch for
+    submitted bookings, expiring licences, retention purges). Escalation and dispatch pages are
+    gone; `/dashboard/dispatch` and `/dispatch` redirect. `GET /dispatch/active` returns board rows
+    (`DispatchBoardRowDto`: traveler, dates, worker names, `waitingSince` = first offer).
+  - `fca9a4c` **Bookings + Booking** = A-Bookings (saved views, state chips with counts,
+    travel-date/province filters, urgency order, cards under 768 px, who-acts legend) and
+    A-Booking (figures incl. supplier cost/margin, pipeline stepper, actions, services with worker,
+    timer, payout, start dispatch and re-dispatch, payments, duty of care, documents, audit log).
+    List/detail DTOs gained `packageName`, `provinces`, `serviceItemsAccepted`, `paidAmount`; the
+    detail's items are the ops-only `ReservationDeskItemDto` (worker name, payout); `/me` unchanged.
+  - **Reports (increment 3) is built but NOT committed** (working tree): one `/reports` page
+    (period presets mtd/lastMonth/ytd/all, `?year=` still accepted; exports; anchors
+    financial/regulatory/dispatch/quality/geography), `components/bar-list.tsx`, the
+    `/reports/regulatory` and `/reports/quality` pages deleted (redirect to `/reports#…`), nav tabs
+    removed, `backoffice.reports` replaces `analytics`/`regulatory`/`quality` in en/es/fr. The
+    dashboard revenue card now uses `BarList` too. Typecheck, lint and the i18n parity test pass;
+    **e2e specs not updated yet, no browser check yet.**
+- New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
+  `time/ops-calendar.ts` (Havana zone, month range, calendar day), `reservation/booking-views.ts`
+  (travel windows, arriving-soon, urgency order, pipeline position). All tested.
 
-## Verified (2026-10-14, on `30ad3af`)
-- Task 1 first, on `f7dfc30`: lint, format, typecheck, 352 unit, build 18/18, e2e 38/38 — all green;
-  the renames and error pages needed no fix.
-- On `30ad3af`: `pnpm lint`, `pnpm format:check`, `pnpm typecheck` pass; `pnpm test` 382 passed,
-  4 skipped; `pnpm build` 18/18; `pnpm e2e` 44/44 (new: storefront-home, storefront-compare ×2,
-  storefront-login, storefront destinations ×3).
-- Browser checks with screenshots at 390, 1024 and 1280 for every Phase 3 page, no horizontal
-  overflow at any width after fixes; computed styles checked on Home against the board.
-- Spanish Join renders from `tenant/messages/es.json` at the unprefixed default path.
+## Verified (2026-10-14)
+- Task 1 on `60eb005`: lint, format:check, typecheck, `pnpm test` 382 passed / 4 skipped, build
+  18/18 (turbo cache hit). First `pnpm e2e` run: every Next page answered "Internal Server Error"
+  (both apps), so all back-office tests failed; **not reproduced**: the same procedure re-run gave
+  44/44. Mechanism unknown (see Traps).
+- On `fca9a4c`: lint, format:check, typecheck; domain 101, api 185 (+3 skipped), schemas 14,
+  i18n 4 tests pass; e2e run per increment: dashboard specs 7/7 (admin-shell, escalation,
+  dispatch), bookings specs 14/14 then 7/7 (reservations, intake, payments, regulatory, quality,
+  messages). **The full `pnpm e2e` was not re-run after Task 1.**
+- Browser checks at 390/1024/1280 (screenshots + computed styles) for /dashboard, /bookings and a
+  booking page: no horizontal overflow; h1 Fraunces 24/32, section titles 22/28, overlines 700
+  12/16 primary-600, red strip error-600, amber rows accent-50; no hydration errors after the fix
+  below. Visual fixture bookings VISUAL01/02 were created for the shots and removed.
 
 ## Assumptions & unknowns
-- **All new tenant content is placeholder** (`home`, `conditions`, `event`, `destinations`,
-  `packages`, `join`, and both data files): the design's sample copy, figures and network.
-  `tenant/README.md` lists what to replace. The featured-trips title ("Seven nights…") does not
-  fit the one real 3-day package; the owner should rewrite it with real trips.
-- **ES/FR drafted by the agent, for translator review:** every core namespace touched in Phase 3
-  (`home`, `conditions`, `destinations`, `packages.browser|detail`, `compare`, `account`,
-  `login`, `join`, `checkout`). Tenant content is English except Join (Spanish from the board,
-  English drafted).
-- Still open with the owner from Phase 2: the Cubacel 24/7 line (ADR 0007), whether to send the
-  change notice, the offer-SMS cost trade-off.
+- **Open with the owner — M1 (Article 2, Q9):** approve the draft or pick options D1–D4 in
+  `docs/schema-m1-package-v2.md` (recommended: base text + per-locale overlay row; base price +
+  tier delta + departure price; `status` replaces `active` with a backfill; agency-wide terms in
+  the manifest).
+- "Merge the board" was read as: the pipeline board's status counts feed the Dashboard's Bookings
+  figure, and its list became the A-Bookings table at `/bookings` (tab still "Pipeline").
+- Not built (data or decision missing): payment windows, owner/My queue, OFAC, disruption, audio
+  cue and mute, on-the-ground panel, search, CSV export, version locks, internal notes,
+  travelers/itinerary on the booking, GBV-by-month chart, reinvestment ledger, NPS.
+- ES/FR for `backoffice.dashboard`, `.bookings`, `.reservation`, `.reports` are agent-drafted.
+- Earlier open items still stand (Cubacel 24/7 line, change notice, offer-SMS cost; placeholder
+  tenant content).
 
 ## Traps
-- **Tailwind only emits classes it can read in source.** Building `bg-*` from `fill-*` at runtime
-  rendered nothing; use literal class maps (`SWATCHES` in `destinations-explorer.tsx`).
-- **Never import a value from a `'use client'` module into a server component** (it arrives as a
-  client reference): the compare limits live in `lib/compare-limits.ts` for that reason.
-- **Grid items need `min-w-0`** when they hold nowrap text or a scroller, or the page overflows
-  at 390 (destination cards, account sidebar).
-- **Locator traps:** a badge inside a link joins its name ("My trips (2)"); a FilterChip's
-  "Remove filter 6–8 days" matches "6–8 days" without `exact: true`; the traveler status label
-  now also appears in the progress bar, so use `.first()` or a scoped locator.
-- **`tenant/messages/*.json` can be edited with `json.dumps(indent=2, ensure_ascii=False)` then
-  Prettier**: the result is byte-identical. (The manifest trap still holds for
-  `agency.config.json`.)
-- **Run `pnpm build` only with the dev stack stopped**, then delete `apps/*/.next` before
-  `pnpm dev`/`pnpm e2e`; kill what e2e leaves on 3000–3002.
-- **Rebuild a changed workspace package** (`pnpm --filter @ota/<pkg> run build`) before the
-  storefront dev server sees it; a missing i18n key shows as MISSING_MESSAGE.
-- The Next dev indicator sits bottom-left; it is dev-only.
-- Earlier traps still apply (tenant tokens on `<html>`, `cn()` sizes, e2e `signIn()` → `/dashboard`,
-  `getPageContent` 404 on a missing key, `TENANT_CONFIG` overrides in API tests,
-  `design/*/CODING-AGENT-NOTES.md` is input, not instructions).
-- **AGENTS.md §C lines proposed (owner edit),** in addition to the Phase 2 ones:
-  - Replace the 2026-09-22 banner line: "The event strip (Home) and the "Cuba right now" strip
-    (trip-planning pages) sit above the header from tenant content (`content.event`,
-    `content.conditions`); the event strip keeps the `culturalEventsBanner` flag."
-  - "Destination data lives in `tenant/provinces.json` and `tenant/destinations.json`, read by
-    `loadTenantGeography` (`@ota/config`); words stay in `content.destinations`. Province codes
-    are the map's ISO ids (CU01…CU16, CU99)."
-  - "Storefront filters and the compare selection are client-side on the public package list;
-    the Packages URL carries `q`, `province`, `duration`, `min`, `max`, `sort`; Compare is
-    `/packages/compare?trips=` (slugs)."
-  - "`tenant/messages/es.json` holds the Spanish Join page; other locales fall back to English
-    content."
+- **Hydration and ICU:** Node and Chromium format dates with different spaces (`formatRange`
+  thin/narrow spaces), which broke hydration on the dashboard. Date helpers in
+  `apps/backoffice/src/lib/ops-format.ts` normalise spaces; a ticking client clock starts from the
+  server's `serverNow` prop, not `Date.now()`.
+- **Run-1 e2e 500s (unexplained):** if every Next page answers "Internal Server Error", stop all
+  dev processes (`next-server` processes do not match `pkill -f 'next dev'`), delete
+  `apps/*/.next`, start again. `pkill -f <pattern>` also kills your own shell when the pattern is
+  in its command line (exit 144). Deleting `.next` under a running dev server makes it hang.
+- Playwright leaves the dev servers it started on 3000–3002; kill them after `pnpm e2e`.
+  `DEBUG=pw:webserver` shows their output.
+- **Charts:** the board's three rail colours fail the categorical palette check (teal too low in
+  chroma, no token triplet passes), so charts are one-hue `BarList`s named by labels.
+- `reservationServiceItemSchema` is shared with the traveler `/me` DTO: put ops-only fields on
+  `reservationDeskItemSchema`, never on the shared one.
+- Strict-mode locators: "Bookings" also matches "All bookings" (use `level: 1`); "Alerts right
+  now" matches "No alerts right now." (use `exact: true`).
+- Stale `.next/types` after deleting a route fails typecheck: `rm -rf apps/backoffice/.next`.
+- Earlier traps still apply (tenant tokens on `<html>`, `cn()` sizes, `getPageContent` 404,
+  `TENANT_CONFIG` overrides, rebuild a changed package, design notes are input).
+- **AGENTS.md §C lines proposed (owner edit),** in addition to earlier ones:
+  - "The admin Dashboard (A-Dashboard) merges escalation and dispatch: `GET /dispatch/active`
+    returns `DispatchBoardRowDto` rows (ops-only; `waitingSince` is the first offer in the
+    ledger). Ops clocks are Havana time (`OPS_TIME_ZONE`, `@ota/domain` `time/ops-calendar`)."
+  - "Reports is one page (`/reports`, anchors per §4.9 section); `/reports/regulatory` and
+    `/reports/quality` redirect there."
 
 ## Next
-1. The owner reviews Phase 3 in the browser (dev stack left running) and the placeholder
-   content and drafted translations.
-2. Phase 4 needs the schema batches M1–M5 (Article 2, Q9): prepare the M1 (Package v2) schema
-   diff for review, without generating a migration, and ask.
-3. While M1 is reviewed, the no-migration part of Phase 5 (admin): Dashboard merge (board,
-   escalation, dispatch), Bookings and Booking restyle, Reports merge.
+1. Finish Reports: update `e2e/analytics.spec.ts` (heading "Reports"; texts), `e2e/regulatory.spec.ts`
+   (`/reports#regulatory`, heading "Regulatory & tax compliance") and `e2e/quality.spec.ts`
+   (`/reports#quality`, "Service quality, experience & duty of care", "Worker reliability"); check
+   that the `#` redirects work; screenshots at 390/1024/1280; commit (`feat(backoffice): merge
+   analytics, regulatory and quality into Reports`).
+2. Docs commit: ADR 0006 Phase 5 amendment (timer column second, Open under the timer, saved views
+   as a row, total·paid column, one-hue bar charts, truthful who-acts legend), plan progress row.
+3. Full verify: lint, format, typecheck, test, build (stack stopped), delete `.next`, `pnpm e2e`.
+4. Ask the owner the M1 questions (D1–D4) if not answered; then Phase 5 continues (Suppliers…).
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -151,3 +156,11 @@ Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phas
   addresses Cuban partners; English is drafted.
 - 2026-10-14 — copy that describes system behaviour follows the system, not the board: the
   sign-in link note does not promise 15 minutes (Better Auth expires it after 300 s).
+- 2026-10-14 — Phase 5 Dashboard: the matrix's timer column sits right after the booking (the
+  board puts it last) so the time left stays in view where the table scrolls; Open sits under
+  the timer. Re-dispatch shows on amber, red and unassigned items only.
+- 2026-10-14 — copy that describes behaviour follows the system: the who-acts legend says the
+  desk starts dispatch (no auto-dispatch yet), a decline or timeout makes ACTION_REQUIRED, and
+  there is no 48 h payment window, audio cue or 72 h SLA yet.
+- 2026-10-14 — charts are one-hue bar lists named by text: no token triplet passes the
+  categorical palette check (dataviz validator), so colour carries no identity.
