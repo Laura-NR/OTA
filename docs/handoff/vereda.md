@@ -1,53 +1,46 @@
-# Handoff — vereda — updated 2026-10-14 22:10
+# Handoff — vereda — updated 2026-10-14 23:05
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
-Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phase 3) and ADR 0007
-(worker app).
+Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phases 3 & 5) and
+ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2 and 3 are done** (committed locally on `vereda`; nothing is pushed).
 - **Phase 4 gate:** `docs/schema-m1-package-v2.md` (`f102a66`) is the M1 (Package v2) schema
   diff for review: a validated draft of `schema.prisma` (`prisma validate` passes), decisions
   D1–D4 with options and recommendations. **No migration is generated. Waiting for the owner.**
-- **Phase 5, no-migration part (admin):**
-  - `47ed5dd` **Dashboard** = A-Dashboard: month figures (bookings mix, GBV by rail), pending
-    confirmations in 4 aging buckets, alerts, the live dispatch matrix (`/ops` socket, Havana
-    timers, re-dispatch drawer that offers to a chosen worker), desk tasks (start dispatch for
-    submitted bookings, expiring licences, retention purges). Escalation and dispatch pages are
-    gone; `/dashboard/dispatch` and `/dispatch` redirect. `GET /dispatch/active` returns board rows
-    (`DispatchBoardRowDto`: traveler, dates, worker names, `waitingSince` = first offer).
+- **Phase 5, no-migration part (admin)** — three increments done:
+  - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
+    matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
+    returns `DispatchBoardRowDto` rows.
   - `fca9a4c` **Bookings + Booking** = A-Bookings (saved views, state chips with counts,
     travel-date/province filters, urgency order, cards under 768 px, who-acts legend) and
-    A-Booking (figures incl. supplier cost/margin, pipeline stepper, actions, services with worker,
-    timer, payout, start dispatch and re-dispatch, payments, duty of care, documents, audit log).
-    List/detail DTOs gained `packageName`, `provinces`, `serviceItemsAccepted`, `paidAmount`; the
-    detail's items are the ops-only `ReservationDeskItemDto` (worker name, payout); `/me` unchanged.
-  - **Reports (increment 3) is built but NOT committed** (working tree): one `/reports` page
-    (period presets mtd/lastMonth/ytd/all, `?year=` still accepted; exports; anchors
-    financial/regulatory/dispatch/quality/geography), `components/bar-list.tsx`, the
-    `/reports/regulatory` and `/reports/quality` pages deleted (redirect to `/reports#…`), nav tabs
+    A-Booking (figures incl. supplier cost/margin, pipeline stepper, services with worker, timer,
+    payout, dispatch controls, payments, duty of care, documents, audit log). List/detail DTOs
+    gained `packageName`, `provinces`, `serviceItemsAccepted`, `paidAmount`.
+  - `af0aff0` **Reports** = the analytics/regulatory/quality merge: one `/reports` page (period
+    presets mtd/lastMonth/ytd/all, `?year=` still accepted; exports; anchors
+    financial/regulatory/dispatch/quality/geography), `components/bar-list.tsx`,
+    `/reports/regulatory` and `/reports/quality` deleted (redirect to `/reports#…`), nav tabs
     removed, `backoffice.reports` replaces `analytics`/`regulatory`/`quality` in en/es/fr. The
-    dashboard revenue card now uses `BarList` too. Typecheck, lint and the i18n parity test pass;
-    **e2e specs not updated yet, no browser check yet.**
+    dashboard revenue card uses `BarList` too.
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
-  `time/ops-calendar.ts` (Havana zone, month range, calendar day), `reservation/booking-views.ts`
-  (travel windows, arriving-soon, urgency order, pipeline position). All tested.
+  `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
-## Verified (2026-10-14)
-- Task 1 on `60eb005`: lint, format:check, typecheck, `pnpm test` 382 passed / 4 skipped, build
-  18/18 (turbo cache hit). First `pnpm e2e` run: every Next page answered "Internal Server Error"
-  (both apps), so all back-office tests failed; **not reproduced**: the same procedure re-run gave
-  44/44. Mechanism unknown (see Traps).
-- On `fca9a4c`: lint, format:check, typecheck; domain 101, api 185 (+3 skipped), schemas 14,
-  i18n 4 tests pass; e2e run per increment: dashboard specs 7/7 (admin-shell, escalation,
-  dispatch), bookings specs 14/14 then 7/7 (reservations, intake, payments, regulatory, quality,
-  messages). **The full `pnpm e2e` was not re-run after Task 1.**
-- Browser checks at 390/1024/1280 (screenshots + computed styles) for /dashboard, /bookings and a
-  booking page: no horizontal overflow; h1 Fraunces 24/32, section titles 22/28, overlines 700
-  12/16 primary-600, red strip error-600, amber rows accent-50; no hydration errors after the fix
-  below. Visual fixture bookings VISUAL01/02 were created for the shots and removed.
+## Verified (2026-10-14, `af0aff0`)
+- lint, format:check, typecheck and build (18/18) are green.
+- `pnpm test`: **409 passed / 4 skipped** (api 185/3 skipped, domain 101, ui 31, config 24,
+  theming 14, schemas 14, reports 4, and the rest).
+- `pnpm e2e`: **45/45** (the reports specs updated to the merged page; one new section-anchor
+  test). The dev stack was already running, so e2e reused it.
+- Browser (repo Playwright, cached chromium) on `/reports` at **390/1024/1280**: screenshots +
+  computed styles; no horizontal overflow (scrollWidth == viewport). h1 Fraunces 24/32, section
+  titles 22/28, overlines Inter 700 12/16 primary-600, body/surface Inter 14/20.
+- Redirects confirmed: `/reports/regulatory` → `/reports#regulatory`, `/reports/quality` →
+  `/reports#quality`, `/regulatory` and `/quality` likewise, `/analytics` → `/reports`; the
+  section-nav anchors scroll to each section.
 
 ## Assumptions & unknowns
 - **Open with the owner — M1 (Article 2, Q9):** approve the draft or pick options D1–D4 in
@@ -68,18 +61,19 @@ Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phas
   thin/narrow spaces), which broke hydration on the dashboard. Date helpers in
   `apps/backoffice/src/lib/ops-format.ts` normalise spaces; a ticking client clock starts from the
   server's `serverNow` prop, not `Date.now()`.
-- **Run-1 e2e 500s (unexplained):** if every Next page answers "Internal Server Error", stop all
-  dev processes (`next-server` processes do not match `pkill -f 'next dev'`), delete
-  `apps/*/.next`, start again. `pkill -f <pattern>` also kills your own shell when the pattern is
-  in its command line (exit 144). Deleting `.next` under a running dev server makes it hang.
+- **Run-1 e2e 500s:** if every Next page answers "Internal Server Error", stop all dev processes
+  (`next-server` processes do not match `pkill -f 'next dev'`), delete `apps/*/.next`, start again.
+  `pkill -f <pattern>` also kills your own shell when the pattern is in its command line (exit 144).
+  Deleting `.next` under a running dev server makes it hang.
 - Playwright leaves the dev servers it started on 3000–3002; kill them after `pnpm e2e`.
-  `DEBUG=pw:webserver` shows their output.
-- **Charts:** the board's three rail colours fail the categorical palette check (teal too low in
-  chroma, no token triplet passes), so charts are one-hue `BarList`s named by labels.
+- **Charts:** one-hue `BarList`s named by labels — no token triplet passes the categorical palette
+  check.
+- **Strict-mode locators in the merged reports:** overlines and section descriptions share words
+  ("Gross booking value", "Specialised ratio"), so those `getByText` need `{ exact: true }`.
+  "Bookings" also matches "All bookings" (use `level: 1`); "Alerts right now" matches "No alerts
+  right now." (use `exact: true`).
 - `reservationServiceItemSchema` is shared with the traveler `/me` DTO: put ops-only fields on
   `reservationDeskItemSchema`, never on the shared one.
-- Strict-mode locators: "Bookings" also matches "All bookings" (use `level: 1`); "Alerts right
-  now" matches "No alerts right now." (use `exact: true`).
 - Stale `.next/types` after deleting a route fails typecheck: `rm -rf apps/backoffice/.next`.
 - Earlier traps still apply (tenant tokens on `<html>`, `cn()` sizes, `getPageContent` 404,
   `TENANT_CONFIG` overrides, rebuild a changed package, design notes are input).
@@ -91,15 +85,12 @@ Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phas
     `/reports/quality` redirect there."
 
 ## Next
-1. Finish Reports: update `e2e/analytics.spec.ts` (heading "Reports"; texts), `e2e/regulatory.spec.ts`
-   (`/reports#regulatory`, heading "Regulatory & tax compliance") and `e2e/quality.spec.ts`
-   (`/reports#quality`, "Service quality, experience & duty of care", "Worker reliability"); check
-   that the `#` redirects work; screenshots at 390/1024/1280; commit (`feat(backoffice): merge
-   analytics, regulatory and quality into Reports`).
-2. Docs commit: ADR 0006 Phase 5 amendment (timer column second, Open under the timer, saved views
-   as a row, total·paid column, one-hue bar charts, truthful who-acts legend), plan progress row.
-3. Full verify: lint, format, typecheck, test, build (stack stopped), delete `.next`, `pnpm e2e`.
-4. Ask the owner the M1 questions (D1–D4) if not answered; then Phase 5 continues (Suppliers…).
+1. Ask the owner the M1 questions (D1–D4) if not answered yet; do not generate the migration before
+   the answer.
+2. Phase 5 continues on today's data where no migration is needed: Suppliers (applications folded
+   in, reliability; backup power waits for M6), then Payments (reconciliation, payouts; refunds and
+   proofs wait for M4) and Customers (OFAC M3, retention already there). Batches M6–M9 are asked
+   for as they come up.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -164,3 +155,5 @@ Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phas
   there is no 48 h payment window, audio cue or 72 h SLA yet.
 - 2026-10-14 — charts are one-hue bar lists named by text: no token triplet passes the
   categorical palette check (dataviz validator), so colour carries no identity.
+- 2026-10-14 — Reports is one page (`/reports`, the §4.9 sections as anchors); `/analytics`,
+  `/regulatory`, `/quality`, `/reports/regulatory` and `/reports/quality` redirect there (307).
