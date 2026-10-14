@@ -13,9 +13,9 @@ import { notFound } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 
 import { BottomNav } from '@/components/bottom-nav';
-import { PromotionalBanner } from '@/components/promotional-banner';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { SiteStrips } from '@/components/site-strips';
 import { getServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
 import { fontVariables } from '@/lib/font';
@@ -62,10 +62,8 @@ export default async function LocaleLayout({
       <body className="flex min-h-screen flex-col pb-16 antialiased md:pb-0">
         <IconSprite />
         <NextIntlClientProvider messages={messages}>
+          <SiteStrips events={isFeatureEnabled(tenant, 'culturalEventsBanner')} />
           <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
-          {isFeatureEnabled(tenant, 'culturalEventsBanner') ? (
-            <PromotionalBanner />
-          ) : null}
           <main className="flex-1">{children}</main>
           <SiteFooter tenant={tenant} />
           <BottomNav signedIn={signedIn} />

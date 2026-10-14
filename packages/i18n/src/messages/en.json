@@ -46,7 +46,8 @@
       "placeholderTitle": "Sample content",
       "placeholderText": "This page shows placeholder text until {agency} publishes the final version.",
       "onThisPage": "On this page",
-      "photoToCome": "Photo to come"
+      "photoToCome": "Photo to come",
+      "sample": "Sample"
     },
     "support": {
       "channelsTitle": "How to reach us",
@@ -135,12 +136,15 @@
     }
   },
   "home": {
-    "eyebrow": "Community-based travel · Cuba",
-    "description": "Ecotourism, agrotourism, and cultural immersion beyond the resort circuits — curated with Cuban communities.",
-    "explore": "Explore experiences",
-    "build": "Build an itinerary",
-    "featured": "Featured",
-    "preparing": "The catalog is being prepared. Check back soon."
+    "preparing": "Our trips are being prepared. Check back soon.",
+    "searchLabel": "Search trips",
+    "where": "Where do you want to go?",
+    "wherePlaceholder": "Havana, Trinidad, Viñales…",
+    "find": "Find your Cuba trip",
+    "allPackages": "{count, plural, one {See the package} other {All # packages}}",
+    "custom": "Build a custom itinerary",
+    "conditionsLink": "Read the full conditions page",
+    "guideMeta": "{category} · {minutes} min"
   },
   "catalog": {
     "title": "Experiences",
@@ -177,7 +181,12 @@
     "signInPrompt": "Sign in to book this package.",
     "signIn": "Sign in",
     "back": "All packages",
-    "day": "Day {day}"
+    "day": "Day {day}",
+    "nights": "{count, plural, one {# night} other {# nights}}",
+    "fromLabel": "From",
+    "requestPill": "Request to book",
+    "instantPill": "Instant",
+    "viewTrip": "View trip"
   },
   "checkout": {
     "pay": "Proceed to payment",
@@ -280,10 +289,6 @@
       "TRAVELER": "You",
       "OPERATIONS": "Operations"
     }
-  },
-  "banner": {
-    "text": "Cultural events across Cuba — ask our team for the current calendar.",
-    "cta": "Explore experiences"
   },
   "join": {
     "title": "Join our network",
@@ -1053,5 +1058,9 @@
       "title": "{agency} — Back-office",
       "description": "Operations back-office for {agency}"
     }
+  },
+  "conditions": {
+    "link": "Current conditions",
+    "more": "More"
   }
 }

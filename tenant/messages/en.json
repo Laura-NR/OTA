@@ -880,6 +880,141 @@
           ]
         }
       ]
+    },
+    "home": {
+      "status": "placeholder",
+      "hero": {
+        "eyebrow": "Casa-based, small-group journeys · Cuba only",
+        "title": "Travel Cuba with respect.",
+        "lede": "Stay in casas particulares. Eat at paladares. Learn from community guides. Your trip supports Cuban families, not state hotel chains. And we tell you, before you book, how the power, the fuel and the roads really are.",
+        "promises": [
+          "Total price shown, no fees at checkout",
+          "Nothing charged until your hosts confirm",
+          "24/7 emergency line, 15-minute response"
+        ],
+        "photo": {
+          "alt": "Yamilé and Osvaldo on the porch of their casa in Viñales, early morning light"
+        }
+      },
+      "steps": {
+        "eyebrow": "How booking works",
+        "title": "Cuban hosts don't have booking APIs. So we built around people.",
+        "link": "Why request-to-book",
+        "items": [
+          {
+            "title": "You request your trip",
+            "text": "Pick dates, a casa tier and extras. You see the full price. We take your details, not your money."
+          },
+          {
+            "title": "Hosts confirm within 24 hours",
+            "text": "Casa, driver and guide each accept on their phones. You watch it happen in My trips. If someone is full, we propose an alternative."
+          },
+          {
+            "title": "Pay once everything is secured",
+            "text": "Bank transfer or card, in EUR, within 48 hours. Vouchers, host contacts and your offline kit unlock the moment it clears."
+          }
+        ]
+      },
+      "featured": {
+        "eyebrow": "Featured trips",
+        "title": "Seven nights, two host families, one honest price"
+      },
+      "why": {
+        "eyebrow": "Why Vereda",
+        "title": "Reality travel: transparent, reciprocal, specific",
+        "stats": [
+          {
+            "value": "85 %+",
+            "text": "of what you spend reaches Cuban families: casas, paladares, guides and drivers.",
+            "tone": "secondary"
+          },
+          {
+            "value": "100 %",
+            "text": "of your trip's carbon offset, included in the price and shown on your invoice.",
+            "tone": "primary"
+          },
+          {
+            "value": "5 %",
+            "text": "of profits fund community-led mangrove restoration in Ciénaga de Zapata.",
+            "tone": "accent"
+          },
+          {
+            "value": "6–12",
+            "text": "travelers per group. Small enough for a living room, large enough to share a minivan.",
+            "tone": "neutral"
+          }
+        ],
+        "points": [
+          "Every host is named, licensed and visited by our Havana team. We don't book GAESA or Gaviota properties.",
+          "Prices are set in EUR and locked when you pay your deposit; no USD clearing, no surprise fees.",
+          "A person in Havana answers WhatsApp or Telegram within 15 minutes, day and night."
+        ],
+        "link": "How we choose hosts and what we pay them"
+      },
+      "custom": {
+        "eyebrow": "Custom itinerary",
+        "title": "Don't see your trip? Tell us the places and the pace.",
+        "text": "Six questions: dates, provinces, how you like to travel, where you sleep, your budget, how to reach you. A Havana specialist replies with a priced proposal within 4 hours on working days.",
+        "cta": "Start a custom itinerary",
+        "note": "No charge for the proposal. A planning fee of € 140 applies only if you book, and comes off the price."
+      },
+      "guides": {
+        "eyebrow": "Practical Cuba",
+        "title": "Guides we update every month"
+      }
+    },
+    "conditions": {
+      "status": "placeholder",
+      "strip": {
+        "headline": "Cuba right now · advisory Level 2.",
+        "text": "Power cuts of 6–12 h are common outside Havana; every stay we book has backup power. Updated 3 Oct 2026."
+      },
+      "eyebrow": "Cuba right now",
+      "title": "The briefing other sites skip",
+      "updated": "Updated Fri 3 Oct 2026 · weekly",
+      "items": [
+        {
+          "topic": "power",
+          "label": "Power",
+          "value": "6–12 h cuts outside Havana",
+          "tone": "caution"
+        },
+        {
+          "topic": "fuel",
+          "label": "Fuel",
+          "value": "Normal · drivers confirmed 24 h ahead",
+          "tone": "ok"
+        },
+        {
+          "topic": "connectivity",
+          "label": "Connectivity",
+          "value": "4G in cities, patchy elsewhere",
+          "tone": "caution"
+        },
+        {
+          "topic": "advisories",
+          "label": "Advisories",
+          "value": "CA, FR, UK, US: Level 2 · increased caution",
+          "tone": "info"
+        },
+        {
+          "topic": "weather",
+          "label": "Weather",
+          "value": "No storm watches · season ends 30 Nov",
+          "tone": "ok"
+        }
+      ],
+      "note": "Yes, outages happen. Here's how we prepare: every casa we book has a generator or battery, drivers confirm fuel the day before, and you get a 30-day Reality Briefing with a packing list."
+    },
+    "event": {
+      "status": "placeholder",
+      "label": "Event",
+      "headline": "Havana Jazz Festival · 18–24 Jan 2027.",
+      "text": "Concerts in Vedado and Old Havana; our festival weekend package opens 15 Oct with concierge tickets, or add the festival to any trip.",
+      "cta": "Request event access"
     }
+  },
+  "packages": {
+    "requestPill": "Request · 24 h"
   }
 }

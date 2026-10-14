@@ -46,7 +46,8 @@
       "placeholderTitle": "Contenu d'exemple",
       "placeholderText": "Cette page affiche un texte provisoire jusqu'à ce que {agency} publie la version finale.",
       "onThisPage": "Sur cette page",
-      "photoToCome": "Photo à venir"
+      "photoToCome": "Photo à venir",
+      "sample": "Exemple"
     },
     "support": {
       "channelsTitle": "Nous joindre",
@@ -135,12 +136,15 @@
     }
   },
   "home": {
-    "eyebrow": "Voyages communautaires · Cuba",
-    "description": "Écotourisme, agrotourisme et immersion culturelle au-delà des circuits de resort — organisés avec les communautés cubaines.",
-    "explore": "Explorer les expériences",
-    "build": "Créer un itinéraire",
-    "featured": "À la une",
-    "preparing": "Le catalogue est en préparation. Revenez bientôt."
+    "preparing": "Nos voyages sont en préparation. Revenez bientôt.",
+    "searchLabel": "Rechercher un voyage",
+    "where": "Où voulez-vous aller ?",
+    "wherePlaceholder": "La Havane, Trinidad, Viñales…",
+    "find": "Trouvez votre voyage à Cuba",
+    "allPackages": "{count, plural, one {Voir le forfait} other {Les # forfaits}}",
+    "custom": "Créer un itinéraire sur mesure",
+    "conditionsLink": "Lire la page complète des conditions",
+    "guideMeta": "{category} · {minutes} min"
   },
   "catalog": {
     "title": "Expériences",
@@ -177,7 +181,12 @@
     "signInPrompt": "Connectez-vous pour réserver ce forfait.",
     "signIn": "Se connecter",
     "back": "Tous les forfaits",
-    "day": "Jour {day}"
+    "day": "Jour {day}",
+    "nights": "{count, plural, one {# nuit} other {# nuits}}",
+    "fromLabel": "À partir de",
+    "requestPill": "Sur demande",
+    "instantPill": "Immédiate",
+    "viewTrip": "Voir le voyage"
   },
   "checkout": {
     "pay": "Passer au paiement",
@@ -280,10 +289,6 @@
       "TRAVELER": "Vous",
       "OPERATIONS": "Opérations"
     }
-  },
-  "banner": {
-    "text": "Événements culturels à travers Cuba — demandez notre calendrier actuel.",
-    "cta": "Explorer les expériences"
   },
   "join": {
     "title": "Rejoignez notre réseau",
@@ -1053,5 +1058,9 @@
       "title": "{agency} — Back-office",
       "description": "Back-office des opérations de {agency}"
     }
+  },
+  "conditions": {
+    "link": "Conditions actuelles",
+    "more": "Plus"
   }
 }

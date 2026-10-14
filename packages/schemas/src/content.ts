@@ -107,6 +107,94 @@ export const blogContentSchema = z.object({
 
 export const footerContentSchema = z.object({ tagline: text });
 
+/** An overline and a display heading: the head of every Home section. */
+const sectionHeadSchema = z.object({ eyebrow: text.optional(), title: text });
+
+/**
+ * The agency's words on Home (Home / M-Home boards). Trips, destinations and
+ * guides come from their own sources; this holds only the copy around them.
+ */
+export const homeContentSchema = z.object({
+  status: contentStatusSchema,
+  hero: sectionHeadSchema.extend({
+    lede: text,
+    /** The checked promises under the search; each must be true of every booking. */
+    promises: z.array(text).max(3),
+    photo: z.object({ alt: text }),
+  }),
+  /** "How booking works"; the link goes to About. */
+  steps: sectionHeadSchema.extend({
+    link: text.optional(),
+    items: z
+      .array(z.object({ title: text, text }))
+      .min(1)
+      .max(4),
+  }),
+  featured: sectionHeadSchema,
+  /** "Why Vereda": figures on tinted tiles, then plain points; the link goes to About. */
+  why: sectionHeadSchema.extend({
+    stats: z
+      .array(
+        z.object({
+          value: text,
+          text,
+          tone: z.enum(['secondary', 'primary', 'accent', 'neutral']),
+        }),
+      )
+      .max(4),
+    points: z.array(text),
+    link: text.optional(),
+  }),
+  /** The custom-itinerary band; shown only when the builder is enabled. */
+  custom: sectionHeadSchema.extend({ text, cta: text, note: text.optional() }),
+  guides: sectionHeadSchema,
+});
+
+export const conditionTopicSchema = z.enum([
+  'power',
+  'fuel',
+  'connectivity',
+  'advisories',
+  'weather',
+  'roads',
+]);
+
+/** `ok` reads green, `caution` amber, `info` blue (DS 03 pills). */
+export const conditionToneSchema = z.enum(['ok', 'caution', 'info']);
+
+/**
+ * "Cuba right now": the strip above the header on the trip-planning pages and
+ * Home's briefing card. Ops will publish it from A-Content (M7); until then it
+ * is tenant content, and a placeholder says so wherever it shows.
+ */
+export const conditionsContentSchema = z.object({
+  status: contentStatusSchema,
+  strip: z.object({ headline: text, text }),
+  eyebrow: text.optional(),
+  title: text,
+  updated: text,
+  items: z
+    .array(
+      z.object({
+        topic: conditionTopicSchema,
+        label: text,
+        value: text,
+        tone: conditionToneSchema,
+      }),
+    )
+    .min(1),
+  note: text.optional(),
+});
+
+/** The event strip above Home's header (spec §3.2's promotional banner). */
+export const eventBannerContentSchema = z.object({
+  status: contentStatusSchema,
+  label: text,
+  headline: text,
+  text,
+  cta: text,
+});
+
 export type ContentStatus = z.infer<typeof contentStatusSchema>;
 export type ContentBlock = z.infer<typeof contentBlockSchema>;
 export type ContentSection = z.infer<typeof contentSectionSchema>;
@@ -116,3 +204,8 @@ export type SupportContent = z.infer<typeof supportContentSchema>;
 export type Article = z.infer<typeof articleSchema>;
 export type BlogContent = z.infer<typeof blogContentSchema>;
 export type FooterContent = z.infer<typeof footerContentSchema>;
+export type HomeContent = z.infer<typeof homeContentSchema>;
+export type ConditionTopic = z.infer<typeof conditionTopicSchema>;
+export type ConditionTone = z.infer<typeof conditionToneSchema>;
+export type ConditionsContent = z.infer<typeof conditionsContentSchema>;
+export type EventBannerContent = z.infer<typeof eventBannerContentSchema>;

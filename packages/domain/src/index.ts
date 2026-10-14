@@ -87,3 +87,16 @@ export {
   type RetentionClock,
   type RetentionStatus,
 } from './retention/retention';
+export {
+  DURATION_BUCKETS,
+  PACKAGE_SORTS,
+  durationBucket,
+  matchesQuery,
+  normalizeSearchText,
+  packageProvinces,
+  searchPackages,
+  type DurationBucketId,
+  type PackageCriteria,
+  type PackageSort,
+  type SearchablePackage,
+} from './catalog/package-search';

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { contentPageSchema } from '../src/content';
+import {
+  conditionsContentSchema,
+  contentPageSchema,
+  eventBannerContentSchema,
+  homeContentSchema,
+} from '../src/content';
 
 const page = {
   status: 'placeholder',
@@ -41,5 +46,80 @@ describe('contentPageSchema', () => {
 
   it('only knows the placeholder and published states', () => {
     expect(() => contentPageSchema.parse({ ...page, status: 'draft' })).toThrow();
+  });
+});
+
+const home = {
+  status: 'placeholder',
+  hero: {
+    title: 'Travel Cuba with respect.',
+    lede: 'Stay in casas.',
+    promises: ['Total price shown'],
+    photo: { alt: 'A casa porch' },
+  },
+  steps: {
+    title: 'How booking works',
+    items: [{ title: 'Request', text: 'We confirm.' }],
+  },
+  featured: { title: 'Featured trips' },
+  why: {
+    title: 'Why us',
+    stats: [{ value: '85 %', text: 'reaches families', tone: 'secondary' }],
+    points: ['Named hosts'],
+  },
+  custom: { title: 'Custom', text: 'Six questions.', cta: 'Start' },
+  guides: { title: 'Guides' },
+};
+
+describe('homeContentSchema', () => {
+  it('accepts the agency copy around the live trips', () => {
+    expect(homeContentSchema.parse(home).hero.promises).toEqual(['Total price shown']);
+  });
+
+  it('keeps the promises to three and the stat tiles to the four drawn tones', () => {
+    expect(() =>
+      homeContentSchema.parse({
+        ...home,
+        hero: { ...home.hero, promises: ['a', 'b', 'c', 'd'] },
+      }),
+    ).toThrow();
+    expect(() =>
+      homeContentSchema.parse({
+        ...home,
+        why: { ...home.why, stats: [{ value: '1', text: 'x', tone: 'red' }] },
+      }),
+    ).toThrow();
+  });
+});
+
+describe('conditions and event strips', () => {
+  const conditions = {
+    status: 'placeholder',
+    strip: { headline: 'Cuba right now.', text: 'Power cuts.' },
+    title: 'The briefing',
+    updated: 'Updated 3 Oct',
+    items: [{ topic: 'power', label: 'Power', value: '6–12 h cuts', tone: 'caution' }],
+  };
+
+  it('accepts a briefing whose rows name a known topic and tone', () => {
+    expect(conditionsContentSchema.parse(conditions).items[0]!.topic).toBe('power');
+    expect(() =>
+      conditionsContentSchema.parse({
+        ...conditions,
+        items: [{ ...conditions.items[0], topic: 'politics' }],
+      }),
+    ).toThrow();
+    expect(() => conditionsContentSchema.parse({ ...conditions, items: [] })).toThrow();
+  });
+
+  it('requires the event call to action', () => {
+    const event = {
+      status: 'placeholder',
+      label: 'Event',
+      headline: 'Jazz',
+      text: 'Concerts.',
+    };
+    expect(() => eventBannerContentSchema.parse(event)).toThrow();
+    expect(eventBannerContentSchema.parse({ ...event, cta: 'Ask' }).cta).toBe('Ask');
   });
 });

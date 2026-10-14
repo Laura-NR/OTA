@@ -39,3 +39,18 @@ export function isCurrent(pathname: string, href: string): boolean {
     ? pathname === '/'
     : pathname === href || pathname.startsWith(`${href}/`);
 }
+
+/**
+ * The trip-planning pages that carry the "Cuba right now" strip above the
+ * header (Home, Destinations, Destination, Packages, Package boards); Compare
+ * draws none.
+ */
+export function isPlanningPath(pathname: string): boolean {
+  if (pathname === '/') {
+    return true;
+  }
+  return (
+    (isCurrent(pathname, '/destinations') || isCurrent(pathname, '/packages')) &&
+    pathname !== '/packages/compare'
+  );
+}

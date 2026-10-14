@@ -1,12 +1,19 @@
+import { searchPackages } from '@ota/domain';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
 import { getPackages } from '@/lib/packages';
 
-export default async function PackagesPage() {
+export default async function PackagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const t = await getTranslations('packages');
-  const packages = await getPackages();
+  // Home's search lands here with `q`.
+  const packages = searchPackages(await getPackages(), { query: q });
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">

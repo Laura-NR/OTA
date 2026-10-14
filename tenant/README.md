@@ -9,11 +9,14 @@ around as data.
   MINTUR `licenseNumber` injected into every generated document), locales, theme
   tokens, feature flags, and destination geography.
 - `messages/<locale>.json` — the agency's own copy, merged over the core catalogs
-  (`packages/i18n`) by the storefront. Any core key can be overridden; the agency's
-  page content (Support, Travel info, Blog, About, Privacy, the footer tagline)
-  lives under `content` and is validated by the `@ota/schemas` content schemas.
+  (`packages/i18n`) by the storefront. Any core key can be overridden (Vereda sets
+  `packages.requestPill` to its 24-hour confirmation window); the agency's page
+  content (Home, Support, Travel info, Blog, About, Privacy, the footer tagline,
+  the "Cuba right now" conditions and the Home event strip) lives under `content`
+  and is validated by the `@ota/schemas` content schemas.
   English ships first: where a locale file has no `content`, the English content
-  is shown. A page whose content is missing is a 404.
+  is shown. A page whose content is missing is a 404, except Home, which then
+  shows only its search and the trips under the agency name.
 
 ## Placeholders to replace before launch
 
@@ -24,8 +27,10 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
 - `messages/en.json` → `content`: built from the design's copy (handoff v1.2). Its
   policies (deposit, fees, cancellation scale), figures and team are the design's
   sample content, not confirmed terms; the privacy notice is a draft written from
-  `docs/pii-at-rest-review.md` for the owner and counsel to review. ES/FR content
-  is not written yet.
+  `docs/pii-at-rest-review.md` for the owner and counsel to review. The
+  `conditions` briefing (advisory level, power, fuel) and the `event` strip are
+  design samples, not current information, and show a "Sample" badge until
+  published. ES/FR content is not written yet.
 - `agency.config.json`: `licenseNumber` (`MINTUR-2026-XXXX`), the
   `emergencyContacts` numbers (`+53 5555 …`), the `payments.bankTransfer` details,
   and `supportEmail` (`desk@example.test`, a reserved domain that never delivers;

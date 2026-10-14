@@ -46,7 +46,8 @@
       "placeholderTitle": "Contenido de muestra",
       "placeholderText": "Esta página muestra un texto provisional hasta que {agency} publique la versión final.",
       "onThisPage": "En esta página",
-      "photoToCome": "Foto pendiente"
+      "photoToCome": "Foto pendiente",
+      "sample": "Muestra"
     },
     "support": {
       "channelsTitle": "Cómo contactarnos",
@@ -135,12 +136,15 @@
     }
   },
   "home": {
-    "eyebrow": "Viajes comunitarios · Cuba",
-    "description": "Ecoturismo, agroturismo e inmersión cultural más allá de los circuitos de resort — curado con comunidades cubanas.",
-    "explore": "Explorar experiencias",
-    "build": "Crear un itinerario",
-    "featured": "Destacados",
-    "preparing": "El catálogo está en preparación. Vuelve pronto."
+    "preparing": "Estamos preparando nuestros viajes. Vuelve pronto.",
+    "searchLabel": "Buscar viajes",
+    "where": "¿Adónde quieres ir?",
+    "wherePlaceholder": "La Habana, Trinidad, Viñales…",
+    "find": "Encuentra tu viaje a Cuba",
+    "allPackages": "{count, plural, one {Ver el paquete} other {Los # paquetes}}",
+    "custom": "Diseña un itinerario a medida",
+    "conditionsLink": "Lee la página completa de condiciones",
+    "guideMeta": "{category} · {minutes} min"
   },
   "catalog": {
     "title": "Experiencias",
@@ -177,7 +181,12 @@
     "signInPrompt": "Inicia sesión para reservar este paquete.",
     "signIn": "Iniciar sesión",
     "back": "Todos los paquetes",
-    "day": "Día {day}"
+    "day": "Día {day}",
+    "nights": "{count, plural, one {# noche} other {# noches}}",
+    "fromLabel": "Desde",
+    "requestPill": "Reserva bajo solicitud",
+    "instantPill": "Inmediata",
+    "viewTrip": "Ver viaje"
   },
   "checkout": {
     "pay": "Continuar al pago",
@@ -280,10 +289,6 @@
       "TRAVELER": "Tú",
       "OPERATIONS": "Operaciones"
     }
-  },
-  "banner": {
-    "text": "Eventos culturales por toda Cuba: pide a nuestro equipo el calendario actual.",
-    "cta": "Explorar experiencias"
   },
   "join": {
     "title": "Únete a nuestra red",
@@ -1053,5 +1058,9 @@
       "title": "{agency} — Back office",
       "description": "Back office de operaciones de {agency}"
     }
+  },
+  "conditions": {
+    "link": "Condiciones actuales",
+    "more": "Más"
   }
 }
