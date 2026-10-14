@@ -13,6 +13,7 @@ import {
   declineServiceItemSchema,
   reassignServiceItemSchema,
   type DeclineServiceItemRequest,
+  type DispatchBoardRowDto,
   type DispatchCandidateDto,
   type DispatchViewDto,
   type ReassignServiceItemRequest,
@@ -40,7 +41,7 @@ export class DispatchController {
 
   @Get('dispatch/active')
   @Roles(UserRole.OperationsAdmin, UserRole.AdministrativeSupport, UserRole.SuperAdmin)
-  active(): Promise<DispatchViewDto[]> {
+  active(): Promise<DispatchBoardRowDto[]> {
     return this.dispatch.listActive();
   }
 

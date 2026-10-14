@@ -68,3 +68,29 @@ export const dispatchViewSchema = z.object({
 });
 
 export type DispatchViewDto = z.infer<typeof dispatchViewSchema>;
+
+/**
+ * A row of the operations desk's dispatch matrix (A-Dashboard,
+ * `GET /dispatch/active`): the dispatch view plus who and when. Ops-only; a
+ * worker's own view stays `DispatchViewDto`, which names nobody.
+ */
+export const dispatchBoardItemSchema = dispatchServiceItemSchema.extend({
+  supplierName: z.string().nullable(),
+});
+
+export type DispatchBoardItemDto = z.infer<typeof dispatchBoardItemSchema>;
+
+export const dispatchBoardRowSchema = dispatchViewSchema.extend({
+  travelerName: z.string().nullable(),
+  travelerEmail: z.string().email(),
+  startDate: z.string(),
+  endDate: z.string(),
+  /**
+   * When the booking started waiting on workers: its first offer, which a
+   * re-dispatch keeps; the booking's creation when nothing was offered yet.
+   */
+  waitingSince: z.string(),
+  serviceItems: z.array(dispatchBoardItemSchema),
+});
+
+export type DispatchBoardRowDto = z.infer<typeof dispatchBoardRowSchema>;

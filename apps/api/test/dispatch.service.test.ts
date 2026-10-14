@@ -150,9 +150,11 @@ function createFakePrisma(store: Store) {
         Object.assign(reservation, args.data);
         return reservation;
       },
+      // The dispatch board's include: the traveler, each item's worker name and
+      // the item's first offer from the ledger.
       findMany: async (args: {
         where?: { status?: { in?: string[] } };
-        include?: { serviceItems?: boolean };
+        include?: { user?: unknown; serviceItems?: unknown };
       }) => {
         let rows = [...store.reservations];
         const statuses = args.where?.status?.in;
@@ -161,16 +163,34 @@ function createFakePrisma(store: Store) {
         }
         return rows
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-          .map((reservation) =>
-            args.include?.serviceItems
+          .map((reservation) => ({
+            ...reservation,
+            ...(args.include?.user
+              ? { user: { fullName: 'Example Traveler', email: 'traveler@example.test' } }
+              : {}),
+            ...(args.include?.serviceItems
               ? {
-                  ...reservation,
-                  serviceItems: store.serviceItems.filter(
-                    (item) => item.reservationId === reservation.id,
-                  ),
+                  serviceItems: store.serviceItems
+                    .filter((item) => item.reservationId === reservation.id)
+                    .map((item) => {
+                      const supplier = store.suppliers.find(
+                        (s) => s.id === item.supplierId,
+                      );
+                      return {
+                        ...item,
+                        supplier: supplier
+                          ? { ...supplier, user: { fullName: `Worker ${supplier.id}` } }
+                          : null,
+                        dispatchOffers: store.offers
+                          .filter((offer) => offer.serviceItemId === item.id)
+                          .sort((a, b) => a.offeredAt.getTime() - b.offeredAt.getTime())
+                          .slice(0, 1)
+                          .map((offer) => ({ offeredAt: offer.offeredAt })),
+                      };
+                    }),
                 }
-              : reservation,
-          );
+              : {}),
+          }));
       },
     },
     serviceItem: {
@@ -317,6 +337,24 @@ describe('DispatchService', () => {
     expect(views[0]?.bookingCode).toBe('ABC12345');
     expect(views[0]?.reservationId).toBe(RESERVATION_ID);
     expect(views[0]?.serviceItems).toHaveLength(1);
+    expect(views[0]?.travelerName).toBe('Example Traveler');
+    // Nothing offered yet: the booking waits from its creation.
+    expect(views[0]?.waitingSince).toBe('2026-09-20T10:00:00.000Z');
+  });
+
+  it('names the worker and keeps the first offer as the booking’s clock after a re-dispatch', async () => {
+    store.suppliers = [makeSupplier({ id: GUIDE_ONE }), makeSupplier({ id: GUIDE_TWO })];
+    await service.startDispatch(RESERVATION_ID, OPERATOR);
+    const firstOfferAt = store.offers[0]!.offeredAt;
+    store.offers[0]!.offeredAt = new Date(firstOfferAt.getTime() - 60 * 60 * 1000);
+
+    await service.reassign(ITEM_ID, {}, OPERATOR);
+    const [row] = await service.listActive();
+
+    expect(store.offers).toHaveLength(2);
+    expect(row?.serviceItems[0]?.supplierId).toBe(GUIDE_TWO);
+    expect(row?.serviceItems[0]?.supplierName).toBe(`Worker ${GUIDE_TWO}`);
+    expect(row?.waitingSince).toBe(store.offers[0]!.offeredAt.toISOString());
   });
 
   it('flags the reservation when no supplier is eligible', async () => {

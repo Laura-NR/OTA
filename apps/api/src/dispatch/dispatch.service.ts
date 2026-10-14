@@ -27,6 +27,7 @@ import {
   type SupplierCategory,
 } from '@ota/domain';
 import type {
+  DispatchBoardRowDto,
   DispatchCandidateDto,
   DispatchServiceItemDto,
   DispatchViewDto,
@@ -119,9 +120,10 @@ export class DispatchService implements OnModuleInit {
 
   /**
    * Every reservation currently in the dispatch/escalation flow, for the live
-   * operations dashboard (spec §4.3).
+   * operations dashboard (spec §4.3). A booking waits from its first offer in
+   * the ledger, so a re-dispatch never makes it look younger.
    */
-  async listActive(): Promise<DispatchViewDto[]> {
+  async listActive(): Promise<DispatchBoardRowDto[]> {
     const reservations = await this.prisma.reservation.findMany({
       where: {
         status: {
@@ -133,16 +135,46 @@ export class DispatchService implements OnModuleInit {
         },
       },
       orderBy: { createdAt: 'asc' },
-      include: { serviceItems: { include: { supplier: true } } },
+      include: {
+        user: { select: { fullName: true, email: true } },
+        serviceItems: {
+          include: {
+            supplier: { include: { user: { select: { fullName: true } } } },
+            dispatchOffers: {
+              select: { offeredAt: true },
+              orderBy: { offeredAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
     const now = new Date();
-    return reservations.map((reservation) => ({
-      reservationId: reservation.id,
-      bookingCode: reservation.bookingCode,
-      status: reservation.status as ReservationStatus,
-      serviceItems: reservation.serviceItems.map((item) => this.toItemDto(item, now)),
-    }));
+    return reservations.map((reservation) => {
+      const firstOffers = reservation.serviceItems.flatMap((item) =>
+        item.dispatchOffers.map((offer) => offer.offeredAt.getTime()),
+      );
+      const waitingSince =
+        firstOffers.length > 0
+          ? new Date(Math.min(...firstOffers))
+          : reservation.createdAt;
+
+      return {
+        reservationId: reservation.id,
+        bookingCode: reservation.bookingCode,
+        status: reservation.status as ReservationStatus,
+        travelerName: reservation.user.fullName,
+        travelerEmail: reservation.user.email,
+        startDate: reservation.startDate.toISOString(),
+        endDate: reservation.endDate.toISOString(),
+        waitingSince: waitingSince.toISOString(),
+        serviceItems: reservation.serviceItems.map((item) => ({
+          ...this.toItemDto(item, now),
+          supplierName: item.supplier?.user.fullName ?? null,
+        })),
+      };
+    });
   }
 
   async accept(serviceItemId: string, actor: AuthUser): Promise<DispatchViewDto> {

@@ -554,8 +554,6 @@
       "settings": "Settings"
     },
     "sections": {
-      "alerts": "Alerts",
-      "dispatch": "Dispatch",
       "board": "Pipeline",
       "messages": "Messages",
       "documents": "Documents",
@@ -749,16 +747,6 @@
       "createFailed": "Could not create payment link",
       "confirmFailed": "Could not confirm payment"
     },
-    "candidates": {
-      "loading": "Loading…",
-      "show": "Show eligible candidates",
-      "empty": "No eligible supplier for this item.",
-      "supplier": "Supplier",
-      "category": "Category",
-      "phone": "Phone",
-      "credentialExpires": "Credential expires",
-      "loadFailed": "Could not load candidates"
-    },
     "dispatchControls": {
       "dispatching": "Dispatching…",
       "start": "Start dispatch",
@@ -815,22 +803,129 @@
       "reject": "Reject",
       "failed": "Could not update application"
     },
-    "dispatch": {
-      "title": "Dispatch",
-      "description": "Offers, deadlines, and escalation state for a reservation's service items.",
-      "reservationStatus": "Reservation status: {status}",
-      "serviceItems": "{count} service item(s)",
-      "noServiceItems": "No service items on this reservation.",
-      "anyProvince": "Any province",
-      "deadline": "deadline:",
-      "escalation": "Escalation",
-      "supplier": "Supplier",
-      "unassigned": "Unassigned",
-      "loadError": "Could not load dispatch data."
-    },
-    "escalation": {
-      "title": "Escalation",
-      "description": "Live dispatch and timeout monitoring for the operations desk. Amber at 75%, red at 100% or on decline."
+    "dashboard": {
+      "title": "Operations dashboard",
+      "clock": "{date} · {time} Havana ({offset})",
+      "manualBooking": "Manual booking",
+      "loadError": "Could not load the dispatch board.",
+      "banner": {
+        "red": "{count, plural, one {# red alert} other {# red alerts}}",
+        "amber": "{count} amber",
+        "goToMatrix": "Go to matrix"
+      },
+      "kpi": {
+        "label": "Key figures",
+        "unavailable": "Figures unavailable right now.",
+        "bookings": "Bookings · {month}",
+        "vsPrevious": "{change} vs {month}",
+        "mix": "confirmed · <strong>{pipeline}</strong> in the pipeline · {cancelled} cancelled",
+        "revenue": "Revenue · GBV month to date",
+        "revenueNote": "net revenue {net} · take rate {rate}",
+        "byRail": "Revenue by payment rail",
+        "rails": {
+          "OPEN_BANKING_SEPA": "SEPA / open banking",
+          "CARD": "Card",
+          "OTHER": "Invoice / other"
+        },
+        "pending": "Pending confirmations · by age",
+        "pendingNote": "bookings waiting on at least one worker",
+        "aging": "Aging buckets",
+        "buckets": {
+          "upTo2h": "0–2 h",
+          "upTo6h": "2–6 h",
+          "upTo24h": "6–24 h",
+          "over24h": "> 24 h"
+        },
+        "alerts": "Alerts right now",
+        "red": "Red · {count}",
+        "redNote": "dispatch timeout + decline",
+        "amber": "Amber · {count}",
+        "amberNote": "offer past 75 % of its timer",
+        "credential": "Credential · {count}",
+        "credentialDays": "soonest licence expires in {days, plural, one {# day} other {# days}}",
+        "credentialNote": "a licence expires within 30 days",
+        "noAlerts": "No alerts right now."
+      },
+      "matrix": {
+        "title": "Dispatch matrix",
+        "description": "Bookings in DISPATCH_IN_PROGRESS, ASSEMBLY_AND_ESCALATION or ACTION_REQUIRED · one column per service · timers in Havana time",
+        "legend": {
+          "NONE": "offered, on time",
+          "AMBER": "amber ≥ 75 %",
+          "RED": "red 100 % or declined"
+        },
+        "live": "Live",
+        "offline": "Offline · reconnecting",
+        "allBookings": "All bookings",
+        "empty": "Nothing is waiting on a worker right now.",
+        "booking": "Booking",
+        "columns": {
+          "stay": "Stay",
+          "transport": "Transport",
+          "guide": "Guide",
+          "activities": "Activities"
+        },
+        "timer": "Timer",
+        "open": "Open",
+        "started": "{timer} · started {time}",
+        "rule": "Timer: 2 h standard, 30 min when arrival is under 48 h. Amber at 75 %, red at 100 % or on decline. A re-dispatch restarts the timer for the new worker only; the booking keeps its original clock."
+      },
+      "status": {
+        "offered": "Offered · {elapsed}",
+        "offeredLate": "Offered · {elapsed} · {percent} %",
+        "accepted": "Accepted",
+        "fulfilled": "Fulfilled",
+        "declined": "Declined",
+        "timeout": "Timeout",
+        "timeoutAt": "Timeout · {time}",
+        "unassigned": "Unassigned"
+      },
+      "elapsed": "{percent} % of timer elapsed",
+      "hoursMinutes": "{hours} h {minutes} m",
+      "minutes": "{minutes} m",
+      "timerHours": "{hours} h timer",
+      "timerMinutes": "{minutes} min timer",
+      "left": "{time} left",
+      "expired": "Expired",
+      "allAccepted": "All accepted",
+      "acceptedOf": "{accepted} of {total} accepted",
+      "acceptedOfAction": "{accepted} of {total} accepted · ACTION_REQUIRED",
+      "noWorker": "No worker yet",
+      "redispatch": "Re-dispatch",
+      "panel": {
+        "title": "Re-dispatch {what}",
+        "rule": "Qualified, available and verified only; licences expiring within 30 days are excluded automatically.",
+        "close": "Close",
+        "loading": "Loading qualified workers…",
+        "empty": "No other qualified worker is free for this service right now.",
+        "verified": "Verified",
+        "meta": "{category} · {provinces}",
+        "licence": "Licence valid to {date}",
+        "offer": "Offer · {timer}",
+        "offering": "Sending the offer…",
+        "call": "Call",
+        "loadFailed": "Could not load the qualified workers.",
+        "offerFailed": "The offer could not be sent."
+      },
+      "tasks": {
+        "title": "Tasks for the desk",
+        "open": "{count} open",
+        "empty": "Nothing is waiting on the desk.",
+        "dispatch": {
+          "title": "Ready to dispatch · {code}",
+          "body": "{traveler} · {dates} · {count, plural, one {# service} other {# services}}"
+        },
+        "credential": {
+          "title": "Licence expires {date} · {name}",
+          "body": "Automatic dispatch leaves this worker out from 30 days before the expiry.",
+          "action": "Inspect"
+        },
+        "retention": {
+          "title": "GDPR retention · {count, plural, one {# account purges} other {# accounts purge}} from {date}",
+          "body": "6 months after COMPLETED, a 30-day grace and no \"keep my account\" click. Nothing to do unless a traveler writes in.",
+          "action": "View"
+        }
+      }
     },
     "messages": {
       "title": "Messages",
@@ -849,21 +944,6 @@
       "download": "Download",
       "downloadPdf": "Download PDF",
       "loadError": "Could not load documents."
-    },
-    "escalationBoard": {
-      "liveDispatch": "Live dispatch",
-      "connected": "socket connected",
-      "offline": "socket offline",
-      "description": "Amber at 75% of the deadline, red at 100% or on decline/timeout.",
-      "refresh": "Refresh",
-      "noEvents": "No live events yet.",
-      "anyProvince": "any province",
-      "deadline": "deadline",
-      "call": "Call {phone}",
-      "redispatching": "Re-dispatching…",
-      "redispatch": "Re-dispatch",
-      "redispatchFailed": "Re-dispatch failed",
-      "nothing": "Nothing is in the dispatch or escalation flow right now."
     },
     "messageThread": {
       "live": "live",

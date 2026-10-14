@@ -554,8 +554,6 @@
       "settings": "Ajustes"
     },
     "sections": {
-      "alerts": "Alertas",
-      "dispatch": "Despacho",
       "board": "Flujo",
       "messages": "Mensajes",
       "documents": "Documentos",
@@ -749,16 +747,6 @@
       "createFailed": "No se pudo crear el enlace de pago",
       "confirmFailed": "No se pudo confirmar el pago"
     },
-    "candidates": {
-      "loading": "Cargando…",
-      "show": "Mostrar proveedores elegibles",
-      "empty": "No hay proveedor elegible para este servicio.",
-      "supplier": "Proveedor",
-      "category": "Categoría",
-      "phone": "Teléfono",
-      "credentialExpires": "Credencial vence",
-      "loadFailed": "No se pudieron cargar los proveedores"
-    },
     "dispatchControls": {
       "dispatching": "Despachando…",
       "start": "Iniciar despacho",
@@ -815,22 +803,129 @@
       "reject": "Rechazar",
       "failed": "No se pudo actualizar la solicitud"
     },
-    "dispatch": {
-      "title": "Despacho",
-      "description": "Ofertas, plazos y estado de escalado de los servicios de una reserva.",
-      "reservationStatus": "Estado de la reserva: {status}",
-      "serviceItems": "{count} servicio(s)",
-      "noServiceItems": "Esta reserva no tiene servicios.",
-      "anyProvince": "Cualquier provincia",
-      "deadline": "plazo:",
-      "escalation": "Escalado",
-      "supplier": "Proveedor",
-      "unassigned": "Sin asignar",
-      "loadError": "No se pudieron cargar los datos de despacho."
-    },
-    "escalation": {
-      "title": "Escalado",
-      "description": "Monitoreo en vivo de despacho y vencimientos para el equipo de operaciones. Ámbar al 75%, rojo al 100% o al rechazar."
+    "dashboard": {
+      "title": "Panel de operaciones",
+      "clock": "{date} · {time} La Habana ({offset})",
+      "manualBooking": "Reserva manual",
+      "loadError": "No se pudo cargar el tablero de despacho.",
+      "banner": {
+        "red": "{count, plural, one {# alerta roja} other {# alertas rojas}}",
+        "amber": "{count} ámbar",
+        "goToMatrix": "Ir a la matriz"
+      },
+      "kpi": {
+        "label": "Cifras clave",
+        "unavailable": "Cifras no disponibles en este momento.",
+        "bookings": "Reservas · {month}",
+        "vsPrevious": "{change} frente a {month}",
+        "mix": "confirmadas · <strong>{pipeline}</strong> en curso · {cancelled} canceladas",
+        "revenue": "Ingresos · GBV del mes",
+        "revenueNote": "ingreso neto {net} · comisión {rate}",
+        "byRail": "Ingresos por vía de pago",
+        "rails": {
+          "OPEN_BANKING_SEPA": "SEPA / open banking",
+          "CARD": "Tarjeta",
+          "OTHER": "Factura / otros"
+        },
+        "pending": "Confirmaciones pendientes · por antigüedad",
+        "pendingNote": "reservas que esperan a al menos un trabajador",
+        "aging": "Tramos de antigüedad",
+        "buckets": {
+          "upTo2h": "0–2 h",
+          "upTo6h": "2–6 h",
+          "upTo24h": "6–24 h",
+          "over24h": "> 24 h"
+        },
+        "alerts": "Alertas ahora",
+        "red": "Rojo · {count}",
+        "redNote": "plazo agotado + rechazo",
+        "amber": "Ámbar · {count}",
+        "amberNote": "oferta pasada del 75 % de su plazo",
+        "credential": "Credencial · {count}",
+        "credentialDays": "la licencia más próxima vence en {days, plural, one {# día} other {# días}}",
+        "credentialNote": "una licencia vence en menos de 30 días",
+        "noAlerts": "No hay alertas ahora."
+      },
+      "matrix": {
+        "title": "Matriz de despacho",
+        "description": "Reservas en DISPATCH_IN_PROGRESS, ASSEMBLY_AND_ESCALATION o ACTION_REQUIRED · una columna por servicio · plazos en hora de La Habana",
+        "legend": {
+          "NONE": "ofrecido, a tiempo",
+          "AMBER": "ámbar ≥ 75 %",
+          "RED": "rojo 100 % o rechazado"
+        },
+        "live": "En vivo",
+        "offline": "Sin conexión · reconectando",
+        "allBookings": "Todas las reservas",
+        "empty": "Ninguna reserva espera a un trabajador ahora.",
+        "booking": "Reserva",
+        "columns": {
+          "stay": "Alojamiento",
+          "transport": "Transporte",
+          "guide": "Guía",
+          "activities": "Actividades"
+        },
+        "timer": "Plazo",
+        "open": "Abrir",
+        "started": "{timer} · iniciado {time}",
+        "rule": "Plazo: 2 h normal, 30 min si la llegada es en menos de 48 h. Ámbar al 75 %, rojo al 100 % o al rechazar. Un redespacho reinicia el plazo solo para el nuevo trabajador; la reserva conserva su reloj original."
+      },
+      "status": {
+        "offered": "Ofrecido · {elapsed}",
+        "offeredLate": "Ofrecido · {elapsed} · {percent} %",
+        "accepted": "Aceptado",
+        "fulfilled": "Cumplido",
+        "declined": "Rechazado",
+        "timeout": "Plazo agotado",
+        "timeoutAt": "Plazo agotado · {time}",
+        "unassigned": "Sin asignar"
+      },
+      "elapsed": "{percent} % del plazo transcurrido",
+      "hoursMinutes": "{hours} h {minutes} min",
+      "minutes": "{minutes} min",
+      "timerHours": "plazo de {hours} h",
+      "timerMinutes": "plazo de {minutes} min",
+      "left": "quedan {time}",
+      "expired": "Vencido",
+      "allAccepted": "Todo aceptado",
+      "acceptedOf": "{accepted} de {total} aceptados",
+      "acceptedOfAction": "{accepted} de {total} aceptados · ACTION_REQUIRED",
+      "noWorker": "Aún sin trabajador",
+      "redispatch": "Redespachar",
+      "panel": {
+        "title": "Redespachar {what}",
+        "rule": "Solo trabajadores cualificados, disponibles y verificados; las licencias que vencen en menos de 30 días se excluyen automáticamente.",
+        "close": "Cerrar",
+        "loading": "Cargando trabajadores cualificados…",
+        "empty": "Ningún otro trabajador cualificado está libre para este servicio ahora.",
+        "verified": "Verificado",
+        "meta": "{category} · {provinces}",
+        "licence": "Licencia válida hasta {date}",
+        "offer": "Ofrecer · {timer}",
+        "offering": "Enviando la oferta…",
+        "call": "Llamar",
+        "loadFailed": "No se pudieron cargar los trabajadores cualificados.",
+        "offerFailed": "No se pudo enviar la oferta."
+      },
+      "tasks": {
+        "title": "Tareas del mostrador",
+        "open": "{count} pendientes",
+        "empty": "Nada espera al mostrador.",
+        "dispatch": {
+          "title": "Lista para despachar · {code}",
+          "body": "{traveler} · {dates} · {count, plural, one {# servicio} other {# servicios}}"
+        },
+        "credential": {
+          "title": "La licencia vence el {date} · {name}",
+          "body": "El despacho automático deja fuera a este trabajador desde 30 días antes del vencimiento.",
+          "action": "Revisar"
+        },
+        "retention": {
+          "title": "Retención RGPD · {count, plural, one {# cuenta se anonimiza} other {# cuentas se anonimizan}} desde el {date}",
+          "body": "6 meses después de COMPLETED, 30 días de gracia y ningún clic en \"conservar mi cuenta\". No hay nada que hacer salvo que un viajero escriba.",
+          "action": "Ver"
+        }
+      }
     },
     "messages": {
       "title": "Mensajes",
@@ -849,21 +944,6 @@
       "download": "Descargar",
       "downloadPdf": "Descargar PDF",
       "loadError": "No se pudieron cargar los documentos."
-    },
-    "escalationBoard": {
-      "liveDispatch": "Despacho en vivo",
-      "connected": "socket conectado",
-      "offline": "socket desconectado",
-      "description": "Ámbar al 75% del plazo, rojo al 100% o al rechazar/agotar.",
-      "refresh": "Actualizar",
-      "noEvents": "Aún no hay eventos en vivo.",
-      "anyProvince": "cualquier provincia",
-      "deadline": "plazo",
-      "call": "Llamar a {phone}",
-      "redispatching": "Redespachando…",
-      "redispatch": "Redespachar",
-      "redispatchFailed": "Falló el redespacho",
-      "nothing": "Ahora mismo no hay nada en el flujo de despacho o escalado."
     },
     "messageThread": {
       "live": "en vivo",

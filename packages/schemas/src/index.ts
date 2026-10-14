@@ -128,6 +128,8 @@ export {
 } from './supplier';
 export {
   declineServiceItemSchema,
+  dispatchBoardItemSchema,
+  dispatchBoardRowSchema,
   dispatchCandidateSchema,
   dispatchServiceItemSchema,
   dispatchViewSchema,
@@ -136,6 +138,8 @@ export {
   serviceItemStatusSchema,
   serviceTypeSchema,
   type DeclineServiceItemRequest,
+  type DispatchBoardItemDto,
+  type DispatchBoardRowDto,
   type DispatchCandidateDto,
   type DispatchServiceItemDto,
   type DispatchViewDto,

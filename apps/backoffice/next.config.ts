@@ -11,12 +11,14 @@ const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
 /**
  * The A-Dashboard information architecture (10 sections) re-homes the pages
  * that predate it; the old paths redirect so bookmarks keep working. Query
- * strings (`?reservation=`) pass through.
+ * strings (`?reservation=`) pass through. The escalation and dispatch pages
+ * are merged into the dashboard.
  */
 const MOVED: ReadonlyArray<[string, string]> = [
   ['/', '/dashboard'],
   ['/escalation', '/dashboard'],
-  ['/dispatch', '/dashboard/dispatch'],
+  ['/dispatch', '/dashboard'],
+  ['/dashboard/dispatch', '/dashboard'],
   ['/reservations/:path*', '/bookings/:path*'],
   ['/messages', '/bookings/messages'],
   ['/documents', '/bookings/documents'],

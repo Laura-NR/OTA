@@ -554,8 +554,6 @@
       "settings": "Paramètres"
     },
     "sections": {
-      "alerts": "Alertes",
-      "dispatch": "Répartition",
       "board": "Pipeline",
       "messages": "Messages",
       "documents": "Documents",
@@ -749,16 +747,6 @@
       "createFailed": "Impossible de créer le lien de paiement",
       "confirmFailed": "Impossible de confirmer le paiement"
     },
-    "candidates": {
-      "loading": "Chargement…",
-      "show": "Afficher les fournisseurs éligibles",
-      "empty": "Aucun fournisseur éligible pour cette prestation.",
-      "supplier": "Fournisseur",
-      "category": "Catégorie",
-      "phone": "Téléphone",
-      "credentialExpires": "Credential expire",
-      "loadFailed": "Impossible de charger les fournisseurs"
-    },
     "dispatchControls": {
       "dispatching": "Répartition…",
       "start": "Lancer la répartition",
@@ -815,22 +803,129 @@
       "reject": "Rejeter",
       "failed": "Impossible de mettre à jour la candidature"
     },
-    "dispatch": {
-      "title": "Répartition",
-      "description": "Offres, échéances et état d'escalade des prestations d'une réservation.",
-      "reservationStatus": "Statut de la réservation : {status}",
-      "serviceItems": "{count} prestation(s)",
-      "noServiceItems": "Aucune prestation sur cette réservation.",
-      "anyProvince": "Toute province",
-      "deadline": "échéance :",
-      "escalation": "Escalade",
-      "supplier": "Fournisseur",
-      "unassigned": "Non attribué",
-      "loadError": "Impossible de charger les données de répartition."
-    },
-    "escalation": {
-      "title": "Escalade",
-      "description": "Suivi en direct de la répartition et des délais pour le poste d'opérations. Ambre à 75 %, rouge à 100 % ou en cas de refus."
+    "dashboard": {
+      "title": "Tableau de bord des opérations",
+      "clock": "{date} · {time} La Havane ({offset})",
+      "manualBooking": "Réservation manuelle",
+      "loadError": "Impossible de charger le tableau de dispatch.",
+      "banner": {
+        "red": "{count, plural, one {# alerte rouge} other {# alertes rouges}}",
+        "amber": "{count} orange",
+        "goToMatrix": "Aller à la matrice"
+      },
+      "kpi": {
+        "label": "Chiffres clés",
+        "unavailable": "Chiffres indisponibles pour le moment.",
+        "bookings": "Réservations · {month}",
+        "vsPrevious": "{change} par rapport à {month}",
+        "mix": "confirmées · <strong>{pipeline}</strong> en cours · {cancelled} annulées",
+        "revenue": "Chiffre d'affaires · GBV du mois",
+        "revenueNote": "revenu net {net} · taux de commission {rate}",
+        "byRail": "Chiffre d'affaires par moyen de paiement",
+        "rails": {
+          "OPEN_BANKING_SEPA": "SEPA / open banking",
+          "CARD": "Carte",
+          "OTHER": "Facture / autre"
+        },
+        "pending": "Confirmations en attente · par ancienneté",
+        "pendingNote": "réservations qui attendent au moins un prestataire",
+        "aging": "Tranches d'ancienneté",
+        "buckets": {
+          "upTo2h": "0–2 h",
+          "upTo6h": "2–6 h",
+          "upTo24h": "6–24 h",
+          "over24h": "> 24 h"
+        },
+        "alerts": "Alertes en cours",
+        "red": "Rouge · {count}",
+        "redNote": "délai dépassé + refus",
+        "amber": "Orange · {count}",
+        "amberNote": "offre au-delà de 75 % de son délai",
+        "credential": "Licence · {count}",
+        "credentialDays": "la plus proche expire dans {days, plural, one {# jour} other {# jours}}",
+        "credentialNote": "une licence expire dans moins de 30 jours",
+        "noAlerts": "Aucune alerte pour le moment."
+      },
+      "matrix": {
+        "title": "Matrice de dispatch",
+        "description": "Réservations en DISPATCH_IN_PROGRESS, ASSEMBLY_AND_ESCALATION ou ACTION_REQUIRED · une colonne par service · délais à l'heure de La Havane",
+        "legend": {
+          "NONE": "proposé, dans les temps",
+          "AMBER": "orange ≥ 75 %",
+          "RED": "rouge 100 % ou refusé"
+        },
+        "live": "En direct",
+        "offline": "Hors ligne · reconnexion",
+        "allBookings": "Toutes les réservations",
+        "empty": "Aucune réservation n'attend de prestataire pour le moment.",
+        "booking": "Réservation",
+        "columns": {
+          "stay": "Hébergement",
+          "transport": "Transport",
+          "guide": "Guide",
+          "activities": "Activités"
+        },
+        "timer": "Délai",
+        "open": "Ouvrir",
+        "started": "{timer} · démarré à {time}",
+        "rule": "Délai : 2 h en standard, 30 min si l'arrivée a lieu dans moins de 48 h. Orange à 75 %, rouge à 100 % ou en cas de refus. Un nouveau dispatch relance le délai pour le nouveau prestataire seulement ; la réservation garde son horloge d'origine."
+      },
+      "status": {
+        "offered": "Proposé · {elapsed}",
+        "offeredLate": "Proposé · {elapsed} · {percent} %",
+        "accepted": "Accepté",
+        "fulfilled": "Réalisé",
+        "declined": "Refusé",
+        "timeout": "Délai dépassé",
+        "timeoutAt": "Délai dépassé · {time}",
+        "unassigned": "Non attribué"
+      },
+      "elapsed": "{percent} % du délai écoulé",
+      "hoursMinutes": "{hours} h {minutes} min",
+      "minutes": "{minutes} min",
+      "timerHours": "délai de {hours} h",
+      "timerMinutes": "délai de {minutes} min",
+      "left": "{time} restantes",
+      "expired": "Expiré",
+      "allAccepted": "Tout accepté",
+      "acceptedOf": "{accepted} sur {total} acceptés",
+      "acceptedOfAction": "{accepted} sur {total} acceptés · ACTION_REQUIRED",
+      "noWorker": "Pas encore de prestataire",
+      "redispatch": "Relancer le dispatch",
+      "panel": {
+        "title": "Relancer le dispatch : {what}",
+        "rule": "Seulement les prestataires qualifiés, disponibles et vérifiés ; les licences qui expirent dans moins de 30 jours sont exclues automatiquement.",
+        "close": "Fermer",
+        "loading": "Chargement des prestataires qualifiés…",
+        "empty": "Aucun autre prestataire qualifié n'est libre pour ce service pour le moment.",
+        "verified": "Vérifié",
+        "meta": "{category} · {provinces}",
+        "licence": "Licence valable jusqu'au {date}",
+        "offer": "Proposer · {timer}",
+        "offering": "Envoi de l'offre…",
+        "call": "Appeler",
+        "loadFailed": "Impossible de charger les prestataires qualifiés.",
+        "offerFailed": "L'offre n'a pas pu être envoyée."
+      },
+      "tasks": {
+        "title": "Tâches du bureau",
+        "open": "{count} en cours",
+        "empty": "Rien n'attend le bureau.",
+        "dispatch": {
+          "title": "Prête à dispatcher · {code}",
+          "body": "{traveler} · {dates} · {count, plural, one {# service} other {# services}}"
+        },
+        "credential": {
+          "title": "La licence expire le {date} · {name}",
+          "body": "Le dispatch automatique écarte ce prestataire à partir de 30 jours avant l'expiration.",
+          "action": "Inspecter"
+        },
+        "retention": {
+          "title": "Conservation RGPD · {count, plural, one {# compte anonymisé} other {# comptes anonymisés}} à partir du {date}",
+          "body": "6 mois après COMPLETED, 30 jours de grâce et aucun clic sur « garder mon compte ». Rien à faire sauf si un voyageur écrit.",
+          "action": "Voir"
+        }
+      }
     },
     "messages": {
       "title": "Messages",
@@ -849,21 +944,6 @@
       "download": "Télécharger",
       "downloadPdf": "Télécharger le PDF",
       "loadError": "Impossible de charger les documents."
-    },
-    "escalationBoard": {
-      "liveDispatch": "Répartition en direct",
-      "connected": "socket connecté",
-      "offline": "socket hors ligne",
-      "description": "Ambre à 75 % du délai, rouge à 100 % ou en cas de refus/dépassement.",
-      "refresh": "Actualiser",
-      "noEvents": "Aucun événement en direct pour l'instant.",
-      "anyProvince": "toute province",
-      "deadline": "échéance",
-      "call": "Appeler {phone}",
-      "redispatching": "Nouvelle répartition…",
-      "redispatch": "Redistribuer",
-      "redispatchFailed": "Échec de la nouvelle répartition",
-      "nothing": "Rien dans le flux de répartition ou d'escalade pour l'instant."
     },
     "messageThread": {
       "live": "en direct",

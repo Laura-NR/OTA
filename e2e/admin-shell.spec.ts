@@ -59,6 +59,7 @@ test.describe('admin shell (A-Dashboard)', () => {
   test('redirects the pre-redesign paths to their new homes', async ({ page }) => {
     const moved: Array<[string, string]> = [
       ['/escalation', '/dashboard'],
+      ['/dashboard/dispatch', '/dashboard'],
       ['/reservations/new', '/bookings/new'],
       ['/inventory', '/packages/inventory'],
       ['/applications', '/suppliers/applications'],

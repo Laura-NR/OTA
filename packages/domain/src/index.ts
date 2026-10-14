@@ -31,6 +31,18 @@ export {
   type EscalationAlert,
   type EscalationInput,
 } from './dispatch/policy';
+export {
+  AGING_BUCKETS,
+  agingBucket,
+  isAwaitingWorker,
+  pendingConfirmations,
+  serviceItemAlert,
+  timerElapsed,
+  type AgingBucketId,
+  type PendingBooking,
+  type PendingConfirmations,
+  type ServiceItemClock,
+} from './dispatch/aging';
 export { SERVICE_TYPE_TO_SUPPLIER_CATEGORIES } from './dispatch/assignment';
 export {
   calculateSupplierReliability,
@@ -80,6 +92,14 @@ export {
   type RegulatoryServiceItem,
   type RegulatorySummary,
 } from './analytics/regulatory';
+export { bookingMix, relativeChange, type BookingMix } from './analytics/booking-mix';
+export {
+  OPS_TIME_ZONE,
+  monthRange,
+  zonedMidnight,
+  zonedYearMonth,
+  type MonthRange,
+} from './time/ops-calendar';
 export {
   RETENTION_EXTENSION_MONTHS,
   RETENTION_GRACE_DAYS,

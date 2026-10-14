@@ -8,12 +8,12 @@ process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 const BOOKING_CODE = 'E2EDSP01';
 
-test.describe('dispatch engine', () => {
-  let reservationId = '';
+test.describe('dispatch from the dashboard', () => {
+  let serviceItemId = '';
 
   test.beforeEach(async ({ page }) => {
-    const { reservation } = await createDispatchableReservation(prisma, BOOKING_CODE);
-    reservationId = reservation.id;
+    const { serviceItem } = await createDispatchableReservation(prisma, BOOKING_CODE);
+    serviceItemId = serviceItem.id;
     await signIn(page);
   });
 
@@ -25,33 +25,46 @@ test.describe('dispatch engine', () => {
     await prisma.$disconnect();
   });
 
-  test('lists eligible candidates and starts an offer', async ({ page }) => {
-    await page.goto('/dashboard/dispatch');
-    await page.getByLabel('Reservation').selectOption(reservationId);
-    await page.getByRole('button', { name: 'Open', exact: true }).click();
+  test('starts a submitted booking from the desk tasks and re-dispatches a decline', async ({
+    page,
+  }) => {
+    await page.goto('/dashboard');
+    const task = page
+      .getByRole('listitem')
+      .filter({ hasText: `Ready to dispatch · ${BOOKING_CODE}` });
+    const matrix = page.getByRole('region', { name: 'Dispatch matrix' });
+    const row = matrix.getByRole('row').filter({ hasText: BOOKING_CODE });
 
-    await expect(page).toHaveURL(
-      new RegExp(`/dashboard/dispatch\\?reservation=${reservationId}`),
-    );
-    await expect(
-      page.getByRole('heading', { name: 'Reservation status: ITINERARY SUBMITTED' }),
-    ).toBeVisible();
-
-    // These are client components; retry until hydration attaches the handlers.
+    // Client components: retry until hydration attaches the handlers.
     await expect(async () => {
-      await page.getByRole('button', { name: 'Show eligible candidates' }).click();
-      await expect(page.getByRole('cell', { name: 'Example Guide' })).toBeVisible({
-        timeout: 2_000,
+      await task.getByRole('button', { name: 'Start dispatch' }).click();
+      await expect(row.getByRole('link', { name: BOOKING_CODE })).toBeVisible({
+        timeout: 3_000,
       });
-    }).toPass({ timeout: 20_000 });
-
-    await expect(async () => {
-      await page.getByRole('button', { name: 'Start dispatch' }).click();
-      await expect(
-        page.getByRole('heading', { name: 'Reservation status: DISPATCH IN PROGRESS' }),
-      ).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 30_000 });
 
-    await expect(page.getByText('GUIDE — OFFERED')).toBeVisible();
+    await expect(row.getByText(/^Offered · /)).toBeVisible();
+    await expect(row.getByText(/^Example Guide/)).toBeVisible();
+
+    // The worker declines (written directly, as the worker app would): red.
+    await prisma.serviceItem.update({
+      where: { id: serviceItemId },
+      data: { status: 'DECLINED', respondedAt: new Date() },
+    });
+    await page.reload();
+    await expect(row.getByText('Declined', { exact: true })).toBeVisible();
+
+    const panel = page.getByRole('dialog', {
+      name: new RegExp(`^Re-dispatch Guide · ${BOOKING_CODE}`),
+    });
+    await expect(async () => {
+      await row.getByRole('button', { name: 'Re-dispatch' }).click();
+      await expect(panel).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+
+    // The only seeded guide was already offered this service.
+    await expect(
+      panel.getByText('No other qualified worker is free for this service right now.'),
+    ).toBeVisible();
   });
 });

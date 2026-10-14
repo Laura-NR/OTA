@@ -31,10 +31,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     icon: 'layout-dashboard',
     href: '/dashboard',
     base: '/dashboard',
-    pages: [
-      { key: 'alerts', href: '/dashboard' },
-      { key: 'dispatch', href: '/dashboard/dispatch' },
-    ],
+    pages: [],
   },
   {
     key: 'bookings',
