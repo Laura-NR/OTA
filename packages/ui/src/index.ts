@@ -17,6 +17,8 @@ export { CrisisBanner } from './components/crisis-banner';
 export type { CrisisBannerProps, CrisisSeverity } from './components/crisis-banner';
 export { Dialog } from './components/dialog';
 export type { DialogProps, DialogSize } from './components/dialog';
+export { Drawer } from './components/drawer';
+export type { DrawerProps } from './components/drawer';
 export { Field } from './components/field';
 export type { FieldControlProps, FieldProps } from './components/field';
 export {

@@ -10,6 +10,7 @@ import { Button } from '../src/components/button';
 import { Counter, clampCount } from '../src/components/counter';
 import { CrisisBanner } from '../src/components/crisis-banner';
 import { Dialog } from '../src/components/dialog';
+import { Drawer } from '../src/components/drawer';
 import { Field } from '../src/components/field';
 import { Input } from '../src/components/input';
 import { Stepper } from '../src/components/stepper';
@@ -243,6 +244,24 @@ describe('Dialog', () => {
     expect(markup).toMatch(/^<dialog/);
     expect(markup).not.toMatch(/<dialog[^>]* open/);
     expect(markup).toMatch(/aria-labelledby="([^"]+)-title"/);
+    expect(markup).toContain('aria-label="Close"');
+  });
+});
+
+describe('Drawer', () => {
+  it('renders closed, labelled by its title, with a named close button', () => {
+    const markup = html(
+      createElement(Drawer, {
+        open: false,
+        onClose: noop,
+        title: 'Menu',
+        closeLabel: 'Close',
+      }),
+    );
+    expect(markup).toMatch(/^<dialog[^>]*aria-labelledby="([^"]+)"/);
+    expect(markup).not.toMatch(/<dialog[^>]* open/);
+    const labelledBy = markup.match(/aria-labelledby="([^"]+)"/)![1];
+    expect(markup).toContain(`<h2 id="${labelledBy}"`);
     expect(markup).toContain('aria-label="Close"');
   });
 });
