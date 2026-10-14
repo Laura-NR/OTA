@@ -1,43 +1,57 @@
+import { buttonClassName, cn } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
+import Image from 'next/image';
 
 import { LocaleSwitcher } from '@/components/locale-switcher';
+import { PrimaryNav } from '@/components/primary-nav';
+import { SiteMenu } from '@/components/site-menu';
 import { Link } from '@/i18n/navigation';
-import { getServerSession } from '@/lib/api';
+import { brand } from '@/lib/brand';
 
-export async function SiteHeader({ agencyName }: { agencyName: string }) {
+/**
+ * The Home header (DS 07): sticky on the cream page. From `lg` the link row
+ * and sign-in sit beside the 28 px wordmark; below it a menu button opens the
+ * drawer, and sign-in stays in the header from `md`.
+ */
+export async function SiteHeader({
+  agencyName,
+  signedIn,
+}: {
+  agencyName: string;
+  signedIn: boolean;
+}) {
   const t = await getTranslations('nav');
-  const session = await getServerSession();
 
   return (
-    <header className="border-b bg-surface">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="text-body-lg font-semibold tracking-tight">
-          {agencyName}
+    <header className="sticky top-0 z-30 border-b bg-page">
+      <div className="mx-auto flex h-16 max-w-container items-center gap-6 px-6 md:px-8 lg:h-[72px] lg:px-10">
+        <Link
+          href="/"
+          aria-label={t('homeLabel', { agency: agencyName })}
+          className="shrink-0"
+        >
+          <Image
+            src={brand.wordmark}
+            alt=""
+            className="h-7 w-auto"
+            priority
+            unoptimized
+          />
         </Link>
-        <nav className="flex items-center gap-4 text-body-sm font-medium">
-          <Link href="/" className="hover:text-primary-600">
-            {t('home')}
-          </Link>
-          <Link href="/catalog" className="hover:text-primary-600">
-            {t('experiences')}
-          </Link>
-          <Link href="/packages" className="hover:text-primary-600">
-            {t('packages')}
-          </Link>
-          <Link href="/join-our-network" className="hover:text-primary-600">
-            {t('workWithUs')}
-          </Link>
-          {session ? (
-            <Link href="/account" className="hover:text-primary-600">
-              {t('account')}
-            </Link>
-          ) : (
-            <Link href="/login" className="hover:text-primary-600">
-              {t('signIn')}
-            </Link>
-          )}
+        <PrimaryNav />
+        <div className="ml-auto flex items-center gap-2">
           <LocaleSwitcher />
-        </nav>
+          <Link
+            href={signedIn ? '/account' : '/login'}
+            className={cn(
+              buttonClassName({ variant: 'tertiary', size: 'sm' }),
+              'hidden md:inline-flex',
+            )}
+          >
+            {signedIn ? t('account') : t('signIn')}
+          </Link>
+          <SiteMenu signedIn={signedIn} variant="header" className="lg:hidden" />
+        </div>
       </div>
     </header>
   );

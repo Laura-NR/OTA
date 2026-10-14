@@ -5,14 +5,31 @@
   },
   "nav": {
     "home": "Home",
-    "experiences": "Experiences",
+    "destinations": "Destinations",
     "packages": "Packages",
-    "workWithUs": "Work with us",
+    "events": "Events",
+    "travelInfo": "Travel info",
+    "blog": "Blog & guides",
+    "support": "Support",
+    "search": "Search",
+    "trips": "Trips",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "primary": "Primary",
+    "main": "Main",
+    "homeLabel": "{agency} home",
     "account": "My account",
     "signIn": "Sign in"
   },
   "footer": {
-    "license": "Licence MINTUR {license}"
+    "license": "Licensed travel agency · MINTUR licence {license}",
+    "customItinerary": "Custom itinerary",
+    "whatsapp": "WhatsApp · {number}",
+    "joinNetwork": "Join our network",
+    "paymentMethods": "Payment methods",
+    "sepa": "SEPA",
+    "copyright": "© {year} {name}"
   },
   "home": {
     "eyebrow": "Community-based travel · Cuba",

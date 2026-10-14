@@ -12,9 +12,11 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { notFound } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { BottomNav } from '@/components/bottom-nav';
 import { PromotionalBanner } from '@/components/promotional-banner';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { getServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
 import { fontVariables } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
@@ -52,18 +54,21 @@ export default async function LocaleLayout({
   // resolve (see themeCssVariables).
   const tokens = themeCssVariables(tenant) as CSSProperties;
   const messages = await getMessages();
+  const signedIn = Boolean(await getServerSession());
 
   return (
     <html lang={locale} style={tokens} className={fontVariables}>
-      <body className="flex min-h-screen flex-col antialiased">
+      {/* Below md the bottom nav is fixed; the body pads for it. */}
+      <body className="flex min-h-screen flex-col pb-16 antialiased md:pb-0">
         <IconSprite />
         <NextIntlClientProvider messages={messages}>
-          <SiteHeader agencyName={tenant.branding.agencyName} />
+          <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
           {isFeatureEnabled(tenant, 'culturalEventsBanner') ? (
             <PromotionalBanner />
           ) : null}
           <main className="flex-1">{children}</main>
           <SiteFooter tenant={tenant} />
+          <BottomNav signedIn={signedIn} />
         </NextIntlClientProvider>
       </body>
     </html>

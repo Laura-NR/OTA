@@ -1,4 +1,6 @@
 import favicon from '../../../../tenant/assets/brand/favicon.svg';
+import wordmarkWhite from '../../../../tenant/assets/brand/vereda-wordmark-white.svg';
+import wordmark from '../../../../tenant/assets/brand/vereda-wordmark.svg';
 
 /**
  * The agency's brand files (logo C, "the name, set once"), self-hosted in the
@@ -7,4 +9,4 @@ import favicon from '../../../../tenant/assets/brand/favicon.svg';
  * This is a build-time asset path, not a runtime import of agency
  * configuration.
  */
-export const brand = { favicon };
+export const brand = { favicon, wordmark, wordmarkWhite };

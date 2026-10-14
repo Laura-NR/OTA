@@ -5,14 +5,31 @@
   },
   "nav": {
     "home": "Accueil",
-    "experiences": "Expériences",
+    "destinations": "Destinations",
     "packages": "Forfaits",
-    "workWithUs": "Travaillez avec nous",
+    "events": "Événements",
+    "travelInfo": "Infos voyage",
+    "blog": "Blog et guides",
+    "support": "Assistance",
+    "search": "Rechercher",
+    "trips": "Voyages",
+    "menu": "Menu",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "primary": "Principale",
+    "main": "Accès rapides",
+    "homeLabel": "{agency} : accueil",
     "account": "Mon compte",
     "signIn": "Se connecter"
   },
   "footer": {
-    "license": "Licence MINTUR {license}"
+    "license": "Agence de voyages agréée · Licence MINTUR {license}",
+    "customItinerary": "Itinéraire sur mesure",
+    "whatsapp": "WhatsApp · {number}",
+    "joinNetwork": "Rejoignez notre réseau",
+    "paymentMethods": "Moyens de paiement",
+    "sepa": "SEPA",
+    "copyright": "© {year} {name}"
   },
   "home": {
     "eyebrow": "Voyages communautaires · Cuba",
