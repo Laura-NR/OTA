@@ -8,11 +8,21 @@ around as data.
 - `agency.config.json` — the agency manifest: `tenantId`, branding (including the
   MINTUR `licenseNumber` injected into every generated document), locales, theme
   tokens, feature flags, and destination geography.
+- `provinces.json` and `destinations.json` — where the agency operates, as data:
+  per province (ISO code `CU01`…`CU16`, `CU99` the isle) the network state,
+  casas, guides and drivers, advisory level, power cuts, fuel, road distance
+  from Havana and the map label; per destination its province, theme, backup
+  power, the curated packages that sleep there (by slug) and its map point.
+  They hold no words: names, taglines and province lines are tenant content
+  (`content.destinations`). `packages/config` validates both files
+  (`loadTenantGeography`); without `provinces.json` the Destinations pages are
+  404 and Home shows no destinations.
 - `messages/<locale>.json` — the agency's own copy, merged over the core catalogs
   (`packages/i18n`) by the storefront. Any core key can be overridden (Vereda sets
   `packages.requestPill` to its 24-hour confirmation window); the agency's page
-  content (Home, Support, Travel info, Blog, About, Privacy, the footer tagline,
-  the "Cuba right now" conditions and the Home event strip) lives under `content`
+  content (Home, Destinations and each destination, Support, Travel info, Blog,
+  About, Privacy, the footer tagline, the "Cuba right now" conditions and the
+  Home event strip) lives under `content`
   and is validated by the `@ota/schemas` content schemas.
   English ships first: where a locale file has no `content`, the English content
   is shown. A page whose content is missing is a 404, except Home, which then
@@ -31,6 +41,10 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   `conditions` briefing (advisory level, power, fuel) and the `event` strip are
   design samples, not current information, and show a "Sample" badge until
   published. ES/FR content is not written yet.
+- `provinces.json` / `destinations.json`: the design's sample network (casas,
+  guides, drivers, advisory levels, power cuts, fuel) dated 3 Oct 2026. Only
+  `trinidad` links a real package (`trinidad-heritage-trail`); only `vinales`
+  has a full destination page in `content.destinations.details`.
 - `agency.config.json`: `licenseNumber` (`MINTUR-2026-XXXX`), the
   `emergencyContacts` numbers (`+53 5555 …`), the `payments.bankTransfer` details,
   and `supportEmail` (`desk@example.test`, a reserved domain that never delivers;

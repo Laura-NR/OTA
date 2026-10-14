@@ -71,7 +71,7 @@ export function PackageCard({
   const href = `/packages/${pkg.slug}`;
 
   return (
-    <article className="flex min-w-0 flex-col overflow-hidden rounded-lg border bg-surface shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <article className="flex w-full min-w-0 flex-col overflow-hidden rounded-lg border bg-surface shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="relative flex aspect-video items-center justify-center bg-sunken text-muted">
         {mediaId ? (
           <img

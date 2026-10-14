@@ -2,6 +2,7 @@ import { isFeatureEnabled } from '@ota/config';
 import {
   blogContentSchema,
   conditionsContentSchema,
+  destinationsContentSchema,
   homeContentSchema,
   type HomeContent,
 } from '@ota/schemas';
@@ -9,10 +10,12 @@ import { Alert, Button, buttonClassName, cn, Icon, Input, Label } from '@ota/ui'
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { ConditionsCard } from '@/components/conditions-card';
+import { DestinationCard } from '@/components/destinations/destination-card';
 import { PackageCard } from '@/components/package-card';
 import { ArrowLink, SectionHead } from '@/components/section-head';
 import { getPathname, Link } from '@/i18n/navigation';
 import { getPageContent } from '@/lib/content';
+import { buildDestinationViews, getGeography } from '@/lib/geography';
 import { getPackages } from '@/lib/packages';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -20,6 +23,9 @@ const wrap = 'mx-auto w-full max-w-container px-6 md:px-8 lg:px-10';
 
 /** How many trips and guides Home features. */
 const FEATURED = 3;
+
+/** How many destinations Home's "Where our hosts are" shows. */
+const DESTINATION_TILES = 6;
 
 const STAT_TONES: Record<HomeContent['why']['stats'][number]['tone'], string> = {
   secondary: 'bg-secondary-100 text-secondary-700',
@@ -30,25 +36,46 @@ const STAT_TONES: Record<HomeContent['why']['stats'][number]['tone'], string> = 
 
 /**
  * Home (Home / M-Home boards). The agency's words are tenant content; the
- * featured trips are the live package catalogue and the guides the tenant's
- * blog. Without Home content the page still offers the search and the trips
- * under the agency's name. The board's reviews are sample testimonials and are
- * left out until real, consented reviews can be shown; its destinations follow
- * with the destination data.
+ * featured trips are the live package catalogue, the destinations the
+ * tenant's destination data and the guides its blog. Without Home content the
+ * page still offers the search and the trips under the agency's name. The
+ * board's reviews are sample testimonials and are left out until real,
+ * consented reviews can be shown.
  */
 export default async function HomePage() {
   const tenant = getTenantConfig();
   const locale = await getLocale();
-  const [t, common, blogT, nav, content, conditions, blog, packages] = await Promise.all([
+  const [
+    t,
+    common,
+    blogT,
+    nav,
+    destinationsT,
+    content,
+    conditions,
+    blog,
+    places,
+    packages,
+  ] = await Promise.all([
     getTranslations('home'),
     getTranslations('pages.common'),
     getTranslations('pages.blog'),
     getTranslations('nav'),
+    getTranslations('destinations'),
     getPageContent('home', homeContentSchema),
     getPageContent('conditions', conditionsContentSchema),
     getPageContent('blog', blogContentSchema),
+    getPageContent('destinations', destinationsContentSchema),
     getPackages(),
   ]);
+  const geography = getGeography();
+  const tiles =
+    geography && places
+      ? buildDestinationViews(geography, places, packages).slice(0, DESTINATION_TILES)
+      : [];
+  const levels = new Map(
+    geography?.provinces.map((province) => [province.code, province.advisoryLevel]),
+  );
   const builder = isFeatureEnabled(tenant, 'customItineraryBuilder');
   const instant = isFeatureEnabled(tenant, 'instantBooking');
   const featured = packages.slice(0, FEATURED);
@@ -191,8 +218,34 @@ export default async function HomePage() {
         ) : null}
       </section>
 
+      {content?.destinations && tiles.length > 0 ? (
+        <section aria-labelledby="destinations-title" className="border-y bg-surface">
+          <div className={cn(wrap, 'flex flex-col gap-7 py-16')}>
+            <SectionHead
+              id="destinations-title"
+              eyebrow={content.destinations.eyebrow}
+              title={content.destinations.title}
+              action={
+                <ArrowLink href="/destinations">{destinationsT('mapLink')}</ArrowLink>
+              }
+            />
+            <ul className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {tiles.map((destination) => (
+                <li key={destination.slug} className="flex flex-col">
+                  <DestinationCard
+                    destination={destination}
+                    variant="tile"
+                    advisoryLevel={levels.get(destination.province)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null}
+
       {content || conditions ? (
-        <section className={cn(wrap, 'grid items-start gap-8 pb-16 xl:grid-cols-2')}>
+        <section className={cn(wrap, 'grid items-start gap-8 py-16 xl:grid-cols-2')}>
           {conditions ? <ConditionsCard content={conditions} /> : null}
           {content ? (
             <section aria-labelledby="why-title" className="flex flex-col gap-6">

@@ -1,147 +1,93 @@
-import {
-  buttonClassName,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  cn,
-} from '@ota/ui';
+import { conditionsContentSchema, destinationsContentSchema } from '@ota/schemas';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 
-import { CubaMap } from '@/components/cuba-map';
-import { Link } from '@/i18n/navigation';
-import { getCatalog, type CatalogFilters } from '@/lib/catalog';
+import { Breadcrumb } from '@/components/breadcrumb';
+import { PageIntro } from '@/components/content/page-intro';
+import { DestinationsExplorer } from '@/components/destinations/destinations-explorer';
+import { getPageContent } from '@/lib/content';
+import {
+  buildDestinationViews,
+  buildProvinceViews,
+  getGeography,
+  provinceCode,
+} from '@/lib/geography';
+import { getPackages } from '@/lib/packages';
+import { getTenantConfig } from '@/lib/tenant';
 
-const TYPES = ['ACCOMMODATION', 'TRANSPORT', 'EXPERIENCE'] as const;
-
-function catalogHref(filters: CatalogFilters): string {
-  const params = new URLSearchParams();
-  if (filters.type) params.set('type', filters.type);
-  if (filters.province) params.set('province', filters.province);
-  const query = params.toString();
-  return query ? `/destinations?${query}` : '/destinations';
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('nav');
+  return { title: t('destinations') };
 }
 
-export default async function CatalogPage({
+/**
+ * Destinations (Destinations / M-Destinations boards), drawn from the tenant's
+ * destination data and words, with each destination's trips and lowest price
+ * from the live package catalogue. `?province=` (a code, or a name as the old
+ * catalogue URLs carry) opens that province's panel.
+ */
+export default async function DestinationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; province?: string }>;
+  searchParams: Promise<{ province?: string }>;
 }) {
-  const { type, province } = await searchParams;
-  const filters: CatalogFilters = { type, province };
-  const t = await getTranslations('catalog');
-  const [items, all] = await Promise.all([getCatalog(filters), getCatalog()]);
-  const provinces = [
-    ...new Set(
-      all.map((item) => item.province).filter((value): value is string => Boolean(value)),
-    ),
-  ].sort();
+  const geography = getGeography();
+  const [content, conditions, packages, nav, t, { province }] = await Promise.all([
+    getPageContent('destinations', destinationsContentSchema),
+    getPageContent('conditions', conditionsContentSchema),
+    getPackages(),
+    getTranslations('nav'),
+    getTranslations('destinations'),
+    searchParams,
+  ]);
+  if (!geography || !content) {
+    notFound();
+  }
+
+  const provinces = buildProvinceViews(geography, content);
+  const destinations = buildDestinationViews(geography, content, packages);
+  const themes = Object.entries(content.themes)
+    .filter(([key]) => destinations.some((destination) => destination.theme === key))
+    .map(([key, label]) => ({ key, label }));
+  const initial = province
+    ? (provinces.find((item) => item.code === province)?.code ?? provinceCode(province))
+    : null;
+  const counts = t('eyebrow', {
+    destinations: destinations.length,
+    provinces: new Set(destinations.map((destination) => destination.province)).size,
+  });
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-h2 font-semibold tracking-tight">{t('title')}</h1>
-        <Link href="/custom" className={buttonClassName()}>
-          {t('build')}
-        </Link>
-      </div>
-      <p className="mt-2 text-muted">{t('count', { count: items.length })}</p>
-
-      <div className="mt-6 rounded-lg border bg-surface p-2">
-        <CubaMap availableProvinces={provinces} selectedProvince={province} type={type} />
-        <p className="px-2 pb-1 text-caption text-muted">{t('mapHint')}</p>
-      </div>
-
-      <div className="mt-6 flex flex-wrap gap-2">
-        <Link
-          href={catalogHref({ type: undefined, province })}
-          className={cn(
-            'rounded-full border px-3 py-1 text-body-sm transition-colors',
-            !type
-              ? 'border-primary-600 bg-action-primary text-on-primary'
-              : 'border-input hover:bg-neutral-100',
-          )}
-        >
-          {t('all')}
-        </Link>
-        {TYPES.map((option) => (
-          <Link
-            key={option}
-            href={catalogHref({ type: option, province })}
-            className={cn(
-              'rounded-full border px-3 py-1 text-body-sm transition-colors',
-              type === option
-                ? 'border-primary-600 bg-action-primary text-on-primary'
-                : 'border-input hover:bg-neutral-100',
-            )}
-          >
-            {t(`types.${option}`)}
-          </Link>
-        ))}
-      </div>
-
-      {provinces.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            href={catalogHref({ type })}
-            className={cn(
-              'rounded-full border px-3 py-1 text-caption transition-colors',
-              !province
-                ? 'border-primary-600 bg-action-primary text-on-primary'
-                : 'border-input hover:bg-neutral-100',
-            )}
-          >
-            {t('allProvinces')}
-          </Link>
-          {provinces.map((value) => (
-            <Link
-              key={value}
-              href={catalogHref({ type, province: value })}
-              className={cn(
-                'rounded-full border px-3 py-1 text-caption transition-colors',
-                province === value
-                  ? 'border-primary-600 bg-action-primary text-on-primary'
-                  : 'border-input hover:bg-neutral-100',
-              )}
-            >
-              {value}
-            </Link>
-          ))}
-        </div>
-      ) : null}
-
-      {items.length === 0 ? (
-        <p className="mt-6 text-body-sm text-muted">{t('empty')}</p>
-      ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
-            <Card key={item.id} className="overflow-hidden">
-              {item.media[0] ? (
-                <img
-                  src={`/api/ota/catalog/media/${item.media[0].id}`}
-                  alt={item.media[0].altText ?? item.name}
-                  className="h-40 w-full object-cover"
-                />
-              ) : null}
-              <CardHeader>
-                <CardTitle className="text-body">{item.name}</CardTitle>
-                <CardDescription>
-                  {item.province ?? t('provinceFallback')} · {t(`types.${item.type}`)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {item.description ? (
-                  <p className="mb-3 text-body-sm text-muted">{item.description}</p>
-                ) : null}
-                <p className="text-body-sm font-medium">
-                  {item.currency} {Number(item.basePrice).toFixed(2)}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+    <div className="mx-auto flex w-full max-w-container flex-col gap-8 px-6 py-8 md:px-8 lg:px-10">
+      <Breadcrumb
+        label={t('breadcrumb')}
+        items={[{ label: nav('home'), href: '/' }, { label: nav('destinations') }]}
+      />
+      <PageIntro
+        status={
+          content.status === 'published' && geography.status === 'published'
+            ? 'published'
+            : 'placeholder'
+        }
+        eyebrow={content.eyebrow ? `${counts} · ${content.eyebrow}` : counts}
+        title={content.title}
+        lede={content.lede}
+        agencyName={getTenantConfig().branding.agencyName}
+        large
+      />
+      <DestinationsExplorer
+        provinces={provinces}
+        destinations={destinations}
+        themes={themes}
+        updated={geography.updated}
+        conditionsNote={
+          conditions ? `${conditions.strip.headline} ${conditions.strip.text}` : null
+        }
+        initialProvince={
+          initial && provinces.some((item) => item.code === initial) ? initial : null
+        }
+      />
     </div>
   );
 }

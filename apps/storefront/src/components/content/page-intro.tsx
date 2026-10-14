@@ -1,5 +1,5 @@
 import type { ContentStatus } from '@ota/schemas';
-import { Alert } from '@ota/ui';
+import { Alert, cn } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
 /**
@@ -13,6 +13,7 @@ export async function PageIntro({
   lede,
   note,
   agencyName,
+  large = false,
 }: {
   status: ContentStatus;
   eyebrow?: string;
@@ -20,6 +21,8 @@ export async function PageIntro({
   lede?: string;
   note?: string;
   agencyName: string;
+  /** The trip pages' 48/56 title (display-2) from `md`, instead of 40/48. */
+  large?: boolean;
 }) {
   const t = await getTranslations('pages.common');
 
@@ -33,7 +36,14 @@ export async function PageIntro({
       {eyebrow ? (
         <p className="text-overline uppercase text-secondary-600">{eyebrow}</p>
       ) : null}
-      <h1 className="text-h1-compact text-default md:text-h1">{title}</h1>
+      <h1
+        className={cn(
+          'text-h1-compact text-default',
+          large ? 'md:text-display-2' : 'md:text-h1',
+        )}
+      >
+        {title}
+      </h1>
       {lede ? <p className="max-w-prose text-body-lg text-secondary">{lede}</p> : null}
       {note ? <p className="text-caption text-muted">{note}</p> : null}
     </header>

@@ -22,3 +22,23 @@ export type {
   TenantConfig,
   TenantManifestOptions,
 } from './tenant';
+export {
+  destinationDataSchema,
+  destinationsFileSchema,
+  fuelStatusSchema,
+  geographyStatusSchema,
+  loadTenantGeography,
+  networkStatusSchema,
+  provinceDataSchema,
+  provincesFileSchema,
+  regionSchema,
+} from './geography';
+export type {
+  DestinationData,
+  FuelStatus,
+  GeographyStatus,
+  NetworkStatus,
+  ProvinceData,
+  Region,
+  TenantGeography,
+} from './geography';

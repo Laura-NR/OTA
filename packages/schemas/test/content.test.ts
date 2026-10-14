@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   conditionsContentSchema,
   contentPageSchema,
+  destinationsContentSchema,
   eventBannerContentSchema,
   homeContentSchema,
 } from '../src/content';
@@ -121,5 +122,50 @@ describe('conditions and event strips', () => {
     };
     expect(() => eventBannerContentSchema.parse(event)).toThrow();
     expect(eventBannerContentSchema.parse({ ...event, cta: 'Ask' }).cta).toBe('Ask');
+  });
+});
+
+describe('destinationsContentSchema', () => {
+  const destinations = {
+    status: 'placeholder',
+    title: 'Where our hosts are',
+    themes: { culture: 'Culture & music' },
+    items: {
+      havana: {
+        name: 'Havana',
+        tagline: 'Rumba and the Malecón.',
+        alt: 'Malecón at dusk',
+        power: 'Battery casas',
+        stays: '14 casas',
+      },
+    },
+  };
+
+  it('holds only words, keyed by destination slug, with optional detail pages', () => {
+    const parsed = destinationsContentSchema.parse(destinations);
+    expect(parsed.details).toEqual({});
+    expect(parsed.provinces).toEqual({});
+  });
+
+  it('checks a detail page section by section', () => {
+    const withDetail = (detail: unknown) =>
+      destinationsContentSchema.parse({ ...destinations, details: { havana: detail } });
+    expect(
+      withDetail({ overview: { title: 'What it is', paragraphs: ['A city.'] } }).details
+        .havana!.overview!.tags,
+    ).toEqual([]);
+    expect(() =>
+      withDetail({
+        conditions: {
+          title: 'This month',
+          items: [{ topic: 'politics', label: 'X', text: 'Y', status: 'Z', tone: 'ok' }],
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      withDetail({
+        gettingThere: { title: 'Getting there', head: ['Leg'], rows: [['A']] },
+      }),
+    ).toThrow();
   });
 });

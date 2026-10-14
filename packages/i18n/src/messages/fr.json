@@ -147,14 +147,6 @@
     "guideMeta": "{category} · {minutes} min"
   },
   "catalog": {
-    "title": "Expériences",
-    "build": "Créez votre propre itinéraire",
-    "count": "{count, plural, =0 {Aucune option} =1 {1 option} other {# options}} à travers Cuba.",
-    "mapHint": "Sélectionnez une province pour filtrer le catalogue. Les provinces colorées ont des options disponibles.",
-    "mapAria": "Carte de Cuba par province",
-    "all": "Tout",
-    "allProvinces": "Toutes les provinces",
-    "empty": "Aucune expérience ne correspond. Essayez un autre filtre.",
     "provinceFallback": "Cuba",
     "types": {
       "ACCOMMODATION": "Hébergements",
@@ -1062,5 +1054,154 @@
   "conditions": {
     "link": "Conditions actuelles",
     "more": "Plus"
+  },
+  "destinations": {
+    "eyebrow": "{destinations, plural, one {# destination} other {# destinations}} · {provinces, plural, one {# province} other {# provinces}}",
+    "breadcrumb": "Fil d'Ariane",
+    "layersLabel": "Couche de la carte",
+    "layers": {
+      "coverage": "Où nous opérons",
+      "conditions": "Conditions actuelles",
+      "route": "Tracer un itinéraire"
+    },
+    "hints": {
+      "coverage": "Où des casas vérifiées, des chauffeurs agréés et des guides sont disponibles ce mois-ci.",
+      "conditions": "Niveau d'alerte, coupures de courant et carburant par province · mis à jour le {date}.",
+      "route": "Touchez les provinces dans l'ordre où vous y dormirez ; le panneau additionne la route et les nuits."
+    },
+    "mapTitle": "Cuba, d'ouest en est",
+    "legend": {
+      "coverage": "vert : actif · ambre pointillé : limité · hachuré : pas encore · points : destinations",
+      "conditions": "vert : niveau 1 · bleu : niveau 2, prudence · ambre : niveau 3, perturbations probables",
+      "route": "numérotées : vos étapes · blanc : disponible · gris : non vendu"
+    },
+    "mapAria": "Carte de Cuba par province",
+    "mapNote": "Limites des provinces issues du fichier Cuba de Simplemaps ; survolez une province pour ses chiffres, touchez-la pour ouvrir le panneau. La bande ci-dessous est la même commande pour le clavier et les lecteurs d'écran.",
+    "regions": {
+      "west": "Ouest",
+      "centre": "Centre",
+      "east": "Est"
+    },
+    "regionMeta": {
+      "west": "De La Havane à Viñales",
+      "centre": "De Cienfuegos à Camagüey",
+      "east": "De Las Tunas à Baracoa"
+    },
+    "regionActive": "{active} sur {total} actives",
+    "status": {
+      "active": "Réseau actif",
+      "limited": "Réseau limité",
+      "none": "Pas encore"
+    },
+    "statusNote": "Actif : casas vérifiées, chauffeurs agréés et guides disponibles. Limité : des hôtes existent mais peu nombreux, sur mesure uniquement. Pas encore : pas de réseau, pas de vente ; dites-nous si cela vous intéresse.",
+    "level": "Niveau d'alerte {level}",
+    "levelShort": "Niveau {level}",
+    "casas": "{count, plural, one {# casa} other {# casas}}",
+    "hotels": "{count, plural, one {# hôtel} other {# hôtels}}",
+    "experiencesCount": "{count, plural, =0 {aucune pour l'instant} one {# expérience} other {# expériences}}",
+    "cuts": "coupures de {hours}",
+    "hours": {
+      "range": "{min}–{max} h",
+      "single": "{min} h",
+      "open": "{min} h et plus"
+    },
+    "fuel": {
+      "ok": "Normal",
+      "queues": "Files d'attente",
+      "scarce": "Rare"
+    },
+    "panel": {
+      "label": "Détails de la province",
+      "eyebrow": "Le réseau ce mois-ci",
+      "title": "Choisissez une province",
+      "text": "Touchez une province sur la carte ou dans la bande pour voir ses hôtes, guides, chauffeurs, conditions et destinations.",
+      "activeProvinces": "Provinces actives",
+      "activeValue": "{active} sur {total}",
+      "casasVetted": "Casas vérifiées",
+      "guidesDrivers": "Guides · chauffeurs",
+      "updated": "Mis à jour",
+      "fullConditions": "Conditions complètes",
+      "close": "Fermer le panneau de la province",
+      "casas": "Casas",
+      "experiences": "Expériences",
+      "fromHavana": "Depuis La Havane",
+      "nearest": "Province active la plus proche",
+      "kmAway": "à {km} km",
+      "capital": "la capitale",
+      "distance": "{km} km à l'{direction, select, west {ouest} other {est}} · ≈ {hours} h",
+      "limitedNote": "Des hôtes existent mais ils sont peu nombreux : voyages sur mesure uniquement, vérifiés à chaque séjour.",
+      "noneNote": "Nous n'avons pas encore d'hôtes vérifiés ni de chauffeurs agréés ici, nous ne le vendons donc pas.",
+      "conditionsLine": "<strong>Électricité</strong> coupures de {hours} par jour{backup, select, yes {; chaque casa proposée a un groupe électrogène, une batterie ou des panneaux solaires} other {}} · <strong>Carburant</strong> {fuel} · mis à jour le {date}",
+      "here": "Destinations ici",
+      "packagesLine": "{count, plural, =0 {Voyages sur mesure uniquement dans cette province} one {# forfait inclut cette province} other {# forfaits incluent cette province}}",
+      "addRoute": "Ajouter à mon itinéraire",
+      "removeRoute": "Retirer de mon itinéraire",
+      "readMore": "En savoir plus",
+      "askCustom": "Demander quand même un voyage sur mesure"
+    },
+    "route": {
+      "eyebrow": "Votre itinéraire · {stops, plural, one {# étape} other {# étapes}} · {nights, plural, one {# nuit suggérée} other {# nuits suggérées}}",
+      "title": "Esquissez un itinéraire",
+      "empty": "Touchez les provinces dans l'ordre où vous y dormirez. Les provinces grisées ne peuvent pas être des étapes ; les limitées oui, avec une note. Jusqu'à six étapes.",
+      "clear": "Effacer",
+      "remove": "Retirer {name} de l'itinéraire",
+      "leg": "{km} km · ≈ {hours} h",
+      "flightLeg": "vol ou nuit intermédiaire",
+      "road": "Route",
+      "roadValue": "{km} km · ≈ {hours} h de conduite",
+      "nightsLabel": "Nuits",
+      "nightsValue": "{nights} suggérées · modifiez-les dans le configurateur",
+      "nights": "{count, plural, one {# nuit} other {# nuits}}",
+      "stop": "étape {n}",
+      "notSold": "non vendu",
+      "flight": "Un trajet dépasse 600 km. Nous chiffrerons un vol intérieur ou une nuit intermédiaire ; le configurateur montre les deux.",
+      "limited": "Une étape se trouve dans une province limitée : sur mesure uniquement, vérifiée à chaque séjour.",
+      "builder": "Ouvrir dans le configurateur",
+      "packages": "Forfaits sur cet itinéraire"
+    },
+    "filterLabel": "Filtrez selon ce que vous cherchez",
+    "all": "Tout",
+    "count": "{count, plural, one {# destination} other {# destinations}}",
+    "showingAll": "Toutes les provinces sont affichées.",
+    "showingProvince": "{province} · {count, plural, one {# destination} other {# destinations}}.",
+    "showingRoute": "Destinations de votre itinéraire.",
+    "clearProvince": "Afficher toutes les provinces",
+    "empty": "Aucune destination ne correspond à ces filtres. Effacez-les ou demandez un voyage sur mesure.",
+    "limitedPill": "Réseau limité",
+    "packagesCount": "{count, plural, =0 {Sur mesure uniquement} one {# forfait} other {# forfaits}}",
+    "fromPrice": "à partir de {price}",
+    "onRequest": "Prix sur demande",
+    "mapLink": "Explorer la carte des provinces",
+    "detail": {
+      "distance": "à {km} km à l'{direction, select, west {ouest} other {est}} de La Havane",
+      "powerPill": "Coupures de {hours}",
+      "seeTrips": "{count, plural, one {Voir le voyage ici} other {Voir les # voyages ici}}",
+      "addRoute": "Ajouter {name} à un itinéraire sur mesure",
+      "onThisPage": "Sur cette page",
+      "tabs": {
+        "overview": "Présentation",
+        "conditions": "Conditions actuelles",
+        "experiences": "Expériences",
+        "packages": "Forfaits",
+        "stays": "Hébergements",
+        "gettingThere": "Comment s'y rendre",
+        "faq": "FAQ"
+      },
+      "conditionsEyebrow": "Conditions actuelles · {province}",
+      "conditionsTitle": "Comment c'est ce mois-ci",
+      "power": "Électricité",
+      "fuel": "Carburant",
+      "advisory": "Alerte",
+      "experiencesTitle": "Expériences à {province}",
+      "packagesTitle": "Voyages qui dorment à {name}",
+      "allTrips": "Tous les voyages",
+      "staysTitle": "Hébergements à {province}",
+      "customEyebrow": "Sur mesure",
+      "customTitle": "{name} à votre façon",
+      "customText": "Partez d'ici et ajoutez des provinces, des nuits ou une plage.",
+      "customCta": "Ouvrir le configurateur",
+      "addToTrip": "Ajouter au voyage",
+      "fromPrice": "À partir de {price}"
+    }
   }
 }

@@ -147,14 +147,6 @@
     "guideMeta": "{category} · {minutes} min"
   },
   "catalog": {
-    "title": "Experiencias",
-    "build": "Crea tu propio itinerario",
-    "count": "{count, plural, =0 {Sin opciones} =1 {1 opción} other {# opciones}} por toda Cuba.",
-    "mapHint": "Selecciona una provincia para filtrar el catálogo. Las provincias resaltadas tienen opciones disponibles.",
-    "mapAria": "Mapa de Cuba por provincia",
-    "all": "Todo",
-    "allProvinces": "Todas las provincias",
-    "empty": "No hay experiencias que coincidan. Prueba otro filtro.",
     "provinceFallback": "Cuba",
     "types": {
       "ACCOMMODATION": "Alojamiento",
@@ -1062,5 +1054,154 @@
   "conditions": {
     "link": "Condiciones actuales",
     "more": "Más"
+  },
+  "destinations": {
+    "eyebrow": "{destinations, plural, one {# destino} other {# destinos}} · {provinces, plural, one {# provincia} other {# provincias}}",
+    "breadcrumb": "Ruta de navegación",
+    "layersLabel": "Capa del mapa",
+    "layers": {
+      "coverage": "Dónde operamos",
+      "conditions": "Condiciones ahora",
+      "route": "Planea una ruta"
+    },
+    "hints": {
+      "coverage": "Dónde hay casas verificadas, choferes con licencia y guías disponibles este mes.",
+      "conditions": "Nivel de aviso, apagones y combustible por provincia · actualizado el {date}.",
+      "route": "Toca las provincias en el orden en que dormirías; el panel suma la carretera y las noches."
+    },
+    "mapTitle": "Cuba, de oeste a este",
+    "legend": {
+      "coverage": "verde: activa · ámbar discontinuo: limitada · rayado: todavía no · puntos: destinos",
+      "conditions": "verde: nivel 1 · azul: nivel 2, precaución · ámbar: nivel 3, interrupciones probables",
+      "route": "numeradas: tus paradas · blanco: disponible · gris: no a la venta"
+    },
+    "mapAria": "Mapa de Cuba por provincias",
+    "mapNote": "Límites provinciales del archivo de Cuba de Simplemaps; pasa sobre una provincia para ver sus cifras y tócala para abrir el panel. La franja de abajo es el mismo control para teclado y lectores de pantalla.",
+    "regions": {
+      "west": "Occidente",
+      "centre": "Centro",
+      "east": "Oriente"
+    },
+    "regionMeta": {
+      "west": "De La Habana a Viñales",
+      "centre": "De Cienfuegos a Camagüey",
+      "east": "De Las Tunas a Baracoa"
+    },
+    "regionActive": "{active} de {total} activas",
+    "status": {
+      "active": "Red activa",
+      "limited": "Red limitada",
+      "none": "Todavía no"
+    },
+    "statusNote": "Activa: casas verificadas, choferes con licencia y guías disponibles. Limitada: hay anfitriones pero pocos, solo a medida. Todavía no: sin red, no se vende; dinos si te interesa.",
+    "level": "Nivel de aviso {level}",
+    "levelShort": "Nivel {level}",
+    "casas": "{count, plural, one {# casa} other {# casas}}",
+    "hotels": "{count, plural, one {# hotel} other {# hoteles}}",
+    "experiencesCount": "{count, plural, =0 {ninguna aún} one {# experiencia} other {# experiencias}}",
+    "cuts": "cortes de {hours}",
+    "hours": {
+      "range": "{min}–{max} h",
+      "single": "{min} h",
+      "open": "{min} h o más"
+    },
+    "fuel": {
+      "ok": "Normal",
+      "queues": "Colas",
+      "scarce": "Escaso"
+    },
+    "panel": {
+      "label": "Detalles de la provincia",
+      "eyebrow": "La red este mes",
+      "title": "Elige una provincia",
+      "text": "Toca una provincia en el mapa o en la franja para ver sus anfitriones, guías, choferes, condiciones y destinos.",
+      "activeProvinces": "Provincias activas",
+      "activeValue": "{active} de {total}",
+      "casasVetted": "Casas verificadas",
+      "guidesDrivers": "Guías · choferes",
+      "updated": "Actualizado",
+      "fullConditions": "Condiciones completas",
+      "close": "Cerrar el panel de la provincia",
+      "casas": "Casas",
+      "experiences": "Experiencias",
+      "fromHavana": "Desde La Habana",
+      "nearest": "Activa más cercana",
+      "kmAway": "a {km} km",
+      "capital": "la capital",
+      "distance": "{km} km al {direction, select, west {oeste} other {este}} · ≈ {hours} h",
+      "limitedNote": "Hay anfitriones, pero pocos: solo viajes a medida, verificados en cada estancia.",
+      "noneNote": "Aún no tenemos anfitriones verificados ni choferes con licencia aquí, así que no lo vendemos.",
+      "conditionsLine": "<strong>Electricidad</strong> cortes de {hours} al día{backup, select, yes {; cada casa que ofrecemos tiene generador, batería o placas solares} other {}} · <strong>Combustible</strong> {fuel} · actualizado el {date}",
+      "here": "Destinos aquí",
+      "packagesLine": "{count, plural, =0 {Solo viajes a medida en esta provincia} one {# paquete incluye esta provincia} other {# paquetes incluyen esta provincia}}",
+      "addRoute": "Añadir a mi ruta",
+      "removeRoute": "Quitar de mi ruta",
+      "readMore": "Leer más",
+      "askCustom": "Pedir un viaje a medida de todos modos"
+    },
+    "route": {
+      "eyebrow": "Tu ruta · {stops, plural, one {# parada} other {# paradas}} · {nights, plural, one {# noche sugerida} other {# noches sugeridas}}",
+      "title": "Esboza una ruta",
+      "empty": "Toca las provincias en el orden en que dormirías en ellas. Las grises no pueden ser paradas; las limitadas sí, con una nota. Hasta seis paradas.",
+      "clear": "Borrar",
+      "remove": "Quitar {name} de la ruta",
+      "leg": "{km} km · ≈ {hours} h",
+      "flightLeg": "vuelo o noche intermedia",
+      "road": "Carretera",
+      "roadValue": "{km} km · ≈ {hours} h de conducción",
+      "nightsLabel": "Noches",
+      "nightsValue": "{nights} sugeridas · cámbialas en el planificador",
+      "nights": "{count, plural, one {# noche} other {# noches}}",
+      "stop": "parada {n}",
+      "notSold": "no a la venta",
+      "flight": "Un tramo supera los 600 km. Cotizaremos un vuelo nacional o una noche intermedia; el planificador muestra ambos.",
+      "limited": "Una parada está en una provincia limitada: solo a medida, verificada en cada estancia.",
+      "builder": "Abrir en el planificador",
+      "packages": "Paquetes en esta ruta"
+    },
+    "filterLabel": "Filtra por lo que buscas",
+    "all": "Todos",
+    "count": "{count, plural, one {# destino} other {# destinos}}",
+    "showingAll": "Mostrando todas las provincias.",
+    "showingProvince": "Mostrando {province} · {count, plural, one {# destino} other {# destinos}}.",
+    "showingRoute": "Mostrando los destinos de tu ruta.",
+    "clearProvince": "Ver todas las provincias",
+    "empty": "Ningún destino coincide con estos filtros. Bórralos o pide un viaje a medida.",
+    "limitedPill": "Red limitada",
+    "packagesCount": "{count, plural, =0 {Solo a medida} one {# paquete} other {# paquetes}}",
+    "fromPrice": "desde {price}",
+    "onRequest": "Precio a consultar",
+    "mapLink": "Explora el mapa de provincias",
+    "detail": {
+      "distance": "a {km} km al {direction, select, west {oeste} other {este}} de La Habana",
+      "powerPill": "Apagones de {hours}",
+      "seeTrips": "{count, plural, one {Ver el viaje aquí} other {Ver los # viajes aquí}}",
+      "addRoute": "Añadir {name} a una ruta a medida",
+      "onThisPage": "En esta página",
+      "tabs": {
+        "overview": "Resumen",
+        "conditions": "Condiciones actuales",
+        "experiences": "Experiencias",
+        "packages": "Paquetes",
+        "stays": "Alojamiento",
+        "gettingThere": "Cómo llegar",
+        "faq": "Preguntas frecuentes"
+      },
+      "conditionsEyebrow": "Condiciones actuales · {province}",
+      "conditionsTitle": "Cómo está este mes",
+      "power": "Electricidad",
+      "fuel": "Combustible",
+      "advisory": "Aviso",
+      "experiencesTitle": "Experiencias en {province}",
+      "packagesTitle": "Viajes que duermen en {name}",
+      "allTrips": "Todos los viajes",
+      "staysTitle": "Alojamiento en {province}",
+      "customEyebrow": "A medida",
+      "customTitle": "{name} a tu manera",
+      "customText": "Empieza aquí y añade provincias, noches o una playa.",
+      "customCta": "Abrir el planificador",
+      "addToTrip": "Añadir al viaje",
+      "fromPrice": "Desde {price}"
+    }
   }
 }

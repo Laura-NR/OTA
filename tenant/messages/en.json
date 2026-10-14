@@ -961,6 +961,10 @@
       "guides": {
         "eyebrow": "Practical Cuba",
         "title": "Guides we update every month"
+      },
+      "destinations": {
+        "eyebrow": "Destinations",
+        "title": "Where our hosts are"
       }
     },
     "conditions": {
@@ -1012,6 +1016,326 @@
       "headline": "Havana Jazz Festival · 18–24 Jan 2027.",
       "text": "Concerts in Vedado and Old Havana; our festival weekend package opens 15 Oct with concierge tickets, or add the festival to any trip.",
       "cta": "Request event access"
+    },
+    "destinations": {
+      "status": "placeholder",
+      "eyebrow": "Hosts we've met",
+      "title": "Where our hosts are",
+      "lede": "We only list places where we have vetted casas, licensed drivers and guides we know by name. The map shows where the network is active this month and where it is thin, what the power and fuel are doing, and lets you sketch a route before you talk to anyone.",
+      "themes": {
+        "culture": "Culture & music",
+        "nature": "Nature & birding",
+        "beach": "Beach",
+        "farm": "Farm & community"
+      },
+      "provinces": {
+        "CU01": {
+          "summary": "Mogotes, tobacco and coffee farms, birding"
+        },
+        "CU15": {
+          "summary": "Las Terrazas eco-community, river pools"
+        },
+        "CU03": {
+          "summary": "Music, art studios, paladares, the Malecón"
+        },
+        "CU16": {
+          "summary": "Farm country south of Havana"
+        },
+        "CU04": {
+          "summary": "Varadero beach, the Zapata wetlands"
+        },
+        "CU05": {
+          "summary": "Santa Clara, Remedios and quiet cays"
+        },
+        "CU06": {
+          "summary": "A French-founded bay city"
+        },
+        "CU07": {
+          "summary": "Trinidad, Topes de Collantes, La Picadora"
+        },
+        "CU08": {
+          "summary": "Cayo Coco reef; resort coast"
+        },
+        "CU09": {
+          "summary": "A maze of plazas, a Slow Food farm"
+        },
+        "CU10": {
+          "summary": "Ranch country, rarely visited"
+        },
+        "CU11": {
+          "summary": "Gibara and the north coast; hurricane recovery"
+        },
+        "CU12": {
+          "summary": "Sierra Maestra foothills, Bayamo"
+        },
+        "CU13": {
+          "summary": "Son, carnival, El Cobre, the castle"
+        },
+        "CU14": {
+          "summary": "Baracoa: cocoa, El Yunque, the Toa river"
+        },
+        "CU99": {
+          "summary": "Not served: ferry and flight capacity"
+        }
+      },
+      "items": {
+        "havana": {
+          "name": "Havana",
+          "tagline": "Rumba in Callejón de Hamel, art studios in Vedado, paladares, the Malecón at dusk.",
+          "alt": "Malecón at dusk with people on the wall",
+          "power": "Battery casas",
+          "stays": "14 casas"
+        },
+        "vinales": {
+          "name": "Viñales",
+          "tagline": "Mogotes, tobacco and coffee farms, caves, the Cuban tody at dawn.",
+          "alt": "Mogotes under morning mist",
+          "power": "Generator casas",
+          "stays": "9 casas, 2 farm stays"
+        },
+        "trinidad": {
+          "name": "Trinidad & Topes de Collantes",
+          "tagline": "Cobbled colonial streets, Casa de la Música steps, waterfalls and coffee at 1,000 m.",
+          "alt": "Cobbled street and pastel houses, Trinidad",
+          "power": "Generators · fuel: plan ahead",
+          "stays": "7 casas"
+        },
+        "zapata": {
+          "name": "Ciénaga de Zapata",
+          "tagline": "The Caribbean's largest wetland: flamingos, Cuban crocodiles, Bay of Pigs reefs.",
+          "alt": "Flamingos in the Zapata wetlands",
+          "power": "Solar casas",
+          "stays": "6 casas"
+        },
+        "varadero": {
+          "name": "Varadero",
+          "tagline": "Twenty kilometres of beach from a casa a block away or an independent hotel.",
+          "alt": "Casa a block from Varadero beach",
+          "power": "Hotel generator",
+          "stays": "4 casas, 1 hotel"
+        },
+        "las-terrazas": {
+          "name": "Las Terrazas",
+          "tagline": "Eco-community in the Sierra del Rosario Biosphere Reserve, coffee ruins, river pools.",
+          "alt": "Community rooms over the lake",
+          "power": "Solar",
+          "stays": "community rooms"
+        },
+        "santiago": {
+          "name": "Santiago de Cuba",
+          "tagline": "Son at Casa de la Trova, carnival, El Cobre, the castle on the bay.",
+          "alt": "Son trio at Casa de la Trova",
+          "power": "Outages 12 h+",
+          "stays": "5 casas"
+        },
+        "cienfuegos": {
+          "name": "Cienfuegos",
+          "tagline": "French-founded bay city, Punta Gorda, the botanical garden.",
+          "alt": "Punta Gorda waterfront",
+          "power": "Battery casas",
+          "stays": "5 casas"
+        },
+        "santa-clara": {
+          "name": "Santa Clara & Remedios",
+          "tagline": "Che memorial, Remedios' Parrandas, cays with few people.",
+          "alt": "Plaza in Remedios",
+          "power": "Generator casas",
+          "stays": "4 casas"
+        },
+        "camaguey": {
+          "name": "Camagüey",
+          "tagline": "A maze of plazas and Finca La Liliana, a 52-hectare Slow Food farm stay.",
+          "alt": "Tinajones in a Camagüey courtyard",
+          "power": "Solar at the farm",
+          "stays": "2 casas, 1 farm"
+        },
+        "la-picadora": {
+          "name": "La Picadora",
+          "tagline": "Agro-ecological community near Yaguajay; stay with farming families.",
+          "alt": "Farm family at La Picadora",
+          "power": "Solar",
+          "stays": "4 family rooms"
+        },
+        "baracoa": {
+          "name": "Baracoa",
+          "tagline": "Cuba's oldest town: cocoa farms, El Yunque, rafting on the Toa.",
+          "alt": "El Yunque above Baracoa",
+          "power": "Battery casas",
+          "stays": "3 casas"
+        },
+        "holguin": {
+          "name": "Holguín & Gibara",
+          "tagline": "Fishing town and quiet beaches. Recovering from Hurricane Melissa (Oct 2025); limited stays.",
+          "alt": "Gibara seafront",
+          "power": "Verify per stay",
+          "stays": "2 casas"
+        },
+        "jardines-del-rey": {
+          "name": "Jardines del Rey · Cayo Coco",
+          "tagline": "Second-largest coral reef in the world; resort-heavy, high hurricane exposure. We add it only as a 2–3 night add-on.",
+          "alt": "Reef flats at Cayo Coco",
+          "power": "Hotel generator",
+          "stays": "1 independent hotel"
+        }
+      },
+      "details": {
+        "vinales": {
+          "lede": "A valley of limestone mogotes where tobacco is still planted by hand and ox. You stay with families in the village, walk the red-earth tracks with a biologist, and learn how a leaf becomes a cigar from the people who grow it, not from a shop.",
+          "photo": {
+            "alt": "Osvaldo ploughing a tobacco field with oxen, mogotes behind"
+          },
+          "travelTime": "2 h 30 by road",
+          "best": "Best: Nov – Apr · dry, 22–28 °C",
+          "overview": {
+            "title": "What Viñales is, and isn't",
+            "paragraphs": [
+              "The valley is a UNESCO cultural landscape and a working farm district of about 28,000 people. The village has one main street, a church square and a few hundred licensed casas; the valley has farms, caves and birds. Days are slow and early; nights are dark when the grid is down, and the stars are the compensation.",
+              "It is not a resort and not a theme park. Horse rides and farm visits are run by families who also farm; prices are set with them, and tipping the farmer directly is normal. Expect mud in the rainy season and dust in the dry one."
+            ],
+            "tags": [
+              "Tobacco & coffee farms",
+              "Birding · 20+ endemics",
+              "Caves · Cueva del Indio, Santo Tomás",
+              "Horseback & walking",
+              "Cayo Levisa day trip",
+              "Las Terrazas on the way"
+            ],
+            "facts": [
+              {
+                "label": "Pace",
+                "value": "Gentle to moderate",
+                "note": "Walks 4–8 km, optional rides"
+              },
+              {
+                "label": "Nights we suggest",
+                "value": "3 to 5",
+                "note": "2 feels rushed; 5 with Cayo Levisa"
+              },
+              {
+                "label": "Cash to bring",
+                "value": "€ 40–60 per day",
+                "note": "Meals out, tips, rides; no cards anywhere"
+              },
+              {
+                "label": "Signal",
+                "value": "4G in the village",
+                "note": "None in most of the valley"
+              },
+              {
+                "label": "Accessibility",
+                "value": "Uneven ground",
+                "note": "3 casas with ground-floor rooms"
+              },
+              {
+                "label": "Hosts speak",
+                "value": "Spanish; some English",
+                "note": "Guides: EN, FR; DE on request"
+              }
+            ]
+          },
+          "conditions": {
+            "title": "What it's like this month",
+            "updated": "Updated Fri 3 Oct 2026 · sources: Unión Eléctrica, Insmet, our drivers",
+            "items": [
+              {
+                "topic": "power",
+                "label": "Power",
+                "text": "Scheduled cuts of 6–10 h most days, usually afternoon and night. All our casas run a generator or battery for fans, fridge and charging.",
+                "status": "Expect it",
+                "tone": "caution"
+              },
+              {
+                "topic": "fuel",
+                "label": "Fuel",
+                "text": "Normal this month on the Havana–Viñales road. Drivers confirm fuel 24 h before each leg.",
+                "status": "Normal",
+                "tone": "ok"
+              },
+              {
+                "topic": "connectivity",
+                "label": "Connectivity",
+                "text": "ETECSA 4G in the village and at Los Jazmines; nothing in the valley. Download the offline kit before you leave Havana.",
+                "status": "Patchy",
+                "tone": "caution"
+              },
+              {
+                "topic": "roads",
+                "label": "Roads & tracks",
+                "text": "Autopista and the valley road are fine. The track to Cueva de Santo Tomás floods after heavy rain; guides check the morning before.",
+                "status": "Open",
+                "tone": "ok"
+              },
+              {
+                "topic": "weather",
+                "label": "Weather",
+                "text": "Hurricane season until 30 Nov; no watches active. 26–31 °C days, 19 °C nights in winter.",
+                "status": "Clear",
+                "tone": "ok"
+              }
+            ],
+            "plan": {
+              "title": "How we plan around it",
+              "items": [
+                "Casas chosen for backup power, 24 h water storage and a host who answers WhatsApp within 30 minutes.",
+                "A 20,000 mAh power bank lent per room; headlamps in the welcome kit.",
+                "Activities scheduled in the morning, when both the grid and the signal are most reliable.",
+                "If a casa drops out, three alternatives in the same price band within 24 h."
+              ]
+            }
+          },
+          "experiences": {
+            "eyebrow": "Experiences",
+            "title": "Run by the people who live here"
+          },
+          "packages": {
+            "eyebrow": "Packages",
+            "title": "Trips that sleep in Viñales"
+          },
+          "stays": {
+            "eyebrow": "Stays",
+            "title": "Eleven casas and two farms we visit every quarter",
+            "note": "Every stay: licence checked · backup power · 24 h water · host replies in 30 min"
+          },
+          "gettingThere": {
+            "eyebrow": "Getting there",
+            "title": "From Havana, 2 h 30 on a good day",
+            "head": ["Leg", "How", "Per vehicle"],
+            "rows": [
+              [
+                "Havana airport → Viñales",
+                "Private minivan with A/C, 180 km",
+                "€ 105–135"
+              ],
+              [
+                "Havana → Viñales via Las Terrazas",
+                "Same, with a 2 h stop in the Sierra del Rosario",
+                "€ 150"
+              ],
+              [
+                "Viñales → Cienfuegos / Trinidad",
+                "Full-day drive, 6–7 h with lunch stop",
+                "€ 220–340"
+              ],
+              [
+                "Shared taxi colectivo",
+                "Licensed, fixed departures, booked through us",
+                "€ 30–50 pp"
+              ]
+            ],
+            "note": "All our packages include these transfers. We don't book Viazul coaches: cancellations and breakdowns are too frequent to put your trip on them. Fuel is confirmed by the driver the day before; if it isn't, a standby driver is assigned within the hour."
+          },
+          "faq": {
+            "title": "Questions travelers ask about Viñales",
+            "items": [
+              {
+                "id": "seventies",
+                "question": "Is Viñales OK for someone in their seventies?",
+                "answer": "Yes, with the right casa and pace. Choose a ground-floor room (three casas have them), skip the 8 km walk for the 3 km loop, and take the car to the viewpoints. Tell us and Daylin plans around it."
+              }
+            ]
+          }
+        }
+      }
     }
   },
   "packages": {

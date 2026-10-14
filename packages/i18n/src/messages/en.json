@@ -147,14 +147,6 @@
     "guideMeta": "{category} · {minutes} min"
   },
   "catalog": {
-    "title": "Experiences",
-    "build": "Build your own itinerary",
-    "count": "{count, plural, =0 {No curated options} =1 {1 curated option} other {# curated options}} across Cuba.",
-    "mapHint": "Select a province to filter the catalog. Filled provinces have options available.",
-    "mapAria": "Map of Cuba by province",
-    "all": "All",
-    "allProvinces": "All provinces",
-    "empty": "No matching experiences right now. Try another filter.",
     "provinceFallback": "Cuba",
     "types": {
       "ACCOMMODATION": "Stays",
@@ -1062,5 +1054,154 @@
   "conditions": {
     "link": "Current conditions",
     "more": "More"
+  },
+  "destinations": {
+    "eyebrow": "{destinations, plural, one {# destination} other {# destinations}} · {provinces, plural, one {# province} other {# provinces}}",
+    "breadcrumb": "Breadcrumb",
+    "layersLabel": "Map layer",
+    "layers": {
+      "coverage": "Where we operate",
+      "conditions": "Conditions now",
+      "route": "Plan a route"
+    },
+    "hints": {
+      "coverage": "Where vetted casas, licensed drivers and guides are on call this month.",
+      "conditions": "Advisory level, power cuts and fuel per province · updated {date}.",
+      "route": "Tap provinces in sleeping order; the panel sums the road and the nights."
+    },
+    "mapTitle": "Cuba, west to east",
+    "legend": {
+      "coverage": "green: active · amber dashed: limited · hatched: not yet · dots: destinations",
+      "conditions": "green: level 1 · blue: level 2 caution · amber: level 3 disruption likely",
+      "route": "numbered: your stops · white: available · grey: not sold"
+    },
+    "mapAria": "Map of Cuba by province",
+    "mapNote": "Province boundaries from the Simplemaps Cuba file; hover a province for its numbers, tap it to open the panel. The strip below is the same control for keyboards and screen readers.",
+    "regions": {
+      "west": "West",
+      "centre": "Centre",
+      "east": "East"
+    },
+    "regionMeta": {
+      "west": "Havana to Viñales",
+      "centre": "Cienfuegos to Camagüey",
+      "east": "Las Tunas to Baracoa"
+    },
+    "regionActive": "{active} of {total} active",
+    "status": {
+      "active": "Active network",
+      "limited": "Limited network",
+      "none": "Not yet"
+    },
+    "statusNote": "Active: vetted casas, licensed drivers and guides on call. Limited: hosts exist, thin bench, custom only. Not yet: no network, not sold; tell us if you want it.",
+    "level": "Advisory level {level}",
+    "levelShort": "Level {level}",
+    "casas": "{count, plural, one {# casa} other {# casas}}",
+    "hotels": "{count, plural, one {# hotel} other {# hotels}}",
+    "experiencesCount": "{count, plural, =0 {none yet} one {# experience} other {# experiences}}",
+    "cuts": "cuts {hours}",
+    "hours": {
+      "range": "{min}–{max} h",
+      "single": "{min} h",
+      "open": "{min} h+"
+    },
+    "fuel": {
+      "ok": "Normal",
+      "queues": "Queues",
+      "scarce": "Scarce"
+    },
+    "panel": {
+      "label": "Province details",
+      "eyebrow": "The network this month",
+      "title": "Pick a province",
+      "text": "Tap a province on the map or in the strip for its hosts, guides, drivers, conditions and destinations.",
+      "activeProvinces": "Active provinces",
+      "activeValue": "{active} of {total}",
+      "casasVetted": "Casas vetted",
+      "guidesDrivers": "Guides · drivers",
+      "updated": "Updated",
+      "fullConditions": "Full conditions",
+      "close": "Close province panel",
+      "casas": "Casas",
+      "experiences": "Experiences",
+      "fromHavana": "From Havana",
+      "nearest": "Nearest active",
+      "kmAway": "{km} km away",
+      "capital": "the capital",
+      "distance": "{km} km {direction, select, west {west} other {east}} · ≈ {hours} h",
+      "limitedNote": "Hosts exist but the bench is thin: custom trips only, verified per stay.",
+      "noneNote": "We have no vetted hosts or licensed drivers here yet, so we don't sell it.",
+      "conditionsLine": "<strong>Power</strong> {hours} cuts a day{backup, select, yes {; every listed casa has a generator, battery or solar} other {}} · <strong>Fuel</strong> {fuel} · updated {date}",
+      "here": "Destinations here",
+      "packagesLine": "{count, plural, =0 {Custom trips only in this province} one {# package includes this province} other {# packages include this province}}",
+      "addRoute": "Add to my route",
+      "removeRoute": "Remove from my route",
+      "readMore": "Read more",
+      "askCustom": "Ask for a custom trip anyway"
+    },
+    "route": {
+      "eyebrow": "Your route · {stops, plural, one {# stop} other {# stops}} · {nights, plural, one {# night} other {# nights}} suggested",
+      "title": "Sketch a route",
+      "empty": "Tap provinces in the order you would sleep in them. Greyed provinces can't be stops; limited ones can, with a note. Up to six stops.",
+      "clear": "Clear",
+      "remove": "Remove {name} from the route",
+      "leg": "{km} km · ≈ {hours} h",
+      "flightLeg": "flight or overnight",
+      "road": "Road",
+      "roadValue": "{km} km · ≈ {hours} h driving",
+      "nightsLabel": "Nights",
+      "nightsValue": "{nights} suggested · change them in the builder",
+      "nights": "{count, plural, one {# night} other {# nights}}",
+      "stop": "stop {n}",
+      "notSold": "not sold",
+      "flight": "One leg is over 600 km. We'll price a domestic flight or an overnight stop; the builder shows both.",
+      "limited": "A stop is in a limited province: custom only, verified per stay.",
+      "builder": "Open in the builder",
+      "packages": "Packages on this route"
+    },
+    "filterLabel": "Filter by what you're after",
+    "all": "All",
+    "count": "{count, plural, one {# destination} other {# destinations}}",
+    "showingAll": "Showing all provinces.",
+    "showingProvince": "Showing {province} · {count, plural, one {# destination} other {# destinations}}.",
+    "showingRoute": "Showing destinations on your route.",
+    "clearProvince": "Show all provinces",
+    "empty": "No destination matches these filters. Clear them, or ask for a custom trip.",
+    "limitedPill": "Limited network",
+    "packagesCount": "{count, plural, =0 {Custom only} one {# package} other {# packages}}",
+    "fromPrice": "from {price}",
+    "onRequest": "Price on request",
+    "mapLink": "Explore the province map",
+    "detail": {
+      "distance": "{km} km {direction, select, west {west} other {east}} of Havana",
+      "powerPill": "Power cuts {hours}",
+      "seeTrips": "{count, plural, one {See the trip here} other {See the # trips here}}",
+      "addRoute": "Add {name} to a custom route",
+      "onThisPage": "On this page",
+      "tabs": {
+        "overview": "Overview",
+        "conditions": "Current conditions",
+        "experiences": "Experiences",
+        "packages": "Packages",
+        "stays": "Stays",
+        "gettingThere": "Getting there",
+        "faq": "FAQ"
+      },
+      "conditionsEyebrow": "Current conditions · {province}",
+      "conditionsTitle": "What it's like this month",
+      "power": "Power",
+      "fuel": "Fuel",
+      "advisory": "Advisory",
+      "experiencesTitle": "Experiences in {province}",
+      "packagesTitle": "Trips that sleep in {name}",
+      "allTrips": "All trips",
+      "staysTitle": "Stays in {province}",
+      "customEyebrow": "Custom",
+      "customTitle": "{name} your way",
+      "customText": "Start from here and add provinces, nights or a beach.",
+      "customCta": "Open the itinerary builder",
+      "addToTrip": "Add to trip",
+      "fromPrice": "From {price}"
+    }
   }
 }

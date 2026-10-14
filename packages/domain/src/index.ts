@@ -100,3 +100,18 @@ export {
   type PackageSort,
   type SearchablePackage,
 } from './catalog/package-search';
+export {
+  FLIGHT_LEG_KM,
+  MAX_ROUTE_STOPS,
+  ROAD_KMH,
+  nearestByRoad,
+  roadHours,
+  summarizeNetwork,
+  summarizeRoute,
+  toggleRouteStop,
+  type NetworkProvince,
+  type NetworkSummary,
+  type RouteLeg,
+  type RouteStopInput,
+  type RouteSummary,
+} from './geography/route';

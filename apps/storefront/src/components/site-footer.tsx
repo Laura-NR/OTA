@@ -1,13 +1,19 @@
 import type { TenantConfig } from '@ota/config';
 import { isFeatureEnabled } from '@ota/config';
+import { destinationsContentSchema } from '@ota/schemas';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import type { ComponentProps } from 'react';
 
 import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
+import { getPageContent } from '@/lib/content';
+import { getGeography } from '@/lib/geography';
 
 type Href = ComponentProps<typeof Link>['href'];
+
+/** How many destinations the footer's Destinations column names. */
+const FOOTER_DESTINATIONS = 3;
 
 type FooterLink =
   | { key: string; label: string; href: Href; external?: false }
@@ -30,8 +36,8 @@ function FooterAnchor({ item, className }: { item: FooterLink; className?: strin
 
 /**
  * The Home footer on primary 700. Columns list only pages that exist: the
- * design's Destinations column and the legal links other than Privacy join as
- * those pages are built. Contact lines (WhatsApp, email) come from the tenant
+ * Destinations column names the tenant's first destinations, and the legal
+ * links other than Privacy join as those pages are built. Contact lines (WhatsApp, email) come from the tenant
  * manifest and are left out when it has none; the tagline is tenant content.
  * Payment marks show only the rails the tenant offers live: the wire transfer
  * (SEPA); the card marks wait for the card gateway.
@@ -42,8 +48,25 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
   const content = await getTranslations('content');
   const tagline = content.has('footer.tagline') ? content('footer.tagline') : null;
   const { whatsappNumber, supportEmail } = tenant.branding;
+  const geography = getGeography();
+  const places = await getPageContent('destinations', destinationsContentSchema);
+  const destinations = (geography?.destinations ?? [])
+    .flatMap((destination) => {
+      const name = places?.items[destination.slug]?.name;
+      return name ? [{ slug: destination.slug, name }] : [];
+    })
+    .slice(0, FOOTER_DESTINATIONS);
 
   const columns: { key: string; title: string; links: FooterLink[] }[] = [
+    {
+      key: 'destinations',
+      title: nav('destinations'),
+      links: destinations.map((destination) => ({
+        key: destination.slug,
+        label: destination.name,
+        href: `/destinations/${destination.slug}`,
+      })),
+    },
     {
       key: 'packages',
       title: nav('packages'),

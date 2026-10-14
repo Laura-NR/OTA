@@ -131,6 +131,8 @@ export const homeContentSchema = z.object({
       .max(4),
   }),
   featured: sectionHeadSchema,
+  /** "Where our hosts are": the first destinations of the tenant's destination data. */
+  destinations: sectionHeadSchema.optional(),
   /** "Why Vereda": figures on tinted tiles, then plain points; the link goes to About. */
   why: sectionHeadSchema.extend({
     stats: z
@@ -195,6 +197,88 @@ export const eventBannerContentSchema = z.object({
   cta: text,
 });
 
+/** A destination card's words; its numbers are in the tenant's destinations.json. */
+export const destinationCardSchema = z.object({
+  name: text,
+  tagline: text,
+  /** The photo's intended alt text, until photography exists. */
+  alt: text,
+  /** The backup-power pill: "Battery casas", "Generators · fuel: plan ahead". */
+  power: text,
+  /** What there is to sleep in: "9 casas, 2 farm stays". */
+  stays: text,
+});
+
+const factSchema = z.object({ label: text, value: text, note: text.optional() });
+
+/**
+ * A destination page's own words (Destination board). Every section is
+ * optional: a destination without them still shows its network, conditions,
+ * experiences, stays and trips from data.
+ */
+export const destinationDetailSchema = z.object({
+  lede: text.optional(),
+  photo: z.object({ alt: text }).optional(),
+  /** "2 h 30 by road", after the distance in the overline. */
+  travelTime: text.optional(),
+  /** "Best: Nov – Apr · dry, 22–28 °C". */
+  best: text.optional(),
+  overview: z
+    .object({
+      title: text,
+      paragraphs: z.array(text).min(1),
+      tags: z.array(text).default([]),
+      facts: z.array(factSchema).default([]),
+    })
+    .optional(),
+  conditions: z
+    .object({
+      title: text,
+      updated: text.optional(),
+      items: z
+        .array(
+          z.object({
+            topic: conditionTopicSchema,
+            label: text,
+            text,
+            status: text,
+            tone: conditionToneSchema,
+          }),
+        )
+        .min(1),
+      plan: z.object({ title: text, items: z.array(text).min(1) }).optional(),
+    })
+    .optional(),
+  experiences: sectionHeadSchema.optional(),
+  packages: sectionHeadSchema.optional(),
+  stays: sectionHeadSchema.extend({ note: text.optional() }).optional(),
+  gettingThere: z
+    .object({
+      title: text,
+      eyebrow: text.optional(),
+      head: z.array(text).min(2),
+      rows: z.array(z.array(z.string())).min(1),
+      note: text.optional(),
+    })
+    .optional(),
+  faq: z.object({ title: text, items: z.array(faqItemSchema).min(1) }).optional(),
+});
+
+/** Destinations and Destination: the words around the tenant's destination data. */
+export const destinationsContentSchema = z.object({
+  status: contentStatusSchema,
+  eyebrow: text.optional(),
+  title: text,
+  lede: text.optional(),
+  /** Theme filter labels, keyed as destinations.json's `theme`. */
+  themes: z.record(z.string(), text),
+  /** One line per province for the map panel, keyed by province code. */
+  provinces: z.record(z.string(), z.object({ summary: text })).default({}),
+  /** Keyed by destination slug; a destination without words is not shown. */
+  items: z.record(z.string(), destinationCardSchema),
+  details: z.record(z.string(), destinationDetailSchema).default({}),
+});
+
 export type ContentStatus = z.infer<typeof contentStatusSchema>;
 export type ContentBlock = z.infer<typeof contentBlockSchema>;
 export type ContentSection = z.infer<typeof contentSectionSchema>;
@@ -209,3 +293,6 @@ export type ConditionTopic = z.infer<typeof conditionTopicSchema>;
 export type ConditionTone = z.infer<typeof conditionToneSchema>;
 export type ConditionsContent = z.infer<typeof conditionsContentSchema>;
 export type EventBannerContent = z.infer<typeof eventBannerContentSchema>;
+export type DestinationCard = z.infer<typeof destinationCardSchema>;
+export type DestinationDetail = z.infer<typeof destinationDetailSchema>;
+export type DestinationsContent = z.infer<typeof destinationsContentSchema>;
