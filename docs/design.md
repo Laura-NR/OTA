@@ -18,4 +18,5 @@ Where the design system lives now:
   components.
 - **How the build adopts it:** `docs/design-v1.1-plan.md` (gap analysis, decisions, phases).
 - **What we asked the design team to fix, and their answers:** `docs/design-change-request-01.md`
-  and `docs/design-change-response-01.md`; `docs/design-change-request-02.md` is the next one.
+  and `docs/design-change-response-01.md`. Change notice 02 (`docs/design-change-request-02.md`)
+  records what the build resolved itself from v1.2 (ADR 0006 and 0007 amendments); it asks nothing.

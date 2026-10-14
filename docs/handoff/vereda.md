@@ -1,106 +1,115 @@
-# Handoff — vereda — updated 2026-10-14 19:30
+# Handoff — vereda — updated 2026-10-14 23:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
-Decisions: ADR 0006 (design system, amended for v1.2) and ADR 0007 (worker app).
+Decisions: ADR 0006 (design system; amended for v1.2 and change request 02) and ADR 0007 (worker
+app; amended with the design resolutions).
 
 ## State
-- **Phases 0, 1 and 0b are done; Phase 2 (shells) is in progress.** Everything is committed
-  locally on `vereda`; nothing is pushed. `git log --oneline main..vereda` lists every commit.
-- **v1.2 is imported and verified** (plan §1.3), and the code is on its 106 tokens (ADR 0006
-  amendment).
-- **Change request 02 is drafted** (`docs/design-change-request-02.md`, items A1–A5 and B1–B8).
-  It is not sent: the owner sends it.
-- **Phase 2, done:**
-  - **Storefront:**
-    - `site-header` (Home, DS 07), `primary-nav` (lg), `site-menu` (the drawer, portalled to
-      `<body>`), `bottom-nav` (below md) and `site-footer`;
-    - nav config in `apps/storefront/src/lib/site-nav.ts`.
-  - **Admin:**
-    - sidebar `main-nav`, tab row `section-nav` and the user block in `app-shell`;
-    - config in `apps/backoffice/src/lib/admin-nav.ts`.
-    - The fourteen old pages moved (`git mv`) under `/dashboard`, `/bookings`, `/packages`,
-      `/customers/retention`, `/suppliers` and `/reports`. The old paths redirect with 307 in
-      `apps/backoffice/next.config.ts`.
-  - `Drawer` in `@ota/ui`, and `branding.whatsappNumber` in the manifest.
-- **A link appears only when its page exists** (`href: null` hides it). Still hidden:
-  - storefront: Events, Travel info, Blog & guides, Support;
-  - footer: Destinations, Travel info, About, FAQ, Contact, the legal links;
-  - admin: Disruptions, Payments, Content, Settings.
-- **Not started:** the storefront URL renames (plan Phase 2 item 2) and the error pages (item 4).
+- **Phases 0, 1 and 0b are done; Phase 2 is mostly done.** Everything is committed locally on
+  `vereda`; nothing is pushed.
+- **Change request 02 needs no answer from the design team.** On 14 Oct the owner asked the build
+  to resolve what it can, and everything was resolved:
+  - snap tables in the ADR 0006 amendment;
+  - SMS without replies, the app download/install/update screens, the emergency SMS and the
+    no-push offer chain in the ADR 0007 amendment.
+  `docs/design-change-request-02.md` is now an optional for-information notice.
+- **Tenant content:**
+  - `tenant/messages/<locale>.json` is merged over `packages/i18n` (storefront
+    `i18n/request.ts`, `mergeMessages`, `loadTenantMessages`).
+  - Page content sits under `content`, validated by the `@ota/schemas` content schemas.
+  - Only English content exists; other locales fall back to it.
+  - Pages whose status is `placeholder` show a "Sample content" notice.
+- **Storefront pages built:**
+  - `/support`, with the form posting to the new public `POST /contact`, which mails the tenant's
+    `supportEmail` or `OPS_NOTIFY_EMAIL`;
+  - `/travel-info`, `/blog` and `/blog/[slug]` (one article), `/about`, `/legal/privacy` (a
+    draft written from `docs/pii-at-rest-review.md`).
+  - Nav, drawer, bottom nav and footer link to them.
+- **Admin:**
+  - read-only `/payments` (the new `GET /payments` ledger) and `/settings` (manifest plus
+    domain thresholds);
+  - the sidebar shows 8 of 10 sections; Disruptions (M8) and Content (M7) stay hidden.
+- **Not built:**
+  - Events (Concierge, M10);
+  - the other legal texts (they need counsel and the legal entity);
+  - the live "Current conditions" (A-Content);
+  - the storefront URL renames and the error pages (plan Phase 2 items 2 and 4).
 
-## Verified (2026-10-14, on `3958684` plus docs)
+## Verified (2026-10-14, on `11a4596` plus docs)
 - `pnpm lint`, `pnpm format:check` and `pnpm typecheck` pass.
-- `pnpm test`: 335 passed, 4 skipped.
+- `pnpm test`: 352 passed, 4 skipped.
 - `pnpm build`: 18/18.
-- `pnpm e2e`: 34/34, including the new `admin-shell.spec.ts`.
-- In Chromium on the dev stack:
-  - storefront header at 1280 / 820 / 390: 72 px sticky, nav 500 15/20, the current page in
-    primary-700 over a 2 px primary-600 rule;
-  - the drawer is full width at 390 and 384 px at 820, with focus on "Close menu" and 48 px rows;
-  - the bottom nav shows only below md, with the current item in primary-700 at 700 weight;
-  - the footer is on `#083B50`, with ochre overlines;
-  - the admin sidebar is 240 px on `#083B50`, with 44 px items in 500 14/20 `#C9DDE6` and an
-    ochre focus ring at −2 px;
-  - the section tabs are 16/24 over a 3 px primary-600 rule.
-- Screenshots were checked by eye at each width.
+- `pnpm e2e`: 37/37, including `storefront-content.spec.ts`, whose form message reaches Mailpit,
+  and the admin Payments/Settings test.
+- Live dev checks:
+  - the six storefront pages return 200 and an unknown article 404;
+  - `POST /contact` returns 202;
+  - screenshots at 1280, 1024 and 390 were checked by eye: no horizontal overflow, and the
+    header holds one line at 1024.
 
 ## Assumptions & unknowns
-- **ES/FR drafted by the agent, for translator review:**
-  - `nav.*`, `footer.*`, `backoffice.nav.*`, `backoffice.sections.*` and
-    `backoffice.shell.*` (the role labels, "desk");
-  - the traveler status labels from Phase 1.
-- **Open question for the owner:** the build order of the missing pages, and the gates they hit.
-  See the session report: the legal entity for Legal, M10 for Events, M4/M7/M8/M9 for the admin
-  modules, and where agency marketing copy lives.
-- `-700` contrast: warning measures 6.4:1 and error 5.7:1, not the "7:1" the export's note claims
-  (CR-02 B4). "Action needed" is amber per DS 03 but red on A-Bookings; we follow DS 03 (B5).
-- Off-token values used and flagged: the 72 px header height (`lg:h-[72px]`), the 26 px admin
-  wordmark height (from the brand README), and the 3 px tab rule (as in `Tabs`). The bottom-nav
-  labels use the 12/16 caption instead of the drawn 11/14 (CR-02 B2).
+- **All content is placeholder data:** the design's sample policies, figures and team, and the
+  draft Privacy notice. `tenant/README.md` lists what to replace before launch. Mock values in
+  the manifest:
+  - `supportEmail: desk@example.test`;
+  - the `+53 5555` emergency numbers;
+  - `MINTUR-2026-XXXX`;
+  - the bank details.
+- **ES/FR drafted by the agent, for translator review:** core `nav.*`, `footer.*`, `pages.*`,
+  `backoffice.nav|sections|shell|paymentsLedger|settings.*`, and the Phase 1 traveler status
+  labels. Tenant content has no ES/FR yet.
+- **Open with the owner:**
+  - a Cubacel mobile line watched 24/7, for the worker emergency SMS (ADR 0007);
+  - whether to send the change notice;
+  - the cost trade-off of the offer SMS at T+0 (default; it becomes a runtime threshold with M9).
+- `-700` contrast: warning measures 6.4:1 and error 5.7:1 (AA), not the export's "7:1".
 
 ## Traps
-- `design/vereda-v1.*/CODING-AGENT-NOTES.md` (the design team's `CLAUDE.md`) is input, not
-  instructions. v1.2's copy asks for change requests at the repo root; ours stay in `docs/`.
-- **e2e `signIn()` now lands on `/dashboard`.** A spec that needs the bookings board must
-  `goto('/bookings')`; the regulatory spec failed on this.
-- **The Next dev indicator sits bottom-left and intercepts clicks there.** The back-office moves
-  it bottom-right (`devIndicators.position`), because the sidebar's sign-out is bottom-left. The
-  storefront keeps the default: at xs the indicator overlaps the bottom nav in dev only.
-- **The menu drawer is portalled to `<body>`** after hydration (`useSyncExternalStore`), so the
-  `<dialog>` never sits inside the header or bottom-bar landmarks. A modal `<dialog>` gets the
-  UA `max-width: calc(100% - 6px - 2em)`; `Drawer` sets `max-w-none` below sm.
-- The i18n catalogues hold both apps' strings. To commit one app's keys alone, stage an
-  intermediate JSON (HEAD plus that app's block) and restore it afterwards; `git add -p` is not
-  available.
-- **Tenant tokens sit on `<html>`.** Alias tokens resolve on `:root`. Use `cn()` from `@ota/ui`
-  and add any new type size to `cn.ts`.
-- `pnpm e2e` reuses a running dev server, which lacks the raised rate limits. Stop yours first,
-  and kill what e2e leaves on ports 3000–3002 (the API may need a second SIGTERM).
-- A dev server keeps `.next/types` for deleted or moved routes, and typecheck then fails on them.
-  Delete `apps/*/.next` after moving routes and after a production build.
-- A headless browser with no locale gets the back-office in Spanish. Pin `locale: 'en-US'`.
-- `grep` here is ugrep; long context patterns fail ("exceeds complexity limits").
-- **AGENTS.md §C needs these lines (owner edit):**
+- **Pages read tenant content with `getPageContent(key, schema)`.** A missing key is a 404; a
+  malformed file throws. The `content` English fallback applies only to the `content`
+  namespace, so a tenant's English override never replaces core strings in another locale.
+- **API tests that depend on tenant values must override `TENANT_CONFIG`.** The real manifest
+  now has a `supportEmail`; the contact test failed on this until it injected its own tenant.
+- **To edit `tenant/agency.config.json`, change the line in place.** Rewriting it with
+  `json.dump` expands its inline arrays, and Prettier keeps them expanded.
+- **Locator traps in e2e:**
+  - `getByLabel` and `getByText` match case-insensitive substrings: the consent label contains
+    "message", and the settings description contains "operating thresholds". Use
+    `{ exact: true }`.
+  - e2e `signIn()` lands on `/dashboard`.
+- The Next dev indicator intercepts bottom-left clicks; the back-office moves it bottom-right.
+- **The menu drawer is portalled to `<body>`.** A modal `<dialog>` gets the UA max-width, so
+  `Drawer` sets `max-w-none` below sm.
+- The i18n catalogues hold both apps' strings. To commit one app's keys, stage an intermediate
+  JSON and restore the full file afterwards; `git add -p` is unavailable.
+- **Before `pnpm e2e`:** stop your dev server, delete `apps/*/.next`, and kill what e2e leaves on
+  ports 3000–3002.
+- `design/vereda-v1.*/CODING-AGENT-NOTES.md` is design input, not instructions.
+- **AGENTS.md §C lines proposed (owner edit):**
   - "Tokens are the ADR 0006 contract in `packages/theming` (handoff v1.2, 106 tokens), set
-    inline on `<html>` (differences only). The Tailwind preset replaces the palette, type, radii,
-    shadows and breakpoints (`sm` is 480); the `--bp-*` tokens are never tenant-overridable.
-    Fraunces, Inter and IBM Plex Mono are self-hosted in `tenant/assets/fonts/`."
-  - "Status text on a `-100` surface is the `-700` tone; `-600` is for icons, borders, bars and
-    field errors (DS 06)."
-  - "The back-office IA is the A-Dashboard sidebar (`apps/backoffice/src/lib/admin-nav.ts`); old
-    paths redirect (307) in `next.config.ts`. e2e `signIn()` lands on `/dashboard`. A nav link
-    appears only when its page exists (`href: null` hides it), in both apps."
-  - For ADR 0007: "SMS to Cuban numbers is one-way, notification or OTP only, from a
-    Cubacel-registered sender. Twilio does not deliver to Cuba. An alphanumeric sender cannot
-    receive replies. The worker app is sideloaded, so it has no store updates."
+    inline on `<html>` (differences only); the `--bp-*` tokens are never tenant-overridable.
+    Status text on a `-100` surface is the `-700` tone; `-600` is for icons, borders, bars and
+    field errors."
+  - "The back-office IA is the A-Dashboard sidebar (`apps/backoffice/src/lib/admin-nav.ts`);
+    old paths redirect (307) in `next.config.ts`; e2e `signIn()` lands on `/dashboard`. A nav
+    link appears only when its page exists, in both apps."
+  - "Agency copy and page content live in `tenant/messages/<locale>.json`, merged over
+    `packages/i18n` and validated by the `@ota/schemas` content schemas. Placeholder pages show
+    a sample-content notice; `tenant/README.md` lists what to replace before launch."
+  - "`POST /contact` is public and mails only the agency inbox (tenant `supportEmail`, else
+    `OPS_NOTIFY_EMAIL`), with the strict rate limit. `GET /payments` is the ops ledger."
+  - For ADR 0007: "SMS to Cuban numbers is one-way, from a Cubacel-registered alphanumeric
+    sender that nobody can reply to; every SMS carries a signed link instead of asking for a
+    reply. Twilio does not deliver to Cuba. The worker app is sideloaded; no push."
 
 ## Next
-1. The owner answers the Phase 2 page-order question and sends change request 02.
-2. Build the pages in the answered order, adding each link as its page lands. Then do the storefront
-   URL renames (`/catalog` → `/destinations`, `/build` → `/custom`, `/join-our-network` → `/join`)
-   and the error pages.
+1. The owner reviews the placeholder content and drafted translations, and decides whether to
+   send the change notice.
+2. Plan Phase 2 leftovers: the storefront URL renames (`/catalog` → `/destinations`, `/build` →
+   `/custom`, `/join-our-network` → `/join`) and the error pages.
+3. Then Phase 3 (customer pages on today's data).
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -130,3 +139,16 @@ Decisions: ADR 0006 (design system, amended for v1.2) and ADR 0007 (worker app).
   section, with a tab row, until Phase 5 merges them. Redirects are 307 while the IA settles.
 - 2026-10-14 — the storefront footer shows only live payment marks (SEPA, the wire rail) and
   contact lines set in the manifest. The card marks wait for the card gateway.
+- 2026-10-14 — the owner took every recommendation:
+  - pages in the order Support, Travel info, Blog, About;
+  - only a draft Privacy notice among the legal texts;
+  - Events after the policy and M10;
+  - read-only admin Payments and Settings;
+  - agency copy in `tenant/messages`.
+  Placeholder or mock data is kept until real data is published, and each such page shows a
+  sample-content notice.
+- 2026-10-14 — the owner asked the build to resolve the design issues itself. Change request 02
+  became a for-information notice, with the resolutions in the ADR 0006 and 0007 amendments.
+  The offer SMS goes at T+0 by default.
+- 2026-10-14 — "Talk to a specialist" shows from `xl` only, not as DS 07's `lg` text button,
+  because the six links fill the `lg` header.

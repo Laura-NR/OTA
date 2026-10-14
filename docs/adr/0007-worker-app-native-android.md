@@ -1,7 +1,7 @@
 # ADR 0007 — Worker app: native Android (Expo), sideloaded, with Cuba's SMS rules
 
 - **Date:** 2026-10-14
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-10-14 (design resolutions, see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `docs/adr/0001-stack.md` (Mobile: Expo React Native + expo-sqlite), spec §5 and
   §7.2, `docs/design-v1.1-plan.md` Q7 and Q10, design boards W-* (`design/vereda-v1.1/project/`),
@@ -96,6 +96,53 @@ approved as a dependency for it. Pin a release at least two weeks old when it is
 - **Google Play distribution.** It is not reachable for Cuban workers.
 - **EAS Build, EAS Update and Expo push.** They are US-hosted services, which raises a sanctions
   question for a Cuba-facing app. The same work runs on our own machines.
+
+## Amendment, 2026-10-14: design resolutions
+
+The design boards assume store distribution, two-way SMS and push. The owner asked
+the build team to resolve these items itself rather than return them to the design
+team (change request 02, A2–A5). The screens below are built from the existing W-*
+and DS components; nothing here adds a token.
+
+- **No SMS asks for a reply (A2).** The sender "Vereda" is alphanumeric, which no
+  network lets anyone reply to, and Cuba is one-way. Every traveler SMS carries one
+  signed link (`vereda.travel/<purpose>/<token>`, short and single-purpose), and the
+  fallback stays the desk call. The links replace the replies:
+  - morning check-in → `/c/<token>`, a page with "All good" and "I need help";
+  - payment window → `/pay/<code>`, which offers the one 24 h hold as a button;
+  - disruption options → `/o/<token>`, the options page already drawn.
+  The acknowledgements ("Thanks, logged", "Option A noted") become that page's
+  confirmation state, not an SMS. Copy rules (C-Spec §04, applied to S-Messages as
+  well): one GSM-7 segment, no á í ó ú, never the word "reply". The templates ship
+  with the notification channel (design plan Phase 6).
+- **Worker app distribution screens (A3)**, Spanish, built in Phase 7:
+  - a download page on the agency site: what the app is, version, size and date,
+    the signing-certificate fingerprint, the arm64 download and an "older phone"
+    32-bit link, the desk phone, and an "Android only" state for iPhones;
+  - illustrated install steps: allowing installs from Chrome, the Play Protect
+    warning, and what to do when the install fails;
+  - the approval SMS (one segment, the link) and email, plus a QR card for the desk;
+  - an in-app update prompt: optional ("Más tarde" / "Actualizar") or required
+    (offers wait, an active job never does), download progress, the hand-off to
+    the Android installer, and a "no data" state;
+  - first run: splash, then location, SMS and notification permissions, each with
+    its reason and a "no" path. Store listings are dropped. The adaptive icon
+    layers are still a brand export (T-Signoff §03).
+- **Emergency SMS from W-Job (A4).** It goes to a separate configuration value,
+  the desk's *mobile* line (`[desk SMS number]`), not the 24/7 voice line: the drawn
+  `+53 7 …` number is a Havana landline, which cannot receive SMS. The body is one
+  GSM-7 segment with no accents: `VEREDA SOS {job code} {type} {lat},{lon} ±{m} m
+  {hh:mm}`. After sending, W-Job shows "sent, wait for the call" or "could not
+  send: call 104 / 106 / 105 and the desk". An SMS-only emergency appears on
+  A-Dashboard once the app syncs. **Open with the owner:** a Cubacel mobile line
+  that someone watches 24/7.
+- **No push (A5).** The worker hears of an offer by SMS at T+0, plus the in-app
+  notice whenever the app has data; the desk calls at amber (75 %), and red
+  re-dispatches. The SMS is at T+0 rather than T+60 because a short-notice offer
+  lasts 30 minutes. Its delay is a threshold (default 0) that becomes a runtime
+  setting with M9, so the owner can trade cost for speed. Ops Lite alerts are
+  browser notifications while the desk page is open, backed by the existing
+  sockets and the amber/red call rules.
 
 ## Sources (read 2026-10-14)
 

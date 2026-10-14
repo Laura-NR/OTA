@@ -1,7 +1,7 @@
 # ADR 0006 — Design system v1.1: the Vereda canvas replaces docs/design.md
 
 - **Date:** 2026-10-13
-- **Status:** Accepted; amended 2026-10-14 for handoff v1.2 (see the end)
+- **Status:** Accepted; amended 2026-10-14 for handoff v1.2 and for change request 02 (see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `design/vereda-v1.1/` (design handoff v1.1), `docs/design-v1.1-plan.md`,
   `docs/design-change-request-01.md`, `packages/theming`, `packages/ui`, `packages/config`
@@ -112,4 +112,44 @@ token contract moves to the v1.2 export (106 tokens) and replaces the snaps abov
 - **The palette key stays `vereda` (A8).** The design team answered "Isla Abierta only", but they
   answered a draft of the request written before the owner's rename. The owner's decision stands,
   and change request 02 raises it again. An unknown palette still falls back to `vereda`.
+
+## Amendment, 2026-10-14: the residues of v1.2, resolved by the build
+
+The owner asked the build team to resolve change request 02 itself where it can.
+These rules apply the existing tokens; none adds a token, so none needs T-Signoff
+§05. The design team is informed, not asked (`docs/design-change-request-02.md`).
+
+- **Colours the boards still draw (B1).** Snap to the nearest token:
+  - `#A61E1E` → `error-700`; `#C98A00` → `accent-600`;
+  - `#F7FAFB`, `#F3F8FA`, `#EEF3F5` → `primary-50`;
+  - `#FFF8F7` → `neutral-50`; `#DCE6D5` → `success-100`;
+  - `#A89F94` (W-Calendar's past days) → `neutral-500`, the muted text.
+  - `#1B7F5C` is not UI: it is one of the canvas editor's alternative primaries
+    for previewing a tenant's brand colour.
+  - **Map fills:** `#CDE3D1` → `success-200`, `#FDE9B5` → `warning-100`,
+    `#B8B0A6` and `#C9C2B8` → `neutral-300`.
+  - **Chart tones:** a series uses `primary-600`, `primary-500`, `primary-200`,
+    `primary-100` in that order.
+  - `#1A0DAB` (the search-result preview) stays literal: it imitates another
+    product's UI, not ours.
+- **Sizes (B2):**
+  - 10 and 11 px → 12 (`caption`, or `overline` when uppercase), including the
+    bottom-nav labels and the documents' overlines;
+  - 38 → 40 (`h1`); 44 → 48 (`display-2`); 52, 72 and 96 → 56 (`display-1`).
+- **Radii (B2/A4):** 18 and 20 px → `lg` (12).
+- **Focus ring (B3).** primary-600, as the token says. DS-Handoff's "primary-500"
+  prose is stale.
+- **Contrast (B4).** The `-700` tones pass AA on their `-100` surfaces: warning
+  6.4:1, error 5.7:1. They are not 7:1 as the export's note claims, and no AAA
+  claim is made for them.
+- **"Action needed" (B5)** is amber everywhere (DS 03): `warning-100`, `warning-700`,
+  `warning-500` border. A-Bookings' red is not followed.
+- **Navigation (B8).** Home's six links are the nav, in the header and in the
+  drawer. The admin wordmark carries the "Ops" caption as A-Dashboard draws it.
+  "Talk to a specialist" shows from `xl` only, because at `lg` the six links leave
+  no room for it.
+- **Palette name (A1).** `vereda` in code, and the canvas's "Isla Abierta" is not
+  carried over. Renaming the canvas is the design team's choice.
+- **Renders (B6).** The `.dc.html` source stays the reference for the admin,
+  worker and Ops Lite boards. Renders are welcome but not waited for.
 
