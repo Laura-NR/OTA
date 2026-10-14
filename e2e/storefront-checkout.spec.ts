@@ -73,10 +73,14 @@ test.describe('storefront checkout', () => {
     // The primary rail is a manual wire transfer: bank details, the booking
     // reference, and no self-confirm control (ADR 0003). The amount/reference
     // come from the receipt via the public lookup, not the URL.
-    await expect(page.getByText('Bank transfer')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Pay by bank transfer' }),
+    ).toBeVisible();
     await expect(page.getByText('Demo Bank (placeholder)')).toBeVisible();
-    await expect(page.getByText(BOOKING_CODE)).toBeVisible();
-    await expect(page.getByText('EUR 200.00')).toBeVisible();
+    // The transfer details and the summary both carry the code and the amount.
+    await expect(page.getByText(BOOKING_CODE).first()).toBeVisible();
+    await expect(page.getByText('€200').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Copy the IBAN' })).toBeVisible();
     await expect(page.getByText('No automatic charge is made')).toBeVisible();
     await expect(page.getByText('Once you have sent the transfer')).toBeVisible();
     await expect(page.getByRole('button', { name: /confirm/i })).toHaveCount(0);
