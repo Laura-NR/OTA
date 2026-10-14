@@ -204,3 +204,41 @@ tokens; no token was added.
   not the board's 15 minutes) and the data note follows the retention lifecycle
   (ADR 0004). The booking pill reads "Request to book", which Vereda's tenant
   overrides with its own "Request · 24 h".
+
+## Amendment, 2026-10-14: Phase 5 admin, resolved by the build
+
+Phase 5 built the admin surfaces on today's data, where no migration is needed;
+only A-Packages v2 waits on M1. The Dashboard (A-Dashboard), Bookings and
+Booking (A-Bookings/A-Booking) and the merged Reports (A-Reports) are done. As
+the owner asked, the build resolved what the boards leave open with the existing
+tokens; no token was added.
+
+- **Dispatch matrix (A-Dashboard).** The timer column sits right after the
+  booking, not last as the board draws it, so the time left stays in view where
+  the table scrolls; **Open** sits under the timer. Re-dispatch shows on amber,
+  red and unassigned items only, because a green row has nothing to re-dispatch.
+  Ops clocks are Havana time (`OPS_TIME_ZONE`, `@ota/domain`
+  `time/ops-calendar`). The dashboard merges the pre-redesign escalation and
+  dispatch pages; `/dashboard/dispatch`, `/escalation` and `/dispatch` redirect.
+- **A-Bookings.** The saved views are a row (All · Needs attention · Arriving
+  soon), each with its count; the state machine is a chip row with per-state
+  counts; the list orders by urgency and is a table from `md`, cards below it.
+  The money column is the total with the paid amount under it (total · paid).
+- **Who-acts legend.** Copy that describes behaviour follows the system: the
+  desk starts dispatch (no auto-dispatch yet), a decline or timeout makes
+  ACTION_REQUIRED, and there is no 48 h payment window, audio cue or 72 h SLA
+  yet.
+- **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
+  anchors (financial, regulatory, dispatch, quality, geography), and
+  `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and
+  `/reports/quality` redirect there (307). The window is a preset (mtd,
+  lastMonth, ytd, all); `?year=` is still accepted for old links.
+- **Charts are one-hue bar lists.** Every chart is a `BarList` (primary-600)
+  named by its label and value in text, so colour carries no identity. No token
+  triplet passes the categorical palette check (the dataviz validator rejects
+  the board's three rail colours; the teal is too low in chroma).
+- **Not drawn, because the data or a decision is missing:** payment windows,
+  owner/My queue, OFAC, disruption, the audio cue and mute, the on-the-ground
+  panel, search, CSV export, version locks, internal notes, travelers and
+  itinerary on the booking, the GBV-by-month chart, the reinvestment ledger and
+  NPS.
