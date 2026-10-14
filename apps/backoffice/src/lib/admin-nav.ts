@@ -92,11 +92,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     icon: 'bar-chart',
     href: '/reports',
     base: '/reports',
-    pages: [
-      { key: 'analytics', href: '/reports' },
-      { key: 'regulatory', href: '/reports/regulatory' },
-      { key: 'quality', href: '/reports/quality' },
-    ],
+    pages: [],
   },
   { key: 'settings', icon: 'settings', href: '/settings', base: '/settings', pages: [] },
 ];

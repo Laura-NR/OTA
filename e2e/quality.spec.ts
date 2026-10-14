@@ -30,8 +30,11 @@ test.describe('quality & duty of care', () => {
     await expect(page.getByText('Resolved').first()).toBeVisible();
 
     await page.goto('/reports/quality');
+    await expect(page).toHaveURL(/\/reports#quality$/);
     await expect(
-      page.getByRole('heading', { name: 'Quality & duty of care' }),
+      page.getByRole('heading', {
+        name: 'Service quality, experience & duty of care',
+      }),
     ).toBeVisible();
     await expect(page.getByText(description)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Worker reliability' })).toBeVisible();

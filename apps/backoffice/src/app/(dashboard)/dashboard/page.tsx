@@ -11,6 +11,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
 import { StartDispatchButton } from '@/components/dispatch-controls';
+import { BarList } from '@/components/bar-list';
 import { KpiCard } from '@/components/kpi-card';
 import { OpsClock } from '@/components/ops-clock';
 import { OpsDesk } from '@/components/ops-desk';
@@ -19,12 +20,12 @@ import { bookingDates, money, monthName, percent, signedPercent } from '@/lib/op
 
 const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
-/** The payment rails in A-Dashboard's order, with their chart tone. */
-const RAILS = [
-  { rail: 'OPEN_BANKING_SEPA', tone: 'bg-primary-600' },
-  { rail: 'CARD', tone: 'bg-accent-500' },
-  { rail: 'OTHER', tone: 'bg-secondary-600' },
-] as const;
+/**
+ * The payment rails in A-Dashboard's order. They are drawn as one-hue bars
+ * named by their labels: the board's three rail colours fail a categorical
+ * palette check (the teal is too low in chroma), so colour carries no identity.
+ */
+const RAILS = ['OPEN_BANKING_SEPA', 'CARD', 'OTHER'] as const;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -137,37 +138,15 @@ export default async function DashboardPage() {
                 })}
               </span>
             </div>
-            <div
-              aria-hidden="true"
-              className="flex h-2 overflow-hidden rounded-full bg-neutral-200"
-            >
-              {finance.gbv > 0
-                ? RAILS.map(({ rail, tone }) => (
-                    <span
-                      key={rail}
-                      className={cn('block h-full', tone)}
-                      style={{ width: `${(railAmount(rail) / finance.gbv) * 100}%` }}
-                    />
-                  ))
-                : null}
-            </div>
-            <ul
-              aria-label={t('kpi.byRail')}
-              className="flex flex-wrap gap-x-3 gap-y-1 text-caption text-secondary"
-            >
-              {RAILS.map(({ rail, tone }) => (
-                <li key={rail} className="inline-flex items-center gap-1.5">
-                  <span
-                    aria-hidden="true"
-                    className={cn('h-2.5 w-2.5 rounded-sm', tone)}
-                  />
-                  {t(`kpi.rails.${rail}`)}
-                  <strong className="font-mono">
-                    {money(railAmount(rail), 'EUR', locale)}
-                  </strong>
-                </li>
-              ))}
-            </ul>
+            <BarList
+              label={t('kpi.byRail')}
+              items={RAILS.map((rail) => ({
+                key: rail,
+                label: t(`kpi.rails.${rail}`),
+                value: railAmount(rail),
+                display: money(railAmount(rail), 'EUR', locale),
+              }))}
+            />
           </>
         ) : (
           <p className="text-body-sm text-muted">{t('kpi.unavailable')}</p>
