@@ -238,6 +238,11 @@ tokens; no token was added.
   is the credential inspector: the profile, the auto-dispatch state, the
   reliability score and the availability calendar. Its backup-power, vehicle and
   payout fields wait for M6 and the payments module.
+- **A-Payments.** The read-only ledger becomes the A-Payments transactions view:
+  a header with the paid total and the pending/refunded counts, status filter
+  chips, and a rail-labelled table that links each receipt to its booking. The
+  refund queue, the payout liabilities by province, the next payout runs and the
+  rails health wait for M4 and a payouts source; the page says so in a note.
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and

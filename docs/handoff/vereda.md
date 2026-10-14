@@ -36,6 +36,10 @@ ADR 0007 (worker app).
     A-Suppliers inspector: the profile, the auto-dispatch state, the reliability score and the
     availability calendar; the credential document and availability are unchanged behind the new
     header.
+  - `6a429e1` **Payments** = the A-Payments transaction ledger: a header with the paid total and
+    the pending/refunded counts, status filter chips with counts, and a rail-labelled table that
+    links each receipt to its booking, plus a note that the refund queue, payouts and rails health
+    wait for M4. Read-only; confirming stays on the booking.
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
   `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
@@ -56,6 +60,9 @@ ADR 0007 (worker app).
   and a supplier detail at 390/1024/1280: no overflow, h1 Fraunces 24/32, the list's expiry strip
   renders `warning-100`/`warning-700` with a `warning-500` border; the category chips and the
   province/verification filters update the URL and the row set.
+- Payments (`6a429e1`): lint, format:check, typecheck, i18n parity test, `pnpm test` (29 tasks),
+  build (18/18) and `pnpm e2e` **45/45** green. Browser on `/payments` at 390/1024/1280 with a
+  receipt fixture: no overflow, the status chips and the rail-labelled ledger render.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -68,6 +75,8 @@ ADR 0007 (worker app).
   **Power** and **Last job** columns await M6 (backup-power fields) and a job-history source; its
   **Add supplier** is the `/suppliers/applications` recruitment path, not a create form. The
   supplier inspector's backup-power, vehicle and payout fields await M6 and the payments module.
+  A-Payments' refund queue, payout liabilities by province, next payout runs and rails health
+  await M4 and a payouts source (the page says so).
 - ES/FR for `backoffice.dashboard`, `.bookings`, `.reservation`, `.reports` are agent-drafted.
 - Earlier open items still stand (Cubacel 24/7 line, change notice, offer-SMS cost; placeholder
   tenant content).
@@ -107,9 +116,9 @@ ADR 0007 (worker app).
 ## Next
 1. Phase 4: generate the M1 migration on the approved draft (D1(a)–D4(a)) and build Package v2
    (tiers, departures, extras, days, media, translations, slug redirects), then M2–M5.
-2. Phase 5 continues on today's data where no migration is needed: Payments (reconciliation,
-   payouts; refunds and proofs wait for M4) and Customers (OFAC M3, retention already there).
-   Batches M6–M9 are asked for as they come up.
+2. Phase 5 continues on today's data where no migration is needed: Customers (OFAC M3, retention
+   already there), then Packages + editor v2 once M1 lands. Batches M6–M9 are asked for as they
+   come up.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -184,3 +193,6 @@ ADR 0007 (worker app).
   "Add supplier" is the `/suppliers/applications` recruitment path, not a create form. Reliability
   is the acceptance rate over the offer ledger; the board's Power and Last job columns wait for M6
   and a job-history source.
+- 2026-10-14 — A-Payments stays read-only on today's data: the transaction ledger with status chips
+  and rail labels. The refund queue, payout liabilities by province, next payout runs and rails
+  health wait for M4 and a payouts source.
