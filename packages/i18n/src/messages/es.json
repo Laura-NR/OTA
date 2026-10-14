@@ -588,7 +588,17 @@
       "created": "Creado",
       "updated": "Actualizado",
       "empty": "Aún no hay pagos.",
-      "loadError": "No se pudo cargar el registro de pagos."
+      "loadError": "No se pudo cargar el registro de pagos.",
+      "summary": "{paid} cobrado · {pending} pendientes · {refunded} reembolsados",
+      "ledger": "Registro de transacciones",
+      "showing": "{count} cobro(s)",
+      "openLabel": "Abrir {code}",
+      "rails": {
+        "OPEN_BANKING_SEPA": "SEPA / banca abierta",
+        "CARD": "Tarjeta",
+        "OTHER": "Factura / otro"
+      },
+      "later": "La cola de reembolsos, los pasivos de pago por provincia, las próximas remesas y la salud de las vías llegan con el calendario de pagos (M4)."
     },
     "settings": {
       "title": "Ajustes",

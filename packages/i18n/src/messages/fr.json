@@ -588,7 +588,17 @@
       "created": "Créé",
       "updated": "Mis à jour",
       "empty": "Aucun paiement pour l'instant.",
-      "loadError": "Le registre des paiements n'a pas pu être chargé."
+      "loadError": "Le registre des paiements n'a pas pu être chargé.",
+      "summary": "{paid} encaissés · {pending} en attente · {refunded} remboursés",
+      "ledger": "Registre des transactions",
+      "showing": "{count} encaissement(s)",
+      "openLabel": "Ouvrir {code}",
+      "rails": {
+        "OPEN_BANKING_SEPA": "SEPA / open banking",
+        "CARD": "Carte",
+        "OTHER": "Facture / autre"
+      },
+      "later": "La file de remboursements, les passifs de paiement par province, les prochains versements et la santé des moyens de paiement arrivent avec le calendrier de paiement (M4)."
     },
     "settings": {
       "title": "Paramètres",

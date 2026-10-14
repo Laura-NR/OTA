@@ -588,7 +588,17 @@
       "created": "Created",
       "updated": "Updated",
       "empty": "No payments yet.",
-      "loadError": "The payment ledger could not be loaded."
+      "loadError": "The payment ledger could not be loaded.",
+      "summary": "{paid} paid · {pending} pending · {refunded} refunded",
+      "ledger": "Transaction ledger",
+      "showing": "{count} receipt(s)",
+      "openLabel": "Open {code}",
+      "rails": {
+        "OPEN_BANKING_SEPA": "SEPA / open banking",
+        "CARD": "Card",
+        "OTHER": "Invoice / other"
+      },
+      "later": "Refund queue, payout liabilities by province, next payout runs and rail health arrive with the payment schedule (M4)."
     },
     "settings": {
       "title": "Settings",
