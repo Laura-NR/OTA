@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-14 23:30
+# Handoff — vereda — updated 2026-10-15 01:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -7,7 +7,7 @@ Decisions: ADR 0006 (design system; amended for v1.2 and change request 02) and 
 app; amended with the design resolutions).
 
 ## State
-- **Phases 0, 1 and 0b are done; Phase 2 is mostly done.** Everything is committed locally on
+- **Phases 0, 1, 0b and 2 are done** (Phase 2's offline, compliance-hold and maintenance pages wait for their triggers). Everything is committed locally on
   `vereda`; nothing is pushed.
 - **Change request 02 needs no answer from the design team.** On 14 Oct the owner asked the build
   to resolve what it can, and everything was resolved:
@@ -31,13 +31,18 @@ app; amended with the design resolutions).
   - read-only `/payments` (the new `GET /payments` ledger) and `/settings` (manifest plus
     domain thresholds);
   - the sidebar shows 8 of 10 sections; Disruptions (M8) and Content (M7) stay hidden.
-- **Not built:**
-  - Events (Concierge, M10);
-  - the other legal texts (they need counsel and the legal entity);
-  - the live "Current conditions" (A-Content);
-  - the storefront URL renames and the error pages (plan Phase 2 items 2 and 4).
+- **Renamed storefront paths** (`634677e`): `/catalog` → `/destinations`, `/build` → `/custom`,
+  `/join-our-network` → `/join`; old paths 307-redirect in `apps/storefront/next.config.ts`.
+- **Error pages** (`d2008d2`): `app/[locale]/not-found.tsx` (+ `[...rest]` catch-all) and
+  `error.tsx`. Offline (needs the service worker, Phase 8), compliance hold (M3) and maintenance
+  (needs a deploy-level switch) are not built.
+- **Not built:** Events (Concierge, M10); the other legal texts (counsel, legal entity); the live
+  "Current conditions" (A-Content).
 
 ## Verified (2026-10-14, on `11a4596` plus docs)
+- **Not yet verified on `634677e` and `d2008d2`** (renames, error pages): only storefront
+  lint/format/typecheck and live dev probes ran (old paths 307 with the query kept; unknown paths
+  404 with the designed page). Run the full suite and `pnpm e2e` first next session.
 - `pnpm lint`, `pnpm format:check` and `pnpm typecheck` pass.
 - `pnpm test`: 352 passed, 4 skipped.
 - `pnpm build`: 18/18.
@@ -105,11 +110,13 @@ app; amended with the design resolutions).
     reply. Twilio does not deliver to Cuba. The worker app is sideloaded; no push."
 
 ## Next
-1. The owner reviews the placeholder content and drafted translations, and decides whether to
-   send the change notice.
-2. Plan Phase 2 leftovers: the storefront URL renames (`/catalog` → `/destinations`, `/build` →
-   `/custom`, `/join-our-network` → `/join`) and the error pages.
-3. Then Phase 3 (customer pages on today's data).
+1. Verify `634677e`/`d2008d2`: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test &&
+   pnpm build`, delete `apps/*/.next`, stop dev servers, `pnpm e2e` (expect 38 tests).
+2. Phase 3, one increment per commit: Home (agency copy into `tenant/messages`), Destinations
+   (map layers from `tenant/` data files `provinces.json` + `destinations.json`, placeholder) and
+   Destination detail, Packages filters + Compare, Package detail restyle, then the Account,
+   Auth (magic link until Q5), Join and wire Payment restyles.
+3. The owner reviews placeholder content and drafted translations; sends the change notice if wanted.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -152,3 +159,5 @@ app; amended with the design resolutions).
   The offer SMS goes at T+0 by default.
 - 2026-10-14 — "Talk to a specialist" shows from `xl` only, not as DS 07's `lg` text button,
   because the six links fill the `lg` header.
+- 2026-10-14 — storefront path renames redirect with 307 until launch (as the back-office), then
+  become 308. Only the 404 and 500 error pages are built; the other three wait for triggers.
