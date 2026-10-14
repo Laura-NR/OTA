@@ -163,9 +163,12 @@ export interface ThemePreset {
   primitives: ThemePrimitives;
 }
 
-/** Keyed as A-Settings names the manifest's `theme.palette` (`islaAbierta`). */
+/**
+ * The agency's palette. The canvas calls it "Isla Abierta", a placeholder name;
+ * the manifest's `theme.palette` key is `vereda`.
+ */
 export const THEME_PRESETS: Readonly<Record<string, ThemePreset>> = {
-  islaAbierta: { name: 'Isla Abierta', primitives: PRIMITIVE_TOKENS },
+  vereda: { name: 'Vereda', primitives: PRIMITIVE_TOKENS },
 };
 
-export const DEFAULT_PALETTE = 'islaAbierta';
+export const DEFAULT_PALETTE = 'vereda';

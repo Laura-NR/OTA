@@ -3,7 +3,7 @@
 **Status:** Accepted 2026-10-13. The owner took every recommendation in §3 (Q7 remains open) and confirmed that the canvas replaces the 2026-09-26 design; see `docs/adr/0006-design-system-v1.1.md`.
 **Input:** `vereda-handoff-v1.1/` (design team, dated 12 Oct 2026; canvas label "Handoff v1.1").
 **Scope:** whether the package is complete and consistent, how far the code is from it, which decisions block the build, and the order to build in.
-**Effect:** this plan replaces the "Design gap" section of `docs/development-plan.md`. `docs/design.md` (Verdín / Bricolage Grotesque, adopted 2026-09-26) is replaced by the canvas design system ("Isla Abierta": teal, terracotta and ochre; Fraunces, Inter and IBM Plex Mono).
+**Effect:** this plan replaces the "Design gap" section of `docs/development-plan.md`. `docs/design.md` (Verdín / Bricolage Grotesque, adopted 2026-09-26) is replaced by the canvas design system (the Vereda palette of teal, terracotta and ochre, called "Isla Abierta" on the canvas; Fraunces, Inter and IBM Plex Mono).
 
 ---
 
@@ -142,7 +142,7 @@ The build order follows HANDOFF §7, reordered so that the work needing no migra
 | 1 Foundations | **Done.** Token contract and tenant compilation, Fraunces / Inter / IBM Plex Mono, brand files and favicon, Lucide sprite, the DS 02–05 component set, the DS 03 traveler vocabulary, the copy-inventory helper. Lint, typecheck, unit tests (325 passed, 4 skipped) and all 31 e2e tests pass. |
 | 2 Shells | Next. |
 
-Phase 1 differs from the text below in four places: the fonts are the Latin subset only (it covers EN/ES/FR/DE/IT; see `tenant/assets/fonts/README.md`); the default preset is `islaAbierta`, the name A-Settings uses; "Travel ready" is not mapped until document approval exists (M3); and the copy step is a read-only helper (`tools/copy-inventory.mjs`) rather than an importer, so translations are reviewed before they land.
+Phase 1 differs from the text below in four places: the fonts are the Latin subset only (it covers EN/ES/FR/DE/IT; see `tenant/assets/fonts/README.md`); the default preset is `vereda`, named for the agency (the canvas's "Isla Abierta" is a placeholder); "Travel ready" is not mapped until document approval exists (M3); and the copy step is a read-only helper (`tools/copy-inventory.mjs`) rather than an importer, so translations are reviewed before they land.
 
 ### Phase 0: Intake (no product code)
 1. Send D1–D8 to the design team. Ask for the missing tokens (Q2), the corrected T-Matrix and T-Assets, page 06 PDFs, and acceptance of row 11.

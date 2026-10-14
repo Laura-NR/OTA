@@ -10,7 +10,7 @@
   "primaryLocale": "es",
   "supportedLocales": ["es", "en", "fr"],
   "theme": {
-    "palette": "islaAbierta",
+    "palette": "vereda",
     "borderRadius": "md"
   },
   "features": {

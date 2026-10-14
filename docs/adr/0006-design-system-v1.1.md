@@ -12,7 +12,8 @@ On 2026-09-26 the owner adopted `docs/design.md` (Verdín palette, Bricolage Gro
 4/10/20) as the default-tenant identity. On 2026-10-12 the design team delivered a complete UI/UX
 design for Vereda Expeditions:
 - 119 boards;
-- a three-tier token set (palette "Isla Abierta": teal, terracotta, ochre, warm neutrals);
+- a three-tier token set (the Vereda palette: teal, terracotta, ochre, warm neutrals; the canvas
+  calls it "Isla Abierta", a placeholder name);
 - Fraunces, Inter and IBM Plex Mono;
 - a status vocabulary and component specs;
 - every screen of the web, admin, worker and Ops Lite apps, the documents and the notifications.
@@ -29,8 +30,8 @@ retired and now points here.**
 - **Tokens (Q1).** The core token contract is the design's three-tier set: 59 primitives, 21
   aliases and 3 component tokens, using the design's names (`--color-primary-600`,
   `--color-text-default`, `--text-h1`, `--space-4`, …).
-  - `packages/theming` holds the default values, as the preset `islaAbierta` (the name A-Settings
-    gives the manifest's `theme.palette`), and compiles a tenant manifest into these custom
+  - `packages/theming` holds the default values, as the preset `vereda` (named for the agency; the
+    canvas's placeholder name "Isla Abierta" is not used in code), and compiles a tenant manifest into these custom
     properties. A tenant overrides **primitives only** (DS 06: "alias and component tokens never
     change per tenant").
   - `packages/ui`'s Tailwind preset maps utilities onto these names. The `--ota-*` HSL-triple
@@ -63,7 +64,7 @@ retired and now points here.**
 ## Consequences
 
 - **Breaking for forks.** The `theme.palette` presets `ecoGreen`, `oceanBlue`, `terracotta` and
-  `slate` no longer exist; an unknown palette falls back to `islaAbierta`, as before. A-Settings
+  `slate` no longer exist; an unknown palette falls back to `vereda`, as before. A-Settings
   also lists an `ecoGreen` preset, but the design defines no values for it; that question is in
   change request 01 (A8). A fork restyles by
   setting `branding.primaryColor` (the primary scale is derived from it) and, optionally,

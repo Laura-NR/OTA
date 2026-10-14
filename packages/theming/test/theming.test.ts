@@ -172,7 +172,7 @@ describe('themeCssVariables', () => {
     ).toBe('0px');
   });
 
-  it('falls back to the Isla Abierta preset for an unknown palette and radius', () => {
+  it('falls back to the Vereda preset for an unknown palette and radius', () => {
     expect(
       themeCssVariables(
         parseTenantConfig({

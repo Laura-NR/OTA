@@ -32,7 +32,7 @@ describe('parseTenantConfig', () => {
 
     expect(config.branding.primaryColor).toBe('#0B4F6C');
     expect(config.theme).toEqual({
-      palette: 'islaAbierta',
+      palette: 'vereda',
       borderRadius: 'md',
       tokens: {},
     });

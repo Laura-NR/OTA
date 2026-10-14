@@ -21,7 +21,7 @@ into code, so we need answers before those values freeze.
 | A5 | DS 07 | **The breakpoints are not exported.** `--bp-sm/md/lg/xl` (480 / 768 / 1024 / 1280) are defined on DS 07 but are missing from the export. | Add them to the export. We use them as the build's breakpoints now. |
 | A6 | DS 02 vs DS 06 | **The focus colour disagrees.** The DS 02/03 board CSS draws the focus ring in `#0B4F6C` (primary-600); DS 06 and `--color-focus-ring` say primary-500. | Confirm primary-500 (the token). |
 | A7 | DS 06 tenant model | **The build adds one alias.** A tenant may override the primitives, so a light brand colour would put white text on it. We added `--color-text-on-primary` (default `neutral-0`; `neutral-900` when the tenant's primary is light). It binds existing primitives only and adds no colour. | Ratify it or propose a name. |
-| A8 | A-Settings › Manifest | **The palette select lists `ecoGreen (preset)`** next to `islaAbierta`, but the tokens define only Isla Abierta. | Should there be a second preset? If so, send its primitive values. Until then the build ships `islaAbierta` only, and an unknown palette falls back to it. |
+| A8 | A-Settings › Manifest, DS 06 | **The palette name.** The canvas calls the palette "Isla Abierta", a placeholder; the agency is Vereda, and the build names the palette `vereda`. The A-Settings select also lists `ecoGreen (preset)`, but the tokens define only one palette. | Rename the palette to Vereda on A-Settings and DS 06. Should there be a second preset? If so, send its primitive values. Until then the build ships `vereda` only, and an unknown palette falls back to it. |
 
 ## B · Defects in the package
 

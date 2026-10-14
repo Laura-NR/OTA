@@ -59,7 +59,7 @@ export const tenantConfigSchema = z.object({
   supportedLocales: z.array(z.string().min(2)).min(1).default(['es', 'en', 'fr']),
   theme: z
     .object({
-      palette: z.string().default('islaAbierta'),
+      palette: z.string().default('vereda'),
       /** Scales the radius steps: `none`, `sm`, `md` (the design) or `lg`. */
       borderRadius: z.string().default('md'),
       /**

@@ -10,7 +10,7 @@ platform. Plan, gap analysis and phases: `docs/design-v1.1-plan.md`; decisions: 
 - **Phase 0 is done**, except sending `docs/design-change-request-01.md` to the design team. That
   is the owner's job; the request is drafted.
 - **Phase 1 is done.**
-  - `packages/theming` holds the 83-token contract as the preset `islaAbierta`. It compiles a tenant
+  - `packages/theming` holds the 83-token contract as the preset `vereda`. It compiles a tenant
     into only the differing custom properties, set on `<html>`.
   - `packages/ui` has `styles.css` (tokens, focus ring, reduced motion, `h1` in Fraunces), a
     preset that restricts Tailwind to the design scales, and the DS 02–05 components: Field, Select,
@@ -80,8 +80,10 @@ platform. Plan, gap analysis and phases: `docs/design-v1.1-plan.md`; decisions: 
   replaces the 2026-09-26 design.
 - 2026-10-13 — the motion tokens use the DS-Handoff values. The export's 0 ms values are the
   reduced-motion override (A1).
-- 2026-10-13 — the default preset is named `islaAbierta`, as A-Settings names it. The four legacy
-  presets are removed.
+- 2026-10-13 — the four legacy presets are removed. The default preset was first named
+  `islaAbierta`, after A-Settings.
+- 2026-10-14 — the owner renamed the preset `vereda`: "Isla Abierta" was a placeholder name, and
+  the agency is Vereda Expeditions. The design team is asked to follow (change request A8).
 - 2026-10-13 — only the fonts' Latin subset is shipped: `next/font/local` cannot split one family
   by unicode-range, and Latin covers EN/ES/FR/DE/IT.
 - 2026-10-13 — commits are made locally per increment on `vereda`, under the owner's approval of
