@@ -1,7 +1,10 @@
 # M1 Package v2: schema diff for review
 
-**Status:** Draft for the owner's review (Article 2; design plan Q9). No migration is generated or
-applied. The draft schema passes `prisma validate`.
+**Status:** **Approved 2026-10-14**: the owner took D1–D4 as recommended — D1(a) base text plus one
+`PackageTranslation` overlay row per locale; D2(a) base price + tier delta + optional departure
+price; D3(a) `status` replaces `active` with a backfill; D4(a) agency-wide terms in the tenant
+manifest, packages store policy keys only. The migration is **not yet generated** (Phase 4 work).
+The draft schema passes `prisma validate`.
 **Date:** 2026-10-14
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M1, read against the Package, Booking and
 A-Package-Edit boards (`design/vereda-v1.2/project/`).

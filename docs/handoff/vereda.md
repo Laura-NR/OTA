@@ -8,9 +8,11 @@ ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2 and 3 are done** (committed locally on `vereda`; nothing is pushed).
-- **Phase 4 gate:** `docs/schema-m1-package-v2.md` (`f102a66`) is the M1 (Package v2) schema
-  diff for review: a validated draft of `schema.prisma` (`prisma validate` passes), decisions
-  D1–D4 with options and recommendations. **No migration is generated. Waiting for the owner.**
+- **Phase 4 gate (resolved 2026-10-14):** the owner approved M1 with D1–D4 as recommended
+  (`docs/schema-m1-package-v2.md`, `f102a66`): base text + one `PackageTranslation` overlay row per
+  locale; base price + tier delta + optional departure price; `status` replaces `active` with a
+  backfill; agency-wide terms in the manifest. **The migration is not yet generated** — it is the
+  next Phase 4 job.
 - **Phase 5, no-migration part (admin)** — three increments done:
   - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
     matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
@@ -43,10 +45,8 @@ ADR 0007 (worker app).
   section-nav anchors scroll to each section.
 
 ## Assumptions & unknowns
-- **Open with the owner — M1 (Article 2, Q9):** approve the draft or pick options D1–D4 in
-  `docs/schema-m1-package-v2.md` (recommended: base text + per-locale overlay row; base price +
-  tier delta + departure price; `status` replaces `active` with a backfill; agency-wide terms in
-  the manifest).
+- **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
+  No assumptions remain on the schema shape.
 - "Merge the board" was read as: the pipeline board's status counts feed the Dashboard's Bookings
   figure, and its list became the A-Bookings table at `/bookings` (tab still "Pipeline").
 - Not built (data or decision missing): payment windows, owner/My queue, OFAC, disruption, audio
@@ -85,8 +85,8 @@ ADR 0007 (worker app).
     `/reports/quality` redirect there."
 
 ## Next
-1. Ask the owner the M1 questions (D1–D4) if not answered yet; do not generate the migration before
-   the answer.
+1. Phase 4: generate the M1 migration on the approved draft (D1(a)–D4(a)) and build Package v2
+   (tiers, departures, extras, days, media, translations, slug redirects), then M2–M5.
 2. Phase 5 continues on today's data where no migration is needed: Suppliers (applications folded
    in, reliability; backup power waits for M6), then Payments (reconciliation, payouts; refunds and
    proofs wait for M4) and Customers (OFAC M3, retention already there). Batches M6–M9 are asked
@@ -157,3 +157,7 @@ ADR 0007 (worker app).
   categorical palette check (dataviz validator), so colour carries no identity.
 - 2026-10-14 — Reports is one page (`/reports`, the §4.9 sections as anchors); `/analytics`,
   `/regulatory`, `/quality`, `/reports/regulatory` and `/reports/quality` redirect there (307).
+- 2026-10-14 — M1 (Package v2) approved as D1(a)–D4(a): base text + one `PackageTranslation` overlay
+  per locale; base price + tier delta + optional departure price; `status` replaces `active`
+  (backfilled); agency-wide terms in the manifest with policy keys on the package. Migration not yet
+  generated.
