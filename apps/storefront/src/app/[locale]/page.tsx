@@ -32,11 +32,11 @@ export default async function HomePage() {
         </h1>
         <p className="mt-4 max-w-2xl text-body-lg text-muted">{t('description')}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/catalog" className={ctaPrimary}>
+          <Link href="/destinations" className={ctaPrimary}>
             {t('explore')}
           </Link>
           {isFeatureEnabled(tenant, 'customItineraryBuilder') ? (
-            <Link href="/build" className={ctaSecondary}>
+            <Link href="/custom" className={ctaSecondary}>
               {t('build')}
             </Link>
           ) : null}

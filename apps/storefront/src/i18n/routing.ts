@@ -3,7 +3,7 @@ import { defineRouting } from 'next-intl/routing';
 
 /**
  * Locale routing for the storefront. The default locale is served without a
- * prefix (`/catalog`); other locales are prefixed (`/en/catalog`).
+ * prefix (`/destinations`); other locales are prefixed (`/en/destinations`).
  */
 export const routing = defineRouting({
   locales: SUPPORTED_LOCALES,

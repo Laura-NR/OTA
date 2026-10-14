@@ -48,7 +48,7 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
       key: 'packages',
       title: nav('packages'),
       links: isFeatureEnabled(tenant, 'customItineraryBuilder')
-        ? [{ key: 'custom', label: t('customItinerary'), href: '/build' }]
+        ? [{ key: 'custom', label: t('customItinerary'), href: '/custom' }]
         : [],
     },
     {
@@ -113,7 +113,7 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
           href: { pathname: '/support', hash: 'contact' },
         },
         ...(isFeatureEnabled(tenant, 'recruitmentPortal')
-          ? [{ key: 'join', label: t('joinNetwork'), href: '/join-our-network' }]
+          ? [{ key: 'join', label: t('joinNetwork'), href: '/join' }]
           : []),
         { key: 'about', label: t('about'), href: '/about' },
       ],

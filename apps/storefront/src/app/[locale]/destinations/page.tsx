@@ -20,7 +20,7 @@ function catalogHref(filters: CatalogFilters): string {
   if (filters.type) params.set('type', filters.type);
   if (filters.province) params.set('province', filters.province);
   const query = params.toString();
-  return query ? `/catalog?${query}` : '/catalog';
+  return query ? `/destinations?${query}` : '/destinations';
 }
 
 export default async function CatalogPage({
@@ -42,7 +42,7 @@ export default async function CatalogPage({
     <div className="mx-auto max-w-5xl px-4 py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-h2 font-semibold tracking-tight">{t('title')}</h1>
-        <Link href="/build" className={buttonClassName()}>
+        <Link href="/custom" className={buttonClassName()}>
           {t('build')}
         </Link>
       </div>

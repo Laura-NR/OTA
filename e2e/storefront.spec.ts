@@ -4,7 +4,7 @@ const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000'
 
 test.describe('storefront catalog map', () => {
   test('renders every province and filters the catalog on select', async ({ page }) => {
-    await page.goto(`${STOREFRONT_URL}/en/catalog`);
+    await page.goto(`${STOREFRONT_URL}/en/destinations`);
     await expect(page.getByRole('heading', { name: 'Experiences' })).toBeVisible();
     // The tenant enables the cultural-events banner, so it renders site-wide.
     await expect(page.getByText(/Cultural events across Cuba/)).toBeVisible();

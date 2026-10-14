@@ -17,7 +17,7 @@ export interface BottomNavLink extends SiteLink {
 
 /** Destinations · Packages · Events · Travel info · Blog & guides · Support. */
 export const PRIMARY_NAV: readonly SiteLink[] = [
-  { key: 'destinations', href: '/catalog' },
+  { key: 'destinations', href: '/destinations' },
   { key: 'packages', href: '/packages' },
   { key: 'events', href: null },
   { key: 'travelInfo', href: '/travel-info' },

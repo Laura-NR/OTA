@@ -11,7 +11,7 @@ export async function PromotionalBanner() {
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-body-sm">
         <span>{t('text')}</span>
         <Link
-          href="/catalog"
+          href="/destinations"
           className="font-medium text-primary-600 underline-offset-4 hover:underline"
         >
           {t('cta')}

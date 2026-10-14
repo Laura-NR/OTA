@@ -9,7 +9,7 @@ import { CUBA_PROVINCES } from '@/lib/cuba-provinces';
 /**
  * Tokenized interactive map of Cuba (spec §4 storefront). Each province is a
  * button: provinces with catalog items are highlighted, the selected province is
- * filled with the tenant primary colour, and selecting one filters `/catalog`.
+ * filled with the tenant primary colour, and selecting one filters `/destinations`.
  */
 export function CubaMap({
   availableProvinces,
@@ -29,7 +29,7 @@ export function CubaMap({
     if (type) params.set('type', type);
     if (name !== selectedProvince) params.set('province', name);
     const query = params.toString();
-    router.push(query ? `/catalog?${query}` : '/catalog');
+    router.push(query ? `/destinations?${query}` : '/destinations');
   }
 
   return (

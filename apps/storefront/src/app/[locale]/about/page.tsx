@@ -35,7 +35,7 @@ export default async function AboutPage() {
             {t('joinTitle')}
           </h2>
           <Link
-            href="/join-our-network"
+            href="/join"
             className={cn(buttonClassName({ variant: 'secondary' }), 'self-start')}
           >
             {t('join')}

@@ -7,12 +7,12 @@ import { PackageBuilder } from '@/components/package-builder';
 import { getServerSession } from '@/lib/api';
 import { getCatalog } from '@/lib/catalog';
 
-export default async function BuildPage() {
+export default async function CustomPage() {
   const session = await getServerSession();
   if (!session) {
     const locale = await getLocale();
     const prefix = locale === DEFAULT_LOCALE ? '' : `/${locale}`;
-    redirect(`${prefix}/login?next=${encodeURIComponent(`${prefix}/build`)}`);
+    redirect(`${prefix}/login?next=${encodeURIComponent(`${prefix}/custom`)}`);
   }
 
   const t = await getTranslations('build');
