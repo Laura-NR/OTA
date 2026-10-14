@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin and apps · accessibility · alerts in three channels, keyboard paths, contrast audit and fixes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.demo{background:#F3EEE6;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.rule{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:20px;color:#4A433D}
+.kbd{display:inline-block;min-width:22px;padding:0 6px;height:24px;line-height:22px;border:1px solid #D6CEC3;border-bottom-width:2px;border-radius:6px;background:#fff;font:600 12px/22px "IBM Plex Mono",ui-monospace,monospace;text-align:center}
+.sw{display:inline-block;width:28px;height:16px;border-radius:4px;vertical-align:middle;margin-right:6px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 14px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;border:1px solid #D6CEC3;background:#fff;color:#083B50}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 900px">
+    <p class="ov">Admin &amp; apps · accessibility pass · WCAG 2.2 AA</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">Alerts you can hear, see and read; a matrix you can drive from the keyboard</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">The customer screens were annotated on DS sheets 02–05. This sheet does the same for the desk, Ops Lite and the worker app, and records a contrast audit of the status palette with two corrections that were applied across the canvas on 6 Oct.</p>
+  </header>
+
+  <!-- 00 Findings -->
+  <section class="sheet" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; border-color: #0B4F6C">
+    <p class="ov">Corrections applied on 6 Oct 2026</p>
+    <ul class="rule">
+      <li><strong>Focus ring.</strong> The DS specified 2 px ochre #F2B134 everywhere. On the cream ground that is 1.78:1, below the 3:1 required for focus indicators. Now: <strong>2 px teal #0B4F6C, offset 2 px, on light surfaces</strong> (8.4:1 on cream, 8.9:1 on white); ochre stays on dark surfaces such as the sidebar (6.3:1).</li>
+      <li><strong>Amber progress bars.</strong> #F59E0B on the #E8E2D9 track measured 1.67:1. Timer and availability bars now use <strong>#B45309</strong> (3.9:1 on the track, 4.7:1 on cream); amber arrows in the handoff diagrams use the same. Amber pills keep their light fill and dark text (6.4:1), unchanged.</li>
+      <li><strong>Colour was carrying the amber state alone</strong> on the dispatch matrix ("Offered · 1 h 31 m" in amber vs blue). The elapsed percentage is now written in the pill as well.</li>
+    </ul>
+  </section>
+
+  <!-- 01 Red alert -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">01 · Red and amber alerts</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Three channels, one event</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="sheet" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 8px"><strong>Audio</strong><p class="p">A short two-note cue when a red alert is raised, repeated every 60 s until acknowledged; amber gets one cue, no repeat. "Mute 15 min" is logged with the actor and never silences a new red alert. The cue is a desk setting, not a browser autoplay: it starts after the user's first interaction of the session.</p></div>
+      <div class="sheet" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 8px"><strong>Visual</strong><p class="p">The alert strip is red with an icon and words; the matrix row is tinted and its pill says "Timeout" or "Declined". Nothing blinks or scrolls (prefers-reduced-motion respected; there is nothing to reduce). Red and amber also differ in lightness and carry text, so they survive grayscale and deuteranopia.</p></div>
+      <div class="sheet" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 8px"><strong>Screen reader</strong><p class="p">The strip is a <span class="mono">role="alert"</span> region: a new red alert announces once, "Red alert. Booking VX-3PA8ZT, guide Osvaldo Ruiz timed out at 13:40. Press R to re-dispatch." Amber uses <span class="mono">aria-live="polite"</span>. Timer ticks are never announced; only threshold crossings are.</p></div>
+    </div>
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 16px 20px 10px"><strong>Keyboard shortcuts on the desk</strong> <span class="cap">· shown in a "?" overlay · single keys never fire inside a text field</span></div>
+      <div style="overflow-x: auto"><table class="tbl"><thead><tr><th>Keys</th><th>Does</th><th>Where</th></tr></thead><tbody>
+        <tr><td><span class="kbd">R</span></td><td>Open re-dispatch for the focused red or amber row</td><td>Dashboard matrix, Booking, Ops Lite</td></tr>
+        <tr><td><span class="kbd">A</span></td><td>Acknowledge the focused alert (undo 6 s)</td><td>Dashboard, Ops Lite</td></tr>
+        <tr><td><span class="kbd">/</span></td><td>Jump to search</td><td>everywhere</td></tr>
+        <tr><td><span class="kbd">G</span> then <span class="kbd">D</span> / <span class="kbd">B</span> / <span class="kbd">P</span></td><td>Go to Dashboard / Bookings / Payments</td><td>everywhere</td></tr>
+        <tr><td><span class="kbd">Esc</span></td><td>Close the open panel or sheet; focus returns to its trigger</td><td>everywhere</td></tr>
+        <tr><td><span class="kbd">?</span></td><td>Show this list</td><td>everywhere</td></tr>
+      </tbody></table></div>
+    </div>
+  </section>
+
+  <!-- 02 Matrix keyboard -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">02 · Dispatch matrix</p><h2 class="disp" style="font-size: 32px; line-height: 40px">A real table, read row by row</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="demo">
+        <p class="cap">What a screen reader hears on the amber transport cell</p>
+        <div class="sheet" style="padding: 14px 16px; font-size: 14px; line-height: 22px"><span class="mono" style="font-size: 12px; color: #6E665E">row header</span> "VX-7K2M9Q, Margaret Chen plus one, Eco-Tourism in Viñales, 13 to 20 February, 2 hour timer started 13:02."<br><span class="mono" style="font-size: 12px; color: #6E665E">cell</span> "Transport. Offered to Reinier Soto, 1 hour 31 minutes elapsed, 76 percent, amber. Button: call plus 53 5 241 3388. Button: re-dispatch."</div>
+      </div>
+      <ul class="rule">
+        <li>Column headers carry <span class="mono">scope="col"</span>; the booking code cell is the row header. Numbers are right-aligned in the mono face.</li>
+        <li>Tab order inside a row: Open → stay cell actions → transport cell actions → … Each action is a real button or link; the row itself is not clickable.</li>
+        <li>The timer bar has an <span class="mono">aria-label</span> with the percentage; the percentage is also printed in the pill (correction 3). Bars never carry information that is not also in text.</li>
+        <li>The inline re-dispatch panel opens below the row, receives focus on its heading, and returns focus to the "Re-dispatch" button on close. Offer buttons are labelled with the worker's name.</li>
+        <li>Under 1024 px the table scrolls inside its box and the first column is sticky; the sticky column never covers a focused control (focus not obscured, WCAG 2.4.11).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 03 Contrast audit -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">03 · Contrast audit · status palette</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Measured, not estimated</h2></div>
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="overflow-x: auto"><table class="tbl" style="min-width: 900px"><thead><tr><th>Use</th><th>Foreground on background</th><th style="text-align: right">Ratio</th><th>Needs</th><th>Result</th></tr></thead><tbody>
+        <tr><td>Request received pill</td><td><span class="sw" style="background: #E3F2FD; border: 1px solid #D6CEC3"></span>#0D47A1 on #E3F2FD</td><td class="mono" style="text-align: right">7.56:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Confirming / amber pill</td><td><span class="sw" style="background: #FEF3C7; border: 1px solid #D6CEC3"></span>#92400E on #FEF3C7</td><td class="mono" style="text-align: right">6.37:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Ready to pay pill</td><td><span class="sw" style="background: #F2B134"></span>#1F1B17 on #F2B134</td><td class="mono" style="text-align: right">9.05:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Confirmed pill</td><td><span class="sw" style="background: #E8F5E9; border: 1px solid #D6CEC3"></span>#1B5E20 on #E8F5E9</td><td class="mono" style="text-align: right">7.00:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Action needed / cancelled pill</td><td><span class="sw" style="background: #FDECEA; border: 1px solid #D6CEC3"></span>#B71C1C on #FDECEA</td><td class="mono" style="text-align: right">5.74:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Timeout pill, red fill</td><td><span class="sw" style="background: #C62828"></span>#FFFFFF on #C62828</td><td class="mono" style="text-align: right">5.62:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Completed / grey pill</td><td><span class="sw" style="background: #F3EEE6; border: 1px solid #D6CEC3"></span>#4A433D on #F3EEE6</td><td class="mono" style="text-align: right">8.41:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Muted caption on cream / white</td><td><span class="sw" style="background: #FBF8F3; border: 1px solid #D6CEC3"></span>#6E665E on #FBF8F3 · #FFFFFF</td><td class="mono" style="text-align: right">5.32 · 5.64</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Primary button</td><td><span class="sw" style="background: #0B4F6C"></span>#FFFFFF on #0B4F6C</td><td class="mono" style="text-align: right">8.94:1</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Sidebar text / active item</td><td><span class="sw" style="background: #083B50"></span>#C9DDE6 · #FFFFFF on #083B50</td><td class="mono" style="text-align: right">8.55 · 11.99</td><td>4.5</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Teal bar on track · red bar on track</td><td><span class="sw" style="background: #E8E2D9"></span>#0B4F6C · #C62828 on #E8E2D9</td><td class="mono" style="text-align: right">6.94 · 4.37</td><td>3.0</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr style="background: #FFFBEB"><td>Amber bar on track · <strong>was</strong></td><td><span class="sw" style="background: #F59E0B"></span>#F59E0B on #E8E2D9</td><td class="mono" style="text-align: right">1.67:1</td><td>3.0</td><td><span class="pill" style="background: #FDECEA; color: #B71C1C">Fail → fixed</span></td></tr>
+        <tr><td>Amber bar on track · <strong>now</strong></td><td><span class="sw" style="background: #B45309"></span>#B45309 on #E8E2D9</td><td class="mono" style="text-align: right">3.90:1</td><td>3.0</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr style="background: #FFFBEB"><td>Focus ring on cream · <strong>was</strong></td><td><span class="sw" style="background: #FBF8F3; border: 2px solid #F2B134"></span>#F2B134 on #FBF8F3</td><td class="mono" style="text-align: right">1.78:1</td><td>3.0</td><td><span class="pill" style="background: #FDECEA; color: #B71C1C">Fail → fixed</span></td></tr>
+        <tr><td>Focus ring on cream / white · <strong>now</strong></td><td><span class="sw" style="background: #FBF8F3; border: 2px solid #0B4F6C"></span>#0B4F6C on #FBF8F3 · #FFFFFF</td><td class="mono" style="text-align: right">8.44 · 8.94</td><td>3.0</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Focus ring on the dark sidebar (unchanged)</td><td><span class="sw" style="background: #083B50; border: 2px solid #F2B134"></span>#F2B134 on #083B50</td><td class="mono" style="text-align: right">6.34:1</td><td>3.0</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pass</span></td></tr>
+        <tr><td>Amber pill border (decorative; the label carries the state)</td><td><span class="sw" style="background: #FEF3C7; border: 1px solid #F59E0B"></span>#F59E0B on #FEF3C7</td><td class="mono" style="text-align: right">1.93:1</td><td>—</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Not required</span></td></tr>
+      </tbody></table></div>
+      <p class="cap" style="padding: 10px 20px 16px">Ratios computed with the WCAG relative-luminance formula on 6 Oct 2026. Text needs 4.5:1 (3:1 at 24 px or 19 px bold); focus indicators and meaningful graphics need 3:1.</p>
+    </div>
+  </section>
+
+  <!-- 04 Forms & controls -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">04 · Forms, controls, structure</p><h2 class="disp" style="font-size: 32px; line-height: 40px">The rules the desk screens follow</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+      <ul class="rule">
+        <li>Every input has a visible label; search fields that look label-less carry a visually hidden one. Help text sits under the field, errors beside it and in a summary at the top (Edge-states sheet, 04).</li>
+        <li>Choice cards (categories, severities, re-dispatch candidates, proof decisions) are real <span class="mono">&lt;label&gt;</span> + radio pairs; state filters are buttons with <span class="mono">aria-pressed</span>; switches use <span class="mono">role="switch"</span> and <span class="mono">aria-checked</span>.</li>
+        <li>Disabled actions keep their label, stay focusable (<span class="mono">aria-disabled</span>) and show the reason beside them ("needs a second approver").</li>
+        <li>Targets: 44 px on the desk and Ops Lite, 48–56 px in the worker app; icon-only buttons carry <span class="mono">aria-label</span>.</li>
+      </ul>
+      <ul class="rule">
+        <li>Each page has one <span class="mono">&lt;h1&gt;</span>, sections have headings, the sidebar is a <span class="mono">&lt;nav aria-label="Admin"&gt;</span> with <span class="mono">aria-current="page"</span>.</li>
+        <li>Tabs are <span class="mono">role="tab"</span> with <span class="mono">aria-selected</span>; arrow keys move between them, Tab leaves the list.</li>
+        <li>Language: the worker app and the recruitment page are <span class="mono">lang="es"</span>; Spanish quotes inside English screens (inbox, booking) are wrapped in <span class="mono">lang="es"</span> spans so speech switches voice.</li>
+        <li>Accessible authentication (WCAG 3.3.8): email link, passkey or SMS code; no memorised secret, no puzzle.</li>
+        <li>Redundant entry (3.3.7): the recruitment form carries the category into the credential step; the booking never asks a traveler's details twice.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 05 Worker app -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">05 · Worker app and Ops Lite</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Outdoors, one-handed, often offline</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+      <ul class="rule">
+        <li>No text under 4.5:1 and no thin grey on the worker screens; body 16 px, buttons 52 px, the emergency button 56 px with icon and words, never an icon alone.</li>
+        <li>Primary actions sit in the thumb zone above the bottom nav; destructive ones (decline, emergency) open a confirmation sheet with the reason first.</li>
+        <li>Offline: a persistent status pill plus a toast with <span class="mono">aria-live="polite"</span> for "guardado sin conexión"; nothing silently fails.</li>
+        <li>Countdowns are written as minutes left and announced only at amber and red; the timer bar duplicates, never replaces, the number.</li>
+      </ul>
+      <ul class="rule">
+        <li>Push text is duplicated by SMS after 60 min, and by a phone call after 1 h without connectivity (the desk sees the gap).</li>
+        <li>Ops Lite: the red card expands in place and moves focus to its heading; "Offer" buttons name the worker; the push notification uses the same words as the card.</li>
+        <li>Haptics on accept, decline and emergency; sound only for incoming offers, following the phone's silent switch.</li>
+        <li>Plain Spanish: no English jargon except the state names the desk uses ("PENDING_SYNC" appears once, explained).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 06 Charts -->
+  <section class="sheet" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 10px">
+    <p class="ov">06 · Charts and figures on A-Reports and the dashboard</p>
+    <ul class="rule">
+      <li>Every bar and stacked bar carries an <span class="mono">aria-label</span> with its values ("Revenue by rail: SEPA 27,100, card 12,930, invoice 1,250"); the legend repeats the numbers in text.</li>
+      <li>The province heat list is a list, not a map; the funnel prints counts and percentages; sparkline-style month columns have a visually hidden table alternative in production.</li>
+      <li>Colour series are limited to teal, ochre and terracotta, which differ in lightness; red is reserved for alerts.</li>
+    </ul>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

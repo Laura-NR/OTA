@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Únete a nuestra red · portal de colaboradores · guías, choferes, casas particulares</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.wrap{max-width:1280px;margin:0 auto;padding:0 40px;box-sizing:border-box}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:16px;line-height:24px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C;height:40px;padding:0 12px}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:focus-visible,.inp:focus-visible,.sel:focus-visible,.cat:focus-visible,.chip:focus-visible,.ck:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.sel{height:48px;padding:0 14px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp::placeholder{color:#6E665E}
+.sel{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231F1B17' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.nav a{text-decoration:none;color:#1F1B17;font-weight:500;font-size:15px}
+.nav a:hover{color:#083B50}
+.cat{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer;text-align:left}
+.cat.on{border-color:#0B4F6C;box-shadow:inset 0 0 0 1px #0B4F6C;background:#F3F8FA}
+.cat input{width:20px;height:20px;accent-color:#0B4F6C;margin:3px 0 0;flex:none}
+.chip{display:inline-flex;align-items:center;height:40px;padding:0 14px;border-radius:9999px;border:1px solid #D6CEC3;background:#fff;color:#1F1B17;font:500 14px/20px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.chip.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.stp{display:flex;align-items:center;gap:10px;font:600 14px/20px Inter,system-ui,sans-serif;color:#6E665E}
+.stp .n{width:28px;height:28px;border-radius:9999px;border:2px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.stp.on{color:#083B50}.stp.done{color:#1B5E20}
+.drop{border:2px dashed #D6CEC3;border-radius:12px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;background:#FBF8F3}
+.foot a{color:#E8E2D9;text-decoration:none;font-size:14px;line-height:20px}
+</style>
+</helmet>
+
+<div style="display: flex; flex-direction: column; min-width: 0">
+
+  <!-- Header (site chrome, Spanish locale) -->
+  <header style="background: #FBF8F3; border-bottom: 1px solid #E8E2D9"><div class="wrap" style="display: flex; align-items: center; gap: 24px; height: 72px; flex-wrap: wrap">
+    <a href="Home.dc.html" aria-label="Vereda Expeditions, inicio" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #083B50"><svg width="117.37" height="28" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#A83E24"></path><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#1F1B17"></path><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#1F1B17"></path><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#1F1B17"></path><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#1F1B17"></path><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#1F1B17"></path><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"></path></svg></a>
+    <nav class="nav" aria-label="Principal" style="display: flex; gap: 20px; flex: 1; flex-wrap: wrap"><a href="Destinations.dc.html">Destinos</a><a href="Packages.dc.html">Paquetes</a><a href="About.dc.html">Sobre Cuba</a><a href="PreTrip.dc.html">Información de viaje</a><a href="Blog.dc.html">Blog</a><a href="Join.dc.html" aria-current="page" style="color: #083B50; border-bottom: 2px solid #0B4F6C">Únete a la red</a></nav>
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+      <button class="btn btn-t btn-sm" type="button" aria-label="Idioma: español" style="gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M2 12h20M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>ES</button>
+      <a class="btn btn-t btn-sm" href="Auth.dc.html">Iniciar sesión</a>
+      <a class="btn btn-s" href="Support.dc.html" style="gap: 8px"><svg class="ic" style="width: 18px; height: 18px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg>Habla con la central</a>
+    </div>
+  </div></header>
+
+  <main id="main" style="display: flex; flex-direction: column">
+
+    <!-- Hero -->
+    <section style="background: #083B50; color: #fff"><div class="wrap" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 40px; align-items: center; padding-top: 56px; padding-bottom: 56px">
+      <div style="display: flex; flex-direction: column; gap: 20px">
+        <p class="ov" style="color: #F2B134">Portal de colaboradores · vereda.travel/es/unete-a-nuestra-red</p>
+        <h1 class="disp" style="font-size: 52px; line-height: 60px; color: #fff; text-wrap: balance">Trabaja con viajeros que vienen a conocer tu Cuba.</h1>
+        <p style="margin: 0; font-size: 18px; line-height: 28px; color: #C9DDE6; max-width: 58ch">Buscamos arrendadores, choferes con licencia, guías certificados por Formatur y lugares culturales o gastronómicos en todo el país. Recibes ofertas en el teléfono, aceptas las que te convienen y cobras en euros a los cinco días hábiles de terminar.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap"><a class="btn" href="#solicitud" style="background: #F2B134; color: #1F1B17">Enviar mi solicitud</a><a class="btn btn-t" href="#como" style="color: #fff">Cómo funciona</a></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; line-height: 20px; color: #C9DDE6">
+          <span style="display: inline-flex; gap: 8px; align-items: center"><svg class="ic" style="width: 16px; height: 16px; color: #F2B134" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Sin cuota de entrada ni exclusividad</span>
+          <span style="display: inline-flex; gap: 8px; align-items: center"><svg class="ic" style="width: 16px; height: 16px; color: #F2B134" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Las casas reciben el 85–90 % de la tarifa; los guías, el 100 % de la suya</span>
+          <span style="display: inline-flex; gap: 8px; align-items: center"><svg class="ic" style="width: 16px; height: 16px; color: #F2B134" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Central en La Habana 24/7 que te respalda ante cualquier incidencia</span>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="padding: 20px; border-radius: 12px; background: rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 6px"><span class="mono" style="font-size: 28px; line-height: 32px; font-weight: 500">38</span><span style="font-size: 14px; line-height: 20px; color: #C9DDE6">colaboradores verificados en 9 provincias</span></div>
+        <div style="padding: 20px; border-radius: 12px; background: rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 6px"><span class="mono" style="font-size: 28px; line-height: 32px; font-weight: 500">5 días</span><span style="font-size: 14px; line-height: 20px; color: #C9DDE6">hábiles entre terminar un servicio y cobrarlo</span></div>
+        <div style="padding: 20px; border-radius: 12px; background: rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 6px"><span class="mono" style="font-size: 28px; line-height: 32px; font-weight: 500">€ 121 000</span><span style="font-size: 14px; line-height: 20px; color: #C9DDE6">pagados a familias y profesionales cubanos en 2026</span></div>
+        <div style="padding: 20px; border-radius: 12px; background: rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 6px"><span class="mono" style="font-size: 28px; line-height: 32px; font-weight: 500">2–3 días</span><span style="font-size: 14px; line-height: 20px; color: #C9DDE6">para revisar tu licencia y darte de alta</span></div>
+      </div>
+    </div></section>
+
+    <!-- How it works -->
+    <section id="como" class="wrap" style="padding-top: 56px; padding-bottom: 24px; display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">Cómo funciona</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Cuatro pasos, ningún papel que no tengas ya</h2></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px">
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px"><span class="mono" style="color: #0B4F6C; font-weight: 500">01</span><h3 style="margin: 0; font-size: 18px; line-height: 24px">Envías la solicitud</h3><p class="p" style="font-size: 14px; line-height: 20px">Categoría, carnet, teléfono, municipios donde trabajas y una foto nítida de tu licencia. Diez minutos desde el móvil.</p></div>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px"><span class="mono" style="color: #0B4F6C; font-weight: 500">02</span><h3 style="margin: 0; font-size: 18px; line-height: 24px">La central verifica</h3><p class="p" style="font-size: 14px; line-height: 20px">Comprobamos la credencial (Formatur, licencia de transporte o RTN) y te llamamos para conocerte. 2–3 días laborables.</p></div>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px"><span class="mono" style="color: #0B4F6C; font-weight: 500">03</span><h3 style="margin: 0; font-size: 18px; line-height: 24px">Instalas la app y marcas tu disponibilidad</h3><p class="p" style="font-size: 14px; line-height: 20px">Recibes ofertas con todos los datos y dos horas para aceptar o rechazar. Nunca se te asigna nada sin tu sí.</p></div>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px"><span class="mono" style="color: #0B4F6C; font-weight: 500">04</span><h3 style="margin: 0; font-size: 18px; line-height: 24px">Trabajas y cobras</h3><p class="p" style="font-size: 14px; line-height: 20px">Orden de trabajo clara, viajeros informados, central 24/7. Pago en efectivo en la oficina o por transferencia, con recibo.</p></div>
+      </div>
+    </section>
+
+    <!-- Application -->
+    <section id="solicitud" class="wrap" style="padding-top: 32px; padding-bottom: 72px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 32px; align-items: start">
+      <div class="card" style="padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">Solicitud</p><h2 class="disp" style="font-size: 28px; line-height: 36px">Únete a la red</h2></div>
+        <ol style="list-style: none; margin: 0; padding: 0; display: flex; gap: 20px; flex-wrap: wrap">
+          <li class="stp {{s1}}"><span class="n">1</span>Categoría</li><li class="stp {{s2}}"><span class="n">2</span>Identidad</li><li class="stp {{s3}}"><span class="n">3</span>Credencial</li><li class="stp {{s4}}"><span class="n">4</span>Revisar</li>
+        </ol>
+
+        <!-- Step 1 -->
+        <sc-if value="{{isCat}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <span class="lbl">¿Qué haces?</span>
+            <div role="radiogroup" aria-label="Categoría" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px">
+              <sc-for list="{{cats}}" as="c" hint-placeholder-count="4"><label class="cat {{c.cls}}"><input type="radio" name="cat" checked="{{c.on}}" onChange="{{c.pick}}"><span style="display: flex; flex-direction: column; gap: 2px"><strong>{{c.label}}</strong><span class="cap">{{c.sub}}</span></span></label></sc-for>
+            </div>
+            <p class="hlp">La categoría determina qué licencia te pedimos en el paso 3. Si haces dos cosas (por ejemplo casa y chofer), envía dos solicitudes.</p>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap"><button class="btn btn-p" type="button" onClick="{{toId}}">Continuar</button></div>
+        </sc-if>
+
+        <!-- Step 2 -->
+        <sc-if value="{{isId}}" hint-placeholder-val="{{ false }}">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px">
+            <div class="fld"><label class="lbl" for="nm">Nombre</label><input class="inp" id="nm" type="text" value="Yunier"></div>
+            <div class="fld"><label class="lbl" for="ap">Apellidos</label><input class="inp" id="ap" type="text" value="Blanco Rodríguez"></div>
+            <div class="fld"><label class="lbl" for="ci">Carnet de identidad · 11 cifras</label><input class="inp mono" id="ci" type="text" inputmode="numeric" value="88041512345"><p class="hlp">Solo para verificar que la licencia es tuya. Se guarda cifrado y nunca se muestra a los viajeros.</p></div>
+            <div class="fld"><label class="lbl" for="tel">Teléfono móvil</label><input class="inp mono" id="tel" type="tel" value="+53 5 790 4418"><p class="hlp">Recibirás un SMS para confirmarlo.</p></div>
+            <div class="fld"><label class="lbl" for="wa">WhatsApp (si es otro número)</label><input class="inp mono" id="wa" type="tel" placeholder="+53 …"></div>
+            <div class="fld"><label class="lbl" for="lang">Idiomas que hablas</label><select class="sel" id="lang"><option>Español e inglés básico</option><option>Español</option><option>Español e inglés fluido</option><option>Español, inglés y francés</option><option>Español, inglés y alemán</option></select></div>
+          </div>
+          <div class="fld">
+            <span class="lbl">Municipios donde trabajas · marca todos los que apliquen</span>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{munis}}" as="m" hint-placeholder-count="8"><button class="chip {{m.cls}}" type="button" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for><button class="chip" type="button">+ Otro municipio</button></div>
+            <p class="hlp">Las ofertas te llegan solo para servicios en estos municipios o que salen de ellos.</p>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap"><button class="btn btn-s" type="button" onClick="{{toCat}}">Atrás</button><button class="btn btn-p" type="button" onClick="{{toCred}}">Continuar</button></div>
+        </sc-if>
+
+        <!-- Step 3 -->
+        <sc-if value="{{isCred}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 4px"><span class="lbl">{{cat.credLabel}}</span><p class="hlp">{{cat.credHelp}}</p></div>
+            <sc-if value="{{noFile}}" hint-placeholder-val="{{ true }}">
+              <div class="drop">
+                <svg class="ic" style="width: 32px; height: 32px; color: #0B4F6C" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <strong>Haz una foto o sube la imagen de tu {{cat.credShort}}</strong>
+                <span class="cap">Las cuatro esquinas visibles, sin reflejos, número y fecha de vencimiento legibles · JPG o PNG hasta 10 MB</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px"><button class="btn btn-p" type="button" onClick="{{addFile}}">Subir foto</button></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{hasFile}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 16px; align-items: flex-start; padding: 14px; border: 1px solid #D6CEC3; border-radius: 12px; background: #fff; flex-wrap: wrap">
+                <div style="width: 160px; aspect-ratio: 4/3; border-radius: 8px; background: #D9C9A3; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box" role="img" aria-label="Vista previa de la foto de la credencial"><span class="cap" style="background: rgba(255,255,255,.9); padding: 2px 6px; border-radius: 4px">{{cat.credShort}} · 2,4 MB</span></div>
+                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px">
+                  <span style="display: inline-flex; gap: 8px; align-items: center; font-size: 14px"><svg class="ic" style="width: 16px; height: 16px; color: #2E7D32" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Esquinas y número legibles</span>
+                  <span style="display: inline-flex; gap: 8px; align-items: center; font-size: 14px"><svg class="ic" style="width: 16px; height: 16px; color: #92400E" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 8v5m0-8h.01"></path></svg>Ligero reflejo arriba a la derecha: la central puede pedir otra foto</span>
+                  <button class="btn btn-t" type="button" onClick="{{rmFile}}" style="align-self: flex-start">Repetir la foto</button>
+                </div>
+              </div>
+            </sc-if>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px">
+              <div class="fld"><label class="lbl" for="cn">Número de la credencial</label><input class="inp mono" id="cn" type="text" value="{{cat.credNum}}"></div>
+              <div class="fld"><label class="lbl" for="cx">Fecha de vencimiento</label><input class="inp mono" id="cx" type="text" value="08/08/2027"><p class="hlp">Con menos de 30 días de vigencia no podemos darte de alta hasta la renovación.</p></div>
+              <sc-for list="{{cat.extra}}" as="x" hint-placeholder-count="2"><div class="fld"><label class="lbl" for="{{x.id}}">{{x.label}}</label><input class="inp" id="{{x.id}}" type="text" value="{{x.value}}"></div></sc-for>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap"><button class="btn btn-s" type="button" onClick="{{toId}}">Atrás</button><button class="btn btn-p" type="button" onClick="{{toRev}}">Continuar</button></div>
+        </sc-if>
+
+        <!-- Step 4 -->
+        <sc-if value="{{isRev}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <div style="padding: 16px 18px; border-radius: 12px; background: #FBF8F3; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; line-height: 20px">
+              <span class="cap">Categoría</span><span>{{cat.label}}</span>
+              <span class="cap">Nombre</span><span>Yunier Blanco Rodríguez · CI 880415•••••</span>
+              <span class="cap">Contacto</span><span class="mono">+53 5 790 4418 · WhatsApp igual</span>
+              <span class="cap">Municipios</span><span>{{muniList}}</span>
+              <span class="cap">Credencial</span><span>{{cat.credShort}} · <span class="mono">{{cat.credNum}}</span> · vence 08/08/2027 · foto {{fileState}}</span>
+            </div>
+            <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 20px"><input class="ck" type="checkbox" checked=""><span>Autorizo a Vereda Expeditions a verificar mi credencial con la entidad emisora (Formatur, Ministerio de Transporte o MINTUR) y a guardar mis datos para gestionar servicios. Puedo pedir su borrado en cualquier momento. <a href="Legal.dc.html">Política de datos de colaboradores</a>.</span></label>
+            <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 20px"><input class="ck" type="checkbox" checked=""><span>Declaro que la licencia es mía y está vigente, y acepto que ningún servicio se asigna a un colaborador sin credencial verificada.</span></label>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap"><button class="btn btn-s" type="button" onClick="{{toCred}}">Atrás</button><button class="btn btn-p" type="button" onClick="{{submit}}">Enviar la solicitud</button></div>
+        </sc-if>
+
+        <!-- Done -->
+        <sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; background: #E8F5E9; color: #1B5E20; border: 1px solid #A5D6A7">
+            <svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <strong style="font-size: 18px; line-height: 24px">Solicitud recibida · <span class="mono">SOL-2026-0212</span></strong>
+              <p style="margin: 0; font-size: 15px; line-height: 22px">Tu credencial está <strong>en auditoría</strong>. La central la revisa en 2–3 días laborables y te llama al +53 5 790 4418 para una breve conversación. Te hemos enviado un SMS con este número de solicitud.</p>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 12px">
+            <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 6px"><strong style="font-size: 15px">1 · Revisión</strong><span class="cap">Comprobamos número, vigencia y que la foto coincide con tu carnet.</span></div>
+            <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 6px"><strong style="font-size: 15px">2 · Llamada</strong><span class="cap">Hablamos de tus servicios, tarifas netas y forma de pago.</span></div>
+            <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 6px"><strong style="font-size: 15px">3 · Alta y app</strong><span class="cap">Recibes el enlace de la app y empiezas a marcar disponibilidad.</span></div>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap"><a class="btn btn-p" href="W-Login.dc.html">Ver cómo es la app</a><button class="btn btn-t" type="button" onClick="{{reset}}">Enviar otra solicitud</button></div>
+        </sc-if>
+      </div>
+
+      <!-- Side -->
+      <aside style="display: flex; flex-direction: column; gap: 16px">
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <p class="ov">Lo que pedimos</p>
+          <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: #4A433D">
+            <li>Licencia vigente: credencial <strong>Formatur</strong> (guías), <strong>licencia de operación de transporte</strong> (choferes), <strong>RTN</strong> (casas) o licencia de actividad (lugares).</li>
+            <li>Carnet de identidad y un teléfono con SMS; WhatsApp ayuda.</li>
+            <li>Responder a las ofertas en el plazo (2 horas) aunque sea para decir que no.</li>
+            <li>Para casas: contarnos con sinceridad si hay generador, placas o tanque de agua.</li>
+          </ul>
+        </div>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <p class="ov">Lo que recibes</p>
+          <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: #4A433D">
+            <li>Ofertas con fechas, viajeros, idioma y pago neto antes de aceptar.</li>
+            <li>Pago en euros a los 5 días hábiles, con recibo. Sin esperar al final de temporada.</li>
+            <li>Una orden de trabajo por servicio y una central que responde de día y de noche.</li>
+            <li>Tu puntuación de fiabilidad y las valoraciones de los viajeros, solo para ti.</li>
+          </ul>
+        </div>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; background: #FBF8F3">
+          <p class="ov">Preguntas frecuentes</p>
+          <details style="font-size: 14px; line-height: 20px"><summary style="cursor: pointer; font-weight: 600; min-height: 24px">¿Cuesta algo entrar en la red?</summary><p class="p" style="font-size: 14px; line-height: 20px; margin-top: 6px">No. No hay cuota ni exclusividad; puedes seguir trabajando con quien quieras.</p></details>
+          <details style="font-size: 14px; line-height: 20px"><summary style="cursor: pointer; font-weight: 600; min-height: 24px">¿Quién fija la tarifa?</summary><p class="p" style="font-size: 14px; line-height: 20px; margin-top: 6px">Tú propones tu tarifa neta en la llamada de alta; la central la revisa una vez al año contigo.</p></details>
+          <details style="font-size: 14px; line-height: 20px"><summary style="cursor: pointer; font-weight: 600; min-height: 24px">¿Y si mi licencia vence pronto?</summary><p class="p" style="font-size: 14px; line-height: 20px; margin-top: 6px">Con menos de 30 días de vigencia no recibes ofertas automáticas; sube la renovación y vuelves a estar activo.</p></details>
+          <details style="font-size: 14px; line-height: 20px"><summary style="cursor: pointer; font-weight: 600; min-height: 24px">¿Qué datos ven los viajeros?</summary><p class="p" style="font-size: 14px; line-height: 20px; margin-top: 6px">Tu nombre, tu teléfono de servicio y tu licencia en el bono. Nunca tu carnet ni tu dirección personal.</p></details>
+        </div>
+        <blockquote style="margin: 0; padding: 20px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff; display: flex; flex-direction: column; gap: 10px"><p style="margin: 0; font-size: 15px; line-height: 22px">"Antes esperaba meses para cobrar. Ahora sé el viernes lo que entra el miércoles, y la central me avisa de los cortes antes que la propia empresa eléctrica."</p><footer style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap"><span style="font-size: 14px; font-weight: 600">Yamilé T. · arrendadora, Viñales</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Testimonio de muestra</span></footer></blockquote>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="foot" style="background: #083B50; color: #E8E2D9"><div class="wrap" style="padding-top: 40px; padding-bottom: 24px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 24px">
+      <div style="display: flex; flex-direction: column; gap: 10px"><span style="display: inline-flex; align-items: center; gap: 10px; color: #fff"><svg width="117.37" height="40.25" viewBox="0 0 134.13 46" role="img" aria-label="Vereda Expeditions"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"></path><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"></path><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"></path><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"></path><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"></path><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"></path><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"></path><path d="M61.07 44V38H64.97V38.91H62.15V40.52H64.76V41.42H62.15V43.09H64.99V44Z" fill="#F2B134"></path><path d="M67.32 44 69.76 40.53V41.34L67.5 38H68.74L69.47 39.1Q69.66 39.38 69.78 39.6Q69.9 39.81 70 40.02Q70.1 40.22 70.22 40.45H69.96Q70.08 40.22 70.18 40.02Q70.28 39.82 70.41 39.6Q70.53 39.38 70.72 39.1L71.46 38H72.68L70.44 41.29V40.51L72.83 44H71.57L70.66 42.65Q70.49 42.4 70.39 42.22Q70.28 42.05 70.19 41.88Q70.1 41.72 69.99 41.5H70.17Q70.06 41.71 69.97 41.87Q69.88 42.04 69.77 42.22Q69.66 42.4 69.49 42.65L68.56 44Z" fill="#F2B134"></path><path d="M75.3 44V38H77.54Q78.23 38 78.7 38.26Q79.17 38.52 79.42 38.97Q79.66 39.41 79.66 39.99Q79.66 40.56 79.41 41.01Q79.17 41.46 78.7 41.71Q78.22 41.97 77.53 41.97H76.04V41.08H77.38Q77.79 41.08 78.05 40.94Q78.31 40.8 78.43 40.55Q78.56 40.31 78.56 39.99Q78.56 39.67 78.43 39.42Q78.31 39.18 78.05 39.04Q77.79 38.9 77.38 38.9H76.37V44Z" fill="#F2B134"></path><path d="M82.27 44V38H86.16V38.91H83.34V40.52H85.96V41.42H83.34V43.09H86.18V44Z" fill="#F2B134"></path><path d="M90.94 44H89.42V43.07H90.89Q91.52 43.07 91.94 42.84Q92.36 42.61 92.57 42.15Q92.78 41.68 92.78 40.99Q92.78 40.31 92.57 39.85Q92.36 39.39 91.95 39.16Q91.53 38.93 90.92 38.93H89.39V38H90.98Q91.88 38 92.52 38.36Q93.16 38.72 93.5 39.39Q93.85 40.06 93.85 40.99Q93.85 41.93 93.5 42.6Q93.16 43.28 92.51 43.64Q91.85 44 90.94 44ZM89.99 38V44H88.91V38Z" fill="#F2B134"></path><path d="M97.59 38V44H96.52V38Z" fill="#F2B134"></path><path d="M100.18 38.91V38H104.96V38.91H103.11V44H102.03V38.91Z" fill="#F2B134"></path><path d="M108.62 38V44H107.54V38Z" fill="#F2B134"></path><path d="M114.04 44.08Q113.26 44.08 112.63 43.71Q112.01 43.35 111.65 42.66Q111.29 41.97 111.29 41Q111.29 40.03 111.65 39.34Q112.01 38.65 112.63 38.29Q113.26 37.92 114.04 37.92Q114.83 37.92 115.45 38.29Q116.07 38.65 116.43 39.34Q116.79 40.03 116.79 41Q116.79 41.97 116.43 42.66Q116.07 43.35 115.45 43.72Q114.83 44.08 114.04 44.08ZM114.04 43.12Q114.53 43.12 114.91 42.87Q115.28 42.63 115.5 42.16Q115.71 41.69 115.71 41Q115.71 40.31 115.5 39.84Q115.28 39.37 114.91 39.13Q114.53 38.88 114.04 38.88Q113.55 38.88 113.17 39.13Q112.8 39.37 112.58 39.84Q112.37 40.32 112.37 41Q112.37 41.69 112.58 42.16Q112.8 42.63 113.17 42.87Q113.55 43.12 114.04 43.12Z" fill="#F2B134"></path><path d="M119.46 44V38H120.68L122.75 41.3Q122.88 41.51 123.03 41.77Q123.17 42.03 123.33 42.35Q123.49 42.67 123.64 43.06H123.52Q123.49 42.72 123.47 42.37Q123.45 42.01 123.44 41.69Q123.42 41.37 123.42 41.15V38H124.52V44H123.3L121.43 41.03Q121.25 40.74 121.09 40.46Q120.93 40.18 120.75 39.83Q120.57 39.48 120.31 38.99H120.46Q120.49 39.42 120.51 39.82Q120.53 40.21 120.54 40.52Q120.56 40.83 120.56 41.02V44Z" fill="#F2B134"></path><path d="M129.48 44.09Q128.78 44.09 128.27 43.88Q127.76 43.66 127.47 43.24Q127.18 42.83 127.15 42.24H128.21Q128.24 42.55 128.41 42.76Q128.58 42.97 128.86 43.07Q129.14 43.17 129.47 43.17Q129.83 43.17 130.1 43.07Q130.37 42.96 130.52 42.76Q130.68 42.57 130.68 42.31Q130.68 42.07 130.54 41.92Q130.41 41.77 130.16 41.66Q129.92 41.56 129.59 41.48L128.91 41.3Q128.16 41.11 127.74 40.71Q127.32 40.32 127.32 39.69Q127.32 39.16 127.6 38.76Q127.89 38.36 128.39 38.14Q128.88 37.92 129.51 37.92Q130.15 37.92 130.63 38.14Q131.11 38.36 131.39 38.75Q131.66 39.14 131.67 39.64H130.63Q130.59 39.26 130.28 39.05Q129.98 38.83 129.49 38.83Q129.16 38.83 128.91 38.94Q128.67 39.04 128.54 39.22Q128.41 39.39 128.41 39.62Q128.41 39.87 128.56 40.04Q128.71 40.2 128.95 40.29Q129.19 40.39 129.43 40.45L129.99 40.59Q130.32 40.67 130.64 40.81Q130.95 40.94 131.2 41.14Q131.45 41.35 131.6 41.64Q131.75 41.92 131.75 42.32Q131.75 42.84 131.48 43.24Q131.21 43.65 130.71 43.87Q130.2 44.09 129.48 44.09Z" fill="#F2B134"></path></svg></span><span style="font-size: 14px; line-height: 20px; color: #C9DDE6">Agencia de viajes licenciada · MINTUR [MINTUR-2026-XXXX] · Centro de atención permanente en La Habana · +53 7 204 2516</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov" style="color: #F2B134">Colaboradores</p><a href="Join.dc.html">Únete a la red</a><a href="W-Login.dc.html">App de colaboradores</a><a href="Legal.dc.html">Política de datos de colaboradores</a><a href="Support.dc.html">Contactar con la central</a></div>
+      <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov" style="color: #F2B134">Viajeros</p><a href="Packages.dc.html">Paquetes</a><a href="Destinations.dc.html">Destinos</a><a href="PreTrip.dc.html">Información de viaje</a><a href="Legal.dc.html">Términos y privacidad</a></div>
+    </div>
+    <p class="cap" style="color: #C9DDE6">© 2026 Vereda Expeditions S.L. · Las cifras de pagos y colaboradores se actualizan cada mes desde el panel de informes.</p>
+  </div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 'cat', cat: 'driver', file: false, munis: { 'Trinidad': true, 'Sancti Spíritus': true, 'Cienfuegos': true } };
+  }
+  renderVals() {
+    const s = this.state;
+    const CATS = {
+      guide: { label: 'Guía turístico', sub: 'Credencial Formatur vigente · especialidades y idiomas', credLabel: 'Credencial de guía · Formatur', credShort: 'credencial Formatur', credHelp: 'La credencial de habilitación como guía de turismo emitida por Formatur. Foto del anverso con tu nombre, número y vigencia.', credNum: 'FTR-SS-2025-0000', extra: [{ id: 'x1', label: 'Especialidades', value: 'Naturaleza, historia colonial' }, { id: 'x2', label: 'Tamaño máximo de grupo', value: '8' }] },
+      driver: { label: 'Porteador privado (chofer)', sub: 'Licencia de operación de transporte · vehículo propio', credLabel: 'Licencia de operación de transporte', credShort: 'licencia de transporte', credHelp: 'La licencia de operación de transporte a tu nombre. Después te pediremos el seguro de responsabilidad civil del vehículo.', credNum: 'LOT-SS-2025-01107', extra: [{ id: 'x1', label: 'Vehículo · modelo y plazas', value: 'Mercedes Sprinter · 12 plazas · AC' }, { id: 'x2', label: 'Matrícula', value: 'P 455 118' }] },
+      host: { label: 'Arrendador (casa particular)', sub: 'Certificado RTN · habitaciones y respaldo eléctrico', credLabel: 'Certificado del Registro Nacional de Turismo (RTN)', credShort: 'certificado RTN', credHelp: 'La inscripción de la casa en el Registro Nacional de Turismo como arrendador de habitaciones. Foto del documento completo.', credNum: 'RTN-SS-2024-0000', extra: [{ id: 'x1', label: 'Habitaciones · capacidad', value: '2 · 4 huéspedes' }, { id: 'x2', label: 'Respaldo eléctrico', value: 'Generador 4 h · tanque de agua' }] },
+      venue: { label: 'Lugar cultural o gastronómico', sub: 'Paladar, taller, finca, sala de música · licencia de actividad', credLabel: 'Licencia de actividad del establecimiento', credShort: 'licencia de actividad', credHelp: 'La licencia que autoriza la actividad (restauración, taller, visita de finca). Si tienes inscripción RTN, súbela también.', credNum: 'LA-SS-2026-0000', extra: [{ id: 'x1', label: 'Nombre del lugar', value: '' }, { id: 'x2', label: 'Aforo · horario', value: '' }] }
+    };
+    const cats = Object.keys(CATS).map((k) => ({ key: k, label: CATS[k].label, sub: CATS[k].sub, on: s.cat === k, cls: s.cat === k ? 'on' : '', pick: () => this.setState({ cat: k }) }));
+    const M = ['La Habana', 'Viñales', 'Pinar del Río', 'Matanzas', 'Playa Larga', 'Cienfuegos', 'Trinidad', 'Sancti Spíritus', 'Santiago de Cuba', 'Baracoa'];
+    const munis = M.map((m) => ({ label: m, on: !!s.munis[m], cls: s.munis[m] ? 'on' : '', pick: () => this.setState({ munis: { ...s.munis, [m]: !s.munis[m] } }) }));
+    const order = ['cat', 'id', 'cred', 'rev', 'done'];
+    const cls = (k) => (s.step === k ? 'on' : order.indexOf(s.step) > order.indexOf(k) ? 'done' : '');
+    return {
+      cats, cat: CATS[s.cat], munis, muniList: M.filter((m) => s.munis[m]).join(', ') || '—',
+      isCat: s.step === 'cat', isId: s.step === 'id', isCred: s.step === 'cred', isRev: s.step === 'rev', isDone: s.step === 'done',
+      s1: cls('cat'), s2: cls('id'), s3: cls('cred'), s4: cls('rev'),
+      toCat: () => this.setState({ step: 'cat' }), toId: () => this.setState({ step: 'id' }), toCred: () => this.setState({ step: 'cred' }), toRev: () => this.setState({ step: 'rev' }), submit: () => this.setState({ step: 'done' }), reset: () => this.setState({ step: 'cat', file: false }),
+      hasFile: s.file, noFile: !s.file, addFile: () => this.setState({ file: true }), rmFile: () => this.setState({ file: false }), fileState: s.file ? 'subida' : 'pendiente'
+    };
+  }
+}
+</script>
+</body>
+</html>

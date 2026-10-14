@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Travel info hub · mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:focus-visible,.tab:focus-visible,.src:focus-visible,.ck:focus-visible,.bn a:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tab{height:44px;padding:0 2px;border:0;background:transparent;font:500 15px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C;font-weight:600}
+.src{height:34px;padding:0 12px;border-radius:9999px;border:1px solid #D6CEC3;background:#fff;font:500 13px/18px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer}
+.src.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.panel{background:#fff;border:1px solid #E8E2D9;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #E8E2D9;font-size:14px;line-height:20px}
+.step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #E8E2D9}
+.step .n{width:28px;height:28px;border-radius:9999px;background:#E6F0F4;color:#083B50;display:inline-flex;align-items:center;justify-content:center;font:700 13px/1 Inter,system-ui,sans-serif;flex:none}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0;flex:none}
+.gl{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #E8E2D9;font-size:14px;line-height:20px}
+.gl b{min-width:110px;font-family:Fraunces,Georgia,serif;font-size:16px;font-weight:600}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#4A433D;font:500 11px/14px Inter,system-ui,sans-serif}
+.bn a[aria-current]{color:#083B50;font-weight:700}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; height: 60px; padding: 0 8px 0 20px; border-bottom: 1px solid #E8E2D9; background: #FBF8F3">
+    <a href="M-Home.dc.html" aria-label="Vereda Expeditions home" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #083B50"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#A83E24"></path><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#1F1B17"></path><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#1F1B17"></path><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#1F1B17"></path><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#1F1B17"></path><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#1F1B17"></path><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"></path></svg></a>
+    <div style="display: flex"><a class="btn btn-t btn-sm" href="#pdf" aria-label="Download the Reality Briefing PDF"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg></a><a href="#menu" aria-label="Open menu" style="width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" style="width: 24px; height: 24px" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></a></div>
+  </header>
+
+  <div style="padding: 16px 20px 8px; display: flex; flex-direction: column; gap: 6px"><p class="ov" style="color: #A83E24">The honest briefing</p><h1 class="disp" style="font-size: 28px; line-height: 34px">Cuba, as it is this month</h1><p class="cap">Every page shows when it was last verified and the source.</p></div>
+
+  <div role="tablist" aria-label="Topics" style="display: flex; gap: 18px; overflow-x: auto; padding: 0 20px; border-bottom: 1px solid #E8E2D9; background: #FBF8F3; position: sticky; top: 0; z-index: 3">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="8"><button class="tab {{t.cls}}" type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+  </div>
+
+  <main style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 110px">
+
+    <sc-if value="{{isCond}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 18px; line-height: 24px">Operations dashboard</h2><span class="cap">3 Oct</span></div>
+      <sc-for list="{{regions}}" as="r" hint-placeholder-count="6">
+        <div class="panel" style="gap: 8px"><p class="sm" style="font-weight: 600">{{r.name}}</p><div style="display: flex; flex-wrap: wrap; gap: 6px"><span class="pill" style="background: {{r.pBg}}; color: {{r.pFg}}">⚡ {{r.power}}</span><span class="pill" style="background: {{r.fBg}}; color: {{r.fFg}}">Fuel: {{r.fuel}}</span><span class="pill" style="background: {{r.sBg}}; color: {{r.sFg}}">Stays: {{r.stays}}</span></div></div>
+      </sc-for>
+      <p class="cap">Green: normal. Amber: expect disruption; we plan around it. Red: not booked this month without a conversation. Sources: Unión Eléctrica, Insmet, our drivers and hosts.</p>
+      <div class="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap"><p class="sm" style="font-weight: 600">Official advisories</p><div style="display: flex; gap: 6px"><sc-for list="{{srcs}}" as="sr" hint-placeholder-count="4"><button class="src {{sr.cls}}" type="button" aria-pressed="{{sr.on}}" onClick="{{sr.pick}}">{{sr.label}}</button></sc-for></div></div>
+        <div style="padding: 12px; background: {{advBg}}; border-radius: 10px; display: flex; flex-direction: column; gap: 4px"><p class="sm" style="font-weight: 600; color: {{advFg}}">{{advTitle}}</p><p class="cap" style="color: #4A433D">{{advBody}}</p><p class="cap">{{advMeta}}</p></div>
+        <p class="cap">If the advisory for your region is raised to "reconsider travel" or above for your dates: free date change or full refund.</p>
+      </div>
+      <div class="panel"><p class="sm" style="font-weight: 600">30-day log</p><div class="row"><span><strong>3 Oct</strong> · Pinar del Río power schedule moved to afternoons</span></div><div class="row"><span><strong>28 Sep</strong> · Trinidad fuel shortage resolved</span></div><div class="row"><span><strong>21 Sep</strong> · Tropical wave passed south; no watches</span></div><div class="row" style="border: 0"><span><strong>15 Sep</strong> · Holguín: 2 partner casas removed from availability</span></div></div>
+    </sc-if>
+
+    <sc-if value="{{isEntry}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 18px; line-height: 24px">E-visa &amp; entry · four steps</h2><span class="cap">Verified 20 Sep</span></div>
+      <div class="panel" style="gap: 0">
+        <div class="step"><span class="n">1</span><div><p class="sm" style="font-weight: 600">Passport valid 6 months beyond return</p><p class="cap">Children need their own.</p></div></div>
+        <div class="step"><span class="n">2</span><div><p class="sm" style="font-weight: 600">E-visa · 3 weeks out</p><p class="cap">Paper tourist cards ended 1 Jan 2026. Online, ≈ € 22–50, approval ~72 business hours, single entry 90 days. <a href="#portal">Official portal</a></p></div></div>
+        <div class="step"><span class="n">3</span><div><p class="sm" style="font-weight: 600">D'Viajeros · within 7 days of your flight</p><p class="cap">Passport, flight, first casa address (on your voucher), health declaration. Save the QR offline.</p></div></div>
+        <div class="step" style="border: 0"><span class="n">4</span><div><p class="sm" style="font-weight: 600">At the airport</p><p class="cap">E-visa code, QR, insurance proof, return flight. Cash € 300–500; nothing over US$ 5,000 equivalent undeclared.</p></div></div>
+      </div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">Cuban-born &amp; US travelers</p><p class="cap">Cuban-born travelers may need a Cuban passport; tell us at booking. US citizens use the same e-visa plus the travel-category certification; a Cuba visit can affect ESTA eligibility.</p></div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">We help</p><p class="cap">Checklist with your dates, reminders at 21 and 7 days, uploads checked before you fly.</p></div>
+    </sc-if>
+
+    <sc-if value="{{isMoney}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 18px; line-height: 24px">Bring € 300–500 a week in cash. Not dollars.</h2></div>
+      <div class="panel" style="gap: 6px"><p class="ov" style="color: #6E665E">Cards</p><p class="sm" style="font-weight: 600">Don't work in Cuba</p><p class="cap">Visa and Mastercard stopped functioning on the island in June 2026. No ATMs, no terminals.</p></div>
+      <div class="panel" style="gap: 6px"><p class="ov" style="color: #6E665E">Which notes</p><p class="sm" style="font-weight: 600">Euros or Canadian dollars</p><p class="cap">Clean recent notes, mixed denominations. USD carries an exchange penalty.</p></div>
+      <div class="panel" style="gap: 6px"><p class="ov" style="color: #6E665E">How much</p><p class="sm" style="font-weight: 600">€ 40–70 per person per day</p><p class="cap">Meals out € 15–25, tips, taxis. Your package covers stays, transfers, guides and listed meals.</p></div>
+      <div class="panel"><p class="sm" style="font-weight: 600">Exchanging &amp; tipping</p><div class="row"><span>Official rate (CADECA)</span><span class="mono" style="font-size: 12px">410 CUP/USD</span></div><div class="row"><span>Street rate, Jan 2026</span><span class="mono" style="font-size: 12px">≈ 466 CUP/USD</span></div><div class="row"><span>Casas, guides, paladares</span><span class="cap">Euros accepted</span></div><div class="row" style="border: 0"><span>Tips</span><span class="cap">Guide € 5–10/day · driver € 3–5 · casa € 2–3/night</span></div><p class="cap">Verified 28 Sep · refreshed monthly and in your Reality Briefing.</p></div>
+    </sc-if>
+
+    <sc-if value="{{isHealth}}" hint-placeholder-val="{{ false }}">
+      <h2 style="margin: 0; font-size: 18px; line-height: 24px">Insurance is law. Evacuation cover is sense.</h2>
+      <div class="panel"><p class="sm" style="font-weight: 600">Your policy must cover</p><div class="row"><span>Medical in Cuba</span><span class="mono" style="font-size: 12px">≥ € 50,000</span></div><div class="row"><span>Evacuation &amp; repatriation</span><span class="mono" style="font-size: 12px">≥ € 500,000</span></div><div class="row"><span>Trip cancellation</span><span class="mono" style="font-size: 12px">100 %</span></div><div class="row" style="border: 0"><span>Baggage</span><span class="mono" style="font-size: 12px">€ 2,000</span></div><p class="cap">Buy at checkout (Essential € 48 · Standard € 96 · Plus € 142) or upload your own; without proof you buy from Asistur at the airport.</p></div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">Before you go</p><p class="cap">Routine vaccines; hep A and typhoid advised. Bring all medicines plus a spare week; pharmacies are short. Repellent with DEET for dengue and Oropouche.</p></div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">In Cuba</p><p class="cap">Bottled or filtered water (filter bottle in your kit). Cira García clinic in Havana; provincial hospitals for emergencies. Ambulance 104 · Police 106 · Vereda line answers in 15 min and calls your insurer.</p></div>
+    </sc-if>
+
+    <sc-if value="{{isPack}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; justify-content: space-between; align-items: center"><h2 style="margin: 0; font-size: 18px; line-height: 24px">Pack for outages</h2><a class="btn btn-t btn-sm" href="#pdf">Save to kit</a></div>
+      <div class="panel" style="gap: 4px"><p class="sm" style="font-weight: 600">Power &amp; light</p><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Power bank 20,000 mAh+</label><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Headlamp or torch</label><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Plug adapter (A/B, 110 and 220 V)</label><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Offline kit and maps downloaded</label></div>
+      <div class="panel" style="gap: 4px"><p class="sm" style="font-weight: 600">Money &amp; papers</p><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Cash in EUR or CAD, split up</label><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Printed e-visa, QR, insurance, vouchers</label><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Passport copy · emergency card</label></div>
+      <div class="panel" style="gap: 4px"><p class="sm" style="font-weight: 600">Health &amp; comfort</p><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">All medication + a spare week</label><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">DEET repellent, reef-safe sunscreen</label><label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px"><input class="ck" type="checkbox">Walking shoes, light rain shell</label></div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">Gifts that help (optional)</p><p class="cap">Coffee filters, reading glasses, children's vitamins, pens, guitar strings. Ask us what your hosts have mentioned.</p></div>
+    </sc-if>
+
+    <sc-if value="{{isConn}}" hint-placeholder-val="{{ false }}">
+      <h2 style="margin: 0; font-size: 18px; line-height: 24px">1–2 Mbps when it works. Plan to be offline.</h2>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">Getting online</p><p class="cap">ETECSA tourist SIM or eSIM; 4G in cities, 3G or nothing rural. Casa Wi-Fi is usually a shared card, slow.</p></div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">What works</p><p class="cap">WhatsApp and Telegram messages, light email, downloaded maps. Video calls rarely; set up a VPN before departure.</p></div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">How we stay in touch</p><p class="cap">Daily WhatsApp check-in each morning. No answer by midday: your guide or host checks on you. The phone line works on any network, 24/7.</p></div>
+      <a class="btn btn-p" href="M-Account.dc.html" style="gap: 8px"><svg class="ic" style="width: 18px; height: 18px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>Download the offline kit</a>
+    </sc-if>
+
+    <sc-if value="{{isEtiq}}" hint-placeholder-val="{{ false }}">
+      <h2 style="margin: 0; font-size: 18px; line-height: 24px">A guest in someone's home, and country</h2>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">In the casa</p><ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 18px; color: #4A433D; display: flex; flex-direction: column; gap: 4px"><li>Hosts register your passport the first night; it's the law.</li><li>Water and power are rationed: short showers, lights off.</li><li>Dinner at the casa is the best meal in town; order in the morning.</li><li>Tip at the end, in cash, directly.</li></ul></div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">Out and about</p><ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 18px; color: #4A433D; display: flex; flex-direction: column; gap: 4px"><li>Ask before photographing people; show them the picture.</li><li>Politics: don't push, don't lecture, don't post about individuals.</li><li>Shoulders covered in churches and family dinners.</li><li>Jineteros: a friendly "no, gracias" works.</li></ul></div>
+      <div class="panel" style="gap: 2px"><p class="sm" style="font-weight: 600; padding-bottom: 6px">A little Cuban Spanish</p><div class="gl"><b>¿Qué bolá?</b><span>"What's up?"</span></div><div class="gl"><b>asere</b><span>"Mate", "friend"</span></div><div class="gl"><b>casa particular</b><span>Licensed private home with guest rooms</span></div><div class="gl"><b>paladar</b><span>Private restaurant</span></div><div class="gl"><b>almendrón</b><span>1950s car used as a shared taxi</span></div><div class="gl"><b>guagua</b><span>Bus ("wa-wa")</span></div><div class="gl"><b>ropa vieja</b><span>Shredded beef; the national dish</span></div><div class="gl" style="border: 0"><b>apagón</b><span>A power cut</span></div></div>
+    </sc-if>
+
+    <sc-if value="{{isUS}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 18px; line-height: 24px">US travelers &amp; OFAC</h2><span class="cap">Verified 30 Sep · not legal advice</span></div>
+      <div style="display: flex; gap: 10px; padding: 12px 14px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; color: #92400E"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg><p class="cap" style="color: #92400E">US persons may only spend on Cuba travel under one of 12 general-licence categories, whatever the channel. Tourism as such is not one of them.</p></div>
+      <div class="panel" style="gap: 0">
+        <div class="step"><span class="n">1</span><div><p class="sm" style="font-weight: 600">Pick your category</p><p class="cap">Most of our travelers use "Support for the Cuban People": a full-time schedule with private hosts, farmers, artists and guides. People-to-people group travel no longer exists (30 Sep 2026).</p></div></div>
+        <div class="step"><span class="n">2</span><div><p class="sm" style="font-weight: 600">Certify at booking</p><p class="cap">Category, name as on passport, typed signature. Kept 5 years; PDF for you.</p></div></div>
+        <div class="step"><span class="n">3</span><div><p class="sm" style="font-weight: 600">Travel the schedule</p><p class="cap">Your itinerary is the schedule. Keep receipts 5 years. No GAESA or Gaviota properties.</p></div></div>
+        <div class="step" style="border: 0"><span class="n">4</span><div><p class="sm" style="font-weight: 600">Pay in euros, outside US banking</p><p class="cap">US-issued cards are declined; pay by wire or invoice. No USD clearing.</p></div></div>
+      </div>
+      <div class="panel" style="gap: 6px"><p class="sm" style="font-weight: 600">Family visits</p><p class="cap">"Family visits" covers close relatives in Cuba. Our Family Visit package: transfers, a casa near your family, luggage for supplies, Spanish-speaking desk.</p></div>
+      <button class="btn btn-s" type="button">Category wizard · 3 questions</button>
+    </sc-if>
+  </main>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24; background: #FBF8F3; padding: 0 4px">viewport fold · 844</span></div>
+  <nav class="bn" aria-label="Main" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="M-Home.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V11Z"></path></svg>Home</a>
+    <a href="M-Packages.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>Search</a>
+    <a href="M-Account.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Trips</a>
+    <a href="M-Support.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg>Support</a>
+    <a href="#menu" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>Menu</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'cond', src: 'ca' };
+  }
+  renderVals() {
+    const s = this.state;
+    const tabDefs = [['cond', 'Conditions'], ['entry', 'E-visa & entry'], ['money', 'Money'], ['health', 'Health & insurance'], ['pack', 'Packing'], ['conn', 'Connectivity'], ['etiq', 'Etiquette'], ['us', 'US travelers']];
+    const tabs = tabDefs.map(([id, label]) => ({ id, label, on: s.tab === id, cls: s.tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) }));
+    const c = { ok: ['#E8F5E9', '#1B5E20'], warn: ['#FEF3C7', '#92400E'], bad: ['#FDECEA', '#B71C1C'] };
+    const regionDefs = [['Havana', '4–8 h cuts', 'warn', 'normal', 'ok', 'operational', 'ok'], ['Pinar del Río · Artemisa', '6–10 h cuts', 'warn', 'normal', 'ok', 'operational', 'ok'], ['Matanzas · Zapata', '6–12 h cuts', 'warn', 'normal', 'ok', 'operational', 'ok'], ['Cienfuegos · Trinidad', '8–12 h cuts', 'warn', 'plan ahead', 'warn', 'operational', 'ok'], ['Santiago · east', '12 h+ cuts', 'bad', 'intermittent', 'warn', 'limited', 'warn'], ['Holguín · Gibara', 'recovering', 'bad', 'roads closed', 'warn', '2 of 6 closed', 'bad']];
+    const regions = regionDefs.map(([name, power, ps, fuel, fs, stays, ss]) => ({ name, power, fuel, stays, pBg: c[ps][0], pFg: c[ps][1], fBg: c[fs][0], fFg: c[fs][1], sBg: c[ss][0], sFg: c[ss][1] }));
+    const srcDefs = { ca: ['CA', 'Exercise a high degree of caution', 'Shortages of food, medicine and fuel; prolonged outages.', 'Government of Canada · 24 Sep 2026', '#E3F2FD', '#0D47A1'], fr: ['FR', 'Voyages non essentiels déconseillés', 'Pénuries de carburant et de médicaments; coupures prolongées.', 'MEAE · 31 mars 2026', '#FEF3C7', '#92400E'], uk: ['UK', 'Against all but essential travel', 'Severe shortages and extended power cuts island-wide.', 'FCDO · 12 Sep 2026', '#FEF3C7', '#92400E'], us: ['US', 'Level 2 · Exercise increased caution', 'Crime; shortages of food, water, medicine and fuel; outages.', 'State Department · 8 Aug 2026', '#E3F2FD', '#0D47A1'] };
+    const srcs = Object.keys(srcDefs).map((id) => ({ id, label: srcDefs[id][0], on: s.src === id, cls: s.src === id ? 'on' : '', pick: () => this.setState({ src: id }) }));
+    const a = srcDefs[s.src];
+    return { tabs, isCond: s.tab === 'cond', isEntry: s.tab === 'entry', isMoney: s.tab === 'money', isHealth: s.tab === 'health', isPack: s.tab === 'pack', isConn: s.tab === 'conn', isEtiq: s.tab === 'etiq', isUS: s.tab === 'us', regions, srcs, advTitle: a[1], advBody: a[2], advMeta: a[3], advBg: a[4], advFg: a[5] };
+  }
+}
+</script>
+</body>
+</html>

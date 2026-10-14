@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customers · list and profile with communication history, OFAC certification, GDPR retention</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:36px;padding:0 12px;font-size:13px}
+.btn:focus-visible,.inp:focus-visible,.sel:focus-visible,.tab:focus-visible,.rowb:focus-visible,.ck:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.sel{height:44px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;box-sizing:border-box}
+.inp{width:100%}.inp::placeholder{color:#6E665E}
+.sel{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231F1B17' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.lbl{font:500 12px/16px Inter,system-ui,sans-serif;color:#4A433D}
+.fld{display:flex;flex-direction:column;gap:4px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 240px;max-width:100%;background:#083B50;color:#fff;display:flex;flex-direction:column;gap:16px;padding:20px 16px 24px;box-sizing:border-box}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:8px;color:#C9DDE6;text-decoration:none;font:500 14px/20px Inter,system-ui,sans-serif}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav a:focus-visible{outline:2px solid #F2B134;outline-offset:-2px}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:#F2B134;color:#1F1B17;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.cnt.red{background:#C62828;color:#fff}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 32px;background:#fff;border-bottom:1px solid #E8E2D9}
+.content{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.tab{height:44px;padding:0 12px;border:0;background:transparent;font:600 13px/18px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C}
+.rowb{width:100%;text-align:left;border:0;background:transparent;padding:0;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;line-height:18px;margin:0}
+.dl dt{color:#6E665E;white-space:nowrap}.dl dd{margin:0}
+.ev{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid #E8E2D9}
+.ev:first-child{border-top:0;padding-top:0}
+.ev .ch{width:32px;height:32px;border-radius:8px;background:#F3EEE6;color:#083B50;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.ev .ch .ic{width:16px;height:16px}
+</style>
+</helmet>
+
+<div class="shell">
+
+  <nav class="side" aria-label="Admin">
+    <a href="A-Dashboard.dc.html" aria-label="Vereda operations desk" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; padding: 4px 12px 8px"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg><span class="cap" style="color: #C9DDE6; margin-left: 2px">Ops</span></a>
+    <div class="nav">
+      <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Dashboard<span class="cnt red">2</span></a>
+      <a href="A-Bookings.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>Bookings<span class="cnt">14</span></a>
+      <a href="A-Disruption.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Disruptions<span class="cnt">1</span></a>
+      <a href="A-Packages.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>Packages</a>
+      <a href="A-Customers.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>Customers</a>
+      <a href="A-Suppliers.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Suppliers<span class="cnt">1</span></a>
+      <a href="A-Payments.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments<span class="cnt">3</span></a>
+      <a href="A-Content.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Content</a>
+      <a href="A-Reports.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+      <a href="A-Settings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.08)">
+      <div style="display: flex; gap: 10px; align-items: center"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">AR</span><div style="display: flex; flex-direction: column; min-width: 0"><strong style="font-size: 13px; line-height: 18px">Ana Rodríguez</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">Operations Admin</span></div></div>
+      <a href="A-Login.dc.html" style="color: #C9DDE6; font-size: 12px; line-height: 16px">Sign out · session ends 02:33</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <h1 class="disp" style="font-size: 24px; line-height: 32px; margin-right: 8px">Customers</h1>
+      <span class="tag mono">312 accounts · 48 with a trip this season</span>
+      <label style="flex: 1 1 240px; max-width: 380px; position: relative; display: flex; align-items: center; margin-left: auto"><span style="position: absolute; left: 12px; color: #6E665E; display: inline-flex"><svg class="ic" style="width: 18px; height: 18px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search customers</span><input class="inp" type="search" placeholder="Name, email, phone, booking code…" style="padding-left: 38px"></label>
+      <button class="btn btn-s" type="button">Merge duplicates</button>
+      <button class="btn btn-p" type="button"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New customer</button>
+    </header>
+
+    <div class="content">
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start">
+
+        <!-- List -->
+        <section class="card" aria-label="Customer list" style="flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; padding: 16px 20px 12px">
+            <div class="fld"><label class="lbl" for="f-c">Country</label><select class="sel" id="f-c"><option>All</option><option>Canada</option><option>United States</option><option>Germany</option><option>France</option><option>United Kingdom</option><option>Spain</option></select></div>
+            <div class="fld"><label class="lbl" for="f-o">OFAC</label><select class="sel" id="f-o"><option>Any</option><option>Certification missing</option><option>On file</option><option>Not applicable</option></select></div>
+            <div class="fld"><label class="lbl" for="f-r">Retention</label><select class="sel" id="f-r"><option>Any</option><option>Active</option><option>Notice sent</option><option>Grace period</option><option>Purge scheduled ≤ 30 d</option></select></div>
+            <div class="fld"><label class="lbl" for="f-t">Tag</label><select class="sel" id="f-t"><option>Any</option><option>Repeat</option><option>Diaspora</option><option>Accessibility</option><option>Press / partner</option><option>Risk flag</option></select></div>
+          </div>
+          <div style="overflow-x: auto">
+            <table class="tbl" style="min-width: 640px">
+              <thead><tr><th scope="col">Customer</th><th scope="col">Trips</th><th scope="col">Last activity</th><th scope="col">OFAC</th><th scope="col">Retention</th></tr></thead>
+              <tbody>
+                <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+                  <tr style="background: {{r.bg}}">
+                    <td><button class="rowb" type="button" aria-pressed="{{r.on}}" onClick="{{r.pick}}"><span style="font-weight: 600">{{r.name}}</span><span class="cap">{{r.country}} · {{r.langs}} · {{r.tagline}}</span></button></td>
+                    <td><span class="mono">{{r.trips}}</span><br><span class="cap">{{r.ltv}}</span></td>
+                    <td><span class="cap" style="color: #1F1B17">{{r.last}}</span></td>
+                    <td><span class="pill" style="background: {{r.ofac.bg}}; color: {{r.ofac.fg}}; border: 1px solid {{r.ofac.bd}}">{{r.ofac.label}}</span></td>
+                    <td><span class="pill" style="background: {{r.ret.bg}}; color: {{r.ret.fg}}">{{r.ret.label}}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <p class="cap" style="padding: 10px 20px 16px">Selecting a row opens the profile beside it (below it under 1100 px). Passport numbers never appear in lists; they open from the vault with a logged view.</p>
+        </section>
+
+        <!-- Profile -->
+        <section class="card" aria-label="Customer profile" style="flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column">
+          <div style="display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; padding: 20px 24px 12px">
+            <span aria-hidden="true" style="width: 48px; height: 48px; border-radius: 9999px; background: #0B4F6C; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px">{{c.init}}</span>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px">
+              <h2 class="disp" style="font-size: 24px; line-height: 30px">{{c.name}}</h2>
+              <span class="cap">{{c.city}}, {{c.country}} · {{c.langs}} · customer since {{c.since}} · {{c.email}} · <a href="{{c.telHref}}">{{c.tel}}</a></span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{c.tags}}" as="t" hint-placeholder-count="2"><span class="tag">{{t}}</span></sc-for></div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><a class="btn btn-sm btn-s" href="A-Booking.dc.html">Message</a><a class="btn btn-sm btn-s" href="{{c.telHref}}">Call</a><button class="btn btn-sm btn-s" type="button">Log a call</button></div>
+          </div>
+          <div role="tablist" aria-label="Profile sections" style="display: flex; gap: 2px; border-bottom: 1px solid #E8E2D9; padding: 0 16px; overflow-x: auto">
+            <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5"><button class="tab {{t.cls}}" type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+          </div>
+
+          <!-- Profile tab -->
+          <sc-if value="{{isProf}}" hint-placeholder-val="{{ true }}">
+            <div style="padding: 18px 24px 20px; display: flex; flex-direction: column; gap: 16px">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px">
+                <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov">Identity</p><dl class="dl"><dt>Born</dt><dd>{{c.born}}</dd><dt>Passport</dt><dd>{{c.passport}} · <button class="btn btn-sm btn-t" type="button" style="height: 24px; padding: 0 6px">View (logged)</button></dd><dt>Address</dt><dd>{{c.address}}</dd><dt>Emergency</dt><dd>{{c.emergency}}</dd></dl></div>
+                <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov">Preferences</p><dl class="dl"><dt>Pace</dt><dd>{{c.pace}}</dd><dt>Diet</dt><dd>{{c.diet}}</dd><dt>Access</dt><dd>{{c.access}}</dd><dt>Contact</dt><dd>{{c.contact}}</dd><dt>Currency</dt><dd>{{c.cur}}</dd></dl></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <p class="ov">Trips</p>
+                <div style="overflow-x: auto"><table class="tbl" style="min-width: 480px"><thead><tr><th scope="col">Code</th><th scope="col">Package · dates</th><th scope="col">Status</th><th scope="col" style="text-align: right">Total</th></tr></thead><tbody><sc-for list="{{c.tripRows}}" as="tr" hint-placeholder-count="2"><tr><td><a class="mono" href="A-Booking.dc.html">{{tr.code}}</a></td><td>{{tr.pkg}}</td><td><span class="pill" style="background: {{tr.bg}}; color: {{tr.fg}}">{{tr.st}}</span></td><td class="mono" style="text-align: right">{{tr.total}}</td></tr></sc-for></tbody></table></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov">Travelers on file</p><div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{c.companions}}" as="co" hint-placeholder-count="1"><span class="tag">{{co}}</span></sc-for></div></div>
+            </div>
+          </sc-if>
+
+          <!-- Communication tab -->
+          <sc-if value="{{isComms}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 18px 24px 20px; display: flex; flex-direction: column; gap: 12px">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center"><p class="ov">Communication history</p><span class="cap">every channel, inbound and outbound · in-app is the record</span><div style="margin-left: auto; display: flex; gap: 6px"><span class="tag">In-app</span><span class="tag">Email</span><span class="tag">SMS</span><span class="tag">WhatsApp link</span><span class="tag">Call</span></div></div>
+              <div style="display: flex; flex-direction: column">
+                <sc-for list="{{c.comms}}" as="e" hint-placeholder-count="4">
+                  <div class="ev"><span class="ch" aria-label="{{e.ch}}"><svg class="ic" viewBox="0 0 24 24"><path d="{{e.icon}}"/></svg></span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><span style="font-size: 13px">{{e.text}}</span><span class="cap">{{e.meta}}</span></div><span class="pill" style="background: {{e.bg}}; color: {{e.fg}}; flex: none">{{e.dir}}</span></div>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><a class="btn btn-sm btn-p" href="A-Booking.dc.html">Write in-app + email</a><button class="btn btn-sm btn-s" type="button">Send SMS</button><a class="btn btn-sm btn-s" href="https://wa.me/">WhatsApp click-to-chat</a><button class="btn btn-sm btn-s" type="button">Log a call</button></div>
+              <p class="cap">WhatsApp is a deep link to the non-Cuban desk number; nothing from WhatsApp is stored unless the agent logs it here.</p>
+            </div>
+          </sc-if>
+
+          <!-- Documents & OFAC tab -->
+          <sc-if value="{{isDocs}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 18px 24px 20px; display: flex; flex-direction: column; gap: 16px">
+              <div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; border-color: {{c.ofac.bd}}">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap"><p class="ov">OFAC certification</p><span class="pill" style="background: {{c.ofac.bg}}; color: {{c.ofac.fg}}; border: 1px solid {{c.ofac.bd}}">{{c.ofac.label}}</span></div>
+                <p class="p">{{c.ofac.detail}}</p>
+                <dl class="dl"><dt>Category</dt><dd>{{c.ofac.cat}}</dd><dt>Signed</dt><dd>{{c.ofac.signed}}</dd><dt>Retention</dt><dd>{{c.ofac.keep}}</dd></dl>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-if value="{{c.ofac.needs}}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm btn-p" type="button">Send certification reminder</button><button class="btn btn-sm btn-s" type="button">Upload signed affidavit</button></sc-if><sc-if value="{{c.ofac.has}}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm btn-s" type="button">View affidavit (logged)</button></sc-if></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <p class="ov">Documents</p>
+                <div style="overflow-x: auto"><table class="tbl" style="min-width: 460px"><thead><tr><th scope="col">Document</th><th scope="col">Status</th><th scope="col">Expires</th><th scope="col">Act</th></tr></thead><tbody><sc-for list="{{c.docs}}" as="d" hint-placeholder-count="3"><tr><td>{{d.name}}</td><td><span class="pill" style="background: {{d.bg}}; color: {{d.fg}}">{{d.st}}</span></td><td class="mono">{{d.exp}}</td><td><button class="btn btn-sm btn-t" type="button">{{d.act}}</button></td></tr></sc-for></tbody></table></div>
+                <p class="cap">Passport images live in the encrypted vault; expiry under 6 months from travel raises an alert on the booking. Workers never see these.</p>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- Data & retention tab -->
+          <sc-if value="{{isData}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 18px 24px 20px; display: flex; flex-direction: column; gap: 16px">
+              <div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap"><p class="ov">GDPR retention lifecycle</p><span class="pill" style="background: {{c.ret.bg}}; color: {{c.ret.fg}}">{{c.ret.label}}</span></div>
+                <p class="p">{{c.ret.detail}}</p>
+                <ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 4px">
+                  <sc-for list="{{c.ret.steps}}" as="st" hint-placeholder-count="4"><li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 6px; border-radius: 9999px; background: {{st.col}}"></span><span class="cap" style="color: {{st.tc}}">{{st.t}}</span></li></sc-for>
+                </ol>
+                <p class="cap">Spec §3.5: 6 months after the last COMPLETED trip an email offers "Keep my account active" (extends 12 months). After a 30-day grace the purge job anonymizes names, passport numbers and phones and keeps only aggregate totals for fiscal reporting. OFAC records are the exception: kept 5 years in a sealed store.</p>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px">
+                <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov">Consent log</p><dl class="dl"><dt>Cookies</dt><dd>{{c.consent.cookies}}</dd><dt>Marketing</dt><dd>{{c.consent.marketing}}</dd><dt>Terms</dt><dd>{{c.consent.terms}}</dd><dt>Region</dt><dd>{{c.consent.region}}</dd></dl></div>
+                <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov">Data held</p><div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="tag">Identity &amp; contact</span><span class="tag">Passport (encrypted)</span><span class="tag">Travel history</span><span class="tag">Messages</span><span class="tag">Payment references (no card data)</span><span class="tag">Consent &amp; audit</span></div></div>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-sm btn-s" type="button">Export data (JSON, to the customer)</button><button class="btn btn-sm btn-s" type="button">Extend retention (customer asked)</button><button class="btn btn-sm btn-s" type="button" style="color: #B71C1C; border-color: #F5B5B0">Anonymize now… (reason + Super Admin)</button></div>
+            </div>
+          </sc-if>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'chen', tab: 'prof' };
+  }
+  renderVals() {
+    const s = this.state;
+    const I = { app: 'M4 4h16v12H7l-3 3V4Z', mail: 'M3 5h18v14H3zM3 7l9 6 9-6', sms: 'M7 2h10v20H7zM11 18h2', wa: 'M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 21l2.1-5.4A8.5 8.5 0 1 1 21 11.5Z', call: 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z' };
+    const IN = { dir: 'Inbound', bg: '#E3F2FD', fg: '#0D47A1' }, OUT = { dir: 'Outbound', bg: '#F3EEE6', fg: '#4A433D' }, SYS = { dir: 'Automated', bg: '#F3EEE6', fg: '#6E665E' };
+    const ofacNA = { label: 'Not applicable', bg: '#F3EEE6', fg: '#4A433D', bd: '#F3EEE6', detail: 'Non-US traveler; the sanctions section is shown for information only.', cat: '—', signed: '—', keep: '—', needs: false, has: false };
+    const retActive = { label: 'Active', bg: '#E8F5E9', fg: '#1B5E20', detail: 'Clock starts 6 months after the next COMPLETED trip.', steps: [{ t: 'Active', col: '#2E7D32', tc: '#1B5E20' }, { t: 'Notice · after +6 m', col: '#E8E2D9', tc: '#6E665E' }, { t: 'Grace 30 d', col: '#E8E2D9', tc: '#6E665E' }, { t: 'Anonymized', col: '#E8E2D9', tc: '#6E665E' }] };
+    const C = {
+      chen: { init: 'MC', name: 'Margaret Chen', country: 'Canada', city: 'Vancouver', langs: 'EN', since: '6 Oct 2026', email: 'margaret.chen@[provider].ca', tel: '+1 604 555 0142', telHref: 'tel:+16045550142', tags: ['First trip', 'CAD display'], tagline: 'first trip · Viñales Feb 2027', trips: '1 · pending', ltv: '€ 3,100 requested', last: '13:31 · replied in-app', born: '1962', passport: 'CA · ending 4471 · exp. 2031', address: 'Vancouver BC · postcode on file', emergency: 'Laura Chen (daughter) · +1 604 555 0199', pace: 'Gentle walking', diet: 'None', access: 'Ground-floor room preferred (David)', contact: 'Email first; phone after 15:00 Havana', cur: 'CAD shown · EUR billed',
+        tripRows: [{ code: 'VX-7K2M9Q', pkg: 'Eco-Tourism in Viñales · 13–20 Feb 2027', st: 'Confirming with hosts', bg: '#FEF3C7', fg: '#92400E', total: '€ 3,100.00' }], companions: ['David Chen · 1960 · CA passport ending 9035'],
+        comms: [{ ...IN, ch: 'In-app', icon: I.app, text: '"Perfect, thank you!"', meta: '6 Oct 13:31 · email reply threaded into the app' }, { ...OUT, ch: 'In-app + email', icon: I.app, text: 'Horseback applied, casa confirmed, driver confirming. By Ana R.', meta: '6 Oct 13:26' }, { ...IN, ch: 'In-app', icon: I.app, text: 'Asked for horseback instead of Las Terrazas; late arrival 17:30', meta: '6 Oct 13:14 · web' }, { ...SYS, ch: 'Email', icon: I.mail, text: 'Request received · nothing charged yet', meta: '6 Oct 13:03 · delivered, opened 13:05' }],
+        ofac: ofacNA, docs: [{ name: 'Passport · Margaret', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2031', act: 'View' }, { name: 'Passport · David', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2029', act: 'View' }, { name: 'Travel insurance', st: 'Pending', bg: '#F3EEE6', fg: '#4A433D', exp: '—', act: 'Remind' }, { name: 'Cuban tourist card', st: 'At T−30 d', bg: '#F3EEE6', fg: '#4A433D', exp: '—', act: '—' }],
+        ret: retActive, consent: { cookies: 'Essential only · v2.3 · 6 Oct 13:01', marketing: 'Not opted in', terms: 'v4.1 accepted 6 Oct 13:02', region: 'CA · PIPEDA notice shown' } },
+      ortega: { init: 'LO', name: 'Luis Ortega', country: 'United States', city: 'Miami FL', langs: 'ES · EN', since: '1 Oct 2026', email: 'l.ortega@[provider].com', tel: '+1 305 555 0188', telHref: 'tel:+13055550188', tags: ['Diaspora', 'US traveler', 'OFAC pending'], tagline: 'family visit · arrives in 44 h', trips: '1 · pending', ltv: '€ 1,680 requested', last: '12:40 · WhatsApp link opened', born: '1979', passport: 'US · ending 2210 · exp. 2030', address: 'Miami FL · postcode on file', emergency: 'Rosa Ortega (sister, Havana) · +53 5 310 6192', pace: 'Family, 2 children (6, 9)', diet: 'One child: no nuts', access: 'None', contact: 'WhatsApp or phone, Spanish', cur: 'USD shown · EUR billed',
+        tripRows: [{ code: 'VX-2F9HQ3', pkg: 'Family Visit · Havana & Matanzas · 8–12 Oct', st: 'Action needed', bg: '#FEF3C7', fg: '#92400E', total: '€ 1,680.00' }], companions: ['Ana María Ortega · 1981 · US passport ending 5531', 'Mateo Ortega · 2017 · passport missing', 'Sofía Ortega · 2020 · passport missing'],
+        comms: [{ ...IN, ch: 'WhatsApp link', icon: I.wa, text: 'Opened click-to-chat from the reminder email (not logged as a message)', meta: '6 Oct 12:40' }, { ...SYS, ch: 'Email + SMS', icon: I.sms, text: 'Reminder: sign the OFAC certification to receive your vouchers', meta: '6 Oct 09:00 · 2nd reminder · delivered' }, { ...OUT, ch: 'Call', icon: I.call, text: 'Phoned, no answer, voicemail left in Spanish. By Ana R.', meta: '5 Oct 16:10 · 1 min' }, { ...SYS, ch: 'Email', icon: I.mail, text: 'Request received · certification required before documents', meta: '1 Oct 20:12 · opened' }],
+        ofac: { label: 'Certification missing', bg: '#FDECEA', fg: '#B71C1C', bd: '#C62828', detail: 'US traveler. Category chosen at step 4 but the affidavit was not signed. Vouchers and work orders are on hold until it is on file (hard gate, UI_UX doc 12 §1.2).', cat: 'Family visit · 31 CFR § 515.561', signed: 'Not yet · reminders 4 Oct, 6 Oct', keep: '5 years from travel in the sealed OFAC store', needs: true, has: false },
+        docs: [{ name: 'Passport · Luis', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2030', act: 'View' }, { name: 'Passport · Ana María', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2028', act: 'View' }, { name: 'Passports · children ×2', st: 'Missing', bg: '#FDECEA', fg: '#B71C1C', exp: '—', act: 'Remind' }, { name: 'OFAC affidavit', st: 'Missing', bg: '#FDECEA', fg: '#B71C1C', exp: '—', act: 'Remind' }],
+        ret: { ...retActive, detail: 'Active. Note: OFAC records are kept 5 years regardless of the GDPR purge.' }, consent: { cookies: 'All · v2.3 · 1 Oct 20:05', marketing: 'Opted in (ES)', terms: 'v4.1 accepted 1 Oct 20:11 · sanctions clause acknowledged', region: 'US-FL · CCPA notice shown' } },
+      dubois: { init: 'PD', name: 'Pierre Dubois', country: 'France', city: 'Lyon', langs: 'FR', since: '2 Mar 2026', email: 'p.dubois@[provider].fr', tel: '+33 6 55 50 01 73', telHref: 'tel:+33655500173', tags: ['Completed', 'Promoter · NPS 10', 'Review 5★'], tagline: 'completed Viñales Sep 2026', trips: '1 · completed', ltv: '€ 2,790 paid', last: '24 Sep · review posted', born: '1971', passport: 'FR · ending 8810 · exp. 2033', address: 'Lyon · postcode on file', emergency: 'Camille Dubois (spouse, traveled)', pace: 'Active', diet: 'Vegetarian (Camille)', access: 'None', contact: 'Email, French', cur: 'EUR',
+        tripRows: [{ code: 'VX-2MM8RV', pkg: 'Eco-Tourism in Viñales · 14–21 Sep 2026', st: 'Completed', bg: '#F3EEE6', fg: '#4A433D', total: '€ 2,790.00' }], companions: ['Camille Dubois · 1973 · FR passport ending 4402'],
+        comms: [{ ...IN, ch: 'In-app', icon: I.app, text: 'Review: "Daylin a fait de ce voyage quelque chose de rare." · 5★', meta: '24 Sep 10:12 · published after moderation' }, { ...SYS, ch: 'Email', icon: I.mail, text: 'NPS survey · answered 10', meta: '22 Sep 09:00 · +24 h after completion' }, { ...OUT, ch: 'SMS', icon: I.sms, text: 'Morning check-in · "Tout va bien"', meta: '14–21 Sep · 7 of 7 replies' }, { ...OUT, ch: 'Call', icon: I.call, text: 'Reconfirmation call, 7 days before. By Ernesto V.', meta: '7 Sep 11:30 · 6 min' }],
+        ofac: ofacNA, docs: [{ name: 'Passport · Pierre', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2033', act: 'View' }, { name: 'Passport · Camille', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2031', act: 'View' }, { name: 'Insurance certificate', st: 'Issued', bg: '#E8F5E9', fg: '#1B5E20', exp: '21 Sep 2026', act: 'View' }],
+        ret: { label: 'Clock running · notice 21 Mar 2027', bg: '#E3F2FD', fg: '#0D47A1', detail: 'Last trip COMPLETED 21 Sep 2026. Retention email goes out 21 Mar 2027; without "Keep my account active" the purge runs on 20 Apr 2027.', steps: [{ t: 'Completed 21 Sep', col: '#2E7D32', tc: '#1B5E20' }, { t: 'Notice 21 Mar 2027', col: '#0B4F6C', tc: '#083B50' }, { t: 'Grace to 20 Apr', col: '#E8E2D9', tc: '#6E665E' }, { t: 'Anonymized', col: '#E8E2D9', tc: '#6E665E' }] }, consent: { cookies: 'Essential + analytics · v2.2 · 2 Mar', marketing: 'Opted in (FR) · newsletter monthly', terms: 'v4.0 accepted 2 Mar', region: 'FR · GDPR' } },
+      mueller: { init: 'KM', name: 'Klaus Müller', country: 'Germany', city: 'Hamburg', langs: 'DE · EN', since: '12 Aug 2026', email: 'k.mueller@[provider].de', tel: '+49 170 555 0121', telHref: 'tel:+491705550121', tags: ['Repeat', 'Custom lead'], tagline: 'Zapata Mar 2027 + custom VX-C-4R8T', trips: '2 · 1 pending', ltv: '€ 940 + € 5,900 est.', last: '14:20 · custom builder saved', born: '1968', passport: 'DE · ending 7730 · exp. 2029', address: 'Hamburg · postcode on file', emergency: 'Ute Müller (spouse, traveling)', pace: 'Active · birding', diet: 'None', access: 'None', contact: 'Email, German or English', cur: 'EUR',
+        tripRows: [{ code: 'VX-3PA8ZT', pkg: 'Ciénaga de Zapata extension · 2–5 Mar 2027', st: 'Action needed', bg: '#FEF3C7', fg: '#92400E', total: '€ 940.00' }, { code: 'VX-C-4R8T', pkg: 'Custom · 14 days west to Trinidad · Mar 2027', st: 'Request received', bg: '#E3F2FD', fg: '#0D47A1', total: '€ 5,900 est.' }], companions: ['Ute Müller · 1970 · DE passport ending 1194'],
+        comms: [{ ...IN, ch: 'In-app', icon: I.app, text: 'Custom itinerary submitted with notes on birding sites', meta: '6 Oct 14:20' }, { ...SYS, ch: 'Email', icon: I.mail, text: 'Zapata request received', meta: '5 Oct 11:40' }], ofac: ofacNA, docs: [{ name: 'Passports ×2', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2029', act: 'View' }], ret: retActive, consent: { cookies: 'Essential only · v2.3', marketing: 'Not opted in', terms: 'v4.1 accepted 5 Oct', region: 'DE · GDPR' } },
+      whitfield: { init: 'EW', name: 'Eleanor Whitfield', country: 'United Kingdom', city: 'Bath', langs: 'EN', since: '20 Sep 2026', email: 'e.whitfield@[provider].co.uk', tel: '+44 7700 900 142', telHref: 'tel:+447700900142', tags: ['Accessibility', 'Phone preferred', 'Large text'], tagline: 'Havana Nov 2026 · comfort tier', trips: '1 · secured', ltv: '€ 4,020 invoicing', last: '3 Oct · phone call 9 min', born: '1954', passport: 'UK · ending 3321 · exp. 2028', address: 'Bath · postcode on file', emergency: 'James Whitfield (son) · +44 7700 900 177', pace: 'Slow · rest days', diet: 'Low salt', access: 'Walking stick · ground floor · large print documents', contact: 'Phone, mornings UK time', cur: 'GBP shown · EUR billed',
+        tripRows: [{ code: 'VX-5HT4RW', pkg: 'Havana Cultural Immersion · comfort · 8–15 Nov', st: 'Ready to pay', bg: '#F2B134', fg: '#1F1B17', total: '€ 4,020.00' }], companions: ['Rosemary Hart · 1956 · UK passport ending 6604'],
+        comms: [{ ...OUT, ch: 'Call', icon: I.call, text: 'Walked through the itinerary by phone; prefers printed documents by post. By Ana R.', meta: '3 Oct 10:05 · 9 min' }, { ...SYS, ch: 'Email', icon: I.mail, text: 'Request received (large-print PDF attached)', meta: '20 Sep 15:30' }], ofac: ofacNA, docs: [{ name: 'Passports ×2', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2028', act: 'View' }, { name: 'Insurance (own policy)', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: 'Dec 2026', act: 'View' }], ret: retActive, consent: { cookies: 'Essential only · v2.3', marketing: 'Not opted in', terms: 'v4.1 accepted 20 Sep (read aloud by phone, logged)', region: 'UK · UK GDPR' } },
+      nair: { init: 'PN', name: 'Priya Nair', country: 'India', city: 'Bengaluru', langs: 'EN', since: '2 Oct 2026', email: 'priya.n@[provider].in', tel: '+91 98 5550 0123', telHref: 'tel:+919855500123', tags: ['Instant', 'Payment expired'], tagline: 'Varadero combo Nov · unpaid', trips: '1 · expiring', ltv: '€ 2,360 unpaid', last: '4 Oct · card link opened', born: '1990', passport: 'IN · ending 0098 · exp. 2032', address: 'Bengaluru · postcode on file', emergency: 'Arjun Nair · +91 98 5550 0199', pace: 'Active', diet: 'Vegetarian', access: 'None', contact: 'Email', cur: 'USD shown · EUR billed',
+        tripRows: [{ code: 'VX-1LK8MZ', pkg: 'Varadero Beach + Havana Combo · 3–9 Nov', st: 'Ready to pay · expired', bg: '#FDECEA', fg: '#B71C1C', total: '€ 2,360.00' }], companions: ['Rahul Nair · 1988 · IN passport ending 7721'],
+        comms: [{ ...SYS, ch: 'Email + SMS', icon: I.sms, text: 'Payment window closes in 2 h', meta: '6 Oct 12:50 · delivered' }, { ...SYS, ch: 'Email', icon: I.mail, text: 'Invoice and payment link · 48 h', meta: '4 Oct 14:50 · opened twice' }], ofac: ofacNA, docs: [{ name: 'Passports ×2', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2032', act: 'View' }], ret: retActive, consent: { cookies: 'All · v2.3', marketing: 'Opted in', terms: 'v4.1 accepted 2 Oct', region: 'IN · GDPR-equivalent notice' } },
+      herrera: { init: 'TH', name: 'Tomás Herrera', country: 'Spain', city: 'Sevilla', langs: 'ES', since: '15 Sep 2026', email: 't.herrera@[provider].es', tel: '+34 600 555 019', telHref: 'tel:+34600555019', tags: ['SEPA', 'Proof pending'], tagline: 'Circuit Jan 2027 · SEPA proof uploaded', trips: '1 · pending payment', ltv: '€ 3,180 pending', last: '13:58 · uploaded proof', born: '1984', passport: 'ES · ending 4410 · exp. 2030', address: 'Sevilla · postcode on file', emergency: 'Marta Herrera · +34 600 555 020', pace: 'Active', diet: 'None', access: 'None', contact: 'Email or phone, Spanish', cur: 'EUR',
+        tripRows: [{ code: 'VX-6TR2PW', pkg: 'Havana–Viñales–Trinidad Circuit · 12–21 Jan 2027', st: 'Ready to pay · 5 h', bg: '#F2B134', fg: '#1F1B17', total: '€ 3,180.00' }], companions: ['Marta Herrera · 1986 · ES passport ending 2277'],
+        comms: [{ ...IN, ch: 'In-app', icon: I.app, text: 'Uploaded bank transfer proof (PDF)', meta: '6 Oct 13:58' }, { ...SYS, ch: 'Email', icon: I.mail, text: 'Invoice and SEPA details · 48 h', meta: '4 Oct 19:40' }], ofac: ofacNA, docs: [{ name: 'Passports ×2', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2030', act: 'View' }], ret: retActive, consent: { cookies: 'Essential + analytics · v2.3', marketing: 'Opted in (ES)', terms: 'v4.1 accepted 15 Sep', region: 'ES · GDPR' } },
+      oneil: { init: 'SO', name: "Sarah O'Neil", country: 'Ireland', city: 'Cork', langs: 'EN', since: '5 Jul 2026', email: 's.oneil@[provider].ie', tel: '+353 85 555 0147', telHref: 'tel:+353855550147', tags: ['Cancelled', 'Refunded'], tagline: 'Varadero Sep · cancelled 18 Aug', trips: '1 · cancelled', ltv: '€ 1,062 refunded', last: '29 Sep · refund confirmed', born: '1992', passport: 'IE · ending 5520 · exp. 2031', address: 'Cork · postcode on file', emergency: 'Niamh O\'Neil · +353 85 555 0190', pace: '—', diet: '—', access: '—', contact: 'Email', cur: 'EUR',
+        tripRows: [{ code: 'VX-3BB1XQ', pkg: 'Varadero Beach + Havana Combo · 20–26 Sep', st: 'Cancelled', bg: '#FDECEA', fg: '#B71C1C', total: '€ 2,360.00' }], companions: ['Conor Byrne · 1991 · IE passport ending 8893'],
+        comms: [{ ...SYS, ch: 'Email', icon: I.mail, text: 'Refund of € 1,062 issued to the original card (45–31 d policy: 10 % kept)', meta: '29 Sep 11:00' }, { ...IN, ch: 'In-app', icon: I.app, text: 'Cancelled the booking from My trips; reason: change of plans', meta: '18 Aug 21:15' }], ofac: ofacNA, docs: [{ name: 'Passports ×2', st: 'Uploaded', bg: '#E8F5E9', fg: '#1B5E20', exp: '2031', act: 'View' }],
+        ret: { label: 'Notice due 18 Feb 2027', bg: '#E3F2FD', fg: '#0D47A1', detail: 'No completed trip; the clock runs from the cancellation date instead.', steps: [{ t: 'Cancelled 18 Aug', col: '#2E7D32', tc: '#1B5E20' }, { t: 'Notice 18 Feb 2027', col: '#0B4F6C', tc: '#083B50' }, { t: 'Grace to 20 Mar', col: '#E8E2D9', tc: '#6E665E' }, { t: 'Anonymized', col: '#E8E2D9', tc: '#6E665E' }] }, consent: { cookies: 'Essential only · v2.2', marketing: 'Withdrawn 18 Aug', terms: 'v4.0 accepted 5 Jul', region: 'IE · GDPR' } }
+    };
+    const order = ['ortega', 'chen', 'herrera', 'nair', 'mueller', 'whitfield', 'dubois', 'oneil'];
+    const rows = order.map((k) => { const c = C[k]; return { name: c.name, country: c.country, langs: c.langs, tagline: c.tagline, trips: c.trips, ltv: c.ltv, last: c.last, ofac: c.ofac, ret: c.ret, on: s.sel === k, bg: s.sel === k ? '#E6F0F4' : 'transparent', pick: () => this.setState({ sel: k }) }; });
+    const tabs = [['prof', 'Profile & trips'], ['comms', 'Communication'], ['docs', 'Documents & OFAC'], ['data', 'Data & retention']].map(([id, label]) => ({ id, label, on: s.tab === id, cls: s.tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) }));
+    return { rows, tabs, c: C[s.sel], isProf: s.tab === 'prof', isComms: s.tab === 'comms', isDocs: s.tab === 'docs', isData: s.tab === 'data' };
+  }
+}
+</script>
+</body>
+</html>

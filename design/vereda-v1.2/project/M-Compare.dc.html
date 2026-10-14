@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Compare · mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:focus-visible,.ck:focus-visible,.bn a:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0}
+.tbl{border-collapse:separate;border-spacing:0;font-size:13px;line-height:18px}
+.tbl th,.tbl td{padding:10px;border-bottom:1px solid #E8E2D9;vertical-align:top;text-align:left}
+.tbl th{font-weight:600;color:#4A433D;background:#F3EEE6;position:sticky;left:0;z-index:1;width:104px;min-width:104px}
+.tbl td{width:160px;min-width:160px}
+.tbl thead th{background:#fff}
+.tbl tr.same td,.tbl tr.same th{opacity:.45}
+.ph{position:relative;display:flex;align-items:flex-end;padding:6px;box-sizing:border-box}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#4A433D;font:500 11px/14px Inter,system-ui,sans-serif}
+.bn a[aria-current]{color:#083B50;font-weight:700}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 8px; border-bottom: 1px solid #E8E2D9; background: #FBF8F3; position: sticky; top: 0; z-index: 3">
+    <a href="M-Packages.dc.html" aria-label="Back to trips" style="width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="flex: 1"><p class="sm" style="font-weight: 600">Compare trips</p><p class="cap">{{countLabel}} · swipe for more</p></div>
+    <button class="btn btn-t btn-sm" type="button" aria-label="Share comparison"><svg class="ic" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"></path></svg></button>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 12px; padding: 16px 0 110px">
+    <div style="padding: 0 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><p class="cap">Per person sharing · all mandatory fees in · 2 travelers · mid-range casas</p><label style="display: inline-flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 500; white-space: nowrap; min-height: 44px"><input class="ck" type="checkbox" checked="{{diffOn}}" onChange="{{toggleDiff}}">Differences</label></div>
+
+    <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}"><div style="margin: 0 20px; padding: 32px 16px; text-align: center; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; align-items: center"><p class="sm" style="font-weight: 600">Nothing to compare yet</p><p class="cap">Tick "Compare" on 2 to 4 trips in the listing.</p><div style="display: flex; gap: 8px"><a class="btn btn-p btn-sm" href="M-Packages.dc.html">Browse trips</a><button class="btn btn-t btn-sm" type="button" onClick="{{restore}}">Prototype: restore</button></div></div></sc-if>
+
+    <sc-if value="{{hasAny}}" hint-placeholder-val="{{ true }}">
+      <div style="overflow-x: auto; padding: 0 20px">
+        <table class="tbl">
+          <thead><tr>
+            <th scope="col" style="vertical-align: bottom"><p class="cap">Attribute</p></th>
+            <sc-for list="{{cols}}" as="c" hint-placeholder-count="3"><th scope="col" style="position: static; width: 160px; min-width: 160px; font-weight: 400; color: #1F1B17"><div style="display: flex; flex-direction: column; gap: 6px"><div class="ph" style="aspect-ratio: 16/9; border-radius: 6px; background: {{c.tint}}"><button type="button" aria-label="Remove {{c.name}}" onClick="{{c.remove}}" style="position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border-radius: 9999px; border: 0; background: rgba(255,255,255,.92); display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div><a href="M-Package.dc.html" style="font-weight: 600; font-size: 14px; line-height: 18px; color: #1F1B17; text-decoration: none">{{c.name}}</a><span style="font-size: 18px; line-height: 22px; font-weight: 700">€ {{c.price}} <span class="cap" style="display: inline">pp</span></span><a class="btn btn-p btn-sm" href="M-Booking.dc.html">{{c.cta}}</a></div></th></sc-for>
+            <sc-if value="{{canAdd}}" hint-placeholder-val="{{ true }}"><th scope="col" style="position: static; width: 120px; min-width: 120px; font-weight: 400"><a href="M-Packages.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 150px; border: 1px dashed #D6CEC3; border-radius: 6px; text-decoration: none; color: #0B4F6C; font-weight: 600; font-size: 13px"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>Add</a></th></sc-if>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="12"><tr class="{{r.cls}}"><th scope="row">{{r.label}}</th><sc-for list="{{r.cells}}" as="cell" hint-placeholder-count="3"><td><sc-if value="{{cell.isPill}}" hint-placeholder-val="{{ false }}"><span class="pill" style="background: {{cell.bg}}; color: {{cell.fg}}; height: 22px; font-size: 12px">{{cell.text}}</span></sc-if><sc-if value="{{cell.isText}}" hint-placeholder-val="{{ true }}"><span>{{cell.text}}</span><sc-if value="{{cell.hasSub}}" hint-placeholder-val="{{ false }}"><br><span class="cap">{{cell.sub}}</span></sc-if></sc-if></td></sc-for><sc-if value="{{canAdd}}" hint-placeholder-val="{{ true }}"><td style="width: 120px; min-width: 120px"></td></sc-if></tr></sc-for>
+          </tbody>
+        </table>
+      </div>
+      <p class="cap" style="padding: 0 20px">Attribute column stays fixed; identical rows dim when "Differences" is on.</p>
+    </sc-if>
+
+    <div style="margin: 8px 20px 0; padding: 16px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 10px"><p class="ov" style="color: #A83E24">Still torn?</p><p class="sm" style="font-weight: 600">A specialist can tell you which fits your dates, pace and budget in ten minutes.</p><div style="display: flex; gap: 8px"><a class="btn btn-s btn-sm" href="https://wa.me/" style="flex: 1">WhatsApp us</a><a class="btn btn-s btn-sm" href="M-Custom.dc.html" style="flex: 1">Mix into a custom route</a></div></div>
+  </main>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24; background: #FBF8F3; padding: 0 4px">viewport fold · 844</span></div>
+  <nav class="bn" aria-label="Main" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="M-Home.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V11Z"></path></svg>Home</a>
+    <a href="M-Packages.dc.html" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>Search</a>
+    <a href="M-Account.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Trips</a>
+    <a href="M-Support.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg>Support</a>
+    <a href="#menu"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>Menu</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { ids: ['vinales', 'havana', 'circuit'], diff: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const all = {
+      vinales: { name: 'Eco-Tourism in Viñales', price: '1,290', tint: '#B9CFD6', cta: 'Request', v: { model: ['pill', 'Request · 24 h', '#fff', '#083B50'], dur: ['8 d / 7 n'], dest: ['Viñales · Las Terrazas · Cayo Levisa · Havana'], stays: ['2 casas + eco-community', 'Generator · solar · battery'], transport: ['Private minivan, A/C'], guided: ['4 guided + 2 farm days'], meals: ['7 B · 3 L · 2 D'], pace: ['Gentle · ≤ 8 km'], group: ['6–12'], rating: ['4.8 · 23 reviews'], cancel: ['Free −€ 60 to 46 d'], share: ['87 % local'], offset: ['Incl. · 1.8 t'] } },
+      havana: { name: 'Havana Cultural Immersion', price: '1,050', tint: '#E3B9A6', cta: 'Request', v: { model: ['pill', 'Request · 24 h', '#fff', '#083B50'], dur: ['8 d / 7 n'], dest: ['Old Havana · Vedado · Las Terrazas'], stays: ['1 casa, Vedado', 'Battery 8 h'], transport: ['Walking, almendrones, 1 minivan day'], guided: ['5 half-days'], meals: ['7 B · 1 L · 2 D'], pace: ['Gentle · city'], group: ['6–12'], rating: ['4.7 · 31 reviews'], cancel: ['Free −€ 60 to 46 d'], share: ['85 % local'], offset: ['Incl. · 1.5 t'] } },
+      circuit: { name: 'Havana · Viñales · Trinidad', price: '1,590', tint: '#DCC9B6', cta: 'Request', v: { model: ['pill', 'Request · 24 h', '#fff', '#083B50'], dur: ['11 d / 10 n'], dest: ['Havana · Viñales · Cienfuegos · Trinidad'], stays: ['3 casas', 'Battery · generator · generator'], transport: ['Private minivan, A/C · 2 long drives'], guided: ['6 guided days'], meals: ['10 B · 3 L · 2 D'], pace: ['Moderate · one 6 h drive'], group: ['6–12'], rating: ['4.9 · 18 reviews'], cancel: ['Free −€ 60 to 46 d'], share: ['86 % local'], offset: ['Incl. · 2.3 t'] } }
+    };
+    const ids = s.ids.filter((id) => all[id]);
+    const cols = ids.map((id) => ({ id, ...all[id], remove: () => this.setState({ ids: s.ids.filter((x) => x !== id) }) }));
+    const rowDefs = [['model', 'Booking'], ['dur', 'Duration'], ['dest', 'Where'], ['stays', 'Stays · power'], ['transport', 'Transport'], ['guided', 'Guided'], ['meals', 'Meals'], ['pace', 'Pace'], ['group', 'Group'], ['rating', 'Reviews'], ['cancel', 'Cancel'], ['share', 'Community'], ['offset', 'Offset']];
+    const rows = rowDefs.map(([key, label]) => { const vals = cols.map((c) => c.v[key]); const same = vals.length > 1 && vals.every((v) => JSON.stringify(v) === JSON.stringify(vals[0])); return { key, label, cls: s.diff && same ? 'same' : '', cells: vals.map((v) => v[0] === 'pill' ? { isPill: true, isText: false, text: v[1], bg: v[2], fg: v[3], hasSub: false, sub: '' } : { isPill: false, isText: true, text: v[0], hasSub: !!v[1], sub: v[1] || '' }) }; });
+    return { cols, rows, empty: cols.length === 0, hasAny: cols.length > 0, canAdd: cols.length < 4, countLabel: cols.length + ' of 4 trips', diffOn: s.diff, toggleDiff: () => this.setState({ diff: !s.diff }), restore: () => this.setState({ ids: ['vinales', 'havana', 'circuit'] }) };
+  }
+}
+</script>
+</body>
+</html>

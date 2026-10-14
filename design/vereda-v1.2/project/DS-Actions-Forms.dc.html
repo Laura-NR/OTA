@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components · Actions and forms</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;transition:background .12s ease-out;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}.btn-p:active{background:#083B50}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}.btn-s:active{background:#E8E2D9}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-d{background:#C62828;color:#fff}.btn-d:hover{background:#B71C1C}
+.btn-l{background:transparent;color:#0B4F6C;padding:0;height:auto;text-decoration:underline;text-underline-offset:3px}
+.btn:disabled{background:#E8E2D9;color:#6E665E;border-color:transparent;cursor:not-allowed}
+.btn-sm{height:32px;padding:0 12px;font-size:14px}.btn-lg{height:48px;padding:0 20px}
+.btn:focus-visible,.inp:focus-visible,.ck:focus-visible,.day:focus-visible,.seg:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ibtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #D6CEC3;background:#fff;cursor:pointer;color:#083B50}
+.ibtn:hover{background:#F3EEE6}.ibtn:disabled{color:#6E665E;background:#F3EEE6;cursor:not-allowed}
+.inp{height:40px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp:focus{border-color:#0B4F6C;outline:2px solid #0B4F6C;outline-offset:2px}
+.inp::placeholder{color:#6E665E}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.err{display:flex;gap:6px;align-items:flex-start;font:400 14px/20px Inter,system-ui,sans-serif;color:#C62828;margin:0}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fld{display:flex;flex-direction:column;gap:6px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0;flex:none}
+.day{width:44px;height:44px;border:0;border-radius:8px;background:transparent;font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
+.day:hover{background:#E6F0F4}
+.day.rng{background:#E6F0F4;border-radius:0}
+.day.sel{background:#0B4F6C;color:#fff;border-radius:8px}
+.day.so{color:#6E665E;text-decoration:line-through;cursor:not-allowed}
+.day.so:hover{background:transparent}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 12px;border-radius:9999px;background:#E6F0F4;color:#083B50;font:500 14px/20px Inter,system-ui,sans-serif}
+.chip button{width:20px;height:20px;border:0;background:transparent;color:#083B50;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;border-radius:9999px}
+.chip button:hover{background:#C9DDE6}
+.seg{height:40px;padding:0 14px;border:1px solid #D6CEC3;background:#fff;font:500 14px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer}
+.seg.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.tier{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer}
+.tier.on{border:2px solid #0B4F6C;padding:15px;background:#F1F6F8}
+.sug{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer}
+.sug:hover{background:#F3EEE6}
+.demo{display:flex;flex-direction:column;gap:12px;padding:20px;border:1px dashed #D6CEC3;border-radius:12px;background:#FBF8F3}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+
+  <header style="display: flex; flex-direction: column; gap: 12px; max-width: 860px">
+    <p class="ov">Vereda design system · Components 1 of 3</p>
+    <h1 class="disp" style="font-size: 40px; line-height: 48px">Actions &amp; form controls</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Every control is a real element: buttons are <span class="mono" style="font-size: 15px">&lt;button&gt;</span>, fields have visible labels, focus is a 2 px teal ring with 2 px offset (ochre on dark surfaces; corrected 6 Oct for 3:1 contrast). Try the counters, the currency menu, the date range and the insurance tiers: they are live.</p>
+  </header>
+
+  <!-- BUTTONS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">01 · Buttons</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">One primary per view</h2>
+    </div>
+    <div class="sheet" style="padding: 24px; overflow-x: auto">
+      <div style="display: grid; grid-template-columns: 140px repeat(6, minmax(140px, 1fr)); gap: 16px 12px; align-items: center; min-width: 1000px">
+        <p class="cap"></p><p class="cap">Default</p><p class="cap">Hover</p><p class="cap">Focus-visible</p><p class="cap">Active / pressed</p><p class="cap">Disabled</p><p class="cap">Loading (aria-busy)</p>
+
+        <p class="lbl">Primary</p>
+        <div><button class="btn btn-p" type="button">Request to book</button></div>
+        <div><button class="btn btn-p" type="button" style="background: #0E6B8C">Request to book</button></div>
+        <div><button class="btn btn-p" type="button" style="outline: 2px solid #F2B134; outline-offset: 2px">Request to book</button></div>
+        <div><button class="btn btn-p" type="button" style="background: #083B50">Request to book</button></div>
+        <div><button class="btn btn-p" type="button" disabled="">Request to book</button></div>
+        <div><button class="btn btn-p" type="button" aria-busy="true" style="gap: 10px"><svg class="ic" style="width: 18px; height: 18px; stroke: #fff; opacity: .9" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>Sending request…</button></div>
+
+        <p class="lbl">Secondary</p>
+        <div><button class="btn btn-s" type="button">Save trip</button></div>
+        <div><button class="btn btn-s" type="button" style="background: #F3EEE6">Save trip</button></div>
+        <div><button class="btn btn-s" type="button" style="outline: 2px solid #F2B134; outline-offset: 2px">Save trip</button></div>
+        <div><button class="btn btn-s" type="button" style="background: #E8E2D9">Save trip</button></div>
+        <div><button class="btn btn-s" type="button" disabled="">Save trip</button></div>
+        <div><button class="btn btn-s" type="button" aria-busy="true"><svg class="ic" style="width: 18px; height: 18px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>Saving…</button></div>
+
+        <p class="lbl">Tertiary</p>
+        <div><button class="btn btn-t" type="button">Compare</button></div>
+        <div><button class="btn btn-t" type="button" style="background: #E6F0F4">Compare</button></div>
+        <div><button class="btn btn-t" type="button" style="outline: 2px solid #F2B134; outline-offset: 2px">Compare</button></div>
+        <div><button class="btn btn-t" type="button" style="background: #C9DDE6">Compare</button></div>
+        <div><button class="btn btn-t" type="button" disabled="" style="background: transparent">Compare</button></div>
+        <div><span class="cap">—</span></div>
+
+        <p class="lbl">Destructive</p>
+        <div><button class="btn btn-d" type="button">Cancel booking</button></div>
+        <div><button class="btn btn-d" type="button" style="background: #B71C1C">Cancel booking</button></div>
+        <div><button class="btn btn-d" type="button" style="outline: 2px solid #F2B134; outline-offset: 2px">Cancel booking</button></div>
+        <div><button class="btn btn-d" type="button" style="background: #8E1B1B">Cancel booking</button></div>
+        <div><button class="btn btn-d" type="button" disabled="">Cancel booking</button></div>
+        <div><span class="cap">Always behind a confirm modal</span></div>
+
+        <p class="lbl">Link</p>
+        <div><button class="btn btn-l" type="button">View cancellation policy</button></div>
+        <div><button class="btn btn-l" type="button" style="color: #083B50">View cancellation policy</button></div>
+        <div><button class="btn btn-l" type="button" style="outline: 2px solid #F2B134; outline-offset: 2px; border-radius: 4px">View cancellation policy</button></div>
+        <div><span class="cap">—</span></div>
+        <div><span class="cap" style="color: #6E665E; text-decoration: underline">View cancellation policy</span></div>
+        <div><span class="cap">—</span></div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Sizes</h3>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+          <button class="btn btn-p btn-sm" type="button">sm · 32</button>
+          <button class="btn btn-p" type="button">md · 40</button>
+          <button class="btn btn-p btn-lg" type="button">lg · 48</button>
+        </div>
+        <p class="hlp">On touch screens md grows to 44 px via padding; primary CTAs on mobile are always lg and full width.</p>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Icon buttons · aria-label required</h3>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+          <button class="ibtn" type="button" aria-label="Save to wishlist"><svg class="ic" viewBox="0 0 24 24"><path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 22l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg></button>
+          <button class="ibtn" type="button" aria-label="Share this package"><svg class="ic" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"></path></svg></button>
+          <button class="ibtn" type="button" aria-label="Download itinerary PDF"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg></button>
+          <button class="ibtn" type="button" aria-label="Close" style="border-color: transparent"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+          <button class="ibtn" type="button" aria-label="Open menu" style="background: #0B4F6C; color: #fff; border-color: #0B4F6C"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+        </div>
+        <p class="hlp">44 × 44 px minimum, 8 px between neighbours.</p>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Support buttons</h3>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+          <a class="btn btn-s" href="https://wa.me/" style="gap: 10px"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg>WhatsApp us</a>
+          <a class="btn btn-s" href="tel:+34000000000" style="gap: 10px"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.9 2.1Z"></path></svg>Call a specialist</a>
+          <button class="btn btn-p" type="button" style="width: 56px; height: 56px; border-radius: 9999px; padding: 0; box-shadow: 0 4px 12px rgba(31,27,23,.16)" aria-label="Chat with us on WhatsApp"><svg class="ic" style="width: 26px; height: 26px; stroke: #fff" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg></button>
+        </div>
+        <p class="hlp">Click-to-chat deep link (wa.me) to a non-Cuban business number, pre-filled with the booking code. No Business API automation is assumed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INPUTS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · Text fields &amp; selection</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Label above, helper below, error explains what to do</h2>
+    </div>
+    <div class="sheet" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 24px">
+      <div class="fld">
+        <label class="lbl" for="f1">Email <span style="color: #6E665E; font-weight: 400">· Required</span></label>
+        <input class="inp" id="f1" type="email" placeholder="you@example.com">
+        <p class="hlp">We use this to send your confirmation and host details.</p>
+        <p class="cap">Default</p>
+      </div>
+      <div class="fld">
+        <label class="lbl" for="f2">Email <span style="color: #6E665E; font-weight: 400">· Required</span></label>
+        <input class="inp" id="f2" type="email" value="margaret.chen@" style="border-color: #0B4F6C; outline: 2px solid #F2B134; outline-offset: 2px">
+        <p class="hlp">We use this to send your confirmation and host details.</p>
+        <p class="cap">Focus</p>
+      </div>
+      <div class="fld">
+        <label class="lbl" for="f3">Email <span style="color: #6E665E; font-weight: 400">· Required</span></label>
+        <input class="inp" id="f3" type="email" value="margaret.chen@utoronto" aria-invalid="true" aria-describedby="f3e" style="border-color: #C62828">
+        <p class="err" id="f3e"><svg class="ic" style="width: 18px; height: 18px; margin-top: 1px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg>Enter a complete email, like name@example.com, so we can send your confirmation.</p>
+        <p class="cap">Error · role="alert"</p>
+      </div>
+      <div class="fld">
+        <label class="lbl" for="f4">Passport number</label>
+        <input class="inp" id="f4" type="text" value="AB1234567" disabled="" style="background: #F3EEE6; color: #6E665E; border-color: #E8E2D9">
+        <p class="hlp">Locked after your documents were approved. Contact us to change it.</p>
+        <p class="cap">Disabled</p>
+      </div>
+      <div class="fld">
+        <label class="lbl" for="f5">Nationality (as on passport)</label>
+        <div style="position: relative">
+          <select class="inp" id="f5" style="appearance: none; -webkit-appearance: none; padding-right: 40px">
+            <option>Canada</option><option>France</option><option>Germany</option><option>Spain</option><option>United Kingdom</option><option>United States</option>
+          </select>
+          <svg class="ic" style="position: absolute; right: 12px; top: 10px; color: #4A433D; pointer-events: none" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg>
+        </div>
+        <p class="hlp">US passport holders complete a short travel-category certification before payment.</p>
+        <p class="cap">Native select</p>
+      </div>
+      <div class="fld">
+        <label class="lbl" for="f6">Anything we should know?</label>
+        <textarea class="inp" id="f6" rows="3" style="height: auto; padding: 10px 12px; resize: vertical" placeholder="Dietary needs, mobility, a birthday on the trip…"></textarea>
+        <p class="hlp">Optional · shared only with your hosts and guide.</p>
+        <p class="cap">Textarea</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Checkbox · radio · toggle</h3>
+        <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer; min-height: 44px"><input class="ck" type="checkbox" checked=""><span style="font-size: 14px; line-height: 20px">I confirm every traveler will hold travel insurance covering medical care and evacuation. It is required to enter Cuba.</span></label>
+        <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer; min-height: 44px"><input class="ck" type="checkbox"><span style="font-size: 14px; line-height: 20px">Send me the Pre-departure Reality Briefing 30 days before I travel.</span></label>
+        <div role="radiogroup" aria-label="Room type" style="display: flex; flex-direction: column; gap: 8px">
+          <label style="display: flex; gap: 12px; align-items: center; cursor: pointer; min-height: 44px"><input class="ck" type="radio" name="room" checked=""><span style="font-size: 14px">Double · 1 bed</span></label>
+          <label style="display: flex; gap: 12px; align-items: center; cursor: pointer; min-height: 44px"><input class="ck" type="radio" name="room"><span style="font-size: 14px">Twin · 2 beds</span></label>
+          <label style="display: flex; gap: 12px; align-items: center; cursor: pointer; min-height: 44px"><input class="ck" type="radio" name="room"><span style="font-size: 14px">Family · 2 rooms, connecting when possible</span></label>
+        </div>
+        <button type="button" role="switch" aria-checked="{{flexOn}}" onClick="{{toggleFlex}}" style="display: flex; align-items: center; gap: 12px; background: transparent; border: 0; padding: 0; cursor: pointer; min-height: 44px; font: 500 14px/20px Inter, system-ui, sans-serif; color: #1F1B17">
+          <span style="width: 44px; height: 24px; border-radius: 9999px; background: {{flexBg}}; position: relative; display: inline-block; transition: background .12s"><span style="position: absolute; top: 2px; left: {{flexKnob}}; width: 20px; height: 20px; border-radius: 9999px; background: #fff; box-shadow: 0 1px 2px rgba(31,27,23,.2); transition: left .12s"></span></span>
+          <span>Flexible dates (± 3 days) · {{flexLabel}}</span>
+        </button>
+      </div>
+
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Travelers counter</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+            <div><p style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 500">Adults</p><p class="hlp">18 and over</p></div>
+            <div style="display: flex; align-items: center; gap: 12px"><button class="ibtn" type="button" aria-label="Remove one adult" onClick="{{decA}}" disabled="{{adultsMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button><span class="mono" style="width: 24px; text-align: center; font-size: 16px" aria-live="polite">{{adults}}</span><button class="ibtn" type="button" aria-label="Add one adult" onClick="{{incA}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+            <div><p style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 500">Children</p><p class="hlp">2–17 · priced by age at travel</p></div>
+            <div style="display: flex; align-items: center; gap: 12px"><button class="ibtn" type="button" aria-label="Remove one child" onClick="{{decC}}" disabled="{{childrenMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button><span class="mono" style="width: 24px; text-align: center; font-size: 16px" aria-live="polite">{{children}}</span><button class="ibtn" type="button" aria-label="Add one child" onClick="{{incC}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+            <div><p style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 500">Infants</p><p class="hlp">Under 2 · free</p></div>
+            <div style="display: flex; align-items: center; gap: 12px"><button class="ibtn" type="button" aria-label="Remove one infant" onClick="{{decI}}" disabled="{{infantsMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button><span class="mono" style="width: 24px; text-align: center; font-size: 16px" aria-live="polite">{{infants}}</span><button class="ibtn" type="button" aria-label="Add one infant" onClick="{{incI}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+          </div>
+        </div>
+        <p class="hlp">{{summary}} · Groups of 6 or more unlock the group rate on the next step.</p>
+      </div>
+
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Currency &amp; language switchers</h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start">
+          <div style="position: relative">
+            <button class="btn btn-s" type="button" aria-haspopup="listbox" aria-expanded="{{curOpen}}" onClick="{{toggleCur}}" style="gap: 8px; min-width: 120px; justify-content: space-between"><span>{{curLabel}}</span><svg class="ic" style="width: 18px; height: 18px" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></button>
+            <sc-if value="{{curOpen}}" hint-placeholder-val="{{ true }}">
+              <ul role="listbox" aria-label="Display currency" style="position: absolute; top: 46px; left: 0; z-index: 2; margin: 0; padding: 6px; list-style: none; width: 260px; background: #fff; border: 1px solid #E8E2D9; border-radius: 8px; box-shadow: 0 4px 12px rgba(31,27,23,.10); display: flex; flex-direction: column; gap: 2px">
+                <sc-for list="{{currencies}}" as="c" hint-placeholder-count="4">
+                  <li><button type="button" role="option" aria-selected="{{c.on}}" onClick="{{c.pick}}" style="width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border: 0; border-radius: 6px; background: {{c.bg}}; cursor: pointer; font: 500 14px/20px Inter, system-ui, sans-serif; color: #1F1B17; text-align: left"><span>{{c.code}} · {{c.name}}</span><span class="mono" style="font-size: 12px; color: #6E665E">{{c.rate}}</span></button></li>
+                </sc-for>
+                <li style="padding: 8px 12px 6px; border-top: 1px solid #E8E2D9; margin-top: 4px"><p class="hlp">Prices are set in EUR. Your rate is locked when you pay the deposit.</p></li>
+              </ul>
+            </sc-if>
+          </div>
+          <div style="display: flex; border: 1px solid #D6CEC3; border-radius: 8px; overflow: hidden" role="group" aria-label="Language">
+            <button class="seg on" type="button" aria-pressed="true" style="border: 0; border-right: 1px solid #D6CEC3">EN</button>
+            <button class="seg" type="button" aria-pressed="false" style="border: 0; border-right: 1px solid #D6CEC3">ES</button>
+            <button class="seg" type="button" aria-pressed="false" style="border: 0">FR</button>
+          </div>
+        </div>
+        <p class="hlp">Dates follow the locale: 15/03/2027 (EN-CA, ES, FR), 03/15/2027 (EN-US), 15.03.2027 (DE). German and Italian ship in phase 3.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">03 · Search bar &amp; filter chips</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">"Where do you want to go?"</h2>
+    </div>
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 20px">
+      <form style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 12px; align-items: end; padding: 16px; background: #FBF8F3; border-radius: 12px; border: 1px solid #E8E2D9; position: relative">
+        <div class="fld" style="position: relative">
+          <label class="lbl" for="q">Where do you want to go?</label>
+          <input class="inp" id="q" type="search" value="Vi" aria-autocomplete="list" aria-expanded="true" aria-controls="q-list" style="border-color: #0B4F6C">
+          <ul id="q-list" role="listbox" style="position: absolute; top: 70px; left: 0; right: 0; z-index: 3; margin: 0; padding: 6px; list-style: none; background: #fff; border: 1px solid #E8E2D9; border-radius: 8px; box-shadow: 0 4px 12px rgba(31,27,23,.10)">
+            <li class="sug" role="option" aria-selected="true" style="background: #F3EEE6"><svg class="ic" style="color: #A83E24" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg><span><strong>Vi</strong>ñales <span style="color: #6E665E">· Pinar del Río · 3 packages</span></span></li>
+            <li class="sug" role="option"><svg class="ic" style="color: #0B4F6C" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6M3 11h18"></path></svg><span>Eco-Tourism in <strong>Vi</strong>ñales <span style="color: #6E665E">· 7 nights · package</span></span></li>
+            <li class="sug" role="option"><svg class="ic" style="color: #0B4F6C" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span>Search everything for "Vi"</span></li>
+          </ul>
+        </div>
+        <div class="fld">
+          <label class="lbl" for="d">When</label>
+          <input class="inp" id="d" type="text" value="13 – 20 Feb 2027" readonly="">
+        </div>
+        <div class="fld">
+          <label class="lbl" for="t">Travelers</label>
+          <input class="inp" id="t" type="text" value="{{summary}}" readonly="">
+        </div>
+        <button class="btn btn-p btn-lg" type="submit" style="gap: 10px"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>Find your Cuba trip</button>
+      </form>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 72px">
+        <span class="chip">Eco / agrotourism<button type="button" aria-label="Remove filter Eco / agrotourism"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></span>
+        <span class="chip">6–8 days<button type="button" aria-label="Remove filter 6–8 days"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></span>
+        <span class="chip">Casa particular<button type="button" aria-label="Remove filter Casa particular"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></span>
+        <span class="chip">Backup power guaranteed<button type="button" aria-label="Remove filter Backup power guaranteed"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></span>
+        <button class="btn btn-l" type="button" style="font-size: 14px; margin-left: 8px">Clear all</button>
+        <span class="cap" style="margin-left: auto">Showing 3 of 8 packages · updated live as filters change</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATE PICKER -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">04 · Date range picker</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Seasons and sold-out days are visible before you pick</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 12px rgba(31,27,23,.10); max-width: 380px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <button class="ibtn" type="button" aria-label="Previous month"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></button>
+          <p style="margin: 0; font-weight: 600">February 2027</p>
+          <button class="ibtn" type="button" aria-label="Next month"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></button>
+        </div>
+        <span style="align-self: flex-start; display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 9999px; background: #FEF3D6; color: #6B4A05; font-size: 12px; font-weight: 600">Mid-high season · 5 Jan – 30 Apr</span>
+        <div style="display: grid; grid-template-columns: repeat(7, 44px); gap: 2px; justify-content: center">
+          <span class="cap" style="text-align: center">Mo</span><span class="cap" style="text-align: center">Tu</span><span class="cap" style="text-align: center">We</span><span class="cap" style="text-align: center">Th</span><span class="cap" style="text-align: center">Fr</span><span class="cap" style="text-align: center">Sa</span><span class="cap" style="text-align: center">Su</span>
+          <button class="day" type="button">1</button><button class="day" type="button">2</button><button class="day" type="button">3</button><button class="day" type="button">4</button><button class="day" type="button">5</button><button class="day so" type="button" aria-disabled="true" aria-label="6 February, sold out">6</button><button class="day so" type="button" aria-disabled="true" aria-label="7 February, sold out">7</button>
+          <button class="day" type="button">8</button><button class="day" type="button">9</button><button class="day" type="button">10</button><button class="day" type="button">11</button><button class="day" type="button">12</button><button class="day sel" type="button" aria-label="13 February, trip starts" aria-pressed="true">13</button><button class="day rng" type="button">14</button>
+          <button class="day rng" type="button">15</button><button class="day rng" type="button">16</button><button class="day rng" type="button">17</button><button class="day rng" type="button">18</button><button class="day rng" type="button">19</button><button class="day sel" type="button" aria-label="20 February, trip ends" aria-pressed="true">20</button><button class="day" type="button">21</button>
+          <button class="day" type="button">22</button><button class="day" type="button">23</button><button class="day" type="button">24</button><button class="day" type="button">25</button><button class="day" type="button">26</button><button class="day" type="button">27</button><button class="day" type="button">28</button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #E8E2D9">
+          <div><p style="margin: 0; font-size: 14px; font-weight: 600">13 – 20 Feb · 7 nights</p><p class="hlp">Sat start · hosts confirm within 24 h</p></div>
+          <button class="btn btn-p" type="button">Apply</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Rules</h3>
+          <ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: #4A433D">
+            <li>44 × 44 px day cells; arrow keys move, Enter selects, Escape closes, focus returns to the field.</li>
+            <li>Range shown as a teal band, endpoints solid teal: a shape, not just a color.</li>
+            <li>Sold-out days are struck through and announced ("6 February, sold out"), never greyed only.</li>
+            <li>Season badge is informational; prices spanning two seasons are itemised per night on the review step.</li>
+            <li>Hurricane season (Jun–Nov) adds an info line: "Free date change if an advisory is raised."</li>
+          </ul>
+        </div>
+        <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Mobile</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A433D">Opens as a full-height bottom sheet with two stacked months, a sticky "Apply · 7 nights" bar in the thumb zone and a "Flexible ± 3 days" toggle above it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSURANCE TIERS + OFAC -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">05 · Choice cards</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Insurance tiers and the US travel-category gate</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h3 style="margin: 0; font-size: 18px; line-height: 24px">Travel insurance · required to enter Cuba</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A433D">Cuban immigration can ask for proof on arrival. Choose a plan here, or confirm you already hold one.</p>
+        </div>
+        <div role="radiogroup" aria-label="Insurance plan" style="display: flex; flex-direction: column; gap: 10px">
+          <sc-for list="{{tiers}}" as="t" hint-placeholder-count="4">
+            <label class="tier {{t.cls}}">
+              <input class="ck" type="radio" name="ins" checked="{{t.on}}" onChange="{{t.pick}}" style="margin-top: 2px">
+              <span style="display: flex; flex-direction: column; gap: 2px; flex: 1">
+                <span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-weight: 600">{{t.name}}</span><span class="mono" style="font-size: 14px">{{t.price}}</span></span>
+                <span style="font-size: 14px; line-height: 20px; color: #4A433D">{{t.desc}}</span>
+              </span>
+            </label>
+          </sc-for>
+        </div>
+        <button class="btn btn-l" type="button" style="align-self: flex-start; font-size: 14px">Compare what each plan covers</button>
+      </div>
+
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; border-color: #FDE68A">
+        <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: #FEF3C7; border-radius: 8px; color: #92400E">
+          <svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+          <p style="margin: 0; font-size: 14px; line-height: 20px">US travelers: spending on Cuba travel is only permitted under one of 12 general-licence categories, whatever the booking channel. You certify yours here; we keep the record for 5 years.</p>
+        </div>
+        <div class="fld">
+          <label class="lbl" for="ofac">Your travel category</label>
+          <div style="position: relative">
+            <select class="inp" id="ofac" style="appearance: none; -webkit-appearance: none; padding-right: 40px">
+              <option>Support for the Cuban People</option><option>Family visits</option><option>Journalistic activity</option><option>Professional research</option><option>Educational activities</option><option>Religious activities</option><option>Humanitarian projects</option><option>Other authorised category…</option>
+            </select>
+            <svg class="ic" style="position: absolute; right: 12px; top: 10px; color: #4A433D; pointer-events: none" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg>
+          </div>
+          <p class="hlp">Not sure? <a href="#wizard">Answer three questions</a> to find the category that fits.</p>
+        </div>
+        <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer"><input class="ck" type="checkbox" style="margin-top: 2px"><span style="font-size: 14px; line-height: 20px">I certify that my travel falls under the category above and that I will keep a full-time schedule of qualifying activities. <a href="#ofac">Read the full statement</a>.</span></label>
+        <div class="fld">
+          <label class="lbl" for="sig">Type your full name as a signature</label>
+          <input class="inp" id="sig" type="text" placeholder="Carlos Rodríguez" style="font-family: Fraunces, Georgia, serif; font-style: italic; font-size: 20px">
+        </div>
+        <p class="hlp">This step is a hard gate: payment stays locked until it is complete. A signed PDF is added to your documents.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3280}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { adults: 2, children: 0, infants: 0, flex: true, curOpen: false, cur: 'EUR', tier: 'standard' };
+  }
+  renderVals() {
+    const s = this.state;
+    const clamp = (n, lo) => Math.max(lo, n);
+    const parts = [];
+    parts.push(s.adults + (s.adults === 1 ? ' adult' : ' adults'));
+    if (s.children) parts.push(s.children + (s.children === 1 ? ' child' : ' children'));
+    if (s.infants) parts.push(s.infants + (s.infants === 1 ? ' infant' : ' infants'));
+    const rates = { EUR: 'base', USD: '1 € = 1.09 $', CAD: '1 € = 1.49 $', GBP: '1 € = 0.85 £' };
+    const names = { EUR: 'Euro', USD: 'US dollar', CAD: 'Canadian dollar', GBP: 'British pound' };
+    const currencies = ['EUR', 'USD', 'CAD', 'GBP'].map((code) => ({
+      code, name: names[code], rate: rates[code], on: s.cur === code,
+      bg: s.cur === code ? '#E6F0F4' : 'transparent',
+      pick: () => this.setState({ cur: code, curOpen: false })
+    }));
+    const tierDefs = [
+      { id: 'essential', name: 'Essential', price: '€ 48 / person', desc: 'Medical €50,000 · evacuation €500,000 · meets the Cuban entry requirement.' },
+      { id: 'standard', name: 'Standard · most chosen', price: '€ 96 / person', desc: 'Medical €100,000 · evacuation €1,000,000 · trip cancellation up to the full package price.' },
+      { id: 'plus', name: 'Plus · cancel for any reason', price: '€ 142 / person', desc: 'Everything in Standard plus 75% back if you cancel for any reason up to 48 h before departure.' },
+      { id: 'none', name: 'No, I already have insurance', price: '€ 0', desc: 'You will upload your policy in Documents. We check that it covers Cuba and evacuation.' }
+    ];
+    const tiers = tierDefs.map((t) => ({ ...t, on: s.tier === t.id, cls: s.tier === t.id ? 'on' : '', pick: () => this.setState({ tier: t.id }) }));
+    return {
+      adults: s.adults, children: s.children, infants: s.infants,
+      adultsMin: s.adults <= 1, childrenMin: s.children <= 0, infantsMin: s.infants <= 0,
+      incA: () => this.setState({ adults: s.adults + 1 }), decA: () => this.setState({ adults: clamp(s.adults - 1, 1) }),
+      incC: () => this.setState({ children: s.children + 1 }), decC: () => this.setState({ children: clamp(s.children - 1, 0) }),
+      incI: () => this.setState({ infants: s.infants + 1 }), decI: () => this.setState({ infants: clamp(s.infants - 1, 0) }),
+      summary: parts.join(', '),
+      flexOn: s.flex, flexBg: s.flex ? '#0B4F6C' : '#D6CEC3', flexKnob: s.flex ? '22px' : '2px', flexLabel: s.flex ? 'on' : 'off',
+      toggleFlex: () => this.setState({ flex: !s.flex }),
+      curOpen: s.curOpen, curLabel: s.cur, toggleCur: () => this.setState({ curOpen: !s.curOpen }), currencies,
+      tiers
+    };
+  }
+}
+</script>
+</body>
+</html>

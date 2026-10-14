@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Usability test kit · scripts per persona on the live prototype · metrics · severity scale</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;white-space:nowrap}
+.task{display:grid;grid-template-columns:28px 1fr 220px;gap:8px 12px;padding:8px 0;border-top:1px solid #E8E2D9;font-size:14px;line-height:20px}
+.task:first-child{border-top:0}
+.task .n{font:600 13px/20px "IBM Plex Mono",ui-monospace,monospace;color:#083B50}
+.quote{margin:0;padding:12px 16px;border-left:0;border-radius:8px;background:#F3EEE6;font-size:14px;line-height:20px;color:#4A433D;font-style:italic}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 900px">
+    <p class="ov">Usability test kit · from UI/UX doc 15, pointed at this canvas</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">Test the prototype as it is</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Every scenario below starts on a live artboard in Play mode and ends on a screen the moderator can recognise. Doc 15's hypotheses, participants, metrics and severity scale are kept; the tasks are rewritten for how this product actually works (request to book, 48-hour payment window, OFAC gate, dispatch desk).</p>
+  </header>
+
+  <!-- Setup -->
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+    <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+      <p class="ov">Setup</p>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: #4A433D">
+        <li><strong>Prototype:</strong> this canvas, Play mode, full-window. Moderated sessions share the Play link over a call with screen share; unmoderated sessions record the same link in a website-testing tool.</li>
+        <li><strong>Devices:</strong> traveler desktop (1440) and phone (390, M-* screens); admin on a 1280+ laptop; worker on a mid-range Android.</li>
+        <li><strong>Phase:</strong> B, high fidelity. Lofi findings from doc 15 round 1 are assumed applied.</li>
+        <li><strong>Language:</strong> EN for travelers, ES for workers; the recruitment page is ES.</li>
+      </ul>
+    </div>
+    <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+      <p class="ov">Participants · 18–29</p>
+      <div style="overflow-x: auto"><table class="tbl"><thead><tr><th>Doc 15 persona</th><th>Canvas persona</th><th>n</th></tr></thead><tbody>
+        <tr><td>US traveler, OFAC-aware</td><td>Luis Ortega · family visit · ES/EN</td><td class="mono">5–8</td></tr>
+        <tr><td>European independent traveler</td><td>Klaus Müller · custom builder · DE/EN</td><td class="mono">5–8</td></tr>
+        <tr><td>Group or low-confidence traveler</td><td>Eleanor Whitfield · phone, large text</td><td class="mono">5–8</td></tr>
+        <tr><td>Booking operations agent</td><td>Ernesto Vila · Administrative Support</td><td class="mono">3–4</td></tr>
+        <tr><td>Operations supervisor</td><td>Ana Rodríguez · Operations Admin</td><td class="mono">1–2</td></tr>
+        <tr><td>Field worker (added)</td><td>Reinier Soto · driver · ES</td><td class="mono">3</td></tr>
+      </tbody></table></div>
+      <p class="cap">Screening as in doc 15; workers recruited from the current supplier pool. Incentives per doc 15.</p>
+    </div>
+  </section>
+
+  <!-- Hypotheses -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 18px 20px 10px; display: flex; flex-direction: column; gap: 4px"><p class="ov">Hypotheses · doc 15 step 3, with the artboards that carry them</p><h2 class="disp" style="font-size: 24px; line-height: 32px">What we are trying to learn</h2></div>
+    <div style="overflow-x: auto"><table class="tbl" style="min-width: 900px"><thead><tr><th>ID</th><th>Hypothesis</th><th>Measured on</th><th>Success</th></tr></thead><tbody>
+      <tr><td class="mono">H1.1</td><td>Travelers complete the 5-step request without help</td><td><a href="Package.dc.html">Package</a> → <a href="Booking.dc.html">Booking</a></td><td>≥ 85 % task success, ≤ 2 critical errors</td></tr>
+      <tr><td class="mono">H1.2</td><td>Travelers can explain "request to book, pay within 48 h" vs "instant"</td><td><a href="Packages.dc.html">Packages</a>, <a href="Booking.dc.html">Booking step 5</a></td><td>≥ 4 of 5 articulate it correctly</td></tr>
+      <tr><td class="mono">H2.1</td><td>Payment page reads as trustworthy; total and policy found unprompted</td><td><a href="Payment.dc.html">Payment</a>, <a href="Confirmation.dc.html">Confirmation</a></td><td>Confidence ≥ 5 of 7; ≥ 60 % mention a trust signal</td></tr>
+      <tr><td class="mono">H2.3</td><td>US travelers can summarise the OFAC certification after reading it</td><td><a href="Booking.dc.html">Booking step 4</a>, <a href="PreTrip.dc.html">PreTrip › OFAC</a></td><td>≥ 4 of 5 correct summaries</td></tr>
+      <tr><td class="mono">H3.1</td><td>Mobile request completes one-handed, no horizontal scroll, right keyboards</td><td><a href="M-Package.dc.html">M-Package</a> → <a href="M-Booking.dc.html">M-Booking</a></td><td>≥ 80 % success; ≥ 90 % correct keyboard on first focus</td></tr>
+      <tr><td class="mono">H4.1</td><td>Admin clears an ACTION_REQUIRED booking (re-dispatch) in ≤ 3 min</td><td><a href="A-Dashboard.dc.html">A-Dashboard</a>, <a href="A-Booking.dc.html">A-Booking</a></td><td>Mean ≤ 3 min; p90 ≤ 5 min</td></tr>
+      <tr><td class="mono">H4.2</td><td>Admin finds a named traveler's booking in ≤ 30 s</td><td><a href="A-Bookings.dc.html">A-Bookings</a>, <a href="A-Customers.dc.html">A-Customers</a></td><td>≥ 80 % within 30 s</td></tr>
+      <tr><td class="mono">H5.1</td><td>A worker accepts an offer and reports an emergency without reading help (added)</td><td><a href="W-Offer.dc.html">W-Offer</a>, <a href="W-Job.dc.html">W-Job</a></td><td>3 of 3, each under 60 s</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <!-- Traveler script -->
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 16px; align-items: start">
+    <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; flex-direction: column; gap: 4px"><p class="ov">Traveler script · moderated remote · 60 min</p><h2 class="disp" style="font-size: 24px; line-height: 32px">Scenarios 1–3</h2></div>
+      <p class="quote">"We're testing the design, not you. Think aloud: what you see, what you expect, what surprises you. Nothing is charged; everything is a prototype."</p>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <strong>Scenario 1 · Browse and evaluate (10 min) · start on <a href="Home.dc.html">Home</a></strong>
+        <p class="p">"You and a friend want a week in Cuba next February: a few nights in Havana, a few in the countryside, a tobacco farm somewhere. You've heard of casas particulares."</p>
+        <div style="display: flex; flex-direction: column">
+          <div class="task"><span class="n">1</span><span>Find a trip that includes Viñales and read what is included and what is not.</span><span class="cap">Packages → Package · inclusions found?</span></div>
+          <div class="task"><span class="n">2</span><span>Compare it with one other trip and say which one includes dinners.</span><span class="cap">Compare · correct answer</span></div>
+          <div class="task"><span class="n">3</span><span>Tell me what the current conditions are in that region right now.</span><span class="cap">Conditions strip / PreTrip · notices the strip?</span></div>
+          <div class="task"><span class="n">4</span><span>Find out whether you pay now or later, and when money is actually taken.</span><span class="cap">Package model pill / step 5 · H1.2 probe</span></div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <strong>Scenario 2 · Request and pay (15 min) · start on <a href="Package.dc.html">Package</a></strong>
+        <p class="p">"Book the Viñales trip for 13–20 February for two adults. One of you is from the United States (Luis persona) or Canada (others)."</p>
+        <div style="display: flex; flex-direction: column">
+          <div class="task"><span class="n">1</span><span>Choose dates, the mid-range tier and the horseback alternative on day 4.</span><span class="cap">Booking steps 1–3 · time, errors</span></div>
+          <div class="task"><span class="n">2</span><span>Enter both travelers. (US persona: complete the certification step.)</span><span class="cap">Step 4 · OFAC gate · H2.3 probe after</span></div>
+          <div class="task"><span class="n">3</span><span>Review and send the request. What happens next, and when?</span><span class="cap">Step 5 → request sent · explains 24 h / 48 h?</span></div>
+          <div class="task"><span class="n">4</span><span>"Your hosts have confirmed." Open the invoice and pay the deposit. Which currency are you paying in, and what is the total?</span><span class="cap"><a href="Payment.dc.html">Payment</a> · currency noticed · confidence 1–7</span></div>
+          <div class="task"><span class="n">5</span><span>Find the cancellation terms for your dates.</span><span class="cap">Confirmation / Legal · found without help?</span></div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <strong>Scenario 3 · Mobile (10 min) · start on <a href="M-Home.dc.html">M-Home</a></strong>
+        <div style="display: flex; flex-direction: column">
+          <div class="task"><span class="n">1</span><span>On your phone, find a short trip leaving within two weeks and request it.</span><span class="cap">M-Packages → M-Booking · keyboards, one hand</span></div>
+          <div class="task"><span class="n">2</span><span>You land in Havana with no data. Show me your itinerary and your host's phone number.</span><span class="cap"><a href="M-Account.dc.html">M-Account</a> / offline kit · found?</span></div>
+        </div>
+      </div>
+      <p class="cap">Debrief: most confusing moment; the one thing you'd change; would you recommend it (0–10, feeds the NPS baseline).</p>
+    </div>
+
+    <!-- Admin + worker scripts -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><p class="ov">Admin script · moderated in person · 45 min</p><h2 class="disp" style="font-size: 24px; line-height: 32px">Scenarios 1–4</h2></div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <strong>1 · Clear the red alert (15 min) · start on <a href="A-Dashboard.dc.html">A-Dashboard</a></strong>
+          <p class="p">"It's 14:32. Something on the matrix is red. Get that booking back on track and tell the traveler what's happening."</p>
+          <div style="display: flex; flex-direction: column">
+            <div class="task"><span class="n">1</span><span>Identify which booking and which service is red, and why.</span><span class="cap">H4.1 timer starts</span></div>
+            <div class="task"><span class="n">2</span><span>Re-dispatch the guide to someone qualified and nearby.</span><span class="cap">Fallback menu used? reason read?</span></div>
+            <div class="task"><span class="n">3</span><span>Acknowledge the alert and message the traveler.</span><span class="cap"><a href="A-Booking.dc.html">A-Booking</a> › Messages · template?</span></div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <strong>2 · Find and change (10 min) · start on <a href="A-Bookings.dc.html">A-Bookings</a></strong>
+          <div style="display: flex; flex-direction: column">
+            <div class="task"><span class="n">1</span><span>"Tomás Herrera says he paid." Find his booking and tell me its status in under 30 seconds.</span><span class="cap">H4.2 · search or saved view</span></div>
+            <div class="task"><span class="n">2</span><span>Review his transfer proof and decide what to do.</span><span class="cap"><a href="A-Payments.dc.html">A-Payments</a> · proof panel · choice + reason</span></div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <strong>3 · The annual report (7 min) · start on <a href="A-Reports.dc.html">A-Reports</a></strong>
+          <div style="display: flex; flex-direction: column">
+            <div class="task"><span class="n">1</span><span>Your supervisor needs the MINTUR annual summary and the list of arrivals in the next 7 days with OFAC status. Produce both.</span><span class="cap">Generator + saved view "Arriving ≤ 7 days" / "Missing OFAC" · export</span></div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <strong>4 · Away from the desk (8 min) · start on <a href="AL-Alerts.dc.html">AL-Alerts</a></strong>
+          <div style="display: flex; flex-direction: column">
+            <div class="task"><span class="n">1</span><span>On your phone, a red alert arrives. Resolve it and nudge the second approver for the pending refund.</span><span class="cap">One-click fallback · nudge · under 2 min</span></div>
+            <div class="task"><span class="n">2</span><span>Open the Viñales outage case and send the travelers their options.</span><span class="cap"><a href="A-Disruption.dc.html">A-Disruption</a> · severity understood?</span></div>
+          </div>
+        </div>
+        <p class="cap">Debrief per doc 15: what takes longest today, what should be more prominent on the booking detail, what you'd automate.</p>
+      </div>
+
+      <div class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><p class="ov">Guion para colaboradores · 20 min · en español · start on <a href="W-Login.dc.html">W-Login</a></p><h2 class="disp" style="font-size: 24px; line-height: 32px">Reinier's four tasks</h2></div>
+        <div style="display: flex; flex-direction: column">
+          <div class="task"><span class="n">1</span><span>Entra con tu teléfono y dime qué significa la franja de tu credencial.</span><span class="cap">SMS code · banner understood</span></div>
+          <div class="task"><span class="n">2</span><span>Tienes una oferta. Decide y responde. (Luego: recházala y explica por qué.)</span><span class="cap"><a href="W-Offer.dc.html">W-Offer</a> · time to answer · reason sheet</span></div>
+          <div class="task"><span class="n">3</span><span>El domingo no trabajas. Bloquéalo y declara cuánto combustible tienes.</span><span class="cap"><a href="W-Calendar.dc.html">W-Calendar</a></span></div>
+          <div class="task"><span class="n">4</span><span>Estás en el aeropuerto y un pasajero se siente mal. ¿Qué haces en la app?</span><span class="cap"><a href="W-Job.dc.html">W-Job</a> · emergency in &lt; 60 s · H5.1</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Metrics -->
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 18px 20px 10px"><p class="ov">Metrics · doc 15 step 6</p><h2 class="disp" style="font-size: 22px; line-height: 28px">Targets for phase B</h2></div>
+      <div style="overflow-x: auto"><table class="tbl"><thead><tr><th>Metric</th><th>Target</th><th>How</th></tr></thead><tbody>
+        <tr><td>Task success rate</td><td class="mono">≥ 85 %</td><td>moderator coding + tool capture</td></tr>
+        <tr><td>Time on task (H4.1, H4.2, H5.1)</td><td class="mono">see hypotheses</td><td>timer from first click</td></tr>
+        <tr><td>Critical errors per task</td><td class="mono">≤ 0.3</td><td>wrong path that needs moderator help</td></tr>
+        <tr><td>Payment confidence</td><td class="mono">≥ 5 / 7</td><td>probe after scenario 2</td></tr>
+        <tr><td>OFAC comprehension</td><td class="mono">≥ 4 / 5</td><td>one-sentence summary scored</td></tr>
+        <tr><td>SUS</td><td class="mono">≥ 68</td><td>post-session, 10 items</td></tr>
+        <tr><td>Recommend (NPS baseline)</td><td class="mono">record</td><td>0–10 at debrief</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 18px 20px 10px"><p class="ov">Severity · doc 15 appendix A</p><h2 class="disp" style="font-size: 22px; line-height: 28px">Rating findings</h2></div>
+      <div style="overflow-x: auto"><table class="tbl"><thead><tr><th>Level</th><th>Meaning</th><th>Fix by</th></tr></thead><tbody>
+        <tr><td><span class="pill" style="background: #FDECEA; color: #B71C1C">4 · Blocker</span></td><td>Task cannot be completed; legal or payment risk</td><td>before development starts</td></tr>
+        <tr><td><span class="pill" style="background: #FEF3C7; color: #92400E">3 · Major</span></td><td>Completed with moderator help or &gt; 2× expected time</td><td>before hifi round 2</td></tr>
+        <tr><td><span class="pill" style="background: #E3F2FD; color: #0D47A1">2 · Minor</span></td><td>Hesitation, recovered alone</td><td>backlog, prioritised</td></tr>
+        <tr><td><span class="pill" style="background: #F3EEE6; color: #4A433D">1 · Cosmetic</span></td><td>Noticed, no effect on the task</td><td>when convenient</td></tr>
+        <tr><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">0 · Positive</span></td><td>Something that worked notably well</td><td>keep, document</td></tr>
+      </tbody></table></div>
+      <p class="cap" style="padding: 10px 20px 16px">Findings go on the canvas as sticky notes beside the artboard they concern, colour = severity (red, orange, blue, gray, green), so the next round can be walked in place.</p>
+    </div>
+  </section>
+
+  <section class="sheet" style="padding: 20px; display: flex; flex-direction: column; gap: 8px">
+    <p class="ov">Known limits of testing on this canvas</p>
+    <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: #4A433D">
+      <li>Each artboard keeps its own state: a choice made on Booking does not carry to Payment. The moderator narrates the hand-off ("your hosts have confirmed").</li>
+      <li>Search fields and most selects are static; tasks are phrased so the answer is visible on the page, not computed.</li>
+      <li>Timers do not tick; the matrix shows one frozen moment (14:32 Havana). Say so before scenario 1 of the admin script.</li>
+      <li>Push notifications are drawn, not delivered; for H5.1 the moderator opens W-Offer and says "this just arrived".</li>
+    </ul>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

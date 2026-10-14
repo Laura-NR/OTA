@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>App de colaboradores · perfil · fiabilidad · pagos y recibos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 18px;border-radius:10px;font:600 15px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C;height:44px;padding:0 10px}
+.btn:focus-visible,.bn a:focus-visible,.rowa:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.stat{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;background:#FBF8F3}
+.stat .v{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:18px;line-height:24px;font-weight:500}
+.li{display:flex;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid #E8E2D9}
+.li:first-child{border-top:0}
+.rowa{display:flex;gap:12px;align-items:center;padding:14px;text-decoration:none;color:inherit;border-top:1px solid #E8E2D9}
+.rowa:first-child{border-top:0}
+.bar{height:8px;border-radius:9999px;background:#E8E2D9;overflow:hidden;display:block}
+.bar span{display:block;height:100%}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E665E;font:500 11px/14px Inter,system-ui,sans-serif;position:relative}
+.bn a.on{color:#083B50;font-weight:700}
+.bn .dot{position:absolute;top:8px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:9999px;background:#C62828;color:#fff;font:700 10px/16px Inter,system-ui,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 12px; padding: 14px 20px 6px">
+    <span aria-hidden="true" style="width: 52px; height: 52px; border-radius: 9999px; background: #0B4F6C; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px">RS</span>
+    <div style="display: flex; flex-direction: column; min-width: 0; flex: 1"><h1 class="disp" style="font-size: 22px; line-height: 26px">Reinier Soto</h1><span class="cap">Chofer · La Habana, Pinar del Río, Matanzas · ES · EN</span></div>
+    <button class="btn btn-t" type="button">Editar</button>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 24px; flex: 1">
+
+    <!-- Fiabilidad -->
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px"><p class="ov">Tu fiabilidad</p><span class="cap" style="margin-left: auto">últimos 12 meses</span></div>
+      <div style="display: flex; align-items: baseline; gap: 12px"><span class="mono" style="font-size: 44px; line-height: 48px; font-weight: 500; color: #1B5E20">95</span><span style="display: flex; flex-direction: column; gap: 2px"><span class="pill" style="background: #E8F5E9; color: #1B5E20; align-self: flex-start">Muy buena</span><span class="cap">subió desde 93 en julio</span></span></div>
+      <span class="bar" aria-label="95 de 100, mínimo 85"><span style="width: 95%; background: #2E7D32"></span></span>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div class="stat"><span class="cap">Aceptados</span><span class="v">95 %</span></div>
+        <div class="stat"><span class="cap">Rechazados</span><span class="v">3 %</span></div>
+        <div class="stat"><span class="cap">Sin respuesta</span><span class="v">2 %</span></div>
+      </div>
+      <p class="cap">Cancelaciones de última hora: 0. Por debajo de 85 la central te saca de las ofertas automáticas hasta hablar contigo. Responder a tiempo, aunque sea para rechazar, mantiene el número alto.</p>
+    </div>
+
+    <!-- Pagos -->
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px"><p class="ov">Pagos</p><span class="tag" style="margin-left: auto">Efectivo EUR · oficina Vedado</span></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <div class="stat"><span class="cap">Pendiente</span><span class="v">€ 360</span><span class="cap">2 trabajos terminados</span></div>
+        <div class="stat"><span class="cap">Próximo pago</span><span class="v" style="font-size: 16px">Sáb 10 oct</span><span class="cap">10:00–13:00 · trae tu carnet</span></div>
+        <div class="stat"><span class="cap">Pagado en 2026</span><span class="v">€ 7,480</span><span class="cap">72 trabajos</span></div>
+        <div class="stat"><span class="cap">Este mes</span><span class="v">€ 540</span><span class="cap">5 trabajos</span></div>
+      </div>
+      <p class="cap">Cada trabajo se paga 5 días hábiles después de terminarlo, salvo que haya una incidencia abierta. Firmas un recibo por cada pago; aquí guardas la copia.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-s" type="button" style="flex: 1">Cambiar a transferencia</button><button class="btn btn-t" type="button">Recibos (PDF)</button></div>
+    </div>
+
+    <!-- Historial -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px"><p class="ov">Historial</p><a href="#" class="cap" style="margin-left: auto">Ver todo</a></div>
+      <div class="card" style="display: flex; flex-direction: column">
+        <div class="li"><span class="mono" style="width: 50px; font-size: 13px; color: #083B50">3 oct</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><span style="font-size: 15px; line-height: 20px">La Habana → Viñales</span><span class="cap">Hannah +2 · VX-4WQ7EB</span></span><span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><strong class="mono">€ 90</strong><span class="pill" style="background: #FEF3C7; color: #92400E">Pendiente</span></span></div>
+        <div class="li"><span class="mono" style="width: 50px; font-size: 13px; color: #083B50">1 oct</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><span style="font-size: 15px; line-height: 20px">Aeropuerto → Vedado</span><span class="cap">Hannah +2 · VX-4WQ7EB</span></span><span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><strong class="mono">€ 25</strong><span class="pill" style="background: #FEF3C7; color: #92400E">Pendiente</span></span></div>
+        <div class="li"><span class="mono" style="width: 50px; font-size: 13px; color: #083B50">28 sep</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><span style="font-size: 15px; line-height: 20px">La Habana → Varadero</span><span class="cap">Amira · VX-7DD2KA</span></span><span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><strong class="mono">€ 60</strong><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pagado 28 sep</span></span></div>
+        <div class="li"><span class="mono" style="width: 50px; font-size: 13px; color: #083B50">21 sep</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><span style="font-size: 15px; line-height: 20px">Viñales ⇄ Aeropuerto</span><span class="cap">Pierre +1 · VX-2MM8RV · ★ 5</span></span><span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><strong class="mono">€ 180</strong><span class="pill" style="background: #E8F5E9; color: #1B5E20">Pagado 28 sep</span></span></div>
+      </div>
+    </section>
+
+    <!-- Valoraciones -->
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 10px"><p class="ov">Valoraciones</p><span class="mono" style="margin-left: auto; font-weight: 500">4,8 ★ · 52</span></div>
+      <p class="p" style="font-size: 14px">«Reinier nos esperó con el cartel, nos ayudó con todo y paró en el mirador. Puntualísimo.» <span class="cap">Pierre · septiembre · traducido del francés</span></p>
+      <p class="cap">Los viajeros valoran puntualidad, limpieza del vehículo e idioma. Solo tú y la central veis los comentarios.</p>
+    </div>
+
+    <!-- Ajustes -->
+    <div class="card" style="display: flex; flex-direction: column">
+      <a class="rowa" href="W-Credentials.dc.html"><svg class="ic" style="color: #083B50" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h4"/></svg><span style="flex: 1">Mis credenciales y vehículo</span><span class="pill" style="background: #E8F5E9; color: #1B5E20">Activa</span><svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+      <a class="rowa" href="#"><svg class="ic" style="color: #083B50" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg><span style="flex: 1">Notificaciones</span><span class="cap">Push + SMS</span><svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+      <a class="rowa" href="#"><svg class="ic" style="color: #083B50" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span style="flex: 1">Idioma de la app</span><span class="cap">Español</span><svg class="ic" style="color: #6E665E" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+      <a class="rowa" href="tel:+5372042516"><svg class="ic" style="color: #083B50" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg><span style="flex: 1">Central 24/7</span><span class="cap">+53 7 204 2516</span></a>
+      <a class="rowa" href="W-Login.dc.html" style="color: #B71C1C"><svg class="ic" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span style="flex: 1">Cerrar sesión en este teléfono</span></a>
+    </div>
+    <div style="height: 72px"></div>
+  </main>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24">primer viewport · 844</span></div>
+  <nav class="bn" aria-label="Principal" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="W-Home.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/><path d="M9 21v-6h6v6"/></svg>Inicio</a>
+    <a href="W-Offer.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>Ofertas<span class="dot">1</span></a>
+    <a href="W-Calendar.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Calendario</a>
+    <a href="W-Job.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M8 7V5h8v2M3 12h18"/></svg>Trabajos</a>
+    <a href="W-Earnings.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

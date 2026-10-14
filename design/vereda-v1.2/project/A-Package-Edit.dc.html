@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Package editor · Eco-Tourism in Viñales v3.3 draft · basics, days, suppliers, pricing, availability, policies, SEO, publish</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:36px;padding:0 12px;font-size:13px}
+.btn:focus-visible,.inp:focus-visible,.sel:focus-visible,.ta:focus-visible,.tab:focus-visible,.ck:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.sel,.ta{padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp,.sel{height:44px}.ta{padding:10px 12px;min-height:88px;resize:vertical}
+.inp::placeholder{color:#6E665E}
+.sel{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231F1B17' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.inp-sm{height:36px;font-size:13px;padding:0 10px}
+.lbl{font:500 13px/18px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:#E6F0F4;color:#083B50;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.num{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace;white-space:nowrap}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 240px;max-width:100%;background:#083B50;color:#fff;display:flex;flex-direction:column;gap:16px;padding:20px 16px 24px;box-sizing:border-box}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:8px;color:#C9DDE6;text-decoration:none;font:500 14px/20px Inter,system-ui,sans-serif}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav a:focus-visible{outline:2px solid #F2B134;outline-offset:-2px}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:#F2B134;color:#1F1B17;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.cnt.red{background:#C62828;color:#fff}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 32px;background:#fff;border-bottom:1px solid #E8E2D9}
+.content{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.tab{height:44px;padding:0 14px;border:0;background:transparent;font:600 14px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C}
+.day{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:1px solid #E8E2D9}
+.day:first-child{border-top:0;padding-top:0}
+.ph{position:relative;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;border-radius:10px}
+.ph .alt{font:500 11px/14px Inter,system-ui,sans-serif;color:#4A433D;background:rgba(255,255,255,.85);padding:3px 6px;border-radius:4px}
+.cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(28px,1fr));gap:3px}
+.cal span{height:28px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font:500 10px/12px "IBM Plex Mono",ui-monospace,monospace}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+</style>
+</helmet>
+
+<div class="shell">
+
+  <nav class="side" aria-label="Admin">
+    <a href="A-Dashboard.dc.html" aria-label="Vereda operations desk" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; padding: 4px 12px 8px"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg><span class="cap" style="color: #C9DDE6; margin-left: 2px">Ops</span></a>
+    <div class="nav">
+      <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Dashboard<span class="cnt red">2</span></a>
+      <a href="A-Bookings.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>Bookings<span class="cnt">14</span></a>
+      <a href="A-Disruption.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Disruptions<span class="cnt">1</span></a>
+      <a href="A-Packages.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>Packages</a>
+      <a href="A-Customers.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>Customers</a>
+      <a href="A-Suppliers.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Suppliers<span class="cnt">1</span></a>
+      <a href="A-Payments.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments<span class="cnt">3</span></a>
+      <a href="A-Content.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Content</a>
+      <a href="A-Reports.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+      <a href="A-Settings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.08)">
+      <div style="display: flex; gap: 10px; align-items: center"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">AR</span><div style="display: flex; flex-direction: column; min-width: 0"><strong style="font-size: 13px; line-height: 18px">Ana Rodríguez</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">Operations Admin</span></div></div>
+      <a href="A-Login.dc.html" style="color: #C9DDE6; font-size: 12px; line-height: 16px">Sign out · session ends 02:33</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6E665E"><a href="A-Packages.dc.html">Packages</a><span aria-hidden="true">›</span><span style="color: #1F1B17">Eco-Tourism in Viñales</span></nav>
+      <span class="pill" style="background: #E8F5E9; color: #1B5E20">Live v3.2</span><span class="pill" style="background: #FEF3C7; color: #92400E">Editing draft v3.3 · autosaved 14:35</span>
+      <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap">
+        <a class="btn btn-s" href="Package.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview as traveler</a>
+        <button class="btn btn-s" type="button">Submit for review</button>
+        <button class="btn btn-p" type="button" onClick="{{openPub}}">Publish or schedule…</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Publish panel -->
+      <sc-if value="{{pubOpen}}" hint-placeholder-val="{{ false }}">
+        <section class="card" role="dialog" aria-labelledby="pubt" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; border-color: #0B4F6C">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><h2 id="pubt" class="disp" style="font-size: 20px; line-height: 26px">Publish v3.3</h2><button class="btn btn-sm btn-t" type="button" onClick="{{closePub}}" style="margin-left: auto">Close</button></div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <p class="ov">Approvals</p>
+              <label style="display: flex; gap: 10px; align-items: flex-start"><input class="ck" type="checkbox" checked><span>Ops feasibility · Ana R. · 4 Oct<br><span class="cap">suppliers confirmed for 2027 dates</span></span></label>
+              <label style="display: flex; gap: 10px; align-items: flex-start"><input class="ck" type="checkbox" checked><span>Finance · margin 24 % ≥ 20 % · automatic<br><span class="cap">no discount above 10 %</span></span></label>
+              <label style="display: flex; gap: 10px; align-items: flex-start"><input class="ck" type="checkbox"><span>Compliance · OFAC category copy unchanged<br><span class="cap">required only when the sanctions text changes · not needed</span></span></label>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <p class="ov">When</p>
+              <label style="display: flex; gap: 10px; align-items: center"><input type="radio" name="when" class="ck" checked><span>Publish now</span></label>
+              <label style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap"><input type="radio" name="when" class="ck"><span>Schedule</span><input class="inp inp-sm" type="text" value="15 Oct 2026 09:00 Havana" style="width: 220px" aria-label="Schedule date and time"></label>
+              <label style="display: flex; gap: 10px; align-items: center"><input class="ck" type="checkbox" checked><span>New bookings only (grandfather the 3 open requests on v3.2)</span></label>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 8px; background: #FBF8F3">
+              <p class="ov">Impact</p>
+              <span style="font-size: 13px">3 open requests and 9 confirmed bookings stay on v3.2.</span>
+              <span style="font-size: 13px">Price change: mid-range high season € 1,395 → € 1,420 (+1.8 %) for departures from 1 Dec 2026.</span>
+              <span style="font-size: 13px">Site, sitemap and EN/ES/FR pages update within 60 s; FR translation of day 4 is pending (falls back to EN with a notice).</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-p" type="button" onClick="{{closePub}}">Publish v3.3 now</button><button class="btn btn-s" type="button" onClick="{{closePub}}">Cancel</button><span class="cap" style="align-self: center">Rollback to any version from the history rail; versions are immutable.</span></div>
+        </section>
+      </sc-if>
+
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start">
+        <!-- Editor -->
+        <div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+          <div role="tablist" aria-label="Package sections" style="display: flex; gap: 2px; border-bottom: 1px solid #E8E2D9; overflow-x: auto">
+            <sc-for list="{{tabs}}" as="t" hint-placeholder-count="8"><button class="tab {{t.cls}}" type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}<sc-if value="{{t.warn}}" hint-placeholder-val="{{ false }}"><span style="width: 8px; height: 8px; border-radius: 9999px; background: #B45309"></span></sc-if></button></sc-for>
+          </div>
+
+          <!-- Basics -->
+          <sc-if value="{{isBasics}}" hint-placeholder-val="{{ true }}">
+            <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px">
+              <h2 class="disp" style="font-size: 20px; line-height: 26px">Basics</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 16px">
+                <div class="fld"><label class="lbl" for="nm">Name · EN</label><input class="inp" id="nm" type="text" value="Eco-Tourism in Viñales"><p class="hlp">ES "Ecoturismo en Viñales" · FR "Écotourisme à Viñales" (translated, in sync)</p></div>
+                <div class="fld"><label class="lbl" for="sl">Slug</label><input class="inp mono" id="sl" type="text" value="vinales-eco"><p class="hlp">Changing a live slug creates a 301 automatically.</p></div>
+                <div class="fld"><label class="lbl" for="ty">Type</label><select class="sel" id="ty"><option>Package · single base</option><option>Circuit · multi-stop</option><option>Short break</option><option>Event</option></select></div>
+                <div class="fld"><label class="lbl" for="du">Duration</label><div class="row"><input class="inp" id="du" type="number" value="7" style="width: 90px"><span class="cap">nights · 8 days</span></div></div>
+                <div class="fld"><label class="lbl" for="mo">Booking model</label><select class="sel" id="mo"><option>Request to book · answer within 24 h</option><option>Instant · needs allotment-backed stay</option></select><p class="hlp">Casas, private drivers and guides are always request-to-book.</p></div>
+                <div class="fld"><label class="lbl" for="gs">Group size</label><div class="row"><input class="inp" id="gs" type="number" value="2" style="width: 90px" aria-label="Minimum travelers"><span class="cap">to</span><input class="inp" type="number" value="8" style="width: 90px" aria-label="Maximum travelers"></div></div>
+              </div>
+              <div class="fld"><label class="lbl" for="sd">Short description · EN</label><textarea class="ta" id="sd">Seven nights in the Viñales valley with a casa family, a biologist guide and farm hosts: mogote walks, caves, tobacco and coffee fincas, and one open day to do nothing at all.</textarea><p class="hlp">160–220 characters is the sweet spot for cards; the full description lives on the Day by day tab.</p></div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 16px">
+                <div class="fld"><span class="lbl">Destinations</span><div class="row"><span class="tag">Viñales <button type="button" aria-label="Remove Viñales" style="border: 0; background: transparent; padding: 0; cursor: pointer; color: inherit; display: inline-flex">×</button></span><span class="tag">Pinar del Río (province)</span><span class="tag">Cayo Jutías (day)</span><button class="btn btn-sm btn-t" type="button">+ Add</button></div></div>
+                <div class="fld"><span class="lbl">Themes</span><div class="row"><label style="display: inline-flex; gap: 8px; align-items: center"><input class="ck" type="checkbox" checked>Ecotourism</label><label style="display: inline-flex; gap: 8px; align-items: center"><input class="ck" type="checkbox" checked>Nature trails</label><label style="display: inline-flex; gap: 8px; align-items: center"><input class="ck" type="checkbox" checked>Agrotourism</label><label style="display: inline-flex; gap: 8px; align-items: center"><input class="ck" type="checkbox">Culture</label><label style="display: inline-flex; gap: 8px; align-items: center"><input class="ck" type="checkbox">Beach</label></div></div>
+                <div class="fld"><span class="lbl">Tax classification · Resolución 193/2026</span><div style="display: flex; flex-direction: column; gap: 6px"><label style="display: inline-flex; gap: 8px; align-items: center"><input type="radio" name="tax" class="ck" checked>Ecotourism / specialized · counts toward the 25 % rate ratio</label><label style="display: inline-flex; gap: 8px; align-items: center"><input type="radio" name="tax" class="ck">General cultural travel</label></div><p class="hlp">Needs ≥ 60 % of nights in nature or rural settings with certified hosts; Administrative Support reviews the evidence folder.</p></div>
+                <div class="fld"><span class="lbl">Accessibility &amp; difficulty</span><div class="row"><select class="sel" style="width: 180px" aria-label="Difficulty"><option>Gentle · 2 of 5</option><option>Moderate · 3 of 5</option><option>Demanding · 4 of 5</option></select><label style="display: inline-flex; gap: 8px; align-items: center"><input class="ck" type="checkbox" checked>Ground-floor room available</label><label style="display: inline-flex; gap: 8px; align-items: center"><input class="ck" type="checkbox">Step-free throughout</label></div></div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 12px">
+                <div class="ph" role="img" aria-label="Hero photo placeholder: mogotes at dawn from Los Jazmines" style="aspect-ratio: 16/9; background: #B9CFD6"><span class="alt">Hero · alt: mogotes at dawn from Los Jazmines viewpoint</span></div>
+                <div class="ph" role="img" aria-label="Gallery photo placeholder: Yamilé's porch with coffee" style="aspect-ratio: 16/9; background: #E7C6B5"><span class="alt">Gallery 1 · alt: Yamilé's porch, morning coffee</span></div>
+                <div class="ph" role="img" aria-label="Gallery photo placeholder: tobacco drying house" style="aspect-ratio: 16/9; background: #D9C9A3"><span class="alt">Gallery 2 · alt: tobacco drying house, Finca El Paraíso</span></div>
+                <div class="drop" style="border: 2px dashed #D6CEC3; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; background: #FBF8F3"><span class="cap">Add image · WebP ≤ 300 KB · alt text required · low-bandwidth variant generated</span></div>
+              </div>
+            </section>
+          </sc-if>
+
+          <!-- Day by day -->
+          <sc-if value="{{isDays}}" hint-placeholder-val="{{ false }}">
+            <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 12px">
+              <div class="row"><h2 class="disp" style="font-size: 20px; line-height: 26px">Day by day</h2><span class="cap">8 days · drag the handle to reorder · each day links the services it consumes</span><button class="btn btn-sm btn-s" type="button" style="margin-left: auto">+ Add day</button></div>
+              <div style="display: flex; flex-direction: column">
+                <sc-for list="{{days}}" as="d" hint-placeholder-count="8">
+                  <div class="day">
+                    <button type="button" aria-label="Reorder day {{d.n}}" style="width: 36px; height: 36px; border: 1px solid #D6CEC3; background: #fff; border-radius: 8px; cursor: grab; color: #6E665E; display: inline-flex; align-items: center; justify-content: center; flex: none"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg></button>
+                    <span class="mono" style="width: 56px; flex: none; font-size: 13px; padding-top: 10px">Day {{d.n}}</span>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+                      <input class="inp" type="text" value="{{d.title}}" aria-label="Day {{d.n}} title">
+                      <textarea class="ta" aria-label="Day {{d.n}} description" style="min-height: 64px">{{d.desc}}</textarea>
+                      <div class="row"><sc-for list="{{d.svc}}" as="sv" hint-placeholder-count="2"><span class="tag">{{sv}}</span></sc-for><sc-if value="{{d.hasAlt}}" hint-placeholder-val="{{ false }}"><span class="pill" style="background: #FEF3D6; color: #6B4A05">Swappable: {{d.alt}}</span></sc-if><button class="btn btn-sm btn-t" type="button">+ Link service</button></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </sc-if>
+
+          <!-- Suppliers & rates -->
+          <sc-if value="{{isSup}}" hint-placeholder-val="{{ false }}">
+            <section class="card" style="display: flex; flex-direction: column">
+              <div class="row" style="padding: 18px 24px 10px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Suppliers &amp; net rates</h2><span class="cap">per couple, mid-range tier · costs feed the margin check</span><button class="btn btn-sm btn-s" type="button" style="margin-left: auto">+ Add component</button></div>
+              <div style="overflow-x: auto">
+                <table class="tbl" style="min-width: 860px">
+                  <thead><tr><th scope="col">Component</th><th scope="col">Supplier</th><th scope="col">Rate</th><th scope="col">Valid</th><th scope="col" style="text-align: right">Net · couple</th><th scope="col">Fallback</th><th scope="col">Status</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Stay · 7 nights</strong><br><span class="cap">double, breakfast</span></td><td>Casa Yamilé · Yamilé Torres</td><td class="mono">€ 70 / night</td><td class="mono">to 31 Dec 2027</td><td class="num">€ 490.00</td><td>Villa Los Pinos · € 75</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Verified · RTN</span></td></tr>
+                    <tr><td><strong>Guide · 4 days</strong></td><td>Daylin Pérez</td><td class="mono">€ 80 / day</td><td class="mono">to 31 Mar 2028</td><td class="num">€ 320.00</td><td>Mariela Castro · € 80</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Verified · Formatur</span></td></tr>
+                    <tr><td><strong>Transfers · 2</strong><br><span class="cap">HAV ⇄ Viñales</span></td><td>Reinier Soto · pool of 3</td><td class="mono">€ 90 / transfer</td><td class="mono">to 30 Jun 2027</td><td class="num">€ 180.00</td><td>Transtur allotment · € 120</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Verified · licence</span></td></tr>
+                    <tr><td><strong>Las Terrazas day trip</strong><br><span class="cap">default day 4</span></td><td>Lázaro Quintana + Finca park fee</td><td class="mono">€ 34 pp</td><td class="mono">to 31 Dec 2026</td><td class="num">€ 68.00</td><td>Horseback · € 30 pp</td><td><span class="pill" style="background: #FEF3C7; color: #92400E">Rate ends in 86 days</span></td></tr>
+                    <tr><td><strong>Dinners · 3</strong></td><td>Paladar El Olivo · Casa Yamilé</td><td class="mono">€ 16 pp</td><td class="mono">to 31 Dec 2026</td><td class="num">€ 96.00</td><td>—</td><td><span class="pill" style="background: #FEF3C7; color: #92400E">Rate ends in 86 days</span></td></tr>
+                    <tr><td><strong>Insurance · Comfort</strong></td><td>Partner underwriter</td><td class="mono">€ 84 pp</td><td class="mono">annual</td><td class="num">€ 168.00</td><td>—</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Contract</span></td></tr>
+                    <tr><td><strong>Tourist cards · 2</strong></td><td>Consulate / airline</td><td class="mono">€ 25 pp</td><td class="mono">—</td><td class="num">€ 50.00</td><td>—</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Pass-through</span></td></tr>
+                    <tr><td colspan="4"><strong>Total net cost · couple</strong><br><span class="cap">sell € 2,790 + fee € 100 · margin 24 % · take rate ok</span></td><td class="num"><strong>€ 1,372.00</strong></td><td colspan="2"><span class="cap">Agency markup 2.03× on services · service fee shown separately (BR-PR-01)</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="cap" style="padding: 10px 24px 16px">Changing a net rate here never changes a live sell price: the Pricing tab shows the new margin and asks for approval if it drops under 20 %.</p>
+            </section>
+          </sc-if>
+
+          <!-- Pricing & seasons -->
+          <sc-if value="{{isPrice}}" hint-placeholder-val="{{ false }}">
+            <section class="card" style="display: flex; flex-direction: column">
+              <div class="row" style="padding: 18px 24px 10px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Pricing &amp; seasons · EUR per person</h2><span class="cap">base currency EUR · USD/CAD/GBP shown at the daily rate, locked at deposit</span></div>
+              <div style="overflow-x: auto">
+                <table class="tbl" style="min-width: 760px">
+                  <thead><tr><th scope="col">Tier</th><th scope="col">High · 1 Dec–31 Mar</th><th scope="col">Shoulder · Apr–Jun, Nov</th><th scope="col">Low · Jul–Oct</th><th scope="col">Single suppl.</th><th scope="col">Child 2–11</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Budget</strong><br><span class="cap">shared bath casa</span></td><td><input class="inp inp-sm mono" type="text" value="1,290" aria-label="Budget high season" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="1,190" aria-label="Budget shoulder" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="1,090" aria-label="Budget low season" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="210" aria-label="Budget single supplement" style="width: 90px"></td><td><input class="inp inp-sm mono" type="text" value="−30 %" aria-label="Budget child discount" style="width: 90px"></td></tr>
+                    <tr style="background: #FFFBEB"><td><strong>Mid-range</strong><br><span class="cap">private bath, AC</span></td><td><input class="inp inp-sm mono" type="text" value="1,420" aria-label="Mid-range high season" style="width: 110px; border-color: #F59E0B"><p class="hlp">was 1,395</p></td><td><input class="inp inp-sm mono" type="text" value="1,295" aria-label="Mid-range shoulder" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="1,190" aria-label="Mid-range low season" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="260" aria-label="Mid-range single supplement" style="width: 90px"></td><td><input class="inp inp-sm mono" type="text" value="−30 %" aria-label="Mid-range child discount" style="width: 90px"></td></tr>
+                    <tr><td><strong>Comfort</strong><br><span class="cap">boutique casa, private guide days</span></td><td><input class="inp inp-sm mono" type="text" value="1,790" aria-label="Comfort high season" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="1,650" aria-label="Comfort shoulder" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="1,520" aria-label="Comfort low season" style="width: 110px"></td><td><input class="inp inp-sm mono" type="text" value="340" aria-label="Comfort single supplement" style="width: 90px"></td><td><input class="inp inp-sm mono" type="text" value="−30 %" aria-label="Comfort child discount" style="width: 90px"></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px; padding: 16px 24px 20px">
+                <div class="fld"><span class="lbl">Margin check · mid-range high</span><div class="row"><span class="mono" style="font-size: 20px; font-weight: 500; color: #1B5E20">24.2 %</span><span class="cap">threshold 20 % · Finance approval not needed</span></div></div>
+                <div class="fld"><label class="lbl" for="eff">Effective from</label><input class="inp" id="eff" type="text" value="1 Dec 2026 · departures"><p class="hlp">Open requests keep their quoted price; confirmed bookings are never repriced.</p></div>
+                <div class="fld"><span class="lbl">Blackout dates</span><div class="row"><span class="tag">24 Dec–2 Jan</span><span class="tag">Semana Santa 2027</span><button class="btn btn-sm btn-t" type="button">+ Add</button></div></div>
+                <div class="fld"><span class="lbl">Promo codes</span><div class="row"><span class="tag mono">EARLY27 · −8 % · to 30 Nov</span><button class="btn btn-sm btn-t" type="button">+ Add</button></div><p class="hlp">Discounts above 10 % route to Finance.</p></div>
+              </div>
+            </section>
+          </sc-if>
+
+          <!-- Availability -->
+          <sc-if value="{{isAvail}}" hint-placeholder-val="{{ false }}">
+            <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+              <div class="row"><h2 class="disp" style="font-size: 20px; line-height: 26px">Availability · next 90 days</h2><span class="cap">derived from component calendars; override per date with a reason</span></div>
+              <div class="row" style="font-size: 12px; color: #4A433D"><span class="row" style="gap: 6px"><span style="width: 14px; height: 14px; border-radius: 3px; background: #0B4F6C"></span>Instant (allotment-backed)</span><span class="row" style="gap: 6px"><span style="width: 14px; height: 14px; border-radius: 3px; background: #fff; border: 1px solid #0B4F6C"></span>Request · 24 h</span><span class="row" style="gap: 6px"><span style="width: 14px; height: 14px; border-radius: 3px; background: #FEF3C7; border: 1px solid #F59E0B"></span>Limited · 1 room</span><span class="row" style="gap: 6px"><span style="width: 14px; height: 14px; border-radius: 3px; background: #E8E2D9"></span>Closed / blackout</span></div>
+              <div class="cal" aria-label="Availability calendar, 6 October to 3 January">
+                <sc-for list="{{cal}}" as="c" hint-placeholder-count="90"><span style="background: {{c.bg}}; color: {{c.fg}}; border: 1px solid {{c.bd}}" title="{{c.t}}">{{c.d}}</span></sc-for>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px">
+                <div class="fld"><span class="lbl">Model per date</span><p class="p">This package is <strong>request to book</strong> because the stay is a casa. It would turn instant only if every component were allotment-backed (hotel + state transport); the toggle is therefore locked here and explained.</p></div>
+                <div class="fld"><label class="lbl" for="lead">Minimum lead time</label><div class="row"><input class="inp" id="lead" type="number" value="3" style="width: 90px"><span class="cap">days · under 48 h the dispatch timer drops to 30 min</span></div></div>
+                <div class="fld"><label class="lbl" for="cap">Capacity per week</label><div class="row"><input class="inp" id="cap" type="number" value="3" style="width: 90px"><span class="cap">departures · Casa Yamilé has 3 rooms, 1 kept for walk-ins</span></div></div>
+                <div class="fld"><span class="lbl">Seasonal notice</span><p class="p">Jun–Nov: hurricane season notice is injected on the package page automatically (Content › Advisories).</p></div>
+              </div>
+            </section>
+          </sc-if>
+
+          <!-- Policies -->
+          <sc-if value="{{isPol}}" hint-placeholder-val="{{ false }}">
+            <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+              <h2 class="disp" style="font-size: 20px; line-height: 26px">Policies &amp; inclusions</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+                <div class="fld"><label class="lbl" for="cx">Cancellation policy</label><select class="sel" id="cx"><option>Standard · agency default (doc 8 §7)</option><option>Flexible · free to 15 days</option><option>Strict · event packages</option></select><div style="overflow-x: auto"><table class="tbl" style="margin-top: 6px"><tbody><tr><td>&gt; 46 days</td><td class="num">fee € 60–180</td></tr><tr><td>45–31 days</td><td class="num">10 %</td></tr><tr><td>30–15 days</td><td class="num">25 %</td></tr><tr><td>14–8 days</td><td class="num">40 %</td></tr><tr><td>7–3 days</td><td class="num">60 %</td></tr><tr><td>2–1 days</td><td class="num">80 %</td></tr></tbody></table></div></div>
+                <div class="fld"><label class="lbl" for="dp">Deposit &amp; schedule</label><select class="sel" id="dp"><option>Plan A · 20 % deposit, balance 60 days out</option><option>Plan B · deposit + 3 instalments (≥ € 2,000)</option><option>Plan C · flex, balance 30 days out, +3 %</option></select><p class="hlp">Deposit non-refundable except supplier cancellation or force majeure. Reminders at 7, 3 and 1 day.</p><label style="display: inline-flex; gap: 8px; align-items: center; margin-top: 8px"><input class="ck" type="checkbox" checked>One free date change if &gt; 90 days out</label></div>
+                <div class="fld"><label class="lbl" for="inc">Included · one per line</label><textarea class="ta" id="inc">7 nights at a casa particular, breakfast
+Airport transfers both ways
+4 guided days with a Formatur-certified guide
+Las Terrazas day trip or horseback half day
+3 dinners
+Comfort insurance
+Cuban tourist card</textarea></div>
+                <div class="fld"><label class="lbl" for="exc">Not included · one per line</label><textarea class="ta" id="exc">International flights
+Lunches and remaining dinners
+Tips (suggested € 5 per guided day)
+Personal expenses, cash for markets</textarea></div>
+                <div class="fld" style="grid-column: 1 / -1"><label class="lbl" for="cuba">Cuba-specific notes · shown before checkout</label><textarea class="ta" id="cuba">Power cuts are common in Pinar del Río; Casa Yamilé runs a generator mornings and evenings. Bring cash (EUR) for markets. US travelers: this package qualifies under "support for the Cuban people"; the OFAC certification is required at step 4.</textarea></div>
+              </div>
+            </section>
+          </sc-if>
+
+          <!-- SEO -->
+          <sc-if value="{{isSeo}}" hint-placeholder-val="{{ false }}">
+            <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+              <h2 class="disp" style="font-size: 20px; line-height: 26px">SEO &amp; translations</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+                <div class="fld"><label class="lbl" for="tt">Title tag · EN</label><input class="inp" id="tt" type="text" value="Eco-Tourism in Viñales · 7 nights with casa hosts · Vereda"><p class="hlp">58 characters · ok</p></div>
+                <div class="fld"><label class="lbl" for="md">Meta description · EN</label><textarea class="ta" id="md" style="min-height: 64px">Seven nights in the Viñales valley with a casa family and a biologist guide. Total price shown first, no hidden fees. Request to book, answer within 24 h.</textarea><p class="hlp">154 characters · ok</p></div>
+                <div class="fld"><span class="lbl">Search preview</span><div style="padding: 12px 14px; border: 1px solid #E8E2D9; border-radius: 8px; display: flex; flex-direction: column; gap: 2px"><span style="color: #1A0DAB; font-size: 16px">Eco-Tourism in Viñales · 7 nights with casa hosts · Vereda</span><span class="mono cap">vereda.travel/en/packages/vinales-eco</span><span style="font-size: 13px; color: #4A433D">Seven nights in the Viñales valley with a casa family and a biologist guide. Total price shown first…</span></div></div>
+                <div class="fld"><span class="lbl">Structured data</span><p class="p">TouristTrip + Offer (EUR, priceValidUntil 31 Mar 2027) + AggregateRating from verified reviews. Generated; no manual edits.</p><span class="lbl" style="margin-top: 8px">Translations</span><div class="row"><span class="pill" style="background: #E8F5E9; color: #1B5E20">EN source</span><span class="pill" style="background: #E8F5E9; color: #1B5E20">ES · in sync</span><span class="pill" style="background: #FEF3C7; color: #92400E">FR · day 4 pending</span><span class="pill" style="background: #F3EEE6; color: #4A433D">DE · not yet</span></div><p class="hlp">hreflang generated per locale; an outdated translation shows a "last updated" notice rather than silently falling back.</p></div>
+              </div>
+            </section>
+          </sc-if>
+
+          <!-- Preview -->
+          <sc-if value="{{isPrev}}" hint-placeholder-val="{{ false }}">
+            <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+              <h2 class="disp" style="font-size: 20px; line-height: 26px">Preview as traveler</h2>
+              <p class="p">Opens the public package page rendered from <strong>draft v3.3</strong> with a "preview" ribbon; prices show the effective-date logic (v3.2 until 30 Nov, v3.3 from 1 Dec). The link is signed and expires in 24 h so it can be shared with a supplier for a sanity check.</p>
+              <div class="row"><a class="btn btn-p" href="Package.dc.html">Open desktop preview</a><a class="btn btn-s" href="M-Package.dc.html">Open mobile preview</a><button class="btn btn-s" type="button">Copy signed link</button></div>
+              <div class="ph" role="img" aria-label="Preview thumbnail placeholder of the package page" style="aspect-ratio: 16/7; background: #E6F0F4; max-width: 720px"><span class="alt">Thumbnail · package page, mid-range tier selected, Feb 2027 departures</span></div>
+            </section>
+          </sc-if>
+        </div>
+
+        <!-- Right rail -->
+        <aside style="flex: 1 1 280px; max-width: 360px; display: flex; flex-direction: column; gap: 16px">
+          <div class="card" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+            <h2 class="disp" style="font-size: 16px; line-height: 22px">Readiness · v3.3</h2>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+              <span class="row" style="gap: 8px"><svg class="ic" style="width: 16px; height: 16px; color: #2E7D32" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Basics, days, policies complete</span>
+              <span class="row" style="gap: 8px"><svg class="ic" style="width: 16px; height: 16px; color: #2E7D32" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>All 7 components have a verified supplier</span>
+              <span class="row" style="gap: 8px"><svg class="ic" style="width: 16px; height: 16px; color: #92400E" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>2 supplier rates end 31 Dec 2026</span>
+              <span class="row" style="gap: 8px"><svg class="ic" style="width: 16px; height: 16px; color: #92400E" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>FR translation of day 4 pending</span>
+              <span class="row" style="gap: 8px"><svg class="ic" style="width: 16px; height: 16px; color: #2E7D32" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Margin 24 % · no Finance gate</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+            <h2 class="disp" style="font-size: 16px; line-height: 22px">Versions</h2>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 8px; background: #FEF3C7"><strong>v3.3 · draft</strong><span class="cap">you · today · +€ 25 high season, day 4 alt, FR pending</span></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 8px; background: #E8F5E9"><strong>v3.2 · live since 2 Oct</strong><span class="cap">Ana R. · horseback alternative added · 12 bookings</span><div class="row" style="gap: 6px"><button class="btn btn-sm btn-t" type="button">Compare</button></div></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px"><strong>v3.1 · 20 Aug–2 Oct</strong><span class="cap">Ernesto V. · policy text · 14 bookings</span><div class="row" style="gap: 6px"><button class="btn btn-sm btn-t" type="button">Compare</button><button class="btn btn-sm btn-t" type="button">Roll back</button></div></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px"><strong>v3.0 · 1 Jun–20 Aug</strong><span class="cap">Ana R. · 2026–27 rates · 31 bookings</span></div>
+            </div>
+          </div>
+          <div class="card" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+            <h2 class="disp" style="font-size: 16px; line-height: 22px">Bookings on this package</h2>
+            <div class="row" style="gap: 6px"><span class="pill" style="background: #FEF3C7; color: #92400E">3 open requests</span><span class="pill" style="background: #E8F5E9; color: #1B5E20">9 confirmed</span><span class="pill" style="background: #F3EEE6; color: #4A433D">31 completed</span></div>
+            <p class="cap">All locked to their booked version. Publishing never touches them.</p>
+            <a class="btn btn-sm btn-s" href="A-Bookings.dc.html" style="align-self: flex-start">See bookings</a>
+          </div>
+          <div class="card" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+            <h2 class="disp" style="font-size: 16px; line-height: 22px">Actions</h2>
+            <div style="display: flex; flex-direction: column; gap: 6px"><button class="btn btn-sm btn-s" type="button">Duplicate as new package</button><button class="btn btn-sm btn-s" type="button">Unpublish (keeps bookings)</button><button class="btn btn-sm btn-s" type="button" style="color: #B71C1C; border-color: #F5B5B0">Archive…</button></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'basics', pub: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const defs = [['basics', 'Basics', false], ['days', 'Day by day', false], ['sup', 'Suppliers & rates', true], ['price', 'Pricing & seasons', false], ['avail', 'Availability', false], ['pol', 'Policies', false], ['seo', 'SEO & translations', true], ['prev', 'Preview', false]];
+    const tabs = defs.map(([id, label, warn]) => ({ id, label, warn, on: s.tab === id, cls: s.tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) }));
+    const days = [
+      { n: 1, title: 'Arrive in Havana, drive to the valley', desc: 'Airport pickup, 2.5 h west through Pinar del Río. Dinner at Casa Yamilé.', svc: ['Transfer HAV → Viñales', 'Casa Yamilé'], hasAlt: false, alt: '' },
+      { n: 2, title: 'Valley walk and Cueva del Indio', desc: 'Gentle 8 km loop under the mogotes with Daylin; cave by boat in the afternoon.', svc: ['Guide · Daylin', 'Casa Yamilé'], hasAlt: false, alt: '' },
+      { n: 3, title: 'Tobacco and coffee fincas', desc: 'Morning at a tobacco farm, lunch with the family, coffee drying yards.', svc: ['Guide · Daylin', 'Dinner · El Olivo'], hasAlt: false, alt: '' },
+      { n: 4, title: 'Las Terrazas day trip', desc: 'Biosphere reserve community, San Juan river pools, Buenavista coffee ruins.', svc: ['Driver · Lázaro', 'Park fee'], hasAlt: true, alt: 'Horseback half day · Finca El Paraíso (−€ 8)' },
+      { n: 5, title: 'Mogotes hike', desc: 'The long one: 14 km, 500 m up, picnic at the top. Gentle option: Los Acuáticos.', svc: ['Guide · Daylin'], hasAlt: false, alt: '' },
+      { n: 6, title: 'Free day', desc: 'Nothing planned on purpose. Bikes, hammocks, the Saturday market.', svc: ['Casa Yamilé'], hasAlt: false, alt: '' },
+      { n: 7, title: 'Cayo Jutías (weather dependent)', desc: 'Beach day 1.5 h away; if the sea is rough, Daylin swaps in the Ancón valley.', svc: ['Driver · Lázaro', 'Guide · Daylin', 'Farewell dinner'], hasAlt: false, alt: '' },
+      { n: 8, title: 'Back to Havana', desc: 'Transfer timed to the flight; optional stop at Soroa orchid garden.', svc: ['Transfer Viñales → HAV'], hasAlt: false, alt: '' }
+    ];
+    const cal = [];
+    for (let i = 0; i < 90; i++) {
+      const d = (5 + i) % 31 + 1;
+      let bg = '#fff', fg = '#1F1B17', bd = '#0B4F6C', t = 'Request · open';
+      if (i >= 79 && i <= 88) { bg = '#E8E2D9'; fg = '#6E665E'; bd = '#E8E2D9'; t = 'Blackout 24 Dec–2 Jan'; }
+      else if (i % 7 === 3 || i === 20 || i === 41) { bg = '#FEF3C7'; fg = '#92400E'; bd = '#F59E0B'; t = 'Limited · 1 room'; }
+      else if (i === 2 || i === 9) { bg = '#E8E2D9'; fg = '#6E665E'; bd = '#E8E2D9'; t = 'Closed · host unavailable'; }
+      cal.push({ d, bg, fg, bd, t });
+    }
+    return {
+      tabs, isBasics: s.tab === 'basics', isDays: s.tab === 'days', isSup: s.tab === 'sup', isPrice: s.tab === 'price', isAvail: s.tab === 'avail', isPol: s.tab === 'pol', isSeo: s.tab === 'seo', isPrev: s.tab === 'prev',
+      days, cal, pubOpen: s.pub, openPub: () => this.setState({ pub: true }), closePub: () => this.setState({ pub: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

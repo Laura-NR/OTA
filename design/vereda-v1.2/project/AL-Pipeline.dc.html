@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ops Lite · pipeline · reservation state machine on the phone, live bookings, travelers on trip</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 14px;border-radius:10px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C;padding:0 10px}
+.btn:focus-visible,.bn a:focus-visible,.st:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.st{width:100%;text-align:left;border:0;border-top:1px solid #E8E2D9;background:transparent;padding:12px 14px;font:inherit;color:inherit;cursor:pointer;display:flex;gap:10px;align-items:center}
+.st:first-child{border-top:0}
+.st .d{width:10px;height:10px;border-radius:9999px;flex:none}
+.bk{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:#FBF8F3}
+.bar{height:8px;border-radius:9999px;background:#E8E2D9;overflow:hidden;display:block}
+.bar span{display:block;height:100%}
+.top{display:flex;align-items:center;gap:10px;padding:12px 20px;background:#083B50;color:#fff}
+.tel{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:8px;border:1px solid #D6CEC3;background:#fff;color:#083B50;text-decoration:none;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E665E;font:500 11px/14px Inter,system-ui,sans-serif;position:relative}
+.bn a.on{color:#083B50;font-weight:700}
+.bn .dot{position:absolute;top:8px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:9999px;background:#C62828;color:#fff;font:700 10px/16px Inter,system-ui,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header class="top">
+    <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><g transform="translate(-0.8 0) scale(1)"><path d="M12.2 26.09H9.8Q8.87 26.09 8.22 25.53Q7.56 24.98 7.08 23.81L1.94 11.01Q1.58 10.15 1.41 9.84Q1.23 9.53 0.89 9.28L0.46 9.02Q-0 8.63 -0.16 8.33Q-0.32 8.03 -0.32 7.55Q-0.32 6.82 0.12 6.41Q0.56 6 1.3 6H10.45Q11.95 6 11.95 7.55Q11.95 8.12 11.67 8.44Q11.39 8.75 10.87 9.08L10.4 9.32Q9.87 9.6 9.75 10.19Q9.63 10.78 9.97 11.74L14.08 22.79L12.21 23.16L16.4 11.71Q16.7 10.87 16.54 10.27Q16.39 9.67 15.72 9.3L15.22 9.08Q14.69 8.76 14.47 8.44Q14.26 8.13 14.26 7.55Q14.26 6.82 14.69 6.41Q15.12 6 15.88 6H20.86Q21.61 6 22.06 6.41Q22.5 6.82 22.5 7.55Q22.5 8.03 22.33 8.36Q22.15 8.68 21.7 9L21.27 9.26Q20.9 9.53 20.62 10Q20.35 10.46 19.76 11.96L14.95 24.02Q14.47 25.21 13.76 25.65Q13.05 26.09 12.2 26.09Z" fill="#A83E24"/><path d="M27.8 26.58Q26.57 26.58 25.6 25.97Q24.62 25.36 24.06 24.36Q23.5 23.36 23.5 22.15Q23.5 20.92 24.06 19.94Q24.62 18.95 25.6 18.36Q26.57 17.78 27.8 17.78Q29.06 17.78 30.03 18.36Q31.01 18.95 31.57 19.93Q32.12 20.92 32.12 22.15Q32.12 23.36 31.57 24.36Q31.01 25.36 30.04 25.97Q29.07 26.58 27.8 26.58Z" fill="#F2B134"/></g></svg>
+    <div style="display: flex; flex-direction: column; flex: 1; min-width: 0"><strong style="font-size: 16px; line-height: 20px">Ops Lite · Pipeline</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">61 bookings · 14 in pipeline · refreshed 14:32</span></div>
+    <span class="pill" style="background: rgba(255,255,255,.16); color: #fff">Live</span>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 12px; padding: 14px 20px 24px; flex: 1">
+
+    <!-- On the ground -->
+    <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px"><p class="ov">On the ground now</p><span class="pill" style="background: #E3F2FD; color: #0D47A1; margin-left: auto">11 travelers</span></div>
+      <span class="bar" aria-label="9 of 11 checked in this morning"><span style="width: 82%; background: #2E7D32"></span></span>
+      <span class="cap">9 of 11 morning check-ins · 2 pending in Viñales (host confirmed by phone)</span>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="tag">Havana 5</span><span class="tag" style="background: #FEF3C7; color: #92400E">Viñales 2 · outage</span><span class="tag">Trinidad 2</span><span class="tag">Varadero 2</span></div>
+      <a class="btn btn-s" href="A-Disruption.dc.html" style="align-self: flex-start">Disruption DC-0931 · major</a>
+    </div>
+
+    <!-- State machine -->
+    <div class="card" style="display: flex; flex-direction: column">
+      <div style="padding: 14px 14px 6px; display: flex; align-items: center; gap: 8px"><p class="ov">State machine · tap a state</p><span class="cap" style="margin-left: auto">spec §4.2</span></div>
+      <sc-for list="{{states}}" as="st" hint-placeholder-count="10">
+        <button class="st" type="button" aria-expanded="{{st.on}}" onClick="{{st.pick}}" style="background: {{st.bg}}"><span class="d" style="background: {{st.dot}}"></span><span class="mono" style="font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: {{st.fg}}">{{st.key}}</span><span class="mono" style="font-weight: 500">{{st.n}}</span><svg class="ic" style="width: 16px; height: 16px; color: #6E665E" viewBox="0 0 24 24"><path d="{{st.chev}}"/></svg></button>
+        <sc-if value="{{st.on}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px 14px 14px">
+            <span class="cap">{{st.who}}</span>
+            <sc-for list="{{st.rows}}" as="r" hint-placeholder-count="2">
+              <div class="bk"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><span style="font-size: 14px; line-height: 18px"><span class="mono">{{r.code}}</span> · {{r.who}}</span><span class="cap">{{r.note}}</span></span><span class="mono" style="font-size: 13px; font-weight: 500; color: {{r.col}}; white-space: nowrap">{{r.clock}}</span><a class="tel" href="{{r.tel}}" aria-label="Call {{r.who}}"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg></a></div>
+            </sc-for>
+            <sc-if value="{{st.more}}" hint-placeholder-val="{{ false }}"><span class="cap">{{st.moreText}}</span></sc-if>
+          </div>
+        </sc-if>
+      </sc-for>
+    </div>
+
+    <!-- Today's movements -->
+    <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">Today's movements</p>
+      <div class="bk"><span class="mono" style="font-size: 13px; color: #083B50; width: 44px">16:35</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 14px; line-height: 18px">Nakamura ×2 arrive HAV · IB 6621</span><span class="cap">Reinier at T3 from 15:50 · on time</span></span></div>
+      <div class="bk"><span class="mono" style="font-size: 13px; color: #083B50; width: 44px">21:10</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 14px; line-height: 18px">Okafor ×1 arrives VRA · AC 1876</span><span class="cap">Yoel (manual assignment, licence pause)</span></span></div>
+      <div class="bk"><span class="mono" style="font-size: 13px; color: #083B50; width: 44px">15:00</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 14px; line-height: 18px">Auto-cancel VX-1LK8MZ if unpaid</span><span class="cap">extend from the Alerts tab</span></span></div>
+    </div>
+
+    <p class="cap">Read-only view of the desk's dispatch matrix. Transitions, invoices and documents stay on the desktop; from here you call, message and re-dispatch.</p>
+    <div style="height: 72px"></div>
+  </main>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24">first viewport · 844</span></div>
+  <nav class="bn" aria-label="Main" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="AL-Alerts.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Alerts<span class="dot">2</span></a>
+    <a href="AL-Pipeline.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>Pipeline</a>
+    <a href="AL-Inbox.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v12H7l-3 3V4Z"/></svg>Inbox<span class="dot">3</span></a>
+    <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>Desk</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'ASSEMBLY_&_ESCALATION' };
+  }
+  renderVals() {
+    const s = this.state;
+    const D = [
+      { key: 'ITINERARY_SUBMITTED', n: 3, dot: '#0D47A1', who: 'System dispatches within 3 min · custom proposals by the desk', rows: [{ code: 'VX-9PL6TD', who: 'Jonas Weber +1', note: 'Zapata 2–5 Nov · availability check', clock: '3 min', col: '#1F1B17', tel: 'tel:+41795550102' }, { code: 'VX-C-4R8T', who: 'Klaus Müller', note: 'custom 14 days · proposal due tomorrow 14:20', clock: '22 h', col: '#1F1B17', tel: 'tel:+491705550121' }], more: true, moreText: '+1 more' },
+      { key: 'DISPATCH_IN_PROGRESS', n: 4, dot: '#F2B134', who: 'Workers answering in their app · 2 h timers', rows: [{ code: 'VX-8N4C2D', who: 'Sophie Laurent +1', note: 'Trinidad 18–21 Oct · 2 of 4 offered', clock: '1:38', col: '#1F1B17', tel: 'tel:+33655500190' }, { code: 'VX-5FG0HN', who: 'Mei Lin +1', note: 'Circuit 5–14 Dec · 1 of 5 accepted', clock: '1:52', col: '#1F1B17', tel: 'tel:+6591555012' }], more: true, moreText: '+2 more' },
+      { key: 'ASSEMBLY_&_ESCALATION', n: 3, dot: '#F59E0B', who: 'Amber watch · re-route declined items · call workers', rows: [{ code: 'VX-2F9HQ3', who: 'Luis Ortega +3', note: 'arrival 44 h · 30-min timer · casa at 80 % · OFAC missing', clock: '0:06', col: '#92400E', tel: 'tel:+13055550188' }, { code: 'VX-7K2M9Q', who: 'Margaret Chen +1', note: 'Viñales Feb · driver at 76 %', clock: '0:29', col: '#92400E', tel: 'tel:+16045550142' }], more: true, moreText: '+1 more · VX-4KD2PL · on time' },
+      { key: 'ACTION_REQUIRED', n: 1, dot: '#C62828', who: 'Red · re-dispatch from the Alerts tab', rows: [{ code: 'VX-3PA8ZT', who: 'Klaus Müller +1', note: 'casa declined · guide timeout', clock: 'Expired', col: '#B71C1C', tel: 'tel:+491705550121' }], more: false, moreText: '' },
+      { key: 'SECURED_&_INVOICED', n: 1, dot: '#F2B134', who: 'Invoice and payment link generating', rows: [{ code: 'VX-5HT4RW', who: 'Eleanor Whitfield +1', note: 'Havana Nov · 4 of 4 accepted · invoice 14:35', clock: 'now', col: '#1F1B17', tel: 'tel:+447700900142' }], more: false, moreText: '' },
+      { key: 'PENDING_PAYMENT', n: 2, dot: '#C98A00', who: '48 h window · proofs matched by Admin Support', rows: [{ code: 'VX-6TR2PW', who: 'Tomás Herrera +1', note: 'SEPA proof pending', clock: '5 h', col: '#92400E', tel: 'tel:+34600555019' }, { code: 'VX-1LK8MZ', who: 'Priya Nair +1', note: 'card declined twice · auto-cancel 15:00', clock: 'Expired', col: '#B71C1C', tel: 'tel:+919855500123' }], more: false, moreText: '' },
+      { key: 'CONFIRMED', n: 23, dot: '#2E7D32', who: 'Documents issued · reconfirmation at T−7 d', rows: [{ code: 'VX-0YZ3NC', who: 'Ingrid Nakamura +1', note: 'arrives today 16:35', clock: 'today', col: '#1B5E20', tel: 'tel:+34600555031' }, { code: 'VX-7DD2KA', who: 'Amira Okafor', note: 'arrives VRA 21:10 · Trinidad 9–12 Oct', clock: 'today', col: '#1B5E20', tel: 'tel:+14165550133' }], more: true, moreText: '+21 more · next arrivals Thu, Sat' },
+      { key: 'IN_PROGRESS', n: 6, dot: '#0B4F6C', who: 'Morning check-ins · incidents · disruption cases', rows: [{ code: 'VX-6RQ4JD', who: 'Anders & Birgit Holm', note: 'Viñales · outage case · safe', clock: 'day 3', col: '#0D47A1', tel: 'tel:+4520555102' }, { code: 'VX-4WQ7EB', who: 'Hannah Berg +2', note: 'Oriente circuit · Bayamo · checked in 08:52', clock: 'day 6', col: '#0D47A1', tel: 'tel:+491515550144' }], more: true, moreText: '+4 more' },
+      { key: 'COMPLETED', n: 16, dot: '#6E665E', who: 'Review prompt · payouts in 5 days · retention clock', rows: [{ code: 'VX-2MM8RV', who: 'Pierre Dubois +1', note: 'Viñales Sep · NPS 10 · payouts settled', clock: '21 Sep', col: '#4A433D', tel: 'tel:+33655500173' }], more: true, moreText: '+15 more this season' },
+      { key: 'CANCELLED', n: 2, dot: '#B71C1C', who: 'Policy applied · refunds within 14 business days', rows: [{ code: 'VX-3BB1XQ', who: "Sarah O'Neil +1", note: 'refunded € 1,062 · 29 Sep', clock: '18 Aug', col: '#4A433D', tel: 'tel:+353855550147' }], more: true, moreText: '+1 more' }
+    ];
+    const states = D.map((d) => { const on = s.sel === d.key; return { ...d, on, bg: on ? '#E6F0F4' : 'transparent', fg: on ? '#083B50' : '#1F1B17', chev: on ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6', pick: () => this.setState({ sel: on ? '' : d.key }) }; });
+    return { states };
+  }
+}
+</script>
+</body>
+</html>
