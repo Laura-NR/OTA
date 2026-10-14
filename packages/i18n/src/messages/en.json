@@ -114,6 +114,26 @@
       "talkToUs": "Talk to us"
     }
   },
+  "errors": {
+    "notFound": {
+      "title": "This page took a wrong turn.",
+      "text": "The link may be old, mistyped, or the page moved when we reorganised. Nothing you booked is affected. Start from one of the paths below.",
+      "home": "Go to the homepage",
+      "browse": "Browse trips",
+      "trips": "My trips",
+      "emailLink": "If you followed a link from our email, <link>tell us</link> and we'll fix it.",
+      "reference": "Error reference {reference}"
+    },
+    "server": {
+      "title": "Something broke on our side.",
+      "text": "Our servers, not Cuba's grid this time. Your booking data is safe and nothing has been charged twice. Most of these clear within a few minutes.",
+      "retry": "Try again",
+      "home": "Go to the homepage",
+      "bookingTitle": "In the middle of a booking or payment?",
+      "bookingText": "Don't resubmit. <link>Contact the desk</link> with the reference below; we check what went through before anything is retried.",
+      "reference": "Reference {reference}"
+    }
+  },
   "home": {
     "eyebrow": "Community-based travel · Cuba",
     "description": "Ecotourism, agrotourism, and cultural immersion beyond the resort circuits — curated with Cuban communities.",

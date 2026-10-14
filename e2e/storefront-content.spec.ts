@@ -78,4 +78,15 @@ test.describe('storefront content pages', () => {
       expect(message?.Subject).toContain('My booking');
     }).toPass();
   });
+
+  test('answers an unknown path with the designed 404 and a way back', async ({
+    page,
+  }) => {
+    const response = await page.goto(`${STOREFRONT_URL}/en/no-such-page`);
+    expect(response?.status()).toBe(404);
+    await expect(
+      page.getByRole('heading', { name: 'This page took a wrong turn.' }),
+    ).toBeVisible();
+    await expect(page.getByText('404 · /en/no-such-page')).toBeVisible();
+  });
 });

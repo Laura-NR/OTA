@@ -114,6 +114,26 @@
       "talkToUs": "Habla con nosotros"
     }
   },
+  "errors": {
+    "notFound": {
+      "title": "Esta página tomó un camino equivocado.",
+      "text": "Puede que el enlace sea antiguo, esté mal escrito o que la página se haya movido al reorganizar el sitio. Nada de lo que reservaste se ve afectado. Empieza por uno de estos caminos.",
+      "home": "Ir a la página de inicio",
+      "browse": "Ver viajes",
+      "trips": "Mis viajes",
+      "emailLink": "Si llegaste desde un enlace de nuestro correo, <link>avísanos</link> y lo arreglaremos.",
+      "reference": "Referencia del error {reference}"
+    },
+    "server": {
+      "title": "Algo falló de nuestro lado.",
+      "text": "Esta vez son nuestros servidores, no la red eléctrica de Cuba. Los datos de tu reserva están a salvo y no se ha cobrado nada dos veces. La mayoría de estos fallos se resuelven en pocos minutos.",
+      "retry": "Intentar de nuevo",
+      "home": "Ir a la página de inicio",
+      "bookingTitle": "¿Estabas reservando o pagando?",
+      "bookingText": "No lo envíes de nuevo. <link>Contacta con el equipo</link> con la referencia de abajo; comprobamos qué se registró antes de reintentar nada.",
+      "reference": "Referencia {reference}"
+    }
+  },
   "home": {
     "eyebrow": "Viajes comunitarios · Cuba",
     "description": "Ecoturismo, agroturismo e inmersión cultural más allá de los circuitos de resort — curado con comunidades cubanas.",

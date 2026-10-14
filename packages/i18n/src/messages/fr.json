@@ -114,6 +114,26 @@
       "talkToUs": "Parlez-nous"
     }
   },
+  "errors": {
+    "notFound": {
+      "title": "Cette page a pris le mauvais chemin.",
+      "text": "Le lien est peut-être ancien, mal saisi, ou la page a changé de place lors d'une réorganisation. Rien de ce que vous avez réservé n'est concerné. Repartez de l'un de ces chemins.",
+      "home": "Aller à l'accueil",
+      "browse": "Voir les voyages",
+      "trips": "Mes voyages",
+      "emailLink": "Si vous avez suivi un lien de notre e-mail, <link>dites-le-nous</link> et nous le corrigerons.",
+      "reference": "Référence de l'erreur {reference}"
+    },
+    "server": {
+      "title": "Quelque chose a lâché de notre côté.",
+      "text": "Nos serveurs cette fois, pas le réseau électrique cubain. Les données de votre réservation sont en sécurité et rien n'a été débité deux fois. La plupart de ces incidents se règlent en quelques minutes.",
+      "retry": "Réessayer",
+      "home": "Aller à l'accueil",
+      "bookingTitle": "En pleine réservation ou en plein paiement ?",
+      "bookingText": "Ne renvoyez rien. <link>Contactez l'équipe</link> avec la référence ci-dessous ; nous vérifions ce qui est passé avant toute nouvelle tentative.",
+      "reference": "Référence {reference}"
+    }
+  },
   "home": {
     "eyebrow": "Voyages communautaires · Cuba",
     "description": "Écotourisme, agrotourisme et immersion culturelle au-delà des circuits de resort — organisés avec les communautés cubaines.",
