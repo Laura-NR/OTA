@@ -34,8 +34,13 @@ const dots: Record<StepState, string> = {
  * label over an 8 px bar. The list is an `ol` with `aria-current="step"`.
  */
 export function Stepper({ steps, progressLabel, className }: StepperProps) {
-  const currentIndex = steps.findIndex((step) => step.state === 'current');
-  const progress = steps.length ? ((currentIndex + 1) / steps.length) * 100 : 0;
+  // The bar fills to the furthest step reached, so a finished journey or a
+  // step held in error still shows how far it got.
+  const reached = steps.reduce(
+    (furthest, step, index) => (step.state === 'upcoming' ? furthest : index),
+    -1,
+  );
+  const progress = steps.length ? ((reached + 1) / steps.length) * 100 : 0;
 
   return (
     <div className={className}>

@@ -327,12 +327,10 @@
   },
   "account": {
     "title": "Mes voyages",
-    "signedInAs": "Connecté en tant que {email}",
     "signOut": "Se déconnecter",
-    "empty": "Aucune réservation pour l'instant. Explorez le catalogue pour commencer.",
+    "empty": "Pas encore de voyage. Parcourez les forfaits ou demandez un itinéraire sur mesure.",
     "serviceCount": "{count, plural, =1 {1 service} other {# services}}",
     "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
-    "booking": "Réservation",
     "itinerary": "Itinéraire",
     "itineraryAssembling": "Votre itinéraire est en cours d'assemblage.",
     "documents": "Documents",
@@ -359,7 +357,42 @@
     "sender": {
       "TRAVELER": "Vous",
       "OPERATIONS": "Opérations"
-    }
+    },
+    "nav": {
+      "label": "Sections du compte",
+      "overview": "Aperçu",
+      "trips": "Mes voyages",
+      "documents": "Documents",
+      "messages": "Messages"
+    },
+    "emergency": {
+      "title": "Urgences · 24 h/24"
+    },
+    "greeting": "Hola, {name}.",
+    "greetingAnon": "Hola.",
+    "countdown": "{days, plural, one {Plus que # jour avant votre voyage.} other {Plus que # jours avant votre voyage.}}",
+    "bookingCode": "Réservation {code}",
+    "nextTrip": "Votre prochain voyage",
+    "viewItinerary": "Voir l'itinéraire",
+    "messageUs": "Nous écrire",
+    "browse": "Voir les forfaits",
+    "custom": "Demander un itinéraire sur mesure",
+    "tasks": {
+      "title": "En attente de vous",
+      "pay": "{code} est prêt à être payé · {amount}",
+      "payText": "Vos hôtes ont confirmé. Payez pour garantir le voyage.",
+      "action": "{code} attend une décision",
+      "actionText": "Quelque chose a changé avec un hôte. Lisez le dernier message et dites-nous ce que vous préférez.",
+      "openMessages": "Ouvrir les messages"
+    },
+    "sample": "Exemple",
+    "fullBriefing": "Point complet",
+    "pastTrip": "Voyage passé",
+    "rateTrip": "Évaluer votre voyage",
+    "messagesLede": "Chaque voyage a sa propre conversation avec notre centrale des opérations.",
+    "openThread": "Ouvrir les messages",
+    "progress": "Étape {step} sur {total} · {label}",
+    "progressLabel": "Progression du voyage"
   },
   "join": {
     "title": "Rejoignez notre réseau",

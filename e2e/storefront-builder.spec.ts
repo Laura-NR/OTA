@@ -48,6 +48,7 @@ test.describe('storefront package builder', () => {
     await page.getByRole('button', { name: 'Submit itinerary' }).click();
 
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
-    await expect(page.getByText('Request received')).toBeVisible();
+    // The status badge, as the traveler reads it; the progress bar repeats the label.
+    await expect(page.getByText('Request received').first()).toBeVisible();
   });
 });

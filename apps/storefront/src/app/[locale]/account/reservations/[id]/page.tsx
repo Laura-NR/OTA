@@ -3,11 +3,6 @@ import type { MyReservationDetailDto } from '@ota/schemas';
 import {
   Alert,
   Badge,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Table,
   TableBody,
   TableCell,
@@ -15,16 +10,25 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
+import { AccountShell } from '@/components/account/account-shell';
+import { TripProgress } from '@/components/account/trip-progress';
 import { CheckoutButton } from '@/components/checkout-button';
 import { MessageThread } from '@/components/message-thread';
 import { ReviewForm } from '@/components/review-form';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
+import { formatMoney } from '@/lib/format';
+import { getTenantConfig } from '@/lib/tenant';
 
+/**
+ * One trip in the Account frame: its progress in the traveler's words, the
+ * payment step when it is due, the itinerary, the documents, the review once
+ * completed, and the thread with operations (`#messages`).
+ */
 export default async function AccountReservationPage({
   params,
 }: {
@@ -44,62 +48,92 @@ export default async function AccountReservationPage({
     notFound();
   }
 
-  const t = await getTranslations('account');
-  const tc = await getTranslations('checkout');
-  const trv = await getTranslations('review');
-  const tsi = await getTranslations('status.serviceItem');
-  const tst = await getTranslations('status.serviceType');
-  const td = await getTranslations('status.document');
+  const [t, tc, trv, tsi, tst, td, format, locale] = await Promise.all([
+    getTranslations('account'),
+    getTranslations('checkout'),
+    getTranslations('review'),
+    getTranslations('status.serviceItem'),
+    getTranslations('status.serviceType'),
+    getTranslations('status.document'),
+    getFormatter(),
+    getLocale(),
+  ]);
+  const tenant = getTenantConfig();
+  const card = 'flex flex-col gap-4 rounded-lg border bg-surface p-6';
+  const when = (value: string) =>
+    format.dateTime(new Date(value), {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-12">
-      <div className="flex flex-wrap items-center gap-3">
-        <Link href="/account" className="text-body-sm text-muted hover:text-default">
+    <AccountShell
+      current="trips"
+      name={session.user.name ?? null}
+      email={session.user.email}
+      counts={{}}
+      emergency={tenant.emergencyContacts[0] ?? null}
+    >
+      <header className="flex flex-col gap-3">
+        <Link
+          href="/account?tab=trips"
+          className="self-start text-body-sm text-primary-600 underline underline-offset-[3px]"
+        >
           ← {t('back')}
         </Link>
-        <h1 className="text-h3 font-semibold tracking-tight">
-          {reservation.bookingCode}
-        </h1>
-        <TravelerStatusBadge status={reservation.status} />
-      </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-mono text-h1-compact text-default">
+            {reservation.bookingCode}
+          </h1>
+          <TravelerStatusBadge status={reservation.status} />
+        </div>
+        <p className="text-body text-secondary">
+          {format.dateTimeRange(
+            new Date(reservation.startDate),
+            new Date(reservation.endDate),
+            {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            },
+          )}{' '}
+          · {formatMoney(reservation.totalAmount, reservation.totalCurrency, locale)}
+        </p>
+      </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('booking')}</CardTitle>
-          <CardDescription>
-            {new Date(reservation.startDate).toLocaleDateString()} →{' '}
-            {new Date(reservation.endDate).toLocaleDateString()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-body-sm">
-          {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}
-        </CardContent>
-      </Card>
+      <section className={card} aria-label={t('progressLabel')}>
+        <TripProgress status={reservation.status} />
+      </section>
 
       {reservation.status === 'SECURED_AND_INVOICED' ||
       reservation.status === 'PENDING_PAYMENT' ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{tc('title')}</CardTitle>
-            <CardDescription>{tc('description')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CheckoutButton reservationId={reservation.id} />
-          </CardContent>
-        </Card>
+        <section
+          aria-labelledby="pay-title"
+          className="flex flex-col items-start gap-3 rounded-lg border border-accent-500 bg-accent-50 p-6"
+        >
+          <h2 id="pay-title" className="text-h4 text-default">
+            {tc('title')}
+          </h2>
+          <p className="text-body-sm text-secondary">{tc('description')}</p>
+          <CheckoutButton reservationId={reservation.id} />
+        </section>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('itinerary')}</CardTitle>
-          <CardDescription>
+      <section aria-labelledby="itinerary-title" className={card}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="itinerary-title" className="text-h4 text-default">
+            {t('itinerary')}
+          </h2>
+          <p className="text-body-sm text-muted">
             {t('serviceCount', { count: reservation.serviceItems.length })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {reservation.serviceItems.length === 0 ? (
-            <Alert>{t('itineraryAssembling')}</Alert>
-          ) : (
+          </p>
+        </div>
+        {reservation.serviceItems.length === 0 ? (
+          <Alert>{t('itineraryAssembling')}</Alert>
+        ) : (
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -118,62 +152,62 @@ export default async function AccountReservationPage({
                       <Badge variant="secondary">{tsi(item.status)}</Badge>
                     </TableCell>
                     <TableCell>{item.province ?? '—'}</TableCell>
-                    <TableCell>
-                      {new Date(item.serviceDateStart).toLocaleString()}
+                    <TableCell className="whitespace-nowrap">
+                      {when(item.serviceDateStart)}
                     </TableCell>
-                    <TableCell>
-                      {new Date(item.serviceDateEnd).toLocaleString()}
+                    <TableCell className="whitespace-nowrap">
+                      {when(item.serviceDateEnd)}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('documents')}</CardTitle>
-          <CardDescription>
+      <section id="documents" aria-labelledby="documents-title" className={card}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="documents-title" className="text-h4 text-default">
+            {t('documents')}
+          </h2>
+          <p className="text-body-sm text-muted">
             {t('documentCount', { count: reservation.documents.length })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {reservation.documents.length === 0 ? (
-            <Alert>{t('documentsEmpty')}</Alert>
-          ) : (
-            <ul className="space-y-2 text-body-sm">
-              {reservation.documents.map((document) => (
-                <li key={document.id} className="flex items-center gap-3">
-                  <Badge variant="outline">{td(document.type)}</Badge>
-                  <a
-                    className="font-medium text-primary-600 underline-offset-4 hover:underline"
-                    href={`/api/ota/documents/${document.id}/download`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t('download')}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+        {reservation.documents.length === 0 ? (
+          <Alert>{t('documentsEmpty')}</Alert>
+        ) : (
+          <ul className="flex flex-col gap-2 text-body-sm">
+            {reservation.documents.map((document) => (
+              <li key={document.id} className="flex flex-wrap items-center gap-3">
+                <Badge variant="outline">{td(document.type)}</Badge>
+                <a
+                  className="font-semibold text-primary-600 underline underline-offset-[3px]"
+                  href={`/api/ota/documents/${document.id}/download`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t('download')}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {reservation.status === 'COMPLETED' ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{trv('title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ReviewForm reservationId={reservation.id} review={reservation.review} />
-          </CardContent>
-        </Card>
+        <section aria-labelledby="review-title" className={card}>
+          <h2 id="review-title" className="text-h4 text-default">
+            {trv('title')}
+          </h2>
+          <ReviewForm reservationId={reservation.id} review={reservation.review} />
+        </section>
       ) : null}
 
-      <MessageThread reservationId={reservation.id} />
-    </div>
+      <div id="messages" className="scroll-mt-24">
+        <MessageThread reservationId={reservation.id} />
+      </div>
+    </AccountShell>
   );
 }

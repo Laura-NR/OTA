@@ -44,3 +44,43 @@ const BY_RESERVATION_STATUS: Readonly<Record<ReservationStatus, TravelerStatus>>
 export function travelerStatus(status: ReservationStatus): TravelerStatus {
   return BY_RESERVATION_STATUS[status];
 }
+
+/** The path a traveler watches a booking take, in order (Account's progress). */
+export const TRAVELER_JOURNEY = [
+  TravelerStatus.RequestReceived,
+  TravelerStatus.ConfirmingWithHosts,
+  TravelerStatus.ReadyToPay,
+  TravelerStatus.Confirmed,
+  TravelerStatus.OnTrip,
+  TravelerStatus.Completed,
+] as const;
+
+export interface JourneyPosition {
+  /** Index into TRAVELER_JOURNEY of the step the booking is at. */
+  index: number;
+  /** The booking waits on someone to act at this step ("Action needed"). */
+  blocked: boolean;
+  /** The last step is reached: every step is done. */
+  finished: boolean;
+}
+
+/**
+ * Where a booking stands on the traveler journey. "Action needed" holds it at
+ * "Confirming with hosts"; a draft counts as a request; a cancelled booking is
+ * off the journey (null).
+ */
+export function journeyPosition(status: ReservationStatus): JourneyPosition | null {
+  const label = travelerStatus(status);
+  if (label === TravelerStatus.Cancelled) {
+    return null;
+  }
+  if (label === TravelerStatus.ActionNeeded) {
+    return { index: 1, blocked: true, finished: false };
+  }
+  const index = label === TravelerStatus.Draft ? 0 : TRAVELER_JOURNEY.indexOf(label);
+  return {
+    index,
+    blocked: false,
+    finished: label === TravelerStatus.Completed,
+  };
+}

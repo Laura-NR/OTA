@@ -327,12 +327,10 @@
   },
   "account": {
     "title": "My trips",
-    "signedInAs": "Signed in as {email}",
     "signOut": "Sign out",
-    "empty": "No bookings yet. Explore the catalog to start planning.",
+    "empty": "No trips yet. Browse the packages or ask for a custom itinerary.",
     "serviceCount": "{count, plural, =1 {1 service} other {# services}}",
     "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
-    "booking": "Booking",
     "itinerary": "Itinerary",
     "itineraryAssembling": "Your itinerary is being assembled.",
     "documents": "Documents",
@@ -359,7 +357,42 @@
     "sender": {
       "TRAVELER": "You",
       "OPERATIONS": "Operations"
-    }
+    },
+    "nav": {
+      "label": "Account sections",
+      "overview": "Overview",
+      "trips": "My trips",
+      "documents": "Documents",
+      "messages": "Messages"
+    },
+    "emergency": {
+      "title": "Emergency · 24/7"
+    },
+    "greeting": "Hola {name}.",
+    "greetingAnon": "Hola.",
+    "countdown": "{days, plural, one {# day to your trip.} other {# days to your trip.}}",
+    "bookingCode": "Booking {code}",
+    "nextTrip": "Your next trip",
+    "viewItinerary": "View itinerary",
+    "messageUs": "Message us",
+    "browse": "Browse packages",
+    "custom": "Start a custom itinerary",
+    "tasks": {
+      "title": "Waiting on you",
+      "pay": "{code} is ready to pay · {amount}",
+      "payText": "Your hosts have confirmed. Pay to lock the trip in.",
+      "action": "{code} needs a decision",
+      "actionText": "Something changed with a host. Read the latest message and tell us what you prefer.",
+      "openMessages": "Open messages"
+    },
+    "sample": "Sample",
+    "fullBriefing": "Full briefing",
+    "pastTrip": "Past trip",
+    "rateTrip": "Rate your trip",
+    "messagesLede": "Each trip has its own thread with our operations desk.",
+    "openThread": "Open messages",
+    "progress": "Step {step} of {total} · {label}",
+    "progressLabel": "Trip progress"
   },
   "join": {
     "title": "Join our network",

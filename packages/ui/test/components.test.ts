@@ -198,6 +198,23 @@ describe('AccordionItem', () => {
 });
 
 describe('Stepper', () => {
+  it('fills the phone bar to the furthest step reached, done or held in error', () => {
+    const bar = (states: ('done' | 'current' | 'upcoming' | 'error')[]) =>
+      html(
+        createElement(Stepper, {
+          progressLabel: 'Progress',
+          steps: states.map((state, index) => ({
+            id: String(index),
+            label: String(index),
+            state,
+          })),
+        }),
+      ).match(/width:(\d+)%/)?.[1];
+    expect(bar(['done', 'done', 'done', 'done'])).toBe('100');
+    expect(bar(['done', 'error', 'upcoming', 'upcoming'])).toBe('50');
+    expect(bar(['current', 'upcoming', 'upcoming', 'upcoming'])).toBe('25');
+  });
+
   it('marks the current step and gives phones a progress line', () => {
     const markup = html(
       createElement(Stepper, {

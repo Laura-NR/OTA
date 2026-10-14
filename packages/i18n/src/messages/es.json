@@ -327,12 +327,10 @@
   },
   "account": {
     "title": "Mis viajes",
-    "signedInAs": "Sesión iniciada como {email}",
     "signOut": "Cerrar sesión",
-    "empty": "Aún no tienes reservas. Explora el catálogo para empezar.",
+    "empty": "Aún no tienes viajes. Mira los paquetes o pide un itinerario a medida.",
     "serviceCount": "{count, plural, =1 {1 servicio} other {# servicios}}",
     "documentCount": "{count, plural, =1 {1 documento} other {# documentos}}",
-    "booking": "Reserva",
     "itinerary": "Itinerario",
     "itineraryAssembling": "Estamos armando tu itinerario.",
     "documents": "Documentos",
@@ -359,7 +357,42 @@
     "sender": {
       "TRAVELER": "Tú",
       "OPERATIONS": "Operaciones"
-    }
+    },
+    "nav": {
+      "label": "Secciones de la cuenta",
+      "overview": "Resumen",
+      "trips": "Mis viajes",
+      "documents": "Documentos",
+      "messages": "Mensajes"
+    },
+    "emergency": {
+      "title": "Emergencias · 24/7"
+    },
+    "greeting": "Hola, {name}.",
+    "greetingAnon": "Hola.",
+    "countdown": "{days, plural, one {Falta # día para tu viaje.} other {Faltan # días para tu viaje.}}",
+    "bookingCode": "Reserva {code}",
+    "nextTrip": "Tu próximo viaje",
+    "viewItinerary": "Ver itinerario",
+    "messageUs": "Escríbenos",
+    "browse": "Ver paquetes",
+    "custom": "Pedir un itinerario a medida",
+    "tasks": {
+      "title": "Pendiente de ti",
+      "pay": "{code} está listo para pagar · {amount}",
+      "payText": "Tus anfitriones han confirmado. Paga para asegurar el viaje.",
+      "action": "{code} necesita una decisión",
+      "actionText": "Algo cambió con un anfitrión. Lee el último mensaje y dinos qué prefieres.",
+      "openMessages": "Abrir mensajes"
+    },
+    "sample": "Muestra",
+    "fullBriefing": "Informe completo",
+    "pastTrip": "Viaje anterior",
+    "rateTrip": "Valora tu viaje",
+    "messagesLede": "Cada viaje tiene su propia conversación con nuestra central de operaciones.",
+    "openThread": "Abrir mensajes",
+    "progress": "Paso {step} de {total} · {label}",
+    "progressLabel": "Progreso del viaje"
   },
   "join": {
     "title": "Únete a nuestra red",
