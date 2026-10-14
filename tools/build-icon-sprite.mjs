@@ -68,6 +68,17 @@ const ICONS = {
   upload: 'upload',
   mail: 'mail',
   'log-out': 'log-out',
+  // customer pages (Home, Destinations, Packages, Compare, Payment)
+  zap: 'zap',
+  fuel: 'fuel',
+  wifi: 'wifi',
+  shield: 'shield',
+  'cloud-sun': 'cloud-sun',
+  route: 'route',
+  columns: 'columns-2',
+  share: 'share-2',
+  lock: 'lock',
+  image: 'image',
 };
 
 const [, , iconsDir] = process.argv;
