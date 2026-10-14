@@ -13,6 +13,8 @@ import type {
   CreatePaymentIntentRequest,
   PaymentIntentDto,
   PaymentIntentLookupDto,
+  PaymentLedgerEntryDto,
+  PaymentLedgerQuery,
   PaymentReceiptDto,
   ReservationDto,
 } from '@ota/schemas';
@@ -51,6 +53,21 @@ export class PaymentsService {
       orderBy: { createdAt: 'desc' },
     });
     return receipts.map(toReceiptDto);
+  }
+
+  /** Receipts across every booking, newest first, for the operations ledger. */
+  async ledger(query: PaymentLedgerQuery): Promise<PaymentLedgerEntryDto[]> {
+    const receipts = await this.prisma.paymentReceipt.findMany({
+      where: query.status ? { status: query.status } : {},
+      orderBy: { createdAt: 'desc' },
+      take: query.limit,
+      include: { reservation: { select: { bookingCode: true } } },
+    });
+    return receipts.map((receipt) => ({
+      ...toReceiptDto(receipt),
+      bookingCode: receipt.reservation.bookingCode,
+      updatedAt: receipt.updatedAt.toISOString(),
+    }));
   }
 
   /**

@@ -2,6 +2,8 @@ export { ConsoleMailer, SmtpMailer, createMailer } from './mailer';
 export type { EmailAttachment, EmailMessage, Mailer, SmtpOptions } from './mailer';
 export { magicLinkEmail } from './templates/magic-link';
 export type { EmailBranding, MagicLinkEmailInput } from './templates/magic-link';
+export { contactMessageEmail } from './templates/contact-message';
+export type { ContactMessageEmailInput } from './templates/contact-message';
 export { newMessageEmail } from './templates/new-message';
 export type { NewMessageEmailInput } from './templates/new-message';
 export { retentionNoticeEmail } from './templates/retention-notice';

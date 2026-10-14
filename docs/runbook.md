@@ -140,7 +140,8 @@ The API mounts a dependency-free fixed-window limiter as Express middleware
 - `RATE_LIMIT_MAX` (default 600/min per IP) for normal routes; `RATE_LIMIT_AUTH_MAX`
   (default 30/min) for credential endpoints only — `/api/auth/sign-in*`,
   `/api/auth/sign-up*`, `/api/auth/magic-link*`, `/api/auth/callback*`,
-  password-reset and verify-email. `/api/auth/get-session` uses the normal limit.
+  password-reset and verify-email, plus the public Support form (`/contact`), which sends
+  an email per request. `/api/auth/get-session` uses the normal limit.
 - `RATE_LIMIT_WINDOW_MS` (default 60000) sets the window.
 - `/health` and `/health/ready` are never limited (orchestrator probes).
 - A throttled client gets `429` with `Retry-After` and `X-RateLimit-*` headers.

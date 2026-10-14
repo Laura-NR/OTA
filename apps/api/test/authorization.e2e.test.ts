@@ -79,6 +79,7 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/reservations/${RESERVATION}`, allowed: 'opsRead' },
   { method: 'get', path: `/reservations/${RESERVATION}/audit`, allowed: 'opsRead' },
   { method: 'get', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsRead' },
+  { method: 'get', path: '/payments', allowed: 'opsRead' },
   { method: 'post', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsWrite' },
   {
     method: 'post',
@@ -290,5 +291,9 @@ describe('authorization matrix', () => {
       '/payments/intents/unknown-reference',
     );
     expect(intent.status).toBe(404);
+
+    // The Support form is public; an empty body fails validation (400), not auth.
+    const contact = await request(app.getHttpServer()).post('/contact').send({});
+    expect(contact.status).toBe(400);
   });
 });

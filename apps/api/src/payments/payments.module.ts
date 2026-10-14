@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { createPaymentProviders, type PaymentProviderName } from '@ota/payments';
 
 import { ReservationsModule } from '../reservations/reservations.module';
+import { PaymentsLedgerController } from './payments-ledger.controller';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
@@ -15,7 +16,7 @@ import { PublicPaymentController } from './public-payment.controller';
  */
 @Module({
   imports: [ReservationsModule],
-  controllers: [PaymentsController, PublicPaymentController],
+  controllers: [PaymentsController, PaymentsLedgerController, PublicPaymentController],
   providers: [
     PaymentsService,
     {

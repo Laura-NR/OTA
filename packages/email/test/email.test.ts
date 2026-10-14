@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   ConsoleMailer,
   SmtpMailer,
+  contactMessageEmail,
   createMailer,
   magicLinkEmail,
   retentionNoticeEmail,
@@ -47,6 +48,28 @@ describe('retentionNoticeEmail', () => {
     expect(email.html).toContain('2026-08-09');
     expect(email.html).toContain('Keep My Account Active');
     expect(email.text).toContain('token=abc');
+  });
+});
+
+describe('contactMessageEmail', () => {
+  it('goes to the agency inbox, replies to the writer, and escapes their text', () => {
+    const email = contactMessageEmail({
+      to: 'desk@example.test',
+      name: 'Jane <b>',
+      email: 'jane@example.test',
+      topic: 'My booking',
+      bookingCode: 'E2E0001',
+      replyLocale: 'en',
+      message: 'Hello\n<script>x</script>',
+      branding,
+    });
+
+    expect(email.to).toBe('desk@example.test');
+    expect(email.replyTo).toBe('jane@example.test');
+    expect(email.subject).toBe('Support form · My booking · Jane <b> · E2E0001');
+    expect(email.html).toContain('&lt;script&gt;x&lt;/script&gt;');
+    expect(email.html).not.toContain('<script>');
+    expect(email.text).toContain('Booking: E2E0001');
   });
 });
 

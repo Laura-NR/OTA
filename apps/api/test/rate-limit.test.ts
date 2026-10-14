@@ -98,6 +98,13 @@ describe('createRateLimiter', () => {
     expect(hit(limiter, '/api/auth/get-session').next).toBe(true);
   });
 
+  it('holds the public Support form to the strict limit, since each post sends an email', () => {
+    const limiter = build({ windowMs: 60_000, max: 10, authMax: 1 });
+
+    expect(hit(limiter, '/contact').next).toBe(true);
+    expect(hit(limiter, '/contact').next).toBe(false);
+  });
+
   it('keys counters by client', () => {
     const limiter = build({ windowMs: 60_000, max: 1, authMax: 1 });
 

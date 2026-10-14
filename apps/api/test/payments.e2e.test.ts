@@ -86,10 +86,22 @@ function createFakePrisma(state: {
         );
         return receipt ? { ...receipt, reservation: { bookingCode: 'PAY00001' } } : null;
       },
-      findMany: async (args: { where: { reservationId: string } }) =>
-        [...state.receipts.values()].filter(
-          (receipt) => receipt.reservationId === args.where.reservationId,
-        ),
+      findMany: async (args: {
+        where: { reservationId?: string; status?: string };
+        include?: unknown;
+      }) =>
+        [...state.receipts.values()]
+          .filter(
+            (receipt) =>
+              (args.where.reservationId === undefined ||
+                receipt.reservationId === args.where.reservationId) &&
+              (args.where.status === undefined || receipt.status === args.where.status),
+          )
+          .map((receipt) =>
+            args.include
+              ? { ...receipt, reservation: { bookingCode: 'PAY00001' } }
+              : receipt,
+          ),
       create: async (args: { data: Partial<PaymentReceipt> }) => {
         const receipt = { ...makeReceipt(), ...args.data } as PaymentReceipt;
         state.receipts.set(receipt.id, receipt);
@@ -280,5 +292,33 @@ describe('payments API', () => {
     );
 
     expect(response.status).toBe(401);
+  });
+
+  it('lists the ledger across bookings with their codes, filtered by status', async () => {
+    state.receipts.set(PAYMENT_ID, makeReceipt({ status: 'PAID' }));
+    state.receipts.set(
+      '88888888-8888-4888-8888-888888888888',
+      makeReceipt({
+        id: '88888888-8888-4888-8888-888888888888',
+        status: 'PENDING',
+      }),
+    );
+
+    const all = await request(app.getHttpServer())
+      .get('/payments')
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(all.status).toBe(200);
+    expect(all.body).toHaveLength(2);
+    expect(all.body[0]).toMatchObject({ bookingCode: 'PAY00001', amount: '321' });
+
+    const paid = await request(app.getHttpServer())
+      .get('/payments?status=PAID')
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(paid.body.map((entry: { id: string }) => entry.id)).toEqual([PAYMENT_ID]);
+
+    const traveler = await request(app.getHttpServer())
+      .get('/payments')
+      .set('x-test-user', TRAVELER.email);
+    expect(traveler.status).toBe(403);
   });
 });

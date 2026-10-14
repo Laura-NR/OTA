@@ -29,6 +29,21 @@ export const paymentReceiptSchema = z.object({
 
 export type PaymentReceiptDto = z.infer<typeof paymentReceiptSchema>;
 
+/** The operations payment ledger: receipts across every booking, newest first. */
+export const paymentLedgerQuerySchema = z.object({
+  status: paymentStatusSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(100),
+});
+
+export type PaymentLedgerQuery = z.infer<typeof paymentLedgerQuerySchema>;
+
+export const paymentLedgerEntrySchema = paymentReceiptSchema.extend({
+  bookingCode: z.string(),
+  updatedAt: z.string(),
+});
+
+export type PaymentLedgerEntryDto = z.infer<typeof paymentLedgerEntrySchema>;
+
 /** A receipt plus the gateway URL the client is sent to in order to pay. */
 export const paymentIntentSchema = paymentReceiptSchema.extend({
   checkoutUrl: z.string(),

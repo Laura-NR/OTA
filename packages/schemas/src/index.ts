@@ -187,11 +187,15 @@ export {
   paymentIntentLookupSchema,
   paymentIntentSchema,
   paymentRailSchema,
+  paymentLedgerEntrySchema,
+  paymentLedgerQuerySchema,
   paymentReceiptSchema,
   paymentStatusSchema,
   type CreatePaymentIntentRequest,
   type PaymentIntentDto,
   type PaymentIntentLookupDto,
+  type PaymentLedgerEntryDto,
+  type PaymentLedgerQuery,
   type PaymentReceiptDto,
 } from './payment';
 export { documentSchema, documentTypeSchema, type DocumentDto } from './document';
@@ -217,3 +221,9 @@ export {
   type ImportUploadRequest,
   type InventoryImportRow,
 } from './import';
+export {
+  contactMessageSchema,
+  contactTopicSchema,
+  type ContactMessageRequest,
+  type ContactTopic,
+} from './contact';
