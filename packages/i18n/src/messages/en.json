@@ -318,12 +318,20 @@
   },
   "login": {
     "title": "Sign in",
-    "description": "Enter your email and we will send a one-time link to your bookings and documents.",
+    "description": "We'll email you a one-tap link. No password.",
     "email": "Email",
-    "send": "Send sign-in link",
+    "send": "Email me a sign-in link",
     "sending": "Sending…",
     "sent": "Check your inbox — a sign-in link is on its way to {email}.",
-    "error": "Could not send the sign-in link."
+    "error": "Could not send the sign-in link.",
+    "emailHint": "The address you booked with, or the one you want to use.",
+    "panelTitle": "No passwords. Just a link.",
+    "panelText": "Signing in takes one tap on a link we email you, and the first link creates your account. Nothing to remember before a trip to a country with 1 Mbps.",
+    "linkNote": "Sign-in links expire after a few minutes and work once.",
+    "dataNote": "Six months after your last trip we ask whether to keep your account; without an answer, your details are deleted 30 days later.",
+    "help": "Can't sign in?",
+    "helpLink": "Write to the desk",
+    "back": "Back to the site"
   },
   "account": {
     "title": "My trips",

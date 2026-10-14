@@ -318,12 +318,20 @@
   },
   "login": {
     "title": "Se connecter",
-    "description": "Saisissez votre e-mail et nous vous enverrons un lien à usage unique vers vos réservations et documents.",
+    "description": "Nous vous envoyons un lien par e-mail. Sans mot de passe.",
     "email": "E-mail",
-    "send": "Envoyer le lien",
+    "send": "M'envoyer un lien de connexion",
     "sending": "Envoi…",
     "sent": "Vérifiez votre boîte de réception — un lien de connexion arrive à {email}.",
-    "error": "Impossible d'envoyer le lien."
+    "error": "Impossible d'envoyer le lien.",
+    "emailHint": "L'adresse de votre réservation, ou celle que vous voulez utiliser.",
+    "panelTitle": "Pas de mot de passe. Juste un lien.",
+    "panelText": "Se connecter, c'est toucher un lien reçu par e-mail ; le premier crée votre compte. Rien à retenir avant de partir dans un pays à 1 Mbit/s.",
+    "linkNote": "Les liens de connexion expirent après quelques minutes et ne servent qu’une fois.",
+    "dataNote": "Six mois après votre dernier voyage, nous vous demandons si vous gardez votre compte ; sans réponse, vos données sont supprimées 30 jours plus tard.",
+    "help": "Impossible de vous connecter ?",
+    "helpLink": "Écrivez à la centrale",
+    "back": "Retour au site"
   },
   "account": {
     "title": "Mes voyages",

@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Button, Input, Label } from '@ota/ui';
+import { Alert, Button, Icon, Input, Label } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -39,8 +39,8 @@ export function MagicLinkForm({ callbackPath = '/account' }: { callbackPath?: st
   }
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
-      <div className="space-y-2">
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="account-email">{t('email')}</Label>
         <Input
           id="account-email"
@@ -49,14 +49,25 @@ export function MagicLinkForm({ callbackPath = '/account' }: { callbackPath?: st
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
+          aria-describedby="account-email-hint"
+          className="h-12"
         />
+        <p id="account-email-hint" className="text-caption text-muted">
+          {t('emailHint')}
+        </p>
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
-      <Button type="submit" className="w-full" disabled={status === 'sending'}>
-        {status === 'sending' ? t('sending') : t('send')}
+      <Button type="submit" size="lg" className="w-full" loading={status === 'sending'}>
+        {status === 'sending' ? (
+          t('sending')
+        ) : (
+          <>
+            <Icon name="mail" />
+            {t('send')}
+          </>
+        )}
       </Button>
     </form>
   );

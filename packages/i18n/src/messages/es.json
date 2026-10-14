@@ -318,12 +318,20 @@
   },
   "login": {
     "title": "Iniciar sesión",
-    "description": "Introduce tu correo y te enviaremos un enlace de un solo uso a tus reservas y documentos.",
+    "description": "Te enviamos un enlace por correo. Sin contraseña.",
     "email": "Correo electrónico",
-    "send": "Enviar enlace",
+    "send": "Enviarme un enlace de acceso",
     "sending": "Enviando…",
     "sent": "Revisa tu bandeja — enviamos un enlace de acceso a {email}.",
-    "error": "No se pudo enviar el enlace."
+    "error": "No se pudo enviar el enlace.",
+    "emailHint": "El correo con el que reservaste, o el que quieras usar.",
+    "panelTitle": "Sin contraseñas. Solo un enlace.",
+    "panelText": "Entrar es tocar un enlace que te enviamos por correo, y el primero crea tu cuenta. Nada que recordar antes de viajar a un país con 1 Mbps.",
+    "linkNote": "Los enlaces de acceso caducan a los pocos minutos y sirven una sola vez.",
+    "dataNote": "Seis meses después de tu último viaje te preguntamos si quieres conservar la cuenta; si no respondes, borramos tus datos 30 días después.",
+    "help": "¿No puedes entrar?",
+    "helpLink": "Escribe a la central",
+    "back": "Volver al sitio"
   },
   "account": {
     "title": "Mis viajes",
