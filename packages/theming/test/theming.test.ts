@@ -22,10 +22,15 @@ interface ExportedTier {
 
 const designExport = JSON.parse(
   readFileSync(
-    resolve(__dirname, '../../../design/vereda-v1.1/handoff/tokens.json'),
+    resolve(__dirname, '../../../design/vereda-v1.2/handoff/tokens.json'),
     'utf8',
   ),
-) as { primitive: ExportedTier; alias: ExportedTier; component: ExportedTier };
+) as {
+  primitive: ExportedTier;
+  alias: ExportedTier;
+  component: ExportedTier;
+  reducedMotion: Record<string, string>;
+};
 
 function values(tier: ExportedTier): Record<string, string> {
   return Object.fromEntries(
@@ -42,17 +47,22 @@ describe('the token contract', () => {
     expect(COMPONENT_TOKENS).toEqual(values(designExport.component));
   });
 
-  it('matches the exported primitive values except motion, which uses DS-Handoff', () => {
-    const exported = values(designExport.primitive);
-    for (const [name, value] of Object.entries(PRIMITIVE_TOKENS)) {
-      if (name.startsWith('motion-')) {
-        // The export carries the reduced-motion 0ms (change request 01, A1).
-        expect(exported[name]).toBe('0ms');
-        continue;
-      }
-      expect(value, name).toBe(exported[name]);
-    }
+  it('matches every exported primitive value', () => {
+    expect(PRIMITIVE_TOKENS).toEqual(values(designExport.primitive));
+    // Motion is the DS-Handoff values; the export lists the reduced-motion
+    // override separately (change request 01, A1).
     expect(PRIMITIVE_TOKENS['motion-base']).toBe('200ms cubic-bezier(.2,.8,.2,1)');
+    expect(designExport.reducedMotion['--motion-base']).toBe('0ms');
+  });
+
+  it('draws the focus ring in primary 600, 8.4:1 on the cream page (A-A11y)', () => {
+    expect(COMPONENT_TOKENS['color-focus-ring']).toBe('var(--color-primary-600)');
+    expect(
+      contrastRatio(
+        PRIMITIVE_TOKENS['color-primary-600'],
+        PRIMITIVE_TOKENS['color-neutral-50'],
+      ),
+    ).toBeCloseTo(8.4, 1);
   });
 
   it('meets the contrast figures of the Foundations sheet', () => {
@@ -65,27 +75,49 @@ describe('the token contract', () => {
       5.6,
       1,
     );
-    // Status text stays AA on its -100 surface (the -700 tones are not tokens yet).
+    // Status text is the -700 tone on its -100 surface. DS 06 says 7:1 or
+    // better; warning (6.4:1) and error (5.7:1) fall short of that but stay AA
+    // (raised in change request 02). The -600 tones, which the boards keep for
+    // icons and field errors, stay AA too.
     for (const status of ['success', 'warning', 'error', 'info'] as const) {
-      const ratio = contrastRatio(
-        PRIMITIVE_TOKENS[`color-${status}-600`],
-        PRIMITIVE_TOKENS[`color-${status}-100`],
+      const surface = PRIMITIVE_TOKENS[`color-${status}-100`];
+      const text = contrastRatio(PRIMITIVE_TOKENS[`color-${status}-700`], surface)!;
+      expect(text, status).toBeGreaterThanOrEqual(5.7);
+      expect(text, status).toBeGreaterThan(
+        contrastRatio(PRIMITIVE_TOKENS[`color-${status}-600`], surface)!,
       );
-      expect(ratio, status).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(PRIMITIVE_TOKENS[`color-${status}-600`], surface),
+        status,
+      ).toBeGreaterThanOrEqual(4.5);
     }
   });
 });
 
 describe('derivePrimaryScale', () => {
-  it('keeps the brand colour as step 600 and orders the steps by lightness', () => {
+  it('reproduces the design teal scale from its step 600', () => {
     const scale = derivePrimaryScale('#0b4f6c')!;
 
-    expect(scale[600]).toBe('#0B4F6C');
+    for (const step of [700, 600, 200, 100, 50] as const) {
+      expect(scale[step], String(step)).toBe(PRIMITIVE_TOKENS[`color-primary-${step}`]);
+    }
+  });
+
+  it('keeps the brand colour as step 600 and orders the steps by lightness', () => {
+    const scale = derivePrimaryScale('#7a1f5c')!;
+
+    expect(scale[600]).toBe('#7A1F5C');
     expect(contrastRatio('#FFFFFF', scale[700])!).toBeGreaterThan(
       contrastRatio('#FFFFFF', scale[600])!,
     );
     expect(contrastRatio('#FFFFFF', scale[500])!).toBeLessThan(
       contrastRatio('#FFFFFF', scale[600])!,
+    );
+    expect(contrastRatio('#FFFFFF', scale[200])!).toBeGreaterThan(
+      contrastRatio('#FFFFFF', scale[100])!,
+    );
+    expect(contrastRatio('#FFFFFF', scale[100])!).toBeGreaterThan(
+      contrastRatio('#FFFFFF', scale[50])!,
     );
     expect(contrastRatio('#FFFFFF', scale[100])!).toBeLessThan(1.2);
   });
@@ -120,6 +152,8 @@ describe('themeCssVariables', () => {
     expect(variables['--color-primary-600']).toBe('#7A1F5C');
     expect(Object.keys(variables).sort()).toEqual([
       '--color-primary-100',
+      '--color-primary-200',
+      '--color-primary-50',
       '--color-primary-500',
       '--color-primary-600',
       '--color-primary-700',
@@ -183,11 +217,11 @@ describe('themeCssVariables', () => {
     ).toEqual({});
   });
 
-  it('never emits the font families, which the font loader owns', () => {
+  it('never emits the font families or the breakpoints, which the build owns', () => {
     const variables = themeCssVariables(
       parseTenantConfig({
         ...base,
-        theme: { tokens: { 'font-body': '"Comic Sans MS"' } },
+        theme: { tokens: { 'font-body': '"Comic Sans MS"', 'bp-md': '700px' } },
       }),
     );
 

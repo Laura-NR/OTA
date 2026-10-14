@@ -15,9 +15,12 @@
  *   `text-secondary` is the secondary *text* colour (neutral 700), while
  *   `text-secondary-600` is the terracotta palette step;
  * - type sizes are the type tokens: `text-caption`, `text-overline`,
- *   `text-body-sm`, `text-body`, `text-body-lg`, `text-button`, `text-h4` …
- *   `text-h1`, `text-display-2`, `text-display-1` (size, line height and the
- *   token's weight); families are `font-display`, `font-body`, `font-mono`.
+ *   `text-label` (pills, tabs, badges), `text-body-sm`, `text-nav` (primary
+ *   navigation), `text-body`, `text-body-lg`, `text-button`, `text-h4` …
+ *   `text-h1`, `text-display-2`, `text-display-1`, and `text-h2-compact` /
+ *   `text-h1-compact` for mobile and dense panels (size, line height and the
+ *   token's weight). Families are `font-display`, `font-body`, `font-mono`;
+ *   the compact headings, like `h1`, take `font-display`.
  *
  * The palette, type scale, radii, shadows and breakpoints replace Tailwind's
  * defaults, so a value outside the design cannot be written by accident.
@@ -39,12 +42,16 @@ const steps = (family, values) =>
 export const TYPE_SCALE = {
   caption: ['12px', { lineHeight: '16px', fontWeight: '500' }],
   overline: ['12px', { lineHeight: '16px', fontWeight: '700', letterSpacing: '0.08em' }],
+  label: ['13px', { lineHeight: '16px', fontWeight: '600' }],
   'body-sm': ['14px', { lineHeight: '20px' }],
+  nav: ['15px', { lineHeight: '20px', fontWeight: '500' }],
   body: ['16px', { lineHeight: '24px' }],
   'body-lg': ['18px', { lineHeight: '28px' }],
   button: ['16px', { lineHeight: '24px', fontWeight: '600' }],
   h4: ['20px', { lineHeight: '28px', fontWeight: '600' }],
+  'h2-compact': ['22px', { lineHeight: '28px', fontWeight: '600' }],
   h3: ['24px', { lineHeight: '32px', fontWeight: '600' }],
+  'h1-compact': ['28px', { lineHeight: '34px', fontWeight: '600' }],
   h2: ['32px', { lineHeight: '40px', fontWeight: '600' }],
   h1: ['40px', { lineHeight: '48px', fontWeight: '600' }],
   'display-2': ['48px', { lineHeight: '56px', fontWeight: '600' }],
@@ -54,20 +61,20 @@ export const TYPE_SCALE = {
 const preset = {
   darkMode: ['class'],
   theme: {
-    // DS 07 breakpoints; mobile first, no 2xl.
+    // DS 07 breakpoints (`--bp-*`); mobile first, no 2xl.
     screens: { sm: '480px', md: '768px', lg: '1024px', xl: '1280px' },
     colors: {
       transparent: 'transparent',
       current: 'currentColor',
       inherit: 'inherit',
-      primary: steps('primary', [100, 500, 600, 700]),
+      primary: steps('primary', [50, 100, 200, 500, 600, 700]),
       secondary: steps('secondary', [100, 500, 600, 700]),
-      accent: steps('accent', [100, 500, 600]),
-      neutral: steps('neutral', [0, 50, 100, 200, 300, 500, 700, 900]),
-      success: steps('success', [100, 600]),
-      warning: steps('warning', [100, 600]),
-      error: steps('error', [100, 600]),
-      info: steps('info', [100, 600]),
+      accent: steps('accent', [50, 100, 500, 600, 700]),
+      neutral: steps('neutral', [0, 50, 100, 200, 300, 500, 600, 700, 900]),
+      success: steps('success', [100, 200, 600, 700]),
+      warning: steps('warning', [100, 200, 500, 600, 700]),
+      error: steps('error', [100, 200, 600, 700]),
+      info: steps('info', [100, 200, 600, 700]),
       timeout: steps('timeout', [600]),
     },
     fontFamily: {

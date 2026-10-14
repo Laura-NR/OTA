@@ -1,6 +1,6 @@
 /**
  * Core design tokens (ADR 0006): the Vereda design system's three tiers, as
- * exported from the canvas (`design/vereda-v1.1/handoff/tokens.css`). These are
+ * exported from the canvas (`design/vereda-v1.2/handoff/tokens.css`). These are
  * the defaults; `@ota/theming` sets a tenant's differences inline on `<html>`.
  * Alias and component tokens are declared on `:root` so they resolve against
  * whatever primitives the root carries.
@@ -11,31 +11,46 @@
   --color-primary-700: #083b50;
   --color-primary-600: #0b4f6c;
   --color-primary-500: #0e6b8c;
+  --color-primary-200: #c9dde6;
   --color-primary-100: #e6f0f4;
+  --color-primary-50: #f1f6f8;
   --color-secondary-700: #7a2a16;
   --color-secondary-600: #a83e24;
   --color-secondary-500: #c75b39;
   --color-secondary-100: #f7e4dc;
+  --color-accent-700: #6b4a05;
   --color-accent-600: #d99a1f;
   --color-accent-500: #f2b134;
   --color-accent-100: #fef3d6;
+  --color-accent-50: #fffbeb;
   /* neutrals (warm) */
   --color-neutral-900: #1f1b17;
   --color-neutral-700: #4a433d;
+  --color-neutral-600: #5a524a;
   --color-neutral-500: #6e665e;
   --color-neutral-300: #d6cec3;
   --color-neutral-200: #e8e2d9;
   --color-neutral-100: #f3eee6;
   --color-neutral-50: #fbf8f3;
   --color-neutral-0: #ffffff;
-  /* semantic fg / bg */
+  /* semantic fg / bg: -700 text on the -100 surface, -600 icons, borders and
+     bars, -200 alert and pill borders */
+  --color-success-700: #1b5e20;
   --color-success-600: #2e7d32;
+  --color-success-200: #c8e6c9;
   --color-success-100: #e8f5e9;
+  --color-warning-700: #92400e;
   --color-warning-600: #b45309;
+  --color-warning-500: #f59e0b;
+  --color-warning-200: #fde68a;
   --color-warning-100: #fef3c7;
+  --color-error-700: #b71c1c;
   --color-error-600: #c62828;
+  --color-error-200: #f5c6c2;
   --color-error-100: #fdecea;
+  --color-info-700: #0d47a1;
   --color-info-600: #1565c0;
+  --color-info-200: #bbdefb;
   --color-info-100: #e3f2fd;
   --color-timeout-600: #c62828;
   /* type: the font families are in the :where(:root) block below */
@@ -59,7 +74,7 @@
   --shadow-sm: 0 1px 2px rgba(31, 27, 23, 0.08);
   --shadow-md: 0 4px 12px rgba(31, 27, 23, 0.1);
   --shadow-lg: 0 12px 32px rgba(31, 27, 23, 0.16);
-  /* motion: the DS-Handoff values (the export carries the reduced-motion 0ms) */
+  /* motion (0ms under reduced motion, below) */
   --motion-fast: 120ms ease-out;
   --motion-base: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --motion-slow: 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -71,6 +86,11 @@
   --margin-lg: 40px;
   --touch-min: 44px;
   --touch-base: 48px;
+  /* breakpoints (DS 07): compiled into the Tailwind screens, which cannot read them */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
   /* ===== alias ===== */
   --color-text-default: var(--color-neutral-900);
   --color-text-secondary: var(--color-neutral-700);
@@ -82,6 +102,8 @@
   --color-action-primary: var(--color-primary-600);
   --color-action-primary-hover: var(--color-primary-500);
   --color-action-primary-active: var(--color-primary-700);
+  /* @ota/theming switches it to neutral-900 when a tenant's primary is light */
+  --color-text-on-primary: var(--color-neutral-0);
   --text-display-1: 600 56px/64px var(--font-display);
   --text-display-2: 600 48px/56px var(--font-display);
   --text-h1: 600 40px/48px var(--font-display);
@@ -93,12 +115,14 @@
   --text-body-sm: 400 14px/20px var(--font-body);
   --text-caption: 500 12px/16px var(--font-body);
   --text-overline: 700 12px/16px var(--font-body);
+  --text-h1-compact: 600 28px/34px var(--font-display);
+  --text-h2-compact: 600 22px/28px var(--font-display);
   /* ===== component ===== */
   --color-border-input: var(--color-neutral-300);
-  --color-focus-ring: var(--color-primary-500);
+  --color-focus-ring: var(--color-primary-600);
   --text-button: 600 16px/24px var(--font-body);
-  /* build addition (change request 01, A7); @ota/theming switches it to ink on a light primary */
-  --color-text-on-primary: var(--color-neutral-0);
+  --text-label: 600 13px/16px var(--font-body);
+  --text-nav: 500 15px/20px var(--font-body);
 }
 
 /*

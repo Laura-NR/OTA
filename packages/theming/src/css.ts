@@ -2,6 +2,7 @@ import type { TenantConfig } from '@ota/config';
 
 import { contrastRatio, derivePrimaryScale, normalizeHex } from './color';
 import {
+  BREAKPOINT_TOKENS,
   DEFAULT_PALETTE,
   FONT_TOKENS,
   ON_PRIMARY_DARK,
@@ -35,7 +36,9 @@ function resolvePrimitives(config: TenantConfig): Record<PrimitiveToken, string>
     primitives['color-primary-700'] = scale[700];
     primitives['color-primary-600'] = scale[600];
     primitives['color-primary-500'] = scale[500];
+    primitives['color-primary-200'] = scale[200];
     primitives['color-primary-100'] = scale[100];
+    primitives['color-primary-50'] = scale[50];
   }
 
   const factor = RADIUS_SCALES[config.theme.borderRadius] ?? 1;
@@ -70,14 +73,15 @@ function onPrimary(primitives: Record<PrimitiveToken, string>): string {
  * nothing. Apply the result on the root element (`<html>`), never lower: the
  * alias tokens are declared on `:root` and resolve their `var()` references
  * there, so a primitive overridden on a descendant would not reach them.
- * Font families are left to the app's font loader (`FONT_TOKENS`).
+ * Font families are left to the app's font loader (`FONT_TOKENS`) and the
+ * breakpoints to the Tailwind preset (`BREAKPOINT_TOKENS`).
  */
 export function themeCssVariables(config: TenantConfig): Record<string, string> {
   const primitives = resolvePrimitives(config);
   const variables: Record<string, string> = {};
 
   for (const name of PRIMITIVE_TOKEN_NAMES) {
-    if (FONT_TOKENS.includes(name)) {
+    if (FONT_TOKENS.includes(name) || BREAKPOINT_TOKENS.includes(name)) {
       continue;
     }
     if (primitives[name] !== PRIMITIVE_TOKENS[name]) {

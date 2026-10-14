@@ -62,6 +62,8 @@ describe('cn', () => {
     expect(cn('text-h1', 'text-default')).toBe('text-h1 text-default');
     expect(cn('text-body-sm', 'text-h3')).toBe('text-h3');
     expect(cn('text-muted', 'text-primary-600')).toBe('text-primary-600');
+    expect(cn('text-label', 'text-warning-700')).toBe('text-label text-warning-700');
+    expect(cn('text-nav', 'text-h1-compact')).toBe('text-h1-compact');
   });
 });
 
@@ -83,7 +85,9 @@ describe('styles.css', () => {
     const reduced = styles.slice(
       styles.indexOf('@media (prefers-reduced-motion: reduce)'),
     );
-    expect(reduced).toContain('--motion-base: 0ms !important');
+    for (const name of ['motion-fast', 'motion-base', 'motion-slow']) {
+      expect(reduced).toContain(`--${name}: 0ms !important`);
+    }
   });
 });
 
@@ -124,6 +128,26 @@ describe('tailwind preset', () => {
     );
   });
 
+  it('offers a step for every colour primitive, and no other', () => {
+    const offered = Object.entries(preset.theme.colors).flatMap(([family, scale]) =>
+      typeof scale === 'string'
+        ? []
+        : Object.keys(scale).map((step) => `color-${family}-${step}`),
+    );
+    const primitives = Object.keys(PRIMITIVE_TOKENS).filter((name) =>
+      name.startsWith('color-'),
+    );
+    expect(offered.sort()).toEqual(primitives.sort());
+  });
+
+  it('has a size for every type token', () => {
+    // A type token's value is a font shorthand: "600 13px/16px var(--font-body)".
+    const typeTokens = Object.entries({ ...ALIAS_TOKENS, ...COMPONENT_TOKENS })
+      .filter(([name, value]) => name.startsWith('text-') && /^\d{3} \d+px\//.test(value))
+      .map(([name]) => name.replace(/^text-/, ''));
+    expect(Object.keys(TYPE_SCALE).sort()).toEqual(typeTokens.sort());
+  });
+
   it('copies the type tokens exactly', () => {
     for (const [name, [size, { lineHeight, fontWeight }]] of Object.entries(TYPE_SCALE)) {
       const token =
@@ -140,10 +164,10 @@ describe('tailwind preset', () => {
     expect(preset.theme.borderRadius.DEFAULT).toBe('var(--radius-md)');
     expect(preset.theme.boxShadow.md).toBe('var(--shadow-md)');
     expect(preset.theme.screens).toEqual({
-      sm: '480px',
-      md: '768px',
-      lg: '1024px',
-      xl: '1280px',
+      sm: PRIMITIVE_TOKENS['bp-sm'],
+      md: PRIMITIVE_TOKENS['bp-md'],
+      lg: PRIMITIVE_TOKENS['bp-lg'],
+      xl: PRIMITIVE_TOKENS['bp-xl'],
     });
     expect(PRIMITIVE_TOKENS['motion-fast']).toContain(
       preset.theme.extend.transitionDuration.fast,

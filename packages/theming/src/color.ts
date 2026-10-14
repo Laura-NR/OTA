@@ -100,14 +100,21 @@ export function normalizeHex(hex: string): string | null {
 }
 
 /**
- * Derive the four primary steps from a tenant's single brand colour, which
- * becomes step 600 (actions). The offsets follow the design's own teal scale:
- * 700 is 6 points darker (pressed), 500 7 points lighter (hover), and 100 a
- * desaturated tint at 93 % lightness (selected rows, info surfaces).
+ * Derive the six primary steps from a tenant's single brand colour, which
+ * becomes step 600 (actions). The offsets follow the design's own teal scale,
+ * which they reproduce exactly except at 500: 700 is 6 points darker
+ * (pressed), 500 7 points lighter (hover), and the tints are desaturated at
+ * fixed lightness: 200 at 84.5 % (sidebar links, chip hover), 100 at 93 %
+ * (selected rows, info surfaces) and 50 at 96 % (selected tier, payment card).
  */
-export function derivePrimaryScale(
-  hex: string,
-): { 700: string; 600: string; 500: string; 100: string } | null {
+export function derivePrimaryScale(hex: string): {
+  700: string;
+  600: string;
+  500: string;
+  200: string;
+  100: string;
+  50: string;
+} | null {
   const rgb = parseHex(hex);
   if (!rgb) {
     return null;
@@ -117,7 +124,9 @@ export function derivePrimaryScale(
     700: hslToHex({ ...base, l: clamp(base.l - 0.06, 0.04, 0.9) }),
     600: hslToHex(base),
     500: hslToHex({ ...base, l: clamp(base.l + 0.07, 0.08, 0.92) }),
+    200: hslToHex({ ...base, s: base.s * 0.45, l: 0.845 }),
     100: hslToHex({ ...base, s: base.s * 0.5, l: 0.93 }),
+    50: hslToHex({ ...base, s: base.s * 0.4, l: 0.96 }),
   };
 }
 

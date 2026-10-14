@@ -7,6 +7,7 @@ export {
 export { themeCssVariables } from './css';
 export {
   ALIAS_TOKENS,
+  BREAKPOINT_TOKENS,
   COMPONENT_TOKENS,
   DEFAULT_PALETTE,
   FONT_TOKENS,
