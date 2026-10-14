@@ -4,8 +4,6 @@ import {
   AGING_BUCKETS,
   pendingConfirmations,
   resolveDispatchTimeoutMs,
-  serviceItemAlert,
-  timerElapsed,
   type AgingBucketId,
   type EscalationAlert,
   type ServiceType,
@@ -24,7 +22,6 @@ import {
   TableHeader,
   TableRow,
   Tag,
-  type BadgeVariant,
 } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -36,6 +33,12 @@ import { connectEscalation } from '@/lib/socket';
 
 import { KpiCard } from './kpi-card';
 import { RedispatchPanel, type RedispatchTarget } from './redispatch-panel';
+import {
+  itemAlert,
+  OPEN_ITEM_STATUSES,
+  ServiceItemStatusBadge,
+  TIMER_FILL,
+} from './service-item-status';
 
 /**
  * The matrix's service columns, one per type in A-Dashboard's order. The timer
@@ -62,24 +65,6 @@ const BUCKET_TEXT: Record<AgingBucketId, string> = {
   upTo24h: 'text-warning-700',
   over24h: 'text-error-700',
 };
-
-const TIMER_FILL: Record<EscalationAlert, string> = {
-  NONE: 'bg-primary-600',
-  AMBER: 'bg-warning-600',
-  RED: 'bg-error-600',
-};
-
-/** Items a desk operator may still re-route: not yet held by a worker. */
-const OPEN_STATUSES: readonly string[] = ['UNASSIGNED', 'OFFERED', 'DECLINED', 'TIMEOUT'];
-
-function itemAlert(item: DispatchBoardItemDto, now: Date): EscalationAlert {
-  return serviceItemAlert({
-    status: item.status,
-    offeredAt: item.offeredAt ? new Date(item.offeredAt) : null,
-    deadline: item.deadline ? new Date(item.deadline) : null,
-    now,
-  });
-}
 
 function rowAlert(row: DispatchBoardRowDto, now: Date): EscalationAlert {
   const alerts = row.serviceItems.map((item) => itemAlert(item, now));
@@ -166,11 +151,6 @@ export function OpsDesk({
   );
   const tallest = Math.max(1, ...Object.values(pending.buckets));
 
-  function duration(ms: number): string {
-    const { hours, minutes } = hoursMinutes(ms);
-    return hours > 0 ? t('hoursMinutes', { hours, minutes }) : t('minutes', { minutes });
-  }
-
   function timerLabel(row: DispatchBoardRowDto): string {
     const window = resolveDispatchTimeoutMs({
       now: new Date(row.waitingSince),
@@ -205,69 +185,15 @@ export function OpsDesk({
     service: string,
   ) {
     const alert = itemAlert(item, now);
-    const offeredAt = item.offeredAt ? new Date(item.offeredAt) : null;
-    const deadline = item.deadline ? new Date(item.deadline) : null;
-    const elapsed = offeredAt && deadline ? timerElapsed(offeredAt, deadline, now) : null;
-    const share = elapsed === null ? 0 : Math.round(elapsed * 100);
-
-    let label: string;
-    let variant: BadgeVariant;
-    switch (item.status) {
-      case 'OFFERED': {
-        const waited = duration(offeredAt ? nowMs - offeredAt.getTime() : 0);
-        label =
-          alert === 'NONE'
-            ? t('status.offered', { elapsed: waited })
-            : t('status.offeredLate', { elapsed: waited, percent: share });
-        variant =
-          alert === 'RED' ? 'destructive' : alert === 'AMBER' ? 'attention' : 'info';
-        break;
-      }
-      case 'ACCEPTED':
-      case 'FULFILLED':
-        label = t(`status.${item.status === 'ACCEPTED' ? 'accepted' : 'fulfilled'}`);
-        variant = 'success';
-        break;
-      case 'DECLINED':
-        label = t('status.declined');
-        variant = 'destructive';
-        break;
-      case 'TIMEOUT':
-        label = deadline
-          ? t('status.timeoutAt', { time: opsTime(deadline, locale) })
-          : t('status.timeout');
-        variant = 'timeout';
-        break;
-      default:
-        label = t('status.unassigned');
-        variant = 'secondary';
-    }
 
     const reroute =
       canManage &&
-      OPEN_STATUSES.includes(item.status) &&
+      OPEN_ITEM_STATUSES.includes(item.status) &&
       (alert !== 'NONE' || item.status === 'UNASSIGNED');
 
     return (
       <div key={item.id} className="flex min-w-32 flex-col gap-1.5">
-        <Badge
-          variant={variant}
-          className={cn('self-start', item.status === 'DECLINED' && 'border-error-600')}
-        >
-          {label}
-        </Badge>
-        {elapsed !== null && (item.status === 'OFFERED' || item.status === 'TIMEOUT') ? (
-          <span
-            role="img"
-            aria-label={t('elapsed', { percent: share })}
-            className="block h-1.5 overflow-hidden rounded-full bg-neutral-200"
-          >
-            <span
-              className={cn('block h-full', TIMER_FILL[alert])}
-              style={{ width: `${share}%` }}
-            />
-          </span>
-        ) : null}
+        <ServiceItemStatusBadge item={item} now={now} />
         <span className="truncate text-caption text-secondary">
           {[item.supplierName ?? t('noWorker'), item.province]
             .filter(Boolean)

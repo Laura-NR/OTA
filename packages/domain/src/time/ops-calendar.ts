@@ -60,6 +60,22 @@ export function zonedYearMonth(
   return { year: field('year'), month: field('month') };
 }
 
+/**
+ * The calendar day of `instant` in `timeZone`, as UTC midnight: the form
+ * booking dates are stored in, so the two compare directly.
+ */
+export function zonedCalendarDay(instant: Date, timeZone: string = OPS_TIME_ZONE): Date {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(instant);
+  const field = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((part) => part.type === type)?.value);
+  return new Date(Date.UTC(field('year'), field('month') - 1, field('day')));
+}
+
 export interface MonthRange {
   year: number;
   month: number;

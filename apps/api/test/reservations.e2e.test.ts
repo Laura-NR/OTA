@@ -96,17 +96,34 @@ interface AuditCreateArgs {
   };
 }
 
+interface FakeServiceItem {
+  reservationId: string;
+  status: string;
+  province: string | null;
+}
+interface FakePayment {
+  reservationId: string;
+  amount: string;
+}
+
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
   users: FakeUser[];
   audits: FakeAudit[];
   counter: { value: number };
+  serviceItems?: FakeServiceItem[];
+  payments?: FakePayment[];
 }) {
   const withRelations = (reservation: Reservation) => ({
     ...reservation,
     user: state.users.find((user) => user.id === reservation.userId) ?? null,
-    serviceItems: [],
-    _count: { serviceItems: 0 },
+    serviceItems: (state.serviceItems ?? []).filter(
+      (item) => item.reservationId === reservation.id,
+    ),
+    package: null,
+    payments: (state.payments ?? []).filter(
+      (payment) => payment.reservationId === reservation.id,
+    ),
   });
 
   const fake = {
@@ -239,6 +256,8 @@ describe('reservations API', () => {
     users: FakeUser[];
     audits: FakeAudit[];
     counter: { value: number };
+    serviceItems: FakeServiceItem[];
+    payments: FakePayment[];
   };
 
   beforeEach(async () => {
@@ -247,6 +266,8 @@ describe('reservations API', () => {
       users: [SUPER_ADMIN, TRAVELER],
       audits: [],
       counter: { value: 0 },
+      serviceItems: [],
+      payments: [],
     };
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
@@ -349,6 +370,34 @@ describe('reservations API', () => {
       ]);
       expect(response.body[0].travelerEmail).toBe(TRAVELER.email);
       expect(response.body[0].serviceItemCount).toBe(0);
+    });
+
+    it('carries the provinces, accepted services and paid amount of each booking', async () => {
+      state.serviceItems = [
+        { reservationId: RESERVATION_ID, status: 'ACCEPTED', province: 'Pinar del Río' },
+        { reservationId: RESERVATION_ID, status: 'OFFERED', province: 'Pinar del Río' },
+        { reservationId: RESERVATION_ID, status: 'FULFILLED', province: 'La Habana' },
+        { reservationId: RESERVATION_ID, status: 'UNASSIGNED', province: null },
+      ];
+      state.payments = [
+        { reservationId: RESERVATION_ID, amount: '100.10' },
+        { reservationId: RESERVATION_ID, amount: '20.20' },
+      ];
+
+      const response = await request(app.getHttpServer())
+        .get('/reservations')
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      const row = response.body.find(
+        (candidate: { id: string }) => candidate.id === RESERVATION_ID,
+      );
+      expect(row).toMatchObject({
+        serviceItemCount: 4,
+        serviceItemsAccepted: 2,
+        provinces: ['Pinar del Río', 'La Habana'],
+        paidAmount: '120.30',
+        packageName: null,
+      });
     });
 
     it('filters by status', async () => {

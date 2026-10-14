@@ -659,15 +659,98 @@
       "dates": "Dates",
       "total": "Total"
     },
-    "board": {
-      "title": "Reservations",
-      "description": "The operations pipeline, grouped by status. Open a booking to transition, inspect, and audit it.",
-      "newReservation": "New reservation",
-      "pipeline": "Pipeline",
-      "bookings": "{count} booking(s)",
-      "serviceItems": "{count} item(s)",
-      "empty": "No reservations yet. Create one, or run the seed, to populate the pipeline.",
-      "loadError": "Could not load reservations."
+    "bookings": {
+      "title": "Bookings",
+      "summary": "{total} total · {pipeline} in pipeline · Havana {time}",
+      "manualBooking": "Manual booking",
+      "loadError": "Could not load the bookings.",
+      "views": {
+        "label": "Saved views",
+        "all": "All bookings",
+        "attention": "Red & amber",
+        "arriving": "Arriving ≤ 7 days"
+      },
+      "states": {
+        "title": "State machine · spec §4.2",
+        "hint": "Click a state to filter."
+      },
+      "filters": {
+        "travelDate": "Travel date",
+        "anyDate": "Any date",
+        "windows": {
+          "next30": "Next 30 days",
+          "next90": "Next 90 days",
+          "thisMonth": "This month",
+          "past": "Past"
+        },
+        "province": "Province",
+        "allProvinces": "All provinces",
+        "clear": "Clear filters"
+      },
+      "table": {
+        "showing": "Showing {shown} of {total} · sorted by clock, most urgent first",
+        "clock": "Clock",
+        "code": "Code",
+        "traveler": "Traveler",
+        "packageDates": "Package · dates",
+        "state": "State",
+        "dispatch": "Dispatch",
+        "total": "Total",
+        "paid": "Paid",
+        "totalPaid": "Total · paid",
+        "paidAmount": "{amount} paid",
+        "open": "Open",
+        "openLabel": "Open {code}",
+        "custom": "Custom itinerary",
+        "dispatchOf": "{accepted} of {total}",
+        "left": "{time} left",
+        "expired": "Expired"
+      },
+      "empty": {
+        "title": "Nothing in this state right now",
+        "hint": "Try \"Clear filters\" or another saved view."
+      },
+      "pagination": {
+        "label": "Pages",
+        "previous": "Previous page",
+        "next": "Next page",
+        "page": "Page {page} of {pages}"
+      },
+      "legend": {
+        "title": "Who acts in each state",
+        "description": "Same vocabulary as the traveler's \"My trips\" tracker (DS sheet 03); the admin sees the system state, the traveler sees the label.",
+        "state": "System state",
+        "sees": "Traveler sees",
+        "who": "Who acts",
+        "clock": "Clock",
+        "leaves": "Leaves to",
+        "whoActs": {
+          "DRAFT": "Ops Admin completes the intake, then submits it.",
+          "ITINERARY_SUBMITTED": "Ops Admin starts dispatch from the dashboard's tasks.",
+          "DISPATCH_IN_PROGRESS": "Workers accept or decline each offer. The desk watches the matrix and calls at amber.",
+          "ASSEMBLY_AND_ESCALATION": "Every service is accepted. Ops Admin checks the assembly and moves it to invoicing.",
+          "SECURED_AND_INVOICED": "Ops Admin creates the payment link on the booking.",
+          "PENDING_PAYMENT": "The traveler pays by bank transfer; the desk confirms the receipt.",
+          "ACTION_REQUIRED": "Ops Admin re-dispatches from the dashboard, or offers the traveler an alternative.",
+          "CONFIRMED": "System: voucher, work orders and invoice.",
+          "IN_PROGRESS": "Desk: incidents and duty of care.",
+          "COMPLETED": "System: review prompt and the retention clock.",
+          "CANCELLED": "Ops Admin applies the cancellation policy."
+        },
+        "clocks": {
+          "DRAFT": "—",
+          "ITINERARY_SUBMITTED": "—",
+          "DISPATCH_IN_PROGRESS": "2 h per offer · 30 min if arrival is under 48 h · amber at 75 %",
+          "ASSEMBLY_AND_ESCALATION": "—",
+          "SECURED_AND_INVOICED": "—",
+          "PENDING_PAYMENT": "—",
+          "ACTION_REQUIRED": "Red on the dashboard until re-dispatched",
+          "CONFIRMED": "Documents at confirmation",
+          "IN_PROGRESS": "—",
+          "COMPLETED": "Retention notice at 6 months, then 30 days' grace",
+          "CANCELLED": "—"
+        }
+      }
     },
     "picker": {
       "label": "Reservation",
@@ -675,38 +758,72 @@
       "open": "Open"
     },
     "reservation": {
-      "backToPipeline": "← Pipeline",
-      "booking": "Booking",
-      "bookingDescription": "Status transitions are governed by the domain state machine.",
-      "traveler": "Traveler",
-      "dates": "Dates",
-      "total": "Total",
-      "services": "Services",
+      "breadcrumbLabel": "Breadcrumb",
+      "breadcrumb": "Bookings",
+      "summary": "{traveler} · {dates} · {nights, plural, one {# night} other {# nights}} · {package}",
+      "created": "created {date} {time} Havana",
+      "custom": "custom itinerary",
+      "kpi": {
+        "label": "Booking figures",
+        "total": "Total · {currency}",
+        "services": "{count, plural, one {# service} other {# services}}",
+        "cost": "Supplier cost",
+        "margin": "margin {rate}",
+        "noCost": "no payout rates yet",
+        "dispatch": "Dispatch",
+        "dispatchOf": "{accepted} of {total}",
+        "dispatchNote": "services accepted by a worker",
+        "paid": "Paid",
+        "paidOf": "of {total}"
+      },
+      "timeline": {
+        "title": "Progress",
+        "steps": {
+          "ITINERARY_SUBMITTED": "Submitted",
+          "DISPATCH_IN_PROGRESS": "Dispatched",
+          "ASSEMBLY_AND_ESCALATION": "Assembly",
+          "SECURED_AND_INVOICED": "Secured & invoiced",
+          "PENDING_PAYMENT": "Pending payment",
+          "CONFIRMED": "Confirmed · documents",
+          "IN_PROGRESS": "On trip",
+          "COMPLETED": "Completed"
+        },
+        "progress": "Step {step} of {total} · {label}",
+        "draft": "Not submitted yet",
+        "cancelled": "Cancelled"
+      },
+      "actions": {
+        "title": "Actions",
+        "description": "The moves the state machine allows from here (spec §4.2), and the booking's tourism classification.",
+        "messages": "Messages with the traveler"
+      },
+      "services": {
+        "title": "Service items",
+        "service": "Service",
+        "worker": "Worker",
+        "status": "Status",
+        "payout": "Payout",
+        "act": "Actions",
+        "empty": "No service items on this booking yet.",
+        "call": "Call",
+        "startHint": "Offers each service to the next qualified worker.",
+        "rule": "States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer and writes it to the audit log. Payout rates are the supplier's net; the traveler never sees this column."
+      },
+      "payments": "Payments",
+      "paymentsDescription": "Payment links are generated at SECURED_AND_INVOICED; confirming clears funds and confirms the booking.",
       "dutyOfCare": "Duty of care",
       "dutyOfCareDescription": "Incidents logged against this booking (spec §4.9.4).",
       "noIncidents": "No incidents logged.",
       "resolved": "Resolved",
       "open": "Open",
-      "payments": "Payments",
-      "paymentsDescription": "Payment links are generated at SECURED_AND_INVOICED; confirming clears funds and confirms the booking.",
-      "serviceItems": "Service items",
-      "components": "{count} component(s)",
-      "noServiceItems": "No service items on this booking yet.",
-      "type": "Type",
-      "status": "Status",
-      "province": "Province",
-      "starts": "Starts",
-      "ends": "Ends",
-      "supplier": "Supplier",
-      "unassigned": "Unassigned",
       "documents": "Documents",
-      "generatedFiles": "{count} generated file(s)",
+      "documentsDescription": "Generated on CONFIRMED; every PDF carries the MINTUR licence in its footer.",
       "noDocuments": "No documents yet. Confirm the booking, or use the Documents page to regenerate.",
       "downloadPdf": "Download PDF",
-      "auditTrail": "Audit trail",
-      "auditEvents": "{count} event(s), newest first",
+      "auditTrail": "Audit log",
+      "auditEvents": "{count, plural, one {# event} other {# events}}, newest first",
       "noAudit": "No audit events recorded.",
-      "system": "system"
+      "system": "System"
     },
     "reservationActions": {
       "viewOnly": "Your role can view this reservation but not change its status.",

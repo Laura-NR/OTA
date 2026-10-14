@@ -2,16 +2,16 @@ import { expect, test } from '@playwright/test';
 
 import { signIn } from './helpers';
 
-test.describe('reservations pipeline', () => {
+test.describe('bookings', () => {
   test.beforeEach(async ({ page }) => {
     await signIn(page);
   });
 
-  test('opens a booking from the board and applies a legal transition', async ({
+  test('opens a booking from the list and applies a legal transition', async ({
     page,
   }) => {
     await page.goto('/bookings');
-    await expect(page.getByRole('heading', { name: 'Reservations' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Bookings', level: 1 })).toBeVisible();
 
     const card = page.getByRole('link', { name: /E2E0001/ });
     await expect(card).toBeVisible();

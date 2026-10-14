@@ -79,6 +79,7 @@ export {
   auditLogEntrySchema,
   createReservationSchema,
   listReservationsQuerySchema,
+  reservationDeskItemSchema,
   reservationDetailSchema,
   reservationListItemSchema,
   reservationSchema,
@@ -91,6 +92,7 @@ export {
   type ReservationDetailDto,
   type ReservationDto,
   type ReservationListItemDto,
+  type ReservationDeskItemDto,
   type ReservationServiceItemDto,
   type TransitionReservationRequest,
 } from './reservation';

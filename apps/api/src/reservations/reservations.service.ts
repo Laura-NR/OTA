@@ -25,18 +25,25 @@ import { generateBookingCode } from '../common/booking-code';
 import { DocumentsService } from '../documents/documents.service';
 import { PrismaService } from '../prisma/prisma.service';
 
+const ROW_CONTEXT = {
+  package: { select: { name: true } },
+  payments: { where: { status: 'PAID' }, select: { amount: true } },
+} as const;
+
 type ListRow = Prisma.ReservationGetPayload<{
   include: {
     user: { select: { email: true; fullName: true } };
-    _count: { select: { serviceItems: true } };
-  };
+    serviceItems: { select: { status: true; province: true } };
+  } & typeof ROW_CONTEXT;
 }>;
 
 type DetailRow = Prisma.ReservationGetPayload<{
   include: {
     user: { select: { id: true; email: true; fullName: true } };
-    serviceItems: true;
-  };
+    serviceItems: {
+      include: { supplier: { include: { user: { select: { fullName: true } } } } };
+    };
+  } & typeof ROW_CONTEXT;
 }>;
 
 type AuditRow = Prisma.AuditLogGetPayload<{
@@ -57,12 +64,35 @@ function toDto(reservation: Reservation): ReservationDto {
   };
 }
 
+const SECURED_ITEM_STATUSES: readonly string[] = ['ACCEPTED', 'FULFILLED'];
+
+/** The context a row carries beyond the reservation: package, places, progress, money. */
+function rowContext(row: ListRow | DetailRow) {
+  return {
+    serviceItemCount: row.serviceItems.length,
+    packageName: row.package?.name ?? null,
+    provinces: [
+      ...new Set(
+        row.serviceItems
+          .map((item) => item.province)
+          .filter((province): province is string => province !== null),
+      ),
+    ],
+    serviceItemsAccepted: row.serviceItems.filter((item) =>
+      SECURED_ITEM_STATUSES.includes(item.status),
+    ).length,
+    paidAmount: row.payments
+      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+      .toFixed(2),
+  };
+}
+
 function toListDto(row: ListRow): ReservationListItemDto {
   return {
     ...toDto(row),
     travelerEmail: row.user.email,
     travelerName: row.user.fullName,
-    serviceItemCount: row._count.serviceItems,
+    ...rowContext(row),
   };
 }
 
@@ -86,8 +116,12 @@ function toDetailDto(row: DetailRow): ReservationDetailDto {
     travelerId: row.user.id,
     travelerEmail: row.user.email,
     travelerName: row.user.fullName,
-    serviceItemCount: row.serviceItems.length,
-    serviceItems: row.serviceItems.map(toServiceItemDto),
+    ...rowContext(row),
+    serviceItems: row.serviceItems.map((item) => ({
+      ...toServiceItemDto(item),
+      supplierName: item.supplier?.user.fullName ?? null,
+      payoutRate: item.payoutRate.toString(),
+    })),
   };
 }
 
@@ -114,8 +148,8 @@ export class ReservationsService {
 
   /**
    * The operations pipeline: most recent first, optionally narrowed to a single
-   * status. Each row carries the traveler and a service-item count so the board
-   * can be read without a second request.
+   * status. Each row carries the traveler, its package, provinces, accepted
+   * services and paid amount, so the bookings list reads without a second request.
    */
   async list(query: ListReservationsQuery): Promise<ReservationListItemDto[]> {
     const reservations = await this.prisma.reservation.findMany({
@@ -124,7 +158,8 @@ export class ReservationsService {
       take: query.limit,
       include: {
         user: { select: { email: true, fullName: true } },
-        _count: { select: { serviceItems: true } },
+        serviceItems: { select: { status: true, province: true } },
+        ...ROW_CONTEXT,
       },
     });
 
@@ -137,7 +172,11 @@ export class ReservationsService {
       where: { id },
       include: {
         user: { select: { id: true, email: true, fullName: true } },
-        serviceItems: { orderBy: { serviceDateStart: 'asc' } },
+        serviceItems: {
+          orderBy: { serviceDateStart: 'asc' },
+          include: { supplier: { include: { user: { select: { fullName: true } } } } },
+        },
+        ...ROW_CONTEXT,
       },
     });
 

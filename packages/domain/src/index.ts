@@ -21,6 +21,18 @@ export {
   type JourneyPosition,
 } from './reservation/traveler-status';
 export {
+  BOOKING_PIPELINE,
+  TRAVEL_WINDOWS,
+  compareUrgency,
+  inTravelWindow,
+  isArrivingWithin,
+  pipelinePosition,
+  type BookingDates,
+  type BookingUrgency,
+  type PipelinePosition,
+  type TravelWindow,
+} from './reservation/booking-views';
+export {
   AMBER_THRESHOLD,
   DEFAULT_DISPATCH_TIMEOUT_MS,
   SHORT_NOTICE_DISPATCH_TIMEOUT_MS,
@@ -96,6 +108,7 @@ export { bookingMix, relativeChange, type BookingMix } from './analytics/booking
 export {
   OPS_TIME_ZONE,
   monthRange,
+  zonedCalendarDay,
   zonedMidnight,
   zonedYearMonth,
   type MonthRange,

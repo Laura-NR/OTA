@@ -659,15 +659,98 @@
       "dates": "Fechas",
       "total": "Total"
     },
-    "board": {
+    "bookings": {
       "title": "Reservas",
-      "description": "El flujo de operaciones, agrupado por estado. Abre una reserva para gestionarla, inspeccionarla y auditar sus cambios.",
-      "newReservation": "Nueva reserva",
-      "pipeline": "Flujo",
-      "bookings": "{count} reserva(s)",
-      "serviceItems": "{count} servicio(s)",
-      "empty": "Aún no hay reservas. Crea una o ejecuta el seed para poblar el flujo.",
-      "loadError": "No se pudieron cargar las reservas."
+      "summary": "{total} en total · {pipeline} en curso · La Habana {time}",
+      "manualBooking": "Reserva manual",
+      "loadError": "No se pudieron cargar las reservas.",
+      "views": {
+        "label": "Vistas guardadas",
+        "all": "Todas las reservas",
+        "attention": "Rojo y ámbar",
+        "arriving": "Llegan en ≤ 7 días"
+      },
+      "states": {
+        "title": "Máquina de estados · spec §4.2",
+        "hint": "Pulse un estado para filtrar."
+      },
+      "filters": {
+        "travelDate": "Fecha de viaje",
+        "anyDate": "Cualquier fecha",
+        "windows": {
+          "next30": "Próximos 30 días",
+          "next90": "Próximos 90 días",
+          "thisMonth": "Este mes",
+          "past": "Pasadas"
+        },
+        "province": "Provincia",
+        "allProvinces": "Todas las provincias",
+        "clear": "Quitar filtros"
+      },
+      "table": {
+        "showing": "Se muestran {shown} de {total} · ordenadas por plazo, las más urgentes primero",
+        "clock": "Plazo",
+        "code": "Código",
+        "traveler": "Viajero",
+        "packageDates": "Paquete · fechas",
+        "state": "Estado",
+        "dispatch": "Despacho",
+        "total": "Total",
+        "paid": "Pagado",
+        "totalPaid": "Total · pagado",
+        "paidAmount": "{amount} pagado",
+        "open": "Abrir",
+        "openLabel": "Abrir {code}",
+        "custom": "Itinerario a medida",
+        "dispatchOf": "{accepted} de {total}",
+        "left": "quedan {time}",
+        "expired": "Vencido"
+      },
+      "empty": {
+        "title": "No hay nada en este estado ahora",
+        "hint": "Pruebe \"Quitar filtros\" u otra vista guardada."
+      },
+      "pagination": {
+        "label": "Páginas",
+        "previous": "Página anterior",
+        "next": "Página siguiente",
+        "page": "Página {page} de {pages}"
+      },
+      "legend": {
+        "title": "Quién actúa en cada estado",
+        "description": "El mismo vocabulario que el seguimiento \"Mis viajes\" del viajero (hoja DS 03); el administrador ve el estado del sistema y el viajero, la etiqueta.",
+        "state": "Estado del sistema",
+        "sees": "El viajero ve",
+        "who": "Quién actúa",
+        "clock": "Plazo",
+        "leaves": "Pasa a",
+        "whoActs": {
+          "DRAFT": "Ops Admin completa el alta y la envía.",
+          "ITINERARY_SUBMITTED": "Ops Admin inicia el despacho desde las tareas del panel.",
+          "DISPATCH_IN_PROGRESS": "Los trabajadores aceptan o rechazan cada oferta. El mostrador vigila la matriz y llama en ámbar.",
+          "ASSEMBLY_AND_ESCALATION": "Todos los servicios están aceptados. Ops Admin revisa el conjunto y lo pasa a facturación.",
+          "SECURED_AND_INVOICED": "Ops Admin crea el enlace de pago en la reserva.",
+          "PENDING_PAYMENT": "El viajero paga por transferencia; el mostrador confirma el cobro.",
+          "ACTION_REQUIRED": "Ops Admin redespacha desde el panel u ofrece una alternativa al viajero.",
+          "CONFIRMED": "Sistema: bono, órdenes de trabajo y factura.",
+          "IN_PROGRESS": "Mostrador: incidencias y deber de cuidado.",
+          "COMPLETED": "Sistema: invitación a opinar y reloj de retención.",
+          "CANCELLED": "Ops Admin aplica la política de cancelación."
+        },
+        "clocks": {
+          "DRAFT": "—",
+          "ITINERARY_SUBMITTED": "—",
+          "DISPATCH_IN_PROGRESS": "2 h por oferta · 30 min si la llegada es en menos de 48 h · ámbar al 75 %",
+          "ASSEMBLY_AND_ESCALATION": "—",
+          "SECURED_AND_INVOICED": "—",
+          "PENDING_PAYMENT": "—",
+          "ACTION_REQUIRED": "Rojo en el panel hasta el redespacho",
+          "CONFIRMED": "Documentos al confirmar",
+          "IN_PROGRESS": "—",
+          "COMPLETED": "Aviso de retención a los 6 meses y 30 días de gracia",
+          "CANCELLED": "—"
+        }
+      }
     },
     "picker": {
       "label": "Reserva",
@@ -675,38 +758,72 @@
       "open": "Abrir"
     },
     "reservation": {
-      "backToPipeline": "← Flujo",
-      "booking": "Reserva",
-      "bookingDescription": "Las transiciones de estado las gobierna la máquina de estados del dominio.",
-      "traveler": "Viajero",
-      "dates": "Fechas",
-      "total": "Total",
-      "services": "Servicios",
-      "dutyOfCare": "Deber de diligencia",
+      "breadcrumbLabel": "Ruta de navegación",
+      "breadcrumb": "Reservas",
+      "summary": "{traveler} · {dates} · {nights, plural, one {# noche} other {# noches}} · {package}",
+      "created": "creada el {date} a las {time}, hora de La Habana",
+      "custom": "itinerario a medida",
+      "kpi": {
+        "label": "Cifras de la reserva",
+        "total": "Total · {currency}",
+        "services": "{count, plural, one {# servicio} other {# servicios}}",
+        "cost": "Coste de proveedores",
+        "margin": "margen {rate}",
+        "noCost": "aún sin tarifas de pago",
+        "dispatch": "Despacho",
+        "dispatchOf": "{accepted} de {total}",
+        "dispatchNote": "servicios aceptados por un trabajador",
+        "paid": "Pagado",
+        "paidOf": "de {total}"
+      },
+      "timeline": {
+        "title": "Avance",
+        "steps": {
+          "ITINERARY_SUBMITTED": "Enviada",
+          "DISPATCH_IN_PROGRESS": "Despachada",
+          "ASSEMBLY_AND_ESCALATION": "Montaje",
+          "SECURED_AND_INVOICED": "Asegurada y facturada",
+          "PENDING_PAYMENT": "Pago pendiente",
+          "CONFIRMED": "Confirmada · documentos",
+          "IN_PROGRESS": "En viaje",
+          "COMPLETED": "Completada"
+        },
+        "progress": "Paso {step} de {total} · {label}",
+        "draft": "Aún no enviada",
+        "cancelled": "Cancelada"
+      },
+      "actions": {
+        "title": "Acciones",
+        "description": "Los pasos que la máquina de estados permite desde aquí (spec §4.2) y la clasificación turística de la reserva.",
+        "messages": "Mensajes con el viajero"
+      },
+      "services": {
+        "title": "Servicios",
+        "service": "Servicio",
+        "worker": "Trabajador",
+        "status": "Estado",
+        "payout": "Pago",
+        "act": "Acciones",
+        "empty": "Esta reserva aún no tiene servicios.",
+        "call": "Llamar",
+        "startHint": "Ofrece cada servicio al siguiente trabajador cualificado.",
+        "rule": "Estados de cada servicio: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un redespacho retira la oferta abierta y lo anota en el registro de auditoría. Las tarifas de pago son el neto del proveedor; el viajero nunca ve esta columna."
+      },
+      "payments": "Pagos",
+      "paymentsDescription": "Los enlaces de pago se generan en SECURED_AND_INVOICED; al confirmar se liquidan los fondos y se confirma la reserva.",
+      "dutyOfCare": "Deber de cuidado",
       "dutyOfCareDescription": "Incidencias registradas en esta reserva (spec §4.9.4).",
       "noIncidents": "No hay incidencias registradas.",
       "resolved": "Resuelta",
       "open": "Abierta",
-      "payments": "Pagos",
-      "paymentsDescription": "Los enlaces de pago se generan en SECURED_AND_INVOICED; confirmar acredita los fondos y confirma la reserva.",
-      "serviceItems": "Servicios",
-      "components": "{count} componente(s)",
-      "noServiceItems": "Esta reserva aún no tiene servicios.",
-      "type": "Tipo",
-      "status": "Estado",
-      "province": "Provincia",
-      "starts": "Inicio",
-      "ends": "Fin",
-      "supplier": "Proveedor",
-      "unassigned": "Sin asignar",
       "documents": "Documentos",
-      "generatedFiles": "{count} archivo(s) generado(s)",
-      "noDocuments": "Aún no hay documentos. Confirma la reserva o usa la página Documentos para regenerarlos.",
+      "documentsDescription": "Se generan en CONFIRMED; cada PDF lleva la licencia MINTUR en su pie.",
+      "noDocuments": "Aún no hay documentos. Confirme la reserva o use la página Documentos para regenerarlos.",
       "downloadPdf": "Descargar PDF",
       "auditTrail": "Registro de auditoría",
-      "auditEvents": "{count} evento(s), del más reciente al más antiguo",
+      "auditEvents": "{count, plural, one {# evento} other {# eventos}}, los más recientes primero",
       "noAudit": "No hay eventos de auditoría.",
-      "system": "sistema"
+      "system": "Sistema"
     },
     "reservationActions": {
       "viewOnly": "Tu rol puede ver esta reserva pero no cambiar su estado.",

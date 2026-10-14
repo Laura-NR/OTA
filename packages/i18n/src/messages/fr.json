@@ -659,15 +659,98 @@
       "dates": "Dates",
       "total": "Total"
     },
-    "board": {
+    "bookings": {
       "title": "Réservations",
-      "description": "Le pipeline des opérations, groupé par statut. Ouvrez une réservation pour la faire évoluer, l'inspecter et l'auditer.",
-      "newReservation": "Nouvelle réservation",
-      "pipeline": "Pipeline",
-      "bookings": "{count} réservation(s)",
-      "serviceItems": "{count} service(s)",
-      "empty": "Aucune réservation pour l'instant. Créez-en une ou lancez le seed pour remplir le pipeline.",
-      "loadError": "Impossible de charger les réservations."
+      "summary": "{total} au total · {pipeline} en cours · La Havane {time}",
+      "manualBooking": "Réservation manuelle",
+      "loadError": "Impossible de charger les réservations.",
+      "views": {
+        "label": "Vues enregistrées",
+        "all": "Toutes les réservations",
+        "attention": "Rouge et orange",
+        "arriving": "Arrivée ≤ 7 jours"
+      },
+      "states": {
+        "title": "Machine à états · spec §4.2",
+        "hint": "Cliquez sur un état pour filtrer."
+      },
+      "filters": {
+        "travelDate": "Date du voyage",
+        "anyDate": "Toutes les dates",
+        "windows": {
+          "next30": "30 prochains jours",
+          "next90": "90 prochains jours",
+          "thisMonth": "Ce mois-ci",
+          "past": "Passées"
+        },
+        "province": "Province",
+        "allProvinces": "Toutes les provinces",
+        "clear": "Effacer les filtres"
+      },
+      "table": {
+        "showing": "{shown} sur {total} · triées par délai, les plus urgentes d'abord",
+        "clock": "Délai",
+        "code": "Code",
+        "traveler": "Voyageur",
+        "packageDates": "Circuit · dates",
+        "state": "État",
+        "dispatch": "Dispatch",
+        "total": "Total",
+        "paid": "Payé",
+        "totalPaid": "Total · payé",
+        "paidAmount": "{amount} payé",
+        "open": "Ouvrir",
+        "openLabel": "Ouvrir {code}",
+        "custom": "Itinéraire sur mesure",
+        "dispatchOf": "{accepted} sur {total}",
+        "left": "{time} restantes",
+        "expired": "Expiré"
+      },
+      "empty": {
+        "title": "Rien dans cet état pour le moment",
+        "hint": "Essayez « Effacer les filtres » ou une autre vue enregistrée."
+      },
+      "pagination": {
+        "label": "Pages",
+        "previous": "Page précédente",
+        "next": "Page suivante",
+        "page": "Page {page} sur {pages}"
+      },
+      "legend": {
+        "title": "Qui agit à chaque état",
+        "description": "Le même vocabulaire que le suivi « Mes voyages » du voyageur (planche DS 03) ; l'administrateur voit l'état système, le voyageur le libellé.",
+        "state": "État système",
+        "sees": "Le voyageur voit",
+        "who": "Qui agit",
+        "clock": "Délai",
+        "leaves": "Passe à",
+        "whoActs": {
+          "DRAFT": "L'Ops Admin complète la saisie puis la soumet.",
+          "ITINERARY_SUBMITTED": "L'Ops Admin lance le dispatch depuis les tâches du tableau de bord.",
+          "DISPATCH_IN_PROGRESS": "Les prestataires acceptent ou refusent chaque offre. Le bureau suit la matrice et appelle à l'orange.",
+          "ASSEMBLY_AND_ESCALATION": "Tous les services sont acceptés. L'Ops Admin vérifie l'ensemble et le passe en facturation.",
+          "SECURED_AND_INVOICED": "L'Ops Admin crée le lien de paiement sur la réservation.",
+          "PENDING_PAYMENT": "Le voyageur paie par virement ; le bureau confirme l'encaissement.",
+          "ACTION_REQUIRED": "L'Ops Admin relance le dispatch depuis le tableau de bord, ou propose une alternative au voyageur.",
+          "CONFIRMED": "Système : bon d'échange, ordres de travail et facture.",
+          "IN_PROGRESS": "Bureau : incidents et devoir de vigilance.",
+          "COMPLETED": "Système : invitation à laisser un avis et horloge de conservation.",
+          "CANCELLED": "L'Ops Admin applique la politique d'annulation."
+        },
+        "clocks": {
+          "DRAFT": "—",
+          "ITINERARY_SUBMITTED": "—",
+          "DISPATCH_IN_PROGRESS": "2 h par offre · 30 min si l'arrivée a lieu dans moins de 48 h · orange à 75 %",
+          "ASSEMBLY_AND_ESCALATION": "—",
+          "SECURED_AND_INVOICED": "—",
+          "PENDING_PAYMENT": "—",
+          "ACTION_REQUIRED": "Rouge sur le tableau de bord jusqu'au nouveau dispatch",
+          "CONFIRMED": "Documents à la confirmation",
+          "IN_PROGRESS": "—",
+          "COMPLETED": "Avis de conservation à 6 mois, puis 30 jours de grâce",
+          "CANCELLED": "—"
+        }
+      }
     },
     "picker": {
       "label": "Réservation",
@@ -675,38 +758,72 @@
       "open": "Ouvrir"
     },
     "reservation": {
-      "backToPipeline": "← Pipeline",
-      "booking": "Réservation",
-      "bookingDescription": "Les transitions de statut sont régies par la machine à états du domaine.",
-      "traveler": "Voyageur",
-      "dates": "Dates",
-      "total": "Total",
-      "services": "Services",
-      "dutyOfCare": "Devoir de diligence",
+      "breadcrumbLabel": "Fil d'Ariane",
+      "breadcrumb": "Réservations",
+      "summary": "{traveler} · {dates} · {nights, plural, one {# nuit} other {# nuits}} · {package}",
+      "created": "créée le {date} à {time}, heure de La Havane",
+      "custom": "itinéraire sur mesure",
+      "kpi": {
+        "label": "Chiffres de la réservation",
+        "total": "Total · {currency}",
+        "services": "{count, plural, one {# service} other {# services}}",
+        "cost": "Coût prestataires",
+        "margin": "marge {rate}",
+        "noCost": "pas encore de tarifs prestataires",
+        "dispatch": "Dispatch",
+        "dispatchOf": "{accepted} sur {total}",
+        "dispatchNote": "services acceptés par un prestataire",
+        "paid": "Payé",
+        "paidOf": "sur {total}"
+      },
+      "timeline": {
+        "title": "Avancement",
+        "steps": {
+          "ITINERARY_SUBMITTED": "Soumise",
+          "DISPATCH_IN_PROGRESS": "Dispatchée",
+          "ASSEMBLY_AND_ESCALATION": "Assemblage",
+          "SECURED_AND_INVOICED": "Sécurisée et facturée",
+          "PENDING_PAYMENT": "Paiement en attente",
+          "CONFIRMED": "Confirmée · documents",
+          "IN_PROGRESS": "En voyage",
+          "COMPLETED": "Terminée"
+        },
+        "progress": "Étape {step} sur {total} · {label}",
+        "draft": "Pas encore soumise",
+        "cancelled": "Annulée"
+      },
+      "actions": {
+        "title": "Actions",
+        "description": "Les passages que la machine à états autorise d'ici (spec §4.2), et la classification touristique de la réservation.",
+        "messages": "Messages avec le voyageur"
+      },
+      "services": {
+        "title": "Services",
+        "service": "Service",
+        "worker": "Prestataire",
+        "status": "État",
+        "payout": "Rémunération",
+        "act": "Actions",
+        "empty": "Cette réservation n'a pas encore de services.",
+        "call": "Appeler",
+        "startHint": "Propose chaque service au prochain prestataire qualifié.",
+        "rule": "États d'un service : UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un nouveau dispatch retire l'offre ouverte et l'inscrit au journal d'audit. Les rémunérations sont le net du prestataire ; le voyageur ne voit jamais cette colonne."
+      },
+      "payments": "Paiements",
+      "paymentsDescription": "Les liens de paiement sont générés en SECURED_AND_INVOICED ; la confirmation encaisse les fonds et confirme la réservation.",
+      "dutyOfCare": "Devoir de vigilance",
       "dutyOfCareDescription": "Incidents enregistrés sur cette réservation (spec §4.9.4).",
       "noIncidents": "Aucun incident enregistré.",
       "resolved": "Résolu",
       "open": "Ouvert",
-      "payments": "Paiements",
-      "paymentsDescription": "Les liens de paiement sont générés à SECURED_AND_INVOICED ; la confirmation encaisse les fonds et confirme la réservation.",
-      "serviceItems": "Prestations",
-      "components": "{count} composant(s)",
-      "noServiceItems": "Aucune prestation sur cette réservation pour l'instant.",
-      "type": "Type",
-      "status": "Statut",
-      "province": "Province",
-      "starts": "Début",
-      "ends": "Fin",
-      "supplier": "Fournisseur",
-      "unassigned": "Non attribué",
       "documents": "Documents",
-      "generatedFiles": "{count} fichier(s) généré(s)",
-      "noDocuments": "Aucun document pour l'instant. Confirmez la réservation ou utilisez la page Documents pour les régénérer.",
+      "documentsDescription": "Générés en CONFIRMED ; chaque PDF porte la licence MINTUR en pied de page.",
+      "noDocuments": "Pas encore de documents. Confirmez la réservation ou utilisez la page Documents pour les régénérer.",
       "downloadPdf": "Télécharger le PDF",
-      "auditTrail": "Piste d'audit",
-      "auditEvents": "{count} événement(s), du plus récent au plus ancien",
+      "auditTrail": "Journal d'audit",
+      "auditEvents": "{count, plural, one {# événement} other {# événements}}, du plus récent au plus ancien",
       "noAudit": "Aucun événement d'audit.",
-      "system": "système"
+      "system": "Système"
     },
     "reservationActions": {
       "viewOnly": "Votre rôle peut consulter cette réservation mais pas changer son statut.",
