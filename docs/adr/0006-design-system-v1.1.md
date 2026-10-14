@@ -1,7 +1,7 @@
 # ADR 0006 — Design system v1.1: the Vereda canvas replaces docs/design.md
 
 - **Date:** 2026-10-13
-- **Status:** Accepted; amended 2026-10-14 for handoff v1.2 and for change request 02 (see the end)
+- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phase 3 (see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `design/vereda-v1.1/` (design handoff v1.1), `docs/design-v1.1-plan.md`,
   `docs/design-change-request-01.md`, `packages/theming`, `packages/ui`, `packages/config`
@@ -153,3 +153,54 @@ These rules apply the existing tokens; none adds a token, so none needs T-Signof
 - **Renders (B6).** The `.dc.html` source stays the reference for the admin,
   worker and Ops Lite boards. Renders are welcome but not waited for.
 
+
+## Amendment, 2026-10-14: Phase 3 customer pages, resolved by the build
+
+Phase 3 built Home, Destinations, Destination, Packages, Compare, Package,
+Account, sign-in, Join and the bank transfer page on today's data. As the
+owner asked, the build resolved what the boards leave open with the existing
+tokens; no token was added.
+
+- **Sizes (B2 snaps, applied):**
+  - 44 px titles (Destinations, Package) → 48 (`display-2`); Destination's 48
+    is already `display-2`;
+  - 36 px figures and headings (Why tiles, custom band) → 40 (`h1`);
+  - 28/36 section headings → `h1-compact` (28/34); 24/28–30 destination names
+    → `h3` (24/32) in the display face;
+  - 15 px running text (Why points, conditions rows, filter labels) → 16
+    (`body`);
+  - the map's 11 and 12 px labels stay in map units: they scale with the
+    drawing, so they are geometry, not a type size.
+- **Radii:** 16 px (hero photo, custom band) → `lg`.
+- **Colours:**
+  - the photo tints (`#B9CFD6`, `#E3B9A6`, `#DCC9B6`) → `bg-sunken` with the
+    "Photo to come" slot Phase 2 uses, until photography exists;
+  - map layers: coverage per B1 (`success-200`, `warning-100` dashed, hatched
+    `neutral-100`/`neutral-300`), conditions on the `-100` tones with `-600`
+    strokes, route stops `secondary-600`;
+  - Join's figure tiles: `neutral-0` at 10 % on `primary-700`, an opacity of an
+    existing token.
+- **Interaction:** Package uses the DS 03 tabs; Destination's section row is
+  anchors (no scroll spy yet); Account sections are links (`?tab=`), a sidebar
+  from `lg` and tabs below it; the Compare selection lives in the tab's session
+  storage; the DS 03 Stepper's phone bar fills to the furthest step reached.
+- **One copy set per route.** The M-* boards' shortened strings are not used;
+  a phone shows the desktop copy.
+- **Not drawn, because the data or a decision is missing:**
+  - reviews and testimonials (the boards' are samples; real ones need consent);
+    hosts' portraits (written consent); the 30-day power history (a conditions
+    feed, A-Content);
+  - Search's "When" and "Travelers", package categories, pace, group size,
+    tiers, departures and Save (M1, M2, saved trips);
+  - deposit or full, deadline, proof upload, sanctions notice and the card and
+    open-banking rails (M4, counsel, Q10);
+  - Join's national ID, municipalities, languages and licence photo (M-batch, a
+    public upload);
+  - Events links and "Request event access" to Concierge (M10; the request goes
+    to the Support form);
+  - passkey, Google and Apple sign-in (Q5).
+- **Truth over sample.** Copy that states how the system behaves says what it
+  does today: sign-in links expire "after a few minutes" (Better Auth's 300 s,
+  not the board's 15 minutes) and the data note follows the retention lifecycle
+  (ADR 0004). The booking pill reads "Request to book", which Vereda's tenant
+  overrides with its own "Request · 24 h".

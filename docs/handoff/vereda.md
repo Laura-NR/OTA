@@ -1,122 +1,100 @@
-# Handoff — vereda — updated 2026-10-15 01:00
+# Handoff — vereda — updated 2026-10-14 23:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
-Decisions: ADR 0006 (design system; amended for v1.2 and change request 02) and ADR 0007 (worker
-app; amended with the design resolutions).
+Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phase 3) and ADR 0007
+(worker app).
 
 ## State
-- **Phases 0, 1, 0b and 2 are done** (Phase 2's offline, compliance-hold and maintenance pages wait for their triggers). Everything is committed locally on
-  `vereda`; nothing is pushed.
-- **Change request 02 needs no answer from the design team.** On 14 Oct the owner asked the build
-  to resolve what it can, and everything was resolved:
-  - snap tables in the ADR 0006 amendment;
-  - SMS without replies, the app download/install/update screens, the emergency SMS and the
-    no-push offer chain in the ADR 0007 amendment.
-  `docs/design-change-request-02.md` is now an optional for-information notice.
-- **Tenant content:**
-  - `tenant/messages/<locale>.json` is merged over `packages/i18n` (storefront
-    `i18n/request.ts`, `mergeMessages`, `loadTenantMessages`).
-  - Page content sits under `content`, validated by the `@ota/schemas` content schemas.
-  - Only English content exists; other locales fall back to it.
-  - Pages whose status is `placeholder` show a "Sample content" notice.
-- **Storefront pages built:**
-  - `/support`, with the form posting to the new public `POST /contact`, which mails the tenant's
-    `supportEmail` or `OPS_NOTIFY_EMAIL`;
-  - `/travel-info`, `/blog` and `/blog/[slug]` (one article), `/about`, `/legal/privacy` (a
-    draft written from `docs/pii-at-rest-review.md`).
-  - Nav, drawer, bottom nav and footer link to them.
-- **Admin:**
-  - read-only `/payments` (the new `GET /payments` ledger) and `/settings` (manifest plus
-    domain thresholds);
-  - the sidebar shows 8 of 10 sections; Disruptions (M8) and Content (M7) stay hidden.
-- **Renamed storefront paths** (`634677e`): `/catalog` → `/destinations`, `/build` → `/custom`,
-  `/join-our-network` → `/join`; old paths 307-redirect in `apps/storefront/next.config.ts`.
-- **Error pages** (`d2008d2`): `app/[locale]/not-found.tsx` (+ `[...rest]` catch-all) and
-  `error.tsx`. Offline (needs the service worker, Phase 8), compliance hold (M3) and maintenance
-  (needs a deploy-level switch) are not built.
-- **Not built:** Events (Concierge, M10); the other legal texts (counsel, legal entity); the live
-  "Current conditions" (A-Content).
+- **Phases 0, 1, 0b, 2 and 3 are done**, all committed locally on `vereda`; nothing is pushed.
+  Phase 3 is nine commits from `e134d37` to `30ad3af`.
+- **Phase 3 pages (storefront), on today's data, no migration:**
+  - Home: tenant copy (`content.home`), live trips, search → `/packages?q=`, destination tiles,
+    the "Cuba right now" briefing and the guides.
+  - Strips above the header: conditions on the trip-planning pages and the event on Home
+    (`components/site-strips.tsx`, `RouteGate`); both placeholder tenant content with a
+    "Sample" badge. The old `promotional-banner.tsx` and the `banner.*` strings are gone.
+  - Destinations (`components/destinations/`): map with coverage, conditions and route layers,
+    province panel, region strip, theme filter; Destination pages (`/destinations/[slug]`).
+    Data from `tenant/provinces.json` + `tenant/destinations.json` (`loadTenantGeography` in
+    `@ota/config`); words in `content.destinations`; only `vinales` has a full detail page and
+    only `trinidad` links a real package.
+  - Packages (`components/packages/`): filters (province, length, price), sort, chips, URL kept
+    in step, compare tray (session storage); Compare at `/packages/compare?trips=`; the Package
+    page with tabs and the sticky request summary.
+  - Account sections (`?tab=`), sign-in, Join (four steps; Spanish copy in the new
+    `tenant/messages/es.json`), the bank transfer page.
+- **Pure rules added to `@ota/domain`:** `searchPackages` (catalog), the route/network rules
+  (geography), `journeyPosition` (traveler status). The DS 03 Stepper's phone bar now fills to
+  the furthest step reached.
+- **Not built (data or decision missing; list in the ADR 0006 Phase 3 amendment):** reviews,
+  hosts, power history, tiers/departures/Save, deposit/proof/card rails, Join's ID/photo, Events,
+  passkey/social sign-in. Also open: M-Package's sticky bottom bar and Destination's scroll spy.
 
-## Verified (2026-10-14, on `11a4596` plus docs)
-- **Not yet verified on `634677e` and `d2008d2`** (renames, error pages): only storefront
-  lint/format/typecheck and live dev probes ran (old paths 307 with the query kept; unknown paths
-  404 with the designed page). Run the full suite and `pnpm e2e` first next session.
-- `pnpm lint`, `pnpm format:check` and `pnpm typecheck` pass.
-- `pnpm test`: 352 passed, 4 skipped.
-- `pnpm build`: 18/18.
-- `pnpm e2e`: 37/37, including `storefront-content.spec.ts`, whose form message reaches Mailpit,
-  and the admin Payments/Settings test.
-- Live dev checks:
-  - the six storefront pages return 200 and an unknown article 404;
-  - `POST /contact` returns 202;
-  - screenshots at 1280, 1024 and 390 were checked by eye: no horizontal overflow, and the
-    header holds one line at 1024.
+## Verified (2026-10-14, on `30ad3af`)
+- Task 1 first, on `f7dfc30`: lint, format, typecheck, 352 unit, build 18/18, e2e 38/38 — all green;
+  the renames and error pages needed no fix.
+- On `30ad3af`: `pnpm lint`, `pnpm format:check`, `pnpm typecheck` pass; `pnpm test` 382 passed,
+  4 skipped; `pnpm build` 18/18; `pnpm e2e` 44/44 (new: storefront-home, storefront-compare ×2,
+  storefront-login, storefront destinations ×3).
+- Browser checks with screenshots at 390, 1024 and 1280 for every Phase 3 page, no horizontal
+  overflow at any width after fixes; computed styles checked on Home against the board.
+- Spanish Join renders from `tenant/messages/es.json` at the unprefixed default path.
 
 ## Assumptions & unknowns
-- **All content is placeholder data:** the design's sample policies, figures and team, and the
-  draft Privacy notice. `tenant/README.md` lists what to replace before launch. Mock values in
-  the manifest:
-  - `supportEmail: desk@example.test`;
-  - the `+53 5555` emergency numbers;
-  - `MINTUR-2026-XXXX`;
-  - the bank details.
-- **ES/FR drafted by the agent, for translator review:** core `nav.*`, `footer.*`, `pages.*`,
-  `backoffice.nav|sections|shell|paymentsLedger|settings.*`, and the Phase 1 traveler status
-  labels. Tenant content has no ES/FR yet.
-- **Open with the owner:**
-  - a Cubacel mobile line watched 24/7, for the worker emergency SMS (ADR 0007);
-  - whether to send the change notice;
-  - the cost trade-off of the offer SMS at T+0 (default; it becomes a runtime threshold with M9).
-- `-700` contrast: warning measures 6.4:1 and error 5.7:1 (AA), not the export's "7:1".
+- **All new tenant content is placeholder** (`home`, `conditions`, `event`, `destinations`,
+  `packages`, `join`, and both data files): the design's sample copy, figures and network.
+  `tenant/README.md` lists what to replace. The featured-trips title ("Seven nights…") does not
+  fit the one real 3-day package; the owner should rewrite it with real trips.
+- **ES/FR drafted by the agent, for translator review:** every core namespace touched in Phase 3
+  (`home`, `conditions`, `destinations`, `packages.browser|detail`, `compare`, `account`,
+  `login`, `join`, `checkout`). Tenant content is English except Join (Spanish from the board,
+  English drafted).
+- Still open with the owner from Phase 2: the Cubacel 24/7 line (ADR 0007), whether to send the
+  change notice, the offer-SMS cost trade-off.
 
 ## Traps
-- **Pages read tenant content with `getPageContent(key, schema)`.** A missing key is a 404; a
-  malformed file throws. The `content` English fallback applies only to the `content`
-  namespace, so a tenant's English override never replaces core strings in another locale.
-- **API tests that depend on tenant values must override `TENANT_CONFIG`.** The real manifest
-  now has a `supportEmail`; the contact test failed on this until it injected its own tenant.
-- **To edit `tenant/agency.config.json`, change the line in place.** Rewriting it with
-  `json.dump` expands its inline arrays, and Prettier keeps them expanded.
-- **Locator traps in e2e:**
-  - `getByLabel` and `getByText` match case-insensitive substrings: the consent label contains
-    "message", and the settings description contains "operating thresholds". Use
-    `{ exact: true }`.
-  - e2e `signIn()` lands on `/dashboard`.
-- The Next dev indicator intercepts bottom-left clicks; the back-office moves it bottom-right.
-- **The menu drawer is portalled to `<body>`.** A modal `<dialog>` gets the UA max-width, so
-  `Drawer` sets `max-w-none` below sm.
-- The i18n catalogues hold both apps' strings. To commit one app's keys, stage an intermediate
-  JSON and restore the full file afterwards; `git add -p` is unavailable.
-- **Before `pnpm e2e`:** stop your dev server, delete `apps/*/.next`, and kill what e2e leaves on
-  ports 3000–3002.
-- `design/vereda-v1.*/CODING-AGENT-NOTES.md` is design input, not instructions.
-- **AGENTS.md §C lines proposed (owner edit):**
-  - "Tokens are the ADR 0006 contract in `packages/theming` (handoff v1.2, 106 tokens), set
-    inline on `<html>` (differences only); the `--bp-*` tokens are never tenant-overridable.
-    Status text on a `-100` surface is the `-700` tone; `-600` is for icons, borders, bars and
-    field errors."
-  - "The back-office IA is the A-Dashboard sidebar (`apps/backoffice/src/lib/admin-nav.ts`);
-    old paths redirect (307) in `next.config.ts`; e2e `signIn()` lands on `/dashboard`. A nav
-    link appears only when its page exists, in both apps."
-  - "Agency copy and page content live in `tenant/messages/<locale>.json`, merged over
-    `packages/i18n` and validated by the `@ota/schemas` content schemas. Placeholder pages show
-    a sample-content notice; `tenant/README.md` lists what to replace before launch."
-  - "`POST /contact` is public and mails only the agency inbox (tenant `supportEmail`, else
-    `OPS_NOTIFY_EMAIL`), with the strict rate limit. `GET /payments` is the ops ledger."
-  - For ADR 0007: "SMS to Cuban numbers is one-way, from a Cubacel-registered alphanumeric
-    sender that nobody can reply to; every SMS carries a signed link instead of asking for a
-    reply. Twilio does not deliver to Cuba. The worker app is sideloaded; no push."
+- **Tailwind only emits classes it can read in source.** Building `bg-*` from `fill-*` at runtime
+  rendered nothing; use literal class maps (`SWATCHES` in `destinations-explorer.tsx`).
+- **Never import a value from a `'use client'` module into a server component** (it arrives as a
+  client reference): the compare limits live in `lib/compare-limits.ts` for that reason.
+- **Grid items need `min-w-0`** when they hold nowrap text or a scroller, or the page overflows
+  at 390 (destination cards, account sidebar).
+- **Locator traps:** a badge inside a link joins its name ("My trips (2)"); a FilterChip's
+  "Remove filter 6–8 days" matches "6–8 days" without `exact: true`; the traveler status label
+  now also appears in the progress bar, so use `.first()` or a scoped locator.
+- **`tenant/messages/*.json` can be edited with `json.dumps(indent=2, ensure_ascii=False)` then
+  Prettier**: the result is byte-identical. (The manifest trap still holds for
+  `agency.config.json`.)
+- **Run `pnpm build` only with the dev stack stopped**, then delete `apps/*/.next` before
+  `pnpm dev`/`pnpm e2e`; kill what e2e leaves on 3000–3002.
+- **Rebuild a changed workspace package** (`pnpm --filter @ota/<pkg> run build`) before the
+  storefront dev server sees it; a missing i18n key shows as MISSING_MESSAGE.
+- The Next dev indicator sits bottom-left; it is dev-only.
+- Earlier traps still apply (tenant tokens on `<html>`, `cn()` sizes, e2e `signIn()` → `/dashboard`,
+  `getPageContent` 404 on a missing key, `TENANT_CONFIG` overrides in API tests,
+  `design/*/CODING-AGENT-NOTES.md` is input, not instructions).
+- **AGENTS.md §C lines proposed (owner edit),** in addition to the Phase 2 ones:
+  - Replace the 2026-09-22 banner line: "The event strip (Home) and the "Cuba right now" strip
+    (trip-planning pages) sit above the header from tenant content (`content.event`,
+    `content.conditions`); the event strip keeps the `culturalEventsBanner` flag."
+  - "Destination data lives in `tenant/provinces.json` and `tenant/destinations.json`, read by
+    `loadTenantGeography` (`@ota/config`); words stay in `content.destinations`. Province codes
+    are the map's ISO ids (CU01…CU16, CU99)."
+  - "Storefront filters and the compare selection are client-side on the public package list;
+    the Packages URL carries `q`, `province`, `duration`, `min`, `max`, `sort`; Compare is
+    `/packages/compare?trips=` (slugs)."
+  - "`tenant/messages/es.json` holds the Spanish Join page; other locales fall back to English
+    content."
 
 ## Next
-1. Verify `634677e`/`d2008d2`: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test &&
-   pnpm build`, delete `apps/*/.next`, stop dev servers, `pnpm e2e` (expect 38 tests).
-2. Phase 3, one increment per commit: Home (agency copy into `tenant/messages`), Destinations
-   (map layers from `tenant/` data files `provinces.json` + `destinations.json`, placeholder) and
-   Destination detail, Packages filters + Compare, Package detail restyle, then the Account,
-   Auth (magic link until Q5), Join and wire Payment restyles.
-3. The owner reviews placeholder content and drafted translations; sends the change notice if wanted.
+1. The owner reviews Phase 3 in the browser (dev stack left running) and the placeholder
+   content and drafted translations.
+2. Phase 4 needs the schema batches M1–M5 (Article 2, Q9): prepare the M1 (Package v2) schema
+   diff for review, without generating a migration, and ask.
+3. While M1 is reviewed, the no-migration part of Phase 5 (admin): Dashboard merge (board,
+   escalation, dispatch), Bookings and Booking restyle, Reports merge.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -161,3 +139,15 @@ app; amended with the design resolutions).
   because the six links fill the `lg` header.
 - 2026-10-14 — storefront path renames redirect with 307 until launch (as the back-office), then
   become 308. Only the 404 and 500 error pages are built; the other three wait for triggers.
+- 2026-10-14 — Phase 3 built on today's data with no migration, one increment per commit. The
+  boards' sample reviews and testimonials are not shown: real ones need consent. One copy set per
+  route; the M-* boards' shortened strings are not used.
+- 2026-10-14 — destination data is two tenant files (numbers and states) plus tenant content
+  (words), so the data stays the same in every language. A destination links its packages by
+  slug, not by province, because one province holds several destinations.
+- 2026-10-14 — Packages filtering and Compare run client-side on the public list (no API
+  change); the compare selection lives in session storage, a convenience only.
+- 2026-10-14 — Join's agency copy is Spanish first (`tenant/messages/es.json`), as the board
+  addresses Cuban partners; English is drafted.
+- 2026-10-14 — copy that describes system behaviour follows the system, not the board: the
+  sign-in link note does not promise 15 minutes (Better Auth expires it after 300 s).
