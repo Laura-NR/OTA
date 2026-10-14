@@ -1,7 +1,7 @@
 # ADR 0006 — Design system v1.1: the Vereda canvas replaces docs/design.md
 
 - **Date:** 2026-10-13
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-10-14 for handoff v1.2 (see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `design/vereda-v1.1/` (design handoff v1.1), `docs/design-v1.1-plan.md`,
   `docs/design-change-request-01.md`, `packages/theming`, `packages/ui`, `packages/config`
@@ -42,8 +42,8 @@ retired and now points here.**
   sent back to the design team as change request 01. Examples: semantic `-700` text tones → `-600`;
   13 px → 12/14 px; 10 px radius → 8 px. The motion tokens are built from DS-Handoff's own values
   (120/200/320 ms), not from the `0ms` export, which is an export bug (A1).
-- **Breakpoints.** DS 07: `sm` 480, `md` 768, `lg` 1024, `xl` 1280; there is no `2xl`. The export
-  does not carry them yet (A5).
+- **Breakpoints.** DS 07: `sm` 480, `md` 768, `lg` 1024, `xl` 1280; there is no `2xl`. The v1.1
+  export did not carry them (A5); v1.2 does, as `--bp-*`.
 - **Fonts.** Fraunces (variable, wght + opsz), Inter (variable, wght) and IBM Plex Mono (400, 500),
   Latin subset, self-hosted from the Fontsource 5.3.0 builds (SIL OFL) in `tenant/assets/fonts/`
   and loaded with `next/font/local`. Bricolage Grotesque is removed.
@@ -85,3 +85,31 @@ retired and now points here.**
 - **Take the board values literally.** That would put 40 untokenised colours and a dozen
   off-scale sizes into the core, against the design's own token rule.
 - **`lucide-react`.** It adds a runtime dependency, while the design contract specifies a sprite.
+
+## Amendment, 2026-10-14: handoff v1.2
+
+The design team answered change request 01 with handoff v1.2 (`design/vereda-v1.2/`,
+`docs/design-change-response-01.md`); the verification is `docs/design-v1.1-plan.md` §1.3. The
+token contract moves to the v1.2 export (106 tokens) and replaces the snaps above:
+
+- **Dark tones are tokens, not snaps (A2).** `success/warning/error/info-700` are the text on a
+  `-100` surface, `-200` the alert and pill borders, `warning-500` the attention-pill border; also
+  `primary-50/200`, `accent-50/700` and `neutral-600`. Badges, alerts, the tinted crisis banners and
+  the admin row tints use them. **Field errors stay `error-600`**, 14/20, because T-Forms and DS 02
+  draw them there (A3).
+- **Sizes (A3).** `--text-label` (600 13/16: pills, tabs, badges) and `--text-nav` (500 15/20:
+  primary navigation) are component tokens; `--text-h1-compact` (28/34) and `--text-h2-compact`
+  (22/28, display face) are aliases. Other off-scale sizes snap per the export's table.
+- **Radii (A4)** snap per the export's table; no new radius.
+- **Breakpoints (A5)** are primitives (`--bp-sm/md/lg/xl`) declared in `styles.css` and copied into
+  the Tailwind screens. A media query cannot read a custom property, so a tenant cannot override
+  them and `@ota/theming` never emits them.
+- **Focus ring (A6)** is primary-600 (8.4:1 on the cream page).
+- **`--color-text-on-primary` (A7)** is part of the export's alias tier. It is still the one alias
+  that the tenant compiler switches (to `neutral-900` on a light primary).
+- **A tenant's brand colour** now derives six primary steps: 700, 600, 500, 200, 100 and 50.
+  Except at 500, these reproduce the design teal exactly.
+- **The palette key stays `vereda` (A8).** The design team answered "Isla Abierta only", but they
+  answered a draft of the request written before the owner's rename. The owner's decision stands,
+  and change request 02 raises it again. An unknown palette still falls back to `vereda`.
+

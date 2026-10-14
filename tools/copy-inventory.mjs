@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * Read one screen's copy from the design's copy inventory
- * (design/vereda-v1.1/handoff/copy-inventory.json) while building it.
+ * (design/vereda-v1.2/handoff/copy-inventory.json) while building it.
  *
- *   node tools/copy-inventory.mjs <Screen> [--kind text|aria-label|placeholder|page-title]
+ *   node tools/copy-inventory.mjs <Screen> [--kind text|aria-label|placeholder|page-title|alt]
  *                                          [--skip-chrome] [--json <namespace>]
  *
  * Without --json it lists the strings in board order with their inventory key, kind and
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const inventory = JSON.parse(
-  readFileSync(join(root, 'design/vereda-v1.1/handoff/copy-inventory.json'), 'utf8'),
+  readFileSync(join(root, 'design/vereda-v1.2/handoff/copy-inventory.json'), 'utf8'),
 );
 
 const args = process.argv.slice(2);

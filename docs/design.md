@@ -7,12 +7,15 @@ handoff v1.1 (`docs/adr/0006-design-system-v1.1.md`). That earlier text is in gi
 
 Where the design system lives now:
 
-- **The design:** `design/vereda-v1.1/`. Start with `HANDOFF.md`; the boards are in `project/`, the
-  tokens in `handoff/tokens.css`, the screens in `handoff/SCREENS.md` and the copy in
-  `handoff/copy-inventory.json`. Use the canvas (version "Handoff v1.1") for visual checks and the
-  `.dc.html` source for values.
+- **The design:** `design/vereda-v1.2/` (handoff v1.2, 14 Oct 2026; `design/vereda-v1.1/` is kept
+  for the record). Start with `HANDOFF.md`; the boards are in `project/`, the tokens in
+  `handoff/tokens.css`, the screens in `handoff/SCREENS.md` and the copy in
+  `handoff/copy-inventory.json`. Use the canvas (version "Handoff v1.2") or the renders in the
+  delivery's `design-canvas/exports/` (not committed) for visual checks, and the `.dc.html` source
+  for values.
 - **The token contract in code:** `packages/theming` holds the token names and defaults and
   compiles a tenant into CSS custom properties. `packages/ui` holds the Tailwind preset and the
   components.
 - **How the build adopts it:** `docs/design-v1.1-plan.md` (gap analysis, decisions, phases).
-- **What we asked the design team to fix:** `docs/design-change-request-01.md`.
+- **What we asked the design team to fix, and their answers:** `docs/design-change-request-01.md`
+  and `docs/design-change-response-01.md`; `docs/design-change-request-02.md` is the next one.
