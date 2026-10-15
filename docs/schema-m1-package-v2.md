@@ -1,10 +1,13 @@
 # M1 Package v2: schema diff for review
 
-**Status:** **Approved 2026-10-14**: the owner took D1–D4 as recommended — D1(a) base text plus one
-`PackageTranslation` overlay row per locale; D2(a) base price + tier delta + optional departure
-price; D3(a) `status` replaces `active` with a backfill; D4(a) agency-wide terms in the tenant
-manifest, packages store policy keys only. The migration is **not yet generated** (Phase 4 work).
-The draft schema passes `prisma validate`.
+**Status:** **Approved and generated 2026-10-15.** The owner took D1–D4 as recommended and the
+migration `20261015000000_package_v2` was applied (with the hand-written backfill); commit
+`3a6f9ce`. Landed so far: the schema, the `PackageStatus` lifecycle replacing `active`, the M1
+package read model (`PackageDto` days/tiers/departures/extras/media + the new fields), pricing v2
+and the publish checks in `@ota/domain`, and the storefront Package page showing tiers,
+departures, extras and the day texts. Still to do: the ops write endpoints for tiers, departures,
+extras, days, media and translations (the Phase 5 item-6 editor), the per-locale translation
+overlay in the public API, package media storage, and retired-slug 308 redirects.
 **Date:** 2026-10-14
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M1, read against the Package, Booking and
 A-Package-Edit boards (`design/vereda-v1.2/project/`).

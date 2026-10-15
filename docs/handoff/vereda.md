@@ -8,11 +8,15 @@ ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2 and 3 are done** (committed locally on `vereda`; nothing is pushed).
-- **Phase 4 gate (resolved 2026-10-14):** the owner approved M1 with D1–D4 as recommended
-  (`docs/schema-m1-package-v2.md`, `f102a66`): base text + one `PackageTranslation` overlay row per
-  locale; base price + tier delta + optional departure price; `status` replaces `active` with a
-  backfill; agency-wide terms in the manifest. **The migration is not yet generated** — it is the
-  next Phase 4 job.
+- **Phase 4, M1 core (2026-10-15):** the owner approved D1–D4 and the migration was generated
+  (`3a6f9ce`, `20261015000000_package_v2`): the M1 catalog model (tiers, departures, extras, days,
+  media, per-locale translations, slug redirects, booking model, group/lead time, themes,
+  policies, SEO) and `PackageStatus` replacing `active` (the existing package backfilled to
+  PUBLISHED). `d93fe9c` adds package pricing v2 and the publish checks to `@ota/domain`;
+  `3c64100` extends the package read model and draws tiers, departures, extras and the day texts
+  on the storefront Package page. **Still to do:** the ops write endpoints (Phase 5 item 6, the
+  A-Package-Edit editor), the per-locale translation overlay in the public API, package media
+  storage and retired-slug 308 redirects.
 - **Phase 5, no-migration part (admin)** — six increments done:
   - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
     matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
@@ -48,9 +52,10 @@ ADR 0007 (worker app).
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
   `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
-## Verified (2026-10-14, `af0aff0`)
+## Verified (2026-10-15, `3c64100`)
 - lint, format:check, typecheck and build (18/18) are green.
-- `pnpm test`: **409 passed / 4 skipped** (api 185/3 skipped, domain 101, ui 31, config 24,
+- `pnpm test`: **419 passed / 4 skipped** (api 185/3 skipped, domain 111 (+10 for M1 pricing and
+  publish checks), ui 31, config 24,
   theming 14, schemas 14, reports 4, and the rest).
 - `pnpm e2e`: **45/45** (the reports specs updated to the merged page; one new section-anchor
   test). The dev stack was already running, so e2e reused it.
@@ -72,6 +77,13 @@ ADR 0007 (worker app).
   new `/customers` routes included), i18n parity test, `pnpm test` (29 tasks), build (18/18) and
   `pnpm e2e` **46/46** green (one new customers spec). Browser on `/customers` and a profile at
   390/1024/1280: no overflow; the account list, the trips and the retention card render.
+- M1 (`3a6f9ce`, `d93fe9c`, `3c64100`): `prisma migrate status` reports the schema up to date;
+  the dev package backfilled to PUBLISHED (`published_at` set). lint, format:check, typecheck,
+  domain tests (111), the api packages/me tests, i18n parity, `pnpm test` (29 tasks), build
+  (18/18) and `pnpm e2e` **46/46** green. Browser on the storefront
+  `/en/packages/trinidad-heritage-trail` at 390/1024/1280: no overflow; Accommodation tiers
+  (Standard included, Comfort +€120), Departures (13 Feb / 6 Mar, seats and price) and Optional
+  extras render; the itinerary shows the seeded day texts.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -126,12 +138,18 @@ ADR 0007 (worker app).
     (`customerSchema` / `customerDetailSchema`); the back-office `/customers` list and
     `/customers/[id]` profile join it to the GDPR retention state in
     `@ota/domain` `retention/retention`."
+  - "M1 Package v2: `Package.status` (`PackageStatus`) replaces `active`; only PUBLISHED shows on
+    `GET /catalog/packages`, and the read model carries `days`/`tiers`/`departures`/`extras`/`media`.
+    Package pricing is `calculatePackagePrice` and the publish gate `packagePublishIssues` in
+    `@ota/domain` `packages/`. Tenant-wide terms stay in the manifest; a package stores policy keys."
 
 ## Next
-1. Phase 4: generate the M1 migration on the approved draft (D1(a)–D4(a)) and build Package v2
-   (tiers, departures, extras, days, media, translations, slug redirects), then M2–M5.
-2. Phase 5 continues on today's data where no migration is needed: Packages + editor v2 once M1
-   lands. Batches M6–M9 are asked for as they come up.
+1. Finish M1: the ops write endpoints for tiers, departures, extras, days, media and translations
+   (the Phase 5 item-6 A-Package-Edit editor), the per-locale translation overlay in the public API,
+   package media storage and retired-slug 308 redirects. Then M2–M5 (travelers, compliance, deposit
+   schedule, proposal).
+2. Phase 5: the Packages editor v2 once the M1 endpoints exist; Content/Disruption/Settings as
+   their migrations land (M6–M9 asked for as they come up).
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -213,3 +231,8 @@ ADR 0007 (worker app).
   the list and profile show trips and the GDPR retention state. Passport, preferences, OFAC and the
   communication history wait for M2/M3. The old `/customers` → `/customers/retention` redirect is
   removed (the section home is `/customers`).
+- 2026-10-15 — M1 generated and applied (`20261015000000_package_v2`): `Package.active` replaced by
+  `status` (existing rows backfilled to PUBLISHED, `published_at` stamped) and the M1 catalog
+  tables added. The package read model, the domain pricing/publish checks and the storefront
+  tiers/departures/extras/day texts landed. The ops editor endpoints, the per-locale overlay,
+  package media storage and slug redirects follow.
