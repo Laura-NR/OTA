@@ -94,6 +94,17 @@ export const packageMediaSchema = z.object({
 
 export type PackageMediaDto = z.infer<typeof packageMediaSchema>;
 
+/** Upload one package photo; the binary is stored and the row keeps its alt. */
+export const packageMediaUploadSchema = z.object({
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  contentBase64: z.string().min(1),
+  altText: z.string().trim().min(1).max(300),
+  showsPeople: z.boolean().default(false),
+  consentReference: z.string().trim().max(200).optional(),
+});
+
+export type PackageMediaUploadRequest = z.infer<typeof packageMediaUploadSchema>;
+
 /** One locale's overlay of a package's words (M1, D1). */
 export const packageTranslationSchema = z.object({
   id: z.string().uuid(),

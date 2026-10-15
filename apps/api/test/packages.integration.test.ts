@@ -1,4 +1,5 @@
 import { PrismaClient } from '@ota/db';
+import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
@@ -8,6 +9,10 @@ import { PackagesService } from '../src/packages/packages.service';
 // Prisma Client auto-loads packages/db/.env, so DATABASE_URL is present; require
 // an explicit opt-in so the default unit suite stays database-free.
 const runIntegration = process.env.RUN_DB_INTEGRATION === '1';
+
+// A valid 1x1 PNG.
+const PNG_1X1 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
 /**
  * Live proof of the M1 package write path against Postgres: creating a package
@@ -26,7 +31,10 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient();
-    service = new PackagesService(prisma as unknown as PrismaService);
+    service = new PackagesService(
+      prisma as unknown as PrismaService,
+      new InMemoryObjectStorage(),
+    );
 
     const user = await prisma.user.create({
       data: { email: `package-e2e-${suffix}@example.test`, role: 'SUPER_ADMIN' },
@@ -141,5 +149,21 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
       (row) => row.id === packageId,
     );
     expect(publicEn?.name).toBe(`Integration Trail ${suffix}`);
+
+    // Package media: upload, serve (public refuses drafts; this one is live), delete.
+    const media = await service.uploadMedia(
+      packageId,
+      {
+        contentType: 'image/png',
+        contentBase64: PNG_1X1,
+        altText: 'A colonial street',
+        showsPeople: false,
+      },
+      actor,
+    );
+    const served = await service.readMedia(media.id, true);
+    expect(served.contentType).toBe('image/png');
+    expect(served.data.length).toBeGreaterThan(0);
+    await service.deleteMedia(packageId, media.id, actor);
   });
 });

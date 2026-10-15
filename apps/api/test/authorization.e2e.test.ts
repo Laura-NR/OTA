@@ -150,6 +150,9 @@ const ROUTES: Route[] = [
   { method: 'post', path: '/packages', allowed: 'opsWrite' },
   { method: 'patch', path: `/packages/${PACKAGE}`, allowed: 'opsWrite' },
   { method: 'put', path: `/packages/${PACKAGE}/translations/es`, allowed: 'opsWrite' },
+  { method: 'get', path: `/packages/media/${MEDIA}`, allowed: 'opsRead' },
+  { method: 'post', path: `/packages/${PACKAGE}/media`, allowed: 'opsWrite' },
+  { method: 'delete', path: `/packages/${PACKAGE}/media/${MEDIA}`, allowed: 'opsWrite' },
   { method: 'delete', path: `/packages/${PACKAGE}`, allowed: 'opsWrite' },
 
   // Suppliers + compliance.

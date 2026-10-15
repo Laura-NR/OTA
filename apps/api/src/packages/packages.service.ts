@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 
 import type {
   InventoryItem,
@@ -17,12 +23,16 @@ import type {
   CreatePackageRequest,
   ListPackagesQuery,
   PackageDto,
+  PackageMediaDto,
+  PackageMediaUploadRequest,
   PutPackageTranslationRequest,
   UpdatePackageRequest,
 } from '@ota/schemas';
+import type { ObjectStorage } from '@ota/storage';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
+import { OBJECT_STORAGE } from '../storage/storage.module';
 
 type ServiceWithItem = PackageService & {
   inventoryItem: InventoryItem & { media: InventoryMedia[] };
@@ -303,6 +313,23 @@ function overlayPackage(dto: PackageDto, locale: string | undefined): PackageDto
   };
 }
 
+const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
+const MEDIA_EXTENSION: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+const EXTENSION_CONTENT_TYPE: Record<string, string> = {
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+};
+
+function packageMediaKey(packageId: string, contentType: string): string {
+  const extension = MEDIA_EXTENSION[contentType] ?? 'bin';
+  return `packages/${packageId}/${randomUUID()}.${extension}`;
+}
+
 /**
  * Curated package catalogue (spec §3.3). Packages are templates; booking one
  * expands its service list into a Reservation via MeService, so the dispatch
@@ -310,7 +337,10 @@ function overlayPackage(dto: PackageDto, locale: string | undefined): PackageDto
  */
 @Injectable()
 export class PackagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+  ) {}
 
   async list(filters: ListPackagesQuery): Promise<PackageDto[]> {
     const where: Prisma.PackageWhereInput = {};
@@ -574,6 +604,86 @@ export class PackagesService {
     // Services cascade; reservations keep their history via ON DELETE SET NULL.
     await this.prisma.package.delete({ where: { id } });
     await this.audit(actor, 'package.deleted', id);
+  }
+
+  /** Store a package photo (M1); the row keeps its alt text and consent. */
+  async uploadMedia(
+    id: string,
+    input: PackageMediaUploadRequest,
+    actor: AuthUser,
+  ): Promise<PackageMediaDto> {
+    await this.loadPackage(id);
+
+    const data = Buffer.from(input.contentBase64, 'base64');
+    if (data.length === 0) {
+      throw new BadRequestException('Media file is empty');
+    }
+    if (data.length > MAX_MEDIA_BYTES) {
+      throw new BadRequestException('Media file exceeds 5 MB');
+    }
+
+    const position = await this.prisma.packageMedia.count({ where: { packageId: id } });
+    const key = packageMediaKey(id, input.contentType);
+    await this.storage.put(key, data, input.contentType);
+
+    const media = await this.prisma.packageMedia.create({
+      data: {
+        packageId: id,
+        storageKey: key,
+        altText: input.altText,
+        position,
+        showsPeople: input.showsPeople,
+        consentReference: input.consentReference ?? null,
+      },
+    });
+    await this.audit(actor, 'package.media_added', id);
+    return {
+      id: media.id,
+      altText: media.altText,
+      position: media.position,
+      showsPeople: media.showsPeople,
+    };
+  }
+
+  async deleteMedia(id: string, mediaId: string, actor: AuthUser): Promise<void> {
+    await this.loadPackage(id);
+    const media = await this.prisma.packageMedia.findUnique({ where: { id: mediaId } });
+    if (!media || media.packageId !== id) {
+      throw new NotFoundException(`Media ${mediaId} not found for this package`);
+    }
+    await this.storage.delete(media.storageKey).catch(() => undefined);
+    await this.prisma.packageMedia.delete({ where: { id: mediaId } });
+    await this.audit(actor, 'package.media_deleted', id);
+  }
+
+  /**
+   * Stream a stored package photo. The public route passes `onlyPublished` so
+   * photos of a draft package are not served to the world.
+   */
+  async readMedia(
+    mediaId: string,
+    onlyPublished: boolean,
+  ): Promise<{ data: Uint8Array; contentType: string }> {
+    const media = await this.prisma.packageMedia.findUnique({
+      where: { id: mediaId },
+      include: { package: { select: { status: true } } },
+    });
+    if (!media || (onlyPublished && media.package.status !== 'PUBLISHED')) {
+      throw new NotFoundException(`Media ${mediaId} not found`);
+    }
+
+    const object = await this.storage.get(media.storageKey);
+    if (!object) {
+      throw new NotFoundException('Media object is missing from storage');
+    }
+    const extension = media.storageKey.split('.').pop()?.toLowerCase() ?? '';
+    return {
+      data: object.body,
+      contentType:
+        object.contentType ||
+        EXTENSION_CONTENT_TYPE[extension] ||
+        'application/octet-stream',
+    };
   }
 
   private async assertInventoryItems(ids: string[]): Promise<void> {

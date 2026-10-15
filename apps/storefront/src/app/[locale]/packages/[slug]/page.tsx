@@ -100,9 +100,24 @@ export default async function PackageDetailPage({
     nights > 0
       ? `${t('days', { count: pkg.durationDays })} · ${t('nights', { count: nights })}`
       : t('days', { count: pkg.durationDays });
-  const photos = unique(
-    pkg.services.flatMap((service) => (service.itemMediaId ? [service.itemMediaId] : [])),
-  ).slice(0, GALLERY);
+  const gallery =
+    pkg.media.length > 0
+      ? pkg.media.slice(0, GALLERY).map((item) => ({
+          id: item.id,
+          alt: item.altText,
+          url: `/api/ota/catalog/packages/media/${item.id}`,
+        }))
+      : unique(
+          pkg.services.flatMap((service) =>
+            service.itemMediaId ? [service.itemMediaId] : [],
+          ),
+        )
+          .slice(0, GALLERY)
+          .map((mediaId) => ({
+            id: mediaId,
+            alt: '',
+            url: `/api/ota/catalog/media/${mediaId}`,
+          }));
   const days = unique([
     ...pkg.services.map((service) => String(service.dayOffset)),
     ...pkg.days.map((day) => String(day.dayOffset)),
@@ -420,7 +435,7 @@ export default async function PackageDetailPage({
 
       <div className={cn(wrap, 'grid gap-3 md:grid-cols-[2fr_1fr_1fr] md:grid-rows-2')}>
         {Array.from({ length: GALLERY }, (_, index) => {
-          const mediaId = photos[index];
+          const photo = gallery[index];
           return (
             <div
               key={index}
@@ -431,10 +446,10 @@ export default async function PackageDetailPage({
                   : 'hidden aspect-[4/3] md:flex',
               )}
             >
-              {mediaId ? (
+              {photo ? (
                 <img
-                  src={`/api/ota/catalog/media/${mediaId}`}
-                  alt=""
+                  src={photo.url}
+                  alt={photo.alt}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
