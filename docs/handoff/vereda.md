@@ -16,10 +16,10 @@ ADR 0007 (worker app).
   `3c64100` extends the package read model and draws tiers, departures, extras and the day texts
   on the storefront Package page; `86b76c4` adds the ops write path (`POST`/`PATCH` replace the
   tiers/departures/extras/days collections, `PUT /packages/:id/translations/:locale`, and a slug
-  change leaves a redirect the public `getBySlug` follows). **Still to do:** the A-Package-Edit
-  editor UI (Phase 5 item 6), the per-locale overlay applied when reading the public catalog,
-  package media storage (upload + serve) and the storefront 308 from a retired slug.
-- **Phase 5, no-migration part (admin)** — six increments done:
+  change leaves a redirect the public `getBySlug` follows). **Still to do:** the per-locale overlay
+  applied when reading the public catalog, package media storage (upload + serve) and the
+  storefront 308 from a retired slug.
+- **Phase 5, no-migration part (admin)** — seven increments done:
   - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
     matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
     returns `DispatchBoardRowDto` rows.
@@ -51,10 +51,15 @@ ADR 0007 (worker app).
     `/customers/[id]` (identity, trips, retention lifecycle). The Customers nav section links to
     both; the old `/customers` redirect is dropped; both routes are in the authorization matrix.
     OFAC, preferences, passport documents and communication wait for M2/M3.
+  - `91a0dbb` **Packages editor v2** = A-Package-Edit: the edit form gains the M1 fields (slug,
+    summary, booking model, group size, lead time) and inline editors for the tiers, departures,
+    extras and day texts, saved in one PATCH through the M1 write path. Publishing runs the domain
+    `packagePublishIssues` first and blocks with the reasons. Media and the locale overlays are not
+    in the form yet.
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
   `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
-## Verified (2026-10-15, `3c64100`)
+## Verified (2026-10-15, `91a0dbb`)
 - lint, format:check, typecheck and build (18/18) are green.
 - `pnpm test`: **419 passed / 5 skipped** (api 185/4 skipped — the live-DB integration tests are
   opt-in, domain 111 (+10 for M1 pricing and
@@ -91,6 +96,10 @@ ADR 0007 (worker app).
   tests, `pnpm test` (29 tasks), build (18/18) and `pnpm e2e` **46/46** green. The live-Postgres
   integration test (`RUN_DB_INTEGRATION=1 … test/packages.integration.test.ts`) proves
   create-with-collections, a wholesale tier replace, the slug redirect and a translation upsert.
+- Packages editor v2 (`91a0dbb`): lint, format:check, typecheck, i18n parity, `pnpm test`
+  (29 tasks), build (18/18) and `pnpm e2e` **46/46** green (the packages-edit spec now asserts the
+  M1 sections). Browser on the editor at 390/1024/1280: no overflow; the tiers, departures,
+  extras and day-text editors render and a save through the form succeeds.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -151,12 +160,11 @@ ADR 0007 (worker app).
     `@ota/domain` `packages/`. Tenant-wide terms stay in the manifest; a package stores policy keys."
 
 ## Next
-1. Finish M1: the A-Package-Edit editor UI (Phase 5 item 6) on the new write path, the per-locale
-   overlay applied when reading the public catalog, package media storage (upload + serve) and the
-   storefront 308 from a retired slug. Then M2–M5 (travelers, compliance, deposit schedule,
-   proposal).
-2. Phase 5: the Packages editor v2 once the M1 endpoints exist; Content/Disruption/Settings as
-   their migrations land (M6–M9 asked for as they come up).
+1. Finish M1: the per-locale overlay applied when reading the public catalog, package media storage
+   (upload + serve) and the storefront 308 from a retired slug. Then M2–M5 (travelers, compliance,
+   deposit schedule, proposal).
+2. Phase 5: add the locale overlays and media to the package editor, then Content/Disruption/
+   Settings as their migrations land (M6–M9 asked for as they come up).
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -247,3 +255,7 @@ ADR 0007 (worker app).
   collections wholesale (same pattern as services); a slug change leaves a `PackageSlugRedirect`
   that the public `getBySlug` follows; `PUT /packages/:id/translations/:locale` upserts one locale.
   The editor UI, the public per-locale overlay, package media and the storefront 308 remain.
+- 2026-10-15 — A-Package-Edit edits the M1 details and the tiers/departures/extras/day texts as
+  inline lists saved in one PATCH; publishing runs the domain `packagePublishIssues` first. Media
+  and the locale overlays are not in the form yet (they follow with media storage and the overlay
+  read).

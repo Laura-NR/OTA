@@ -249,6 +249,12 @@ tokens; no token was added.
   `GET /customers` + `GET /customers/:id` (ops-only). The OFAC certification,
   preferences, passport documents and the communication history wait for M2/M3;
   the profile says so.
+- **A-Package-Edit (Phase 5 item 6).** The package editor edits the M1 details
+  and the accommodation tiers, departures, optional extras and day texts as
+  inline lists, saved in one PATCH through the M1 write path. Publishing runs the
+  domain `packagePublishIssues` first and blocks with the reasons. Media and the
+  per-locale text overlays are edited elsewhere (package media storage and the
+  public overlay read are follow-ups).
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and

@@ -7,7 +7,7 @@ read model (`PackageDto` days/tiers/departures/extras/media/translations + the n
 v2 and the publish checks in `@ota/domain`, the storefront Package page showing tiers, departures,
 extras and the day texts, and the ops write path (`86b76c4`: `create`/`update` replace the
 collections; `PUT /packages/:id/translations/:locale`; a slug change leaves a redirect the public
-`getBySlug` follows). Still to do: the A-Package-Edit editor UI (Phase 5 item 6), the per-locale
+`getBySlug` follows), and the A-Package-Edit editor UI (`91a0dbb`). Still to do: the per-locale
 overlay applied when reading the public catalog, package media storage (upload + serve), and the
 storefront 308 from a retired slug to the current one.
 **Date:** 2026-10-14
