@@ -243,6 +243,12 @@ tokens; no token was added.
   chips, and a rail-labelled table that links each receipt to its booking. The
   refund queue, the payout liabilities by province, the next payout runs and the
   rails health wait for M4 and a payouts source; the page says so in a note.
+- **A-Customers.** The account list (`/customers`) shows each traveler's trip
+  count, last activity and GDPR retention state; the profile (`/customers/[id]`)
+  shows identity, the trips and the retention lifecycle. The read model is
+  `GET /customers` + `GET /customers/:id` (ops-only). The OFAC certification,
+  preferences, passport documents and the communication history wait for M2/M3;
+  the profile says so.
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and

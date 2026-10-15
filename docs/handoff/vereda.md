@@ -13,7 +13,7 @@ ADR 0007 (worker app).
   locale; base price + tier delta + optional departure price; `status` replaces `active` with a
   backfill; agency-wide terms in the manifest. **The migration is not yet generated** — it is the
   next Phase 4 job.
-- **Phase 5, no-migration part (admin)** — three increments done:
+- **Phase 5, no-migration part (admin)** — six increments done:
   - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
     matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
     returns `DispatchBoardRowDto` rows.
@@ -40,6 +40,11 @@ ADR 0007 (worker app).
     the pending/refunded counts, status filter chips with counts, and a rail-labelled table that
     links each receipt to its booking, plus a note that the refund queue, payouts and rails health
     wait for M4. Read-only; confirming stays on the booking.
+  - `435ecf3` **Customers** = A-Customers: a new ops-only read model (`GET /customers`,
+    `GET /customers/:id`) plus `/customers` (trip count, last activity, retention state) and
+    `/customers/[id]` (identity, trips, retention lifecycle). The Customers nav section links to
+    both; the old `/customers` redirect is dropped; both routes are in the authorization matrix.
+    OFAC, preferences, passport documents and communication wait for M2/M3.
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
   `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
@@ -63,6 +68,10 @@ ADR 0007 (worker app).
 - Payments (`6a429e1`): lint, format:check, typecheck, i18n parity test, `pnpm test` (29 tasks),
   build (18/18) and `pnpm e2e` **45/45** green. Browser on `/payments` at 390/1024/1280 with a
   receipt fixture: no overflow, the status chips and the rail-labelled ledger render.
+- Customers (`435ecf3`): lint, format:check, typecheck, the authorization matrix (4 tests, the
+  new `/customers` routes included), i18n parity test, `pnpm test` (29 tasks), build (18/18) and
+  `pnpm e2e` **46/46** green (one new customers spec). Browser on `/customers` and a profile at
+  390/1024/1280: no overflow; the account list, the trips and the retention card render.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -76,7 +85,8 @@ ADR 0007 (worker app).
   **Add supplier** is the `/suppliers/applications` recruitment path, not a create form. The
   supplier inspector's backup-power, vehicle and payout fields await M6 and the payments module.
   A-Payments' refund queue, payout liabilities by province, next payout runs and rails health
-  await M4 and a payouts source (the page says so).
+  await M4 and a payouts source (the page says so). A-Customers' OFAC certification, preferences,
+  passport documents and communication history await M2/M3 (the profile says so).
 - ES/FR for `backoffice.dashboard`, `.bookings`, `.reservation`, `.reports` are agent-drafted.
 - Earlier open items still stand (Cubacel 24/7 line, change notice, offer-SMS cost; placeholder
   tenant content).
@@ -112,13 +122,16 @@ ADR 0007 (worker app).
     verification filters, and credential/reliability/auto-dispatch columns. Reliability is the
     acceptance rate from `GET /quality/supplier-reliability`; auto-dispatch is the domain
     `canAutoDispatch`. Recruitment is `/suppliers/applications`."
+  - "A-Customers is the ops-only read model `GET /customers` + `GET /customers/:id`
+    (`customerSchema` / `customerDetailSchema`); the back-office `/customers` list and
+    `/customers/[id]` profile join it to the GDPR retention state in
+    `@ota/domain` `retention/retention`."
 
 ## Next
 1. Phase 4: generate the M1 migration on the approved draft (D1(a)–D4(a)) and build Package v2
    (tiers, departures, extras, days, media, translations, slug redirects), then M2–M5.
-2. Phase 5 continues on today's data where no migration is needed: Customers (OFAC M3, retention
-   already there), then Packages + editor v2 once M1 lands. Batches M6–M9 are asked for as they
-   come up.
+2. Phase 5 continues on today's data where no migration is needed: Packages + editor v2 once M1
+   lands. Batches M6–M9 are asked for as they come up.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -196,3 +209,7 @@ ADR 0007 (worker app).
 - 2026-10-14 — A-Payments stays read-only on today's data: the transaction ledger with status chips
   and rail labels. The refund queue, payout liabilities by province, next payout runs and rails
   health wait for M4 and a payouts source.
+- 2026-10-14 — A-Customers adds an ops-only read model (`GET /customers`, `GET /customers/:id`);
+  the list and profile show trips and the GDPR retention state. Passport, preferences, OFAC and the
+  communication history wait for M2/M3. The old `/customers` → `/customers/retention` redirect is
+  removed (the section home is `/customers`).
