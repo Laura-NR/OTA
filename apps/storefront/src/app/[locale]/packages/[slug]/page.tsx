@@ -12,7 +12,7 @@ import { PackageBookingForm } from '@/components/package-booking-form';
 import { BookingModelPill, PackageCard } from '@/components/package-card';
 import { PackageActions, PackageTabs } from '@/components/packages/package-actions';
 import { SectionHead } from '@/components/section-head';
-import { Link } from '@/i18n/navigation';
+import { Link, permanentRedirect } from '@/i18n/navigation';
 import { getServerSession } from '@/lib/api';
 import { getPageContent } from '@/lib/content';
 import { formatMoney } from '@/lib/format';
@@ -85,6 +85,11 @@ export default async function PackageDetailPage({
   ]);
   if (!pkg) {
     notFound();
+  }
+  // A retired slug resolves to its package (the API follows the redirect); send
+  // the visitor to the current slug with a 308.
+  if (pkg.slug !== slug) {
+    permanentRedirect({ href: `/packages/${pkg.slug}`, locale });
   }
   const tenant = getTenantConfig();
   const instant = isFeatureEnabled(tenant, 'instantBooking');

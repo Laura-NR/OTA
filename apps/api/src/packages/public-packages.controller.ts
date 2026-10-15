@@ -29,7 +29,10 @@ export class PublicPackagesController {
 
   @Get(':slug')
   @Public()
-  getBySlug(@Param('slug') slug: string): Promise<PackageDto> {
-    return this.packages.getBySlug(slug);
+  getBySlug(
+    @Param('slug') slug: string,
+    @Query('locale') locale?: string,
+  ): Promise<PackageDto> {
+    return this.packages.getBySlug(slug, locale);
   }
 }

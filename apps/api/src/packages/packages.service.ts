@@ -222,6 +222,87 @@ function dayCreate(day: DayInput) {
   };
 }
 
+interface TranslationContent {
+  days?: Record<string, { title?: string; body?: string; meals?: string }>;
+  tiers?: Record<string, { name?: string; description?: string }>;
+  extras?: Record<
+    string,
+    { name?: string; description?: string; durationLabel?: string }
+  >;
+  mediaAlt?: Record<string, string>;
+}
+
+/**
+ * Overlay a locale's published translation onto a package DTO (M1, D1): the
+ * scalar words, then the nested days (by dayOffset), tiers and extras (by code)
+ * and media alt texts (by id). Anything missing falls back to the source. The
+ * raw translations are stripped so a public read never leaks drafts.
+ */
+function overlayPackage(dto: PackageDto, locale: string | undefined): PackageDto {
+  const translation = locale
+    ? dto.translations.find((row) => row.locale === locale && row.published)
+    : undefined;
+  if (!translation) {
+    return dto;
+  }
+
+  const content: TranslationContent = {
+    days: (translation.days ?? undefined) as TranslationContent['days'],
+    tiers: (translation.tiers ?? undefined) as TranslationContent['tiers'],
+    extras: (translation.extras ?? undefined) as TranslationContent['extras'],
+    mediaAlt: (translation.mediaAlt ?? undefined) as TranslationContent['mediaAlt'],
+  };
+
+  return {
+    ...dto,
+    name: translation.name ?? dto.name,
+    summary: translation.summary ?? dto.summary,
+    description: translation.description ?? dto.description,
+    included: translation.included.length > 0 ? translation.included : dto.included,
+    excluded: translation.excluded.length > 0 ? translation.excluded : dto.excluded,
+    cubaNotes: translation.cubaNotes ?? dto.cubaNotes,
+    seoTitle: translation.seoTitle ?? dto.seoTitle,
+    seoDescription: translation.seoDescription ?? dto.seoDescription,
+    days: dto.days.map((day) => {
+      const overlay = content.days?.[String(day.dayOffset)];
+      return overlay
+        ? {
+            ...day,
+            title: overlay.title ?? day.title,
+            body: overlay.body ?? day.body,
+            meals: overlay.meals ?? day.meals,
+          }
+        : day;
+    }),
+    tiers: dto.tiers.map((tier) => {
+      const overlay = content.tiers?.[tier.code];
+      return overlay
+        ? {
+            ...tier,
+            name: overlay.name ?? tier.name,
+            description: overlay.description ?? tier.description,
+          }
+        : tier;
+    }),
+    extras: dto.extras.map((extra) => {
+      const overlay = content.extras?.[extra.code];
+      return overlay
+        ? {
+            ...extra,
+            name: overlay.name ?? extra.name,
+            description: overlay.description ?? extra.description,
+            durationLabel: overlay.durationLabel ?? extra.durationLabel,
+          }
+        : extra;
+    }),
+    media: dto.media.map((item) => ({
+      ...item,
+      altText: content.mediaAlt?.[item.id] ?? item.altText,
+    })),
+    translations: [],
+  };
+}
+
 /**
  * Curated package catalogue (spec §3.3). Packages are templates; booking one
  * expands its service list into a Reservation via MeService, so the dispatch
@@ -244,22 +325,23 @@ export class PackagesService {
     return packages.map(toPackageDto);
   }
 
-  /** The storefront sees published packages only. */
+  /** The storefront sees published packages only, in the requested locale. */
   async listPublic(filters: ListPackagesQuery): Promise<PackageDto[]> {
-    return this.list({ ...filters, status: 'PUBLISHED' });
+    const packages = await this.list({ ...filters, status: 'PUBLISHED' });
+    return packages.map((pkg) => overlayPackage(pkg, filters.locale));
   }
 
   async getById(id: string): Promise<PackageDto> {
     return toPackageDto(await this.loadWithServices(id));
   }
 
-  async getBySlug(slug: string): Promise<PackageDto> {
+  async getBySlug(slug: string, locale?: string): Promise<PackageDto> {
     const pkg = await this.prisma.package.findUnique({
       where: { slug },
       include: INCLUDE_SERVICES,
     });
     if (pkg && pkg.status === 'PUBLISHED') {
-      return toPackageDto(pkg);
+      return overlayPackage(toPackageDto(pkg), locale);
     }
 
     // A retired slug redirects to its package (the storefront 308s to the
@@ -273,7 +355,7 @@ export class PackagesService {
         include: INCLUDE_SERVICES,
       });
       if (target && target.status === 'PUBLISHED') {
-        return toPackageDto(target);
+        return overlayPackage(toPackageDto(target), locale);
       }
     }
 

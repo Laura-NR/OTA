@@ -268,6 +268,8 @@ export type PutPackageTranslationRequest = z.infer<typeof putPackageTranslationS
 export const listPackagesQuerySchema = z.object({
   province: z.string().trim().min(1).optional(),
   status: packageStatusSchema.optional(),
+  /** Public reads overlay this locale's published translation (M1, D1). */
+  locale: z.string().trim().min(2).max(5).optional(),
 });
 
 export type ListPackagesQuery = z.infer<typeof listPackagesQuerySchema>;

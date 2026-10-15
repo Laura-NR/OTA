@@ -114,15 +114,32 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
     const byOldSlug = await service.getBySlug(created.slug);
     expect(byOldSlug.id).toBe(packageId);
 
-    // Save a Spanish overlay.
+    // Save a Spanish overlay, including a nested day title.
     const translated = await service.upsertTranslation(
       packageId,
       'es',
-      { name: 'Sendero de Integración', published: true },
+      {
+        name: 'Sendero de Integración',
+        published: true,
+        days: { '0': { title: 'Llegada' } },
+      },
       actor,
     );
     const es = translated.translations.find((row) => row.locale === 'es');
     expect(es?.name).toBe('Sendero de Integración');
     expect(es?.published).toBe(true);
+
+    // The public read overlays the published locale and strips the raw rows.
+    const publicEs = (await service.listPublic({ locale: 'es' })).find(
+      (row) => row.id === packageId,
+    );
+    expect(publicEs?.name).toBe('Sendero de Integración');
+    expect(publicEs?.days.find((day) => day.dayOffset === 0)?.title).toBe('Llegada');
+    expect(publicEs?.translations).toEqual([]);
+
+    const publicEn = (await service.listPublic({ locale: 'en' })).find(
+      (row) => row.id === packageId,
+    );
+    expect(publicEn?.name).toBe(`Integration Trail ${suffix}`);
   });
 });
