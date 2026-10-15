@@ -56,16 +56,37 @@ interface FakePackage {
   name: string;
   slug: string;
   description: string | null;
+  summary: string | null;
   province: string | null;
   durationDays: number;
   currency: string;
   basePrice: Prisma.Decimal;
   status: string;
   publishedAt: Date | null;
+  bookingModel: string;
+  groupMin: number | null;
+  groupMax: number | null;
+  leadTimeDays: number;
+  tourismCategory: string;
+  themes: string[];
+  difficulty: number | null;
+  accessibility: string[];
+  cancellationPolicy: string | null;
+  depositPolicy: string | null;
+  included: string[];
+  excluded: string[];
+  cubaNotes: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
   attributes: null;
   createdAt: Date;
   updatedAt: Date;
   services: FakeService[];
+  days: never[];
+  tiers: never[];
+  departures: never[];
+  extras: never[];
+  media: never[];
 }
 
 function makeInventoryItem(id: string): FakeInventoryItem {
@@ -99,6 +120,22 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
     basePrice: new Prisma.Decimal('180.00'),
     status: 'PUBLISHED',
     publishedAt: new Date('2026-09-01T00:00:00Z'),
+    summary: null,
+    bookingModel: 'REQUEST',
+    groupMin: null,
+    groupMax: null,
+    leadTimeDays: 2,
+    tourismCategory: 'GENERAL',
+    themes: [],
+    difficulty: null,
+    accessibility: [],
+    cancellationPolicy: null,
+    depositPolicy: null,
+    included: [],
+    excluded: [],
+    cubaNotes: null,
+    seoTitle: null,
+    seoDescription: null,
     attributes: null,
     createdAt: new Date('2026-09-01T00:00:00Z'),
     updatedAt: new Date('2026-09-01T00:00:00Z'),
@@ -113,6 +150,11 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
         inventoryItem: makeInventoryItem(ITEM_A),
       },
     ],
+    days: [],
+    tiers: [],
+    departures: [],
+    extras: [],
+    media: [],
     ...overrides,
   };
 }
@@ -165,9 +207,30 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
           basePrice: new Prisma.Decimal(args.data.basePrice),
           status: args.data.status,
           publishedAt: args.data.publishedAt,
+          summary: null,
+          bookingModel: 'REQUEST',
+          groupMin: null,
+          groupMax: null,
+          leadTimeDays: 2,
+          tourismCategory: 'GENERAL',
+          themes: [],
+          difficulty: null,
+          accessibility: [],
+          cancellationPolicy: null,
+          depositPolicy: null,
+          included: [],
+          excluded: [],
+          cubaNotes: null,
+          seoTitle: null,
+          seoDescription: null,
           attributes: null,
           createdAt: new Date(),
           updatedAt: new Date(),
+          days: [],
+          tiers: [],
+          departures: [],
+          extras: [],
+          media: [],
           services: args.data.services.create.map((service, index) => ({
             id: `new-s${index}`,
             packageId: NEW_ID,

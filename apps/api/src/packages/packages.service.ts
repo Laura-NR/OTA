@@ -4,7 +4,12 @@ import type {
   InventoryItem,
   InventoryMedia,
   Package,
+  PackageDay,
+  PackageDeparture,
+  PackageExtra,
+  PackageMedia,
   PackageService,
+  PackageTier,
   Prisma,
 } from '@ota/db';
 import type {
@@ -20,7 +25,14 @@ import { PrismaService } from '../prisma/prisma.service';
 type ServiceWithItem = PackageService & {
   inventoryItem: InventoryItem & { media: InventoryMedia[] };
 };
-type PackageWithServices = Package & { services: ServiceWithItem[] };
+type PackageWithServices = Package & {
+  services: ServiceWithItem[];
+  days: PackageDay[];
+  tiers: PackageTier[];
+  departures: PackageDeparture[];
+  extras: PackageExtra[];
+  media: PackageMedia[];
+};
 
 /** Lower-case kebab slug for storefront URLs (accents stripped). */
 function slugify(value: string): string {
@@ -41,12 +53,28 @@ function toPackageDto(pkg: PackageWithServices): PackageDto {
     name: pkg.name,
     slug: pkg.slug,
     description: pkg.description,
+    summary: pkg.summary,
     province: pkg.province,
     durationDays: pkg.durationDays,
     currency: pkg.currency,
     basePrice: pkg.basePrice.toString(),
     status: pkg.status,
     publishedAt: pkg.publishedAt ? pkg.publishedAt.toISOString() : null,
+    bookingModel: pkg.bookingModel,
+    groupMin: pkg.groupMin,
+    groupMax: pkg.groupMax,
+    leadTimeDays: pkg.leadTimeDays,
+    tourismCategory: pkg.tourismCategory,
+    themes: pkg.themes,
+    difficulty: pkg.difficulty,
+    accessibility: pkg.accessibility,
+    cancellationPolicy: pkg.cancellationPolicy,
+    depositPolicy: pkg.depositPolicy,
+    included: pkg.included,
+    excluded: pkg.excluded,
+    cubaNotes: pkg.cubaNotes,
+    seoTitle: pkg.seoTitle,
+    seoDescription: pkg.seoDescription,
     services: pkg.services.map((service) => ({
       id: service.id,
       inventoryItemId: service.inventoryItemId,
@@ -58,6 +86,48 @@ function toPackageDto(pkg: PackageWithServices): PackageDto {
       itemBasePrice: service.inventoryItem.basePrice.toString(),
       itemCurrency: service.inventoryItem.currency,
       itemMediaId: service.inventoryItem.media[0]?.id ?? null,
+    })),
+    days: pkg.days.map((day) => ({
+      id: day.id,
+      dayOffset: day.dayOffset,
+      title: day.title,
+      body: day.body,
+      meals: day.meals,
+    })),
+    tiers: pkg.tiers.map((tier) => ({
+      id: tier.id,
+      code: tier.code,
+      name: tier.name,
+      description: tier.description,
+      position: tier.position,
+      priceDelta: tier.priceDelta.toString(),
+      singleSupplement: tier.singleSupplement ? tier.singleSupplement.toString() : null,
+      isDefault: tier.isDefault,
+    })),
+    departures: pkg.departures.map((departure) => ({
+      id: departure.id,
+      startDate: departure.startDate.toISOString(),
+      capacity: departure.capacity,
+      price: departure.price ? departure.price.toString() : null,
+      status: departure.status,
+    })),
+    extras: pkg.extras.map((extra) => ({
+      id: extra.id,
+      code: extra.code,
+      name: extra.name,
+      description: extra.description,
+      durationLabel: extra.durationLabel,
+      dayOffset: extra.dayOffset,
+      price: extra.price.toString(),
+      priceUnit: extra.priceUnit,
+      position: extra.position,
+      active: extra.active,
+    })),
+    media: pkg.media.map((item) => ({
+      id: item.id,
+      altText: item.altText,
+      position: item.position,
+      showsPeople: item.showsPeople,
     })),
     createdAt: pkg.createdAt.toISOString(),
     updatedAt: pkg.updatedAt.toISOString(),
@@ -73,6 +143,11 @@ const INCLUDE_SERVICES = {
     },
     orderBy: [{ dayOffset: 'asc' as const }, { position: 'asc' as const }],
   },
+  days: { orderBy: { dayOffset: 'asc' as const } },
+  tiers: { orderBy: { position: 'asc' as const } },
+  departures: { orderBy: { startDate: 'asc' as const } },
+  extras: { orderBy: { position: 'asc' as const } },
+  media: { orderBy: { position: 'asc' as const } },
 };
 
 /**

@@ -32,18 +32,101 @@ export const packageServiceSchema = z.object({
 
 export type PackageServiceDto = z.infer<typeof packageServiceSchema>;
 
+/** One itinerary day's words (M1), keyed by its dayOffset. */
+export const packageDaySchema = z.object({
+  id: z.string().uuid(),
+  dayOffset: z.number().int(),
+  title: z.string(),
+  body: z.string().nullable(),
+  meals: z.string().nullable(),
+});
+
+export type PackageDayDto = z.infer<typeof packageDaySchema>;
+
+/** An accommodation tier: a delta over the departure price. */
+export const packageTierSchema = z.object({
+  id: z.string().uuid(),
+  code: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  position: z.number().int(),
+  priceDelta: z.string(),
+  singleSupplement: z.string().nullable(),
+  isDefault: z.boolean(),
+});
+
+export type PackageTierDto = z.infer<typeof packageTierSchema>;
+
+/** A fixed departure; `price` null falls back to the package base price. */
+export const packageDepartureSchema = z.object({
+  id: z.string().uuid(),
+  startDate: z.string(),
+  capacity: z.number().int(),
+  price: z.string().nullable(),
+  status: z.enum(['OPEN', 'CLOSED', 'CANCELLED']),
+});
+
+export type PackageDepartureDto = z.infer<typeof packageDepartureSchema>;
+
+/** An optional add-on, priced per person or per booking. */
+export const packageExtraSchema = z.object({
+  id: z.string().uuid(),
+  code: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  durationLabel: z.string().nullable(),
+  dayOffset: z.number().int().nullable(),
+  price: z.string(),
+  priceUnit: z.enum(['PER_PERSON', 'PER_BOOKING']),
+  position: z.number().int(),
+  active: z.boolean(),
+});
+
+export type PackageExtraDto = z.infer<typeof packageExtraSchema>;
+
+/** A package photo's metadata; the binary is served from storage. */
+export const packageMediaSchema = z.object({
+  id: z.string().uuid(),
+  altText: z.string(),
+  position: z.number().int(),
+  showsPeople: z.boolean(),
+});
+
+export type PackageMediaDto = z.infer<typeof packageMediaSchema>;
+
 export const packageSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
+  summary: z.string().nullable(),
   province: z.string().nullable(),
   durationDays: z.number().int(),
   currency: z.string(),
   basePrice: z.string(),
   status: packageStatusSchema,
   publishedAt: z.string().nullable(),
+  bookingModel: z.enum(['REQUEST', 'INSTANT']),
+  groupMin: z.number().int().nullable(),
+  groupMax: z.number().int().nullable(),
+  leadTimeDays: z.number().int(),
+  tourismCategory: z.string(),
+  themes: z.array(z.string()),
+  difficulty: z.number().int().nullable(),
+  accessibility: z.array(z.string()),
+  cancellationPolicy: z.string().nullable(),
+  depositPolicy: z.string().nullable(),
+  included: z.array(z.string()),
+  excluded: z.array(z.string()),
+  cubaNotes: z.string().nullable(),
+  seoTitle: z.string().nullable(),
+  seoDescription: z.string().nullable(),
   services: z.array(packageServiceSchema),
+  days: z.array(packageDaySchema),
+  tiers: z.array(packageTierSchema),
+  departures: z.array(packageDepartureSchema),
+  extras: z.array(packageExtraSchema),
+  media: z.array(packageMediaSchema),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

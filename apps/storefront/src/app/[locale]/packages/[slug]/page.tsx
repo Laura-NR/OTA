@@ -49,11 +49,22 @@ function unique(values: readonly string[]): string[] {
   return [...new Set(values)];
 }
 
+/** A departure date (stored at UTC midnight) in the visitor's language. */
+function departureDate(value: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'UTC',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
 /**
- * A curated package (Package / M-Package boards) on today's data: its length,
- * provinces and services, photos from the catalogue, the conditions of the
- * provinces it visits, and the sticky request summary. Tiers, departures,
- * reviews and the FAQ arrive with the package model (M1) and are not drawn.
+ * A curated package (Package / M-Package boards): its length, provinces and
+ * services, photos from the catalogue, the conditions of the provinces it
+ * visits, and the sticky request summary. M1 adds the day texts, the
+ * accommodation tiers, the departures and the optional extras. Reviews and the
+ * FAQ are still not drawn.
  */
 export default async function PackageDetailPage({
   params,
@@ -87,7 +98,10 @@ export default async function PackageDetailPage({
   const photos = unique(
     pkg.services.flatMap((service) => (service.itemMediaId ? [service.itemMediaId] : [])),
   ).slice(0, GALLERY);
-  const days = unique(pkg.services.map((service) => String(service.dayOffset)))
+  const days = unique([
+    ...pkg.services.map((service) => String(service.dayOffset)),
+    ...pkg.days.map((day) => String(day.dayOffset)),
+  ])
     .map(Number)
     .sort((a, b) => a - b);
   const byType = (type: string) =>
@@ -167,6 +181,84 @@ export default async function PackageDetailPage({
               </ul>
             </section>
           ) : null}
+          {pkg.tiers.length > 0 ? (
+            <section aria-labelledby="tiers-title" className="flex flex-col gap-3">
+              <h2 id="tiers-title" className="text-h3 text-default">
+                {t('detail.tiers')}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {pkg.tiers.map((tier) => (
+                  <li
+                    key={tier.id}
+                    className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border bg-surface px-4 py-3 text-body"
+                  >
+                    <span className="font-medium text-default">{tier.name}</span>
+                    <span className="text-body-sm text-secondary">
+                      {Number(tier.priceDelta) === 0
+                        ? t('detail.tiersBase')
+                        : t('detail.tierDelta', {
+                            delta: formatMoney(tier.priceDelta, pkg.currency, locale),
+                          })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {pkg.departures.length > 0 ? (
+            <section aria-labelledby="departures-title" className="flex flex-col gap-3">
+              <h2 id="departures-title" className="text-h3 text-default">
+                {t('detail.departures')}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {pkg.departures.map((departure) => (
+                  <li
+                    key={departure.id}
+                    className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border bg-surface px-4 py-3 text-body"
+                  >
+                    <span className="font-medium text-default">
+                      {departureDate(departure.startDate, locale)}
+                    </span>
+                    <span className="text-body-sm text-secondary">
+                      {t('detail.departureSeats', { count: departure.capacity })} ·{' '}
+                      {t('detail.departureFrom', {
+                        price: formatMoney(
+                          departure.price ?? pkg.basePrice,
+                          pkg.currency,
+                          locale,
+                        ),
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {pkg.extras.filter((extra) => extra.active).length > 0 ? (
+            <section aria-labelledby="extras-title" className="flex flex-col gap-3">
+              <h2 id="extras-title" className="text-h3 text-default">
+                {t('detail.extras')}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {pkg.extras
+                  .filter((extra) => extra.active)
+                  .map((extra) => (
+                    <li
+                      key={extra.id}
+                      className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border bg-surface px-4 py-3 text-body"
+                    >
+                      <span className="font-medium text-default">{extra.name}</span>
+                      <span className="text-body-sm text-secondary">
+                        {formatMoney(extra.price, pkg.currency, locale)} ·{' '}
+                        {extra.priceUnit === 'PER_PERSON'
+                          ? t('detail.extraPerPerson')
+                          : t('detail.extraPerBooking')}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ) : null}
         </div>
       ),
     },
@@ -175,30 +267,50 @@ export default async function PackageDetailPage({
       label: t('detail.tabs.itinerary'),
       panel: (
         <ol className="flex flex-col gap-4 pt-6">
-          {days.map((day) => (
-            <li key={day} className="flex gap-4 rounded-lg border bg-surface p-5">
-              <span className="w-16 shrink-0 text-overline uppercase text-secondary-600">
-                {t('day', { day: day + 1 })}
-              </span>
-              <ul className="flex flex-1 flex-col gap-2">
-                {pkg.services
-                  .filter((service) => service.dayOffset === day)
-                  .map((service) => (
-                    <li
-                      key={service.id}
-                      className="flex flex-wrap justify-between gap-x-3 text-body"
-                    >
-                      <span className="font-medium text-default">{service.itemName}</span>
-                      <span className="text-body-sm text-muted">
-                        {[tc(`types.${service.itemType}`), service.itemProvince]
-                          .filter(Boolean)
-                          .join(' · ')}
+          {days.map((day) => {
+            const info = pkg.days.find((entry) => entry.dayOffset === day);
+            return (
+              <li key={day} className="flex gap-4 rounded-lg border bg-surface p-5">
+                <span className="w-16 shrink-0 text-overline uppercase text-secondary-600">
+                  {t('day', { day: day + 1 })}
+                </span>
+                <div className="flex flex-1 flex-col gap-2">
+                  {info ? (
+                    <>
+                      <span className="text-body font-medium text-default">
+                        {info.title}
                       </span>
-                    </li>
-                  ))}
-              </ul>
-            </li>
-          ))}
+                      {info.body ? (
+                        <p className="text-body-sm text-secondary">{info.body}</p>
+                      ) : null}
+                    </>
+                  ) : null}
+                  <ul className="flex flex-col gap-2">
+                    {pkg.services
+                      .filter((service) => service.dayOffset === day)
+                      .map((service) => (
+                        <li
+                          key={service.id}
+                          className="flex flex-wrap justify-between gap-x-3 text-body"
+                        >
+                          <span className="font-medium text-default">
+                            {service.itemName}
+                          </span>
+                          <span className="text-body-sm text-muted">
+                            {[tc(`types.${service.itemType}`), service.itemProvince]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                  {info?.meals ? (
+                    <p className="text-caption text-muted">{info.meals}</p>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       ),
     },
