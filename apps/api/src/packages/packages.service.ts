@@ -10,12 +10,14 @@ import type {
   PackageMedia,
   PackageService,
   PackageTier,
+  PackageTranslation,
   Prisma,
 } from '@ota/db';
 import type {
   CreatePackageRequest,
   ListPackagesQuery,
   PackageDto,
+  PutPackageTranslationRequest,
   UpdatePackageRequest,
 } from '@ota/schemas';
 
@@ -32,6 +34,7 @@ type PackageWithServices = Package & {
   departures: PackageDeparture[];
   extras: PackageExtra[];
   media: PackageMedia[];
+  translations: PackageTranslation[];
 };
 
 /** Lower-case kebab slug for storefront URLs (accents stripped). */
@@ -129,6 +132,24 @@ function toPackageDto(pkg: PackageWithServices): PackageDto {
       position: item.position,
       showsPeople: item.showsPeople,
     })),
+    translations: pkg.translations.map((translation) => ({
+      id: translation.id,
+      locale: translation.locale,
+      name: translation.name,
+      summary: translation.summary,
+      description: translation.description,
+      included: translation.included,
+      excluded: translation.excluded,
+      cubaNotes: translation.cubaNotes,
+      seoTitle: translation.seoTitle,
+      seoDescription: translation.seoDescription,
+      days: translation.days ?? null,
+      tiers: translation.tiers ?? null,
+      extras: translation.extras ?? null,
+      mediaAlt: translation.mediaAlt ?? null,
+      published: translation.published,
+      sourceUpdatedAt: translation.sourceUpdatedAt.toISOString(),
+    })),
     createdAt: pkg.createdAt.toISOString(),
     updatedAt: pkg.updatedAt.toISOString(),
   };
@@ -148,7 +169,58 @@ const INCLUDE_SERVICES = {
   departures: { orderBy: { startDate: 'asc' as const } },
   extras: { orderBy: { position: 'asc' as const } },
   media: { orderBy: { position: 'asc' as const } },
+  translations: { orderBy: { locale: 'asc' as const } },
 };
+
+type TierInput = NonNullable<CreatePackageRequest['tiers']>[number];
+type DepartureInput = NonNullable<CreatePackageRequest['departures']>[number];
+type ExtraInput = NonNullable<CreatePackageRequest['extras']>[number];
+type DayInput = NonNullable<CreatePackageRequest['days']>[number];
+
+function tierCreate(tier: TierInput) {
+  return {
+    code: tier.code,
+    name: tier.name,
+    description: tier.description ?? null,
+    position: tier.position,
+    priceDelta: tier.priceDelta,
+    singleSupplement: tier.singleSupplement ?? null,
+    isDefault: tier.isDefault,
+  };
+}
+
+function departureCreate(departure: DepartureInput) {
+  return {
+    startDate: departure.startDate,
+    capacity: departure.capacity,
+    price: departure.price ?? null,
+    status: departure.status,
+  };
+}
+
+function extraCreate(extra: ExtraInput) {
+  return {
+    code: extra.code,
+    name: extra.name,
+    description: extra.description ?? null,
+    durationLabel: extra.durationLabel ?? null,
+    inventoryItemId: extra.inventoryItemId ?? null,
+    dayOffset: extra.dayOffset ?? null,
+    price: extra.price,
+    priceUnit: extra.priceUnit,
+    position: extra.position,
+    active: extra.active,
+  };
+}
+
+function dayCreate(day: DayInput) {
+  return {
+    dayOffset: day.dayOffset,
+    title: day.title,
+    body: day.body ?? null,
+    meals: day.meals ?? null,
+  };
+}
 
 /**
  * Curated package catalogue (spec §3.3). Packages are templates; booking one
@@ -186,10 +258,26 @@ export class PackagesService {
       where: { slug },
       include: INCLUDE_SERVICES,
     });
-    if (!pkg || pkg.status !== 'PUBLISHED') {
-      throw new NotFoundException(`Package ${slug} not found`);
+    if (pkg && pkg.status === 'PUBLISHED') {
+      return toPackageDto(pkg);
     }
-    return toPackageDto(pkg);
+
+    // A retired slug redirects to its package (the storefront 308s to the
+    // current slug when they differ).
+    const redirect = await this.prisma.packageSlugRedirect.findUnique({
+      where: { slug },
+    });
+    if (redirect) {
+      const target = await this.prisma.package.findUnique({
+        where: { id: redirect.packageId },
+        include: INCLUDE_SERVICES,
+      });
+      if (target && target.status === 'PUBLISHED') {
+        return toPackageDto(target);
+      }
+    }
+
+    throw new NotFoundException(`Package ${slug} not found`);
   }
 
   async create(input: CreatePackageRequest, actor: AuthUser): Promise<PackageDto> {
@@ -202,12 +290,28 @@ export class PackagesService {
         name: input.name,
         slug,
         description: input.description ?? null,
+        summary: input.summary ?? null,
         province: input.province ?? null,
         durationDays: input.durationDays,
         currency: input.currency,
         basePrice: input.basePrice,
         status: input.status ?? 'DRAFT',
         publishedAt: input.status === 'PUBLISHED' ? new Date() : null,
+        bookingModel: input.bookingModel,
+        groupMin: input.groupMin ?? null,
+        groupMax: input.groupMax ?? null,
+        leadTimeDays: input.leadTimeDays,
+        tourismCategory: input.tourismCategory,
+        themes: input.themes ?? [],
+        difficulty: input.difficulty ?? null,
+        accessibility: input.accessibility ?? [],
+        cancellationPolicy: input.cancellationPolicy ?? null,
+        depositPolicy: input.depositPolicy ?? null,
+        included: input.included ?? [],
+        excluded: input.excluded ?? [],
+        cubaNotes: input.cubaNotes ?? null,
+        seoTitle: input.seoTitle ?? null,
+        seoDescription: input.seoDescription ?? null,
         attributes: (input.attributes ?? undefined) as Prisma.InputJsonValue,
         services: {
           create: input.services.map((service) => ({
@@ -216,6 +320,12 @@ export class PackagesService {
             position: service.position,
           })),
         },
+        ...(input.tiers ? { tiers: { create: input.tiers.map(tierCreate) } } : {}),
+        ...(input.departures
+          ? { departures: { create: input.departures.map(departureCreate) } }
+          : {}),
+        ...(input.extras ? { extras: { create: input.extras.map(extraCreate) } } : {}),
+        ...(input.days ? { days: { create: input.days.map(dayCreate) } } : {}),
       },
       include: INCLUDE_SERVICES,
     });
@@ -249,18 +359,58 @@ export class PackagesService {
     if (input.attributes !== undefined) {
       data.attributes = input.attributes as Prisma.InputJsonValue;
     }
+    if (input.summary !== undefined) data.summary = input.summary;
+    if (input.bookingModel !== undefined) data.bookingModel = input.bookingModel;
+    if (input.groupMin !== undefined) data.groupMin = input.groupMin;
+    if (input.groupMax !== undefined) data.groupMax = input.groupMax;
+    if (input.leadTimeDays !== undefined) data.leadTimeDays = input.leadTimeDays;
+    if (input.tourismCategory !== undefined) data.tourismCategory = input.tourismCategory;
+    if (input.themes !== undefined) data.themes = input.themes;
+    if (input.difficulty !== undefined) data.difficulty = input.difficulty;
+    if (input.accessibility !== undefined) data.accessibility = input.accessibility;
+    if (input.cancellationPolicy !== undefined) {
+      data.cancellationPolicy = input.cancellationPolicy;
+    }
+    if (input.depositPolicy !== undefined) data.depositPolicy = input.depositPolicy;
+    if (input.included !== undefined) data.included = input.included;
+    if (input.excluded !== undefined) data.excluded = input.excluded;
+    if (input.cubaNotes !== undefined) data.cubaNotes = input.cubaNotes;
+    if (input.seoTitle !== undefined) data.seoTitle = input.seoTitle;
+    if (input.seoDescription !== undefined) data.seoDescription = input.seoDescription;
 
     const services = input.services;
     if (services) {
       await this.assertInventoryItems(services.map((service) => service.inventoryItemId));
     }
+    const slugChanged = input.slug !== undefined && input.slug !== existing.slug;
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      // Each collection, when present, is replaced wholesale: simpler and
+      // race-free for an editor that submits the whole list at once.
       if (services) {
-        // The itinerary is replaced wholesale: simpler and race-free for an
-        // editor that submits the whole list at once.
         await tx.packageService.deleteMany({ where: { packageId: id } });
       }
+      if (input.tiers) {
+        await tx.packageTier.deleteMany({ where: { packageId: id } });
+      }
+      if (input.departures) {
+        await tx.packageDeparture.deleteMany({ where: { packageId: id } });
+      }
+      if (input.extras) {
+        await tx.packageExtra.deleteMany({ where: { packageId: id } });
+      }
+      if (input.days) {
+        await tx.packageDay.deleteMany({ where: { packageId: id } });
+      }
+      if (slugChanged) {
+        // Keep a retired slug pointing at the package so old links resolve.
+        await tx.packageSlugRedirect.upsert({
+          where: { slug: existing.slug },
+          create: { slug: existing.slug, packageId: id },
+          update: { packageId: id },
+        });
+      }
+
       return tx.package.update({
         where: { id },
         data: {
@@ -276,6 +426,12 @@ export class PackagesService {
                 },
               }
             : {}),
+          ...(input.tiers ? { tiers: { create: input.tiers.map(tierCreate) } } : {}),
+          ...(input.departures
+            ? { departures: { create: input.departures.map(departureCreate) } }
+            : {}),
+          ...(input.extras ? { extras: { create: input.extras.map(extraCreate) } } : {}),
+          ...(input.days ? { days: { create: input.days.map(dayCreate) } } : {}),
         },
         include: INCLUDE_SERVICES,
       });
@@ -283,6 +439,52 @@ export class PackagesService {
 
     await this.audit(actor, 'package.updated', id);
     return toPackageDto(updated);
+  }
+
+  /** Upsert one locale's text overlay (M1, D1) and audit it. */
+  async upsertTranslation(
+    id: string,
+    locale: string,
+    input: PutPackageTranslationRequest,
+    actor: AuthUser,
+  ): Promise<PackageDto> {
+    const pkg = await this.loadPackage(id);
+
+    const data: Prisma.PackageTranslationUncheckedCreateInput = {
+      packageId: id,
+      locale,
+      sourceUpdatedAt: pkg.contentUpdatedAt,
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.summary !== undefined ? { summary: input.summary } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      ...(input.included !== undefined ? { included: input.included } : {}),
+      ...(input.excluded !== undefined ? { excluded: input.excluded } : {}),
+      ...(input.cubaNotes !== undefined ? { cubaNotes: input.cubaNotes } : {}),
+      ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle } : {}),
+      ...(input.seoDescription !== undefined
+        ? { seoDescription: input.seoDescription }
+        : {}),
+      ...(input.days !== undefined ? { days: input.days as Prisma.InputJsonValue } : {}),
+      ...(input.tiers !== undefined
+        ? { tiers: input.tiers as Prisma.InputJsonValue }
+        : {}),
+      ...(input.extras !== undefined
+        ? { extras: input.extras as Prisma.InputJsonValue }
+        : {}),
+      ...(input.mediaAlt !== undefined
+        ? { mediaAlt: input.mediaAlt as Prisma.InputJsonValue }
+        : {}),
+      ...(input.published !== undefined ? { published: input.published } : {}),
+    };
+
+    await this.prisma.packageTranslation.upsert({
+      where: { packageId_locale: { packageId: id, locale } },
+      create: data,
+      update: { ...data, packageId: undefined, locale: undefined },
+    });
+
+    await this.audit(actor, 'package.translation_saved', id);
+    return this.getById(id);
   }
 
   async remove(id: string, actor: AuthUser): Promise<void> {

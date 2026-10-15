@@ -70,6 +70,8 @@ export {
   packageServiceSchema,
   packageStatusSchema,
   packageTierSchema,
+  packageTranslationSchema,
+  putPackageTranslationSchema,
   updatePackageSchema,
   type CreatePackageBookingRequest,
   type CreatePackageRequest,
@@ -82,6 +84,8 @@ export {
   type PackageServiceDto,
   type PackageStatusDto,
   type PackageTierDto,
+  type PackageTranslationDto,
+  type PutPackageTranslationRequest,
   type UpdatePackageRequest,
 } from './package';
 export {

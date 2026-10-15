@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { inventoryTypeSchema } from './inventory';
-import { nationalitySchema } from './regulatory';
+import { nationalitySchema, tourismCategorySchema } from './regulatory';
 
 /** Publish lifecycle of a curated package (M1 / A-Package-Edit). */
 export const packageStatusSchema = z.enum([
@@ -94,6 +94,28 @@ export const packageMediaSchema = z.object({
 
 export type PackageMediaDto = z.infer<typeof packageMediaSchema>;
 
+/** One locale's overlay of a package's words (M1, D1). */
+export const packageTranslationSchema = z.object({
+  id: z.string().uuid(),
+  locale: z.string(),
+  name: z.string().nullable(),
+  summary: z.string().nullable(),
+  description: z.string().nullable(),
+  included: z.array(z.string()),
+  excluded: z.array(z.string()),
+  cubaNotes: z.string().nullable(),
+  seoTitle: z.string().nullable(),
+  seoDescription: z.string().nullable(),
+  days: z.unknown().nullable(),
+  tiers: z.unknown().nullable(),
+  extras: z.unknown().nullable(),
+  mediaAlt: z.unknown().nullable(),
+  published: z.boolean(),
+  sourceUpdatedAt: z.string(),
+});
+
+export type PackageTranslationDto = z.infer<typeof packageTranslationSchema>;
+
 export const packageSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -127,6 +149,7 @@ export const packageSchema = z.object({
   departures: z.array(packageDepartureSchema),
   extras: z.array(packageExtraSchema),
   media: z.array(packageMediaSchema),
+  translations: z.array(packageTranslationSchema),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -139,6 +162,44 @@ const packageServiceInputSchema = z.object({
   position: z.coerce.number().int().min(0).max(100).default(0),
 });
 
+/** M1 sub-resource inputs; each list, when present, replaces the collection. */
+const packageTierInputSchema = z.object({
+  code: z.string().trim().min(1).max(50),
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(2000).optional(),
+  position: z.coerce.number().int().min(0).max(100).default(0),
+  priceDelta: z.coerce.number().default(0),
+  singleSupplement: z.coerce.number().nonnegative().nullable().optional(),
+  isDefault: z.boolean().default(false),
+});
+
+const packageDepartureInputSchema = z.object({
+  startDate: z.coerce.date(),
+  capacity: z.coerce.number().int().min(1).max(1000),
+  price: z.coerce.number().nonnegative().nullable().optional(),
+  status: z.enum(['OPEN', 'CLOSED', 'CANCELLED']).default('OPEN'),
+});
+
+const packageExtraInputSchema = z.object({
+  code: z.string().trim().min(1).max(50),
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(2000).optional(),
+  durationLabel: z.string().trim().max(100).optional(),
+  inventoryItemId: z.string().uuid().optional(),
+  dayOffset: z.coerce.number().int().min(0).max(60).optional(),
+  price: z.coerce.number().nonnegative(),
+  priceUnit: z.enum(['PER_PERSON', 'PER_BOOKING']).default('PER_PERSON'),
+  position: z.coerce.number().int().min(0).max(100).default(0),
+  active: z.boolean().default(true),
+});
+
+const packageDayInputSchema = z.object({
+  dayOffset: z.coerce.number().int().min(0).max(60),
+  title: z.string().trim().min(1).max(200),
+  body: z.string().trim().max(4000).optional(),
+  meals: z.string().trim().max(200).optional(),
+});
+
 export const createPackageSchema = z.object({
   name: z.string().trim().min(1).max(200),
   slug: z
@@ -149,13 +210,33 @@ export const createPackageSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug must be lower-case kebab-case')
     .optional(),
   description: z.string().trim().max(2000).optional(),
+  summary: z.string().trim().max(400).optional(),
   province: z.string().trim().min(1).max(100).optional(),
   durationDays: z.coerce.number().int().min(1).max(60),
   currency: z.string().trim().length(3).default('EUR'),
   basePrice: z.coerce.number().nonnegative(),
   status: packageStatusSchema.optional(),
+  bookingModel: z.enum(['REQUEST', 'INSTANT']).default('REQUEST'),
+  groupMin: z.coerce.number().int().min(1).max(100).nullable().optional(),
+  groupMax: z.coerce.number().int().min(1).max(100).nullable().optional(),
+  leadTimeDays: z.coerce.number().int().min(0).max(365).default(2),
+  tourismCategory: tourismCategorySchema.optional(),
+  themes: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  difficulty: z.coerce.number().int().min(1).max(5).nullable().optional(),
+  accessibility: z.array(z.string().trim().min(1).max(100)).max(20).optional(),
+  cancellationPolicy: z.string().trim().max(100).nullable().optional(),
+  depositPolicy: z.string().trim().max(100).nullable().optional(),
+  included: z.array(z.string().trim().max(200)).max(50).optional(),
+  excluded: z.array(z.string().trim().max(200)).max(50).optional(),
+  cubaNotes: z.string().trim().max(4000).optional(),
+  seoTitle: z.string().trim().max(200).optional(),
+  seoDescription: z.string().trim().max(400).optional(),
   attributes: z.record(z.string(), z.unknown()).optional(),
   services: z.array(packageServiceInputSchema).min(1).max(40),
+  tiers: z.array(packageTierInputSchema).max(20).optional(),
+  departures: z.array(packageDepartureInputSchema).max(365).optional(),
+  extras: z.array(packageExtraInputSchema).max(50).optional(),
+  days: z.array(packageDayInputSchema).max(60).optional(),
 });
 
 export type CreatePackageRequest = z.infer<typeof createPackageSchema>;
@@ -164,6 +245,25 @@ export type CreatePackageRequest = z.infer<typeof createPackageSchema>;
 export const updatePackageSchema = createPackageSchema.partial();
 
 export type UpdatePackageRequest = z.infer<typeof updatePackageSchema>;
+
+/** One locale's overlay of a package's words (M1, D1). */
+export const putPackageTranslationSchema = z.object({
+  name: z.string().trim().max(200).nullable().optional(),
+  summary: z.string().trim().max(400).nullable().optional(),
+  description: z.string().trim().max(4000).nullable().optional(),
+  included: z.array(z.string().trim().max(200)).max(50).optional(),
+  excluded: z.array(z.string().trim().max(200)).max(50).optional(),
+  cubaNotes: z.string().trim().max(4000).nullable().optional(),
+  seoTitle: z.string().trim().max(200).nullable().optional(),
+  seoDescription: z.string().trim().max(400).nullable().optional(),
+  days: z.record(z.string(), z.unknown()).optional(),
+  tiers: z.record(z.string(), z.unknown()).optional(),
+  extras: z.record(z.string(), z.unknown()).optional(),
+  mediaAlt: z.record(z.string(), z.unknown()).optional(),
+  published: z.boolean().optional(),
+});
+
+export type PutPackageTranslationRequest = z.infer<typeof putPackageTranslationSchema>;
 
 export const listPackagesQuerySchema = z.object({
   province: z.string().trim().min(1).optional(),

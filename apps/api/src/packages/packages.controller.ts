@@ -9,16 +9,19 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
   createPackageSchema,
   listPackagesQuerySchema,
+  putPackageTranslationSchema,
   updatePackageSchema,
   type CreatePackageRequest,
   type ListPackagesQuery,
   type PackageDto,
+  type PutPackageTranslationRequest,
   type UpdatePackageRequest,
 } from '@ota/schemas';
 
@@ -72,6 +75,18 @@ export class PackagesController {
     @CurrentUser() actor: AuthUser,
   ): Promise<PackageDto> {
     return this.packages.update(id, body, actor);
+  }
+
+  @Put(':id/translations/:locale')
+  @Roles(...WRITE_ROLES)
+  saveTranslation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('locale') locale: string,
+    @Body(new ZodValidationPipe(putPackageTranslationSchema))
+    body: PutPackageTranslationRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<PackageDto> {
+    return this.packages.upsertTranslation(id, locale, body, actor);
   }
 
   @Delete(':id')

@@ -87,6 +87,7 @@ interface FakePackage {
   departures: never[];
   extras: never[];
   media: never[];
+  translations: never[];
 }
 
 function makeInventoryItem(id: string): FakeInventoryItem {
@@ -155,6 +156,7 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
     departures: [],
     extras: [],
     media: [],
+    translations: [],
     ...overrides,
   };
 }
@@ -231,6 +233,7 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
           departures: [],
           extras: [],
           media: [],
+          translations: [],
           services: args.data.services.create.map((service, index) => ({
             id: `new-s${index}`,
             packageId: NEW_ID,
@@ -250,6 +253,7 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
       },
     },
     auditLog: { create: async () => ({}) },
+    packageSlugRedirect: { findUnique: async () => null },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
   return fake;
