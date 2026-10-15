@@ -45,7 +45,8 @@ function toPackageDto(pkg: PackageWithServices): PackageDto {
     durationDays: pkg.durationDays,
     currency: pkg.currency,
     basePrice: pkg.basePrice.toString(),
-    active: pkg.active,
+    status: pkg.status,
+    publishedAt: pkg.publishedAt ? pkg.publishedAt.toISOString() : null,
     services: pkg.services.map((service) => ({
       id: service.id,
       inventoryItemId: service.inventoryItemId,
@@ -85,7 +86,7 @@ export class PackagesService {
 
   async list(filters: ListPackagesQuery): Promise<PackageDto[]> {
     const where: Prisma.PackageWhereInput = {};
-    if (filters.active !== undefined) where.active = filters.active;
+    if (filters.status !== undefined) where.status = filters.status;
     if (filters.province) where.province = filters.province;
 
     const packages = await this.prisma.package.findMany({
@@ -96,9 +97,9 @@ export class PackagesService {
     return packages.map(toPackageDto);
   }
 
-  /** The storefront sees active packages only. */
+  /** The storefront sees published packages only. */
   async listPublic(filters: ListPackagesQuery): Promise<PackageDto[]> {
-    return this.list({ ...filters, active: true });
+    return this.list({ ...filters, status: 'PUBLISHED' });
   }
 
   async getById(id: string): Promise<PackageDto> {
@@ -110,7 +111,7 @@ export class PackagesService {
       where: { slug },
       include: INCLUDE_SERVICES,
     });
-    if (!pkg || !pkg.active) {
+    if (!pkg || pkg.status !== 'PUBLISHED') {
       throw new NotFoundException(`Package ${slug} not found`);
     }
     return toPackageDto(pkg);
@@ -130,7 +131,8 @@ export class PackagesService {
         durationDays: input.durationDays,
         currency: input.currency,
         basePrice: input.basePrice,
-        active: input.active ?? true,
+        status: input.status ?? 'DRAFT',
+        publishedAt: input.status === 'PUBLISHED' ? new Date() : null,
         attributes: (input.attributes ?? undefined) as Prisma.InputJsonValue,
         services: {
           create: input.services.map((service) => ({
@@ -152,7 +154,7 @@ export class PackagesService {
     input: UpdatePackageRequest,
     actor: AuthUser,
   ): Promise<PackageDto> {
-    await this.loadPackage(id);
+    const existing = await this.loadPackage(id);
 
     const data: Prisma.PackageUpdateInput = {};
     if (input.name !== undefined) data.name = input.name;
@@ -162,7 +164,13 @@ export class PackagesService {
     if (input.durationDays !== undefined) data.durationDays = input.durationDays;
     if (input.currency !== undefined) data.currency = input.currency;
     if (input.basePrice !== undefined) data.basePrice = input.basePrice;
-    if (input.active !== undefined) data.active = input.active;
+    if (input.status !== undefined) {
+      data.status = input.status;
+      // Stamp the first publish; a later status change keeps the original.
+      if (input.status === 'PUBLISHED' && existing.publishedAt === null) {
+        data.publishedAt = new Date();
+      }
+    }
     if (input.attributes !== undefined) {
       data.attributes = input.attributes as Prisma.InputJsonValue;
     }

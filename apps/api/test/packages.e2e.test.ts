@@ -60,7 +60,8 @@ interface FakePackage {
   durationDays: number;
   currency: string;
   basePrice: Prisma.Decimal;
-  active: boolean;
+  status: string;
+  publishedAt: Date | null;
   attributes: null;
   createdAt: Date;
   updatedAt: Date;
@@ -96,7 +97,8 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
     durationDays: 3,
     currency: 'EUR',
     basePrice: new Prisma.Decimal('180.00'),
-    active: true,
+    status: 'PUBLISHED',
+    publishedAt: new Date('2026-09-01T00:00:00Z'),
     attributes: null,
     createdAt: new Date('2026-09-01T00:00:00Z'),
     updatedAt: new Date('2026-09-01T00:00:00Z'),
@@ -122,9 +124,9 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
         args.where.id.in.filter((id) => id === ITEM_A).length,
     },
     package: {
-      findMany: async (args: { where?: { active?: boolean; province?: string } }) =>
+      findMany: async (args: { where?: { status?: string; province?: string } }) =>
         state.packages.filter((pkg) => {
-          if (args.where?.active !== undefined && pkg.active !== args.where.active) {
+          if (args.where?.status !== undefined && pkg.status !== args.where.status) {
             return false;
           }
           if (args.where?.province && pkg.province !== args.where.province) {
@@ -145,7 +147,8 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
           durationDays: number;
           currency: string;
           basePrice: number;
-          active: boolean;
+          status: string;
+          publishedAt: Date | null;
           services: {
             create: { inventoryItemId: string; dayOffset: number; position: number }[];
           };
@@ -160,7 +163,8 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
           durationDays: args.data.durationDays,
           currency: args.data.currency,
           basePrice: new Prisma.Decimal(args.data.basePrice),
-          active: args.data.active,
+          status: args.data.status,
+          publishedAt: args.data.publishedAt,
           attributes: null,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -208,7 +212,12 @@ describe('packages API', () => {
     state = {
       packages: [
         makePackage(),
-        makePackage({ id: INACTIVE_ID, slug: 'retired-trail', active: false }),
+        makePackage({
+          id: INACTIVE_ID,
+          slug: 'retired-trail',
+          status: 'DRAFT',
+          publishedAt: null,
+        }),
       ],
     };
 
@@ -227,7 +236,7 @@ describe('packages API', () => {
     await app.close();
   });
 
-  it('serves only active packages on the public catalogue', async () => {
+  it('serves only published packages on the public catalogue', async () => {
     const response = await request(app.getHttpServer()).get('/catalog/packages');
 
     expect(response.status).toBe(200);
@@ -239,17 +248,17 @@ describe('packages API', () => {
     });
   });
 
-  it('serves a public package by slug and 404s an inactive one', async () => {
-    const active = await request(app.getHttpServer()).get(
+  it('serves a public package by slug and 404s a draft one', async () => {
+    const published = await request(app.getHttpServer()).get(
       '/catalog/packages/vinales-agro-ecology-trail',
     );
-    expect(active.status).toBe(200);
-    expect(active.body.name).toBe('Vinales Agro-Ecology Trail');
+    expect(published.status).toBe(200);
+    expect(published.body.name).toBe('Vinales Agro-Ecology Trail');
 
-    const inactive = await request(app.getHttpServer()).get(
+    const draft = await request(app.getHttpServer()).get(
       '/catalog/packages/retired-trail',
     );
-    expect(inactive.status).toBe(404);
+    expect(draft.status).toBe(404);
   });
 
   it('lists every package for an operations role', async () => {

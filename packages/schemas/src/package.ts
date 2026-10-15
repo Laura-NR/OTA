@@ -3,6 +3,16 @@ import { z } from 'zod';
 import { inventoryTypeSchema } from './inventory';
 import { nationalitySchema } from './regulatory';
 
+/** Publish lifecycle of a curated package (M1 / A-Package-Edit). */
+export const packageStatusSchema = z.enum([
+  'DRAFT',
+  'IN_REVIEW',
+  'PUBLISHED',
+  'ARCHIVED',
+]);
+
+export type PackageStatusDto = z.infer<typeof packageStatusSchema>;
+
 /**
  * One catalog item inside a package itinerary, joined with the catalog summary
  * the storefront needs to render it (spec §3.3).
@@ -31,7 +41,8 @@ export const packageSchema = z.object({
   durationDays: z.number().int(),
   currency: z.string(),
   basePrice: z.string(),
-  active: z.boolean(),
+  status: packageStatusSchema,
+  publishedAt: z.string().nullable(),
   services: z.array(packageServiceSchema),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -59,7 +70,7 @@ export const createPackageSchema = z.object({
   durationDays: z.coerce.number().int().min(1).max(60),
   currency: z.string().trim().length(3).default('EUR'),
   basePrice: z.coerce.number().nonnegative(),
-  active: z.boolean().optional(),
+  status: packageStatusSchema.optional(),
   attributes: z.record(z.string(), z.unknown()).optional(),
   services: z.array(packageServiceInputSchema).min(1).max(40),
 });
@@ -73,10 +84,7 @@ export type UpdatePackageRequest = z.infer<typeof updatePackageSchema>;
 
 export const listPackagesQuerySchema = z.object({
   province: z.string().trim().min(1).optional(),
-  active: z
-    .enum(['true', 'false'])
-    .optional()
-    .transform((value) => (value === undefined ? undefined : value === 'true')),
+  status: packageStatusSchema.optional(),
 });
 
 export type ListPackagesQuery = z.infer<typeof listPackagesQuerySchema>;

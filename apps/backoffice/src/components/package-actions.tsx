@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Button } from '@ota/ui';
+import type { PackageStatusDto } from '@ota/schemas';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -9,12 +10,12 @@ import { apiRequest } from '@/lib/client-api';
 
 export interface PackageActionsProps {
   packageId: string;
-  active: boolean;
+  status: PackageStatusDto;
   canManage: boolean;
 }
 
-/** Activate/deactivate and delete a curated package from the list. */
-export function PackageActions({ packageId, active, canManage }: PackageActionsProps) {
+/** Publish/unpublish and delete a curated package from the list. */
+export function PackageActions({ packageId, status, canManage }: PackageActionsProps) {
   const t = useTranslations('backoffice.forms');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -37,6 +38,8 @@ export function PackageActions({ packageId, active, canManage }: PackageActionsP
     }
   }
 
+  const published = status === 'PUBLISHED';
+
   return (
     <div className="space-y-2">
       {error ? <Alert variant="destructive">{error}</Alert> : null}
@@ -49,12 +52,12 @@ export function PackageActions({ packageId, active, canManage }: PackageActionsP
             run(() =>
               apiRequest(`/packages/${packageId}`, {
                 method: 'PATCH',
-                body: JSON.stringify({ active: !active }),
+                body: JSON.stringify({ status: published ? 'DRAFT' : 'PUBLISHED' }),
               }),
             )
           }
         >
-          {active ? t('deactivate') : t('activate')}
+          {published ? t('unpublish') : t('publish')}
         </Button>
         <Button
           size="sm"

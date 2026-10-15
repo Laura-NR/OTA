@@ -226,7 +226,7 @@ export class MeService {
         },
       },
     });
-    if (!pkg || !pkg.active) {
+    if (!pkg || pkg.status !== 'PUBLISHED') {
       throw new NotFoundException(`Package ${input.packageId} not found`);
     }
 

@@ -301,7 +301,7 @@ describe('me API', () => {
           id: PACKAGE_ID,
           name: 'Vinales Agro-Ecology Trail',
           slug: 'vinales-agro-ecology-trail',
-          active: true,
+          status: 'PUBLISHED',
           currency: 'EUR',
           basePrice: new Prisma.Decimal('180.00'),
           services: [
@@ -333,7 +333,7 @@ describe('me API', () => {
           id: INACTIVE_PACKAGE_ID,
           name: 'Retired Trail',
           slug: 'retired-trail',
-          active: false,
+          status: 'DRAFT',
           currency: 'EUR',
           basePrice: new Prisma.Decimal('99.00'),
           services: [],

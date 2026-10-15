@@ -1,6 +1,6 @@
 'use client';
 
-import type { InventoryItemDto, PackageDto } from '@ota/schemas';
+import type { InventoryItemDto, PackageDto, PackageStatusDto } from '@ota/schemas';
 import {
   Alert,
   Button,
@@ -40,7 +40,7 @@ export function PackageEditForm({
   const [durationDays, setDurationDays] = useState(String(pkg.durationDays));
   const [currency, setCurrency] = useState(pkg.currency);
   const [basePrice, setBasePrice] = useState(pkg.basePrice);
-  const [active, setActive] = useState(pkg.active);
+  const [status, setStatus] = useState<PackageStatusDto>(pkg.status);
   const [rows, setRows] = useState<ServiceRow[]>(
     [...pkg.services]
       .sort((a, b) => a.dayOffset - b.dayOffset || a.position - b.position)
@@ -87,7 +87,7 @@ export function PackageEditForm({
           durationDays: Number(durationDays),
           currency,
           basePrice: Number(basePrice),
-          active,
+          status,
           services: rows.map((row, index) => ({
             inventoryItemId: row.inventoryItemId,
             dayOffset: row.dayOffset,
@@ -173,14 +173,22 @@ export function PackageEditForm({
                 maxLength={3}
               />
             </div>
-            <label className="flex items-center gap-2 text-body-sm">
-              <input
-                type="checkbox"
-                checked={active}
-                onChange={(event) => setActive(event.target.checked)}
-              />
-              {t('active')}
-            </label>
+            <div className="space-y-2">
+              <Label htmlFor="edit-status">{t('status')}</Label>
+              <Select
+                id="edit-status"
+                value={status}
+                onChange={(event) => setStatus(event.target.value as PackageStatusDto)}
+              >
+                {(['DRAFT', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED'] as const).map(
+                  (candidate) => (
+                    <option key={candidate} value={candidate}>
+                      {candidate}
+                    </option>
+                  ),
+                )}
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>

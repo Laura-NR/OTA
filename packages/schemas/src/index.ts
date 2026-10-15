@@ -64,12 +64,14 @@ export {
   listPackagesQuerySchema,
   packageSchema,
   packageServiceSchema,
+  packageStatusSchema,
   updatePackageSchema,
   type CreatePackageBookingRequest,
   type CreatePackageRequest,
   type ListPackagesQuery,
   type PackageDto,
   type PackageServiceDto,
+  type PackageStatusDto,
   type UpdatePackageRequest,
 } from './package';
 export {

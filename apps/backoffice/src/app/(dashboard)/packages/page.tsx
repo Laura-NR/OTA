@@ -78,15 +78,25 @@ export default async function PackagesPage() {
                     </TableCell>
                     <TableCell>{pkg.services.length}</TableCell>
                     <TableCell>
-                      <Badge variant={pkg.active ? 'default' : 'outline'}>
-                        {pkg.active ? t('active') : t('inactive')}
+                      <Badge
+                        variant={
+                          pkg.status === 'PUBLISHED'
+                            ? 'success'
+                            : pkg.status === 'IN_REVIEW'
+                              ? 'warning'
+                              : pkg.status === 'ARCHIVED'
+                                ? 'secondary'
+                                : 'outline'
+                        }
+                      >
+                        {pkg.status}
                       </Badge>
                     </TableCell>
                     {canManage ? (
                       <TableCell>
                         <PackageActions
                           packageId={pkg.id}
-                          active={pkg.active}
+                          status={pkg.status}
                           canManage={canManage}
                         />
                       </TableCell>

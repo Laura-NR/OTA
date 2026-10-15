@@ -11,7 +11,7 @@ import { PackagesService } from './packages.service';
 
 /**
  * The storefront's public package catalogue. `@Public()` and hard-wired to
- * active packages only; the operations `GET /packages` view stays
+ * published packages only; the operations `GET /packages` view stays
  * authenticated.
  */
 @Controller('catalog/packages')
