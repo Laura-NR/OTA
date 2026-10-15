@@ -165,6 +165,23 @@ enum ExtraPriceUnit {
   PER_BOOKING
 }
 
+// M2: who travels and at what price.
+enum TravelerKind {
+  ADULT
+  CHILD
+  INFANT
+}
+
+enum PriceLineKind {
+  BASE
+  TIER
+  CHILD
+  SINGLE_SUPPLEMENT
+  EXTRA
+  SERVICE
+  FEE
+}
+
 model User {
   id            String   @id @default(uuid()) @db.Uuid
   email         String   @unique
@@ -456,6 +473,7 @@ model PackageTier {
 
   package  Package          @relation(fields: [packageId], references: [id], onDelete: Cascade)
   services PackageService[]
+  reservations Reservation[]
 
   @@unique([packageId, code])
   @@map("package_tiers")
@@ -476,6 +494,7 @@ model PackageDeparture {
   updatedAt DateTime        @updatedAt @map("updated_at")
 
   package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
 
   @@unique([packageId, startDate])
   @@index([startDate])
@@ -502,6 +521,7 @@ model PackageExtra {
 
   package       Package        @relation(fields: [packageId], references: [id], onDelete: Cascade)
   inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  reservationExtras ReservationExtra[]
 
   @@unique([packageId, code])
   @@map("package_extras")
@@ -647,24 +667,122 @@ model Reservation {
   completedAt             DateTime?         @map("completed_at")
   totalCurrency           String            @default("EUR") @map("total_currency")
   totalAmount             Decimal           @default(0) @map("total_amount") @db.Decimal(10, 2)
+  // M2: the party, the chosen tier/departure and the frozen price lines.
+  partySize               Int               @map("party_size") @default(1)
+  tierId                  String?           @map("tier_id") @db.Uuid
+  departureId             String?           @map("departure_id") @db.Uuid
   customItineraryPayload  Json?             @map("custom_itinerary_payload")
   createdAt               DateTime          @default(now()) @map("created_at")
   updatedAt               DateTime          @updatedAt @map("updated_at")
 
   user        User            @relation(fields: [userId], references: [id])
   package     Package?        @relation(fields: [packageId], references: [id])
+  tier        PackageTier?      @relation(fields: [tierId], references: [id], onDelete: SetNull)
+  departure   PackageDeparture? @relation(fields: [departureId], references: [id], onDelete: SetNull)
   serviceItems ServiceItem[]
   payments    PaymentReceipt[]
   documents   Document[]
   messages    Message[]
   reviews     Review[]
   incidents   Incident[]
+  travelers   ReservationTraveler[]
+  rooms       ReservationRoom[]
+  extras      ReservationExtra[]
+  priceLines  ReservationPriceLine[]
 
   @@index([userId])
   @@index([status])
   @@index([packageId])
   @@index([completedAt])
+  @@index([tierId])
+  @@index([departureId])
   @@map("reservations")
+}
+
+// One traveler on a booking (M2). `passportNumberEnc` is AES-256-GCM ciphertext
+// (decision D1); the plaintext is returned only by the logged vault route.
+model ReservationTraveler {
+  id                    String       @id @default(uuid()) @db.Uuid
+  reservationId         String       @map("reservation_id") @db.Uuid
+  roomId                String?      @map("room_id") @db.Uuid
+  position              Int          @default(0)
+  kind                  TravelerKind @default(ADULT)
+  isLead                Boolean      @default(false) @map("is_lead")
+  fullName              String       @map("full_name")
+  dateOfBirth           DateTime?    @map("date_of_birth") @db.Date
+  nationality           String?
+  passportNumberEnc     String?      @map("passport_number_enc")
+  passportExpiresAt     DateTime?    @map("passport_expires_at") @db.Date
+  emergencyContactName  String?      @map("emergency_contact_name")
+  emergencyContactPhone String?      @map("emergency_contact_phone")
+  createdAt             DateTime     @default(now()) @map("created_at")
+  updatedAt             DateTime     @updatedAt @map("updated_at")
+
+  reservation Reservation           @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  room        ReservationRoom?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  priceLines  ReservationPriceLine[]
+
+  @@index([reservationId])
+  @@index([roomId])
+  @@map("reservation_travelers")
+}
+
+// A room on the rooming list (M2); position orders them on the voucher.
+model ReservationRoom {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @map("reservation_id") @db.Uuid
+  label         String
+  capacity      Int      @default(2)
+  position      Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  reservation Reservation           @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  travelers   ReservationTraveler[]
+
+  @@index([reservationId])
+  @@map("reservation_rooms")
+}
+
+// An add-on chosen on the booking (M2), priced from the package extra or manual.
+model ReservationExtra {
+  id             String         @id @default(uuid()) @db.Uuid
+  reservationId  String         @map("reservation_id") @db.Uuid
+  packageExtraId String?        @map("package_extra_id") @db.Uuid
+  label          String
+  unit           ExtraPriceUnit @default(PER_PERSON)
+  quantity       Int            @default(1)
+  unitAmount     Decimal        @map("unit_amount") @db.Decimal(10, 2)
+  amount         Decimal        @db.Decimal(10, 2)
+  currency       String         @default("EUR")
+  position       Int            @default(0)
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  reservation  Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  packageExtra PackageExtra? @relation(fields: [packageExtraId], references: [id], onDelete: SetNull)
+
+  @@index([reservationId])
+  @@map("reservation_extras")
+}
+
+// A frozen price line (M2): the reproducible invoice of what the traveler paid.
+model ReservationPriceLine {
+  id            String        @id @default(uuid()) @db.Uuid
+  reservationId String        @map("reservation_id") @db.Uuid
+  travelerId    String?       @map("traveler_id") @db.Uuid
+  kind          PriceLineKind
+  label         String
+  quantity      Decimal       @default(1) @db.Decimal(6, 2)
+  unitAmount    Decimal       @map("unit_amount") @db.Decimal(10, 2)
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("EUR")
+  position      Int           @default(0)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  reservation Reservation          @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  traveler    ReservationTraveler? @relation(fields: [travelerId], references: [id], onDelete: SetNull)
+
+  @@index([reservationId])
+  @@map("reservation_price_lines")
 }
 
 model ServiceItem {
@@ -680,8 +798,11 @@ model ServiceItem {
   offeredAt        DateTime?         @map("offered_at")
   respondedAt      DateTime?         @map("responded_at")
   declineReason    String?           @map("decline_reason")
-  payoutRate       Decimal           @default(0) @map("payout_rate") @db.Decimal(10, 2)
-  payoutStatus     PayoutStatus      @default(ACCRUED) @map("payout_status")
+  payoutRate      Decimal           @default(0) @map("payout_rate") @db.Decimal(10, 2)
+  payoutStatus    PayoutStatus      @default(ACCRUED) @map("payout_status")
+  // M2: what the traveler pays for this service (closes the invoice gap);
+  // null until the booking is priced.
+  travelerPrice   Decimal?          @map("traveler_price") @db.Decimal(10, 2)
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
