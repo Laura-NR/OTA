@@ -19,11 +19,11 @@ ADR 0007 (worker app).
   change leaves a redirect the public `getBySlug` follows). `12ab551` applies the per-locale
   overlay on the public read and 308s a retired slug; `aa07096` adds package media storage
   (upload/serve/delete). **M1 is complete** except the editor's media and locale tabs.
-- **Phase 4, M2 (drafted 2026-10-15):** `docs/schema-m2-travelers.md` is the M2 (party and
-  travelers) schema diff for review: `ReservationTraveler`, `ReservationRoom`, `ReservationExtra`,
-  `ReservationPriceLine`, `Reservation.tierId/departureId/partySize`, `ServiceItem.travelerPrice`,
-  with decisions D1–D4 (passport encryption, travelers storage, room set-up, per-service price).
-  **No migration generated. Waiting for the owner.**
+- **Phase 4, M2 (approved + generated 2026-10-15):** the owner took D1–D4 as recommended and
+  migration `20261015010000_travelers` was applied (`328cf3c`): `ReservationTraveler` (passport as
+  AES-256-GCM ciphertext), `ReservationRoom`, `ReservationExtra`, `ReservationPriceLine`,
+  `Reservation.partySize/tierId/departureId`, `ServiceItem.travelerPrice`. Additive. The surfaces
+  (encryption helper, DTOs, pricing reducer, API, booking form, invoice, retention purge) follow.
 - **Phase 5, no-migration part (admin)** — seven increments done:
   - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
     matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
@@ -169,9 +169,10 @@ ADR 0007 (worker app).
     `@ota/domain` `packages/`. Tenant-wide terms stay in the manifest; a package stores policy keys."
 
 ## Next
-1. M2: ask the owner to approve `docs/schema-m2-travelers.md` (D1–D4), then generate the migration
-   and build the travelers/rooming/price-line surfaces, then M3–M5 (compliance, deposit schedule,
-   proposal).
+1. M2: build the surfaces on the generated schema — the passport encryption helper, the
+   traveler/room/price-line DTOs, the booking pricing reducer, the API routes, the booking form,
+   the invoice amounts and the retention purge of traveler PII — then M3–M5 (compliance, deposit
+   schedule, proposal).
 2. Phase 5: add the locale overlays and media to the package editor; Content/Disruption/Settings as
    their migrations land (M6–M9 asked for as they come up).
 
@@ -274,3 +275,6 @@ ADR 0007 (worker app).
   with upload/serve/delete. The editor's media and locale tabs remain.
 - 2026-10-15 — M2 (party and travelers) drafted in `docs/schema-m2-travelers.md` for review per Q9;
   no migration generated.
+- 2026-10-15 — M2 approved as D1(a)–D4(a) and generated (`20261015010000_travelers`): app-level
+  AES-256-GCM passport encryption, traveler/room/price-line tables, `ReservationRoom` rooming list,
+  and `ServiceItem.travelerPrice` alongside the price lines. The surfaces follow.

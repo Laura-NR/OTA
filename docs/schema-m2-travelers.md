@@ -1,8 +1,12 @@
 # M2 Party and travelers: schema diff for review
 
-**Status:** Draft for the owner's review (Article 2; design plan Q9). **No migration is generated or
-applied.** The draft follows the M1 pattern: the catalog side landed in M1, so M2 is the **booking
-side** — who travels, in what room, at what tier, with which extras, and at what price.
+**Status:** **Approved and generated 2026-10-15.** The owner took D1–D4 as recommended and the
+migration `20261015010000_travelers` was applied (`328cf3c`): `ReservationTraveler` (passport as
+AES-256-GCM ciphertext), `ReservationRoom`, `ReservationExtra`, `ReservationPriceLine`,
+`Reservation.partySize/tierId/departureId` and `ServiceItem.travelerPrice`. Additive; no backfill.
+The surfaces follow: the encryption helper, the traveler/room/price-line DTOs, the booking pricing
+reducer, the API routes and the booking form, the invoice amounts and the retention purge of
+traveler PII.
 **Date:** 2026-10-15
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M2, read against the Booking, Account and
 A-Booking boards (`design/vereda-v1.2/project/`).
