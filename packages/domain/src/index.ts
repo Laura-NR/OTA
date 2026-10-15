@@ -78,6 +78,24 @@ export {
   type PricingRule,
 } from './pricing/pricing';
 export {
+  calculatePackagePrice,
+  childRate,
+  type ChildBand,
+  type ExtraUnit,
+  type PackageExtraInput,
+  type PackagePriceBreakdown,
+  type PackagePriceInput,
+} from './packages/pricing';
+export {
+  PackageStatus,
+  canPublishPackage,
+  packagePublishIssues,
+  type BookingModel,
+  type PackagePublishInput,
+  type PublishIssue,
+  type PublishMedia,
+} from './packages/publish';
+export {
   calculateFinance,
   calculateGeography,
   calculateOperations,
