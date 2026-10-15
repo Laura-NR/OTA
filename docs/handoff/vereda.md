@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-14 23:05
+# Handoff — vereda — updated 2026-10-15 21:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -7,7 +7,8 @@ Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phas
 ADR 0007 (worker app).
 
 ## State
-- **Phases 0, 1, 0b, 2 and 3 are done** (committed locally on `vereda`; nothing is pushed).
+- **Phases 0, 1, 0b, 2 and 3 are done** (committed locally on `vereda`; the owner pushes on
+  request, so origin may trail the local branch — check `git log --oneline origin/vereda..vereda`).
 - **Phase 4, M1 core (2026-10-15):** the owner approved D1–D4 and the migration was generated
   (`3a6f9ce`, `20261015000000_package_v2`): the M1 catalog model (tiers, departures, extras, days,
   media, per-locale translations, slug redirects, booking model, group/lead time, themes,
@@ -111,8 +112,8 @@ ADR 0007 (worker app).
   day title) and a media upload/serve/delete.
 
 ## Assumptions & unknowns
-- **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
-  No assumptions remain on the schema shape.
+- **Schema gates (Q9):** M1 approved (2026-10-14) and landed; M2 approved (2026-10-15) as
+  D1(a)–D4(a) with the migration applied, its surfaces next. No open schema-shape questions.
 - "Merge the board" was read as: the pipeline board's status counts feed the Dashboard's Bookings
   figure, and its list became the A-Bookings table at `/bookings` (tab still "Pipeline").
 - Not built (data or decision missing): payment windows, owner/My queue, OFAC, disruption, audio
@@ -167,6 +168,13 @@ ADR 0007 (worker app).
     `GET /catalog/packages`, and the read model carries `days`/`tiers`/`departures`/`extras`/`media`.
     Package pricing is `calculatePackagePrice` and the publish gate `packagePublishIssues` in
     `@ota/domain` `packages/`. Tenant-wide terms stay in the manifest; a package stores policy keys."
+  - "The public package catalog takes `?locale=` and overlays a published `PackageTranslation`
+    (nested days/tiers/extras/media by stable keys), stripping raw rows. Package media lives behind
+    `packages/storage` at `packages/<id>/<uuid>.<ext>` (`POST /packages/:id/media`,
+    `GET /catalog/packages/media/:id`); the public serve refuses a draft's photos."
+  - "M2 (party/travelers) is additive: `ReservationTraveler` (passport number as AES-256-GCM
+    ciphertext under `PASSPORT_ENCRYPTION_KEY`), `ReservationRoom`/`Extra`/`PriceLine`,
+    `Reservation.partySize/tierId/departureId` and `ServiceItem.travelerPrice`."
 
 ## Next
 1. M2: build the surfaces on the generated schema — the passport encryption helper, the
