@@ -16,9 +16,14 @@ ADR 0007 (worker app).
   `3c64100` extends the package read model and draws tiers, departures, extras and the day texts
   on the storefront Package page; `86b76c4` adds the ops write path (`POST`/`PATCH` replace the
   tiers/departures/extras/days collections, `PUT /packages/:id/translations/:locale`, and a slug
-  change leaves a redirect the public `getBySlug` follows). **Still to do:** the per-locale overlay
-  applied when reading the public catalog, package media storage (upload + serve) and the
-  storefront 308 from a retired slug.
+  change leaves a redirect the public `getBySlug` follows). `12ab551` applies the per-locale
+  overlay on the public read and 308s a retired slug; `aa07096` adds package media storage
+  (upload/serve/delete). **M1 is complete** except the editor's media and locale tabs.
+- **Phase 4, M2 (drafted 2026-10-15):** `docs/schema-m2-travelers.md` is the M2 (party and
+  travelers) schema diff for review: `ReservationTraveler`, `ReservationRoom`, `ReservationExtra`,
+  `ReservationPriceLine`, `Reservation.tierId/departureId/partySize`, `ServiceItem.travelerPrice`,
+  with decisions D1–D4 (passport encryption, travelers storage, room set-up, per-service price).
+  **No migration generated. Waiting for the owner.**
 - **Phase 5, no-migration part (admin)** — seven increments done:
   - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
     matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
@@ -59,7 +64,7 @@ ADR 0007 (worker app).
 - New pure rules in `@ota/domain`: `dispatch/aging.ts`, `analytics/booking-mix.ts`,
   `time/ops-calendar.ts` (Havana zone), `reservation/booking-views.ts`. All tested.
 
-## Verified (2026-10-15, `91a0dbb`)
+## Verified (2026-10-15, `aa07096`)
 - lint, format:check, typecheck and build (18/18) are green.
 - `pnpm test`: **419 passed / 5 skipped** (api 185/4 skipped — the live-DB integration tests are
   opt-in, domain 111 (+10 for M1 pricing and
@@ -100,6 +105,10 @@ ADR 0007 (worker app).
   (29 tasks), build (18/18) and `pnpm e2e` **46/46** green (the packages-edit spec now asserts the
   M1 sections). Browser on the editor at 390/1024/1280: no overflow; the tiers, departures,
   extras and day-text editors render and a save through the form succeeds.
+- M1 closers (`12ab551`, `aa07096`): lint, format:check, typecheck, i18n parity, the api
+  packages/me/authorization tests, `pnpm test` (29 tasks), build (18/18) and `pnpm e2e` **46/46**
+  green. The live-Postgres integration test now also proves the per-locale overlay (with a nested
+  day title) and a media upload/serve/delete.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -160,11 +169,11 @@ ADR 0007 (worker app).
     `@ota/domain` `packages/`. Tenant-wide terms stay in the manifest; a package stores policy keys."
 
 ## Next
-1. Finish M1: the per-locale overlay applied when reading the public catalog, package media storage
-   (upload + serve) and the storefront 308 from a retired slug. Then M2–M5 (travelers, compliance,
-   deposit schedule, proposal).
-2. Phase 5: add the locale overlays and media to the package editor, then Content/Disruption/
-   Settings as their migrations land (M6–M9 asked for as they come up).
+1. M2: ask the owner to approve `docs/schema-m2-travelers.md` (D1–D4), then generate the migration
+   and build the travelers/rooming/price-line surfaces, then M3–M5 (compliance, deposit schedule,
+   proposal).
+2. Phase 5: add the locale overlays and media to the package editor; Content/Disruption/Settings as
+   their migrations land (M6–M9 asked for as they come up).
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -259,3 +268,9 @@ ADR 0007 (worker app).
   inline lists saved in one PATCH; publishing runs the domain `packagePublishIssues` first. Media
   and the locale overlays are not in the form yet (they follow with media storage and the overlay
   read).
+- 2026-10-15 — M1 closed: the public catalog overlays a `?locale=` published translation (nested
+  days/tiers/extras/media by stable keys) and strips raw rows; the storefront 308s a retired slug
+  to the current one; package media lives behind `packages/storage` at `packages/<id>/<uuid>.<ext>`
+  with upload/serve/delete. The editor's media and locale tabs remain.
+- 2026-10-15 — M2 (party and travelers) drafted in `docs/schema-m2-travelers.md` for review per Q9;
+  no migration generated.

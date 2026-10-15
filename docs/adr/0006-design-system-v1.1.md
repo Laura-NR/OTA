@@ -252,9 +252,11 @@ tokens; no token was added.
 - **A-Package-Edit (Phase 5 item 6).** The package editor edits the M1 details
   and the accommodation tiers, departures, optional extras and day texts as
   inline lists, saved in one PATCH through the M1 write path. Publishing runs the
-  domain `packagePublishIssues` first and blocks with the reasons. Media and the
-  per-locale text overlays are edited elsewhere (package media storage and the
-  public overlay read are follow-ups).
+  domain `packagePublishIssues` first and blocks with the reasons. Package photos
+  are uploaded and served behind packages/storage (`POST /packages/:id/media`,
+  `GET /catalog/packages/media/:id`), and the public catalog overlays a locale's
+  published translation (`?locale=`). The editor's media and locale tabs are
+  still to add.
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and
