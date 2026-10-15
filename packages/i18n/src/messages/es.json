@@ -561,6 +561,7 @@
       "inventory": "Inventario",
       "imports": "Importaciones",
       "retention": "Retención",
+      "customers": "Clientes",
       "suppliers": "Proveedores",
       "applications": "Solicitudes"
     },
@@ -1284,6 +1285,53 @@
         "description": "Dónde se prestan los servicios reservados.",
         "byProvince": "Geografía de los servicios",
         "byProvinceDescription": "Servicios reservados por provincia"
+      }
+    },
+    "customers": {
+      "title": "Clientes",
+      "summary": "{accounts} cuentas · {withTrips} con un viaje",
+      "retentionDesk": "Mesa de retención",
+      "loadError": "No se pudieron cargar los clientes.",
+      "accounts": "Cuentas",
+      "count": "{count} cuenta(s)",
+      "empty": "Aún no hay clientes.",
+      "back": "← Clientes",
+      "since": "cliente desde {date}",
+      "message": "Correo",
+      "call": "Llamar",
+      "table": {
+        "customer": "Cliente",
+        "trips": "Viajes",
+        "lastActivity": "Última actividad",
+        "retention": "Retención",
+        "openLabel": "Abrir {name}",
+        "code": "Código",
+        "packageDates": "Paquete · fechas",
+        "status": "Estado",
+        "total": "Total"
+      },
+      "tripsTitle": "Viajes",
+      "tripsDescription": "{count} viaje(s)",
+      "noTrips": "Aún no hay viajes.",
+      "customItinerary": "Itinerario a medida",
+      "retentionTitle": "Retención GDPR",
+      "retentionDetail": {
+        "ACTIVE": "La cuenta está activa. El reloj de retención arranca 6 meses después del último viaje completado.",
+        "NOTICE_DUE": "Toca enviar el aviso de continuidad; el viajero puede confirmar para extender la cuenta 12 meses.",
+        "GRACE_PERIOD": "Se envió un aviso y corre el periodo de gracia de 30 días; sin confirmación, el registro se anonimiza.",
+        "PURGE_DUE": "El periodo de gracia terminó; el registro debe anonimizarse.",
+        "ANONYMIZED": "El registro se ha anonimizado; se conservan las reservas y los totales fiscales."
+      },
+      "lastCompleted": "Último viaje completado",
+      "noCompleted": "Aún no hay viaje completado",
+      "retentionNote": "6 meses después del último viaje completado se envía un correo de continuidad; tras 30 días de gracia la cuenta se anonimiza. Spec §3.5.",
+      "later": "Las preferencias, los documentos de pasaporte, la certificación OFAC y el historial de comunicación llegan con M2/M3; hoy solo se muestran la cuenta, sus viajes y la retención.",
+      "retentionStatus": {
+        "ACTIVE": "Activa",
+        "NOTICE_DUE": "Aviso pendiente",
+        "GRACE_PERIOD": "Periodo de gracia",
+        "PURGE_DUE": "Purga pendiente",
+        "ANONYMIZED": "Anonimizada"
       }
     },
     "retention": {

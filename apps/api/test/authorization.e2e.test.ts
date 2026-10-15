@@ -52,6 +52,7 @@ const APPLICATION = '20202020-2020-4020-8020-202020202020';
 const RULE = '30303030-3030-4030-8030-303030303030';
 const MEDIA = '40404040-4040-4040-8040-404040404040';
 const PAYMENT = '50505050-5050-4050-8050-505050505050';
+const CUSTOMER = '60606060-6060-4060-8060-606060606060';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'worker';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -184,6 +185,10 @@ const ROUTES: Route[] = [
   // GDPR retention lifecycle (the keep-alive link itself is public).
   { method: 'get', path: '/retention/pending', allowed: 'opsRead' },
   { method: 'post', path: '/retention/scan', allowed: 'opsWrite' },
+
+  // Customers read model.
+  { method: 'get', path: '/customers', allowed: 'opsRead' },
+  { method: 'get', path: `/customers/${CUSTOMER}`, allowed: 'opsRead' },
 ];
 
 const fakePrisma = {

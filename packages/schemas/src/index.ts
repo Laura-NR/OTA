@@ -25,6 +25,14 @@ export {
   type RetentionStatusDto,
 } from './retention';
 export {
+  customerDetailSchema,
+  customerSchema,
+  customerTripSchema,
+  type CustomerDetailDto,
+  type CustomerDto,
+  type CustomerTripDto,
+} from './customer';
+export {
   createIncidentSchema,
   incidentSchema,
   incidentSeveritySchema,

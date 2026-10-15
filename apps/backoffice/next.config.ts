@@ -27,7 +27,6 @@ const MOVED: ReadonlyArray<[string, string]> = [
   ['/imports', '/packages/imports'],
   ['/applications', '/suppliers/applications'],
   ['/retention', '/customers/retention'],
-  ['/customers', '/customers/retention'],
   ['/analytics', '/reports'],
   ['/regulatory', '/reports#regulatory'],
   ['/quality', '/reports#quality'],

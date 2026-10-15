@@ -561,6 +561,7 @@
       "inventory": "Inventaire",
       "imports": "Importations",
       "retention": "Rétention",
+      "customers": "Clients",
       "suppliers": "Fournisseurs",
       "applications": "Candidatures"
     },
@@ -1284,6 +1285,53 @@
         "description": "Où les services réservés ont lieu.",
         "byProvince": "Géographie des services",
         "byProvinceDescription": "Services réservés par province"
+      }
+    },
+    "customers": {
+      "title": "Clients",
+      "summary": "{accounts} comptes · {withTrips} avec un voyage",
+      "retentionDesk": "Bureau de conservation",
+      "loadError": "Impossible de charger les clients.",
+      "accounts": "Comptes",
+      "count": "{count} compte(s)",
+      "empty": "Aucun client pour l'instant.",
+      "back": "← Clients",
+      "since": "client depuis le {date}",
+      "message": "E-mail",
+      "call": "Appeler",
+      "table": {
+        "customer": "Client",
+        "trips": "Voyages",
+        "lastActivity": "Dernière activité",
+        "retention": "Conservation",
+        "openLabel": "Ouvrir {name}",
+        "code": "Code",
+        "packageDates": "Forfait · dates",
+        "status": "Statut",
+        "total": "Total"
+      },
+      "tripsTitle": "Voyages",
+      "tripsDescription": "{count} voyage(s)",
+      "noTrips": "Aucun voyage pour l'instant.",
+      "customItinerary": "Itinéraire sur mesure",
+      "retentionTitle": "Conservation RGPD",
+      "retentionDetail": {
+        "ACTIVE": "Le compte est actif. Le délai de conservation démarre 6 mois après le dernier voyage terminé.",
+        "NOTICE_DUE": "Un avis de maintien est dû ; le voyageur peut confirmer pour prolonger le compte de 12 mois.",
+        "GRACE_PERIOD": "Un avis a été envoyé et le délai de grâce de 30 jours court ; sans confirmation, le dossier est anonymisé.",
+        "PURGE_DUE": "Le délai de grâce est écoulé ; le dossier doit être anonymisé.",
+        "ANONYMIZED": "Le dossier a été anonymisé ; les réservations et les totaux fiscaux sont conservés."
+      },
+      "lastCompleted": "Dernier voyage terminé",
+      "noCompleted": "Aucun voyage terminé pour l'instant",
+      "retentionNote": "6 mois après le dernier voyage terminé, un e-mail de maintien est envoyé ; après 30 jours de grâce, le compte est anonymisé. Spec §3.5.",
+      "later": "Les préférences, les documents de passeport, la certification OFAC et l'historique de communication arrivent avec M2/M3 ; seuls le compte, ses voyages et la conservation sont affichés aujourd'hui.",
+      "retentionStatus": {
+        "ACTIVE": "Actif",
+        "NOTICE_DUE": "Avis dû",
+        "GRACE_PERIOD": "Délai de grâce",
+        "PURGE_DUE": "Purge due",
+        "ANONYMIZED": "Anonymisé"
       }
     },
     "retention": {

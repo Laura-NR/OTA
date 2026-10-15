@@ -561,6 +561,7 @@
       "inventory": "Inventory",
       "imports": "Imports",
       "retention": "Retention",
+      "customers": "Customers",
       "suppliers": "Suppliers",
       "applications": "Applications"
     },
@@ -1284,6 +1285,53 @@
         "description": "Where the booked services take place.",
         "byProvince": "Service geography",
         "byProvinceDescription": "Booked services by province"
+      }
+    },
+    "customers": {
+      "title": "Customers",
+      "summary": "{accounts} accounts · {withTrips} with a trip",
+      "retentionDesk": "Retention desk",
+      "loadError": "Could not load the customers.",
+      "accounts": "Accounts",
+      "count": "{count} account(s)",
+      "empty": "No customers yet.",
+      "back": "← Customers",
+      "since": "customer since {date}",
+      "message": "Email",
+      "call": "Call",
+      "table": {
+        "customer": "Customer",
+        "trips": "Trips",
+        "lastActivity": "Last activity",
+        "retention": "Retention",
+        "openLabel": "Open {name}",
+        "code": "Code",
+        "packageDates": "Package · dates",
+        "status": "Status",
+        "total": "Total"
+      },
+      "tripsTitle": "Trips",
+      "tripsDescription": "{count} trip(s)",
+      "noTrips": "No trips yet.",
+      "customItinerary": "Custom itinerary",
+      "retentionTitle": "GDPR retention",
+      "retentionDetail": {
+        "ACTIVE": "The account is active. The retention clock starts 6 months after the last completed trip.",
+        "NOTICE_DUE": "A keep-alive notice is due; the traveler can confirm to extend the account by 12 months.",
+        "GRACE_PERIOD": "A notice was sent and the 30-day grace period is running; without a confirmation the record is anonymized.",
+        "PURGE_DUE": "The grace period has lapsed; the record is due for anonymization.",
+        "ANONYMIZED": "The record has been anonymized; reservations and fiscal totals are kept."
+      },
+      "lastCompleted": "Last completed trip",
+      "noCompleted": "No completed trip yet",
+      "retentionNote": "6 months after the last completed trip a keep-alive email goes out; after a 30-day grace the account is anonymized. Spec §3.5.",
+      "later": "Preferences, passport documents, OFAC certification and the communication history arrive with M2/M3; only the account, its trips and retention are shown today.",
+      "retentionStatus": {
+        "ACTIVE": "Active",
+        "NOTICE_DUE": "Notice due",
+        "GRACE_PERIOD": "Grace period",
+        "PURGE_DUE": "Purge due",
+        "ANONYMIZED": "Anonymized"
       }
     },
     "retention": {

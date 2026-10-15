@@ -7,6 +7,7 @@ import { AssistantModule } from './assistant/assistant.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { ContactModule } from './contact/contact.module';
+import { CustomersModule } from './customers/customers.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { DocumentsModule } from './documents/documents.module';
 import { EmailModule } from './email/email.module';
@@ -66,6 +67,7 @@ const isTest = process.env.NODE_ENV === 'test';
     ReportsModule,
     RetentionModule,
     ContactModule,
+    CustomersModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })

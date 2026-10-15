@@ -65,9 +65,12 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
   {
     key: 'customers',
     icon: 'users',
-    href: '/customers/retention',
+    href: '/customers',
     base: '/customers',
-    pages: [{ key: 'retention', href: '/customers/retention' }],
+    pages: [
+      { key: 'customers', href: '/customers' },
+      { key: 'retention', href: '/customers/retention' },
+    ],
   },
   {
     key: 'suppliers',
