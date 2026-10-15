@@ -18,6 +18,13 @@ test.describe('curated package editor', () => {
       page.getByRole('heading', { name: 'Trinidad Heritage Trail' }),
     ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Itinerary' })).toBeVisible();
+    // M1: the editor carries the tiers, departures, extras and day texts.
+    await expect(
+      page.getByRole('heading', { name: 'Accommodation tiers' }),
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Departures' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Optional extras' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Day texts' })).toBeVisible();
 
     // Re-saving the seeded price is a no-op that exercises the replace-all PATCH.
     await page.getByLabel('Base price').fill('240.00');
