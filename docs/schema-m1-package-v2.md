@@ -2,12 +2,14 @@
 
 **Status:** **Approved and generated 2026-10-15.** The owner took D1–D4 as recommended and the
 migration `20261015000000_package_v2` was applied (with the hand-written backfill); commit
-`3a6f9ce`. Landed so far: the schema, the `PackageStatus` lifecycle replacing `active`, the M1
-package read model (`PackageDto` days/tiers/departures/extras/media + the new fields), pricing v2
-and the publish checks in `@ota/domain`, and the storefront Package page showing tiers,
-departures, extras and the day texts. Still to do: the ops write endpoints for tiers, departures,
-extras, days, media and translations (the Phase 5 item-6 editor), the per-locale translation
-overlay in the public API, package media storage, and retired-slug 308 redirects.
+`3a6f9ce`. Landed: the schema, the `PackageStatus` lifecycle replacing `active`, the M1 package
+read model (`PackageDto` days/tiers/departures/extras/media/translations + the new fields), pricing
+v2 and the publish checks in `@ota/domain`, the storefront Package page showing tiers, departures,
+extras and the day texts, and the ops write path (`86b76c4`: `create`/`update` replace the
+collections; `PUT /packages/:id/translations/:locale`; a slug change leaves a redirect the public
+`getBySlug` follows). Still to do: the A-Package-Edit editor UI (Phase 5 item 6), the per-locale
+overlay applied when reading the public catalog, package media storage (upload + serve), and the
+storefront 308 from a retired slug to the current one.
 **Date:** 2026-10-14
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M1, read against the Package, Booking and
 A-Package-Edit boards (`design/vereda-v1.2/project/`).

@@ -14,9 +14,11 @@ ADR 0007 (worker app).
   policies, SEO) and `PackageStatus` replacing `active` (the existing package backfilled to
   PUBLISHED). `d93fe9c` adds package pricing v2 and the publish checks to `@ota/domain`;
   `3c64100` extends the package read model and draws tiers, departures, extras and the day texts
-  on the storefront Package page. **Still to do:** the ops write endpoints (Phase 5 item 6, the
-  A-Package-Edit editor), the per-locale translation overlay in the public API, package media
-  storage and retired-slug 308 redirects.
+  on the storefront Package page; `86b76c4` adds the ops write path (`POST`/`PATCH` replace the
+  tiers/departures/extras/days collections, `PUT /packages/:id/translations/:locale`, and a slug
+  change leaves a redirect the public `getBySlug` follows). **Still to do:** the A-Package-Edit
+  editor UI (Phase 5 item 6), the per-locale overlay applied when reading the public catalog,
+  package media storage (upload + serve) and the storefront 308 from a retired slug.
 - **Phase 5, no-migration part (admin)** — six increments done:
   - `47ed5dd` **Dashboard** = A-Dashboard: month figures, aging buckets, alerts, the live dispatch
     matrix (`/ops` socket, Havana timers, re-dispatch drawer), desk tasks. `GET /dispatch/active`
@@ -54,7 +56,8 @@ ADR 0007 (worker app).
 
 ## Verified (2026-10-15, `3c64100`)
 - lint, format:check, typecheck and build (18/18) are green.
-- `pnpm test`: **419 passed / 4 skipped** (api 185/3 skipped, domain 111 (+10 for M1 pricing and
+- `pnpm test`: **419 passed / 5 skipped** (api 185/4 skipped — the live-DB integration tests are
+  opt-in, domain 111 (+10 for M1 pricing and
   publish checks), ui 31, config 24,
   theming 14, schemas 14, reports 4, and the rest).
 - `pnpm e2e`: **45/45** (the reports specs updated to the merged page; one new section-anchor
@@ -84,6 +87,10 @@ ADR 0007 (worker app).
   `/en/packages/trinidad-heritage-trail` at 390/1024/1280: no overflow; Accommodation tiers
   (Standard included, Comfort +€120), Departures (13 Feb / 6 Mar, seats and price) and Optional
   extras render; the itinerary shows the seeded day texts.
+- M1 write path (`86b76c4`): lint, format:check, typecheck, the api packages/me/authorization
+  tests, `pnpm test` (29 tasks), build (18/18) and `pnpm e2e` **46/46** green. The live-Postgres
+  integration test (`RUN_DB_INTEGRATION=1 … test/packages.integration.test.ts`) proves
+  create-with-collections, a wholesale tier replace, the slug redirect and a translation upsert.
 
 ## Assumptions & unknowns
 - **M1 (Q9) answered 2026-10-14:** approved as D1(a)–D4(a); the migration is the next Phase 4 job.
@@ -144,10 +151,10 @@ ADR 0007 (worker app).
     `@ota/domain` `packages/`. Tenant-wide terms stay in the manifest; a package stores policy keys."
 
 ## Next
-1. Finish M1: the ops write endpoints for tiers, departures, extras, days, media and translations
-   (the Phase 5 item-6 A-Package-Edit editor), the per-locale translation overlay in the public API,
-   package media storage and retired-slug 308 redirects. Then M2–M5 (travelers, compliance, deposit
-   schedule, proposal).
+1. Finish M1: the A-Package-Edit editor UI (Phase 5 item 6) on the new write path, the per-locale
+   overlay applied when reading the public catalog, package media storage (upload + serve) and the
+   storefront 308 from a retired slug. Then M2–M5 (travelers, compliance, deposit schedule,
+   proposal).
 2. Phase 5: the Packages editor v2 once the M1 endpoints exist; Content/Disruption/Settings as
    their migrations land (M6–M9 asked for as they come up).
 
@@ -236,3 +243,7 @@ ADR 0007 (worker app).
   tables added. The package read model, the domain pricing/publish checks and the storefront
   tiers/departures/extras/day texts landed. The ops editor endpoints, the per-locale overlay,
   package media storage and slug redirects follow.
+- 2026-10-15 — M1 write path: `POST`/`PATCH /packages` replace the tiers/departures/extras/days
+  collections wholesale (same pattern as services); a slug change leaves a `PackageSlugRedirect`
+  that the public `getBySlug` follows; `PUT /packages/:id/translations/:locale` upserts one locale.
+  The editor UI, the public per-locale overlay, package media and the storefront 308 remain.
