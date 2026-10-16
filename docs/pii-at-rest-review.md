@@ -42,11 +42,14 @@ supplier legal documents. Booking codes, UUIDs, and amounts are pseudonymous.
 | Email content | magic links, message bodies, retention notices | Provider-dependent; Mailpit in dev | **G6** |
 | Application logs | `ConsoleMailer` prints the full email body; expiry scan logs supplier emails; digest logs the recipient | pino, no redaction/retention | **G7** |
 | `Account`/`Session` IP + user agent | as above | Deleted on purge | None |
+| `ReservationTraveler` (M2) | `fullName`, `dateOfBirth`, `nationality`, passport number (`passportNumberEnc`, AES-256-GCM) and expiry, emergency contact name + phone | **Scrubbed** on anonymization (name `[redacted]`, the rest null; kind, lead flag and room kept); the passport number is read only through the audited vault route | None |
+| `ReservationExtra.label` / `ReservationPriceLine.label` (M2) | a manual extra's label is desk free text, copied onto its price line | Untouched (fiscal invoice line); desk guidance: no personal data in a manual extra | **G1** (residual) |
 
-Encryption at rest: there is **no field-level encryption**. Data relies on the
-Postgres/S3 provider's disk encryption. No passport or billing-address field
-exists yet, so the spec §8.2 AES-256 requirement is not yet triggered — but see
-G8.
+Encryption at rest: the passport number is the one field-level-encrypted
+column (M2 decision D1, 2026-10-16): AES-256-GCM in the API under
+`PASSPORT_ENCRYPTION_KEY`, the traveler id bound as additional data
+(`@ota/domain/passport-cipher`). Everything else relies on the Postgres/S3
+provider's disk encryption; no billing-address field exists yet (G8).
 
 ## 3. Controls that already exist
 
@@ -94,9 +97,10 @@ are retained according to the SMTP provider (Mailpit in dev, no policy).
 fallback); `ExpiryAlertService` logs supplier emails; the BI digest logs the
 recipient. No redaction or log retention is configured.
 
-**G8 — No field-level encryption for future sensitive fields.** When passport or
-billing-address data is added (spec §8.2), it must be AES-256 at rest by design,
-not left to disk encryption.
+**G8 — Field-level encryption for sensitive fields.** Closed for the passport
+number (M2, AES-256-GCM, app-level key; key rotation needs a re-encrypt pass that
+is not built). Billing-address data, when added (spec §8.2), must follow the same
+pattern rather than rely on disk encryption.
 
 **G9 — `ImportBatch.rows` may embed supplier PII** and is kept forever.
 

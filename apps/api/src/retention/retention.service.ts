@@ -325,8 +325,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Scrub the traveler's PII and revoke their credentials in one transaction.
-   * Fiscal rows (reservation totals, service items, payment receipts, audit
-   * trail) are kept, but free-text PII on the traveler's bookings is redacted
+   * Fiscal rows (reservation totals, service items, price lines, payment
+   * receipts, audit trail) are kept, but free-text PII on the traveler's
+   * bookings is redacted and every traveler in their parties loses name, date
+   * of birth, nationality, passport and emergency contact
    * (`docs/pii-at-rest-review.md`, Tier 1).
    */
   private async anonymize(userId: string, email: string, now: Date): Promise<void> {
@@ -357,6 +359,20 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       await tx.incident.updateMany({
         where: { reservationId: { in: reservationIds } },
         data: { description: '[redacted]' },
+      });
+      // M2 party rows: keep kind, lead flag and room (party size and bed-nights
+      // stay reportable); drop who they were.
+      await tx.reservationTraveler.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: {
+          fullName: '[redacted]',
+          dateOfBirth: null,
+          nationality: null,
+          passportNumberEnc: null,
+          passportExpiresAt: null,
+          emergencyContactName: null,
+          emergencyContactPhone: null,
+        },
       });
       await tx.serviceItem.updateMany({
         where: { reservationId: { in: reservationIds } },

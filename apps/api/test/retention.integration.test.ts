@@ -84,6 +84,21 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     });
     reservationId = reservation.id;
 
+    // M2 party PII that the purge must scrub.
+    await prisma.reservationTraveler.create({
+      data: {
+        reservationId,
+        isLead: true,
+        fullName: 'Retention Test Traveler',
+        dateOfBirth: new Date('1980-01-01T00:00:00Z'),
+        nationality: 'ES',
+        passportNumberEnc: 'v1.iv.tag.ciphertext',
+        passportExpiresAt: new Date('2031-01-01T00:00:00Z'),
+        emergencyContactName: 'PII emergency contact',
+        emergencyContactPhone: '+34 600 000 000',
+      },
+    });
+
     // Tier 1 free-text PII that the purge must scrub.
     await prisma.message.create({
       data: { reservationId, sender: 'TRAVELER', body: 'My passport is P1234567' },
@@ -132,7 +147,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     await prisma.verification.deleteMany({
       where: { identifier: { contains: email } },
     });
-    // Messages, reviews, incidents, and service items cascade with the booking.
+    // Messages, reviews, incidents, travelers and service items cascade with the booking.
     await prisma.reservation.deleteMany({ where: { id: reservationId } });
     await prisma.user.deleteMany({ where: { id: userId } });
     await prisma.$disconnect();
@@ -184,6 +199,22 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
 
     // Tier 1: reservation-scoped free text is redacted.
     expect(reservation?.customItineraryPayload).toBeNull();
+
+    // M2: the party keeps its shape but not who travelled.
+    const traveler = await prisma.reservationTraveler.findFirstOrThrow({
+      where: { reservationId },
+    });
+    expect(traveler).toMatchObject({
+      isLead: true,
+      kind: 'ADULT',
+      fullName: '[redacted]',
+      dateOfBirth: null,
+      nationality: null,
+      passportNumberEnc: null,
+      passportExpiresAt: null,
+      emergencyContactName: null,
+      emergencyContactPhone: null,
+    });
 
     const storedMessage = await prisma.message.findFirstOrThrow({
       where: { reservationId },

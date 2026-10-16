@@ -71,6 +71,7 @@ function createFakePrisma(state: RetentionState) {
     message: { updateMany: noopWrite },
     review: { updateMany: noopWrite },
     incident: { updateMany: noopWrite },
+    reservationTraveler: { updateMany: noopWrite },
     serviceItem: { updateMany: noopWrite },
     dispatchOffer: { updateMany: noopWrite },
     verification: { deleteMany: noopWrite },

@@ -89,4 +89,7 @@ stateless tokenized confirmation, and anonymizes in place.**
   during anonymization. Tier 2 (generated PDFs) and Tier 3 (supplier
   applications, supplier PII/credentials, import batches) are still open — Tier 2
   needs legal input on fiscal-retention requirements.
+- Since M2 (2026-10-16) the purge also scrubs every `ReservationTraveler` on the
+  traveler's bookings (name, date of birth, nationality, passport ciphertext and
+  expiry, emergency contact), keeping the party's shape for reporting.
 - Confirm the retention windows (6/30/12) against counsel before production.
