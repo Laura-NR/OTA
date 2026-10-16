@@ -10,7 +10,17 @@ export interface DocumentServiceItem {
   serviceDateStart: string;
   serviceDateEnd: string;
   payoutRate: string;
+  /** What the traveler pays for this service; absent or null when it is bundled. */
+  travelerPrice?: string | null;
   supplier: DocumentSupplier | null;
+}
+
+/** A frozen price line of the booking (M2), in order. */
+export interface DocumentPriceLine {
+  kind: string;
+  label: string;
+  quantity: string;
+  amount: string;
 }
 
 export interface ReservationDocumentInput {
@@ -22,6 +32,7 @@ export interface ReservationDocumentInput {
   status: string;
   traveler: { fullName: string | null; email: string };
   serviceItems: DocumentServiceItem[];
+  priceLines?: DocumentPriceLine[];
 }
 
 export interface VoucherModel {
@@ -55,13 +66,14 @@ export interface WorkOrderModel {
   travelerName: string;
 }
 
-/** An included service on the traveler's invoice (description, not unit price). */
+/** A service on the traveler's invoice, with its price unless the package bundles it. */
 export interface InvoiceServiceLine {
   serviceType: string;
   province: string | null;
   start: string;
   end: string;
   providerName: string | null;
+  amount: string | null;
 }
 
 export interface InvoiceModel {
@@ -69,6 +81,7 @@ export interface InvoiceModel {
   travelerName: string;
   currency: string;
   services: InvoiceServiceLine[];
+  priceLines: DocumentPriceLine[];
   total: string;
 }
 
@@ -124,7 +137,9 @@ export function buildInvoiceModel(input: ReservationDocumentInput): InvoiceModel
       start: item.serviceDateStart,
       end: item.serviceDateEnd,
       providerName: item.supplier?.fullName ?? null,
+      amount: item.travelerPrice ?? null,
     })),
+    priceLines: input.priceLines ?? [],
     total: input.totalAmount,
   };
 }

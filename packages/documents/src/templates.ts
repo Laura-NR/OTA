@@ -67,6 +67,7 @@ function page(title: string, body: string, branding: DocumentBranding): string {
   ul.contacts { margin: 6px 0 0; padding-left: 18px; }
   ul.contacts li { margin: 2px 0; }
   .total { font-weight: bold; }
+  .amount { text-align: right; white-space: nowrap; }
   footer { position: fixed; bottom: 0; left: 0; right: 0; border-top: 1px solid #e5e7eb;
     padding-top: 6px; font-size: 10px; color: #6b7280; }
 </style>
@@ -138,29 +139,64 @@ ${emergencyBlock(branding)}`;
   return page(`Work order ${model.bookingCode}`, body, branding);
 }
 
+/** Invoice wording for the M2 price-line kinds (the label carries the name). */
+const PRICE_LINE_KINDS: Record<string, string> = {
+  BASE: 'Package',
+  TIER: 'Accommodation tier',
+  CHILD: 'Child rate',
+  SINGLE_SUPPLEMENT: 'Single supplement',
+  EXTRA: 'Extra',
+  SERVICE: 'Service',
+  FEE: 'Fee',
+};
+
 export function renderInvoiceHtml(
   model: InvoiceModel,
   branding: DocumentBranding,
 ): string {
+  const currency = escapeHtml(model.currency);
   const rows = model.services
     .map(
       (service) => `<tr>
         <td>${escapeHtml(service.serviceType)} — ${escapeHtml(service.province ?? 'Cuba')}</td>
         <td>${escapeHtml(formatDate(service.start))} → ${escapeHtml(formatDate(service.end))}</td>
         <td>${escapeHtml(service.providerName ?? 'Agency arranged')}</td>
+        <td class="amount">${service.amount === null ? '<span class="muted">Included</span>' : `${escapeHtml(service.amount)} ${currency}`}</td>
       </tr>`,
     )
     .join('');
+
+  const breakdown =
+    model.priceLines.length === 0
+      ? ''
+      : `
+<h2>Price breakdown</h2>
+<table>
+  <thead><tr><th>Item</th><th class="amount">Qty</th><th class="amount">Amount</th></tr></thead>
+  <tbody>${model.priceLines
+    .map(
+      (line) => `<tr>
+        <td>${escapeHtml(PRICE_LINE_KINDS[line.kind] ?? line.kind)} — ${escapeHtml(line.label)}</td>
+        <td class="amount">${escapeHtml(line.quantity)}</td>
+        <td class="amount">${escapeHtml(line.amount)} ${currency}</td>
+      </tr>`,
+    )
+    .join('')}</tbody>
+</table>`;
+
+  const bundledNote = model.services.some((service) => service.amount === null)
+    ? `Services marked Included are part of the package price${model.priceLines.length > 0 ? ', itemised in the price breakdown' : ''}. `
+    : '';
 
   const body = `
 <h2>Invoice</h2>
 <p class="muted">Booking ${escapeHtml(model.bookingCode)} · Billed to ${escapeHtml(model.travelerName)}</p>
 <table>
-  <thead><tr><th>Included service</th><th>Dates</th><th>Provider</th></tr></thead>
-  <tbody>${rows || '<tr><td colspan="3" class="muted">Curated travel package.</td></tr>'}</tbody>
-</table>
-<p class="total">Total due: ${escapeHtml(model.total)} ${escapeHtml(model.currency)}</p>
-<p class="muted">Itemised by included service. See the voucher for rendezvous points and emergency contacts.</p>`;
+  <thead><tr><th>Included service</th><th>Dates</th><th>Provider</th><th class="amount">Amount</th></tr></thead>
+  <tbody>${rows || '<tr><td colspan="4" class="muted">Curated travel package.</td></tr>'}</tbody>
+</table>${breakdown}
+<p class="total">Total due: ${escapeHtml(model.total)} ${currency}</p>
+<p class="muted">${bundledNote}See the voucher for rendezvous points and emergency contacts.</p>`;
 
   return page(`Invoice ${model.bookingCode}`, body, branding);
 }

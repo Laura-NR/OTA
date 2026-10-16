@@ -431,6 +431,26 @@ describe('me API', () => {
     );
     expect(created?.userId).toBe(TRAVELER.id);
     expect(state.audits.map((entry) => entry.action)).toContain('reservation.submitted');
+    // Each service carries its catalog price, which the invoice itemises.
+    const service = state.serviceItems.find((item) => item.reservationId === created?.id);
+    expect(service?.travelerPrice).toBe(90);
+  });
+
+  it('totals a custom trip as the sum of its service prices, repeats included', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/me/reservations')
+      .set('x-test-user', TRAVELER.email)
+      .send({
+        startDate: '2027-01-10',
+        endDate: '2027-01-14',
+        serviceItems: [
+          { inventoryItemId: CATALOG_ITEM },
+          { inventoryItemId: CATALOG_ITEM },
+        ],
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.totalAmount).toBe('180');
   });
 
   it('rejects an unavailable catalog item', async () => {

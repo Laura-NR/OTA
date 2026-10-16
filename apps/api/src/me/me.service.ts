@@ -92,6 +92,8 @@ interface SubmissionServiceItem {
   serviceDateStart: Date;
   serviceDateEnd: Date;
   province: string | null;
+  /** The catalog price a custom trip charges for it; null inside a package. */
+  travelerPrice: number | null;
 }
 
 interface SubmissionParams {
@@ -180,8 +182,19 @@ export class MeService {
     }
     const byId = new Map(items.map((item) => [item.id, item]));
 
-    const totalAmount = items.reduce((sum, item) => sum + Number(item.basePrice), 0);
     const currency = items[0]?.currency ?? 'EUR';
+    const serviceItems = input.serviceItems.map((selection) => {
+      const item = byId.get(selection.inventoryItemId)!;
+      return {
+        serviceType: INVENTORY_TO_SERVICE[item.type],
+        serviceDateStart: selection.serviceDateStart ?? input.startDate,
+        serviceDateEnd: selection.serviceDateEnd ?? input.endDate,
+        province: item.province,
+        travelerPrice: Number(item.basePrice),
+      };
+    });
+    // The total is the sum of the per-service prices, so the invoice adds up.
+    const totalAmount = serviceItems.reduce((sum, item) => sum + item.travelerPrice, 0);
 
     const createdId = await this.createSubmission(userId, {
       startDate: input.startDate,
@@ -190,15 +203,7 @@ export class MeService {
       totalAmount,
       customItineraryPayload: { notes: input.notes ?? null, inventoryItemIds: ids },
       nationality: input.nationality,
-      serviceItems: input.serviceItems.map((selection) => {
-        const item = byId.get(selection.inventoryItemId)!;
-        return {
-          serviceType: INVENTORY_TO_SERVICE[item.type],
-          serviceDateStart: selection.serviceDateStart ?? input.startDate,
-          serviceDateEnd: selection.serviceDateEnd ?? input.endDate,
-          province: item.province,
-        };
-      }),
+      serviceItems,
     });
 
     return this.getReservation(userId, createdId);
@@ -238,6 +243,7 @@ export class MeService {
         serviceDateStart: serviceDate,
         serviceDateEnd: serviceDate,
         province: service.inventoryItem.province,
+        travelerPrice: null,
       };
     });
 
@@ -303,6 +309,7 @@ export class MeService {
                 province: item.province,
                 status: 'UNASSIGNED' as const,
                 payoutRate: 0,
+                travelerPrice: item.travelerPrice,
               })),
             },
           },

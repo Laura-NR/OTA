@@ -36,6 +36,7 @@ const input: ReservationDocumentInput = {
       serviceDateStart: '2026-11-02T09:00:00.000Z',
       serviceDateEnd: '2026-11-02T13:00:00.000Z',
       payoutRate: '40.00',
+      travelerPrice: '95.00',
       supplier: { fullName: 'Guide One', primaryPhone: '+53 5555 1111' },
     },
     {
@@ -87,6 +88,46 @@ describe('document templates', () => {
     expect(html).toContain('MINTUR-TEST-1234');
     expect(html).toContain('ABC12345');
     expect(html).toContain('Guide One');
+  });
+
+  it('prices each service on the invoice and marks bundled ones as included', () => {
+    const invoice = buildInvoiceModel(input);
+    const html = renderInvoiceHtml(invoice, branding);
+
+    expect(invoice.services.map((service) => service.amount)).toEqual(['95.00', null]);
+    expect(html).toContain('95.00 EUR');
+    expect(html).toContain('Included');
+    expect(html).not.toContain('Price breakdown');
+  });
+
+  it('adds the frozen price lines as a breakdown', () => {
+    const html = renderInvoiceHtml(
+      buildInvoiceModel({
+        ...input,
+        priceLines: [
+          {
+            kind: 'BASE',
+            label: 'Trinidad Heritage Trail',
+            quantity: '2',
+            amount: '2550.00',
+          },
+          {
+            kind: 'CHILD',
+            label: 'Trinidad Heritage Trail',
+            quantity: '1',
+            amount: '837.00',
+          },
+          { kind: 'FEE', label: 'Service fee', quantity: '1', amount: '100.00' },
+        ],
+      }),
+      branding,
+    );
+
+    expect(html).toContain('Price breakdown');
+    expect(html).toContain('Package — Trinidad Heritage Trail');
+    expect(html).toContain('Child rate — Trinidad Heritage Trail');
+    expect(html).toContain('Fee — Service fee');
+    expect(html).toContain('2550.00 EUR');
   });
 
   it('renders the invoice total and itemised services', () => {

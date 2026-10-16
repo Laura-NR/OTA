@@ -5,7 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
-import type { Document, Reservation, ServiceItem, SupplierProfile, User } from '@ota/db';
+import type {
+  Document,
+  Reservation,
+  ReservationPriceLine,
+  ServiceItem,
+  SupplierProfile,
+  User,
+} from '@ota/db';
 import {
   buildInvoiceModel,
   buildVoucherModel,
@@ -30,6 +37,7 @@ type ReservationForDocuments = Reservation & {
   serviceItems: Array<
     ServiceItem & { supplier: (SupplierProfile & { user: User }) | null }
   >;
+  priceLines: ReservationPriceLine[];
 };
 
 function toDocumentDto(document: Document): DocumentDto {
@@ -60,12 +68,19 @@ function toDocumentInput(reservation: ReservationForDocuments): ReservationDocum
       serviceDateStart: item.serviceDateStart.toISOString(),
       serviceDateEnd: item.serviceDateEnd.toISOString(),
       payoutRate: item.payoutRate.toString(),
+      travelerPrice: item.travelerPrice === null ? null : item.travelerPrice.toFixed(2),
       supplier: item.supplier
         ? {
             fullName: item.supplier.user.fullName,
             primaryPhone: item.supplier.primaryPhone,
           }
         : null,
+    })),
+    priceLines: reservation.priceLines.map((line) => ({
+      kind: line.kind,
+      label: line.label,
+      quantity: line.quantity.toString(),
+      amount: line.amount.toFixed(2),
     })),
   };
 }
@@ -130,6 +145,7 @@ export class DocumentsService {
       include: {
         user: true,
         serviceItems: { include: { supplier: { include: { user: true } } } },
+        priceLines: { orderBy: { position: 'asc' } },
       },
     });
     if (!reservation) {
