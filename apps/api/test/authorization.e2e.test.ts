@@ -53,6 +53,8 @@ const RULE = '30303030-3030-4030-8030-303030303030';
 const MEDIA = '40404040-4040-4040-8040-404040404040';
 const PAYMENT = '50505050-5050-4050-8050-505050505050';
 const CUSTOMER = '60606060-6060-4060-8060-606060606060';
+const TRAVELER_ROW = '70707070-7070-4070-8070-707070707070';
+const EXTRA = '80808080-8080-4080-8080-808080808080';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'worker';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -99,6 +101,22 @@ const ROUTES: Route[] = [
   },
   { method: 'get', path: `/reservations/${RESERVATION}/documents`, allowed: 'opsRead' },
   { method: 'post', path: `/reservations/${RESERVATION}/documents`, allowed: 'opsWrite' },
+
+  // M2 party, extras, price lines; the passport vault is writers-only.
+  { method: 'get', path: `/reservations/${RESERVATION}/travelers`, allowed: 'opsRead' },
+  { method: 'put', path: `/reservations/${RESERVATION}/travelers`, allowed: 'opsWrite' },
+  {
+    method: 'get',
+    path: `/reservations/${RESERVATION}/travelers/${TRAVELER_ROW}/passport`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/reservations/${RESERVATION}/extras`, allowed: 'opsWrite' },
+  {
+    method: 'delete',
+    path: `/reservations/${RESERVATION}/extras/${EXTRA}`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: `/reservations/${RESERVATION}/price-lines`, allowed: 'opsRead' },
 
   // Dispatch / escalation — ops control; worker responds.
   { method: 'post', path: `/reservations/${RESERVATION}/dispatch`, allowed: 'opsWrite' },

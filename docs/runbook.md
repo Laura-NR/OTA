@@ -167,6 +167,12 @@ The API mounts a dependency-free fixed-window limiter as Express middleware
 - `AUTH_SECRET` signs Better Auth sessions **and** retention keep-alive tokens.
   Rotating it invalidates all sessions and any outstanding keep-alive links;
   travelers simply sign in again and can be re-notified.
+- `PASSPORT_ENCRYPTION_KEY` (32 bytes, base64) encrypts travelers' passport
+  numbers (AES-256-GCM, `@ota/domain/passport-cipher`). Losing it makes every
+  stored number unreadable; changing it needs a re-encrypt pass, which is not
+  built yet, so treat it as a key to back up, not to rotate. Unset, the API
+  answers 503 to any passport write or vault read and keeps the rest working.
+  Each vault read is audited as `traveler.passport_viewed`.
 - `DATABASE_URL`, `S3_*`, `SMTP_*`, `REDIS_URL` are environment-only. Reference
   the variable name — never paste values into tickets, logs, or docs.
 

@@ -28,6 +28,7 @@ import { StorageModule } from './storage/storage.module';
 import { SupplierApplicationsModule } from './supplier-applications/supplier-applications.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { TenantModule } from './tenant/tenant.module';
+import { TravelersModule } from './travelers/travelers.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
@@ -68,6 +69,7 @@ const isTest = process.env.NODE_ENV === 'test';
     RetentionModule,
     ContactModule,
     CustomersModule,
+    TravelersModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
