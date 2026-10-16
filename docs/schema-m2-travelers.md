@@ -4,9 +4,11 @@
 migration `20261015010000_travelers` was applied (`328cf3c`): `ReservationTraveler` (passport as
 AES-256-GCM ciphertext), `ReservationRoom`, `ReservationExtra`, `ReservationPriceLine`,
 `Reservation.partySize/tierId/departureId` and `ServiceItem.travelerPrice`. Additive; no backfill.
-The surfaces follow: the encryption helper, the traveler/room/price-line DTOs, the booking pricing
-reducer, the API routes and the booking form, the invoice amounts and the retention purge of
-traveler PII.
+**Surfaces landed 2026-10-16:** the booking pricing reducer and the passport cipher (`37b5c6e`),
+the DTOs (`da24767`), the API routes with the audited passport vault (`482c7c7`), the invoice
+amounts and price breakdown (`b392bbc`), the A-Booking travel party and price breakdown
+(`ae4ef0b`) and the retention purge of traveler PII (`36ffba1`). Still open: the storefront
+Booking form (Phase 4 screens), which will submit the same party through a traveler route.
 **Date:** 2026-10-15
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M2, read against the Booking, Account and
 A-Booking boards (`design/vereda-v1.2/project/`).

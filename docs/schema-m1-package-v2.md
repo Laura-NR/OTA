@@ -8,8 +8,9 @@ v2 and the publish checks in `@ota/domain`, the storefront Package page showing 
 extras and the day texts, and the ops write path (`86b76c4`: `create`/`update` replace the
 collections; `PUT /packages/:id/translations/:locale`; a slug change leaves a redirect the public
 `getBySlug` follows), the A-Package-Edit editor UI (`91a0dbb`), the per-locale overlay and
-retired-slug 308 (`12ab551`), and package media storage and serving (`aa07096`). **M1 is complete**
-except the editor's media/locale tabs. `docs/schema-m2-travelers.md` is the M2 draft for review.
+retired-slug 308 (`12ab551`), package media storage and serving (`aa07096`), and the editor's
+Photos and Translations tabs (`d8b646b`, 2026-10-16). **M1 is complete.** M2 is
+`docs/schema-m2-travelers.md`.
 **Date:** 2026-10-14
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M1, read against the Package, Booking and
 A-Package-Edit boards (`design/vereda-v1.2/project/`).

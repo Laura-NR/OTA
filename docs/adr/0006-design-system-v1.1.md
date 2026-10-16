@@ -255,8 +255,16 @@ tokens; no token was added.
   domain `packagePublishIssues` first and blocks with the reasons. Package photos
   are uploaded and served behind packages/storage (`POST /packages/:id/media`,
   `GET /catalog/packages/media/:id`), and the public catalog overlays a locale's
-  published translation (`?locale=`). The editor's media and locale tabs are
-  still to add.
+  published translation (`?locale=`). Since 2026-10-16 the editor is three tabs
+  (Details, Photos, Translations; every panel stays mounted, so unsaved edits
+  survive a switch). Photos label the first "Hero" and the rest "Gallery n", as
+  the board does; a photo that shows people carries a consent badge, warning-toned
+  while the reference is missing. The board's "WebP ≤ 300 KB" and low-bandwidth
+  variant are not enforced (the API takes JPEG, PNG or WebP up to 5 MB): resizing
+  needs an image library, a dependency question. Translations show one status per
+  locale (source, not yet, draft, outdated, in sync) from the source-text
+  timestamp; the board's per-field "day 4 pending" is not tracked. Each field
+  shows the source text as its placeholder, and a blank field falls back to it.
 - **A-Booking travel party (M2, 2026-10-16).** Two sections join the booking page
   after the services: **Travelers** (tier and departure, the travelers, the rooming
   list and the extras, edited in place and saved in one PUT) and **Price breakdown**
