@@ -259,6 +259,7 @@ export function TravelPartyForm({
               type="button"
               variant="tertiary"
               size="sm"
+              className="justify-self-start"
               onClick={() => removeRoom(index)}
             >
               {t('removeRoom')}
