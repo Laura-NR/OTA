@@ -13,7 +13,12 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "passThroughEnv": [
+        "PASSPORT_ENCRYPTION_KEY",
+        "RATE_LIMIT_MAX",
+        "RATE_LIMIT_AUTH_MAX"
+      ]
     }
   }
 }
