@@ -7,7 +7,8 @@ around as data.
 
 - `agency.config.json` — the agency manifest: `tenantId`, branding (including the
   MINTUR `licenseNumber` injected into every generated document), locales, theme
-  tokens, feature flags, and destination geography.
+  tokens, feature flags, destination geography, and the booking terms
+  (`pricing`: child bands and per-booking or per-traveler fees).
 - `provinces.json` and `destinations.json` — where the agency operates, as data:
   per province (ISO code `CU01`…`CU16`, `CU99` the isle) the network state,
   casas, guides and drivers, advisory level, power cuts, fuel, road distance
@@ -50,7 +51,11 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
 - `agency.config.json`: `licenseNumber` (`MINTUR-2026-XXXX`), the
   `emergencyContacts` numbers (`+53 5555 …`), the `payments.bankTransfer` details,
   and `supportEmail` (`desk@example.test`, a reserved domain that never delivers;
-  in development Mailpit receives the Support form there).
+  in development Mailpit receives the Support form there). The `pricing` terms
+  are the Booking board's samples: infants under 2 free, children up to 12 at
+  60 %, a € 25 tourist card per traveler and a € 100 service fee per booking.
+  They are frozen onto every package booking's price lines, so confirm them
+  before launch.
 
 ## Forking for a new agency
 

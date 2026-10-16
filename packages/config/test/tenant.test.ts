@@ -69,6 +69,26 @@ describe('parseTenantConfig', () => {
     ]);
   });
 
+  it('defaults to no child bands and no fees, and validates configured terms', () => {
+    expect(parseTenantConfig(minimal).pricing).toEqual({ childBands: [], fees: [] });
+
+    const config = parseTenantConfig({
+      ...minimal,
+      pricing: {
+        childBands: [{ maxAge: 12, rate: 0.6 }],
+        fees: [{ label: 'Service fee', unit: 'PER_BOOKING', amount: 100 }],
+      },
+    });
+    expect(config.pricing.childBands).toEqual([{ maxAge: 12, rate: 0.6 }]);
+    expect(config.pricing.fees[0]?.unit).toBe('PER_BOOKING');
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        pricing: { childBands: [{ maxAge: 12, rate: 1.5 }] },
+      }),
+    ).toThrow();
+  });
+
   it('has no WhatsApp line unless the manifest sets one', () => {
     expect(parseTenantConfig(minimal).branding.whatsappNumber).toBeNull();
     expect(

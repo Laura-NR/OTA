@@ -45,6 +45,37 @@ export const paymentsSchema = z.object({
 
 export type PaymentsConfig = z.infer<typeof paymentsSchema>;
 
+/**
+ * A child's rate as a fraction of the adult price, up to an inclusive age
+ * (M1 decision D4: agency-wide terms live in the manifest). No band, no
+ * discount: a child then pays the adult rate.
+ */
+export const childBandSchema = z.object({
+  maxAge: z.number().int().min(0).max(17),
+  rate: z.number().min(0).max(1),
+});
+
+export type ChildBandConfig = z.infer<typeof childBandSchema>;
+
+/**
+ * A fee every package booking carries (a tourist card, a service fee). The
+ * label is frozen onto the booking's price lines and printed on the invoice.
+ */
+export const bookingFeeSchema = z.object({
+  label: z.string().min(1),
+  unit: z.enum(['PER_PERSON', 'PER_BOOKING']),
+  amount: z.number().nonnegative(),
+});
+
+export type BookingFeeConfig = z.infer<typeof bookingFeeSchema>;
+
+export const pricingSchema = z.object({
+  childBands: z.array(childBandSchema).default([]),
+  fees: z.array(bookingFeeSchema).default([]),
+});
+
+export type PricingConfig = z.infer<typeof pricingSchema>;
+
 export const tenantConfigSchema = z.object({
   tenantId: z.string().min(1),
   branding: z.object({
@@ -79,6 +110,7 @@ export const tenantConfigSchema = z.object({
     })
     .prefault({}),
   payments: paymentsSchema.prefault({}),
+  pricing: pricingSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
 });
 

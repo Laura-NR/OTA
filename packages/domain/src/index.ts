@@ -87,6 +87,22 @@ export {
   type PackagePriceInput,
 } from './packages/pricing';
 export {
+  PRICE_LOCKED_STATUSES,
+  ageOn,
+  departurePlacesLeft,
+  isPriceLocked,
+  priceBooking,
+  type BookingExtraInput,
+  type BookingFeeInput,
+  type BookingPrice,
+  type BookingPriceInput,
+  type BookingPriceLine,
+  type BookingTierInput,
+  type BookingTravelerInput,
+  type PriceLineKind,
+  type TravelerKind,
+} from './packages/booking-price';
+export {
   PackageStatus,
   canPublishPackage,
   packagePublishIssues,

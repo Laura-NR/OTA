@@ -3,22 +3,28 @@ export { loadTenantMessages } from './messages';
 export type { Env } from './env';
 export {
   bankTransferDetailsSchema,
+  bookingFeeSchema,
   buildTenantManifest,
+  childBandSchema,
   emergencyContactSchema,
   featureFlagsSchema,
   isFeatureEnabled,
   loadTenantConfig,
   parseTenantConfig,
   paymentsSchema,
+  pricingSchema,
   slugifyTenantId,
   tenantConfigSchema,
 } from './tenant';
 export type {
   BankTransferDetails,
   BankTransferManifestOptions,
+  BookingFeeConfig,
+  ChildBandConfig,
   EmergencyContact,
   FeatureFlags,
   PaymentsConfig,
+  PricingConfig,
   TenantConfig,
   TenantManifestOptions,
 } from './tenant';
