@@ -1473,7 +1473,13 @@
       "inactive": "Inactivo"
     },
     "packageDetail": {
-      "subtitle": "{slug} · {days} días · {currency} {price}"
+      "subtitle": "{slug} · {days} días · {currency} {price}",
+      "tabs": {
+        "label": "Secciones del editor de paquetes",
+        "details": "Datos",
+        "photos": "Fotos",
+        "translations": "Traducciones"
+      }
     },
     "intake": {
       "title": "Nueva reserva",
@@ -1702,6 +1708,71 @@
     "metadata": {
       "title": "{agency} — Back office",
       "description": "Back office de operaciones de {agency}"
+    },
+    "packageMedia": {
+      "hint": "JPEG, PNG o WebP de hasta 5 MB. El texto alternativo es obligatorio; una foto con personas necesita una referencia de consentimiento antes de publicar el paquete.",
+      "none": "Aún no hay fotos. La primera que subas será la principal.",
+      "hero": "Principal",
+      "gallery": "Galería {number}",
+      "showsPeople": "Con personas",
+      "consentOnFile": "consentimiento registrado",
+      "consentMissing": "falta el consentimiento",
+      "remove": "Quitar",
+      "removeFailed": "No se pudo quitar la foto.",
+      "file": "Foto",
+      "altText": "Texto alternativo",
+      "altHint": "Describe lo que muestra la foto, para quien no puede verla.",
+      "peopleLabel": "Se reconoce a personas en esta foto",
+      "consentReference": "Referencia del consentimiento",
+      "consentHint": "La autorización firmada que consta, p. ej. su carpeta o número de formulario.",
+      "chooseImage": "Elige una foto para subir.",
+      "useImageType": "Usa una imagen JPEG, PNG o WebP.",
+      "tooLarge": "La foto supera los 5 MB.",
+      "upload": "Subir foto",
+      "uploading": "Subiendo…",
+      "uploadFailed": "No se pudo subir la foto."
+    },
+    "packageTranslations": {
+      "intro": "Cada idioma se superpone al texto de origen. Lo que quede en blanco usa el origen; solo una traducción publicada aparece en la web.",
+      "statusLabel": "Estado de las traducciones",
+      "source": "origen",
+      "states": {
+        "missing": "sin traducir",
+        "draft": "borrador",
+        "outdated": "desactualizada",
+        "inSync": "al día"
+      },
+      "outdatedNote": "El texto de origen cambió después de guardar esta traducción; revísala y vuelve a guardarla.",
+      "locale": "Idioma",
+      "words": "Textos",
+      "name": "Nombre",
+      "summary": "Resumen de la tarjeta",
+      "description": "Descripción",
+      "included": "Incluido · uno por línea",
+      "excluded": "No incluido · uno por línea",
+      "cubaNotes": "Notas sobre Cuba",
+      "seoTitle": "Etiqueta de título",
+      "seoDescription": "Meta descripción",
+      "days": "Textos por día",
+      "dayHeading": "Día {number}",
+      "dayTitle": "Título",
+      "dayBody": "Texto",
+      "dayMeals": "Comidas",
+      "tiers": "Categorías",
+      "tierName": "Nombre",
+      "tierDescription": "Descripción",
+      "extras": "Extras",
+      "extraName": "Nombre",
+      "extraDescription": "Descripción",
+      "extraDuration": "Duración",
+      "photos": "Textos alternativos de las fotos",
+      "photoAlt": "{label} · texto alternativo",
+      "published": "Publicada: mostrar este idioma en la web",
+      "save": "Guardar traducción",
+      "saving": "Guardando…",
+      "saved": "Traducción guardada.",
+      "saveFailed": "No se pudo guardar la traducción.",
+      "onlySource": "La agencia no tiene otro idioma al que traducir."
     }
   },
   "conditions": {

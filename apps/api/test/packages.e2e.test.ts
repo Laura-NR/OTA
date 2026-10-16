@@ -63,6 +63,8 @@ interface FakePackage {
   basePrice: Prisma.Decimal;
   status: string;
   publishedAt: Date | null;
+  sourceLocale: string;
+  contentUpdatedAt: Date;
   bookingModel: string;
   groupMin: number | null;
   groupMax: number | null;
@@ -121,6 +123,8 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
     basePrice: new Prisma.Decimal('180.00'),
     status: 'PUBLISHED',
     publishedAt: new Date('2026-09-01T00:00:00Z'),
+    sourceLocale: 'en',
+    contentUpdatedAt: new Date('2026-09-01T00:00:00Z'),
     summary: null,
     bookingModel: 'REQUEST',
     groupMin: null,
@@ -209,6 +213,8 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
           basePrice: new Prisma.Decimal(args.data.basePrice),
           status: args.data.status,
           publishedAt: args.data.publishedAt,
+          sourceLocale: 'en',
+          contentUpdatedAt: new Date(),
           summary: null,
           bookingModel: 'REQUEST',
           groupMin: null,
@@ -335,6 +341,11 @@ describe('packages API', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(2);
+    // The editor's translation status reads these.
+    expect(response.body[0]).toMatchObject({
+      sourceLocale: 'en',
+      contentUpdatedAt: '2026-09-01T00:00:00.000Z',
+    });
   });
 
   it('creates a package and generates a slug when none is supplied', async () => {

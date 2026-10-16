@@ -161,6 +161,23 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
       },
       actor,
     );
+    expect(media.hasConsent).toBe(false);
+    const withPeople = await service.uploadMedia(
+      packageId,
+      {
+        contentType: 'image/png',
+        contentBase64: PNG_1X1,
+        altText: 'Musicians on the steps',
+        showsPeople: true,
+        consentReference: 'release-2026-017',
+      },
+      actor,
+    );
+    expect(withPeople).toMatchObject({ showsPeople: true, hasConsent: true });
+    const listed = await service.getById(packageId);
+    expect(JSON.stringify(listed.media)).not.toContain('release-2026-017');
+    await service.deleteMedia(packageId, withPeople.id, actor);
+
     const served = await service.readMedia(media.id, true);
     expect(served.contentType).toBe('image/png');
     expect(served.data.length).toBeGreaterThan(0);

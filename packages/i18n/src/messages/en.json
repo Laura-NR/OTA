@@ -1473,7 +1473,13 @@
       "inactive": "Inactive"
     },
     "packageDetail": {
-      "subtitle": "{slug} · {days} days · {currency} {price}"
+      "subtitle": "{slug} · {days} days · {currency} {price}",
+      "tabs": {
+        "label": "Package editor sections",
+        "details": "Details",
+        "photos": "Photos",
+        "translations": "Translations"
+      }
     },
     "intake": {
       "title": "New reservation",
@@ -1702,6 +1708,71 @@
     "metadata": {
       "title": "{agency} — Back-office",
       "description": "Operations back-office for {agency}"
+    },
+    "packageMedia": {
+      "hint": "JPEG, PNG or WebP up to 5 MB. Alt text is required; a photo that shows people needs a consent reference before the package can be published.",
+      "none": "No photos yet. The first one you upload is the hero.",
+      "hero": "Hero",
+      "gallery": "Gallery {number}",
+      "showsPeople": "Shows people",
+      "consentOnFile": "consent on file",
+      "consentMissing": "consent missing",
+      "remove": "Remove",
+      "removeFailed": "The photo could not be removed.",
+      "file": "Photo",
+      "altText": "Alt text",
+      "altHint": "Say what the photo shows, for travelers who cannot see it.",
+      "peopleLabel": "People can be recognised in this photo",
+      "consentReference": "Consent reference",
+      "consentHint": "The signed release on file, e.g. its folder or form number.",
+      "chooseImage": "Choose a photo to upload.",
+      "useImageType": "Use a JPEG, PNG or WebP image.",
+      "tooLarge": "The photo is over 5 MB.",
+      "upload": "Upload photo",
+      "uploading": "Uploading…",
+      "uploadFailed": "The photo could not be uploaded."
+    },
+    "packageTranslations": {
+      "intro": "Each language overlays the source text. Anything left blank falls back to the source; only a published translation shows on the storefront.",
+      "statusLabel": "Translation status",
+      "source": "source",
+      "states": {
+        "missing": "not yet",
+        "draft": "draft",
+        "outdated": "outdated",
+        "inSync": "in sync"
+      },
+      "outdatedNote": "The source text changed after this translation was saved; check it and save again.",
+      "locale": "Language",
+      "words": "Words",
+      "name": "Name",
+      "summary": "Card summary",
+      "description": "Description",
+      "included": "Included · one per line",
+      "excluded": "Not included · one per line",
+      "cubaNotes": "Cuba-specific notes",
+      "seoTitle": "Title tag",
+      "seoDescription": "Meta description",
+      "days": "Day texts",
+      "dayHeading": "Day {number}",
+      "dayTitle": "Title",
+      "dayBody": "Text",
+      "dayMeals": "Meals",
+      "tiers": "Tiers",
+      "tierName": "Name",
+      "tierDescription": "Description",
+      "extras": "Extras",
+      "extraName": "Name",
+      "extraDescription": "Description",
+      "extraDuration": "Duration",
+      "photos": "Photo alt texts",
+      "photoAlt": "{label} · alt text",
+      "published": "Published: show this language on the storefront",
+      "save": "Save translation",
+      "saving": "Saving…",
+      "saved": "Translation saved.",
+      "saveFailed": "The translation could not be saved.",
+      "onlySource": "The tenant has no other language to translate into."
     }
   },
   "conditions": {

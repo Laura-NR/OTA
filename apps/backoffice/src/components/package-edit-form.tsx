@@ -60,7 +60,8 @@ function numberOrNull(value: string): number | null {
  * Edit a curated package on the M1 model (A-Package-Edit, spec §3.3): the
  * details, the itinerary, the accommodation tiers, the departures, the extras
  * and the day texts, saved in one PATCH. Publishing runs the domain publish
- * checks first. Media and per-locale text are edited elsewhere.
+ * checks first, including the photos'. Photos and per-locale text are edited
+ * on their own tabs (`PackageMediaManager`, `PackageTranslations`).
  */
 export function PackageEditForm({
   package: pkg,
@@ -166,7 +167,12 @@ export function PackageEditForm({
         bookingModel,
         cancellationPolicy: pkg.cancellationPolicy,
         depositPolicy: pkg.depositPolicy,
-        media: [],
+        // Only whether a consent reference is on file matters to the check.
+        media: pkg.media.map((photo) => ({
+          altText: photo.altText,
+          showsPeople: photo.showsPeople,
+          consentReference: photo.hasConsent ? 'on file' : null,
+        })),
         knownPolicyKeys: [pkg.cancellationPolicy, pkg.depositPolicy].filter(
           (key): key is string => key !== null,
         ),

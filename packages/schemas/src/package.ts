@@ -90,6 +90,8 @@ export const packageMediaSchema = z.object({
   altText: z.string(),
   position: z.number().int(),
   showsPeople: z.boolean(),
+  /** A consent reference is on file (the reference itself stays internal). */
+  hasConsent: z.boolean(),
 });
 
 export type PackageMediaDto = z.infer<typeof packageMediaSchema>;
@@ -139,6 +141,10 @@ export const packageSchema = z.object({
   basePrice: z.string(),
   status: packageStatusSchema,
   publishedAt: z.string().nullable(),
+  /** The locale of the base text; translations overlay the others. */
+  sourceLocale: z.string(),
+  /** When the source text last changed; an older translation is outdated. */
+  contentUpdatedAt: z.string(),
   bookingModel: z.enum(['REQUEST', 'INSTANT']),
   groupMin: z.number().int().nullable(),
   groupMax: z.number().int().nullable(),

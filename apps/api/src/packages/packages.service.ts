@@ -73,6 +73,8 @@ function toPackageDto(pkg: PackageWithServices): PackageDto {
     basePrice: pkg.basePrice.toString(),
     status: pkg.status,
     publishedAt: pkg.publishedAt ? pkg.publishedAt.toISOString() : null,
+    sourceLocale: pkg.sourceLocale,
+    contentUpdatedAt: pkg.contentUpdatedAt.toISOString(),
     bookingModel: pkg.bookingModel,
     groupMin: pkg.groupMin,
     groupMax: pkg.groupMax,
@@ -141,6 +143,7 @@ function toPackageDto(pkg: PackageWithServices): PackageDto {
       altText: item.altText,
       position: item.position,
       showsPeople: item.showsPeople,
+      hasConsent: (item.consentReference ?? '').trim().length > 0,
     })),
     translations: pkg.translations.map((translation) => ({
       id: translation.id,
@@ -642,6 +645,7 @@ export class PackagesService {
       altText: media.altText,
       position: media.position,
       showsPeople: media.showsPeople,
+      hasConsent: (media.consentReference ?? '').trim().length > 0,
     };
   }
 

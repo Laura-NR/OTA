@@ -1473,7 +1473,13 @@
       "inactive": "Inactif"
     },
     "packageDetail": {
-      "subtitle": "{slug} · {days} jours · {currency} {price}"
+      "subtitle": "{slug} · {days} jours · {currency} {price}",
+      "tabs": {
+        "label": "Sections de l'éditeur de forfait",
+        "details": "Détails",
+        "photos": "Photos",
+        "translations": "Traductions"
+      }
     },
     "intake": {
       "title": "Nouvelle réservation",
@@ -1702,6 +1708,71 @@
     "metadata": {
       "title": "{agency} — Back-office",
       "description": "Back-office des opérations de {agency}"
+    },
+    "packageMedia": {
+      "hint": "JPEG, PNG ou WebP jusqu'à 5 Mo. Le texte alternatif est obligatoire ; une photo montrant des personnes doit avoir une référence de consentement avant la publication du forfait.",
+      "none": "Pas encore de photos. La première envoyée devient la photo principale.",
+      "hero": "Principale",
+      "gallery": "Galerie {number}",
+      "showsPeople": "Avec des personnes",
+      "consentOnFile": "consentement enregistré",
+      "consentMissing": "consentement manquant",
+      "remove": "Retirer",
+      "removeFailed": "La photo n'a pas pu être retirée.",
+      "file": "Photo",
+      "altText": "Texte alternatif",
+      "altHint": "Dites ce que montre la photo, pour qui ne peut pas la voir.",
+      "peopleLabel": "Des personnes sont reconnaissables sur cette photo",
+      "consentReference": "Référence du consentement",
+      "consentHint": "L'autorisation signée enregistrée, p. ex. son dossier ou numéro de formulaire.",
+      "chooseImage": "Choisissez une photo à envoyer.",
+      "useImageType": "Utilisez une image JPEG, PNG ou WebP.",
+      "tooLarge": "La photo dépasse 5 Mo.",
+      "upload": "Envoyer la photo",
+      "uploading": "Envoi…",
+      "uploadFailed": "La photo n'a pas pu être envoyée."
+    },
+    "packageTranslations": {
+      "intro": "Chaque langue se superpose au texte source. Ce qui reste vide reprend la source ; seule une traduction publiée apparaît sur le site.",
+      "statusLabel": "État des traductions",
+      "source": "source",
+      "states": {
+        "missing": "pas encore",
+        "draft": "brouillon",
+        "outdated": "à revoir",
+        "inSync": "à jour"
+      },
+      "outdatedNote": "Le texte source a changé après l'enregistrement de cette traduction ; vérifiez-la et enregistrez-la à nouveau.",
+      "locale": "Langue",
+      "words": "Textes",
+      "name": "Nom",
+      "summary": "Résumé de la carte",
+      "description": "Description",
+      "included": "Inclus · un par ligne",
+      "excluded": "Non inclus · un par ligne",
+      "cubaNotes": "Notes sur Cuba",
+      "seoTitle": "Balise de titre",
+      "seoDescription": "Méta-description",
+      "days": "Textes par jour",
+      "dayHeading": "Jour {number}",
+      "dayTitle": "Titre",
+      "dayBody": "Texte",
+      "dayMeals": "Repas",
+      "tiers": "Catégories",
+      "tierName": "Nom",
+      "tierDescription": "Description",
+      "extras": "Extras",
+      "extraName": "Nom",
+      "extraDescription": "Description",
+      "extraDuration": "Durée",
+      "photos": "Textes alternatifs des photos",
+      "photoAlt": "{label} · texte alternatif",
+      "published": "Publiée : afficher cette langue sur le site",
+      "save": "Enregistrer la traduction",
+      "saving": "Enregistrement…",
+      "saved": "Traduction enregistrée.",
+      "saveFailed": "La traduction n'a pas pu être enregistrée.",
+      "onlySource": "L'agence n'a pas d'autre langue vers laquelle traduire."
     }
   },
   "conditions": {

@@ -3,9 +3,13 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import { PackageEditForm } from '@/components/package-edit-form';
+import { PackageEditorTabs } from '@/components/package-editor-tabs';
+import { PackageMediaManager } from '@/components/package-media-manager';
+import { PackageTranslations } from '@/components/package-translations';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
+import { getTenantConfig } from '@/lib/tenant';
 
 export default async function PackageDetailPage({
   params,
@@ -36,7 +40,13 @@ export default async function PackageDetailPage({
           price: Number(pkg.basePrice).toFixed(2),
         })}
       />
-      <PackageEditForm package={pkg} items={items} />
+      <PackageEditorTabs
+        details={<PackageEditForm package={pkg} items={items} />}
+        photos={<PackageMediaManager packageId={pkg.id} media={pkg.media} />}
+        translations={
+          <PackageTranslations pkg={pkg} locales={getTenantConfig().supportedLocales} />
+        }
+      />
     </div>
   );
 }
