@@ -18,49 +18,36 @@ ORIENT FIRST, in this order:
 - AGENTS.md (Sections A/B/C and the Articles);
 - docs/handoff/vereda.md (State, Verified, Assumptions, Traps, Next, Decisions) — the live snapshot;
 - docs/design-v1.1-plan.md (Progress table, Phase 4 onward);
-- docs/schema-m1-package-v2.md (done) and docs/schema-m2-travelers.md (approved, migration applied;
-  the surfaces are the next work);
+- docs/schema-m2-travelers.md (surfaces landed; the storefront Booking form is open) and
+  docs/schema-m3-compliance.md (drafted; check whether the owner has answered D1–D6);
 - docs/adr/0006-design-system-v1.1.md (amended for Phases 3 and 5) and docs/adr/0007-worker-app-native-android.md;
 - tenant/README.md (placeholder data and how tenant content works).
 Verify the handoff against the code; run `git log --oneline main..vereda`.
 
-WHERE WE ARE: Phases 0, 1, 0b, 2, 3 are done, and Phase 5's admin increments are done
-(Dashboard 47ed5dd, Bookings/Booking fca9a4c, Reports af0aff0, Suppliers 715d216/1790c68,
-Payments 6a429e1, Customers 435ecf3, Packages editor 91a0dbb). M1 (Package v2) is COMPLETE:
-migration 20261015000000_package_v2 (3a6f9ce), pricing/publish domain (d93fe9c), read model +
-storefront (3c64100), write path + translations + slug redirects (86b76c4), editor (91a0dbb),
-per-locale overlay + 308 (12ab551), package media (aa07096). M2 (party and travelers) is APPROVED
-(D1(a)–D4(a)) and its migration 20261015010000_travelers is APPLIED (328cf3c) — only the schema is
-done, no surfaces yet. Last full verify: lint/format/typecheck green, `pnpm test` 419 passed /
-5 skipped, build 18/18, `pnpm e2e` 46/46. The owner decided: placeholder/mock data until real data
-is published; the design team is not asked; the build resolves design gaps itself with existing
-tokens, recorded in the ADRs.
+WHERE WE ARE: Phases 0, 1, 0b, 2, 3 are done; Phase 5's admin increments are done. M1 (Package v2)
+is complete, including the editor's Photos and Translations tabs (d8b646b). M2 (party and
+travelers) surfaces landed on 2026-10-16: booking price lines + passport cipher (37b5c6e), DTOs
+(da24767), party/extras/price-lines API + audited passport vault (482c7c7), invoice amounts
+(b392bbc), A-Booking travel party + price breakdown (ae4ef0b), retention scrub (36ffba1); turbo dev
+env pass-through fix (b8c6c0d). M3 (OFAC affidavit + consent) is DRAFTED for review in
+docs/schema-m3-compliance.md — no migration. Last full verify: see the handoff's Verified section.
+The owner decided: placeholder/mock data until real data is published; the design team is not
+asked; the build resolves design gaps itself with existing tokens, recorded in the ADRs.
 
-TASK 1 — BUILD THE M2 SURFACES (docs/schema-m2-travelers.md §5), one increment per commit:
-- `@ota/domain`: a booking-side pricing reducer turning the M1 `calculatePackagePrice` result into
-  price lines (base, tier, child, single supplement, extras, fees), with tests; and a small
-  passport encryption helper (AES-256-GCM, key from PASSPORT_ENCRYPTION_KEY) — pure enough to test.
-- `@ota/schemas`: traveler, room, extra and price-line DTOs. The passport number MUST NOT appear in
-  any list DTO.
-- API: `GET/PUT /reservations/:id/travelers` (with rooms), `POST /reservations/:id/extras`,
-  `GET /reservations/:id/price-lines`, and a logged `GET /reservations/:id/travelers/:id/passport`
-  (audited). Add every route to apps/api/test/authorization.e2e.test.ts.
-- Back-office: a travel-party panel on the A-Booking page; the invoice gains per-service amounts.
-- Retention: the purge (apps/api/src/retention) scrubs the new traveler PII.
-Then the remaining M1 niceties: the package editor's media and locale tabs.
+TASK 1 — If the owner answered M3 D1–D6: generate the M3 migration (with the append-only trigger
+and its live-DB test), then the M3 surfaces (docs/schema-m3-compliance.md §5), one increment per
+commit. If not, do not touch M3's schema; ask once, batched, with the recommendations.
 
-TASK 2 — DOCS: record each increment in docs/handoff/vereda.md (keep it a snapshot; Decisions is
-append-only), the Progress table in docs/design-v1.1-plan.md, and the ADR 0006 Phase 5 amendment
-where a design resolution is made.
+TASK 2 — The storefront Booking form (plan Phase 4 screens, Booking board): five steps (dates and
+party, stay tier, extras, travelers, review) on the M2 model, through a traveler-scoped route that
+reuses the party/pricing service (server price re-check, never client prices). The passport number
+is optional at booking and never echoed back. Add every new route to the authorization matrix.
 
-TASK 3 — VERIFY each increment and once at the end: `pnpm lint && pnpm format:check &&
-pnpm typecheck && pnpm test && pnpm build` (dev stack stopped), delete apps/*/.next, `pnpm e2e`
-(all specs), kill what e2e leaves on 3000–3002. Fix anything red (Article 7). Run the live-DB
-integration tests with RUN_DB_INTEGRATION=1 against the migrated dev DB (retention, dispatch
-BullMQ, and test/packages.integration.test.ts).
-
-TASK 4 — M3 onward: draft docs/schema-m3-compliance.md (OFAC affidavit + consent records) for the
-owner's review BEFORE generating any migration (Q9). Do not start M3's migration until approved.
+TASK 3 — DOCS and VERIFY as before: the handoff snapshot (Decisions append-only), the Progress
+table, the ADR 0006 amendment for design resolutions; `pnpm lint && pnpm format:check &&
+pnpm typecheck && pnpm test && pnpm build` (dev stack stopped), delete apps/*/.next, `pnpm e2e`,
+kill what e2e leaves on 3000–3002; live-DB tests with RUN_DB_INTEGRATION=1 (retention, packages)
+and REDIS_URL (dispatch BullMQ). Browser check at 390/1024/1280.
 
 WORKING RULES (AGENTS.md): converge on evidence (Article 4: report Converged / Not converged);
 ask before a schema migration, a new dependency, a data change or spending money (batch questions
@@ -86,5 +73,8 @@ needs `{ exact: true }` on shared words; Tailwind only emits literal class names
 values from a 'use client' module into a server component; grid items need min-w-0; rebuild a
 changed workspace package before the dev server sees it; delete apps/*/.next after a build or
 moving routes; API tests that depend on tenant values override TENANT_CONFIG; a live single test
-(`pnpm --filter @ota/api exec vitest run <path>`) needs the workspace packages built first).
+(`pnpm --filter @ota/api exec vitest run <path>`) needs the workspace packages built first; an env
+variable set on `pnpm dev` reaches the apps only if turbo.json's dev task passes it through; API
+test fixtures must carry every column a mapper reads; PASSPORT_ENCRYPTION_KEY unset → 503 on
+passport writes/reads).
 ```
