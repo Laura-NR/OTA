@@ -114,6 +114,7 @@ function toDetailDto(row: DetailRow): ReservationDetailDto {
   return {
     ...toDto(row),
     travelerId: row.user.id,
+    packageId: row.packageId,
     travelerEmail: row.user.email,
     travelerName: row.user.fullName,
     ...rowContext(row),

@@ -76,6 +76,30 @@ export function monthName(
   }).format(new Date(Date.UTC(year, month - 1, 15)));
 }
 
+/** A calendar date stored as `YYYY-MM-DD` or UTC midnight ("13 Feb 2027" in English). */
+export function calendarDate(value: string, locale: string): string {
+  return plainSpaces(
+    new Intl.DateTimeFormat(locale, {
+      timeZone: 'UTC',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(value)),
+  );
+}
+
+/** An amount to the cent, as a price line or an invoice reads ("€2,790.00" in English). */
+export function moneyExact(amount: number, currency: string, locale: string): string {
+  return plainSpaces(
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount),
+  );
+}
+
 /** An amount in whole units, the way the desk's figures read ("€41,280" in English). */
 export function money(amount: number, currency: string, locale: string): string {
   return new Intl.NumberFormat(locale, {

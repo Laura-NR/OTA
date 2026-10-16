@@ -9,8 +9,11 @@ import type {
   DispatchViewDto,
   DocumentDto,
   IncidentDto,
+  PackageDto,
   PaymentReceiptDto,
   ReservationDetailDto,
+  ReservationPartyDto,
+  ReservationPriceLinesDto,
 } from '@ota/schemas';
 import { Badge, buttonClassName, cn, Icon, Stepper, Tag } from '@ota/ui';
 import type { StepperStep } from '@ota/ui';
@@ -24,9 +27,11 @@ import { IncidentLogForm } from '@/components/incident-log-form';
 import { IncidentResolveButton } from '@/components/incident-resolve-button';
 import { KpiCard } from '@/components/kpi-card';
 import { PaymentPanel } from '@/components/payment-panel';
+import { PriceBreakdown } from '@/components/price-breakdown';
 import { ReservationActions } from '@/components/reservation-actions';
 import { StatusBadge } from '@/components/status-badge';
 import { TourismCategoryControl } from '@/components/tourism-category-control';
+import { TravelParty } from '@/components/travel-party';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { bookingDates, money, opsDate, opsTime, percent } from '@/lib/ops-format';
@@ -84,13 +89,21 @@ export default async function BookingPage({
     },
   );
 
-  const [audit, documents, payments, incidents, dispatch] = await Promise.all([
-    apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
-    apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
-    apiFetch<PaymentReceiptDto[]>(`/reservations/${id}/payments`).catch(() => []),
-    apiFetch<IncidentDto[]>(`/incidents?reservationId=${id}`).catch(() => []),
-    apiFetch<DispatchViewDto>(`/reservations/${id}/dispatch`).catch(() => null),
-  ]);
+  const [audit, documents, payments, incidents, dispatch, party, priceLines, pkg] =
+    await Promise.all([
+      apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
+      apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
+      apiFetch<PaymentReceiptDto[]>(`/reservations/${id}/payments`).catch(() => []),
+      apiFetch<IncidentDto[]>(`/incidents?reservationId=${id}`).catch(() => []),
+      apiFetch<DispatchViewDto>(`/reservations/${id}/dispatch`).catch(() => null),
+      apiFetch<ReservationPartyDto>(`/reservations/${id}/travelers`).catch(() => null),
+      apiFetch<ReservationPriceLinesDto>(`/reservations/${id}/price-lines`).catch(
+        () => null,
+      ),
+      reservation.packageId
+        ? apiFetch<PackageDto>(`/packages/${reservation.packageId}`).catch(() => null)
+        : Promise.resolve(null),
+    ]);
 
   const now = new Date();
   const currency = reservation.totalCurrency;
@@ -281,6 +294,41 @@ export default async function BookingPage({
           canManage={canManage}
         />
       </Section>
+
+      {party ? (
+        <Section
+          id="party-title"
+          title={t('party.title')}
+          description={t('party.description')}
+        >
+          <div className="px-5">
+            <TravelParty
+              reservationId={reservation.id}
+              party={party}
+              options={{
+                tiers: pkg?.tiers ?? [],
+                departures: pkg?.departures ?? [],
+                extras: pkg?.extras ?? [],
+              }}
+              startDate={reservation.startDate}
+              currency={currency}
+              canManage={canManage}
+            />
+          </div>
+        </Section>
+      ) : null}
+
+      {priceLines && party ? (
+        <Section
+          id="price-title"
+          title={t('price.title', { currency })}
+          description={t('price.description')}
+        >
+          <div className="px-5">
+            <PriceBreakdown lines={priceLines} priced={party.priced} />
+          </div>
+        </Section>
+      ) : null}
 
       <Section
         id="payments-title"

@@ -1,7 +1,7 @@
 # ADR 0006 — Design system v1.1: the Vereda canvas replaces docs/design.md
 
 - **Date:** 2026-10-13
-- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phase 3 (see the end)
+- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phases 3 and 5 (see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `design/vereda-v1.1/` (design handoff v1.1), `docs/design-v1.1-plan.md`,
   `docs/design-change-request-01.md`, `packages/theming`, `packages/ui`, `packages/config`
@@ -257,6 +257,18 @@ tokens; no token was added.
   `GET /catalog/packages/media/:id`), and the public catalog overlays a locale's
   published translation (`?locale=`). The editor's media and locale tabs are
   still to add.
+- **A-Booking travel party (M2, 2026-10-16).** Two sections join the booking page
+  after the services: **Travelers** (tier and departure, the travelers, the rooming
+  list and the extras, edited in place and saved in one PUT) and **Price breakdown**
+  (the frozen price lines and their total, the lines the invoice prints). The
+  board's "CA passport ending 4471" is not drawn: no list carries the number or its
+  tail, so a traveler reads "Passport on file · expires …" and **Show passport
+  number** fetches it for one traveler from the audited vault route (operations and
+  Super Admin; support sees the status only). The board's Needs, OFAC and traveler
+  documents rows wait for preferences, M3 and the traveler document uploads; the
+  deposit and balance line waits for M4; "Locked to package v3.2" waits for package
+  versions (M1 D3c). Once a payment link exists the section says the price is
+  locked and only corrections that leave it unchanged save.
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and

@@ -113,6 +113,8 @@ export type ReservationDeskItemDto = z.infer<typeof reservationDeskItemSchema>;
 
 export const reservationDetailSchema = reservationListItemSchema.extend({
   travelerId: z.string().uuid(),
+  /** The curated package it was booked from (its tiers, departures and extras). */
+  packageId: z.string().uuid().nullable(),
   serviceItems: z.array(reservationDeskItemSchema),
 });
 
