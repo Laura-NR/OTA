@@ -164,6 +164,16 @@ export default async function ProposalDetailPage({
                   date: calendarDate(current.validUntil, locale),
                 })}
               </span>
+              {current.hasPdf ? (
+                <a
+                  href={`/api/ota/proposals/${proposal.id}/versions/${current.id}/pdf`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-body-sm font-semibold text-primary-600 underline underline-offset-[3px]"
+                >
+                  {t('pdf')}
+                </a>
+              ) : null}
             </div>
             <p className="whitespace-pre-line text-body-sm text-secondary">
               {current.document.summary}

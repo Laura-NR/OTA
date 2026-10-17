@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
   buttonClassName,
+  Icon,
 } from '@ota/ui';
 import type { BadgeVariant } from '@ota/ui';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
@@ -131,6 +132,17 @@ export default async function ProposalPage({
             <p className="text-body-sm text-muted">
               {t('validUntil', { date: formatDay(version.validUntil, locale) })}
             </p>
+            {version.hasPdf ? (
+              <a
+                href={`/api/ota/me/proposals/${proposal.id}/versions/${version.id}/pdf`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 self-start text-body-sm font-semibold text-primary-600 underline underline-offset-[3px]"
+              >
+                <Icon name="download" className="h-4 w-4" />
+                {t('pdf')}
+              </a>
+            ) : null}
           </section>
 
           <section className={card}>

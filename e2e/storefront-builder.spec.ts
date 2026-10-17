@@ -16,6 +16,10 @@ interface MailpitMessage {
   To?: { Address: string }[];
 }
 
+interface MailpitDetail {
+  Attachments?: { FileName: string; ContentType: string; PartID: string }[];
+}
+
 let proposalId = '';
 let reference = '';
 
@@ -44,8 +48,9 @@ async function deleteProposal(): Promise<void> {
 
 /**
  * The M5 custom-trip vertical slice: a traveler sends a request, the desk
- * prices and sends a proposal (with a Mailpit check), and the traveler accepts
- * it. Acceptance creates an ITINERARY_SUBMITTED booking and charges nothing.
+ * prices and sends a proposal (with a Mailpit check of the email and its
+ * D-Proposal PDF), and the traveler accepts it. Acceptance creates an
+ * ITINERARY_SUBMITTED booking and charges nothing.
  */
 test.describe('custom-trip proposals', () => {
   test.beforeAll(async () => {
@@ -113,7 +118,13 @@ test.describe('custom-trip proposals', () => {
     await page.getByRole('button', { name: 'Publish and send' }).click();
     await expect(page.getByText('Sent', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Version 1')).toBeVisible();
+    const deskPdf = await page.request.get(
+      (await page.getByRole('link', { name: 'Open the PDF' }).getAttribute('href'))!,
+    );
+    expect(deskPdf.headers()['content-type']).toBe('application/pdf');
+    expect((await deskPdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
 
+    let messageId = '';
     await expect(async () => {
       const response = await fetch(`${MAILPIT_URL}/api/v1/messages`);
       const { messages } = (await response.json()) as { messages: MailpitMessage[] };
@@ -123,7 +134,24 @@ test.describe('custom-trip proposals', () => {
           candidate.Subject.includes(reference),
       );
       expect(message).toBeTruthy();
+      messageId = message!.ID;
     }).toPass();
+    // The email carries the version's PDF, a real file.
+    const detail = (await (
+      await fetch(`${MAILPIT_URL}/api/v1/message/${messageId}`)
+    ).json()) as MailpitDetail;
+    const attachment = detail.Attachments?.find(
+      (candidate) => candidate.FileName === `${reference}-v1.pdf`,
+    );
+    expect(attachment?.ContentType).toBe('application/pdf');
+    const part = await fetch(
+      `${MAILPIT_URL}/api/v1/message/${messageId}/part/${attachment!.PartID}`,
+    );
+    expect(
+      Buffer.from(await part.arrayBuffer())
+        .subarray(0, 5)
+        .toString(),
+    ).toBe('%PDF-');
 
     // The traveler reviews and accepts it.
     await signIn(page, TRAVELER_EMAIL, {
@@ -134,6 +162,11 @@ test.describe('custom-trip proposals', () => {
     await expect(
       page.getByText('Fourteen days west to Trinidad, birding first.'),
     ).toBeVisible();
+    const travelerPdf = await page.request.get(
+      `${STOREFRONT_URL}${await page.getByRole('link', { name: 'Download the PDF' }).getAttribute('href')}`,
+    );
+    expect(travelerPdf.headers()['content-type']).toBe('application/pdf');
+    expect((await travelerPdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
     await page.getByRole('button', { name: 'Accept this proposal' }).click();
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
 
