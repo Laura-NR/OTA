@@ -40,6 +40,17 @@ describe('calculateFinance', () => {
     ]);
   });
 
+  it('takes refunds sent out of net revenue (M4)', () => {
+    const finance = calculateFinance({
+      paid: [{ amount: 1000, rail: 'OPEN_BANKING_SEPA' }],
+      payouts: [{ payoutRate: 400, payoutStatus: 'ACCRUED' }],
+      refunds: [{ amount: 150 }],
+    });
+
+    expect(finance).toMatchObject({ gbv: 1000, refundsSent: 150, netRevenue: 450 });
+    expect(finance.takeRate).toBe(0.45);
+  });
+
   it('guards against division by zero when nothing has been paid', () => {
     const kpis = calculateFinance({ paid: [], payouts: [] });
 

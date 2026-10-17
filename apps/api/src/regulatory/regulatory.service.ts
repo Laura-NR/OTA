@@ -64,8 +64,10 @@ export class RegulatoryService {
   }
 
   /**
-   * ONAT-oriented ledger export: paid receipts in the window, one row each.
-   * This is a data export, not a tax-formatted filing.
+   * ONAT-oriented ledger export: paid receipts in the window, one PAYMENT row
+   * each with its rail fee, and refunds sent in the window as REFUND rows with
+   * a negative amount (M4), in date order. This is a data export, not a
+   * tax-formatted filing.
    */
   async fiscalExport(query: RegulatoryRangeQuery): Promise<string> {
     const createdAtFilter =
@@ -87,20 +89,54 @@ export class RegulatoryService {
         rail: true,
         currency: true,
         amount: true,
+        feeAmount: true,
+        reservation: { select: { bookingCode: true } },
+      },
+    });
+    const refunds = await this.prisma.refund.findMany({
+      where: {
+        status: 'SENT',
+        ...(createdAtFilter ? { sentAt: createdAtFilter } : {}),
+      },
+      orderBy: { sentAt: 'asc' },
+      select: {
+        sentAt: true,
+        currency: true,
+        amount: true,
+        receipt: { select: { rail: true } },
         reservation: { select: { bookingCode: true } },
       },
     });
 
-    const header = 'booking_code,paid_at,rail,currency,amount';
-    const rows = receipts.map((receipt) =>
-      [
-        csvCell(receipt.reservation.bookingCode),
-        csvCell(receipt.createdAt.toISOString()),
-        csvCell(receipt.rail),
-        csvCell(receipt.currency),
-        csvCell(Number(receipt.amount).toFixed(2)),
-      ].join(','),
-    );
+    const entries = [
+      ...receipts.map((receipt) => ({
+        at: receipt.createdAt,
+        cells: [
+          receipt.reservation.bookingCode,
+          receipt.createdAt.toISOString(),
+          receipt.rail,
+          receipt.currency,
+          Number(receipt.amount).toFixed(2),
+          Number(receipt.feeAmount).toFixed(2),
+          'PAYMENT',
+        ],
+      })),
+      ...refunds.map((refund) => ({
+        at: refund.sentAt!,
+        cells: [
+          refund.reservation.bookingCode,
+          refund.sentAt!.toISOString(),
+          refund.receipt.rail,
+          refund.currency,
+          (-Number(refund.amount)).toFixed(2),
+          '0.00',
+          'REFUND',
+        ],
+      })),
+    ].sort((a, b) => a.at.getTime() - b.at.getTime());
+
+    const header = 'booking_code,paid_at,rail,currency,amount,fee,kind';
+    const rows = entries.map((entry) => entry.cells.map(csvCell).join(','));
 
     return [header, ...rows].join('\n');
   }

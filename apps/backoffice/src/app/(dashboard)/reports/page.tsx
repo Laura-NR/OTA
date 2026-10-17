@@ -265,9 +265,17 @@ export default async function ReportsPage({
               <Figure
                 overline={t('financial.netRevenue')}
                 value={eur(overview.finance.netRevenue)}
-                note={t('financial.takeRateNote', {
-                  rate: pct(overview.finance.takeRate),
-                })}
+                note={[
+                  t('financial.takeRateNote', { rate: pct(overview.finance.takeRate) }),
+                  // M4: net of the refunds sent in the window.
+                  overview.finance.refundsSent > 0
+                    ? t('financial.refundsNote', {
+                        amount: eur(overview.finance.refundsSent),
+                      })
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               />
               <Figure
                 overline={t('financial.aov')}

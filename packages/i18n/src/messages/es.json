@@ -1686,6 +1686,7 @@
         "gbv": "Valor bruto de reservas",
         "netRevenue": "Ingreso neto",
         "takeRateNote": "comisión media {rate}",
+        "refundsNote": "tras {amount} reembolsados",
         "aov": "Valor medio · por reserva",
         "paidBookings": "{count, plural, one {# reserva pagada} other {# reservas pagadas}}",
         "payouts": "Pagos a proveedores",

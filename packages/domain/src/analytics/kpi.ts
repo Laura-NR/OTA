@@ -19,6 +19,9 @@ export interface FinanceKpis {
   gbv: number;
   payoutsAccrued: number;
   payoutsSettled: number;
+  /** M4: refunds sent back to travelers in the window. */
+  refundsSent: number;
+  /** GBV less supplier payouts and refunds sent. */
   netRevenue: number;
   /** Net revenue / GBV, 0 when there is no gross volume. */
   takeRate: number;
@@ -31,6 +34,8 @@ export interface FinanceKpis {
 export interface FinanceInput {
   paid: { amount: number; rail: string; packageId?: string | null }[];
   payouts: { payoutRate: number; payoutStatus: string; packageId?: string | null }[];
+  /** M4: refunds sent in the window. */
+  refunds?: { amount: number }[];
 }
 
 export interface OperationsKpis {
@@ -91,7 +96,10 @@ export function calculateFinance(input: FinanceInput): FinanceKpis {
       .filter((payout) => payout.payoutStatus === 'SETTLED')
       .reduce((sum, payout) => sum + payout.payoutRate, 0),
   );
-  const netRevenue = round2(gbv - payoutsAccrued - payoutsSettled);
+  const refundsSent = round2(
+    (input.refunds ?? []).reduce((sum, refund) => sum + refund.amount, 0),
+  );
+  const netRevenue = round2(gbv - payoutsAccrued - payoutsSettled - refundsSent);
 
   const byRailMap = new Map<string, { amount: number; count: number }>();
   for (const payment of input.paid) {
@@ -136,6 +144,7 @@ export function calculateFinance(input: FinanceInput): FinanceKpis {
     gbv,
     payoutsAccrued,
     payoutsSettled,
+    refundsSent,
     netRevenue,
     takeRate: ratio(netRevenue, gbv),
     averageOrderValue: input.paid.length > 0 ? round2(gbv / input.paid.length) : 0,

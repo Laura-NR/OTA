@@ -67,6 +67,7 @@ function createFakePrisma() {
       ],
     },
     dispatchOffer: { findMany: async () => [] },
+    refund: { findMany: async () => [] },
     review: { findMany: async () => [{ rating: 5 }] },
     incident: { findMany: async () => [] },
   };

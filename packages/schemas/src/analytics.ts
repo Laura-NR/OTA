@@ -26,6 +26,8 @@ const financeSchema = z.object({
   gbv: z.number(),
   payoutsAccrued: z.number(),
   payoutsSettled: z.number(),
+  /** M4: refunds sent in the window; net revenue is after them. */
+  refundsSent: z.number(),
   netRevenue: z.number(),
   takeRate: z.number(),
   averageOrderValue: z.number(),

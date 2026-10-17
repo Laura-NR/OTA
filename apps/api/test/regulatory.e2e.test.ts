@@ -67,6 +67,7 @@ function createFakePrisma() {
       rail: 'CARD',
       currency: 'EUR',
       amount: '120.00',
+      feeAmount: '0.00',
       reservation: { bookingCode: 'E2E1001' },
     },
     {
@@ -74,13 +75,25 @@ function createFakePrisma() {
       rail: 'OPEN_BANKING_SEPA',
       currency: 'EUR',
       amount: '80.00',
+      feeAmount: '2.40',
       reservation: { bookingCode: 'E2E1002' },
+    },
+  ];
+  // M4: a refund sent between the two payments.
+  const sentRefunds = [
+    {
+      sentAt: new Date('2026-10-02T18:00:00Z'),
+      currency: 'EUR',
+      amount: '50.00',
+      receipt: { rail: 'CARD' },
+      reservation: { bookingCode: 'E2E1001' },
     },
   ];
 
   return {
     reservation: { findMany: async () => reservations },
     paymentReceipt: { findMany: async () => paidReceipts },
+    refund: { findMany: async () => sentRefunds },
   };
 }
 
@@ -154,7 +167,7 @@ describe('regulatory API', () => {
     expect(response.body.range.to).toBe('2026-12-31T00:00:00.000Z');
   });
 
-  it('exports the paid ledger as CSV', async () => {
+  it('exports the paid ledger with fees and refunds as CSV', async () => {
     const response = await request(app.getHttpServer())
       .get('/analytics/regulatory/fiscal-export')
       .set('x-test-user', SUPER_ADMIN.email);
@@ -162,9 +175,15 @@ describe('regulatory API', () => {
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('text/csv');
     const lines = response.text.trim().split('\n');
-    expect(lines[0]).toBe('booking_code,paid_at,rail,currency,amount');
-    expect(lines[1]).toBe('E2E1001,2026-10-02T12:00:00.000Z,CARD,EUR,120.00');
-    expect(lines[2]).toBe('E2E1002,2026-10-03T12:00:00.000Z,OPEN_BANKING_SEPA,EUR,80.00');
+    expect(lines[0]).toBe('booking_code,paid_at,rail,currency,amount,fee,kind');
+    expect(lines[1]).toBe(
+      'E2E1001,2026-10-02T12:00:00.000Z,CARD,EUR,120.00,0.00,PAYMENT',
+    );
+    // M4: a refund sent is a negative row, in date order.
+    expect(lines[2]).toBe('E2E1001,2026-10-02T18:00:00.000Z,CARD,EUR,-50.00,0.00,REFUND');
+    expect(lines[3]).toBe(
+      'E2E1002,2026-10-03T12:00:00.000Z,OPEN_BANKING_SEPA,EUR,80.00,2.40,PAYMENT',
+    );
   });
 
   it('returns 403 for a traveler', async () => {

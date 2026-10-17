@@ -45,6 +45,8 @@ function createFakePrisma() {
       reservation: { packageId: null },
     },
   ];
+  // M4: one refund sent in the window.
+  const refunds = [{ amount: '10' }];
   const offers = [
     {
       status: 'ACCEPTED',
@@ -69,6 +71,8 @@ function createFakePrisma() {
     },
     serviceItem: { findMany: async () => serviceItems },
     dispatchOffer: { findMany: async () => offers },
+    // M4: refunds sent count against net revenue.
+    refund: { findMany: async () => refunds },
     reservation: { findMany: async () => reservations },
     review: { findMany: async () => reviews },
     incident: {
@@ -120,8 +124,10 @@ describe('analytics API', () => {
       gbv: 150,
       payoutsAccrued: 30,
       payoutsSettled: 20,
-      netRevenue: 100,
-      takeRate: 0.6667,
+      refundsSent: 10,
+      // 150 GBV less 50 of payouts and the 10 refunded.
+      netRevenue: 90,
+      takeRate: 0.6,
       averageOrderValue: 75,
       paidCount: 2,
     });

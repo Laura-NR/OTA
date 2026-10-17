@@ -1686,6 +1686,7 @@
         "gbv": "Gross booking value",
         "netRevenue": "Net revenue",
         "takeRateNote": "take rate {rate} blended",
+        "refundsNote": "after {amount} refunded",
         "aov": "AOV · per booking",
         "paidBookings": "{count, plural, one {# paid booking} other {# paid bookings}}",
         "payouts": "Supplier payouts",
