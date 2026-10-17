@@ -12,6 +12,8 @@ export { bookingReceivedEmail } from './templates/booking-received';
 export type { BookingReceivedEmailInput } from './templates/booking-received';
 export { ofacReminderEmail } from './templates/ofac-reminder';
 export type { OfacReminderEmailInput } from './templates/ofac-reminder';
+export { proposalSentEmail } from './templates/proposal-sent';
+export type { ProposalSentEmailInput } from './templates/proposal-sent';
 export { instalmentReminderEmail } from './templates/instalment-reminder';
 export type {
   InstalmentReminderEmailInput,

@@ -10,6 +10,7 @@ import {
   instalmentReminderEmail,
   magicLinkEmail,
   ofacReminderEmail,
+  proposalSentEmail,
   retentionNoticeEmail,
   type EmailBranding,
 } from '../src';
@@ -144,6 +145,29 @@ describe('instalmentReminderEmail', () => {
     expect(email.html).toContain('14 de enero de 2027');
     expect(email.html).toContain('2480,00');
     expect(email.text).toContain('VX-7K2M9Q');
+  });
+});
+
+describe('proposalSentEmail', () => {
+  it('carries the reference, summary, total, validity and account link', () => {
+    const email = proposalSentEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      reference: 'VX-C-4R8T',
+      summary: 'Fourteen days west to Trinidad.',
+      total: 5900,
+      currency: 'EUR',
+      validUntil: new Date('2026-10-21T23:59:59Z'),
+      portalUrl: 'https://example.test/es/account/proposals/abc',
+      locale: 'es',
+      branding,
+    });
+
+    expect(email.subject).toContain('VX-C-4R8T');
+    expect(email.html).toContain('Fourteen days west to Trinidad.');
+    expect(email.html).toContain('5900,00');
+    expect(email.html).toContain('21 de octubre de 2026');
+    expect(email.text).toContain('https://example.test/es/account/proposals/abc');
   });
 });
 
