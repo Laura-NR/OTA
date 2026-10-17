@@ -79,7 +79,10 @@ test.describe('storefront OFAC certification and consents', () => {
       name: 'US travel-category certification',
     });
     await expect(certification.getByText(US_TRAVELER, { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Proceed to payment' })).toHaveCount(0);
+    // M4: payment shows the locked notice, not the plan choice, until certified.
+    await expect(
+      page.getByRole('button', { name: 'Continue to bank transfer' }),
+    ).toHaveCount(0);
 
     const signature = certification.getByLabel(
       `Type ${US_TRAVELER}'s full name as a signature`,
@@ -99,7 +102,9 @@ test.describe('storefront OFAC certification and consents', () => {
     await expect(
       certification.getByText('Certified · Support for the Cuban people'),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Proceed to payment' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Continue to bank transfer' }),
+    ).toBeVisible();
 
     await page.goto(`${STOREFRONT_URL}/en/account?tab=preferences`);
     const stories = page.getByRole('switch', {
