@@ -1,109 +1,105 @@
-# Handoff — vereda — updated 2026-10-17 16:10
+# Handoff — vereda — updated 2026-10-17 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
-Decisions: ADR 0006 (design system; amended for v1.2, change request 02, Phases 3 & 5 and the
-Phase 4 Booking form) and ADR 0007 (worker app).
+Decisions: ADR 0006 (design system; amended for v1.2, change request 02, Phases 3 & 5, the
+Phase 4 Booking form and M4 payments) and ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done.** Commits are local
   on `vereda`; the owner pushes (check `git log --oneline origin/vereda..vereda`).
-- **M1, M2 and M3 are complete**, including their surfaces (see the Decisions log and the plan's
-  Progress table for the commits).
-- **The storefront Booking form landed 2026-10-17, sign-in first (owner decision)**, one commit
-  per increment:
-  - `2671aa6` / `c310070` domain: `planRooms` (SHARE two to a room, an odd party's last room a
-    triple; PRIVATE a room of one each; infants in the first adult's room) and `travelerKindOn`
-    (infant under 2, adult from 18, read on the departure day).
-  - `4749858` schemas: `bookPackageSchema` (choices only: no kind, no price; the four booking
-    consents required; certifications by traveler index with the statement version).
-  - `c531266` API: `POST /me/reservations/package-booking` (`apps/api/src/me/package-booking.service.ts`).
-    `plan()` checks everything with no writes (departure open with places, tier, extras, lead is
-    an adult, `expectedTotal` vs the server price → 409 `PriceChanged`, consent and statement
-    versions, signatures, passport key); `write()` runs inside `MeService.createSubmission`'s
-    transaction through its new `within` hook. Pricing is shared with the desk's party panel via
-    `apps/api/src/travelers/package-pricing.ts`; `AffidavitsService.createOnline` and
-    `ConsentsService.requireText` are shared with the existing routes.
-  - `e7afb49` storefront: `/packages/[slug]/book` (`components/booking/booking-flow.tsx`), five
-    steps plus "Request received"; the sticky summary prices with the same domain rules. The
-    Package page sidebar now links into it; its old date form and strings are gone.
-- **`03a7f39`**: `POST`/`PATCH /packages` refuse a package that is PUBLISHED after the save and
-  fails `packagePublishIssues` (409 `PackageNotPublishable`, `issues[]`); unpublishing is never
-  blocked. Policy keys count as known (no manifest list yet; M4 D2 adds it).
-- **M4 (payment schedule) is drafted** in `docs/schema-m4-payment-schedule.md` (`d82b96f`): D1–D8
-  with recommendations, the Prisma diff and the manifest terms. **No migration until approved.**
+- **M1, M2, M3 and M4 are complete**, with their surfaces; the storefront Booking form (sign-in
+  first) landed earlier today (`2671aa6`…`e7afb49`), and the API enforces the publish checks.
+- **M4 (payment schedule) approved D1–D8 as recommended and landed 2026-10-17**, one commit each:
+  - `4fa9bf7` migration `20261017144721_payment_schedule`: `PaymentInstalment`, `PaymentProof`,
+    `Refund`, `RefundApproval`, five enums, `PaymentReceipt.feeAmount`/`instalmentId`.
+  - `75d3520` manifest `policies` (deposit plans, cancellation scales by key) and payment terms
+    (`windowHours`, `cardFeePercent` 0, `refundApproval`) as placeholders; domain rules
+    (`buildSchedule`, `depositEligible`, `cardFee`, `addBusinessDays`, `cancellationRefund`,
+    `refundDecision`); the seeded package names the `standard` policies. `ac7b395` the publish
+    checks read the manifest's keys (`knownPolicyKeys`).
+  - `75befdd`/`49191dd` API (`apps/api/src/payments`): links pay instalments (the first fixes the
+    plan and moves to PENDING_PAYMENT; the first PAID confirms; a balance only marks its
+    instalment), schedule reads (`/reservations/:id/schedule`, `/me/...`), extend, proofs (owner
+    upload, queue, audited file, accept extends a business day, reject with note), refunds
+    (quote, request, votes by limits, gateway refund with idempotency key or bank reference,
+    queue); booking rows carry `nextInstalment`. `2e77ef9` optional `PaymentProvider.refund`.
+  - `1149aeb` storefront trip page payment section; `940723f` desk (A-Booking panel, A-Payments
+    queues, dashboard alerts, "Payment due" view); `b90feaa` `paymentAlert`; `fbc172f` refunds in
+    finance (net revenue) and the fiscal CSV (fee and kind columns, REFUND rows).
+- **`099e0c0` fixes a pre-existing bug**: `express.json()` kept its 100 KB default, so every
+  base64 upload over ~73 KB (photos, credentials, scans, imports) got 413. Upload routes now take
+  15 MB (`apps/api/src/common/json-body.ts`).
 
-## Verified (2026-10-17, after `d82b96f`; dev stack stopped for the build)
-- `pnpm lint`, `pnpm format:check` green; `TURBO_FORCE=true pnpm typecheck` 33/33 (0 cached);
-  `TURBO_FORCE=true pnpm test` **513 passed / 10 skipped** (domain 144, api 226/9 skipped,
-  schemas 31, …); `TURBO_FORCE=true pnpm build` 18/18.
-- `pnpm e2e` **50/50** with `apps/*/.next` deleted; `storefront-packages.spec.ts` now books two
-  adults and a child through all five steps (US lead certifies; a wrong signature is held) and
-  checks the frozen lines, party, affidavit and consents in the DB, then deletes the booking and
-  restores the traveler's nationality and phone.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL`): retention 1/1, packages 1/1, affidavits 3/3, the
-  new `package-booking.integration.test.ts` 2/2 (one transaction stores booking, rooms, travelers
-  with passport ciphertext that decrypts, extras, lines, affidavit, consents; a refused booking
-  writes nothing), dispatch BullMQ 1/1, compliance BullMQ 1/1. No fixture rows left.
-- The three new API tests in `packages.e2e.test.ts` fail against the old service (checked by
-  swapping it back), and the 13 Booking API tests cover price, kinds, rooms, passport never
-  returned or audited, certification, consents, stale versions, places, price moved, under-age
-  lead, retired extra, 401, and 503 without a key.
-- Browser (temporary spec, removed): every step at 390/1024/1280 has scrollWidth == viewport
-  after the fix to the step-5 submit label at 390 (it was 394). Titles Fraunces 32/40/600
-  (22/28 at 390), panels 12 px radius and 28 px padding (20 at 390), summary 360 px sticky at
-  top 96 from `lg`. All 435 new `booking.*` messages parse in en/es/fr.
+## Verified (2026-10-17, after `7b1afdf`; dev stack stopped for the build)
+- lint, format:check green; `TURBO_FORCE=true` typecheck 33/33, test **555 passed / 12 skipped**
+  (domain 158, api 247/11 skipped, schemas 35, …), build 18/18 — all 0 cached.
+- `pnpm e2e` **51/51** (`.next` deleted first): new `payment-schedule.spec.ts` (deposit link,
+  expired window on the dashboard and the view, proof accepted on A-Payments, deposit confirms,
+  balance, refund approved and sent); `storefront-checkout` now chooses the plan and uploads a
+  proof; `storefront-ofac` and `payments` follow M4. A first run failed on the OFAC spec's old
+  button name; fixed (`7b1afdf`).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL`) 11/11: retention, packages, affidavits 3,
+  package-booking 2, **payment-schedule 2** (deposit → proof → balance → dual-approved refund on
+  real FKs; deleting a booking removes its refunds while a refunded receipt cannot be deleted
+  alone), dispatch and compliance BullMQ.
+- The upload fix: the new `json-body.test.ts` fails on the old parser; the dev API refused a
+  200 KB upload body with 413 before and lets it reach the guard (401) after.
+- Browser (temporary spec, removed): trip payment section (choice, schedule, proof), A-Booking
+  panel and A-Payments at 390/1024/1280 — scrollWidth == viewport everywhere.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
-- Legal texts, the OFAC categories' wording and the pricing samples (child bands, fees) are still
-  placeholders for counsel and the owner. M4 adds counsel questions (the card surcharge under PSD2
-  art. 62(4), the cancellation scale and € 60 fee, the deposit's refundability) and owner
-  questions (deposit 20 %, 60 and 30 days, 48 h window, the band ranges, refund thresholds).
-- The booking's owner signs for every US traveler with that traveler's name (counsel question).
-- Places are checked, then booked, without a lock: two simultaneous bookings on the last places
-  could oversell (same as the desk's party panel). Fine for request-to-book; revisit with
-  instant booking.
-- Not built: the Payment page's deposit/balance (M4), the Confirmation screen with CSAT, M5
-  proposal, E-OFAC and the other C-Spec emails (Phase 6), the cookie banner (Phase 8).
+- **Placeholders awaiting the owner/counsel**: the M4 terms (20 % deposit, 60/30 days, 48 h
+  window, the cancellation bands beyond 45–31 10 % and 30–15 25 %, the € 60 fee, the € 500 /
+  € 2,000 limits), the card fee (0 % pending PSD2 advice), whether a deposit is refundable, how
+  long proofs are kept; the legal texts and OFAC wording; the pricing samples.
+- The cancellation scale keeps a share of **what was paid** (A-Payments' worked examples), not
+  of the total (the Booking board's summary); confirm with the owner.
+- Places are checked, then booked, without a lock (same as the desk's party panel).
+- Proof files of the e2e fixtures are not removed from object storage (rows are).
+- Not built: the PAYMENT_TERMS consent on payment, the override "confirm on proof", statement
+  import, payouts, rails health, travel credit, the Confirmation screen, M5, Phase 6 emails
+  (incl. balance reminders), Phase 8 cookie banner.
 
 ## Traps
-- **The pasted session brief can be stale**: on 2026-10-17 it repeated work already in the log.
-  Compare it with `docs/next-session-prompt.md` and `git log main..vereda` before starting.
-- **Turbo replays cached results**: a fully cached `pnpm test` or `typecheck` is a replay, not a
-  run. For evidence after changes elsewhere, use `TURBO_FORCE=true`.
-- **`pkill -f '<pattern>'` from a Bash tool call can kill its own shell** (exit 144), because the
-  call's command line contains the pattern. Kill by PID from `ss -ltnp` instead.
-- A regex of no-break spaces written through a heredoc landed as literal characters and failed
-  `no-irregular-whitespace`; keep `   ` as escapes (`apps/storefront/src/lib/format.ts`).
-- Storefront client components must not format with `Intl` on both sides: pass server-formatted
-  strings (`formatDay`, `countryOptions`) or wrap with `plainSpaces(formatMoney(...))`.
-- Booking stamps the lead's nationality and phone on the user: e2e fixtures using
-  `traveler@example.test` must restore them.
-- Earlier traps still apply: never run `prisma format`; `traveler_affidavits` rows can be deleted
-  but never updated; API fakes need every column a mapper reads; rebuild changed workspace
-  packages before the dev server or a single live test sees them; delete `apps/*/.next` after a
-  build; Playwright leaves 3000–3002 listening; `getByLabel` matches substrings.
+- **Stage only the increment's files**: a `git rm` staged earlier rides along with the next
+  commit. On 2026-10-17 it landed in an API commit and was moved by a soft reset of two
+  unpushed commits.
+- **`json.dump` reformats a whole JSON file** (the manifest): insert keys as text and check the
+  diff only adds lines. Catalog JSON round-trips cleanly through Prettier; the manifest does not.
+- `ops-format` already has `calendarDate` (UTC); a balance due date must use it, not `opsDate`
+  (Havana shows the previous evening).
+- A client form that seeds `useState` from props keeps a stale first value when the list grows
+  after a refresh (the refund form's receipt); derive the selection from props.
+- React-controlled `<select>`s: wait for hydration (`__react*` keys on the node) before
+  `selectOption`, or the choice is reset (`e2e/payment-schedule.spec.ts` `hydrated()`).
+- The payments spec and the global setup must clear `E2E0001`'s instalments: once a schedule
+  exists, a second run gets "Nothing is due".
+- Earlier traps still apply (stale briefs, Turbo replays, `pkill -f` kills the calling shell,
+  no `prisma format`, append-only affidavits, ICU spaces, `.next` after a build, Playwright
+  leaves 3000–3002 listening, `getByText` substrings need `exact`).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones:
-  - "2026-10-17: the storefront Booking form posts `POST /me/reservations/package-booking`. The
-    server derives traveler kinds from the date of birth (`travelerKindOn`), builds rooms from the
-    SHARE/PRIVATE choice (`planRooms`), prices with `apps/api/src/travelers/package-pricing.ts`
-    (shared with the desk's party panel), refuses a moved `expectedTotal` (409 `PriceChanged`),
-    and writes the party, lines, affidavits and consents through `createSubmission`'s `within`
-    hook, in one transaction."
-  - "2026-10-17: `POST`/`PATCH /packages` refuse a package that is PUBLISHED after the save and
-    fails `packagePublishIssues` (409 `PackageNotPublishable`, `issues[]`); unpublishing is never
-    blocked."
+  - "2026-10-17: M4 payments: a payment link pays the next `PaymentInstalment`; the first link
+    fixes the plan (FULL, or DEPOSIT + BALANCE from the package's `depositPolicy` in the
+    manifest `policies`); the first PAID receipt confirms the booking, a balance only marks its
+    instalment. Expired windows and overdue balances are read with `paymentAlert` from the
+    booking's `nextInstalment`; nothing auto-cancels (M4 D4)."
+  - "2026-10-17: refunds need approvals by the manifest's `payments.refundApproval` limits
+    (`refundDecision`); a card refund calls `PaymentProvider.refund` with the refund id as the
+    idempotency key, a transfer refund is recorded with the bank reference. A refund's receipt
+    FK is NO ACTION."
+  - "2026-10-17: base64 upload routes are listed in `apps/api/src/common/json-body.ts`
+    (15 MB); every other route keeps the 100 KB JSON limit. Add a new upload route there."
 
 ## Next
-1. Owner: review the M4 draft (`docs/schema-m4-payment-schedule.md`, D1–D8, the sample terms and
-   thresholds); counsel questions; back up the passport key; confirm the pricing samples.
-2. After M4 is approved: the migration, then the Payment page (deposit or full, wire with the
-   proof upload), the schedule on A-Booking, the proofs and refund queues on A-Payments, the
-   window and balance alerts. The manifest `policies` then give the publish checks real keys.
-3. Then the Confirmation screen (with CSAT), the M5 proposal draft, Phase 6 emails, Phase 8 cookie
-   banner.
+1. Owner: confirm or change the M4 placeholder terms and the share-of-paid reading; counsel on
+   the card surcharge, the cancellation scale, the deposit's refundability and proof retention;
+   back up the passport key.
+2. Phase 6 notifications without a migration: the booking-received email, the E-OFAC reminder
+   and the balance reminders (7, 3, 1 days) from the instalments' due dates.
+3. Draft M5 (proposal) for review; the Confirmation screen; Phase 8 cookie banner.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -256,3 +252,19 @@ Phase 4 Booking form) and ADR 0007 (worker app).
 - 2026-10-17 — M4 drafted with recommendations D1(a)–D8(a); the card fee defaults to 0 pending
   counsel (PSD2), and the first payment window's expiry goes to the desk rather than auto-cancelling
   while bank transfer is the only live rail.
+- 2026-10-17 — the owner approved M4 D1–D8 as recommended and will take the counsel questions
+  later; the sample terms ship as manifest placeholders and the card fee is 0 %.
+- 2026-10-17 — a refund's receipt link is ON DELETE NO ACTION (the draft said RESTRICT), so a
+  booking's cascade removes both rows in one statement.
+- 2026-10-17 — the cancellation scale keeps its share of what was paid (A-Payments' worked
+  examples); a traveler-cancellation quote applies it to everything paid on the booking, less
+  refunds already made, drawn from the chosen receipt as far as it goes.
+- 2026-10-17 — expired windows and overdue balances are derived on read (`paymentAlert` over
+  each booking's next instalment) instead of a scheduled scan; the scan lands with the Phase 6
+  reminders that need it.
+- 2026-10-17 — the proof upload is on the trip page behind sign-in, not on the public wire page
+  (a capability URL); the wire page points to it.
+- 2026-10-17 — no PAYMENT_TERMS consent on payment yet: its words (the deposit's refundability)
+  are a counsel question.
+- 2026-10-17 — the JSON body limit fix (`099e0c0`) is route-scoped (upload routes at 15 MB)
+  rather than global, so ordinary routes keep the 100 KB limit.

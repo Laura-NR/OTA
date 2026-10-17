@@ -46,6 +46,8 @@ supplier legal documents. Booking codes, UUIDs, and amounts are pseudonymous.
 | `TravelerAffidavit` (M3) | signer name and nationality, typed signature, IP address and user agent (online), scanned paper form (`affidavits/<reservationId>/…` in object storage) | **Kept outside the traveler purge** for 5 years after the trip (OFAC record keeping, M3 D6), append-only by trigger; the daily retention scan deletes the row and its scan at `retainUntil`. Full record, scan and export are audited reads (ops+super; export Super Admin) | None (by design) |
 | `ConsentRecord` (M3) | user (or visitor) id, purpose, granted, text version, locale | On anonymization the user and visitor ids and the IP country are nulled; the versioned counts stay | None |
 | `ReservationExtra.label` / `ReservationPriceLine.label` (M2) | a manual extra's label is desk free text, copied onto its price line | Untouched (fiscal invoice line); desk guidance: no personal data in a manual extra | **G1** (residual) |
+| `PaymentProof` + its file (M4, `payment-proofs/<reservationId>/…` in object storage) | the payer's name, bank and part of an IBAN on the scanned receipt; who uploaded and reviewed it; the desk's review note | Private, read only through the audited `GET /payments/proofs/:id/file` (ops roles, no-store); untouched by the traveler purge, as payment evidence | **G2** (kept with the fiscal records; how long is a counsel question) |
+| `Refund.note`, `RefundApproval.note` (M4) | desk free text giving the reason for a refund or a vote | Untouched (financial record); desk guidance: the reason, not personal details | **G1** (residual) |
 
 Encryption at rest: the passport number is the one field-level-encrypted
 column (M2 decision D1, 2026-10-16): AES-256-GCM in the API under

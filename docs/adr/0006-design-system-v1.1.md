@@ -368,3 +368,42 @@ stays there for bookings made before the form.
 - **Package page.** The sticky summary keeps the price, the booking-model pill
   and the support links; its date inputs are gone and "Check availability &
   request" opens the form.
+
+## Amendment, 2026-10-17: M4 payments, resolved by the build
+
+M4 (deposit and balance, proofs of transfer, refunds) is built on the Payment,
+A-Booking and A-Payments boards with the existing tokens. The owner approved
+D1–D8 as recommended; the agency's terms are manifest placeholders until
+counsel and the owner confirm them.
+
+- **Payment page.** The board's standalone Payment page is the trip page's
+  payment section plus the bank-transfer instructions page. Before the first
+  payment the traveler chooses **Deposit · 20 %** (with the balance and its
+  date) or **Pay in full**, as radio cards; bank transfer is the only method,
+  and "Card payments are not available yet" stands in for the card, wallet,
+  open-banking and invoice tabs. The board's "46 h 12 min left" countdown, the
+  sanctions checkbox (a PAYMENT_TERMS consent, waiting for counsel on the
+  deposit's refundability) and the "+3 %" card copy (the card fee is 0 % until
+  counsel rules, PSD2 art. 62(4)) are not drawn.
+- **Schedule and proof.** After the choice, each instalment shows its amount,
+  due date and a Due, Overdue or Paid chip. A balance falls due on a calendar
+  day, read in UTC on both sides; a payment window ends at an instant, shown in
+  UTC on the storefront and Havana time on the desk. The proof upload sits on
+  the trip page behind sign-in, not on the public instructions page (a
+  capability URL), which points to it; a rejected proof shows the desk's note
+  and can be replaced. The board's 7, 3 and 1-day reminders wait for Phase 6.
+- **A-Booking.** The payment panel shows the schedule with **Give 24 h more**
+  on each instalment due, the plan choice on the first link and "Next link"
+  after it, the receipts with their card fee and proofs (view, logged; accept,
+  which extends the window a business day; reject with a note), and the
+  refunds with a request form whose **Suggest from the policy** fills the
+  cancellation scale's amount.
+- **A-Payments.** "Proofs to check" and "Refunds" are lists above the ledger
+  rather than the board's tabbed transaction table. "Confirm now on proof
+  (override)" is not drawn (D5b waits for a bank feed), nor are the
+  bank-statement import, "Record a payment", the ONAT button, the KPI tiles,
+  payout liabilities, payout runs, rails health and the travel-credit offer.
+  The approval limits line comes from the manifest.
+- **Alerts.** A-Dashboard adds "payment window over" and "balances overdue",
+  both opening a new **Payment due** saved view on A-Bookings; neither changes
+  a booking's status (D3, D4).

@@ -6,7 +6,15 @@ migration `20261017144721_payment_schedule` was applied: `PaymentInstalment`, `P
 `Refund`, `RefundApproval`, five enums and `PaymentReceipt.feeAmount`/`instalmentId`. Additive; no
 backfill. One change from the diff below: a refund's link to its receipt is `ON DELETE NO ACTION`
 rather than `RESTRICT`, so deleting a booking can remove both rows in one statement while a
-receipt with refunds still cannot be deleted alone.
+receipt with refunds still cannot be deleted alone. **Surfaces landed 2026-10-17**, one commit
+each: manifest terms and the pure rules (`75d3520`), publish checks on the manifest's policy keys
+(`ac7b395`), DTOs (`af794c0`), gateway refunds (`2e77ef9`), the API (`75befdd`, `49191dd`), the
+storefront trip page (`1149aeb`), the payment alert (`b90feaa`), the desk (`940723f`), finance and
+the fiscal CSV (`fbc172f`). Two departures from §5: the expired-window and overdue-balance alerts
+are read from each booking's next instalment (`paymentAlert`) rather than set by a scheduled scan,
+which lands with the Phase 6 reminders; and the payment page does not ask a PAYMENT_TERMS consent
+yet (the deposit's refundability is a counsel question). The cancellation scale keeps its share of
+what was paid, as A-Payments works it, not of the total as the Booking board's summary reads.
 **Date:** 2026-10-17
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M4: deposit and balance instalments, due dates,
 proof-of-transfer uploads, fees, and refunds with an approval chain. Read against the Payment,
