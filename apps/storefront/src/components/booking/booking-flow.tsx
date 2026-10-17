@@ -481,6 +481,7 @@ export function BookingFlow({
             </span>
             . {t('sent.nothing')}
           </p>
+          <p className="text-body-sm text-muted">{t('sent.emailed')}</p>
         </div>
         <ol className="flex flex-col gap-3">
           {timeline.map((entry) => (

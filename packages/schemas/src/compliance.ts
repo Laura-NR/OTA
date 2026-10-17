@@ -98,6 +98,20 @@ export const affidavitExportQuerySchema = z.object({
 
 export type AffidavitExportQuery = z.infer<typeof affidavitExportQuerySchema>;
 
+/** The desk asks for an E-OFAC reminder on one of a customer's trips. */
+export const sendOfacReminderSchema = z.object({
+  reservationId: z.string().uuid(),
+});
+
+export type SendOfacReminderRequest = z.infer<typeof sendOfacReminderSchema>;
+
+export const ofacReminderResultSchema = z.object({
+  sent: z.boolean(),
+  missing: z.number().int(),
+});
+
+export type OfacReminderResultDto = z.infer<typeof ofacReminderResultSchema>;
+
 export const consentPurposeSchema = z.enum(CONSENT_PURPOSES);
 
 export type ConsentPurposeDto = z.infer<typeof consentPurposeSchema>;

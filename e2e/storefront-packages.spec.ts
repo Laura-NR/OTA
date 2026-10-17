@@ -4,7 +4,14 @@ import { expect, test, type Page } from '@playwright/test';
 import { signIn } from './helpers';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
+const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? 'http://localhost:8025';
 const TRAVELER_EMAIL = 'traveler@example.test';
+
+interface MailpitMessage {
+  ID: string;
+  Subject: string;
+  To?: { Address: string }[];
+}
 
 process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
@@ -155,9 +162,21 @@ test.describe('storefront curated packages', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: 'Request received' }),
     ).toBeVisible();
+    await expect(page.getByText("We've emailed a copy to your inbox.")).toBeVisible();
     const confirmation = await page.getByText(/Booking code:/).textContent();
     bookingCode = confirmation?.match(/Booking code:\s*([A-Z0-9]{8})/)?.[1] ?? '';
     expect(bookingCode).toMatch(/^[A-Z0-9]{8}$/);
+
+    await expect(async () => {
+      const response = await fetch(`${MAILPIT_URL}/api/v1/messages`);
+      const { messages } = (await response.json()) as { messages: MailpitMessage[] };
+      const message = messages.find(
+        (candidate) =>
+          candidate.To?.some((recipient) => recipient.Address === TRAVELER_EMAIL) &&
+          candidate.Subject.includes(bookingCode),
+      );
+      expect(message?.Subject).toContain('nothing is charged yet');
+    }).toPass();
 
     const booking = await prisma.reservation.findUniqueOrThrow({
       where: { bookingCode },

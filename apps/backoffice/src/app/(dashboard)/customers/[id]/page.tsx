@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { CertificationReminderButton } from '@/components/certification-reminder-button';
 import { StatusBadge } from '@/components/status-badge';
 import { apiFetch } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
@@ -157,11 +158,19 @@ export default async function CustomerDetailPage({
                       {trip.ofacRequired === 0 ? (
                         <span className="text-muted">{t('ofacStatus.none')}</span>
                       ) : (
-                        <Badge variant={ofacVariant(trip)}>
-                          {trip.ofacMissing > 0
-                            ? t('ofacStatus.missing', { count: trip.ofacMissing })
-                            : t('ofacStatus.certified')}
-                        </Badge>
+                        <div className="flex flex-col items-start gap-1.5">
+                          <Badge variant={ofacVariant(trip)}>
+                            {trip.ofacMissing > 0
+                              ? t('ofacStatus.missing', { count: trip.ofacMissing })
+                              : t('ofacStatus.certified')}
+                          </Badge>
+                          {trip.ofacMissing > 0 ? (
+                            <CertificationReminderButton
+                              customerId={customer.id}
+                              reservationId={trip.id}
+                            />
+                          ) : null}
+                        </div>
                       )}
                     </td>
                     <td className="py-2 text-right align-top font-mono">

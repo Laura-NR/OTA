@@ -409,6 +409,7 @@
       "lede": "Tu solicitud ya está con tus anfitriones, {name}.",
       "code": "Código de reserva",
       "nothing": "No se ha cobrado nada.",
+      "emailed": "Te hemos enviado una copia por correo.",
       "timeline": {
         "received": "Solicitud recibida",
         "receivedHint": "Ahora mismo",
@@ -1839,6 +1840,12 @@
         "none": "—",
         "certified": "Certificado",
         "missing": "faltan {count}"
+      },
+      "reminder": {
+        "send": "Enviar recordatorio de certificación",
+        "sending": "Enviando…",
+        "sent": "Recordatorio enviado",
+        "failed": "No se pudo enviar el recordatorio."
       },
       "consentTitle": "Registro de consentimientos",
       "consentDescription": "Cada autorización y retirada, de la más reciente a la más antigua, con la versión del texto que vio el viajero.",

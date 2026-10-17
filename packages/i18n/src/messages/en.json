@@ -409,6 +409,7 @@
       "lede": "Your request is with your hosts, {name}.",
       "code": "Booking code",
       "nothing": "Nothing has been charged.",
+      "emailed": "We've emailed a copy to your inbox.",
       "timeline": {
         "received": "Request received",
         "receivedHint": "Just now",
@@ -1839,6 +1840,12 @@
         "none": "—",
         "certified": "Certified",
         "missing": "{count} missing"
+      },
+      "reminder": {
+        "send": "Send certification reminder",
+        "sending": "Sending…",
+        "sent": "Reminder sent",
+        "failed": "The reminder could not be sent."
       },
       "consentTitle": "Consent log",
       "consentDescription": "Every grant and withdrawal, newest first, with the version of the words the traveler saw.",

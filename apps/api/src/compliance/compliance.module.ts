@@ -12,6 +12,7 @@ import { LEGAL_CONTENT } from './compliance.tokens';
 import { ConsentsService } from './consents.service';
 import { LegalTextsService } from './legal-texts.service';
 import { MeComplianceController } from './me-compliance.controller';
+import { OfacRemindersService } from './ofac-reminders.service';
 
 /** Each locale's `content.legal` from the tenant messages; a locale without one is absent. */
 function loadLegalContent(tenant: TenantConfig): Record<string, LegalContent> {
@@ -34,6 +35,7 @@ function loadLegalContent(tenant: TenantConfig): Record<string, LegalContent> {
     AffidavitsService,
     ConsentsService,
     LegalTextsService,
+    OfacRemindersService,
     {
       provide: LEGAL_CONTENT,
       inject: [TENANT_CONFIG],

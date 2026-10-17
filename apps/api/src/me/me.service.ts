@@ -1,11 +1,15 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import type { TenantConfig } from '@ota/config';
 import type { InventoryItem, InventoryType, PackageService, Prisma } from '@ota/db';
 import { ReservationStatus, ServiceType } from '@ota/domain';
+import { bookingReceivedEmail, type Mailer } from '@ota/email';
 import type {
   BookPackageRequest,
   CreateMyReservationRequest,
@@ -22,9 +26,12 @@ import type {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
+import { accountReservationUrl } from '../common/storefront-url';
 import type { SigningClient } from '../compliance/affidavits.service';
+import { MAILER } from '../email/email.module';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import {
   PackageBookingService,
   type SubmittedReservation,
@@ -149,10 +156,14 @@ function packageServiceItems(
  */
 @Injectable()
 export class MeService {
+  private readonly logger = new Logger(MeService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
     private readonly bookings: PackageBookingService,
+    @Inject(MAILER) private readonly mailer: Mailer,
+    @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
   ) {}
 
   async getProfile(userId: string): Promise<MeProfileDto> {
@@ -337,7 +348,49 @@ export class MeService {
         this.bookings.write(tx, reservation, plan, input, actor.id, client),
     });
 
-    return this.getReservation(actor.id, createdId);
+    const detail = await this.getReservation(actor.id, createdId);
+    await this.sendBookingReceived(actor, plan, input, detail);
+    return detail;
+  }
+
+  /**
+   * E-Received (Phase 6): the Booking form's first email. It is best effort —
+   * a mail failure never rolls back a request that has already been stored.
+   */
+  private async sendBookingReceived(
+    actor: AuthUser,
+    plan: { pkg: { name: string; currency: string }; startDate: Date; endDate: Date },
+    input: BookPackageRequest,
+    detail: MyReservationDetailDto,
+  ): Promise<void> {
+    const locale = this.travelerLocale(input.locale);
+    try {
+      await this.mailer.send(
+        bookingReceivedEmail({
+          to: actor.email,
+          name: input.travelers[0]!.fullName,
+          bookingCode: detail.bookingCode,
+          packageName: plan.pkg.name,
+          startDate: plan.startDate,
+          endDate: plan.endDate,
+          total: Number(detail.totalAmount),
+          currency: plan.pkg.currency,
+          portalUrl: accountReservationUrl(this.tenant, locale, detail.id),
+          locale,
+          branding: this.tenant.branding,
+        }),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Booking-received email failed for ${detail.bookingCode}: ${
+          error instanceof Error ? error.message : 'unknown error'
+        }`,
+      );
+    }
+  }
+
+  private travelerLocale(value?: string | null): string {
+    return value ?? this.tenant.primaryLocale;
   }
 
   /**

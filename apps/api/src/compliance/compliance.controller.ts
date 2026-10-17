@@ -13,12 +13,15 @@ import { UserRole } from '@ota/domain';
 import {
   affidavitExportQuerySchema,
   recordPaperAffidavitSchema,
+  sendOfacReminderSchema,
   type AffidavitExportQuery,
   type AffidavitRecordDto,
   type AffidavitSummaryDto,
   type ConsentRecordDto,
+  type OfacReminderResultDto,
   type RecordPaperAffidavitRequest,
   type ReservationOfacDto,
+  type SendOfacReminderRequest,
 } from '@ota/schemas';
 import type { Response } from 'express';
 
@@ -28,6 +31,7 @@ import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { AffidavitsService } from './affidavits.service';
 import { ConsentsService } from './consents.service';
+import { OfacRemindersService } from './ofac-reminders.service';
 
 const READ_ROLES = [
   UserRole.OperationsAdmin,
@@ -46,6 +50,7 @@ export class ComplianceController {
   constructor(
     private readonly affidavits: AffidavitsService,
     private readonly consents: ConsentsService,
+    private readonly ofacReminders: OfacRemindersService,
   ) {}
 
   @Get('reservations/:id/ofac')
@@ -106,5 +111,16 @@ export class ComplianceController {
   @Roles(...READ_ROLES)
   customerConsents(@Param('id', ParseUUIDPipe) id: string): Promise<ConsentRecordDto[]> {
     return this.consents.forCustomer(id);
+  }
+
+  @Post('customers/:id/certification-reminder')
+  @Roles(...WRITE_ROLES)
+  certificationReminder(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(sendOfacReminderSchema))
+    body: SendOfacReminderRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<OfacReminderResultDto> {
+    return this.ofacReminders.send(id, body.reservationId, actor);
   }
 }

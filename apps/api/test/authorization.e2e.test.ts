@@ -87,6 +87,7 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/reservations/${RESERVATION}/audit`, allowed: 'opsRead' },
   { method: 'get', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsRead' },
   { method: 'get', path: '/payments', allowed: 'opsRead' },
+  { method: 'post', path: '/payments/reminders/scan', allowed: 'opsWrite' },
   { method: 'post', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsWrite' },
   {
     method: 'post',
@@ -134,6 +135,11 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/affidavits/${AFFIDAVIT}`, allowed: 'opsWrite' },
   { method: 'get', path: `/affidavits/${AFFIDAVIT}/document`, allowed: 'opsWrite' },
   { method: 'get', path: `/customers/${CUSTOMER}/consents`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/customers/${CUSTOMER}/certification-reminder`,
+    allowed: 'opsWrite',
+  },
   // The traveler's own (scoped to the caller in the service).
   {
     method: 'get',

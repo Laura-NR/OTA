@@ -75,6 +75,8 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
       db,
       {} as PaymentsService,
       new PackageBookingService(db, affidavits, consents, tenant, key),
+      { send: async () => undefined },
+      tenant,
     );
 
     const user = await prisma.user.create({

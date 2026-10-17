@@ -409,6 +409,7 @@
       "lede": "Votre demande est chez vos hôtes, {name}.",
       "code": "Code de réservation",
       "nothing": "Rien n'a été débité.",
+      "emailed": "Nous vous avons envoyé une copie par e-mail.",
       "timeline": {
         "received": "Demande reçue",
         "receivedHint": "À l'instant",
@@ -1839,6 +1840,12 @@
         "none": "—",
         "certified": "Certifié",
         "missing": "{count} manquant(s)"
+      },
+      "reminder": {
+        "send": "Envoyer un rappel de certification",
+        "sending": "Envoi…",
+        "sent": "Rappel envoyé",
+        "failed": "Le rappel n'a pas pu être envoyé."
       },
       "consentTitle": "Journal des consentements",
       "consentDescription": "Chaque accord et retrait, du plus récent au plus ancien, avec la version du texte que le voyageur a vue.",

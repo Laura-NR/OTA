@@ -258,3 +258,10 @@ export const refundQuoteSchema = z.object({
 });
 
 export type RefundQuoteDto = z.infer<typeof refundQuoteSchema>;
+
+/** The result of one balance-reminder pass (the daily BullMQ scan or a manual run). */
+export const reminderScanResultSchema = z.object({
+  sent: z.number().int(),
+});
+
+export type ReminderScanResultDto = z.infer<typeof reminderScanResultSchema>;

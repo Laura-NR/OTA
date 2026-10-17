@@ -11,6 +11,10 @@ import { ProofsService } from './proofs.service';
 import { PublicPaymentController } from './public-payment.controller';
 import { RefundsController } from './refunds.controller';
 import { RefundsService } from './refunds.service';
+import { BullmqReminderScheduler } from './bullmq-reminders.scheduler';
+import { RemindersController } from './reminders.controller';
+import { NoopReminderScheduler, REMINDER_SCHEDULER } from './reminders.scheduler';
+import { RemindersService } from './reminders.service';
 import { ScheduleController } from './schedule.controller';
 import { ScheduleService } from './schedule.service';
 
@@ -30,12 +34,24 @@ import { ScheduleService } from './schedule.service';
     ScheduleController,
     ProofsController,
     RefundsController,
+    RemindersController,
   ],
   providers: [
     PaymentsService,
     ScheduleService,
     ProofsService,
     RefundsService,
+    RemindersService,
+    {
+      provide: REMINDER_SCHEDULER,
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL;
+        if (process.env.NODE_ENV === 'test' || !redisUrl) {
+          return new NoopReminderScheduler();
+        }
+        return new BullmqReminderScheduler(redisUrl);
+      },
+    },
     {
       provide: PAYMENT_PROVIDERS,
       useFactory: () =>
