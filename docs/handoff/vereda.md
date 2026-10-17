@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-17 12:00
+# Handoff — vereda — updated 2026-10-17 13:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -47,14 +47,15 @@ ADR 0007 (worker app).
   certification step and Preferences at 390/1024/1280 — no overflow (scrollWidth == viewport);
   back-office section titles Fraunces 22/28/600, storefront card title Inter 20/28/600 like the
   page's other cards; "View record" showed the IP and wrote one `affidavit.viewed` row.
-- **Not verified:** the passport flow under the owner's real key. The owner said the key was
-  added, but the running API answered 503 and `apps/api/.env` was last modified 2026-09-20 (file
-  metadata only; contents not read), so the edit was most likely not saved. The passport path
-  itself was proven on 2026-10-16 with a throwaway key.
+- Passport flow under the owner's real key (2026-10-17, after the key was filled in
+  `apps/api/.env` and the API restarted; the value was never printed): the key decodes to
+  32 bytes; a passport saved through `PUT /reservations/:id/travelers` is stored as `v1.`
+  ciphertext with no plaintext in the row; the vault route returns it (200) and writes one
+  `traveler.passport_viewed` row. The throwaway fixture was deleted.
 
 ## Assumptions & unknowns
-- `PASSPORT_ENCRYPTION_KEY`: see "Not verified" above. Save it in `apps/api/.env`, then
-  restart the API.
+- `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev). Back it up; a production key must be
+  different and is a deploy secret.
 - Legal texts (OFAC statement, consent words) and the category wording are placeholders for
   counsel; changing words needs a new version id. Who may sign for a companion or a minor is a
   counsel question: today the booking's owner can sign for any US traveler on it, with that
@@ -91,8 +92,8 @@ ADR 0007 (worker app).
     lists never carry the signature, IP or user agent."
 
 ## Next
-1. Owner: save `PASSPORT_ENCRYPTION_KEY` in `apps/api/.env` and restart the API; counsel review
-   of the legal texts and categories; confirm the pricing samples.
+1. Owner: back up the dev passport key; counsel review of the legal texts and categories;
+   confirm the pricing samples.
 2. The storefront Booking form (5 steps, M2 party + M3 step 4 + consents at review), then
    M4 (deposit schedule) and M5 (proposal) — each migration asked for first.
 3. Phase 6: the E-OFAC reminder and the other C-Spec emails; Phase 8: cookie banner + public

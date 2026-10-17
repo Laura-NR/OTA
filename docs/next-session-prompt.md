@@ -29,8 +29,8 @@ complete. M3 (OFAC affidavit + consent) was approved on 2026-10-17 (D1–D6 as r
 landed: migration 20261017075012_compliance with the append-only affidavit trigger (5f6cd29),
 domain rules (a4255b7), DTOs + tenant legal texts (4354b7b), API with the payment/voucher gate
 (783040a), retention sweep (cff508a), desk surfaces (694e25f), storefront certification step and
-consents (3660290). Last full verify: see the handoff's Verified section. Check first whether the
-owner has saved PASSPORT_ENCRYPTION_KEY in apps/api/.env (see the handoff: not verified yet).
+consents (3660290). Last full verify: see the handoff's Verified section. PASSPORT_ENCRYPTION_KEY
+is set in apps/api/.env and verified (never print or rotate it).
 The owner decided: placeholder/mock data until real data is published; the design team is not
 asked; the build resolves design gaps itself with existing tokens, recorded in the ADRs.
 
