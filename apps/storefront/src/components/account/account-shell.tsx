@@ -6,13 +6,15 @@ import type { ReactNode } from 'react';
 import { SignOutButton } from '@/components/sign-out-button';
 import { Link } from '@/i18n/navigation';
 
-export type AccountSection = 'overview' | 'trips' | 'documents' | 'messages';
+export type AccountSection =
+  'overview' | 'trips' | 'documents' | 'messages' | 'preferences';
 
 const SECTIONS: readonly { key: AccountSection; href: string }[] = [
   { key: 'overview', href: '/account' },
   { key: 'trips', href: '/account?tab=trips' },
   { key: 'documents', href: '/account?tab=documents' },
   { key: 'messages', href: '/account?tab=messages' },
+  { key: 'preferences', href: '/account?tab=preferences' },
 ];
 
 function initials(name: string): string {
@@ -29,9 +31,9 @@ function initials(name: string): string {
 /**
  * The Account frame (Account / M-Account boards): from `lg` a sidebar with the
  * traveler, the sections, the emergency line and sign-out; below it the
- * traveler over a row of section tabs. The board's payments, travelers,
- * reviews and preferences sections need data that does not exist yet
- * (deposits M4, travelers M2), so they are not listed.
+ * traveler over a row of section tabs. Preferences holds the notification
+ * consents (M3); the board's payments, travelers and reviews sections wait for
+ * their data (deposits M4, the traveler-side party), so they are not listed.
  */
 export async function AccountShell({
   current,

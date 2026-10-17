@@ -2,6 +2,7 @@ import { conditionsContentSchema } from '@ota/schemas';
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type {
   MeProfileDto,
+  MyConsentDto,
   MyReservationDetailDto,
   MyReservationListItemDto,
 } from '@ota/schemas';
@@ -11,6 +12,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
 import { AccountShell, type AccountSection } from '@/components/account/account-shell';
+import { NotificationPreferences } from '@/components/account/notification-preferences';
 import { TripProgress } from '@/components/account/trip-progress';
 import { CheckoutButton } from '@/components/checkout-button';
 import { TONE_BADGES } from '@/components/conditions-card';
@@ -35,13 +37,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 function section(tab: string | undefined): AccountSection {
-  return tab === 'trips' || tab === 'documents' || tab === 'messages' ? tab : 'overview';
+  return tab === 'trips' ||
+    tab === 'documents' ||
+    tab === 'messages' ||
+    tab === 'preferences'
+    ? tab
+    : 'overview';
 }
 
 /**
  * Account (Account / M-Account boards): the traveler's next trip with its
- * progress and what is waiting on them, then their trips, documents and
- * message threads, each a section of the same frame (`?tab=`).
+ * progress and what is waiting on them, then their trips, documents, message
+ * threads and notification preferences, each a section of the same frame
+ * (`?tab=`).
  */
 export default async function AccountPage({
   searchParams,
@@ -64,6 +72,10 @@ export default async function AccountPage({
     getPageContent('conditions', conditionsContentSchema),
   ]);
   const tenant = getTenantConfig();
+  const consents =
+    current === 'preferences'
+      ? await apiFetch<MyConsentDto[]>(`/me/consents?locale=${locale}`).catch(() => [])
+      : [];
   const name = profile?.fullName ?? session.user.name ?? null;
   const firstName = name?.split(/\s+/)[0] ?? null;
 
@@ -421,6 +433,15 @@ export default async function AccountPage({
               ))}
             </ul>
           )}
+        </section>
+      ) : null}
+
+      {current === 'preferences' ? (
+        <section aria-labelledby="preferences-title" className="flex flex-col gap-4">
+          <h1 id="preferences-title" className="text-h1-compact text-default md:text-h1">
+            {t('preferences.title')}
+          </h1>
+          <NotificationPreferences consents={consents} />
         </section>
       ) : null}
     </AccountShell>

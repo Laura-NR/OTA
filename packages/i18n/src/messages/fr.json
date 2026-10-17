@@ -406,7 +406,8 @@
       "overview": "Aperçu",
       "trips": "Mes voyages",
       "documents": "Documents",
-      "messages": "Messages"
+      "messages": "Messages",
+      "preferences": "Préférences"
     },
     "emergency": {
       "title": "Urgences · 24 h/24"
@@ -435,7 +436,34 @@
     "messagesLede": "Chaque voyage a sa propre conversation avec notre centrale des opérations.",
     "openThread": "Ouvrir les messages",
     "progress": "Étape {step} sur {total} · {label}",
-    "progressLabel": "Progression du voyage"
+    "progressLabel": "Progression du voyage",
+    "ofac": {
+      "title": "Certification de la catégorie de voyage (États-Unis)",
+      "lede": "La loi américaine n'autorise les dépenses de voyage à Cuba que sous l'une des 12 catégories de licence générale, quel que soit le canal de réservation. Chaque voyageur américain certifie sa catégorie ; nous conservons le dossier 5 ans.",
+      "locked": "Le paiement reste bloqué tant que tous les voyageurs américains de ce voyage n'ont pas certifié.",
+      "category": "Catégorie de voyage",
+      "statement": "Ce que vous certifiez",
+      "signature": "Tapez le nom complet de {name} en guise de signature",
+      "signatureHint": "Tel qu'il figure sur la réservation : {name}",
+      "submit": "Signer la certification",
+      "submitting": "Signature…",
+      "certified": "Certifié · {category}",
+      "failed": "La certification n'a pas pu être enregistrée."
+    },
+    "preferences": {
+      "title": "Notifications",
+      "lede": "Les nouvelles de vos réservations vous arrivent toujours par e-mail. Ces deux-là sont à votre choix, modifiable à tout moment.",
+      "purposes": {
+        "TRIP_MESSAGES": "Briefing avant départ et suivi quotidien",
+        "MARKETING_EMAIL": "Récits et nouveaux voyages · e-mail mensuel"
+      },
+      "on": "Activé",
+      "off": "Désactivé",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré",
+      "failed": "Votre choix n'a pas pu être enregistré.",
+      "none": "Rien à choisir pour l'instant."
+    }
   },
   "join": {
     "title": "Rejoignez notre réseau",

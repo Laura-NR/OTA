@@ -1,5 +1,5 @@
 import { DEFAULT_LOCALE } from '@ota/i18n';
-import type { MyReservationDetailDto } from '@ota/schemas';
+import type { MyReservationDetailDto, ReservationOfacDto } from '@ota/schemas';
 import {
   Alert,
   Badge,
@@ -14,6 +14,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
 import { AccountShell } from '@/components/account/account-shell';
+import { OfacCertification } from '@/components/account/ofac-certification';
 import { TripProgress } from '@/components/account/trip-progress';
 import { CheckoutButton } from '@/components/checkout-button';
 import { MessageThread } from '@/components/message-thread';
@@ -25,9 +26,11 @@ import { formatMoney } from '@/lib/format';
 import { getTenantConfig } from '@/lib/tenant';
 
 /**
- * One trip in the Account frame: its progress in the traveler's words, the
- * payment step when it is due, the itinerary, the documents, the review once
- * completed, and the thread with operations (`#messages`).
+ * One trip in the Account frame: its progress in the traveler's words, the US
+ * travel-category certification when a traveler needs it (M3), the payment
+ * step when it is due (locked until every US traveler has certified), the
+ * itinerary, the documents, the review once completed, and the thread with
+ * operations (`#messages`).
  */
 export default async function AccountReservationPage({
   params,
@@ -59,6 +62,11 @@ export default async function AccountReservationPage({
     getLocale(),
   ]);
   const tenant = getTenantConfig();
+  const ofac = await apiFetch<ReservationOfacDto>(
+    `/me/reservations/${id}/ofac?locale=${locale}`,
+  ).catch(() => null);
+  const ofacRequired = ofac?.travelers.some((traveler) => traveler.required) ?? false;
+  const ofacLocked = (ofac?.missing ?? 0) > 0;
   const card = 'flex flex-col gap-4 rounded-lg border bg-surface p-6';
   const when = (value: string) =>
     format.dateTime(new Date(value), {
@@ -107,6 +115,15 @@ export default async function AccountReservationPage({
         <TripProgress status={reservation.status} />
       </section>
 
+      {ofac && ofacRequired ? (
+        <section aria-labelledby="ofac-title" className={card}>
+          <h2 id="ofac-title" className="text-h4 text-default">
+            {t('ofac.title')}
+          </h2>
+          <OfacCertification reservationId={reservation.id} ofac={ofac} />
+        </section>
+      ) : null}
+
       {reservation.status === 'SECURED_AND_INVOICED' ||
       reservation.status === 'PENDING_PAYMENT' ? (
         <section
@@ -117,7 +134,11 @@ export default async function AccountReservationPage({
             {tc('title')}
           </h2>
           <p className="text-body-sm text-secondary">{tc('description')}</p>
-          <CheckoutButton reservationId={reservation.id} />
+          {ofacLocked ? (
+            <Alert variant="warning">{t('ofac.locked')}</Alert>
+          ) : (
+            <CheckoutButton reservationId={reservation.id} />
+          )}
         </section>
       ) : null}
 

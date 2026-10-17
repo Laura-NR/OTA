@@ -406,7 +406,8 @@
       "overview": "Overview",
       "trips": "My trips",
       "documents": "Documents",
-      "messages": "Messages"
+      "messages": "Messages",
+      "preferences": "Preferences"
     },
     "emergency": {
       "title": "Emergency · 24/7"
@@ -435,7 +436,34 @@
     "messagesLede": "Each trip has its own thread with our operations desk.",
     "openThread": "Open messages",
     "progress": "Step {step} of {total} · {label}",
-    "progressLabel": "Trip progress"
+    "progressLabel": "Trip progress",
+    "ofac": {
+      "title": "US travel-category certification",
+      "lede": "US law allows spending on Cuba travel only under one of 12 general-licence categories, whatever the booking channel. Each US traveler certifies their category; we keep the record for 5 years.",
+      "locked": "Payment stays locked until every US traveler on this trip has certified.",
+      "category": "Travel category",
+      "statement": "What you certify",
+      "signature": "Type {name}'s full name as a signature",
+      "signatureHint": "As it appears on the booking: {name}",
+      "submit": "Sign the certification",
+      "submitting": "Signing…",
+      "certified": "Certified · {category}",
+      "failed": "The certification could not be saved."
+    },
+    "preferences": {
+      "title": "Notifications",
+      "lede": "Booking updates always reach you by email. These two are up to you, and you can change them any time.",
+      "purposes": {
+        "TRIP_MESSAGES": "Pre-departure briefing and daily check-ins",
+        "MARKETING_EMAIL": "Stories and new trips · monthly email"
+      },
+      "on": "On",
+      "off": "Off",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Your choice could not be saved.",
+      "none": "Nothing to choose yet."
+    }
   },
   "join": {
     "title": "Join our network",

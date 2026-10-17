@@ -406,7 +406,8 @@
       "overview": "Resumen",
       "trips": "Mis viajes",
       "documents": "Documentos",
-      "messages": "Mensajes"
+      "messages": "Mensajes",
+      "preferences": "Preferencias"
     },
     "emergency": {
       "title": "Emergencias · 24/7"
@@ -435,7 +436,34 @@
     "messagesLede": "Cada viaje tiene su propia conversación con nuestra central de operaciones.",
     "openThread": "Abrir mensajes",
     "progress": "Paso {step} de {total} · {label}",
-    "progressLabel": "Progreso del viaje"
+    "progressLabel": "Progreso del viaje",
+    "ofac": {
+      "title": "Certificación de la categoría de viaje (EE. UU.)",
+      "lede": "La ley de EE. UU. solo permite gastar en viajes a Cuba bajo una de 12 categorías de licencia general, sea cual sea el canal de reserva. Cada viajero estadounidense certifica su categoría; guardamos el registro 5 años.",
+      "locked": "El pago queda bloqueado hasta que todos los viajeros estadounidenses de este viaje hayan certificado.",
+      "category": "Categoría de viaje",
+      "statement": "Lo que certificas",
+      "signature": "Escribe el nombre completo de {name} como firma",
+      "signatureHint": "Tal como figura en la reserva: {name}",
+      "submit": "Firmar la certificación",
+      "submitting": "Firmando…",
+      "certified": "Certificado · {category}",
+      "failed": "No se pudo guardar la certificación."
+    },
+    "preferences": {
+      "title": "Notificaciones",
+      "lede": "Las novedades de tus reservas te llegan siempre por correo. Estas dos dependen de ti y puedes cambiarlas cuando quieras.",
+      "purposes": {
+        "TRIP_MESSAGES": "Informe previo al viaje y seguimiento diario",
+        "MARKETING_EMAIL": "Historias y viajes nuevos · correo mensual"
+      },
+      "on": "Activado",
+      "off": "Desactivado",
+      "saving": "Guardando…",
+      "saved": "Guardado",
+      "failed": "No se pudo guardar tu elección.",
+      "none": "Aún no hay nada que elegir."
+    }
   },
   "join": {
     "title": "Únete a nuestra red",
