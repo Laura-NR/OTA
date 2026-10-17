@@ -43,6 +43,8 @@ supplier legal documents. Booking codes, UUIDs, and amounts are pseudonymous.
 | Application logs | `ConsoleMailer` prints the full email body; expiry scan logs supplier emails; digest logs the recipient | pino, no redaction/retention | **G7** |
 | `Account`/`Session` IP + user agent | as above | Deleted on purge | None |
 | `ReservationTraveler` (M2) | `fullName`, `dateOfBirth`, `nationality`, passport number (`passportNumberEnc`, AES-256-GCM) and expiry, emergency contact name + phone | **Scrubbed** on anonymization (name `[redacted]`, the rest null; kind, lead flag and room kept); the passport number is read only through the audited vault route | None |
+| `TravelerAffidavit` (M3) | signer name and nationality, typed signature, IP address and user agent (online), scanned paper form (`affidavits/<reservationId>/…` in object storage) | **Kept outside the traveler purge** for 5 years after the trip (OFAC record keeping, M3 D6), append-only by trigger; the daily retention scan deletes the row and its scan at `retainUntil`. Full record, scan and export are audited reads (ops+super; export Super Admin) | None (by design) |
+| `ConsentRecord` (M3) | user (or visitor) id, purpose, granted, text version, locale | On anonymization the user and visitor ids and the IP country are nulled; the versioned counts stay | None |
 | `ReservationExtra.label` / `ReservationPriceLine.label` (M2) | a manual extra's label is desk free text, copied onto its price line | Untouched (fiscal invoice line); desk guidance: no personal data in a manual extra | **G1** (residual) |
 
 Encryption at rest: the passport number is the one field-level-encrypted

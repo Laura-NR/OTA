@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { TenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import type { Mailer } from '@ota/email';
+import { createObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import type { PrismaService } from '../src/prisma/prisma.service';
@@ -27,6 +28,8 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
   let send: ReturnType<typeof vi.fn>;
   let userId = '';
   let reservationId = '';
+  let keptAffidavitId = '';
+  let expiredAffidavitId = '';
   const email = `retention-e2e-${Date.now()}@example.test`;
 
   beforeAll(async () => {
@@ -44,6 +47,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
         },
       } as unknown as TenantConfig,
       new NoopRetentionScheduler(),
+      createObjectStorage({ bucket: 'retention-test', region: 'us-east-1' }),
     );
 
     const user = await prisma.user.create({
@@ -99,6 +103,41 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
       },
     });
 
+    // M3: a consent the purge must detach, an affidavit it must keep, and one
+    // past its five years that the sweep deletes.
+    await prisma.consentRecord.create({
+      data: {
+        userId,
+        reservationId,
+        purpose: 'MARKETING_EMAIL',
+        granted: true,
+        textVersion: 'marketing@test',
+        source: 'ACCOUNT',
+      },
+    });
+    const affidavit = {
+      reservationId,
+      category: 'SUPPORT_FOR_THE_CUBAN_PEOPLE' as const,
+      signerName: 'Retention Test Traveler',
+      bookingCode: 'RTN-AFFIDAVIT',
+      travelStart: new Date(Date.now() - 220 * DAY_MS),
+      travelEnd: new Date(Date.now() - 210 * DAY_MS),
+      statementVersion: 'ofac@test',
+      statementHash: 'a'.repeat(64),
+      signature: 'Retention Test Traveler',
+      signedAt: new Date(Date.now() - 230 * DAY_MS),
+    };
+    keptAffidavitId = (
+      await prisma.travelerAffidavit.create({
+        data: { ...affidavit, retainUntil: new Date(Date.now() + 1000 * DAY_MS) },
+      })
+    ).id;
+    expiredAffidavitId = (
+      await prisma.travelerAffidavit.create({
+        data: { ...affidavit, retainUntil: new Date(Date.now() - DAY_MS) },
+      })
+    ).id;
+
     // Tier 1 free-text PII that the purge must scrub.
     await prisma.message.create({
       data: { reservationId, sender: 'TRAVELER', body: 'My passport is P1234567' },
@@ -147,6 +186,10 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     await prisma.verification.deleteMany({
       where: { identifier: { contains: email } },
     });
+    await prisma.travelerAffidavit.deleteMany({
+      where: { id: { in: [keptAffidavitId, expiredAffidavitId] } },
+    });
+    await prisma.consentRecord.deleteMany({ where: { reservationId } });
     // Messages, reviews, incidents, travelers and service items cascade with the booking.
     await prisma.reservation.deleteMany({ where: { id: reservationId } });
     await prisma.user.deleteMany({ where: { id: userId } });
@@ -155,7 +198,10 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
 
   it('sends the notice, records consent, then anonymizes after the grace', async () => {
     const first = await service.scan();
-    expect(first).toEqual({ noticed: 1, purged: 0 });
+    expect(first).toEqual({ noticed: 1, purged: 0, affidavitsDeleted: 1 });
+    expect(
+      await prisma.travelerAffidavit.findUnique({ where: { id: expiredAffidavitId } }),
+    ).toBeNull();
     expect(send).toHaveBeenCalledTimes(1);
 
     const message = send.mock.calls[0][0] as { to: string; html: string };
@@ -181,7 +227,17 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     });
 
     const second = await service.scan();
-    expect(second).toEqual({ noticed: 0, purged: 1 });
+    expect(second).toEqual({ noticed: 0, purged: 1, affidavitsDeleted: 0 });
+
+    // M3 D6: the consent log loses who; the affidavit keeps its five years.
+    const consentRow = await prisma.consentRecord.findFirstOrThrow({
+      where: { reservationId },
+    });
+    expect(consentRow).toMatchObject({ userId: null, visitorId: null, granted: true });
+    const kept = await prisma.travelerAffidavit.findUniqueOrThrow({
+      where: { id: keptAffidavitId },
+    });
+    expect(kept.signerName).toBe('Retention Test Traveler');
 
     user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
     expect(user.email).toBe(`anonymized+${userId}@anonymized.invalid`);

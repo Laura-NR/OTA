@@ -72,6 +72,8 @@ function createFakePrisma(state: RetentionState) {
     review: { updateMany: noopWrite },
     incident: { updateMany: noopWrite },
     reservationTraveler: { updateMany: noopWrite },
+    consentRecord: { updateMany: noopWrite },
+    travelerAffidavit: { findMany: async () => [], deleteMany: noopWrite },
     serviceItem: { updateMany: noopWrite },
     dispatchOffer: { updateMany: noopWrite },
     verification: { deleteMany: noopWrite },
@@ -191,7 +193,7 @@ describe('retention API', () => {
       .set('x-test-user', SUPER_ADMIN.email);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ noticed: 1, purged: 0 });
+    expect(response.body).toEqual({ noticed: 1, purged: 0, affidavitsDeleted: 0 });
     expect(mailer.send).toHaveBeenCalledTimes(1);
     const email = mailer.send.mock.calls[0][0] as {
       to: string;
@@ -214,7 +216,7 @@ describe('retention API', () => {
       .post('/retention/scan')
       .set('x-test-user', SUPER_ADMIN.email);
 
-    expect(response.body).toEqual({ noticed: 0, purged: 0 });
+    expect(response.body).toEqual({ noticed: 0, purged: 0, affidavitsDeleted: 0 });
     expect(mailer.send).not.toHaveBeenCalled();
   });
 
@@ -225,7 +227,7 @@ describe('retention API', () => {
       .post('/retention/scan')
       .set('x-test-user', SUPER_ADMIN.email);
 
-    expect(response.body).toEqual({ noticed: 0, purged: 1 });
+    expect(response.body).toEqual({ noticed: 0, purged: 1, affidavitsDeleted: 0 });
     const user = state.users[0];
     expect(user.email).toBe(`anonymized+${TRAVELER_ID}@anonymized.invalid`);
     expect(user.fullName).toBeNull();
@@ -264,7 +266,7 @@ describe('retention API', () => {
     const scan = await request(app.getHttpServer())
       .post('/retention/scan')
       .set('x-test-user', SUPER_ADMIN.email);
-    expect(scan.body).toEqual({ noticed: 0, purged: 0 });
+    expect(scan.body).toEqual({ noticed: 0, purged: 0, affidavitsDeleted: 0 });
   });
 
   it('lists pending retention records for operations', async () => {

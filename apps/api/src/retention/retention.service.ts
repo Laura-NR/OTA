@@ -20,9 +20,11 @@ import type {
   RetentionPendingUserDto,
   RetentionScanResultDto,
 } from '@ota/schemas';
+import type { ObjectStorage } from '@ota/storage';
 
 import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OBJECT_STORAGE } from '../storage/storage.module';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { signRetentionToken, verifyRetentionToken } from './retention-token';
 import { RETENTION_SCHEDULER, type RetentionScheduler } from './retention.scheduler';
@@ -100,6 +102,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     @Inject(RETENTION_SCHEDULER) private readonly scheduler: RetentionScheduler,
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -112,17 +115,53 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     await this.scheduler.close();
   }
 
-  /** One pass of the lifecycle job: notices first, then due purges. */
+  /**
+   * One pass of the lifecycle job: notices first, then due purges, then the
+   * OFAC affidavits whose five years have run out (M3, D6).
+   */
   async scan(): Promise<RetentionScanResultDto> {
     const now = new Date();
     const noticed = await this.sendDueNotices(now);
     const purged = await this.purgeExpired(now);
-    if (noticed > 0 || purged > 0) {
+    const affidavitsDeleted = await this.sweepAffidavits(now);
+    if (noticed > 0 || purged > 0 || affidavitsDeleted > 0) {
       this.logger.log(
-        `Retention scan: ${noticed} notice(s) sent, ${purged} record(s) anonymized`,
+        `Retention scan: ${noticed} notice(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted`,
       );
     }
-    return { noticed, purged };
+    return { noticed, purged, affidavitsDeleted };
+  }
+
+  /**
+   * Delete affidavits past `retainUntil` and their scans. They are kept out of
+   * the traveler purge (their own snapshot outlives it) and end only here; a
+   * newer affidavit that superseded one keeps its row, its link turning null.
+   */
+  private async sweepAffidavits(now: Date): Promise<number> {
+    const expired = await this.prisma.travelerAffidavit.findMany({
+      where: { retainUntil: { lt: now } },
+      select: { id: true, documentKey: true },
+    });
+    if (expired.length === 0) {
+      return 0;
+    }
+    for (const affidavit of expired) {
+      if (affidavit.documentKey) {
+        await this.storage.delete(affidavit.documentKey).catch(() => undefined);
+      }
+    }
+    await this.prisma.travelerAffidavit.deleteMany({
+      where: { id: { in: expired.map((affidavit) => affidavit.id) } },
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'retention.affidavits_deleted',
+        entityType: 'TravelerAffidavit',
+        entityId: null,
+        metadata: { count: expired.length },
+      },
+    });
+    return expired.length;
   }
 
   /** Travelers whose lifecycle is not simply ACTIVE, most urgent first. */
@@ -327,9 +366,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
    * Scrub the traveler's PII and revoke their credentials in one transaction.
    * Fiscal rows (reservation totals, service items, price lines, payment
    * receipts, audit trail) are kept, but free-text PII on the traveler's
-   * bookings is redacted and every traveler in their parties loses name, date
-   * of birth, nationality, passport and emergency contact
-   * (`docs/pii-at-rest-review.md`, Tier 1).
+   * bookings is redacted, every traveler in their parties loses name, date of
+   * birth, nationality, passport and emergency contact, and their consent log
+   * loses its link to them (`docs/pii-at-rest-review.md`, Tier 1; M3 D6). OFAC
+   * affidavits are kept for their five years.
    */
   private async anonymize(userId: string, email: string, now: Date): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
@@ -359,6 +399,13 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       await tx.incident.updateMany({
         where: { reservationId: { in: reservationIds } },
         data: { description: '[redacted]' },
+      });
+      // M3 D6: the consent log keeps its versioned counts, not who gave them.
+      // OFAC affidavits are not touched: they keep their own snapshot for five
+      // years and end in sweepAffidavits.
+      await tx.consentRecord.updateMany({
+        where: { userId },
+        data: { userId: null, visitorId: null, ipCountry: null },
       });
       // M2 party rows: keep kind, lead flag and room (party size and bed-nights
       // stay reportable); drop who they were.

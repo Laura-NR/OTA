@@ -92,4 +92,9 @@ stateless tokenized confirmation, and anonymizes in place.**
 - Since M2 (2026-10-16) the purge also scrubs every `ReservationTraveler` on the
   traveler's bookings (name, date of birth, nationality, passport ciphertext and
   expiry, emergency contact), keeping the party's shape for reporting.
+- Since M3 (2026-10-17) anonymization also detaches the traveler's consent log
+  (user and visitor ids, IP country nulled), and OFAC affidavits are the stated
+  exception: they keep their own snapshot for five years after the trip and the
+  same daily scan deletes them, with their scans, at `retainUntil`
+  (`docs/schema-m3-compliance.md`, D6).
 - Confirm the retention windows (6/30/12) against counsel before production.

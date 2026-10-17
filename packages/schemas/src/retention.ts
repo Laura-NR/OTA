@@ -37,6 +37,8 @@ export type ListRetentionQuery = z.infer<typeof listRetentionQuerySchema>;
 export const retentionScanResultSchema = z.object({
   noticed: z.number().int(),
   purged: z.number().int(),
+  /** OFAC affidavits past their five years, deleted with their scans (M3, D6). */
+  affidavitsDeleted: z.number().int(),
 });
 
 export type RetentionScanResultDto = z.infer<typeof retentionScanResultSchema>;
