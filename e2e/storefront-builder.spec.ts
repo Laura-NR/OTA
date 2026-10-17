@@ -4,27 +4,61 @@ import { expect, test } from '@playwright/test';
 import { signIn } from './helpers';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
+const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? 'http://localhost:8025';
+const TRAVELER_EMAIL = 'traveler@example.test';
 
 process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 
-test.describe('storefront package builder', () => {
-  test.afterEach(async ({ page }) => {
-    const match = page.url().match(/reservations\/([0-9a-f-]+)$/);
-    if (match) {
-      await prisma.auditLog
-        .deleteMany({ where: { entityType: 'Reservation', entityId: match[1] } })
-        .catch(() => undefined);
-      await prisma.reservation.delete({ where: { id: match[1] } }).catch(() => undefined);
-    }
+interface MailpitMessage {
+  ID: string;
+  Subject: string;
+  To?: { Address: string }[];
+}
+
+let proposalId = '';
+let reference = '';
+
+async function deleteProposal(): Promise<void> {
+  if (!proposalId) return;
+  const proposal = await prisma.proposal.findUnique({
+    where: { id: proposalId },
+    select: { id: true, requestId: true, reservationId: true },
+  });
+  if (!proposal) return;
+  await prisma.auditLog.deleteMany({
+    where: { entityType: 'Proposal', entityId: proposal.id },
+  });
+  await prisma.auditLog.deleteMany({
+    where: { entityType: 'CustomRequest', entityId: proposal.requestId },
+  });
+  if (proposal.reservationId) {
+    await prisma.auditLog.deleteMany({
+      where: { entityType: 'Reservation', entityId: proposal.reservationId },
+    });
+    await prisma.reservation.delete({ where: { id: proposal.reservationId } });
+  }
+  await prisma.proposal.delete({ where: { id: proposal.id } });
+  await prisma.customRequest.delete({ where: { id: proposal.requestId } });
+}
+
+/**
+ * The M5 custom-trip vertical slice: a traveler sends a request, the desk
+ * prices and sends a proposal (with a Mailpit check), and the traveler accepts
+ * it. Acceptance creates an ITINERARY_SUBMITTED booking and charges nothing.
+ */
+test.describe('custom-trip proposals', () => {
+  test.beforeAll(async () => {
+    await deleteProposal();
   });
 
   test.afterAll(async () => {
+    await deleteProposal();
     await prisma.$disconnect();
   });
 
-  test('builds and submits an itinerary', async ({ page }) => {
-    await signIn(page, 'traveler@example.test', {
+  test('sends a request, prices it on the desk and accepts it', async ({ page }) => {
+    await signIn(page, TRAVELER_EMAIL, {
       origin: STOREFRONT_URL,
       callbackPath: '/en/custom',
     });
@@ -44,11 +78,89 @@ test.describe('storefront package builder', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('button', { name: 'Continue' }).click();
 
-    await expect(page.getByText(/Estimated total/)).toBeVisible();
-    await page.getByRole('button', { name: 'Submit itinerary' }).click();
+    await page
+      .getByLabel('Must-haves, no-gos, anything else')
+      .fill('Birding first, long walks, casas only.');
+    await page.getByRole('button', { name: 'Request my priced proposal' }).click();
 
+    await expect(page.getByRole('heading', { name: 'Proposal requested' })).toBeVisible();
+    const link = page.getByRole('link', { name: 'Open my proposal' });
+    const href = await link.getAttribute('href');
+    proposalId = href?.split('/').filter(Boolean).at(-1) ?? '';
+    expect(proposalId).toMatch(/^[0-9a-f-]{36}$/);
+    reference =
+      (
+        await page
+          .getByText(/VX-C-[A-Z0-9]{8}/)
+          .first()
+          .textContent()
+      )?.match(/VX-C-[A-Z0-9]{8}/)?.[0] ?? '';
+    expect(reference).toMatch(/^VX-C-/);
+
+    await link.click();
+    await expect(page).toHaveURL(new RegExp(`/account/proposals/${proposalId}$`));
+    await expect(page.getByText('Being priced', { exact: true })).toBeVisible();
+    await expect(page.getByText('A specialist is pricing your request.')).toBeVisible();
+
+    // The desk prices it.
+    await signIn(page);
+    await page.goto('/bookings/proposals');
+    await page.getByRole('link', { name: reference }).click();
+    await expect(page.getByRole('heading', { name: reference })).toBeVisible();
+    await page
+      .getByLabel('Proposal summary')
+      .fill('Fourteen days west to Trinidad, birding first.');
+    await page.getByRole('button', { name: 'Publish and send' }).click();
+    await expect(page.getByText('Sent', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Version 1')).toBeVisible();
+
+    await expect(async () => {
+      const response = await fetch(`${MAILPIT_URL}/api/v1/messages`);
+      const { messages } = (await response.json()) as { messages: MailpitMessage[] };
+      const message = messages.find(
+        (candidate) =>
+          candidate.To?.some((recipient) => recipient.Address === TRAVELER_EMAIL) &&
+          candidate.Subject.includes(reference),
+      );
+      expect(message).toBeTruthy();
+    }).toPass();
+
+    // The traveler reviews and accepts it.
+    await signIn(page, TRAVELER_EMAIL, {
+      origin: STOREFRONT_URL,
+      callbackPath: `/en/account/proposals/${proposalId}`,
+    });
+    await expect(page.getByText('Ready to review', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Fourteen days west to Trinidad, birding first.'),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Accept this proposal' }).click();
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
-    // The status badge, as the traveler reads it; the progress bar repeats the label.
-    await expect(page.getByText('Request received').first()).toBeVisible();
+
+    const proposal = await prisma.proposal.findUniqueOrThrow({
+      where: { id: proposalId },
+      include: {
+        request: true,
+        reservation: {
+          include: { priceLines: true, serviceItems: true },
+        },
+      },
+    });
+    expect(proposal.status).toBe('ACCEPTED');
+    expect(proposal.request.status).toBe('CONVERTED');
+    expect(proposal.reservation).toMatchObject({
+      status: 'ITINERARY_SUBMITTED',
+      partySize: 1,
+      totalCurrency: 'EUR',
+    });
+    expect(proposal.reservation?.priceLines).toHaveLength(1);
+    expect(proposal.reservation?.serviceItems).toHaveLength(1);
+    const acceptedVersion = await prisma.proposalVersion.findFirst({
+      where: { proposalId },
+      orderBy: { version: 'desc' },
+    });
+    expect(Number(proposal.reservation?.totalAmount)).toBe(
+      Number(acceptedVersion?.total),
+    );
   });
 });
