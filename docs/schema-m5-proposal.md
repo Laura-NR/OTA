@@ -259,7 +259,7 @@ tenant manifest, not the database, as with M1/M4.
 +  proposal   Proposal            @relation("ProposalVersions", fields: [proposalId], references: [id], onDelete: Cascade)
 +  createdBy  User?               @relation("ProposalVersionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 +  priceLines ProposalPriceLine[]
-+  acceptedBy Proposal?           @relation("ProposalAcceptedVersion")
++  acceptedIn Proposal?           @relation("ProposalAcceptedVersion")
 +
 +  @@unique([proposalId, version])
 +  @@map("proposal_versions")
