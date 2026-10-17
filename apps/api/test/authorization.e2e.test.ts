@@ -144,6 +144,8 @@ const ROUTES: Route[] = [
   },
   { method: 'get', path: '/me/consents', allowed: 'authenticated' },
   { method: 'post', path: '/me/consents', allowed: 'authenticated' },
+  // The Booking form: books for the caller, so any signed-in role.
+  { method: 'post', path: '/me/reservations/package-booking', allowed: 'authenticated' },
 
   // Dispatch / escalation — ops control; worker responds.
   { method: 'post', path: `/reservations/${RESERVATION}/dispatch`, allowed: 'opsWrite' },

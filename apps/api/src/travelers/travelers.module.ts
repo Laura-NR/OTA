@@ -19,5 +19,7 @@ import { PASSPORT_KEY } from './travelers.tokens';
       },
     },
   ],
+  // The Booking form (MeModule) stores passport numbers with the same key.
+  exports: [PASSPORT_KEY],
 })
 export class TravelersModule {}

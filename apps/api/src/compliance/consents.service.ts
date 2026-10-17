@@ -5,11 +5,16 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import type { ConsentRecord } from '@ota/db';
-import { CONSENT_PURPOSES, currentConsents, needsConsent } from '@ota/domain';
+import {
+  CONSENT_PURPOSES,
+  currentConsents,
+  needsConsent,
+  type ConsentPurpose,
+} from '@ota/domain';
 import type { ConsentRecordDto, MyConsentDto, RecordConsentRequest } from '@ota/schemas';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { LegalTextsService } from './legal-texts.service';
+import { LegalTextsService, type ResolvedText } from './legal-texts.service';
 
 function toDto(row: ConsentRecord): ConsentRecordDto {
   return {
@@ -58,17 +63,7 @@ export class ConsentsService {
   }
 
   async record(userId: string, input: RecordConsentRequest): Promise<ConsentRecordDto> {
-    const text = this.legal.consent(input.purpose, input.locale);
-    if (!text) {
-      throw new UnprocessableEntityException(
-        `The agency has no text for ${input.purpose} consent yet`,
-      );
-    }
-    if (text.version !== input.textVersion) {
-      throw new ConflictException(
-        'These words changed since they were shown; reload and choose again',
-      );
-    }
+    const text = this.requireText(input.purpose, input.textVersion, input.locale);
     if (input.reservationId) {
       const owned = await this.prisma.reservation.findFirst({
         where: { id: input.reservationId, userId },
@@ -92,6 +87,29 @@ export class ConsentsService {
       },
     });
     return toDto(row);
+  }
+
+  /**
+   * The words in force for a purpose, refused when the agency has none (422)
+   * or when the traveler was shown another version (409).
+   */
+  requireText(
+    purpose: ConsentPurpose,
+    textVersion: string,
+    locale?: string,
+  ): ResolvedText {
+    const text = this.legal.consent(purpose, locale);
+    if (!text) {
+      throw new UnprocessableEntityException(
+        `The agency has no text for ${purpose} consent yet`,
+      );
+    }
+    if (text.version !== textVersion) {
+      throw new ConflictException(
+        'These words changed since they were shown; reload and choose again',
+      );
+    }
+    return text;
   }
 
   /** A customer's whole log, newest first (A-Customers "Consent log"). */

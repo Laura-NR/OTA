@@ -40,5 +40,7 @@ function loadLegalContent(tenant: TenantConfig): Record<string, LegalContent> {
       useFactory: loadLegalContent,
     },
   ],
+  // The Booking form (MeModule) signs and records consents as it books.
+  exports: [AffidavitsService, ConsentsService],
 })
 export class ComplianceModule {}

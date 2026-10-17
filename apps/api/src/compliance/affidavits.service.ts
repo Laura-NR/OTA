@@ -174,25 +174,52 @@ export class AffidavitsService {
       );
     }
 
-    const affidavit = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.travelerAffidavit.create({
-        data: {
-          ...this.snapshot(reservation, traveler, current, statement, input.category),
-          signature: input.signature,
-          source: 'ONLINE',
-          ipAddress: client.ipAddress,
-          userAgent: client.userAgent?.slice(0, 500) ?? null,
-          signedAt: new Date(),
-        },
-      });
-      await this.audit(tx, actor.id, 'affidavit.signed', reservationId, {
-        affidavitId: created.id,
-        travelerId,
-        category: input.category,
-      });
-      return created;
-    });
+    const affidavit = await this.prisma.$transaction((tx) =>
+      this.createOnline(
+        tx,
+        actor.id,
+        reservation,
+        traveler,
+        current,
+        input,
+        statement,
+        client,
+      ),
+    );
     return toSummary(affidavit);
+  }
+
+  /**
+   * Write an online certification in the caller's transaction, after the
+   * caller has checked the statement version and the signature. The Booking
+   * form signs as it books, so the booking and its records land together.
+   */
+  async createOnline(
+    tx: Prisma.TransactionClient,
+    actorId: string,
+    reservation: { id: string; bookingCode: string; startDate: Date; endDate: Date },
+    traveler: { id: string; fullName: string; nationality: string | null },
+    current: TravelerAffidavit | null,
+    input: { category: OfacCategory; signature: string },
+    statement: ResolvedText,
+    client: SigningClient,
+  ): Promise<TravelerAffidavit> {
+    const created = await tx.travelerAffidavit.create({
+      data: {
+        ...this.snapshot(reservation, traveler, current, statement, input.category),
+        signature: input.signature,
+        source: 'ONLINE',
+        ipAddress: client.ipAddress,
+        userAgent: client.userAgent?.slice(0, 500) ?? null,
+        signedAt: new Date(),
+      },
+    });
+    await this.audit(tx, actorId, 'affidavit.signed', reservation.id, {
+      affidavitId: created.id,
+      travelerId: traveler.id,
+      category: input.category,
+    });
+    return created;
   }
 
   /** The desk records a signed paper form and keeps its scan (A-Customers). */
@@ -365,7 +392,8 @@ export class AffidavitsService {
     return { reservation, traveler, current: reservation.affidavits[0] ?? null };
   }
 
-  private requireStatement(locale?: string): ResolvedText {
+  /** The OFAC statement in force; 503 while the tenant content has none. */
+  requireStatement(locale?: string): ResolvedText {
     const statement = this.legal.ofacStatement(locale);
     if (!statement) {
       throw new ServiceUnavailableException(

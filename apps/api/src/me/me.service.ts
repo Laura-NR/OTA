@@ -4,9 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { InventoryType, Prisma } from '@ota/db';
+import type { InventoryItem, InventoryType, PackageService, Prisma } from '@ota/db';
 import { ReservationStatus, ServiceType } from '@ota/domain';
 import type {
+  BookPackageRequest,
   CreateMyReservationRequest,
   CreatePackageBookingRequest,
   CreatePaymentIntentRequest,
@@ -21,8 +22,13 @@ import type {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
+import type { SigningClient } from '../compliance/affidavits.service';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  PackageBookingService,
+  type SubmittedReservation,
+} from './package-booking.service';
 
 /** Catalog types map onto the dispatch service types (inventory has no GUIDE). */
 const INVENTORY_TO_SERVICE: Record<InventoryType, ServiceType> = {
@@ -106,6 +112,34 @@ interface SubmissionParams {
   auditMetadata?: Record<string, unknown>;
   packageId?: string;
   nationality?: string;
+  /** The Booking form's choices (M2); the defaults leave a booking unpriced. */
+  partySize?: number;
+  tierId?: string | null;
+  departureId?: string | null;
+  tourismCategory?: Prisma.ReservationCreateInput['tourismCategory'];
+  /** More writes that must land with the booking, in its transaction. */
+  within?: (
+    tx: Prisma.TransactionClient,
+    reservation: SubmittedReservation,
+  ) => Promise<void>;
+}
+
+/** A package's itinerary as service items, each on its day from `startDate`. */
+function packageServiceItems(
+  services: readonly (PackageService & { inventoryItem: InventoryItem })[],
+  startDate: Date,
+): SubmissionServiceItem[] {
+  return services.map((service) => {
+    const serviceDate = new Date(startDate);
+    serviceDate.setUTCDate(serviceDate.getUTCDate() + service.dayOffset);
+    return {
+      serviceType: INVENTORY_TO_SERVICE[service.inventoryItem.type],
+      serviceDateStart: serviceDate,
+      serviceDateEnd: serviceDate,
+      province: service.inventoryItem.province,
+      travelerPrice: null,
+    };
+  });
 }
 
 /**
@@ -118,6 +152,7 @@ export class MeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
+    private readonly bookings: PackageBookingService,
   ) {}
 
   async getProfile(userId: string): Promise<MeProfileDto> {
@@ -235,17 +270,7 @@ export class MeService {
       throw new NotFoundException(`Package ${input.packageId} not found`);
     }
 
-    const serviceItems: SubmissionServiceItem[] = pkg.services.map((service) => {
-      const serviceDate = new Date(input.startDate);
-      serviceDate.setUTCDate(serviceDate.getUTCDate() + service.dayOffset);
-      return {
-        serviceType: INVENTORY_TO_SERVICE[service.inventoryItem.type],
-        serviceDateStart: serviceDate,
-        serviceDateEnd: serviceDate,
-        province: service.inventoryItem.province,
-        travelerPrice: null,
-      };
-    });
+    const serviceItems = packageServiceItems(pkg.services, input.startDate);
 
     const createdId = await this.createSubmission(userId, {
       startDate: input.startDate,
@@ -263,10 +288,63 @@ export class MeService {
   }
 
   /**
-   * Shared submission path for both the dynamic builder and curated packages:
-   * allocate a unique booking code, persist the reservation and its service
-   * items atomically, record the audit entry, and stamp the traveler's
-   * nationality when supplied.
+   * The storefront Booking form (Booking board, five steps): book a curated
+   * package on a departure with the traveler's party, rooms, tier and extras.
+   * The server prices it (M2) and freezes the lines; the US certifications
+   * (M3) and the booking consents are written with it. The booking lands at
+   * ITINERARY_SUBMITTED, like the other two paths.
+   */
+  async bookPackage(
+    actor: AuthUser,
+    input: BookPackageRequest,
+    client: SigningClient,
+  ): Promise<MyReservationDetailDto> {
+    const plan = await this.bookings.plan(input);
+    const { pkg, price } = plan;
+
+    const createdId = await this.createSubmission(actor.id, {
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      totalCurrency: pkg.currency,
+      totalAmount: price.total,
+      customItineraryPayload: {
+        packageId: pkg.id,
+        packageSlug: pkg.slug,
+        rooming: input.rooming,
+        roommateMatch: input.roommateMatch,
+        roomRequests: input.roomRequests ?? null,
+        notes: input.notes ?? null,
+      },
+      packageId: pkg.id,
+      nationality: input.travelers[0]!.nationality,
+      partySize: input.travelers.length,
+      tierId: plan.tierId,
+      departureId: plan.departureId,
+      tourismCategory: pkg.tourismCategory,
+      serviceItems: packageServiceItems(pkg.services, plan.startDate),
+      // Ids and counts only: no names, dates of birth or passport numbers.
+      auditMetadata: {
+        packageId: pkg.id,
+        packageSlug: pkg.slug,
+        departureId: plan.departureId,
+        tierId: plan.tierId,
+        partySize: input.travelers.length,
+        total: price.total.toFixed(2),
+        certifications: plan.affidavits.length,
+        consents: plan.consents.map((consent) => consent.purpose),
+      },
+      within: (tx, reservation) =>
+        this.bookings.write(tx, reservation, plan, input, actor.id, client),
+    });
+
+    return this.getReservation(actor.id, createdId);
+  }
+
+  /**
+   * Shared submission path for the dynamic builder, curated packages and the
+   * Booking form: allocate a unique booking code, persist the reservation, its
+   * service items and the caller's `within` writes atomically, record the
+   * audit entry, and stamp the traveler's nationality when supplied.
    */
   private async createSubmission(
     userId: string,
@@ -300,6 +378,12 @@ export class MeService {
             status: ReservationStatus.ItinerarySubmitted,
             totalCurrency: params.totalCurrency,
             totalAmount: params.totalAmount,
+            ...(params.partySize !== undefined ? { partySize: params.partySize } : {}),
+            tierId: params.tierId ?? null,
+            departureId: params.departureId ?? null,
+            ...(params.tourismCategory
+              ? { tourismCategory: params.tourismCategory }
+              : {}),
             customItineraryPayload: params.customItineraryPayload,
             serviceItems: {
               create: params.serviceItems.map((item) => ({
@@ -314,6 +398,8 @@ export class MeService {
             },
           },
         });
+
+        await params.within?.(tx, reservation);
 
         await tx.auditLog.create({
           data: {

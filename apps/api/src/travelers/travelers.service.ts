@@ -12,13 +12,10 @@ import {
 import type { TenantConfig } from '@ota/config';
 import type { Prisma } from '@ota/db';
 import {
-  ageOn,
   departurePlacesLeft,
   isPriceLocked,
-  priceBooking,
   type BookingExtraInput,
   type BookingPrice,
-  type BookingTierInput,
   type ReservationStatus,
   type TravelerKind,
 } from '@ota/domain';
@@ -39,6 +36,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { pricePackageChoice, priceLineRows } from './package-pricing';
 import { PASSPORT_KEY } from './travelers.tokens';
 
 const PARTY_INCLUDE = {
@@ -623,31 +621,19 @@ export class TravelersService {
     const departure = choice.departureId
       ? row.package.departures.find((candidate) => candidate.id === choice.departureId)
       : undefined;
-    const tierInput: BookingTierInput | null = tier
-      ? {
-          name: tier.name,
-          priceDelta: Number(tier.priceDelta),
-          singleSupplement:
-            tier.singleSupplement === null ? null : Number(tier.singleSupplement),
-        }
-      : null;
-    const travelDate = departure?.startDate ?? row.startDate;
 
-    const price = priceBooking({
-      packageName: row.package.name,
-      basePrice: Number(row.package.basePrice),
-      departurePrice:
-        departure && departure.price !== null ? Number(departure.price) : null,
-      tier: tierInput,
-      travelers: choice.travelers.map((traveler) => ({
-        kind: traveler.kind,
-        age: traveler.dateOfBirth ? ageOn(traveler.dateOfBirth, travelDate) : null,
-      })),
-      childBands: this.tenant.pricing.childBands,
-      singleRooms: choice.singleRooms,
-      extras: choice.extras,
-      fees: this.tenant.pricing.fees,
-    });
+    const price = pricePackageChoice(
+      row.package,
+      {
+        tier: tier ?? null,
+        departure: departure ?? null,
+        travelDate: departure?.startDate ?? row.startDate,
+        travelers: choice.travelers,
+        singleRooms: choice.singleRooms,
+        extras: choice.extras,
+      },
+      this.tenant.pricing,
+    );
 
     if (!isPriceLocked(row.status as ReservationStatus)) {
       return price;
@@ -673,18 +659,7 @@ export class TravelersService {
   ): Promise<void> {
     await tx.reservationPriceLine.deleteMany({ where: { reservationId: row.id } });
     await tx.reservationPriceLine.createMany({
-      data: price.lines.map((line, position) => ({
-        reservationId: row.id,
-        travelerId:
-          line.travelerIndex === null ? null : (travelerIds[line.travelerIndex] ?? null),
-        kind: line.kind,
-        label: line.label,
-        quantity: line.quantity,
-        unitAmount: line.unitAmount,
-        amount: line.amount,
-        currency: row.totalCurrency,
-        position,
-      })),
+      data: priceLineRows(price, row.id, travelerIds, row.totalCurrency),
     });
 
     const extraLines = price.lines.filter((line) => line.kind === 'EXTRA');

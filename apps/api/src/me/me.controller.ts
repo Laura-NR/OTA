@@ -7,12 +7,15 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Req,
 } from '@nestjs/common';
 import {
+  bookPackageSchema,
   createMyReservationSchema,
   createPackageBookingSchema,
   createPaymentIntentSchema,
   createReviewSchema,
+  type BookPackageRequest,
   type CreateMyReservationRequest,
   type CreatePackageBookingRequest,
   type CreatePaymentIntentRequest,
@@ -23,6 +26,7 @@ import {
   type MyReviewDto,
   type PaymentIntentDto,
 } from '@ota/schemas';
+import type { Request } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
@@ -65,6 +69,25 @@ export class MeController {
     @CurrentUser() actor: AuthUser,
   ): Promise<MyReservationDetailDto> {
     return this.me.createPackageReservation(actor.id, body);
+  }
+
+  /**
+   * The Booking form: departure, tier, party, rooms, extras, US certifications
+   * and consents in one request. The request's IP and browser are kept with
+   * each online certification (M3, D5).
+   */
+  @Post('reservations/package-booking')
+  @HttpCode(HttpStatus.CREATED)
+  bookPackageWithParty(
+    @Body(new ZodValidationPipe(bookPackageSchema)) body: BookPackageRequest,
+    @CurrentUser() actor: AuthUser,
+    @Req() request: Request,
+  ): Promise<MyReservationDetailDto> {
+    const userAgent = request.headers['user-agent'];
+    return this.me.bookPackage(actor, body, {
+      ipAddress: request.ip ?? null,
+      userAgent: typeof userAgent === 'string' ? userAgent : null,
+    });
   }
 
   @Post('reservations/:id/payments')
