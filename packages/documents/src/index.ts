@@ -14,3 +14,9 @@ export {
 } from './data';
 export { renderInvoiceHtml, renderVoucherHtml, renderWorkOrderHtml } from './templates';
 export { closePdfRenderer, renderHtmlToPdf } from './pdf';
+export {
+  proposalPdfLocale,
+  renderProposalHtml,
+  type ProposalPdfLocale,
+  type ProposalPdfModel,
+} from './proposal';

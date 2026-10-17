@@ -1,7 +1,7 @@
 import type { DocumentBranding, DocumentEmergencyContact } from './branding';
 import type { InvoiceModel, VoucherModel, WorkOrderModel } from './data';
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -44,13 +44,26 @@ function emergencyBlock(branding: DocumentBranding): string {
     .join('')}</ul>`;
 }
 
-function page(title: string, body: string, branding: DocumentBranding): string {
+/**
+ * The shared A4 shell: the agency header with its MINTUR licence (spec §8.1),
+ * the body, and the footer. `lang` and `licenseLabel` let a localized document
+ * (the proposal) keep the same shell.
+ */
+export function page(
+  title: string,
+  body: string,
+  branding: DocumentBranding,
+  {
+    lang = 'en',
+    licenseLabel = 'MINTUR License',
+  }: { lang?: string; licenseLabel?: string } = {},
+): string {
   const contact = [branding.supportPhone, branding.supportEmail]
     .filter((value): value is string => Boolean(value))
     .join(' · ');
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${escapeHtml(lang)}">
 <head>
 <meta charset="utf-8" />
 <title>${escapeHtml(title)}</title>
@@ -75,7 +88,7 @@ function page(title: string, body: string, branding: DocumentBranding): string {
 <body>
 <header>
   <h1>${escapeHtml(branding.agencyName)}</h1>
-  <div class="muted">MINTUR License: ${escapeHtml(branding.licenseNumber)}</div>
+  <div class="muted">${escapeHtml(licenseLabel)}: ${escapeHtml(branding.licenseNumber)}</div>
 </header>
 ${body}
 <footer>
