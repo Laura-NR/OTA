@@ -30,22 +30,36 @@ landed: migration 20261017075012_compliance with the append-only affidavit trigg
 domain rules (a4255b7), DTOs + tenant legal texts (4354b7b), API with the payment/voucher gate
 (783040a), retention sweep (cff508a), desk surfaces (694e25f), storefront certification step and
 consents (3660290). Last full verify: see the handoff's Verified section. PASSPORT_ENCRYPTION_KEY
-is set in apps/api/.env and verified (never print or rotate it).
+is set in apps/api/.env and verified (never print, read or rotate it). The dev stack may still be
+running from the last session (check ports 3000–3002 before a build).
 The owner decided: placeholder/mock data until real data is published; the design team is not
 asked; the build resolves design gaps itself with existing tokens, recorded in the ADRs.
 
-TASK 1 — The storefront Booking form (plan Phase 4 screens, Booking board, 5 steps: dates and
-party, stay tier, extras, travelers, review) on the M2 model through a traveler-scoped route that
-reuses the party/pricing service (server price re-check, never client prices); step 4 carries the
-M3 certification for US travelers and step 5 records the TERMS/PRIVACY/CANCELLATION and insurance
-consents against the tenant's legal text versions. The passport number is optional at booking and
-never echoed back. Every new route goes into the authorization matrix.
+TASK 1 — The storefront Booking form (plan Phase 4 screens; Booking board, 5 steps: departure and
+party, stay tier, insurance and extras, travelers, review). Today the Package page books through
+`POST /me/reservations/from-package`, which sets the total to the package base price and stores no
+party. Extend that path with a traveler-scoped route that takes the departure, tier, party, rooms
+and extras, reuses the M2 pricing (`apps/api/src/travelers`, domain `priceBooking`; the server
+re-prices and re-checks the departure's places, never trusting client prices) and freezes the
+price lines. Step 4 collects the travelers (passport number optional, never echoed back) and the
+M3 certification for US travelers; step 5 records the TERMS/PRIVACY/CANCELLATION and insurance
+consents against the tenant's legal text versions. Every new route goes into the authorization
+matrix. Before building: the board's "You don't need an account: we create one with a sign-in
+link" (guest provisioning) changes how accounts are created, so ask the owner (options: keep
+sign-in first with the magic link as today, or create the account at submit and email the link)
+— recommend one, and build the sign-in-first flow meanwhile.
 
-TASK 2 — Draft docs/schema-m4-payment-schedule.md (deposit/balance instalments, due dates,
+TASK 2 — Enforce the package publish checks on the server: today only the A-Package-Edit form
+runs the domain `packagePublishIssues`; `PATCH /packages/:id` accepts PUBLISHED without them.
+Run them in the API on any move to PUBLISHED (409 with the reasons) and test it. The manifest has
+no policy-key list yet, so treat a package's own policy keys as known, as the editor does, and
+flag that gap.
+
+TASK 3 — Draft docs/schema-m4-payment-schedule.md (deposit/balance instalments, due dates,
 proof-of-transfer uploads, fees, refunds with an approval chain) for the owner's review BEFORE any
 migration (Q9).
 
-TASK 3 — DOCS and VERIFY as before: the handoff snapshot (Decisions append-only), the Progress
+TASK 4 — DOCS and VERIFY as before: the handoff snapshot (Decisions append-only), the Progress
 table, the ADR 0006 amendment for design resolutions; `pnpm lint && pnpm format:check &&
 pnpm typecheck && pnpm test && pnpm build` (dev stack stopped), delete apps/*/.next, `pnpm e2e`,
 kill what e2e leaves on 3000–3002; live-DB tests with RUN_DB_INTEGRATION=1 (retention, packages,
@@ -65,7 +79,9 @@ RATE_LIMIT_AUTH_MAX=100000 if the owner wants to browse, and leave it running at
 
 DECISION GATES (ask; do not assume): schema migrations (M1–M10), new dependencies, the SMS
 provider and anything needing the agency's legal entity, a real LLM vendor, PII purge Tiers 2–3,
-load tests, deployment topology.
+load tests, deployment topology, guest account provisioning at booking. Still open with the
+owner: the placeholder pricing terms (child bands, fees) and counsel's review of the legal texts
+and OFAC categories; the AGENTS.md §C lines proposed in the handoff (owner edit).
 
 KNOWN TRAPS: see docs/handoff/vereda.md Traps (ICU spaces break hydration: use the
 ops-format helpers and a serverNow prop; next-server processes survive `pkill -f 'next dev'`;

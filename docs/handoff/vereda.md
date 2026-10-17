@@ -94,8 +94,9 @@ ADR 0007 (worker app).
 ## Next
 1. Owner: back up the dev passport key; counsel review of the legal texts and categories;
    confirm the pricing samples.
-2. The storefront Booking form (5 steps, M2 party + M3 step 4 + consents at review), then
-   M4 (deposit schedule) and M5 (proposal) — each migration asked for first.
+2. The storefront Booking form (5 steps, M2 party + M3 step 4 + consents at review; guest
+   account provisioning is an owner decision), server-side package publish checks, then M4
+   (deposit schedule) and M5 (proposal) — each migration asked for first.
 3. Phase 6: the E-OFAC reminder and the other C-Spec emails; Phase 8: cookie banner + public
    consent route.
 
