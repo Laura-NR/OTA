@@ -57,12 +57,23 @@ function makeReceipt(overrides: Partial<PaymentReceipt> = {}): PaymentReceipt {
   };
 }
 
+interface GateTraveler {
+  id: string;
+  usPerson: boolean | null;
+  nationality: string | null;
+}
+
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
   receipts: Map<string, PaymentReceipt>;
   audits: { action: string }[];
+  travelers?: GateTraveler[];
+  affidavits?: { travelerId: string }[];
 }) {
   const fake = {
+    // M3: the OFAC gate reads the party and its affidavits.
+    reservationTraveler: { findMany: async () => state.travelers ?? [] },
+    travelerAffidavit: { findMany: async () => state.affidavits ?? [] },
     reservation: {
       findUnique: async (args: { where: { id: string } }) =>
         state.reservations.get(args.where.id) ?? null,
@@ -147,6 +158,8 @@ describe('payments API', () => {
     reservations: Map<string, Reservation>;
     receipts: Map<string, PaymentReceipt>;
     audits: { action: string }[];
+    travelers?: GateTraveler[];
+    affidavits?: { travelerId: string }[];
   };
 
   beforeEach(async () => {
@@ -196,6 +209,21 @@ describe('payments API', () => {
     expect(response.body.checkoutUrl).toContain('/checkout/mock/mock_');
     expect(state.reservations.get(RESERVATION_ID)?.status).toBe('PENDING_PAYMENT');
     expect(state.audits.map((entry) => entry.action)).toContain('payment.intent_created');
+  });
+
+  it('keeps payment locked until every US traveler has certified (OFAC, M3)', async () => {
+    state.travelers = [
+      { id: '77777777-7777-4777-8777-777777777777', usPerson: null, nationality: 'US' },
+      { id: '78787878-7878-4878-8878-787878787878', usPerson: null, nationality: 'CA' },
+    ];
+
+    const locked = await createIntent();
+    expect(locked.status).toBe(409);
+    expect(locked.body.message).toContain('OFAC');
+    expect(state.reservations.get(RESERVATION_ID)?.status).toBe('SECURED_AND_INVOICED');
+
+    state.affidavits = [{ travelerId: '77777777-7777-4777-8777-777777777777' }];
+    expect((await createIntent()).status).toBe(201);
   });
 
   it('confirms a pending payment and moves the booking to CONFIRMED', async () => {

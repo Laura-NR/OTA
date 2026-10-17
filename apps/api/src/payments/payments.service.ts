@@ -20,6 +20,7 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { loadOfacGate } from '../compliance/ofac-gate';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
@@ -110,6 +111,13 @@ export class PaymentsService {
     ) {
       throw new ConflictException(
         'A payment link can only be created once the booking is secured and invoiced',
+      );
+    }
+    // M3 D3: every US person on the booking must have certified first.
+    const gate = await loadOfacGate(this.prisma, reservationId);
+    if (gate.missing.length > 0) {
+      throw new ConflictException(
+        `Payment stays locked until ${gate.missing.length} US traveler(s) complete the OFAC travel-category certification`,
       );
     }
 

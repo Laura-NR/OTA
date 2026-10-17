@@ -101,6 +101,9 @@ describe('DocumentsService', () => {
 
   const fakePrisma = () =>
     ({
+      // M3: no travelers, so the OFAC gate is clear.
+      reservationTraveler: { findMany: async () => [] },
+      travelerAffidavit: { findMany: async () => [] },
       reservation: {
         findUnique: async () => reservation,
       },
@@ -179,6 +182,22 @@ describe('DocumentsService', () => {
     expect(invoice).toContain('95.00 EUR');
     expect(invoice).toContain('Fee — Service fee');
     expect(invoice).toContain('100.00 EUR');
+  });
+
+  it('holds the voucher and work orders while a US traveler has not certified (OFAC)', async () => {
+    const prisma = {
+      ...fakePrisma(),
+      reservationTraveler: {
+        findMany: async () => [{ id: 'traveler-us', usPerson: null, nationality: 'US' }],
+      },
+      travelerAffidavit: { findMany: async () => [] },
+    } as unknown as PrismaService;
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
+
+    const documents = await service.generate(RESERVATION_ID, OPERATOR);
+
+    expect(documents.map((document) => document.type)).toEqual(['INVOICE']);
+    expect(audits).toEqual(['documents.generated', 'documents.held']);
   });
 
   it('stores documents under the booking code', async () => {

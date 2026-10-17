@@ -55,8 +55,9 @@ const PAYMENT = '50505050-5050-4050-8050-505050505050';
 const CUSTOMER = '60606060-6060-4060-8060-606060606060';
 const TRAVELER_ROW = '70707070-7070-4070-8070-707070707070';
 const EXTRA = '80808080-8080-4080-8080-808080808080';
+const AFFIDAVIT = '90909090-9090-4090-8090-909090909090';
 
-type Allowed = 'opsRead' | 'opsWrite' | 'worker';
+type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
 
 interface Route {
@@ -117,6 +118,32 @@ const ROUTES: Route[] = [
     allowed: 'opsWrite',
   },
   { method: 'get', path: `/reservations/${RESERVATION}/price-lines`, allowed: 'opsRead' },
+
+  // M3 compliance: statuses for every ops role; records, scans and paper
+  // affidavits for writers; the legal export for the Super Admin alone.
+  { method: 'get', path: `/reservations/${RESERVATION}/ofac`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/reservations/${RESERVATION}/travelers/${TRAVELER_ROW}/affidavit`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: '/affidavits/export', allowed: 'superAdmin' },
+  { method: 'get', path: `/affidavits/${AFFIDAVIT}`, allowed: 'opsWrite' },
+  { method: 'get', path: `/affidavits/${AFFIDAVIT}/document`, allowed: 'opsWrite' },
+  { method: 'get', path: `/customers/${CUSTOMER}/consents`, allowed: 'opsRead' },
+  // The traveler's own (scoped to the caller in the service).
+  {
+    method: 'get',
+    path: `/me/reservations/${RESERVATION}/ofac`,
+    allowed: 'authenticated',
+  },
+  {
+    method: 'post',
+    path: `/me/reservations/${RESERVATION}/travelers/${TRAVELER_ROW}/affidavit`,
+    allowed: 'authenticated',
+  },
+  { method: 'get', path: '/me/consents', allowed: 'authenticated' },
+  { method: 'post', path: '/me/consents', allowed: 'authenticated' },
 
   // Dispatch / escalation — ops control; worker responds.
   { method: 'post', path: `/reservations/${RESERVATION}/dispatch`, allowed: 'opsWrite' },
@@ -251,6 +278,17 @@ describe('authorization matrix', () => {
   });
 
   function deniedFor(allowed: Allowed): { email: string; label: string }[] {
+    if (allowed === 'authenticated') {
+      return [];
+    }
+    if (allowed === 'superAdmin') {
+      return [
+        { email: USERS.operations.email, label: 'operations admin' },
+        { email: USERS.support.email, label: 'support' },
+        { email: USERS.worker.email, label: 'service worker' },
+        { email: USERS.traveler.email, label: 'traveler' },
+      ];
+    }
     if (allowed === 'worker') {
       return [
         { email: USERS.operations.email, label: 'operations admin' },

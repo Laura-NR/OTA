@@ -79,6 +79,9 @@ function createFakePrisma(state: FakeState) {
   });
 
   const fake = {
+    // M3: no travelers, so the OFAC gate is clear.
+    reservationTraveler: { findMany: async () => [] },
+    travelerAffidavit: { findMany: async () => [] },
     user: {
       findUnique: async (args: { where: { id: string } }) =>
         state.users.find((user) => user.id === args.where.id) ?? null,

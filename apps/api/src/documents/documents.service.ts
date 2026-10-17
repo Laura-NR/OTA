@@ -27,6 +27,7 @@ import { DocumentType, UserRole } from '@ota/domain';
 import type { DocumentDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { loadOfacGate } from '../compliance/ofac-gate';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { DOCUMENT_RENDERER, type DocumentRenderer } from './document-renderer';
@@ -138,6 +139,8 @@ export class DocumentsService {
    * Compile the legal document set for a reservation: traveler voucher, one
    * supplier work order per assigned service, and an invoice. Each PDF is
    * stored and recorded; the caller (or the CONFIRMED transition) invokes this.
+   * While a US traveler has no OFAC certification (M3 D3) the voucher and work
+   * orders are held: only the invoice is issued, and the hold is audited.
    */
   async generate(reservationId: string, actor: AuthUser | null): Promise<DocumentDto[]> {
     const reservation = await this.prisma.reservation.findUnique({
@@ -154,15 +157,21 @@ export class DocumentsService {
 
     const input = toDocumentInput(reservation);
     const branding = this.branding();
+    const gate = await loadOfacGate(this.prisma, reservationId);
+    const held = gate.missing.length > 0;
     const artifacts: Array<{ type: DocumentType; html: string }> = [
-      {
-        type: DocumentType.Voucher,
-        html: renderVoucherHtml(buildVoucherModel(input), branding),
-      },
-      ...buildWorkOrderModels(input).map((model) => ({
-        type: DocumentType.WorkOrder,
-        html: renderWorkOrderHtml(model, branding),
-      })),
+      ...(held
+        ? []
+        : [
+            {
+              type: DocumentType.Voucher,
+              html: renderVoucherHtml(buildVoucherModel(input), branding),
+            },
+            ...buildWorkOrderModels(input).map((model) => ({
+              type: DocumentType.WorkOrder,
+              html: renderWorkOrderHtml(model, branding),
+            })),
+          ]),
       {
         type: DocumentType.Invoice,
         html: renderInvoiceHtml(buildInvoiceModel(input), branding),
@@ -189,6 +198,20 @@ export class DocumentsService {
         metadata: { count: created.length },
       },
     });
+    if (held) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorUserId: actor?.id ?? null,
+          action: 'documents.held',
+          entityType: 'Reservation',
+          entityId: reservationId,
+          metadata: {
+            reason: 'ofac_certification_missing',
+            travelers: gate.missing.length,
+          },
+        },
+      });
+    }
 
     return created;
   }

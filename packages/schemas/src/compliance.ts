@@ -74,6 +74,8 @@ export const signAffidavitSchema = z.object({
   category: ofacCategorySchema,
   signature: z.string().trim().min(1).max(200),
   statementVersion: z.string().trim().min(1).max(100),
+  /** The language the statement was shown in, so the stored hash is of those words. */
+  locale: z.string().trim().min(2).max(5).optional(),
 });
 
 export type SignAffidavitRequest = z.infer<typeof signAffidavitSchema>;
@@ -149,3 +151,10 @@ export const recordConsentSchema = z.object({
 });
 
 export type RecordConsentRequest = z.infer<typeof recordConsentSchema>;
+
+/** `?locale=`: the language a traveler reads the legal texts in. */
+export const legalLocaleQuerySchema = z.object({
+  locale: z.string().trim().min(2).max(5).optional(),
+});
+
+export type LegalLocaleQuery = z.infer<typeof legalLocaleQuerySchema>;

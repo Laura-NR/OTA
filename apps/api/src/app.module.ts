@@ -6,6 +6,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { AssistantModule } from './assistant/assistant.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
+import { ComplianceModule } from './compliance/compliance.module';
 import { ContactModule } from './contact/contact.module';
 import { CustomersModule } from './customers/customers.module';
 import { DispatchModule } from './dispatch/dispatch.module';
@@ -70,6 +71,7 @@ const isTest = process.env.NODE_ENV === 'test';
     ContactModule,
     CustomersModule,
     TravelersModule,
+    ComplianceModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
