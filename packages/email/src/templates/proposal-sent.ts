@@ -1,5 +1,5 @@
 import { emailDate, emailLocale, emailMoney, type EmailLocale } from '../locale';
-import type { EmailMessage } from '../mailer';
+import type { EmailAttachment, EmailMessage } from '../mailer';
 import type { EmailBranding } from './magic-link';
 
 export interface ProposalSentEmailInput {
@@ -13,6 +13,8 @@ export interface ProposalSentEmailInput {
   portalUrl: string;
   locale?: string | null;
   branding: EmailBranding;
+  /** The D-Proposal PDF of this version, when it could be rendered. */
+  pdf?: EmailAttachment | null;
 }
 
 function escapeHtml(value: string): string {
@@ -30,6 +32,7 @@ interface Copy {
   total: (amount: string, date: string) => string;
   cta: string;
   note: string;
+  attached: string;
 }
 
 const COPY: Record<EmailLocale, Copy> = {
@@ -41,6 +44,7 @@ const COPY: Record<EmailLocale, Copy> = {
       `The proposal total is ${amount}. Prices are held until ${date}.`,
     cta: 'Review your proposal',
     note: 'Review it online and accept it when it feels right. Nothing is charged by accepting; the desk confirms each provider first.',
+    attached: 'The proposal is attached as a PDF to keep or print.',
   },
   es: {
     subject: (reference) => `Tu propuesta de viaje a medida · ${reference}`,
@@ -50,6 +54,7 @@ const COPY: Record<EmailLocale, Copy> = {
       `El total de la propuesta es ${amount}. Los precios se mantienen hasta el ${date}.`,
     cta: 'Ver tu propuesta',
     note: 'Revísala en línea y acéptala cuando quieras. Aceptarla no cobra nada; primero confirmamos a cada proveedor.',
+    attached: 'Adjuntamos la propuesta en PDF para guardarla o imprimirla.',
   },
   fr: {
     subject: (reference) => `Votre proposition de voyage sur mesure · ${reference}`,
@@ -59,12 +64,14 @@ const COPY: Record<EmailLocale, Copy> = {
       `Le total de la proposition est de ${amount}. Les prix sont garantis jusqu'au ${date}.`,
     cta: 'Voir votre proposition',
     note: "Consultez-la en ligne et acceptez-la quand vous le souhaitez. L'accepter ne débite rien ; le bureau confirme d'abord chaque prestataire.",
+    attached: 'La proposition est jointe en PDF, à conserver ou à imprimer.',
   },
 };
 
 /**
  * M5: the email that tells a traveler a priced proposal is ready. It links to
- * the signed-in proposal page; the document itself stays behind the session.
+ * the signed-in proposal page, where it is accepted, and carries the version's
+ * D-Proposal PDF when one was rendered.
  */
 export function proposalSentEmail({
   to,
@@ -77,6 +84,7 @@ export function proposalSentEmail({
   portalUrl,
   locale: requestedLocale,
   branding,
+  pdf,
 }: ProposalSentEmailInput): EmailMessage {
   const locale = emailLocale(requestedLocale);
   const copy = COPY[locale];
@@ -93,7 +101,7 @@ export function proposalSentEmail({
   <blockquote style="border-left:3px solid ${branding.primaryColor};margin:12px 0;padding:8px 12px;background:#f9fafb;">
     ${escapeHtml(summary)}
   </blockquote>
-  <p>${escapeHtml(copy.total(amount, date))}</p>
+  <p>${escapeHtml(copy.total(amount, date))}</p>${pdf ? `\n  <p>${escapeHtml(copy.attached)}</p>` : ''}
   <p>
     <a href="${safeUrl}"
        style="display:inline-block;background:${branding.primaryColor};color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;">
@@ -110,12 +118,13 @@ export function proposalSentEmail({
 </body>
 </html>`;
 
-  const text = `${branding.agencyName}\n\n${copy.greeting(name)}\n${copy.lede}\n\n${summary}\n\n${copy.total(amount, date)}\n\n${copy.cta}: ${portalUrl}\n\n${copy.note}\nMINTUR License ${branding.licenseNumber}`;
+  const text = `${branding.agencyName}\n\n${copy.greeting(name)}\n${copy.lede}\n\n${summary}\n\n${copy.total(amount, date)}${pdf ? `\n${copy.attached}` : ''}\n\n${copy.cta}: ${portalUrl}\n\n${copy.note}\nMINTUR License ${branding.licenseNumber}`;
 
   return {
     to,
     subject: copy.subject(reference),
     html,
     text,
+    ...(pdf ? { attachments: [pdf] } : {}),
   };
 }

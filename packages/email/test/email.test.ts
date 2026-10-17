@@ -168,6 +168,33 @@ describe('proposalSentEmail', () => {
     expect(email.html).toContain('5900,00');
     expect(email.html).toContain('21 de octubre de 2026');
     expect(email.text).toContain('https://example.test/es/account/proposals/abc');
+    expect(email.attachments).toBeUndefined();
+    expect(email.html).not.toContain('PDF');
+  });
+
+  it('attaches the D-Proposal PDF and says so when one was rendered', () => {
+    const pdf = {
+      filename: 'VX-C-4R8T-v1.pdf',
+      content: Buffer.from('%PDF-1.7'),
+      contentType: 'application/pdf',
+    };
+    const email = proposalSentEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      reference: 'VX-C-4R8T',
+      summary: 'Fourteen days west to Trinidad.',
+      total: 5900,
+      currency: 'EUR',
+      validUntil: new Date('2026-10-21T23:59:59Z'),
+      portalUrl: 'https://example.test/account/proposals/abc',
+      locale: 'en',
+      branding,
+      pdf,
+    });
+
+    expect(email.attachments).toEqual([pdf]);
+    expect(email.html).toContain('The proposal is attached as a PDF to keep or print.');
+    expect(email.text).toContain('The proposal is attached as a PDF to keep or print.');
   });
 });
 
