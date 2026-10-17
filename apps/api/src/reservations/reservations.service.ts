@@ -30,6 +30,13 @@ const ROW_CONTEXT = {
   payments: { where: { status: 'PAID' }, select: { amount: true } },
   travelers: { select: { id: true, usPerson: true, nationality: true } },
   affidavits: { select: { travelerId: true } },
+  // M4: the next instalment still due, for the payment window and balance alerts.
+  instalments: {
+    where: { status: 'DUE' },
+    orderBy: { position: 'asc' },
+    take: 1,
+    select: { kind: true, amount: true, dueAt: true },
+  },
 } as const;
 
 type ListRow = Prisma.ReservationGetPayload<{
@@ -68,7 +75,10 @@ function toDto(reservation: Reservation): ReservationDto {
 
 const SECURED_ITEM_STATUSES: readonly string[] = ['ACCEPTED', 'FULFILLED'];
 
-/** The context a row carries beyond the reservation: package, places, progress, money, OFAC. */
+/**
+ * The context a row carries beyond the reservation: package, places, progress,
+ * money, OFAC, and the next instalment due (M4).
+ */
 function rowContext(row: ListRow | DetailRow) {
   return {
     serviceItemCount: row.serviceItems.length,
@@ -87,6 +97,13 @@ function rowContext(row: ListRow | DetailRow) {
       .reduce((sum, payment) => sum + Number(payment.amount), 0)
       .toFixed(2),
     ofacMissing: ofacGate(row.travelers, row.affidavits).missing.length,
+    nextInstalment: row.instalments[0]
+      ? {
+          kind: row.instalments[0].kind,
+          amount: row.instalments[0].amount.toFixed(2),
+          dueAt: row.instalments[0].dueAt.toISOString(),
+        }
+      : null,
   };
 }
 

@@ -6,8 +6,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import type { PaymentReceipt } from '@ota/db';
-import { ReservationStatus } from '@ota/domain';
+import { randomUUID } from 'node:crypto';
+
+import type { TenantConfig } from '@ota/config';
+import type { PaymentReceipt, Reservation } from '@ota/db';
+import {
+  ReservationStatus,
+  buildSchedule,
+  cardFee,
+  type ScheduledInstalment,
+} from '@ota/domain';
 import type { PaymentProvider, PaymentRail } from '@ota/payments';
 import type {
   CreatePaymentIntentRequest,
@@ -23,9 +31,38 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { loadOfacGate } from '../compliance/ofac-gate';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
+import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { depositPolicyFor } from './payment-terms';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
 
-function toReceiptDto(receipt: PaymentReceipt): PaymentReceiptDto {
+/** Statuses in which a first payment link may be created (spec §7.1). */
+const FIRST_LINK_STATUSES: readonly string[] = [
+  ReservationStatus.SecuredAndInvoiced,
+  ReservationStatus.PendingPayment,
+];
+
+/** Once a schedule exists, a later instalment (the balance) is paid from these too. */
+const LATER_LINK_STATUSES: readonly string[] = [
+  ...FIRST_LINK_STATUSES,
+  ReservationStatus.Confirmed,
+  ReservationStatus.InProgress,
+];
+
+function toReservationDto(reservation: Reservation): ReservationDto {
+  return {
+    id: reservation.id,
+    bookingCode: reservation.bookingCode,
+    status: reservation.status as ReservationStatus,
+    tourismCategory: reservation.tourismCategory,
+    startDate: reservation.startDate.toISOString(),
+    endDate: reservation.endDate.toISOString(),
+    totalCurrency: reservation.totalCurrency,
+    totalAmount: reservation.totalAmount.toString(),
+    createdAt: reservation.createdAt.toISOString(),
+  };
+}
+
+export function toReceiptDto(receipt: PaymentReceipt): PaymentReceiptDto {
   return {
     id: receipt.id,
     reservationId: receipt.reservationId,
@@ -46,6 +83,7 @@ export class PaymentsService {
     private readonly reservations: ReservationsService,
     @Inject(PAYMENT_PROVIDERS)
     private readonly providers: Record<PaymentRail, PaymentProvider>,
+    @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
   ) {}
 
   async list(reservationId: string): Promise<PaymentReceiptDto[]> {
@@ -96,24 +134,38 @@ export class PaymentsService {
   }
 
   /**
-   * Generate a payment link for a secured booking (spec §7.1). Creating the
-   * link is what moves SECURED_AND_INVOICED -> PENDING_PAYMENT; a booking that
-   * is already awaiting payment may take a second rail.
+   * Generate a payment link for the next instalment (spec §7.1, M4). The first
+   * link fixes the plan: the full amount, or a deposit and a balance when the
+   * package's deposit plan allows it (M4 D1–D2); creating it moves
+   * SECURED_AND_INVOICED -> PENDING_PAYMENT. Later links pay the instalment
+   * still due, the balance included once the booking is confirmed. A card
+   * payment carries the manifest's card fee on top (M4 D6).
    */
   async createIntent(
     reservationId: string,
     input: CreatePaymentIntentRequest,
     actor: AuthUser,
   ): Promise<PaymentIntentDto> {
-    const reservation = await this.requireReservation(reservationId);
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      include: {
+        instalments: { orderBy: { position: 'asc' } },
+        package: { select: { depositPolicy: true } },
+      },
+    });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation ${reservationId} not found`);
+    }
     const status = reservation.status as ReservationStatus;
-    if (
-      status !== ReservationStatus.SecuredAndInvoiced &&
-      status !== ReservationStatus.PendingPayment
-    ) {
+    const scheduled = reservation.instalments.length > 0;
+    if (!(scheduled ? LATER_LINK_STATUSES : FIRST_LINK_STATUSES).includes(status)) {
       throw new ConflictException(
         'A payment link can only be created once the booking is secured and invoiced',
       );
+    }
+    const due = reservation.instalments.find((instalment) => instalment.status === 'DUE');
+    if (scheduled && !due) {
+      throw new ConflictException('Nothing is due on this booking');
     }
     // M3 D3: every US person on the booking must have certified first.
     const gate = await loadOfacGate(this.prisma, reservationId);
@@ -123,21 +175,80 @@ export class PaymentsService {
       );
     }
 
+    let schedule: ScheduledInstalment[] | null = null;
+    const plan = input.plan ?? 'FULL';
+    const policyKey = reservation.package?.depositPolicy ?? null;
+    if (!scheduled) {
+      schedule = buildSchedule({
+        total: Number(reservation.totalAmount),
+        plan,
+        policy: depositPolicyFor(this.tenant, policyKey),
+        departure: reservation.startDate,
+        now: new Date(),
+        windowHours: this.tenant.payments.windowHours,
+      });
+      if (!schedule) {
+        throw new ConflictException(
+          'A deposit is not offered on this booking: pay the full amount',
+        );
+      }
+    }
+    const instalmentIds = (schedule ?? []).map(() => randomUUID());
+    const instalmentId = due?.id ?? instalmentIds[0]!;
+    const amount = Number(due?.amount ?? schedule![0]!.amount);
+    const kind = due?.kind ?? schedule![0]!.kind;
+    const fee =
+      input.rail === 'CARD' ? cardFee(amount, this.tenant.payments.cardFeePercent) : 0;
+
     const intent = await this.providers[input.rail].createIntent({
       reference: reservation.bookingCode,
-      amount: Number(reservation.totalAmount),
+      amount: amount + fee,
       currency: reservation.totalCurrency,
       rail: input.rail,
     });
 
     const receipt = await this.prisma.$transaction(async (tx) => {
+      if (schedule) {
+        await tx.paymentInstalment.createMany({
+          data: schedule.map((instalment, position) => ({
+            id: instalmentIds[position]!,
+            reservationId,
+            kind: instalment.kind,
+            position,
+            amount: instalment.amount,
+            currency: reservation.totalCurrency,
+            dueAt: instalment.dueAt,
+            policyKey: plan === 'DEPOSIT' ? policyKey : null,
+          })),
+        });
+        await tx.auditLog.create({
+          data: {
+            actorUserId: actor.id,
+            action: 'payment.schedule_created',
+            entityType: 'Reservation',
+            entityId: reservationId,
+            metadata: {
+              plan,
+              policyKey: plan === 'DEPOSIT' ? policyKey : null,
+              instalments: schedule.map((instalment) => ({
+                kind: instalment.kind,
+                amount: instalment.amount.toFixed(2),
+                dueAt: instalment.dueAt.toISOString(),
+              })),
+            },
+          },
+        });
+      }
+
       const created = await tx.paymentReceipt.create({
         data: {
           reservationId,
+          instalmentId,
           gatewayTxId: intent.providerReference,
           rail: input.rail,
           currency: reservation.totalCurrency,
-          amount: reservation.totalAmount,
+          amount,
+          feeAmount: fee,
           status: 'PENDING',
         },
       });
@@ -170,7 +281,9 @@ export class PaymentsService {
           entityId: created.id,
           metadata: {
             rail: input.rail,
-            amount: reservation.totalAmount.toString(),
+            instalment: kind,
+            amount: amount.toFixed(2),
+            fee: fee.toFixed(2),
             currency: reservation.totalCurrency,
           },
         },
@@ -185,7 +298,8 @@ export class PaymentsService {
   /**
    * Apply a gateway callback to a pending receipt. Until a real provider with
    * signed webhooks is wired (ADR 0003), only an authenticated operations user
-   * can confirm. On PAID the booking moves to CONFIRMED, which issues documents.
+   * can confirm. On PAID the receipt's instalment is paid, and the first
+   * payment moves the booking to CONFIRMED, which issues documents.
    */
   async confirm(
     reservationId: string,
@@ -223,6 +337,12 @@ export class PaymentsService {
           payoutStatus: event.status === 'PAID' ? 'ACCRUED' : 'FAILED',
         },
       });
+      if (event.status === 'PAID' && receipt.instalmentId) {
+        await tx.paymentInstalment.update({
+          where: { id: receipt.instalmentId },
+          data: { status: 'PAID', paidAt: new Date() },
+        });
+      }
       await tx.auditLog.create({
         data: {
           actorUserId: actor.id,
@@ -238,8 +358,17 @@ export class PaymentsService {
       });
     });
 
-    // Funds cleared: the reservation service owns the state machine and the
-    // best-effort document generation on CONFIRMED.
+    // The first payment received (the deposit, or the full amount) confirms
+    // the booking (M4 D3); the reservation service owns the state machine and
+    // the best-effort documents. A later payment, the balance, only marks its
+    // instalment.
+    const reservation = await this.requireReservation(reservationId);
+    if (
+      event.status !== 'PAID' ||
+      reservation.status !== ReservationStatus.PendingPayment
+    ) {
+      return toReservationDto(reservation);
+    }
     return this.reservations.transition(
       reservationId,
       { to: ReservationStatus.Confirmed },

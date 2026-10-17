@@ -65,20 +65,44 @@ interface GateTraveler {
   nationality: string | null;
 }
 
+interface FakeInstalment {
+  id: string;
+  reservationId: string;
+  kind: string;
+  position: number;
+  amount: number;
+  dueAt: Date;
+  status: string;
+}
+
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
   receipts: Map<string, PaymentReceipt>;
   audits: { action: string }[];
   travelers?: GateTraveler[];
   affidavits?: { travelerId: string }[];
+  instalments?: FakeInstalment[];
 }) {
+  const instalments = () => (state.instalments ??= []);
   const fake = {
     // M3: the OFAC gate reads the party and its affidavits.
     reservationTraveler: { findMany: async () => state.travelers ?? [] },
     travelerAffidavit: { findMany: async () => state.affidavits ?? [] },
     reservation: {
-      findUnique: async (args: { where: { id: string } }) =>
-        state.reservations.get(args.where.id) ?? null,
+      // M4: a payment link reads the schedule and the package's deposit plan.
+      findUnique: async (args: { where: { id: string }; include?: unknown }) => {
+        const row = state.reservations.get(args.where.id);
+        if (!row) return null;
+        return args.include
+          ? {
+              ...row,
+              instalments: instalments()
+                .filter((instalment) => instalment.reservationId === row.id)
+                .sort((a, b) => a.position - b.position),
+              package: null,
+            }
+          : row;
+      },
       update: async (args: {
         where: { id: string };
         data: { status: Reservation['status'] };
@@ -126,6 +150,18 @@ function createFakePrisma(state: {
         const updated = { ...existing, ...args.data };
         state.receipts.set(args.where.id, updated);
         return updated;
+      },
+    },
+    paymentInstalment: {
+      createMany: async (args: { data: FakeInstalment[] }) => {
+        instalments().push(...args.data.map((row) => ({ ...row, status: 'DUE' })));
+        return { count: args.data.length };
+      },
+      update: async (args: { where: { id: string }; data: Partial<FakeInstalment> }) => {
+        const row = instalments().find((instalment) => instalment.id === args.where.id);
+        if (!row) throw new Error('not found');
+        Object.assign(row, args.data);
+        return row;
       },
     },
     auditLog: {

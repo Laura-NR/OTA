@@ -74,6 +74,17 @@ export const reservationListItemSchema = reservationSchema.extend({
   paidAmount: z.string(),
   /** US persons still without an OFAC affidavit; any holds payment and vouchers (M3). */
   ofacMissing: z.number().int().nonnegative(),
+  /**
+   * M4: the next instalment still due. Past its date, a deposit or full payment
+   * is an expired payment window and a balance is overdue.
+   */
+  nextInstalment: z
+    .object({
+      kind: z.enum(['DEPOSIT', 'BALANCE', 'FULL']),
+      amount: z.string(),
+      dueAt: z.string(),
+    })
+    .nullable(),
 });
 
 export type ReservationListItemDto = z.infer<typeof reservationListItemSchema>;

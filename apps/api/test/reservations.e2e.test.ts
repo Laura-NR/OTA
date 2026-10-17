@@ -112,6 +112,13 @@ interface FakeTraveler {
   nationality: string | null;
 }
 
+interface FakeInstalment {
+  reservationId: string;
+  kind: 'DEPOSIT' | 'BALANCE' | 'FULL';
+  amount: Prisma.Decimal;
+  dueAt: Date;
+}
+
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
   users: FakeUser[];
@@ -121,6 +128,7 @@ function createFakePrisma(state: {
   payments?: FakePayment[];
   travelers?: FakeTraveler[];
   affidavits?: { reservationId: string; travelerId: string }[];
+  instalments?: FakeInstalment[];
 }) {
   const withRelations = (reservation: Reservation) => ({
     ...reservation,
@@ -137,6 +145,9 @@ function createFakePrisma(state: {
     ),
     affidavits: (state.affidavits ?? []).filter(
       (affidavit) => affidavit.reservationId === reservation.id,
+    ),
+    instalments: (state.instalments ?? []).filter(
+      (instalment) => instalment.reservationId === reservation.id,
     ),
   });
 
@@ -274,6 +285,7 @@ describe('reservations API', () => {
     payments: FakePayment[];
     travelers?: FakeTraveler[];
     affidavits?: { reservationId: string; travelerId: string }[];
+    instalments?: FakeInstalment[];
   };
 
   beforeEach(async () => {
@@ -440,6 +452,31 @@ describe('reservations API', () => {
         .set('x-test-user', SUPER_ADMIN.email);
 
       expect(response.body.ofacMissing).toBe(1);
+    });
+
+    it('carries the next instalment due, for the payment alerts (M4)', async () => {
+      const before = await request(app.getHttpServer())
+        .get(`/reservations/${RESERVATION_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+      expect(before.body.nextInstalment).toBeNull();
+
+      state.instalments = [
+        {
+          reservationId: RESERVATION_ID,
+          kind: 'BALANCE',
+          amount: new Prisma.Decimal('2480'),
+          dueAt: new Date('2027-01-14T00:00:00Z'),
+        },
+      ];
+      const response = await request(app.getHttpServer())
+        .get(`/reservations/${RESERVATION_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.nextInstalment).toEqual({
+        kind: 'BALANCE',
+        amount: '2480.00',
+        dueAt: '2027-01-14T00:00:00.000Z',
+      });
     });
 
     it('filters by status', async () => {

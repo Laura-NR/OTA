@@ -235,6 +235,13 @@ export const refundQueueQuerySchema = z.object({
 
 export type RefundQueueQuery = z.infer<typeof refundQueueQuerySchema>;
 
+export const refundQuoteQuerySchema = z.object({
+  receiptId: z.string().uuid(),
+  reason: refundReasonSchema,
+});
+
+export type RefundQuoteQuery = z.infer<typeof refundQuoteQuerySchema>;
+
 /** The amount the cancellation scale suggests today, before a refund is created. */
 export const refundQuoteSchema = z.object({
   receiptId: z.string().uuid(),

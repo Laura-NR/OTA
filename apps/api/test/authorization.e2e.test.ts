@@ -56,6 +56,9 @@ const CUSTOMER = '60606060-6060-4060-8060-606060606060';
 const TRAVELER_ROW = '70707070-7070-4070-8070-707070707070';
 const EXTRA = '80808080-8080-4080-8080-808080808080';
 const AFFIDAVIT = '90909090-9090-4090-8090-909090909090';
+const INSTALMENT = 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1';
+const PROOF = 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2';
+const REFUND = 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -146,6 +149,39 @@ const ROUTES: Route[] = [
   { method: 'post', path: '/me/consents', allowed: 'authenticated' },
   // The Booking form: books for the caller, so any signed-in role.
   { method: 'post', path: '/me/reservations/package-booking', allowed: 'authenticated' },
+  // M4: the caller's own schedule and proofs of transfer (scoped in the service).
+  {
+    method: 'get',
+    path: `/me/reservations/${RESERVATION}/schedule`,
+    allowed: 'authenticated',
+  },
+  {
+    method: 'post',
+    path: `/me/reservations/${RESERVATION}/payments/${PAYMENT}/proof`,
+    allowed: 'authenticated',
+  },
+
+  // M4 payment schedule, proofs and refunds — read by ops roles, changed by writers.
+  { method: 'get', path: `/reservations/${RESERVATION}/schedule`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/reservations/${RESERVATION}/instalments/${INSTALMENT}/extend`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'get',
+    path: `/reservations/${RESERVATION}/refunds/quote`,
+    allowed: 'opsRead',
+  },
+  { method: 'post', path: `/reservations/${RESERVATION}/refunds`, allowed: 'opsWrite' },
+  { method: 'get', path: '/payments/proofs', allowed: 'opsRead' },
+  { method: 'get', path: `/payments/proofs/${PROOF}/file`, allowed: 'opsRead' },
+  { method: 'post', path: `/payments/proofs/${PROOF}/accept`, allowed: 'opsWrite' },
+  { method: 'post', path: `/payments/proofs/${PROOF}/reject`, allowed: 'opsWrite' },
+  { method: 'get', path: '/refunds', allowed: 'opsRead' },
+  { method: 'post', path: `/refunds/${REFUND}/approve`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/reject`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/sent`, allowed: 'opsWrite' },
 
   // Dispatch / escalation — ops control; worker responds.
   { method: 'post', path: `/reservations/${RESERVATION}/dispatch`, allowed: 'opsWrite' },

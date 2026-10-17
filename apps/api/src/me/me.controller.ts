@@ -15,6 +15,7 @@ import {
   createPackageBookingSchema,
   createPaymentIntentSchema,
   createReviewSchema,
+  proofUploadSchema,
   type BookPackageRequest,
   type CreateMyReservationRequest,
   type CreatePackageBookingRequest,
@@ -25,12 +26,17 @@ import {
   type MyReservationListItemDto,
   type MyReviewDto,
   type PaymentIntentDto,
+  type PaymentScheduleDto,
+  type ProofSummaryDto,
+  type ProofUploadRequest,
 } from '@ota/schemas';
 import type { Request } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { ProofsService } from '../payments/proofs.service';
+import { ScheduleService } from '../payments/schedule.service';
 import { MeService } from './me.service';
 
 /**
@@ -39,7 +45,11 @@ import { MeService } from './me.service';
  */
 @Controller('me')
 export class MeController {
-  constructor(private readonly me: MeService) {}
+  constructor(
+    private readonly me: MeService,
+    private readonly schedule: ScheduleService,
+    private readonly proofs: ProofsService,
+  ) {}
 
   @Get()
   profile(@CurrentUser() actor: AuthUser): Promise<MeProfileDto> {
@@ -99,6 +109,27 @@ export class MeController {
     @CurrentUser() actor: AuthUser,
   ): Promise<PaymentIntentDto> {
     return this.me.createPaymentLink(actor, id, body);
+  }
+
+  /** M4: the caller's payment schedule, receipts, proofs and refunds. */
+  @Get('reservations/:id/schedule')
+  paymentSchedule(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<PaymentScheduleDto> {
+    return this.schedule.get(id, { ownerId: actor.id });
+  }
+
+  /** M4 D5: a proof of transfer for the caller's own pending bank transfer. */
+  @Post('reservations/:id/payments/:paymentId/proof')
+  @HttpCode(HttpStatus.CREATED)
+  uploadProof(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('paymentId', ParseUUIDPipe) paymentId: string,
+    @Body(new ZodValidationPipe(proofUploadSchema)) body: ProofUploadRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<ProofSummaryDto> {
+    return this.proofs.upload(actor, id, paymentId, body);
   }
 
   @Post('reservations/:id/reviews')

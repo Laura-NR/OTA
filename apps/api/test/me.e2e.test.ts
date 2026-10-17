@@ -104,6 +104,7 @@ function createFakePrisma(state: FakeState) {
       findUnique: async (args: { where: { id: string } }) =>
         state.packages.find((pkg) => pkg.id === args.where.id) ?? null,
     },
+    paymentInstalment: { createMany: async () => ({ count: 1 }) },
     paymentReceipt: {
       create: async (args: { data: Record<string, unknown> }) => {
         const receipt = {
@@ -147,6 +148,7 @@ function createFakePrisma(state: FakeState) {
       findUnique: async (args: {
         where: { id?: string; bookingCode?: string };
         select?: unknown;
+        include?: unknown;
       }) => {
         const row = args.where.id
           ? state.reservations.get(args.where.id)
@@ -154,7 +156,9 @@ function createFakePrisma(state: FakeState) {
               (candidate) => candidate.bookingCode === args.where.bookingCode,
             );
         if (!row) return null;
-        return args.select ? { id: row.id } : row;
+        if (args.select) return { id: row.id };
+        // M4: a payment link reads the schedule (none yet) and the package's plan.
+        return args.include ? { ...row, instalments: [], package: null } : row;
       },
       findFirst: async (args: { where: { id: string; userId: string } }) => {
         const row = [...state.reservations.values()].find(
