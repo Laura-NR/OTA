@@ -433,3 +433,24 @@ The E-Received, E-OFAC and 7/3/1 instalment emails are built on the existing tok
   trigger and a provider.
 - **Not resolved here.** The M5 D-Proposal screen is drafted in `docs/schema-m5-proposal.md` and is
   not built, so its document layout stays a Phase 6/M5 design task.
+
+## Amendment, 2026-10-17: M5 custom proposals, resolved by the build
+
+M5 (custom request → priced proposal → acceptance) is built on the existing tokens and the
+D-Proposal board. No token was added.
+
+- **The builder is now a request, not a booking.** `/custom` keeps the five-step shape but sends a
+  `CustomRequest`; its success panel is **Proposal requested** with the reference and a link to the
+  proposal. The designed builder's provinces, pace, interests, per-stop stays and activities are
+  not drawn yet; the current picker, dates, party and notes are what the desk prices.
+- **The traveler proposal page** (`/account/proposals/<id>`, sign-in required) uses the DS 03 badge
+  for the status, `text-h1-compact` for the reference, a `Table` for the price lines, the display
+  face for the summary, and the usual primary button for **Accept this proposal**. The planning fee
+  is a caption under the total: shown for transparency, never added to the amount due.
+- **The desk queue** is a **Proposals** tab under Bookings, not a new sidebar section, so the
+  A-Dashboard ten-section navigation is unchanged. The detail page shows the request, the current
+  version and a composer: a summary, a validity date and a price-line table with literal class names
+  and the existing `Select`/`Input` components. Publishing a version sends the proposal email and
+  marks it SENT; the previous version stays readable.
+- **Not drawn:** the D-Proposal PDF, structured stops/days/options editing, the provider-request
+  step and the anonymous proposal link. They are recorded in `docs/schema-m5-proposal.md` §8.

@@ -1,9 +1,9 @@
 # M5 Custom-trip proposal: schema diff for review
 
-**Status:** **Draft for the owner (Q9).** No migration has been generated. This document proposes the
-custom-request and proposal entities, the D-Proposal document and the path from the Custom builder's
-request to a priced proposal the traveler accepts. It needs the owner's decisions in §3 before any
-schema change.
+**Status:** **Approved 2026-10-17 and generated.** The owner took the recommendations in §3 and the
+answers in §7. Migration `20261017181739_custom_proposals` was applied: `CustomRequest`, `Proposal`,
+`ProposalVersion`, `ProposalPriceLine`, four enums, and the `User`/`Reservation`/`InventoryItem`
+relations. Additive; no backfill. Implementation notes are in §8.
 **Date:** 2026-10-17
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M5; the `Custom` / `M-Custom` builder boards and the
 `D-Proposal` document board in `design/vereda-v1.2/project/`. It builds on M1 (package pricing and
@@ -336,17 +336,49 @@ The manifest (no migration; sample values to confirm, D8):
 6. The M4 flow takes over: securing the providers, the invoice, the deposit and the balance. The
    proposal itself never charges anything.
 
-## 7. Questions for the owner
+## 7. Owner decisions (2026-10-17)
 
-1. **Acceptance creates a request to book, not a confirmed trip** (D7a): is that the intended meaning
-   of "Accepted · becomes a request to book"?
-2. **Sign-in required for the proposal** (D6a), or do you want the board's public
-   `vereda.travel/p/<reference>` link? We recommend sign-in because the page is personal.
-3. **Planning fee** (D8): is € 140 added to the proposal total and then credited when the traveler
-   books, or absorbed into the total and shown only for transparency?
-4. **Validity** (D5): 21 days as on the board, and is the expiry derived on read (recommended) or a
-   status a job must write?
-5. **Proposal document shape** (D3): price lines normalised and the route/days as a validated JSON
-   snapshot (recommended), or should every stop/day/option become its own table?
-6. **Retention** (D2/§2): after the traveler is anonymized, may we keep the proposal's totals and
-   dates but redact names and free text (recommended), or must the whole proposal document go?
+1. **Acceptance creates a request to book**, not a confirmed trip. Acceptance creates a
+   `Reservation` at `ITINERARY_SUBMITTED` with the accepted version's price lines and service items
+   for the chosen catalog items; the desk dispatches next. Nothing is charged.
+2. **Sign-in required.** The proposal page is `/account/proposals/<id>` behind the traveler's
+   session; the email carries a magic link. The short reference is never a capability URL.
+3. **Planning fee is transparency only.** The manifest value is snapshotted in
+   `ProposalVersion.terms` and shown on the proposal, but it is not added to the amount due. No
+   separate fee or credit line exists.
+4. **Validity is 21 days** by manifest placeholder, and expiry is derived on read. Acceptance of an
+   expired version is refused with a 409; no scheduled expiry job.
+5. **Normalised price lines plus a validated JSON document.** Money is copied 1:1 into
+   `ReservationPriceLine`; the route/days/options narrative is a `ProposalDocument` snapshot.
+6. **Retention keeps the commercial skeleton.** Totals, dates, categories, price lines and the
+   accepted-version metadata are kept; names, free-text notes, the request payload's personal
+   content and the proposal PDF are redacted or removed on anonymization.
+
+## 8. What landed, and what did not
+
+Landed: the migration; the manifest `proposals` block; the pure `@ota/domain` proposal rules
+(line amount, total, per-person, derived expiry, price-line mapping); `@ota/schemas` request,
+document, version, acceptance and DTO schemas; the API (`POST /me/custom-requests`,
+`GET /me/proposals`, `GET /me/proposals/:id`, `POST /me/proposals/:id/accept|decline`,
+`GET /proposals`, `GET /proposals/:id`, `POST /proposals/:id/versions`); the branded proposal
+email; the traveler proposal page and account list; the desk proposal queue and composer; the
+retention scrub; the authorization matrix; a live-DB integration test; and the browser e2e flow
+(request → desk prices → traveler accepts).
+
+Not built in this increment:
+
+- the full designed Custom builder (provinces, pace, interests, transport styles, per-stop stays,
+  activities and guides). The existing builder still collects dates, party, catalog items and
+  notes; the desk prices the rest.
+- structured editing of stops/days/options in the composer. The API accepts them and stores them
+  in `ProposalVersion.document`; the composer currently edits the summary and price lines.
+- the D-Proposal PDF (`pdfKey` stays null) and the account's PDF download. The email links to the
+  signed-in proposal page.
+- provider request/response tracking after acceptance (the board's "11 requests"); the desk uses
+  today's dispatch.
+- an anonymous proposal link, planning-fee charging, and a proposal audit export.
+
+The proposal reference is `VX-C-` plus the existing 8-character booking code, unique on
+`CustomRequest.reference`.
+
+The six questions answered above were the review gate; the original wording is in the git history.

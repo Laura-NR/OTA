@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-17 20:11
+# Handoff — vereda — updated 2026-10-17 20:40
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -27,31 +27,46 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
     scan is idempotent per instalment and day through the audit log (`payment.reminder_sent`,
     `metadata.days`), so **no migration**. `RemindersService` / `BullmqReminderScheduler` live in
     `apps/api/src/payments`.
-- **M5 is drafted, not built:** `docs/schema-m5-proposal.md` proposes `CustomRequest` +
-  versioned `Proposal`/`ProposalVersion` + `ProposalPriceLine`, the D-Proposal document and the
-  request → proposal → acceptance path. It waits for the owner's answers (Q9); no migration.
+- **M5 landed 2026-10-17** after the owner approved the draft: migration
+  `20261017181739_custom_proposals` (`CustomRequest`, `Proposal`, `ProposalVersion`,
+  `ProposalPriceLine`, four enums, relations) and the manifest `proposals` block.
+  - Pure rules in `@ota/domain/src/proposals` (line amount, total, per person, derived expiry,
+    proposal→price-line mapping); schemas in `@ota/schemas/src/proposal.ts`.
+  - API: `POST /me/custom-requests`, `GET /me/proposals`, `GET /me/proposals/:id`,
+    `POST /me/proposals/:id/accept|decline`, `GET /proposals`, `GET /proposals/:id`,
+    `POST /proposals/:id/versions`. Acceptance creates an `ITINERARY_SUBMITTED` booking with the
+    accepted price lines and service items for the chosen catalog items; nothing is charged.
+  - Email: `proposalSentEmail` (branded, en/es/fr) links to the signed-in proposal page.
+  - Storefront: `/custom` now creates a request (success panel **Proposal requested**), the
+    account page lists proposals, and `/account/proposals/<id>` shows the version and accepts or
+    declines it. The desk gets a **Proposals** tab under Bookings, a queue and a composer that
+    prices a version and publishes/sends it.
+  - Retention scrubs the request payload/notes and the version document/PDF on anonymization,
+    keeping dates, party, totals and price lines.
+  - Minimal first cut: the full designed Custom builder and structured stops/days/options editing
+    are not built; the composer edits the summary, validity and price lines. The D-Proposal PDF is
+    deferred (`pdfKey` stays null).
 - **Not built:** the Confirmation screen (Task 3 of this session), the remaining Phase 6 emails
-  (E-Reminder 24 h/2 h, E-Confirmed, E-Invoice, E-NPS, …), SMS/push, the M5 surfaces, Phase 8.
+  (E-Reminder 24 h/2 h, E-Confirmed, E-Invoice, E-NPS, …), SMS/push, the full M5 builder/PDF,
+  Phase 8.
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
   samples, the deposit's refundability and proof retention.
 
 ## Verified (2026-10-17, after this increment; dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **558 passed / 12 skipped** (domain 158, api 247/11 skipped,
-  email 9, schemas 35, ui 31, config 26, theming 14, documents 10, payments 8, imports 5,
+- `TURBO_FORCE=true pnpm test` **565 passed / 13 skipped** (domain 164, api 247/12 skipped,
+  email 10, schemas 35, ui 31, config 26, theming 14, documents 10, payments 8, imports 5,
   reports 4, ai 4, i18n 4, storage 3/1 skipped), 0 cached.
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (API + both Next apps).
-- `pnpm e2e` **53/53** (`.next` deleted first), 6.6 min. New/updated Mailpit checks:
-  `storefront-packages.spec.ts` (E-Received to the lead, plus the "emailed" line),
-  `customers.spec.ts` (E-OFAC from A-Customers, audit row asserted), and
-  `payment-reminders.spec.ts` (7/3/1 balance reminders, second scan sends 0, 3 audit rows).
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL`) **11/11**: retention, packages, affidavits 3,
-  package-booking 2, payment-schedule 2, dispatch and compliance BullMQ.
-- Browser (temporary spec, removed): A-Customers with the reminder button at **390/1024/1280**
-  and the Request received panel at **390/1024**; `scrollWidth == viewport` everywhere,
-  screenshots in `/tmp/ota-customers-*.png` and `/tmp/ota-request-received-*.png`. The full suite
-  already covers 1280.
+- `pnpm e2e` **53/53** (`.next` deleted first), 6.8 min. The M5 spec is the full vertical slice:
+  traveler request → desk prices and publishes (Mailpit checked) → traveler accepts → reservation
+  asserted. The Phase 6 Mailpit checks remain (E-Received, E-OFAC, 7/3/1 reminders).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL`) **12/12**: retention, packages, affidavits 3,
+  package-booking 2, payment-schedule 2, **proposals 1**, dispatch and compliance BullMQ.
+- Browser (temporary spec, removed): the custom builder, the traveler proposal page and the desk
+  composer at **390/1024/1280**; `scrollWidth == viewport` everywhere, screenshots in
+  `/tmp/ota-m5-*.png`. The full e2e suite covers 1280.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -64,8 +79,13 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
   a non-primary locale is prefixed (`/en`, `/fr`), the tenant primary locale is not.
 - E-OFAC is sent per booking from A-Customers; a customer with several incomplete trips gets one
   email per trip. The board's SMS channel is not built.
-- The M5 decisions (separate request, versioning, sign-in-only proposal, acceptance → request to
-  book) are recommendations, not approved. No migration was generated.
+- M5 is implemented as approved: a separate request, immutable versions, sign-in-only
+  proposal, acceptance → request to book, 21-day read-time expiry, planning fee as transparency
+  copy only, and normalised price lines + a validated JSON document.
+- The M5 composer prices a summary and lines; the designed day-by-day/stops/options editor and the
+  D-Proposal PDF are not built. The proposal reference is `VX-C-` plus the 8-character booking code.
+- M5 service items come only from the request's chosen catalog items; custom price lines are
+  price-only until the desk maps them to services.
 
 ## Traps
 - **Rebuild `@ota/email`, `@ota/schemas` and `@ota/i18n` before the dev API sees template/type/copy
@@ -74,6 +94,14 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
   `metadata: { path: ['days'], equals: days }`; a whole-object `equals` never matches.
 - The reminder e2e fixture owns three audit rows with `entityType: 'PaymentInstalment'`; delete
   them by the fixture's instalment ids (no FK), then the reservation cascades its instalments.
+- M5: `Proposal.acceptedVersionId` is unique, so the Prisma relation is one-to-one. The proposal
+  e2e owns a `CustomRequest`/`Proposal`/`Reservation`; delete the proposal/reservation audit rows
+  first, then the reservation, proposal and request (versions/lines cascade).
+- M5: `ProposalsService` imports `Prisma` as a value for `PrismaClientKnownRequestError`; a
+  type-only import fails at runtime. The retention fake needs `customRequest`/`proposalVersion`
+  stubs or the default suite 500s on the purge test.
+- The old `storefront-builder` spec now drives the whole M5 flow; it no longer expects a booking
+  directly from `/custom`.
 - `signIn()` clears Mailpit at the start, so a spec that checks a later email must clear it again
   after sign-in (the magic-link message is harmless but the booking/reminder subject match is not).
 - E-Received is best-effort: the e2e polls Mailpit, and the UI copy does not wait for SMTP.
@@ -91,19 +119,22 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
     reminders are 7/3/1 UTC days before a DUE instalment; the daily `payment-reminders` BullMQ scan
     (07:00) uses the audit log (`payment.reminder_sent`, `metadata.days`) as the idempotency ledger,
     so no migration. `POST /payments/reminders/scan` forces a pass."
-  - "2026-10-17: M5 is drafted in `docs/schema-m5-proposal.md` (CustomRequest + versioned Proposal +
-    ProposalPriceLine; acceptance creates an ITINERARY_SUBMITTED request to book). No M5 migration
-    exists until the owner answers the six questions in that document."
+  - "2026-10-17: M5 landed on migration `20261017181739_custom_proposals`: `/custom` creates a
+    `CustomRequest`, the desk prices immutable `ProposalVersion`s from `/bookings/proposals`, and
+    accepting a version creates an `ITINERARY_SUBMITTED` booking with the accepted price lines in
+    one transaction (nothing is charged). The proposal page is sign-in only. The D-Proposal PDF,
+    structured stops/days/options editing and the full designed builder remain."
 
 ## Next
-1. Owner: answer the M5 questions (§7 of `docs/schema-m5-proposal.md`): acceptance semantics,
-   sign-in vs public proposal, planning fee, validity, document shape, retention. Also the M4
-   placeholders and the passport-key backup remain open.
+1. Owner: the M4 placeholders, the passport-key backup, and the M5 sample terms (planning fee,
+   validity, response hours) remain open. The M5 decisions themselves are settled (§7 of the
+   schema doc).
 2. Build the Confirmation screen (Task 3, Confirmation/M-Confirmation boards) on today's data,
    with the Review model's CSAT where a completed trip has one.
-3. Finish Phase 6: E-Reminder 24 h/2 h, E-Confirmed, E-Invoice, E-NPS, E-Advisory, E-Options,
-   E-Reconfirm, E-Retention; SMS/push behind a provider; proposal email/PDF after M5.
-4. Phase 8 cookie banner and the remaining customer/admin surfaces.
+3. M5 follow-ups: the full designed Custom builder, structured stops/days/options editing, the
+   D-Proposal PDF, provider request/response tracking and the anonymous-link decision.
+4. Finish Phase 6: E-Reminder 24 h/2 h, E-Confirmed, E-Invoice, E-NPS, E-Advisory, E-Options,
+   E-Reconfirm, E-Retention; SMS/push behind a provider; Phase 8 cookie banner.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -287,3 +318,12 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
   the migration.
 - 2026-10-17 — Task 3 (the Confirmation screen) was not built this session; it stays first in
   `Next`.
+- 2026-10-17 — M5 approved and implemented as recommended: acceptance creates an
+  `ITINERARY_SUBMITTED` request to book; the proposal page is sign-in only; the planning fee is
+  transparency copy and is not added to the amount due; validity is 21 days with expiry derived on
+  read; price lines are normalised and the route/days/options narrative is a validated JSON
+  document; retention keeps totals/dates and redacts names, free text and the PDF. Migration
+  `20261017181739_custom_proposals` applied.
+- 2026-10-17 — M5 service items are created from the request's chosen catalog items; custom price
+  lines are price-only until the desk maps them to services. The full designed builder and
+  structured stops/days/options editing are follow-ups; the D-Proposal PDF waits for Phase 6.

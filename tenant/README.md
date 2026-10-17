@@ -66,7 +66,12 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   day 25 % bands come from the boards; the other day ranges and the € 60 fee are
   guesses; the share kept is of what was paid), the 48-hour first-payment
   window, the refund limits (€ 500 alone, € 2,000 with two approvers) and a card
-  fee of 0 % until counsel rules on surcharges (PSD2 art. 62(4)).
+  fee of 0 % until counsel rules on surcharges (PSD2 art. 62(4)). The M5
+  `proposals` block is also a sample: 21 days of validity, a 4-working-hour
+  response promise, a € 140 planning fee shown for transparency only (it is not
+  added to the amount due), and the `standard` deposit/cancellation policy
+  keys. The planning fee and validity are placeholders until the owner confirms
+  them.
 
 ## Forking for a new agency
 
