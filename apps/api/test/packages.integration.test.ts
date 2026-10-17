@@ -1,3 +1,4 @@
+import { parseTenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -34,6 +35,10 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
     service = new PackagesService(
       prisma as unknown as PrismaService,
       new InMemoryObjectStorage(),
+      parseTenantConfig({
+        tenantId: 'test-agency',
+        branding: { agencyName: 'Test Agency', licenseNumber: 'MINTUR-TEST-1234' },
+      }),
     );
 
     const user = await prisma.user.create({

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
+import { knownPolicyKeys, type TenantConfig } from '@ota/config';
 import { packagePublishIssues, type PackagePublishInput } from '@ota/domain';
 import type {
   InventoryItem,
@@ -35,6 +36,7 @@ import type { ObjectStorage } from '@ota/storage';
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { OBJECT_STORAGE } from '../storage/storage.module';
+import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 
 type ServiceWithItem = PackageService & {
   inventoryItem: InventoryItem & { media: InventoryMedia[] };
@@ -64,17 +66,11 @@ function slugify(value: string): string {
 
 /**
  * Refuse a package that fails the M1 publish checks (409 with the reasons), so
- * no client can publish what the editor would refuse. The manifest has no
- * policy-key list yet, so a package's own policy keys count as known, as in the
- * editor.
+ * no client can publish what the editor would refuse. Its policy keys must be
+ * ones the tenant manifest defines (M4 D2).
  */
-function assertPublishable(input: Omit<PackagePublishInput, 'knownPolicyKeys'>): void {
-  const issues = packagePublishIssues({
-    ...input,
-    knownPolicyKeys: [input.cancellationPolicy, input.depositPolicy].filter(
-      (key): key is string => key !== null,
-    ),
-  });
+function assertPublishable(input: PackagePublishInput): void {
+  const issues = packagePublishIssues(input);
   if (issues.length > 0) {
     throw new ConflictException({
       error: 'PackageNotPublishable',
@@ -367,6 +363,7 @@ export class PackagesService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+    @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
   ) {}
 
   async list(filters: ListPackagesQuery): Promise<PackageDto[]> {
@@ -434,6 +431,7 @@ export class PackagesService {
         cancellationPolicy: input.cancellationPolicy ?? null,
         depositPolicy: input.depositPolicy ?? null,
         media: [],
+        knownPolicyKeys: knownPolicyKeys(this.tenant),
       });
     }
 
@@ -551,6 +549,7 @@ export class PackagesService {
         depositPolicy:
           input.depositPolicy !== undefined ? input.depositPolicy : current.depositPolicy,
         media: current.media,
+        knownPolicyKeys: knownPolicyKeys(this.tenant),
       });
     }
     const slugChanged = input.slug !== undefined && input.slug !== existing.slug;

@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { parseTenantConfig } from '@ota/config';
 import { Prisma } from '@ota/db';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -7,6 +8,16 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { TENANT_CONFIG } from '../src/tenant/tenant.tokens';
+
+// The publish checks read the manifest's policy keys (M4 D2).
+const tenant = parseTenantConfig({
+  tenantId: 'test-agency',
+  branding: { agencyName: 'Test Agency', licenseNumber: 'MINTUR-TEST-1234' },
+  policies: {
+    cancellation: { standard: { bands: [{ fromDays: 0, keepPercent: 100 }] } },
+  },
+});
 
 const SUPER_ADMIN = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -338,6 +349,8 @@ describe('packages API', () => {
       .useValue(createFakePrisma(state))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
+      .overrideProvider(TENANT_CONFIG)
+      .useValue(tenant)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -446,6 +459,24 @@ describe('packages API', () => {
     expect(published.status).toBe(200);
     expect(published.body.status).toBe('PUBLISHED');
     expect(published.body.departures).toHaveLength(1);
+  });
+
+  it('accepts only policy keys the manifest defines', async () => {
+    const departures = [{ startDate: '2027-02-13', capacity: 8 }];
+    const unknown = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'PUBLISHED', departures, cancellationPolicy: 'lenient' });
+
+    expect(unknown.status).toBe(409);
+    expect(unknown.body.issues).toEqual(['UNKNOWN_POLICY']);
+
+    const known = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'PUBLISHED', departures, cancellationPolicy: 'standard' });
+
+    expect(known.status).toBe(200);
   });
 
   it('checks an edit to a published package, but never blocks unpublishing it', async () => {

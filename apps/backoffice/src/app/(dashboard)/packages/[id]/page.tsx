@@ -1,3 +1,4 @@
+import { knownPolicyKeys } from '@ota/config';
 import type { InventoryItemDto, PackageDto } from '@ota/schemas';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -41,7 +42,13 @@ export default async function PackageDetailPage({
         })}
       />
       <PackageEditorTabs
-        details={<PackageEditForm package={pkg} items={items} />}
+        details={
+          <PackageEditForm
+            package={pkg}
+            items={items}
+            policyKeys={knownPolicyKeys(getTenantConfig())}
+          />
+        }
         photos={<PackageMediaManager packageId={pkg.id} media={pkg.media} />}
         translations={
           <PackageTranslations pkg={pkg} locales={getTenantConfig().supportedLocales} />

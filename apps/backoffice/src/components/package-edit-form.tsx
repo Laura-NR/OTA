@@ -66,9 +66,12 @@ function numberOrNull(value: string): number | null {
 export function PackageEditForm({
   package: pkg,
   items,
+  policyKeys,
 }: {
   package: PackageDto;
   items: InventoryItemDto[];
+  /** The manifest's deposit and cancellation policy keys (M4 D2). */
+  policyKeys: string[];
 }) {
   const t = useTranslations('backoffice.packageEdit');
   const router = useRouter();
@@ -173,9 +176,7 @@ export function PackageEditForm({
           showsPeople: photo.showsPeople,
           consentReference: photo.hasConsent ? 'on file' : null,
         })),
-        knownPolicyKeys: [pkg.cancellationPolicy, pkg.depositPolicy].filter(
-          (key): key is string => key !== null,
-        ),
+        knownPolicyKeys: policyKeys,
       });
       if (issues.length > 0) {
         setError(t('publishIssues', { issues: issues.join(', ') }));
