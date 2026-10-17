@@ -57,6 +57,12 @@ export const proofSummarySchema = z.object({
 export type ProofSummaryDto = z.infer<typeof proofSummarySchema>;
 
 export const scheduleReceiptSchema = paymentReceiptSchema.extend({
+  /**
+   * The provider's reference: for a bank transfer, the capability key of its
+   * instructions page (`/checkout/wire/<reference>`), so a pending transfer is
+   * reopened rather than started again.
+   */
+  reference: z.string().nullable(),
   proofs: z.array(proofSummarySchema),
 });
 

@@ -413,6 +413,12 @@ describe('M4 payment schedule API', () => {
       expect(state.audits.map((audit) => audit.action)).toContain(
         'payment.schedule_created',
       );
+
+      // The traveler reopens the pending transfer's instructions by its reference.
+      const mine = await http()
+        .get(`/me/reservations/${BOOKING}/schedule`)
+        .set(as('owner'));
+      expect(mine.body.receipts[0].reference).toMatch(/^wire_/);
     });
 
     it('adds the card fee on top of the instalment, not into it', async () => {

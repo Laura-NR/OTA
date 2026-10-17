@@ -143,6 +143,7 @@ export class ScheduleService {
       cardFeePercent: this.tenant.payments.cardFeePercent,
       receipts: row.payments.map((receipt) => ({
         ...toReceiptDto(receipt),
+        reference: receipt.gatewayTxId,
         proofs: receipt.proofs.map((proof) => ({
           id: proof.id,
           receiptId: proof.receiptId,
