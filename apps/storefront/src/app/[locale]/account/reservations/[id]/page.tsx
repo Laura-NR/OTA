@@ -1,3 +1,4 @@
+import { hasConfirmation } from '@ota/domain';
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type {
   MyReservationDetailDto,
@@ -7,6 +8,8 @@ import type {
 import {
   Alert,
   Badge,
+  buttonClassName,
+  Icon,
   Table,
   TableBody,
   TableCell,
@@ -30,7 +33,8 @@ import { formatMoney } from '@/lib/format';
 import { getTenantConfig } from '@/lib/tenant';
 
 /**
- * One trip in the Account frame: its progress in the traveler's words, the US
+ * One trip in the Account frame: its progress in the traveler's words, the
+ * link to the confirmation once the first payment has confirmed it, the US
  * travel-category certification when a traveler needs it (M3), the payment
  * step when it is due (locked until every US traveler has certified), the
  * itinerary, the documents, the review once completed, and the thread with
@@ -73,6 +77,7 @@ export default async function AccountReservationPage({
   ]);
   const ofacRequired = ofac?.travelers.some((traveler) => traveler.required) ?? false;
   const ofacLocked = (ofac?.missing ?? 0) > 0;
+  const confirmed = hasConfirmation(reservation.status, Number(schedule?.paid ?? 0));
   const card = 'flex flex-col gap-4 rounded-lg border bg-surface p-6';
   const when = (value: string) =>
     format.dateTime(new Date(value), {
@@ -120,6 +125,21 @@ export default async function AccountReservationPage({
       <section className={card} aria-label={t('progressLabel')}>
         <TripProgress status={reservation.status} />
       </section>
+
+      {confirmed ? (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-success-200 bg-success-100 p-4">
+          <p className="flex items-center gap-2 text-body font-semibold text-success-700">
+            <Icon name="check-circle" className="h-5 w-5" />
+            {t('confirmed')}
+          </p>
+          <Link
+            href={`/account/reservations/${reservation.id}/confirmation`}
+            className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+          >
+            {t('viewConfirmation')}
+          </Link>
+        </section>
+      ) : null}
 
       {ofac && ofacRequired ? (
         <section aria-labelledby="ofac-title" className={card}>

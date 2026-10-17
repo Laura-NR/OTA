@@ -556,6 +556,8 @@
     "documentsEmpty": "Les bons et factures apparaîtront ici une fois votre réservation confirmée.",
     "download": "Télécharger le PDF",
     "back": "Mes voyages",
+    "confirmed": "Votre voyage est réservé.",
+    "viewConfirmation": "Voir votre confirmation",
     "columns": {
       "type": "Type",
       "status": "Statut",
@@ -2424,6 +2426,75 @@
       "INFORMATIONAL_MATERIALS": "Informations et supports d'information",
       "AUTHORIZED_EXPORT_TRANSACTIONS": "Exportations autorisées"
     }
+  },
+  "confirmation": {
+    "metaTitle": "Voyage confirmé",
+    "back": "Retour à {code}",
+    "overline": "Confirmée · réservation",
+    "title": "Votre voyage est réservé, {name}.",
+    "titleAnon": "Votre voyage est réservé.",
+    "customTrip": "Votre voyage sur mesure",
+    "ledeParty": "{trip}, {dates}, pour vous et {others}.",
+    "ledeSolo": "{trip}, {dates}.",
+    "ledeDocuments": "Vos documents sont ci-dessous et toujours dans Mes voyages.",
+    "downloadVoucher": "Télécharger votre bon",
+    "addToCalendar": "Ajouter au calendrier",
+    "messageUs": "Nous écrire",
+    "calendarDescription": "Réservation {code} avec {agency}. Vos documents et messages sont dans Mes voyages.",
+    "steps": {
+      "title": "Avant de partir · dans l'ordre",
+      "lede": "Tout ceci se trouve aussi sur la page de votre voyage.",
+      "certify": "Certifiez votre catégorie de voyage américaine",
+      "certifyText": "{count, plural, one {Un voyageur doit encore} other {# voyageurs doivent encore}} certifier. Votre bon est émis une fois que tous l'ont fait.",
+      "certifyAction": "Certifier maintenant",
+      "pay": "{kind} · {amount} avant le {date}",
+      "payOverdue": "{kind} · {amount}, dû le {date}",
+      "payText": "Nous vous envoyons un rappel par e-mail 7, 3 et 1 jours avant l'échéance.",
+      "payOverdueText": "Ce paiement a dépassé son échéance. Payez maintenant ou écrivez-nous si vous avez besoin de plus de temps.",
+      "payAction": "Payer en avance",
+      "payNow": "Payer maintenant",
+      "travelInfo": "Vérifiez les conditions d'entrée",
+      "travelInfoText": "Les règles d'entrée et les avis pour Cuba changent souvent. Lisez la version actuelle sur nos pages Infos voyage avant de partir.",
+      "travelInfoAction": "Infos voyage"
+    },
+    "documents": {
+      "title": "Vos documents",
+      "lede": "Émis maintenant que nous avons reçu votre premier paiement.",
+      "open": "Ouvrir Documents",
+      "issued": "PDF · émis le {date}",
+      "details": {
+        "VOUCHER": "Itinéraire, points de rendez-vous, numéros d'urgence et notre licence",
+        "INVOICE": "Les services réservés, détaillés",
+        "RECEIPT": "Votre paiement",
+        "EMERGENCY_CONTACT": "Qui appeler, de jour comme de nuit"
+      },
+      "held": "Votre bon est émis une fois que chaque voyageur américain a certifié sa catégorie de voyage.",
+      "empty": "Vos documents sont en préparation. Ils apparaîtront ici et dans Mes voyages."
+    },
+    "services": {
+      "title": "Vos services",
+      "lede": "Une question sur l'un d'eux ? Écrivez à notre équipe des opérations.",
+      "confirmed": "Confirmé",
+      "arranging": "En préparation",
+      "desk": "Équipe des opérations",
+      "deskText": "Écrivez-nous depuis la page de votre voyage"
+    },
+    "summary": {
+      "label": "Résumé du voyage",
+      "total": "Total du voyage",
+      "paid": "{kind} payé le {date} · {rail}",
+      "paidBefore": "Payé",
+      "refunded": "Remboursé",
+      "due": "{kind} avant le {date}",
+      "paidInFull": "Payé en totalité",
+      "payEarly": "Payer en avance",
+      "rails": {
+        "OPEN_BANKING_SEPA": "virement",
+        "CARD": "carte",
+        "OTHER": "autre"
+      }
+    },
+    "advisory": "Les règles d'entrée et les avis pour Cuba changent souvent ; la version actuelle est toujours sur les pages <link>Infos voyage</link>."
   },
   "proposal": {
     "title": "Votre proposition sur mesure",

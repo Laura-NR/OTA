@@ -556,6 +556,8 @@
     "documentsEmpty": "Vouchers and invoices appear here once your booking is confirmed.",
     "download": "Download PDF",
     "back": "My trips",
+    "confirmed": "Your trip is booked.",
+    "viewConfirmation": "View your confirmation",
     "columns": {
       "type": "Type",
       "status": "Status",
@@ -2424,6 +2426,75 @@
       "INFORMATIONAL_MATERIALS": "Information and informational materials",
       "AUTHORIZED_EXPORT_TRANSACTIONS": "Authorized export transactions"
     }
+  },
+  "confirmation": {
+    "metaTitle": "Trip confirmed",
+    "back": "Back to {code}",
+    "overline": "Confirmed · booking",
+    "title": "Your trip is booked, {name}.",
+    "titleAnon": "Your trip is booked.",
+    "customTrip": "Your custom trip",
+    "ledeParty": "{trip}, {dates}, for you and {others}.",
+    "ledeSolo": "{trip}, {dates}.",
+    "ledeDocuments": "Your documents are below and always in My trips.",
+    "downloadVoucher": "Download your voucher",
+    "addToCalendar": "Add to calendar",
+    "messageUs": "Message us",
+    "calendarDescription": "Booking {code} with {agency}. Your documents and messages are in My trips.",
+    "steps": {
+      "title": "Before you fly · in order",
+      "lede": "Everything here also lives on your trip page.",
+      "certify": "Certify your US travel category",
+      "certifyText": "{count, plural, one {One traveler still needs} other {# travelers still need}} to certify. Your voucher is issued once everyone has.",
+      "certifyAction": "Certify now",
+      "pay": "{kind} · {amount} by {date}",
+      "payOverdue": "{kind} · {amount}, due {date}",
+      "payText": "We email you a reminder 7, 3 and 1 days before it is due.",
+      "payOverdueText": "This payment is past its date. Pay now, or write to us if you need more time.",
+      "payAction": "Pay early",
+      "payNow": "Pay now",
+      "travelInfo": "Check the entry requirements",
+      "travelInfoText": "Entry rules and advisories for Cuba change often. Read the current version on our Travel info pages before you fly.",
+      "travelInfoAction": "Travel info"
+    },
+    "documents": {
+      "title": "Your documents",
+      "lede": "Issued now that your first payment has been received.",
+      "open": "Open Documents",
+      "issued": "PDF · issued {date}",
+      "details": {
+        "VOUCHER": "Itinerary, rendezvous points, emergency numbers and our licence",
+        "INVOICE": "The services you booked, itemised",
+        "RECEIPT": "Your payment",
+        "EMERGENCY_CONTACT": "Who to call, day and night"
+      },
+      "held": "Your voucher is issued once every US traveler has certified their travel category.",
+      "empty": "Your documents are being prepared. They will appear here and in My trips."
+    },
+    "services": {
+      "title": "Your services",
+      "lede": "Questions about any of them? Write to our operations desk.",
+      "confirmed": "Confirmed",
+      "arranging": "Being arranged",
+      "desk": "Operations desk",
+      "deskText": "Write to us from your trip page"
+    },
+    "summary": {
+      "label": "Trip summary",
+      "total": "Trip total",
+      "paid": "{kind} paid {date} · {rail}",
+      "paidBefore": "Paid",
+      "refunded": "Refunded",
+      "due": "{kind} due {date}",
+      "paidInFull": "Paid in full",
+      "payEarly": "Pay early",
+      "rails": {
+        "OPEN_BANKING_SEPA": "bank transfer",
+        "CARD": "card",
+        "OTHER": "other"
+      }
+    },
+    "advisory": "Entry rules and advisories for Cuba change often; the current version is always on the <link>Travel info</link> pages."
   },
   "proposal": {
     "title": "Your custom proposal",
