@@ -51,6 +51,15 @@ interface FakeService {
   inventoryItem: FakeInventoryItem;
 }
 
+interface FakeDeparture {
+  id: string;
+  packageId: string;
+  startDate: Date;
+  capacity: number;
+  price: Prisma.Decimal | null;
+  status: string;
+}
+
 interface FakePackage {
   id: string;
   name: string;
@@ -86,7 +95,7 @@ interface FakePackage {
   services: FakeService[];
   days: never[];
   tiers: never[];
-  departures: never[];
+  departures: FakeDeparture[];
   extras: never[];
   media: never[];
   translations: never[];
@@ -253,11 +262,41 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
         state.packages.push(created);
         return created;
       },
+      update: async (args: {
+        where: { id: string };
+        data: Record<string, unknown> & {
+          departures?: {
+            create: {
+              startDate: Date;
+              capacity: number;
+              price: number | null;
+              status: string;
+            }[];
+          };
+        };
+      }) => {
+        const pkg = state.packages.find((candidate) => candidate.id === args.where.id);
+        if (!pkg) throw new Error(`No fake package ${args.where.id}`);
+        const { departures, ...scalars } = args.data;
+        Object.assign(pkg, scalars);
+        if (departures) {
+          pkg.departures = departures.create.map((departure, index) => ({
+            id: `${pkg.id}-d${index}`,
+            packageId: pkg.id,
+            startDate: departure.startDate,
+            capacity: departure.capacity,
+            price: departure.price === null ? null : new Prisma.Decimal(departure.price),
+            status: departure.status,
+          }));
+        }
+        return pkg;
+      },
       delete: async (args: { where: { id: string } }) => {
         const index = state.packages.findIndex((pkg) => pkg.id === args.where.id);
         if (index >= 0) state.packages.splice(index, 1);
       },
     },
+    packageDeparture: { deleteMany: async () => ({ count: 0 }) },
     auditLog: { create: async () => ({}) },
     packageSlugRedirect: { findUnique: async () => null },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
@@ -365,6 +404,67 @@ describe('packages API', () => {
     expect(state.packages.some((pkg) => pkg.slug === 'trinidad-heritage-trail')).toBe(
       true,
     );
+  });
+
+  it('refuses to create a published package that fails the publish checks', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/packages')
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({
+        name: 'Undated Trail',
+        durationDays: 2,
+        basePrice: 100,
+        status: 'PUBLISHED',
+        services: [{ inventoryItemId: ITEM_A }],
+      });
+
+    expect(response.status).toBe(409);
+    expect(response.body.issues).toEqual(['DEPARTURE_REQUIRED']);
+    expect(response.body.message).toContain('DEPARTURE_REQUIRED');
+    expect(state.packages).toHaveLength(2);
+  });
+
+  it('refuses to publish a draft until it passes the checks as saved', async () => {
+    const refused = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'PUBLISHED' });
+
+    expect(refused.status).toBe(409);
+    expect(refused.body.issues).toEqual(['DEPARTURE_REQUIRED']);
+    expect(state.packages.find((pkg) => pkg.id === INACTIVE_ID)?.status).toBe('DRAFT');
+
+    // The departure sent in the same save counts towards the check.
+    const published = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({
+        status: 'PUBLISHED',
+        departures: [{ startDate: '2027-02-13', capacity: 8 }],
+      });
+
+    expect(published.status).toBe(200);
+    expect(published.body.status).toBe('PUBLISHED');
+    expect(published.body.departures).toHaveLength(1);
+  });
+
+  it('checks an edit to a published package, but never blocks unpublishing it', async () => {
+    // The fake published package has no departure, so it no longer passes.
+    const edit = await request(app.getHttpServer())
+      .patch(`/packages/${PACKAGE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ name: 'Renamed Trail' });
+
+    expect(edit.status).toBe(409);
+    expect(edit.body.issues).toEqual(['DEPARTURE_REQUIRED']);
+
+    const unpublish = await request(app.getHttpServer())
+      .patch(`/packages/${PACKAGE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'DRAFT' });
+
+    expect(unpublish.status).toBe(200);
+    expect(unpublish.body.status).toBe('DRAFT');
   });
 
   it('rejects a package referencing an unknown catalog item', async () => {

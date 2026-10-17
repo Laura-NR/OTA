@@ -1,11 +1,13 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
+import { packagePublishIssues, type PackagePublishInput } from '@ota/domain';
 import type {
   InventoryItem,
   InventoryMedia,
@@ -58,6 +60,28 @@ function slugify(value: string): string {
       .replace(/^-+|-+$/g, '')
       .slice(0, 200) || 'package'
   );
+}
+
+/**
+ * Refuse a package that fails the M1 publish checks (409 with the reasons), so
+ * no client can publish what the editor would refuse. The manifest has no
+ * policy-key list yet, so a package's own policy keys count as known, as in the
+ * editor.
+ */
+function assertPublishable(input: Omit<PackagePublishInput, 'knownPolicyKeys'>): void {
+  const issues = packagePublishIssues({
+    ...input,
+    knownPolicyKeys: [input.cancellationPolicy, input.depositPolicy].filter(
+      (key): key is string => key !== null,
+    ),
+  });
+  if (issues.length > 0) {
+    throw new ConflictException({
+      error: 'PackageNotPublishable',
+      message: `The package cannot be published: ${issues.join(', ')}`,
+      issues,
+    });
+  }
 }
 
 function toPackageDto(pkg: PackageWithServices): PackageDto {
@@ -400,6 +424,19 @@ export class PackagesService {
     await this.assertInventoryItems(ids);
 
     const slug = input.slug ?? (await this.uniqueSlug(slugify(input.name)));
+    if (input.status === 'PUBLISHED') {
+      assertPublishable({
+        name: input.name,
+        slug,
+        serviceCount: input.services.length,
+        departureCount: input.departures?.length ?? 0,
+        bookingModel: input.bookingModel,
+        cancellationPolicy: input.cancellationPolicy ?? null,
+        depositPolicy: input.depositPolicy ?? null,
+        media: [],
+      });
+    }
+
     const created = await this.prisma.package.create({
       data: {
         name: input.name,
@@ -496,6 +533,25 @@ export class PackagesService {
     const services = input.services;
     if (services) {
       await this.assertInventoryItems(services.map((service) => service.inventoryItemId));
+    }
+    // A package that is PUBLISHED after this save must pass the checks as it
+    // will then stand, whether the save publishes it or edits a published one.
+    if ((input.status ?? existing.status) === 'PUBLISHED') {
+      const current = await this.loadWithServices(id);
+      assertPublishable({
+        name: input.name ?? current.name,
+        slug: input.slug ?? current.slug,
+        serviceCount: services?.length ?? current.services.length,
+        departureCount: input.departures?.length ?? current.departures.length,
+        bookingModel: input.bookingModel ?? current.bookingModel,
+        cancellationPolicy:
+          input.cancellationPolicy !== undefined
+            ? input.cancellationPolicy
+            : current.cancellationPolicy,
+        depositPolicy:
+          input.depositPolicy !== undefined ? input.depositPolicy : current.depositPolicy,
+        media: current.media,
+      });
     }
     const slugChanged = input.slug !== undefined && input.slug !== existing.slug;
 
