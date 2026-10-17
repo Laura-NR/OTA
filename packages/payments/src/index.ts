@@ -16,4 +16,6 @@ export type {
   PaymentProvider,
   PaymentRail,
   PaymentWebhookEvent,
+  RefundInput,
+  RefundResult,
 } from './provider';

@@ -6,6 +6,8 @@ import type {
   PaymentIntent,
   PaymentProvider,
   PaymentWebhookEvent,
+  RefundInput,
+  RefundResult,
 } from './provider';
 
 export interface MockPaymentProviderOptions {
@@ -36,5 +38,10 @@ export class MockPaymentProvider implements PaymentProvider {
 
   parseWebhook(payload: unknown): PaymentWebhookEvent | null {
     return parsePaymentConfirmation(payload);
+  }
+
+  /** Deterministic per idempotency key, as a gateway's dedup would be. */
+  async refund(input: RefundInput): Promise<RefundResult> {
+    return { providerRefundId: `mock_refund_${input.idempotencyKey}` };
   }
 }
