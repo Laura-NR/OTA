@@ -103,6 +103,27 @@ export {
   type TravelerKind,
 } from './packages/booking-price';
 export {
+  OFAC_CATEGORIES,
+  OFAC_RETENTION_YEARS,
+  affidavitRetainUntil,
+  foldName,
+  isUsPerson,
+  ofacGate,
+  signatureMatches,
+  type GateAffidavit,
+  type GateTraveler,
+  type OfacCategory,
+  type OfacGate,
+  type UsPersonInput,
+} from './compliance/ofac';
+export {
+  CONSENT_PURPOSES,
+  currentConsents,
+  needsConsent,
+  type ConsentEntry,
+  type ConsentPurpose,
+} from './compliance/consent';
+export {
   PackageStatus,
   canPublishPackage,
   packagePublishIssues,
