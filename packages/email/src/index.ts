@@ -8,3 +8,12 @@ export { newMessageEmail } from './templates/new-message';
 export type { NewMessageEmailInput } from './templates/new-message';
 export { retentionNoticeEmail } from './templates/retention-notice';
 export type { RetentionNoticeEmailInput } from './templates/retention-notice';
+export { bookingReceivedEmail } from './templates/booking-received';
+export type { BookingReceivedEmailInput } from './templates/booking-received';
+export { ofacReminderEmail } from './templates/ofac-reminder';
+export type { OfacReminderEmailInput } from './templates/ofac-reminder';
+export { instalmentReminderEmail } from './templates/instalment-reminder';
+export type {
+  InstalmentReminderEmailInput,
+  ReminderInstalmentKind,
+} from './templates/instalment-reminder';
