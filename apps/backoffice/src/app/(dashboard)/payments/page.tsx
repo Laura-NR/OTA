@@ -1,4 +1,5 @@
-import type { PaymentLedgerEntryDto } from '@ota/schemas';
+import { UserRole } from '@ota/domain';
+import type { PaymentLedgerEntryDto, ProofQueueItemDto, RefundDto } from '@ota/schemas';
 import {
   Alert,
   Badge,
@@ -15,8 +16,11 @@ import type { BadgeVariant } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
-import { apiFetch } from '@/lib/api';
-import { money, opsDate, opsTime } from '@/lib/ops-format';
+import { ProofReview } from '@/components/proof-review';
+import { RefundActions } from '@/components/refund-actions';
+import { apiFetch, getServerSession } from '@/lib/api';
+import { getTenantConfig } from '@/lib/tenant';
+import { money, moneyExact, opsDate, opsTime } from '@/lib/ops-format';
 
 const STATUSES = ['PENDING', 'AUTHORIZED', 'PAID', 'FAILED', 'REFUNDED'] as const;
 type Status = (typeof STATUSES)[number];
@@ -33,11 +37,13 @@ function timestamp(value: string, locale: string): string {
   return `${opsDate(value, locale)} · ${opsTime(value, locale)}`;
 }
 
+const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
+
 /**
- * A-Payments, read-only for now: the receipt ledger across bookings. Refunds
- * with approvals, proofs, the payout liabilities by province and the rail health
- * arrive with the payment schedule (M4); confirming a receipt stays on the
- * booking's payment panel.
+ * A-Payments: the proofs of transfer to check and the refund queue with its
+ * approvals (M4), then the receipt ledger across bookings. Confirming a receipt
+ * stays on the booking's payment panel. The payout liabilities by province, the
+ * payout runs, rail health and bank-statement matching come later.
  */
 export default async function PaymentsPage({
   searchParams,
@@ -48,9 +54,14 @@ export default async function PaymentsPage({
   const locale = await getLocale();
   const { status } = await searchParams;
   const filter = STATUSES.find((candidate) => candidate === status);
-  const entries = await apiFetch<PaymentLedgerEntryDto[]>('/payments?limit=500').catch(
-    () => null,
-  );
+  const [entries, proofs, refunds, session] = await Promise.all([
+    apiFetch<PaymentLedgerEntryDto[]>('/payments?limit=500').catch(() => null),
+    apiFetch<ProofQueueItemDto[]>('/payments/proofs').catch(() => []),
+    apiFetch<RefundDto[]>('/refunds').catch(() => []),
+    getServerSession(),
+  ]);
+  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const limits = getTenantConfig().payments.refundApproval;
 
   const all = entries ?? [];
   const rows = filter ? all.filter((entry) => entry.status === filter) : all;
@@ -109,6 +120,111 @@ export default async function PaymentsPage({
               );
             })}
           </nav>
+
+          <section
+            aria-labelledby="proofs-title"
+            className="rounded-lg border bg-surface"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-5 pb-3 pt-4">
+              <h2 id="proofs-title" className="font-display text-h2-compact">
+                {t('proofsTitle')}
+              </h2>
+              <p className="text-caption text-muted">{t('proofsLede')}</p>
+            </div>
+            {proofs.length === 0 ? (
+              <p className="border-t px-5 py-4 text-body-sm text-muted">
+                {t('proofsEmpty')}
+              </p>
+            ) : (
+              <ul className="divide-y border-t">
+                {proofs.map((proof) => (
+                  <li
+                    key={proof.id}
+                    className="flex flex-col gap-2 px-5 py-4 md:flex-row md:justify-between"
+                  >
+                    <div className="flex min-w-0 flex-col gap-0.5 text-body-sm">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/bookings/${proof.reservationId}`}
+                          className="font-mono font-medium text-primary-600 underline-offset-4 hover:underline"
+                        >
+                          {proof.bookingCode}
+                        </Link>
+                        <span className="font-mono">
+                          {moneyExact(Number(proof.amount), proof.currency, locale)}
+                        </span>
+                        {proof.instalmentKind ? (
+                          <span className="text-secondary">
+                            {t(`instalments.${proof.instalmentKind}`)}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="text-caption text-muted">
+                        {t('proofSent', {
+                          when: timestamp(proof.createdAt, locale),
+                          email: proof.uploadedByEmail ?? '—',
+                        })}
+                        {proof.dueAt
+                          ? ` · ${t('proofWindow', { when: timestamp(proof.dueAt, locale) })}`
+                          : ''}
+                      </span>
+                    </div>
+                    <ProofReview proof={proof} canManage={canManage} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section
+            aria-labelledby="refunds-title"
+            className="rounded-lg border bg-surface"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-5 pb-3 pt-4">
+              <h2 id="refunds-title" className="font-display text-h2-compact">
+                {t('refundsTitle')}
+              </h2>
+              <p className="text-caption text-muted">
+                {t('thresholds', {
+                  single: money(limits.singleUpTo, currency, locale),
+                  dual: money(limits.dualUpTo, currency, locale),
+                })}
+              </p>
+            </div>
+            {refunds.length === 0 ? (
+              <p className="border-t px-5 py-4 text-body-sm text-muted">
+                {t('refundsEmpty')}
+              </p>
+            ) : (
+              <ul className="divide-y border-t">
+                {refunds.map((refund) => (
+                  <li
+                    key={refund.id}
+                    className="flex flex-col gap-2 px-5 py-4 md:flex-row md:justify-between"
+                  >
+                    <div className="flex min-w-0 flex-col gap-0.5 text-body-sm">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/bookings/${refund.reservationId}`}
+                          className="font-mono font-medium text-primary-600 underline-offset-4 hover:underline"
+                        >
+                          {refund.bookingCode}
+                        </Link>
+                        <span className="font-mono">
+                          {moneyExact(Number(refund.amount), refund.currency, locale)}
+                        </span>
+                        <span className="text-secondary">
+                          {t(`reasons.${refund.reason}`)}
+                        </span>
+                      </span>
+                      <span className="text-caption text-muted">{refund.note}</span>
+                    </div>
+                    <RefundActions refund={refund} canManage={canManage} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           <section
             aria-labelledby="ledger-title"

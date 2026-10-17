@@ -859,7 +859,27 @@
         "CARD": "Tarjeta",
         "OTHER": "Factura / otro"
       },
-      "later": "La cola de reembolsos, los pasivos de pago por provincia, las próximas remesas y la salud de las vías llegan con el calendario de pagos (M4)."
+      "later": "Los pasivos de pago por provincia, las remesas de pago, el estado de las vías y la conciliación con el extracto bancario llegarán más adelante.",
+      "proofsTitle": "Justificantes por revisar",
+      "proofsLede": "Aceptar uno da un día laborable más al plazo; marca el pago como pagado cuando el dinero esté en la cuenta.",
+      "proofsEmpty": "Ningún justificante pendiente.",
+      "proofSent": "Enviado {when} por {email}",
+      "proofWindow": "plazo {when}",
+      "refundsTitle": "Reembolsos",
+      "refundsEmpty": "Ningún reembolso pendiente de aprobar o enviar.",
+      "thresholds": "Aprobaciones: una persona hasta {single}, dos personas hasta {dual}, un Super Admin por encima.",
+      "instalments": {
+        "DEPOSIT": "Depósito",
+        "BALANCE": "Resto",
+        "FULL": "Pago completo"
+      },
+      "reasons": {
+        "TRAVELER_CANCELLATION": "Cancelación del viajero",
+        "HOST_CANCELLATION": "Cancelación del anfitrión",
+        "FORCE_MAJEURE": "Fuerza mayor",
+        "GOODWILL": "Gesto comercial",
+        "PRICE_CORRECTION": "Corrección de precio"
+      }
     },
     "settings": {
       "title": "Ajustes",
@@ -937,7 +957,8 @@
         "all": "Todas las reservas",
         "attention": "Rojo y ámbar",
         "arriving": "Llegan en ≤ 7 días",
-        "ofac": "Falta OFAC"
+        "ofac": "Falta OFAC",
+        "payment": "Pago pendiente"
       },
       "states": {
         "title": "Máquina de estados · spec §4.2",
@@ -1079,7 +1100,7 @@
         "rule": "Estados de cada servicio: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un redespacho retira la oferta abierta y lo anota en el registro de auditoría. Las tarifas de pago son el neto del proveedor; el viajero nunca ve esta columna."
       },
       "payments": "Pagos",
-      "paymentsDescription": "Los enlaces de pago se generan en SECURED_AND_INVOICED; al confirmar se liquidan los fondos y se confirma la reserva.",
+      "paymentsDescription": "Los enlaces se crean cuando la reserva está SECURED_AND_INVOICED; el primer pago recibido (el depósito o el importe completo) la confirma, y el resto se paga después.",
       "dutyOfCare": "Deber de cuidado",
       "dutyOfCareDescription": "Incidencias registradas en esta reserva (spec §4.9.4).",
       "noIncidents": "No hay incidencias registradas.",
@@ -1274,7 +1295,76 @@
       "createLink": "Crear enlace de pago",
       "checkoutLink": "Enlace de pago:",
       "createFailed": "No se pudo crear el enlace de pago",
-      "confirmFailed": "No se pudo confirmar el pago"
+      "confirmFailed": "No se pudo confirmar el pago",
+      "schedule": "Calendario",
+      "plan": "Plan",
+      "planFull": "Importe completo · {amount}",
+      "planDeposit": "Depósito {percent} % · {amount}, resto {balance} antes del {date}",
+      "noDeposit": "Sin depósito en esta reserva: no hay plan de depósito o la salida está demasiado cerca.",
+      "kinds": {
+        "DEPOSIT": "Depósito",
+        "BALANCE": "Resto",
+        "FULL": "Pago completo"
+      },
+      "instalmentStatus": {
+        "DUE": "Vence {date}",
+        "OVERDUE": "Vencido desde {date}",
+        "PAID": "Pagado {date}",
+        "WAIVED": "Condonado",
+        "CANCELLED": "Cancelado"
+      },
+      "extend": "Dar 24 h más",
+      "linkFor": "Próximo enlace: {kind} · {amount}",
+      "fee": "+ {amount} de comisión de tarjeta",
+      "proofStatuses": {
+        "SUBMITTED": "Justificante por revisar",
+        "ACCEPTED": "Justificante aceptado",
+        "REJECTED": "Justificante rechazado"
+      },
+      "viewProof": "Ver justificante (registrado)",
+      "acceptProof": "Aceptar y ampliar 1 día laborable",
+      "rejectProof": "Rechazar",
+      "rejectNote": "¿Qué debe corregir el viajero?",
+      "rejectSend": "Rechazar justificante",
+      "refunds": "Reembolsos",
+      "noRefunds": "Sin reembolsos.",
+      "refundReasons": {
+        "TRAVELER_CANCELLATION": "Cancelación del viajero",
+        "HOST_CANCELLATION": "Cancelación del anfitrión",
+        "FORCE_MAJEURE": "Fuerza mayor",
+        "GOODWILL": "Gesto comercial",
+        "PRICE_CORRECTION": "Corrección de precio"
+      },
+      "refundStatuses": {
+        "REQUESTED": "Solicitado",
+        "APPROVED": "Aprobado",
+        "REJECTED": "Rechazado",
+        "SENT": "Enviado",
+        "FAILED": "Fallido"
+      },
+      "needsApprovals": "{count, plural, one {Falta # aprobación} other {Faltan # aprobaciones}}",
+      "needsSuper": "Necesita un Super Admin",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "rejectReason": "¿Por qué?",
+      "cancel": "Cancelar",
+      "bankReference": "Referencia bancaria",
+      "markSent": "Registrar como enviado",
+      "rule": "Escala {policy}: a {days} días, se retiene {keep} % + {fee}",
+      "newRefund": "Registrar un reembolso",
+      "fromPayment": "Del pago",
+      "reason": "Motivo",
+      "amountIn": "Importe ({currency})",
+      "suggest": "Sugerir según la política",
+      "note": "Motivo, para el registro",
+      "requestRefund": "Solicitar reembolso",
+      "refundFailed": "No se pudo guardar el reembolso.",
+      "actionFailed": "No funcionó. Inténtalo de nuevo.",
+      "rails": {
+        "OPEN_BANKING_SEPA": "Transferencia",
+        "CARD": "Tarjeta",
+        "OTHER": "Otro"
+      }
     },
     "dispatchControls": {
       "dispatching": "Despachando…",
@@ -1404,7 +1494,11 @@
         "credentialNote": "una licencia vence en menos de 30 días",
         "noAlerts": "No hay alertas ahora.",
         "ofac": "{count, plural, one {# reserva} other {# reservas}} · falta OFAC",
-        "ofacNote": "pago y vouchers en espera"
+        "ofacNote": "pago y vouchers en espera",
+        "windowExpired": "{count, plural, one {# reserva} other {# reservas}} · plazo de pago vencido",
+        "windowExpiredNote": "amplíalo o cancela",
+        "balanceOverdue": "{count, plural, one {# resto vencido} other {# restos vencidos}}",
+        "balanceOverdueNote": "recuérdaselo al viajero"
       },
       "matrix": {
         "title": "Matriz de despacho",

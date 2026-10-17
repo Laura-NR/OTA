@@ -88,6 +88,8 @@ export interface OpsDeskProps {
   credentials: CredentialAlert;
   /** Open bookings with a US traveler still to certify (M3): payment and vouchers held. */
   ofacMissing: number;
+  /** M4: first payments past their window, and balances past due. */
+  payments: { windowExpired: number; balanceOverdue: number };
   canManage: boolean;
 }
 
@@ -103,6 +105,7 @@ export function OpsDesk({
   figures,
   credentials,
   ofacMissing,
+  payments,
   canManage,
 }: OpsDeskProps) {
   const t = useTranslations('backoffice.dashboard');
@@ -340,7 +343,13 @@ export function OpsDesk({
         </KpiCard>
 
         <KpiCard overline={t('kpi.alerts')}>
-          {red.length + amber.length + credentials.count + ofacMissing === 0 ? (
+          {red.length +
+            amber.length +
+            credentials.count +
+            ofacMissing +
+            payments.windowExpired +
+            payments.balanceOverdue ===
+          0 ? (
             <p className="text-body-sm text-muted">{t('kpi.noAlerts')}</p>
           ) : (
             <ul className="flex flex-col gap-2 text-body-sm">
@@ -372,6 +381,32 @@ export function OpsDesk({
                       {t('kpi.ofac', { count: ofacMissing })}
                     </Badge>
                     {t('kpi.ofacNote')}
+                  </Link>
+                </li>
+              ) : null}
+              {payments.windowExpired > 0 ? (
+                <li>
+                  <Link
+                    href="/bookings?view=payment"
+                    className="flex flex-wrap items-center gap-2"
+                  >
+                    <Badge variant="warning">
+                      {t('kpi.windowExpired', { count: payments.windowExpired })}
+                    </Badge>
+                    {t('kpi.windowExpiredNote')}
+                  </Link>
+                </li>
+              ) : null}
+              {payments.balanceOverdue > 0 ? (
+                <li>
+                  <Link
+                    href="/bookings?view=payment"
+                    className="flex flex-wrap items-center gap-2"
+                  >
+                    <Badge variant="warning">
+                      {t('kpi.balanceOverdue', { count: payments.balanceOverdue })}
+                    </Badge>
+                    {t('kpi.balanceOverdueNote')}
                   </Link>
                 </li>
               ) : null}

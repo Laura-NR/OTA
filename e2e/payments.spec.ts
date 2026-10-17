@@ -27,6 +27,10 @@ test.describe('payment pipeline', () => {
       await prisma.paymentReceipt.deleteMany({
         where: { reservationId: reservation.id },
       });
+      // M4: the first link fixes a schedule; clear it so the next run starts fresh.
+      await prisma.paymentInstalment.deleteMany({
+        where: { reservationId: reservation.id },
+      });
       await prisma.document.deleteMany({ where: { reservationId: reservation.id } });
       await prisma.reservation.update({
         where: { id: reservation.id },

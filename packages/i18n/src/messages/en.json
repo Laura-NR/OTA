@@ -859,7 +859,27 @@
         "CARD": "Card",
         "OTHER": "Invoice / other"
       },
-      "later": "Refund queue, payout liabilities by province, next payout runs and rail health arrive with the payment schedule (M4)."
+      "later": "Payout liabilities by province, the payout runs, rail health and bank-statement matching come later.",
+      "proofsTitle": "Proofs to check",
+      "proofsLede": "Accepting one gives the window a business day; mark the payment paid once the money is in the account.",
+      "proofsEmpty": "No proof waiting.",
+      "proofSent": "Sent {when} by {email}",
+      "proofWindow": "window {when}",
+      "refundsTitle": "Refunds",
+      "refundsEmpty": "No refund waiting for approval or sending.",
+      "thresholds": "Approvals: one person up to {single}, two people up to {dual}, a Super Admin above.",
+      "instalments": {
+        "DEPOSIT": "Deposit",
+        "BALANCE": "Balance",
+        "FULL": "Full payment"
+      },
+      "reasons": {
+        "TRAVELER_CANCELLATION": "Traveler cancellation",
+        "HOST_CANCELLATION": "Host cancellation",
+        "FORCE_MAJEURE": "Force majeure",
+        "GOODWILL": "Goodwill",
+        "PRICE_CORRECTION": "Price correction"
+      }
     },
     "settings": {
       "title": "Settings",
@@ -937,7 +957,8 @@
         "all": "All bookings",
         "attention": "Red & amber",
         "arriving": "Arriving ≤ 7 days",
-        "ofac": "Missing OFAC"
+        "ofac": "Missing OFAC",
+        "payment": "Payment due"
       },
       "states": {
         "title": "State machine · spec §4.2",
@@ -1079,7 +1100,7 @@
         "rule": "States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer and writes it to the audit log. Payout rates are the supplier's net; the traveler never sees this column."
       },
       "payments": "Payments",
-      "paymentsDescription": "Payment links are generated at SECURED_AND_INVOICED; confirming clears funds and confirms the booking.",
+      "paymentsDescription": "Links are created once the booking is SECURED_AND_INVOICED; the first payment received (the deposit or the full amount) confirms it, and a balance is paid after.",
       "dutyOfCare": "Duty of care",
       "dutyOfCareDescription": "Incidents logged against this booking (spec §4.9.4).",
       "noIncidents": "No incidents logged.",
@@ -1274,7 +1295,76 @@
       "createLink": "Create payment link",
       "checkoutLink": "Checkout link:",
       "createFailed": "Could not create payment link",
-      "confirmFailed": "Could not confirm payment"
+      "confirmFailed": "Could not confirm payment",
+      "schedule": "Schedule",
+      "plan": "Plan",
+      "planFull": "Full amount · {amount}",
+      "planDeposit": "Deposit {percent} % · {amount}, balance {balance} by {date}",
+      "noDeposit": "No deposit on this booking: no deposit plan, or departure too close.",
+      "kinds": {
+        "DEPOSIT": "Deposit",
+        "BALANCE": "Balance",
+        "FULL": "Full payment"
+      },
+      "instalmentStatus": {
+        "DUE": "Due {date}",
+        "OVERDUE": "Overdue since {date}",
+        "PAID": "Paid {date}",
+        "WAIVED": "Waived",
+        "CANCELLED": "Cancelled"
+      },
+      "extend": "Give 24 h more",
+      "linkFor": "Next link: {kind} · {amount}",
+      "fee": "+ {amount} card fee",
+      "proofStatuses": {
+        "SUBMITTED": "Proof to check",
+        "ACCEPTED": "Proof accepted",
+        "REJECTED": "Proof rejected"
+      },
+      "viewProof": "View proof (logged)",
+      "acceptProof": "Accept, extend 1 business day",
+      "rejectProof": "Reject",
+      "rejectNote": "What should the traveler fix?",
+      "rejectSend": "Reject proof",
+      "refunds": "Refunds",
+      "noRefunds": "No refunds.",
+      "refundReasons": {
+        "TRAVELER_CANCELLATION": "Traveler cancellation",
+        "HOST_CANCELLATION": "Host cancellation",
+        "FORCE_MAJEURE": "Force majeure",
+        "GOODWILL": "Goodwill",
+        "PRICE_CORRECTION": "Price correction"
+      },
+      "refundStatuses": {
+        "REQUESTED": "Requested",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SENT": "Sent",
+        "FAILED": "Failed"
+      },
+      "needsApprovals": "Needs {count, plural, one {# more approval} other {# more approvals}}",
+      "needsSuper": "Needs a Super Admin",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectReason": "Why?",
+      "cancel": "Cancel",
+      "bankReference": "Bank reference",
+      "markSent": "Record as sent",
+      "rule": "Scale {policy}: {days} days out, {keep} % kept + {fee}",
+      "newRefund": "Record a refund",
+      "fromPayment": "From payment",
+      "reason": "Reason",
+      "amountIn": "Amount ({currency})",
+      "suggest": "Suggest from the policy",
+      "note": "Reason, for the record",
+      "requestRefund": "Request refund",
+      "refundFailed": "The refund could not be saved.",
+      "actionFailed": "That did not work. Try again.",
+      "rails": {
+        "OPEN_BANKING_SEPA": "Bank transfer",
+        "CARD": "Card",
+        "OTHER": "Other"
+      }
     },
     "dispatchControls": {
       "dispatching": "Dispatching…",
@@ -1404,7 +1494,11 @@
         "credentialNote": "a licence expires within 30 days",
         "noAlerts": "No alerts right now.",
         "ofac": "{count, plural, one {# booking} other {# bookings}} · OFAC missing",
-        "ofacNote": "payment and vouchers held"
+        "ofacNote": "payment and vouchers held",
+        "windowExpired": "{count, plural, one {# booking} other {# bookings}} · payment window over",
+        "windowExpiredNote": "extend it or cancel",
+        "balanceOverdue": "{count, plural, one {# balance} other {# balances}} overdue",
+        "balanceOverdueNote": "remind the traveler"
       },
       "matrix": {
         "title": "Dispatch matrix",

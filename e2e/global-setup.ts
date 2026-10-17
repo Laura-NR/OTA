@@ -1,6 +1,6 @@
 /**
  * Resets the E2E-owned fixtures so the suite is repeatable:
- * - the `E2E0001` reservation is put back to DRAFT;
+ * - the `E2E0001` reservation is put back to DRAFT, without payments;
  * - the seeded guide supplier is brought back to VERIFIED and available.
  *
  * It writes to the development database (the same one the stack uses). Run
@@ -53,6 +53,13 @@ export default async function globalSetup(): Promise<void> {
     });
     await prisma.message.deleteMany({ where: { reservationId: reservation.id } });
     await prisma.incident.deleteMany({ where: { reservationId: reservation.id } });
+    // M4: payments and their schedule, so a run that stopped half way cannot
+    // leave E2E0001 with nothing due. Refunds go first (they hold a receipt).
+    await prisma.refund.deleteMany({ where: { reservationId: reservation.id } });
+    await prisma.paymentReceipt.deleteMany({ where: { reservationId: reservation.id } });
+    await prisma.paymentInstalment.deleteMany({
+      where: { reservationId: reservation.id },
+    });
 
     await prisma.supplierProfile.update({
       where: { id: guide.supplierProfile.id },

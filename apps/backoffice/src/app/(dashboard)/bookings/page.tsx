@@ -6,6 +6,7 @@ import {
   compareUrgency,
   inTravelWindow,
   isArrivingWithin,
+  paymentAlert,
   serviceItemAlert,
   travelerStatus,
   type EscalationAlert,
@@ -37,7 +38,7 @@ import { bookingDates, countdown, money, opsTime } from '@/lib/ops-format';
 const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /** A-Bookings' saved views that today's data can answer. */
-const VIEWS = ['all', 'attention', 'arriving', 'ofac'] as const;
+const VIEWS = ['all', 'attention', 'arriving', 'ofac', 'payment'] as const;
 type View = (typeof VIEWS)[number];
 
 const PAGE_SIZE = 25;
@@ -90,6 +91,17 @@ function inView(row: Row, view: View, now: Date): boolean {
   if (view === 'ofac')
     return (
       row.ofacMissing > 0 && row.status !== 'COMPLETED' && row.status !== 'CANCELLED'
+    );
+  if (view === 'payment')
+    // M4: a first payment past its window, or a balance past due.
+    return (
+      paymentAlert(
+        row.nextInstalment
+          ? { kind: row.nextInstalment.kind, dueAt: new Date(row.nextInstalment.dueAt) }
+          : null,
+        row.status,
+        now,
+      ) !== null
     );
   return true;
 }

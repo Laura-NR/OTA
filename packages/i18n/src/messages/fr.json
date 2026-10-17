@@ -859,7 +859,27 @@
         "CARD": "Carte",
         "OTHER": "Facture / autre"
       },
-      "later": "La file de remboursements, les passifs de paiement par province, les prochains versements et la santé des moyens de paiement arrivent avec le calendrier de paiement (M4)."
+      "later": "Les passifs de paiement par province, les tournées de paiement, l'état des canaux et le rapprochement avec le relevé bancaire arriveront plus tard.",
+      "proofsTitle": "Preuves à vérifier",
+      "proofsLede": "En accepter une donne un jour ouvré de plus au délai ; marquez le paiement comme payé une fois l'argent sur le compte.",
+      "proofsEmpty": "Aucune preuve en attente.",
+      "proofSent": "Envoyée {when} par {email}",
+      "proofWindow": "délai {when}",
+      "refundsTitle": "Remboursements",
+      "refundsEmpty": "Aucun remboursement en attente d'approbation ou d'envoi.",
+      "thresholds": "Approbations : une personne jusqu'à {single}, deux personnes jusqu'à {dual}, un Super Admin au-delà.",
+      "instalments": {
+        "DEPOSIT": "Acompte",
+        "BALANCE": "Solde",
+        "FULL": "Paiement complet"
+      },
+      "reasons": {
+        "TRAVELER_CANCELLATION": "Annulation du voyageur",
+        "HOST_CANCELLATION": "Annulation de l'hôte",
+        "FORCE_MAJEURE": "Force majeure",
+        "GOODWILL": "Geste commercial",
+        "PRICE_CORRECTION": "Correction de prix"
+      }
     },
     "settings": {
       "title": "Paramètres",
@@ -937,7 +957,8 @@
         "all": "Toutes les réservations",
         "attention": "Rouge et orange",
         "arriving": "Arrivée ≤ 7 jours",
-        "ofac": "OFAC manquant"
+        "ofac": "OFAC manquant",
+        "payment": "Paiement dû"
       },
       "states": {
         "title": "Machine à états · spec §4.2",
@@ -1079,7 +1100,7 @@
         "rule": "États d'un service : UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un nouveau dispatch retire l'offre ouverte et l'inscrit au journal d'audit. Les rémunérations sont le net du prestataire ; le voyageur ne voit jamais cette colonne."
       },
       "payments": "Paiements",
-      "paymentsDescription": "Les liens de paiement sont générés en SECURED_AND_INVOICED ; la confirmation encaisse les fonds et confirme la réservation.",
+      "paymentsDescription": "Les liens sont créés une fois la réservation SECURED_AND_INVOICED ; le premier paiement reçu (l'acompte ou le montant total) la confirme, et le solde est réglé ensuite.",
       "dutyOfCare": "Devoir de vigilance",
       "dutyOfCareDescription": "Incidents enregistrés sur cette réservation (spec §4.9.4).",
       "noIncidents": "Aucun incident enregistré.",
@@ -1274,7 +1295,76 @@
       "createLink": "Créer un lien de paiement",
       "checkoutLink": "Lien de paiement :",
       "createFailed": "Impossible de créer le lien de paiement",
-      "confirmFailed": "Impossible de confirmer le paiement"
+      "confirmFailed": "Impossible de confirmer le paiement",
+      "schedule": "Échéancier",
+      "plan": "Formule",
+      "planFull": "Montant total · {amount}",
+      "planDeposit": "Acompte {percent} % · {amount}, solde {balance} avant le {date}",
+      "noDeposit": "Pas d'acompte sur cette réservation : pas de formule d'acompte, ou départ trop proche.",
+      "kinds": {
+        "DEPOSIT": "Acompte",
+        "BALANCE": "Solde",
+        "FULL": "Paiement complet"
+      },
+      "instalmentStatus": {
+        "DUE": "À régler {date}",
+        "OVERDUE": "En retard depuis {date}",
+        "PAID": "Payé {date}",
+        "WAIVED": "Remis",
+        "CANCELLED": "Annulé"
+      },
+      "extend": "Donner 24 h de plus",
+      "linkFor": "Prochain lien : {kind} · {amount}",
+      "fee": "+ {amount} de frais de carte",
+      "proofStatuses": {
+        "SUBMITTED": "Preuve à vérifier",
+        "ACCEPTED": "Preuve acceptée",
+        "REJECTED": "Preuve refusée"
+      },
+      "viewProof": "Voir la preuve (journalisé)",
+      "acceptProof": "Accepter, prolonger d'un jour ouvré",
+      "rejectProof": "Refuser",
+      "rejectNote": "Que doit corriger le voyageur ?",
+      "rejectSend": "Refuser la preuve",
+      "refunds": "Remboursements",
+      "noRefunds": "Aucun remboursement.",
+      "refundReasons": {
+        "TRAVELER_CANCELLATION": "Annulation du voyageur",
+        "HOST_CANCELLATION": "Annulation de l'hôte",
+        "FORCE_MAJEURE": "Force majeure",
+        "GOODWILL": "Geste commercial",
+        "PRICE_CORRECTION": "Correction de prix"
+      },
+      "refundStatuses": {
+        "REQUESTED": "Demandé",
+        "APPROVED": "Approuvé",
+        "REJECTED": "Refusé",
+        "SENT": "Envoyé",
+        "FAILED": "Échec"
+      },
+      "needsApprovals": "{count, plural, one {Il manque # approbation} other {Il manque # approbations}}",
+      "needsSuper": "Nécessite un Super Admin",
+      "approve": "Approuver",
+      "reject": "Refuser",
+      "rejectReason": "Pourquoi ?",
+      "cancel": "Annuler",
+      "bankReference": "Référence bancaire",
+      "markSent": "Enregistrer comme envoyé",
+      "rule": "Barème {policy} : à {days} jours, {keep} % retenu + {fee}",
+      "newRefund": "Enregistrer un remboursement",
+      "fromPayment": "Depuis le paiement",
+      "reason": "Motif",
+      "amountIn": "Montant ({currency})",
+      "suggest": "Proposer selon la politique",
+      "note": "Motif, pour le registre",
+      "requestRefund": "Demander le remboursement",
+      "refundFailed": "Le remboursement n'a pas pu être enregistré.",
+      "actionFailed": "Cela n'a pas fonctionné. Réessayez.",
+      "rails": {
+        "OPEN_BANKING_SEPA": "Virement",
+        "CARD": "Carte",
+        "OTHER": "Autre"
+      }
     },
     "dispatchControls": {
       "dispatching": "Répartition…",
@@ -1404,7 +1494,11 @@
         "credentialNote": "une licence expire dans moins de 30 jours",
         "noAlerts": "Aucune alerte pour le moment.",
         "ofac": "{count, plural, one {# réservation} other {# réservations}} · OFAC manquant",
-        "ofacNote": "paiement et bons en attente"
+        "ofacNote": "paiement et bons en attente",
+        "windowExpired": "{count, plural, one {# réservation} other {# réservations}} · délai de paiement dépassé",
+        "windowExpiredNote": "prolongez-le ou annulez",
+        "balanceOverdue": "{count, plural, one {# solde en retard} other {# soldes en retard}}",
+        "balanceOverdueNote": "relancez le voyageur"
       },
       "matrix": {
         "title": "Matrice de dispatch",

@@ -51,8 +51,24 @@ export async function PaymentSchedule({
     getLocale(),
   ]);
   const money = (value: string) => formatMoney(value, schedule.currency, locale);
+  // A balance falls due on a calendar day (stored at UTC midnight); a payment
+  // window ends at an instant, shown with its time zone.
   const day = (value: string) =>
-    format.dateTime(new Date(value), { day: 'numeric', month: 'short', year: 'numeric' });
+    format.dateTime(new Date(value), {
+      timeZone: 'UTC',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  const instant = (value: string) =>
+    format.dateTime(new Date(value), {
+      timeZone: 'UTC',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    });
   const now = Date.now();
   const payable = PAYABLE.includes(status);
   const next = schedule.instalments.find(
@@ -137,7 +153,10 @@ export async function PaymentSchedule({
                         ? t('statuses.PAID', { date: day(instalment.paidAt) })
                         : instalment.status === 'DUE'
                           ? t(overdue ? 'statuses.OVERDUE' : 'statuses.DUE', {
-                              date: day(instalment.dueAt),
+                              date:
+                                instalment.kind === 'BALANCE'
+                                  ? day(instalment.dueAt)
+                                  : instant(instalment.dueAt),
                             })
                           : t(`statuses.${instalment.status}`)}
                     </span>

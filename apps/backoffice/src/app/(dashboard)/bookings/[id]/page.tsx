@@ -10,7 +10,7 @@ import type {
   DocumentDto,
   IncidentDto,
   PackageDto,
-  PaymentReceiptDto,
+  PaymentScheduleDto,
   ReservationDetailDto,
   ReservationOfacDto,
   ReservationPartyDto,
@@ -91,11 +91,11 @@ export default async function BookingPage({
     },
   );
 
-  const [audit, documents, payments, incidents, dispatch, party, priceLines, pkg, ofac] =
+  const [audit, documents, schedule, incidents, dispatch, party, priceLines, pkg, ofac] =
     await Promise.all([
       apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
       apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
-      apiFetch<PaymentReceiptDto[]>(`/reservations/${id}/payments`).catch(() => []),
+      apiFetch<PaymentScheduleDto>(`/reservations/${id}/schedule`).catch(() => null),
       apiFetch<IncidentDto[]>(`/incidents?reservationId=${id}`).catch(() => []),
       apiFetch<DispatchViewDto>(`/reservations/${id}/dispatch`).catch(() => null),
       apiFetch<ReservationPartyDto>(`/reservations/${id}/travelers`).catch(() => null),
@@ -351,12 +351,15 @@ export default async function BookingPage({
         description={t('paymentsDescription')}
       >
         <div className="px-5">
-          <PaymentPanel
-            reservationId={reservation.id}
-            status={reservation.status}
-            canManage={canManage}
-            receipts={payments}
-          />
+          {schedule ? (
+            <PaymentPanel
+              reservationId={reservation.id}
+              status={reservation.status}
+              canManage={canManage}
+              schedule={schedule}
+              now={new Date().toISOString()}
+            />
+          ) : null}
         </div>
       </Section>
 

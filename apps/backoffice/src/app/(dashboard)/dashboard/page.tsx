@@ -1,4 +1,10 @@
-import { bookingMix, monthRange, relativeChange, UserRole } from '@ota/domain';
+import {
+  bookingMix,
+  monthRange,
+  paymentAlert,
+  relativeChange,
+  UserRole,
+} from '@ota/domain';
 import type {
   AnalyticsOverviewDto,
   DispatchBoardRowDto,
@@ -72,6 +78,24 @@ export default async function DashboardPage() {
       reservation.status !== 'COMPLETED' &&
       reservation.status !== 'CANCELLED',
   ).length;
+
+  // M4: first payments past their window and balances past due.
+  const alerts = recent.map((reservation) =>
+    paymentAlert(
+      reservation.nextInstalment
+        ? {
+            kind: reservation.nextInstalment.kind,
+            dueAt: new Date(reservation.nextInstalment.dueAt),
+          }
+        : null,
+      reservation.status,
+      now,
+    ),
+  );
+  const payments = {
+    windowExpired: alerts.filter((alert) => alert === 'WINDOW_EXPIRED').length,
+    balanceOverdue: alerts.filter((alert) => alert === 'BALANCE_OVERDUE').length,
+  };
 
   const mix = overview ? bookingMix(overview.operations.funnel) : null;
   const previousMix = previous ? bookingMix(previous.operations.funnel) : null;
@@ -184,6 +208,7 @@ export default async function DashboardPage() {
         serverNow={now.getTime()}
         figures={figures}
         ofacMissing={ofacMissing}
+        payments={payments}
         credentials={{
           count: expiring.length,
           soonestDays:
