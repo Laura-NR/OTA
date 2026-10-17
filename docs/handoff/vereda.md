@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-17 20:40
+# Handoff — vereda — updated 2026-10-17 22:10
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -46,7 +46,7 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
   - Minimal first cut: the full designed Custom builder and structured stops/days/options editing
     are not built; the composer edits the summary, validity and price lines. The D-Proposal PDF is
     deferred (`pdfKey` stays null).
-- **Not built:** the Confirmation screen (Task 3 of this session), the remaining Phase 6 emails
+- **Not built:** the Confirmation screen (the next task), the remaining Phase 6 emails
   (E-Reminder 24 h/2 h, E-Confirmed, E-Invoice, E-NPS, …), SMS/push, the full M5 builder/PDF,
   Phase 8.
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
@@ -64,9 +64,13 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
   asserted. The Phase 6 Mailpit checks remain (E-Received, E-OFAC, 7/3/1 reminders).
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL`) **12/12**: retention, packages, affidavits 3,
   package-booking 2, payment-schedule 2, **proposals 1**, dispatch and compliance BullMQ.
-- Browser (temporary spec, removed): the custom builder, the traveler proposal page and the desk
-  composer at **390/1024/1280**; `scrollWidth == viewport` everywhere, screenshots in
-  `/tmp/ota-m5-*.png`. The full e2e suite covers 1280.
+- Browser (temporary specs, removed): the custom builder, the traveler proposal page and the desk
+  composer at **390/1024/1280**, then the proposal page again after the planning-fee caption;
+  `scrollWidth == viewport` everywhere, screenshots in `/tmp/ota-m5-*.png` and
+  `/tmp/ota-m5-final-proposal-*.png`. The full e2e suite covers 1280.
+- **Session close:** M5 is committed locally in six commits (`22088b0`, `435f914`, `93c796c`,
+  `a2cff9e`, `74a24d0`, `81e147e`); nothing was pushed. The dev stack is stopped, ports
+  3000–3002 are free, and `apps/*/.next` was removed. `git status` is clean.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
