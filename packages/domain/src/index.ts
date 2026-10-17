@@ -228,6 +228,22 @@ export {
   type ScheduledInstalment,
 } from './payments/schedule';
 export {
+  PROPOSAL_LINE_KINDS,
+  PROPOSAL_LINE_UNITS,
+  PROPOSAL_STATUSES,
+  proposalCanAccept,
+  proposalEffectiveStatus,
+  proposalLineAmount,
+  proposalPartySize,
+  proposalPerPerson,
+  proposalToPriceLineKind,
+  proposalTotal,
+  type ProposalLineKind,
+  type ProposalLineUnit,
+  type ProposalStatus,
+  type ReservationPriceLineKind,
+} from './proposals/proposal';
+export {
   cancellationRefund,
   refundDecision,
   type CancellationBand,

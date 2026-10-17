@@ -132,6 +132,21 @@ export const policiesSchema = z.object({
 
 export type PoliciesConfig = z.infer<typeof policiesSchema>;
 
+/**
+ * M5: the desk's proposal terms. The planning fee is transparency copy (it is
+ * never added to the amount due); validity and response time are sample
+ * placeholders until the owner confirms them.
+ */
+export const proposalsSchema = z.object({
+  validityDays: z.number().int().positive().default(21),
+  responseHours: z.number().int().positive().default(4),
+  planningFee: z.number().nonnegative().default(140),
+  defaultDepositPolicy: z.string().min(1).nullable().default('standard'),
+  defaultCancellationPolicy: z.string().min(1).nullable().default('standard'),
+});
+
+export type ProposalsConfig = z.infer<typeof proposalsSchema>;
+
 export const tenantConfigSchema = z.object({
   tenantId: z.string().min(1),
   branding: z.object({
@@ -168,6 +183,7 @@ export const tenantConfigSchema = z.object({
   payments: paymentsSchema.prefault({}),
   pricing: pricingSchema.prefault({}),
   policies: policiesSchema.prefault({}),
+  proposals: proposalsSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
 });
 

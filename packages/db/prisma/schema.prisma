@@ -154,6 +154,42 @@ enum RefundStatus {
   FAILED
 }
 
+
+/// M5: the Custom builder's request, before the desk prices it.
+enum CustomRequestStatus {
+  OPEN
+  CONVERTED
+  CLOSED
+}
+
+/// M5: a proposal thread's lifecycle. EXPIRED is derived on read from validUntil.
+enum ProposalStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum ProposalLineKind {
+  TRANSPORT
+  LODGING
+  GUIDES
+  ACTIVITIES
+  MEALS
+  INSURANCE
+  FEE
+  OTHER
+}
+
+enum ProposalLineUnit {
+  PER_PERSON
+  PER_BOOKING
+  PER_NIGHT
+  PER_DAY
+  PER_GROUP
+}
+
 enum DocumentType {
   VOUCHER
   WORK_ORDER
@@ -297,6 +333,10 @@ model User {
   proofsReviewed   PaymentProof[]   @relation("ProofReviewedBy")
   refundsRequested Refund[]         @relation("RefundRequestedBy")
   refundApprovals  RefundApproval[]
+  // M5
+  customRequests       CustomRequest[]
+  proposalsAssigned    Proposal[]        @relation("ProposalAssignedTo")
+  proposalVersionsMade ProposalVersion[] @relation("ProposalVersionCreatedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -442,6 +482,7 @@ model InventoryItem {
   media           InventoryMedia[]
   packageServices PackageService[]
   packageExtras   PackageExtra[]
+  proposalLines   ProposalPriceLine[]
 
   @@index([type])
   @@index([province])
@@ -785,6 +826,7 @@ model Reservation {
   consents    ConsentRecord[]
   instalments PaymentInstalment[]
   refunds     Refund[]
+  proposal    Proposal?
 
   @@index([userId])
   @@index([status])
@@ -1131,6 +1173,108 @@ model RefundApproval {
 
   @@unique([refundId, approverId])
   @@map("refund_approvals")
+}
+
+
+/// M5: the Custom builder's request. It is not a booking and holds no price.
+model CustomRequest {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  /// The visible reference (VX-C-XXXXXXXX), unique across requests.
+  reference String              @unique
+  status    CustomRequestStatus @default(OPEN)
+  locale    String?
+  /// The builder's answers, validated by the CustomRequest payload schema.
+  payload   Json
+  notes     String?
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposals Proposal[]
+
+  @@index([userId, createdAt])
+  @@map("custom_requests")
+}
+
+/// M5: the proposal thread: one reference, a current version and its acceptance.
+model Proposal {
+  id                String         @id @default(uuid()) @db.Uuid
+  requestId         String         @map("request_id") @db.Uuid
+  status            ProposalStatus @default(DRAFT)
+  currentVersion    Int            @default(0) @map("current_version")
+  assignedToId      String?        @map("assigned_to_id") @db.Uuid
+  acceptedVersionId String?        @unique @map("accepted_version_id") @db.Uuid
+  reservationId     String?        @unique @map("reservation_id") @db.Uuid
+  sentAt            DateTime?      @map("sent_at")
+  acceptedAt        DateTime?      @map("accepted_at")
+  declinedAt        DateTime?      @map("declined_at")
+  declineReason     String?        @map("decline_reason")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  request         CustomRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  assignedTo      User?             @relation("ProposalAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  acceptedVersion ProposalVersion?  @relation("ProposalAcceptedVersion", fields: [acceptedVersionId], references: [id], onDelete: SetNull)
+  reservation     Reservation?      @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  versions        ProposalVersion[] @relation("ProposalVersions")
+
+  @@index([status, createdAt])
+  @@index([requestId])
+  @@map("proposals")
+}
+
+/// M5: one immutable priced version sent to the traveler.
+model ProposalVersion {
+  id          String   @id @default(uuid()) @db.Uuid
+  proposalId  String   @map("proposal_id") @db.Uuid
+  version     Int
+  currency    String   @default("EUR")
+  total       Decimal  @db.Decimal(10, 2)
+  perPerson   Decimal? @map("per_person") @db.Decimal(10, 2)
+  validUntil  DateTime @map("valid_until")
+  /// Route, stops, days, options and the summary; validated by ProposalDocument.
+  document    Json
+  /// The policy keys and words shown, snapshotted (M5 D8).
+  terms       Json?
+  pdfKey      String?  @map("pdf_key")
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  proposal   Proposal            @relation("ProposalVersions", fields: [proposalId], references: [id], onDelete: Cascade)
+  createdBy  User?               @relation("ProposalVersionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  priceLines ProposalPriceLine[]
+  acceptedIn Proposal?           @relation("ProposalAcceptedVersion")
+
+  @@unique([proposalId, version])
+  @@map("proposal_versions")
+}
+
+/// M5: one money line of a version; copied into ReservationPriceLine on acceptance.
+model ProposalPriceLine {
+  id               String           @id @default(uuid()) @db.Uuid
+  versionId        String           @map("version_id") @db.Uuid
+  kind             ProposalLineKind
+  unit             ProposalLineUnit @default(PER_BOOKING)
+  label            String
+  description      String?
+  quantity         Decimal          @default(1) @db.Decimal(6, 2)
+  unitAmount       Decimal          @map("unit_amount") @db.Decimal(10, 2)
+  amount           Decimal          @db.Decimal(10, 2)
+  currency         String           @default("EUR")
+  position         Int              @default(0)
+  serviceType      ServiceType?     @map("service_type")
+  province         String?
+  serviceDateStart DateTime?        @map("service_date_start") @db.Date
+  serviceDateEnd   DateTime?        @map("service_date_end") @db.Date
+  inventoryItemId  String?          @map("inventory_item_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  version       ProposalVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem?  @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+
+  @@index([versionId, position])
+  @@map("proposal_price_lines")
 }
 
 model Document {

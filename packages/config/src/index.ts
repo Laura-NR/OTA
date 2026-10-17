@@ -18,6 +18,7 @@ export {
   paymentsSchema,
   policiesSchema,
   pricingSchema,
+  proposalsSchema,
   refundApprovalSchema,
   slugifyTenantId,
   tenantConfigSchema,
@@ -32,6 +33,7 @@ export type {
   PaymentsConfig,
   PoliciesConfig,
   PricingConfig,
+  ProposalsConfig,
   TenantConfig,
   TenantManifestOptions,
 } from './tenant';

@@ -69,6 +69,13 @@
       }
     }
   },
+  "proposals": {
+    "validityDays": 21,
+    "responseHours": 4,
+    "planningFee": 140,
+    "defaultDepositPolicy": "standard",
+    "defaultCancellationPolicy": "standard"
+  },
   "emergencyContacts": [
     { "label": "Operations desk (24/7)", "phone": "+53 5555 0100" },
     { "label": "Medical emergency", "phone": "+53 5555 0104" },
