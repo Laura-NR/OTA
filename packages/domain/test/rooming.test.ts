@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { planRooms } from '../src';
+import { planRooms, travelerKindOn } from '../src';
 
 describe('planRooms', () => {
   it('puts a sharing couple in one double, with no single room', () => {
@@ -43,5 +43,16 @@ describe('planRooms', () => {
     const privateRooms = planRooms(['CHILD', 'ADULT', 'INFANT'], 'PRIVATE');
     expect(privateRooms.roomOf).toEqual([0, 1, 1]);
     expect(privateRooms.singleRooms).toBe(2);
+  });
+});
+
+describe('travelerKindOn', () => {
+  const departure = new Date('2027-02-13T00:00:00Z');
+
+  it('reads the kind from the age on the travel date, not the booking date', () => {
+    expect(travelerKindOn(new Date('2025-02-14T00:00:00Z'), departure)).toBe('INFANT');
+    expect(travelerKindOn(new Date('2025-02-13T00:00:00Z'), departure)).toBe('CHILD');
+    expect(travelerKindOn(new Date('2009-02-14T00:00:00Z'), departure)).toBe('CHILD');
+    expect(travelerKindOn(new Date('2009-02-13T00:00:00Z'), departure)).toBe('ADULT');
   });
 });

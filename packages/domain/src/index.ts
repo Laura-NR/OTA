@@ -87,11 +87,14 @@ export {
   type PackagePriceInput,
 } from './packages/pricing';
 export {
+  ADULT_FROM_AGE,
+  INFANT_UNDER_AGE,
   PRICE_LOCKED_STATUSES,
   ageOn,
   departurePlacesLeft,
   isPriceLocked,
   priceBooking,
+  travelerKindOn,
   type BookingExtraInput,
   type BookingFeeInput,
   type BookingPrice,

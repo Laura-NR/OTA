@@ -108,6 +108,23 @@ export function ageOn(dateOfBirth: Date, on: Date): number {
   return age;
 }
 
+/** Infants (no bed, priced by their band) are under 2; adults are 18 and over. */
+export const INFANT_UNDER_AGE = 2;
+export const ADULT_FROM_AGE = 18;
+
+/**
+ * A traveler's kind from their age on the travel date (Booking board step 1),
+ * so a traveler-built booking never trusts a kind sent by the client: an
+ * infant takes no bed, which would otherwise dodge a single supplement.
+ */
+export function travelerKindOn(dateOfBirth: Date, on: Date): TravelerKind {
+  const age = ageOn(dateOfBirth, on);
+  if (age < INFANT_UNDER_AGE) {
+    return 'INFANT';
+  }
+  return age < ADULT_FROM_AGE ? 'CHILD' : 'ADULT';
+}
+
 export function priceBooking(input: BookingPriceInput): BookingPrice {
   const startPrice = input.departurePrice ?? input.basePrice;
   const tierDelta = input.tier?.priceDelta ?? 0;
