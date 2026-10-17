@@ -361,3 +361,14 @@ export {
   type SignAffidavitRequest,
   type TravelerOfacDto,
 } from './compliance';
+export {
+  BOOKING_OPTIONAL_CONSENTS,
+  BOOKING_REQUIRED_CONSENTS,
+  bookPackageSchema,
+  bookingAffidavitSchema,
+  bookingConsentSchema,
+  bookingExtraSchema,
+  bookingTravelerSchema,
+  type BookPackageRequest,
+  type BookingTravelerInput,
+} from './booking';
