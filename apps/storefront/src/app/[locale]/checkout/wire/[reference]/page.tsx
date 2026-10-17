@@ -175,6 +175,16 @@ export default async function WireCheckoutPage({
 
               <Alert variant="info">{t('wireNotice')}</Alert>
               <p className="text-body-sm text-secondary">{t('wireNextSteps')}</p>
+              {/* M4 D5: the proof upload sits with the trip, behind the sign-in. */}
+              <p className="text-body-sm text-secondary">
+                {t('wireProof')}{' '}
+                <Link
+                  href="/account?tab=trips"
+                  className="text-primary-600 underline underline-offset-[3px]"
+                >
+                  {t('backToAccount')}
+                </Link>
+              </p>
               <p className="flex items-center gap-2 border-t pt-4 text-caption text-muted">
                 <Icon name="shield-check" className="h-4 w-4" />
                 {t('licence', { license: tenant.branding.licenseNumber })}

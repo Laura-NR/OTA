@@ -14,7 +14,6 @@ import { redirect } from 'next/navigation';
 import { AccountShell, type AccountSection } from '@/components/account/account-shell';
 import { NotificationPreferences } from '@/components/account/notification-preferences';
 import { TripProgress } from '@/components/account/trip-progress';
-import { CheckoutButton } from '@/components/checkout-button';
 import { TONE_BADGES } from '@/components/conditions-card';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
@@ -253,7 +252,13 @@ export default async function AccountPage({
                       })}
                     </p>
                     <p className="text-body-sm text-secondary">{t('tasks.payText')}</p>
-                    <CheckoutButton reservationId={reservation.id} />
+                    {/* The trip page holds the choice of deposit or full (M4). */}
+                    <Link
+                      href={`/account/reservations/${reservation.id}#pay-title`}
+                      className={buttonClassName()}
+                    >
+                      {t('payment.choosePay')}
+                    </Link>
                   </li>
                 ))}
                 {blocked.map((reservation) => (

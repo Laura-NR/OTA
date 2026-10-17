@@ -439,11 +439,6 @@
     }
   },
   "checkout": {
-    "pay": "Continuar al pago",
-    "creating": "Preparando…",
-    "error": "No se pudo iniciar el pago.",
-    "title": "Pago",
-    "description": "Generaremos un enlace de pago seguro para esta reserva.",
     "mockTitle": "Pago (simulado)",
     "mockDescription": "Este es un sustituto de desarrollo de la pasarela de pago.",
     "reference": "Referencia",
@@ -487,7 +482,8 @@
     },
     "needHelp": "¿Necesitas ayuda?",
     "helpLink": "Escribe a la central",
-    "licence": "Agencia de viajes licenciada · licencia MINTUR {license}"
+    "licence": "Agencia de viajes licenciada · licencia MINTUR {license}",
+    "wireProof": "¿Ya la enviaste? Sube el justificante con tu viaje para agilizarlo:"
   },
   "review": {
     "title": "Valora tu viaje",
@@ -633,6 +629,63 @@
       "saved": "Guardado",
       "failed": "No se pudo guardar tu elección.",
       "none": "Aún no hay nada que elegir."
+    },
+    "payment": {
+      "title": "Pago",
+      "choose": "¿Cómo quieres pagar?",
+      "deposit": "Depósito · {percent} %",
+      "depositText": "{amount} ahora y el resto, {balance}, antes del {date}.",
+      "full": "Pago completo",
+      "fullText": "{amount} en un solo pago, sin nada más que recordar.",
+      "method": "Transferencia bancaria, sin comisión",
+      "cardSoon": "El pago con tarjeta aún no está disponible.",
+      "continue": "Continuar a la transferencia",
+      "working": "Preparando…",
+      "failed": "No se pudo iniciar el pago. Inténtalo de nuevo o escríbenos.",
+      "locked": "El pago queda bloqueado hasta que todos los viajeros estadounidenses de este viaje hayan certificado.",
+      "choosePay": "Elegir cómo pagar",
+      "paidTotal": "Pagado hasta ahora: {paid} de {total}.",
+      "kinds": {
+        "DEPOSIT": "Depósito",
+        "BALANCE": "Resto",
+        "FULL": "Pago completo"
+      },
+      "statuses": {
+        "DUE": "Vence el {date}",
+        "OVERDUE": "Venció el {date}",
+        "PAID": "Pagado el {date}",
+        "WAIVED": "Condonado",
+        "CANCELLED": "Cancelado"
+      },
+      "badges": {
+        "DUE": "Pendiente",
+        "OVERDUE": "Vencido",
+        "PAID": "Pagado",
+        "WAIVED": "Condonado",
+        "CANCELLED": "Cancelado"
+      },
+      "pay": "Pagar {amount} por transferencia",
+      "pending": "Transferencia iniciada · {amount}",
+      "bankDetails": "Ver de nuevo los datos bancarios",
+      "proofTitle": "Justificante de transferencia",
+      "proofHint": "Opcional, agiliza las cosas. Un PDF o una foto, hasta 10 MB; lo revisamos a mano en un día laborable.",
+      "proofChoose": "Subir un PDF o una foto",
+      "uploading": "Subiendo…",
+      "proofTooLarge": "El archivo supera los 10 MB.",
+      "proofFailed": "No se pudo subir el justificante. Inténtalo de nuevo o escríbenos.",
+      "proofStatuses": {
+        "SUBMITTED": "Enviado · lo estamos revisando",
+        "ACCEPTED": "Revisado · se confirma cuando llegue el dinero",
+        "REJECTED": "No aceptado"
+      },
+      "refunds": "Reembolsos",
+      "refundStatuses": {
+        "REQUESTED": "En aprobación",
+        "APPROVED": "Aprobado",
+        "REJECTED": "Denegado",
+        "SENT": "Enviado el {date}",
+        "FAILED": "Se está reintentando"
+      }
     }
   },
   "join": {

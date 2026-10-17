@@ -439,11 +439,6 @@
     }
   },
   "checkout": {
-    "pay": "Proceed to payment",
-    "creating": "Preparing…",
-    "error": "Could not start the payment.",
-    "title": "Payment",
-    "description": "We will generate a secure payment link for this booking.",
     "mockTitle": "Payment (mock)",
     "mockDescription": "This is a development stand-in for the payment gateway.",
     "reference": "Reference",
@@ -487,7 +482,8 @@
     },
     "needHelp": "Need help?",
     "helpLink": "Write to the desk",
-    "licence": "Licensed travel agency · MINTUR licence {license}"
+    "licence": "Licensed travel agency · MINTUR licence {license}",
+    "wireProof": "Already sent it? Upload the proof of transfer with your trip to speed things up:"
   },
   "review": {
     "title": "Rate your trip",
@@ -633,6 +629,63 @@
       "saved": "Saved",
       "failed": "Your choice could not be saved.",
       "none": "Nothing to choose yet."
+    },
+    "payment": {
+      "title": "Payment",
+      "choose": "How would you like to pay?",
+      "deposit": "Deposit · {percent} %",
+      "depositText": "{amount} now, then the balance of {balance} by {date}.",
+      "full": "Pay in full",
+      "fullText": "{amount} in one payment, nothing more to remember.",
+      "method": "Bank transfer, no fee",
+      "cardSoon": "Card payments are not available yet.",
+      "continue": "Continue to bank transfer",
+      "working": "Preparing…",
+      "failed": "The payment could not be started. Try again, or message us.",
+      "locked": "Payment stays locked until every US traveler on this trip has certified.",
+      "choosePay": "Choose how to pay",
+      "paidTotal": "Paid so far: {paid} of {total}.",
+      "kinds": {
+        "DEPOSIT": "Deposit",
+        "BALANCE": "Balance",
+        "FULL": "Full payment"
+      },
+      "statuses": {
+        "DUE": "Due by {date}",
+        "OVERDUE": "Was due {date}",
+        "PAID": "Paid {date}",
+        "WAIVED": "Waived",
+        "CANCELLED": "Cancelled"
+      },
+      "badges": {
+        "DUE": "Due",
+        "OVERDUE": "Overdue",
+        "PAID": "Paid",
+        "WAIVED": "Waived",
+        "CANCELLED": "Cancelled"
+      },
+      "pay": "Pay {amount} by bank transfer",
+      "pending": "Bank transfer started · {amount}",
+      "bankDetails": "See the bank details again",
+      "proofTitle": "Proof of transfer",
+      "proofHint": "Optional, it speeds things up. A PDF or a photo, up to 10 MB; we check it by hand within one business day.",
+      "proofChoose": "Upload a PDF or photo",
+      "uploading": "Uploading…",
+      "proofTooLarge": "The file is larger than 10 MB.",
+      "proofFailed": "The proof could not be uploaded. Try again, or message us.",
+      "proofStatuses": {
+        "SUBMITTED": "Sent · we are checking it",
+        "ACCEPTED": "Checked · confirmed once the money lands",
+        "REJECTED": "Not accepted"
+      },
+      "refunds": "Refunds",
+      "refundStatuses": {
+        "REQUESTED": "Being approved",
+        "APPROVED": "Approved",
+        "REJECTED": "Declined",
+        "SENT": "Sent {date}",
+        "FAILED": "Being retried"
+      }
     }
   },
   "join": {

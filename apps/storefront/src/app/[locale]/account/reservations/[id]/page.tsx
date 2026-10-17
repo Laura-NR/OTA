@@ -1,5 +1,9 @@
 import { DEFAULT_LOCALE } from '@ota/i18n';
-import type { MyReservationDetailDto, ReservationOfacDto } from '@ota/schemas';
+import type {
+  MyReservationDetailDto,
+  PaymentScheduleDto,
+  ReservationOfacDto,
+} from '@ota/schemas';
 import {
   Alert,
   Badge,
@@ -15,8 +19,8 @@ import { notFound, redirect } from 'next/navigation';
 
 import { AccountShell } from '@/components/account/account-shell';
 import { OfacCertification } from '@/components/account/ofac-certification';
+import { PaymentSchedule } from '@/components/account/payment-schedule';
 import { TripProgress } from '@/components/account/trip-progress';
-import { CheckoutButton } from '@/components/checkout-button';
 import { MessageThread } from '@/components/message-thread';
 import { ReviewForm } from '@/components/review-form';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
@@ -51,9 +55,8 @@ export default async function AccountReservationPage({
     notFound();
   }
 
-  const [t, tc, trv, tsi, tst, td, format, locale] = await Promise.all([
+  const [t, trv, tsi, tst, td, format, locale] = await Promise.all([
     getTranslations('account'),
-    getTranslations('checkout'),
     getTranslations('review'),
     getTranslations('status.serviceItem'),
     getTranslations('status.serviceType'),
@@ -62,9 +65,12 @@ export default async function AccountReservationPage({
     getLocale(),
   ]);
   const tenant = getTenantConfig();
-  const ofac = await apiFetch<ReservationOfacDto>(
-    `/me/reservations/${id}/ofac?locale=${locale}`,
-  ).catch(() => null);
+  const [ofac, schedule] = await Promise.all([
+    apiFetch<ReservationOfacDto>(`/me/reservations/${id}/ofac?locale=${locale}`).catch(
+      () => null,
+    ),
+    apiFetch<PaymentScheduleDto>(`/me/reservations/${id}/schedule`).catch(() => null),
+  ]);
   const ofacRequired = ofac?.travelers.some((traveler) => traveler.required) ?? false;
   const ofacLocked = (ofac?.missing ?? 0) > 0;
   const card = 'flex flex-col gap-4 rounded-lg border bg-surface p-6';
@@ -124,22 +130,13 @@ export default async function AccountReservationPage({
         </section>
       ) : null}
 
-      {reservation.status === 'SECURED_AND_INVOICED' ||
-      reservation.status === 'PENDING_PAYMENT' ? (
-        <section
-          aria-labelledby="pay-title"
-          className="flex flex-col items-start gap-3 rounded-lg border border-accent-500 bg-accent-50 p-6"
-        >
-          <h2 id="pay-title" className="text-h4 text-default">
-            {tc('title')}
-          </h2>
-          <p className="text-body-sm text-secondary">{tc('description')}</p>
-          {ofacLocked ? (
-            <Alert variant="warning">{t('ofac.locked')}</Alert>
-          ) : (
-            <CheckoutButton reservationId={reservation.id} />
-          )}
-        </section>
+      {schedule ? (
+        <PaymentSchedule
+          reservationId={reservation.id}
+          status={reservation.status}
+          schedule={schedule}
+          locked={ofacLocked}
+        />
       ) : null}
 
       <section aria-labelledby="itinerary-title" className={card}>

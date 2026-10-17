@@ -439,11 +439,6 @@
     }
   },
   "checkout": {
-    "pay": "Passer au paiement",
-    "creating": "Préparation…",
-    "error": "Impossible de lancer le paiement.",
-    "title": "Paiement",
-    "description": "Nous générerons un lien de paiement sécurisé pour cette réservation.",
     "mockTitle": "Paiement (simulé)",
     "mockDescription": "Ceci remplace la passerelle de paiement en développement.",
     "reference": "Référence",
@@ -487,7 +482,8 @@
     },
     "needHelp": "Besoin d'aide ?",
     "helpLink": "Écrivez à la centrale",
-    "licence": "Agence de voyages agréée · licence MINTUR {license}"
+    "licence": "Agence de voyages agréée · licence MINTUR {license}",
+    "wireProof": "Déjà envoyé ? Déposez la preuve de virement avec votre voyage pour accélérer les choses :"
   },
   "review": {
     "title": "Notez votre voyage",
@@ -633,6 +629,63 @@
       "saved": "Enregistré",
       "failed": "Votre choix n'a pas pu être enregistré.",
       "none": "Rien à choisir pour l'instant."
+    },
+    "payment": {
+      "title": "Paiement",
+      "choose": "Comment souhaitez-vous payer ?",
+      "deposit": "Acompte · {percent} %",
+      "depositText": "{amount} maintenant, puis le solde de {balance} avant le {date}.",
+      "full": "Payer la totalité",
+      "fullText": "{amount} en un seul paiement, plus rien à retenir.",
+      "method": "Virement bancaire, sans frais",
+      "cardSoon": "Le paiement par carte n'est pas encore disponible.",
+      "continue": "Continuer vers le virement",
+      "working": "Préparation…",
+      "failed": "Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous.",
+      "locked": "Le paiement reste bloqué tant que chaque voyageur américain de ce voyage n'a pas certifié.",
+      "choosePay": "Choisir comment payer",
+      "paidTotal": "Payé jusqu'ici : {paid} sur {total}.",
+      "kinds": {
+        "DEPOSIT": "Acompte",
+        "BALANCE": "Solde",
+        "FULL": "Paiement complet"
+      },
+      "statuses": {
+        "DUE": "À régler avant le {date}",
+        "OVERDUE": "Était dû le {date}",
+        "PAID": "Payé le {date}",
+        "WAIVED": "Remis",
+        "CANCELLED": "Annulé"
+      },
+      "badges": {
+        "DUE": "À régler",
+        "OVERDUE": "En retard",
+        "PAID": "Payé",
+        "WAIVED": "Remis",
+        "CANCELLED": "Annulé"
+      },
+      "pay": "Payer {amount} par virement",
+      "pending": "Virement commencé · {amount}",
+      "bankDetails": "Revoir les coordonnées bancaires",
+      "proofTitle": "Preuve de virement",
+      "proofHint": "Facultatif, cela accélère les choses. Un PDF ou une photo, jusqu'à 10 Mo ; nous la vérifions à la main sous un jour ouvré.",
+      "proofChoose": "Envoyer un PDF ou une photo",
+      "uploading": "Envoi…",
+      "proofTooLarge": "Le fichier dépasse 10 Mo.",
+      "proofFailed": "La preuve n'a pas pu être envoyée. Réessayez ou écrivez-nous.",
+      "proofStatuses": {
+        "SUBMITTED": "Envoyée · en cours de vérification",
+        "ACCEPTED": "Vérifiée · confirmée à l'arrivée des fonds",
+        "REJECTED": "Non acceptée"
+      },
+      "refunds": "Remboursements",
+      "refundStatuses": {
+        "REQUESTED": "En cours d'approbation",
+        "APPROVED": "Approuvé",
+        "REJECTED": "Refusé",
+        "SENT": "Envoyé le {date}",
+        "FAILED": "Nouvelle tentative en cours"
+      }
     }
   },
   "join": {

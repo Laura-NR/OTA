@@ -10,6 +10,7 @@ process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 
 async function cleanup(reservationId: string): Promise<void> {
+  // Receipts take their proofs with them; the booking takes its instalments.
   await prisma.paymentReceipt
     .deleteMany({ where: { reservationId } })
     .catch(() => undefined);
@@ -58,16 +59,24 @@ test.describe('storefront checkout', () => {
     await prisma.$disconnect();
   });
 
-  test('a traveler creates a wire link and sees the bank details without a confirm action', async ({
+  test('a traveler chooses the full amount, sees the bank details without a confirm action, and sends a proof', async ({
     page,
   }) => {
     await signIn(page, 'traveler@example.test', {
       origin: STOREFRONT_URL,
       callbackPath: '/en/account',
     });
-    await page.goto(`${STOREFRONT_URL}/en/account/reservations/${reservationId}`);
+    const trip = `${STOREFRONT_URL}/en/account/reservations/${reservationId}`;
+    await page.goto(trip);
 
-    await page.getByRole('button', { name: 'Proceed to payment' }).click();
+    // M4: a custom trip has no deposit plan, so the full amount is the only choice.
+    await expect(page.getByRole('heading', { level: 2, name: 'Payment' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Pay in full/ })).toBeChecked();
+    await expect(page.getByRole('radio', { name: /Deposit/ })).toHaveCount(0);
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Continue to bank transfer' }).click();
+      await expect(page).toHaveURL(/\/checkout\/wire\//, { timeout: 3_000 });
+    }).toPass();
 
     await expect(page).toHaveURL(/\/checkout\/wire\//);
     // The primary rail is a manual wire transfer: bank details, the booking
@@ -84,5 +93,23 @@ test.describe('storefront checkout', () => {
     await expect(page.getByText('No automatic charge is made')).toBeVisible();
     await expect(page.getByText('Once you have sent the transfer')).toBeVisible();
     await expect(page.getByRole('button', { name: /confirm/i })).toHaveCount(0);
+
+    // Back on the trip, the pending transfer takes a proof (M4 D5).
+    await page.goto(trip);
+    await expect(page.getByText('Bank transfer started · €200')).toBeVisible();
+    await expect(async () => {
+      await page.getByLabel('Upload a PDF or photo').setInputFiles({
+        name: 'proof.pdf',
+        mimeType: 'application/pdf',
+        buffer: Buffer.from('%PDF-1.4 transfer receipt'),
+      });
+      await expect(page.getByText('Sent · we are checking it')).toBeVisible({
+        timeout: 5_000,
+      });
+    }).toPass();
+    const proofs = await prisma.paymentProof.count({
+      where: { receipt: { reservationId } },
+    });
+    expect(proofs).toBe(1);
   });
 });
