@@ -113,6 +113,47 @@ enum PayoutStatus {
   FAILED
 }
 
+// M4 payment schedule (docs/schema-m4-payment-schedule.md)
+enum InstalmentKind {
+  DEPOSIT
+  BALANCE
+  FULL
+}
+
+enum InstalmentStatus {
+  DUE
+  PAID
+  // The desk forgave it (a goodwill gesture); audited.
+  WAIVED
+  // The booking was cancelled before it fell due.
+  CANCELLED
+}
+
+enum ProofStatus {
+  SUBMITTED
+  // Looks right and the window was extended; the money is still to be seen.
+  ACCEPTED
+  REJECTED
+}
+
+enum RefundReason {
+  TRAVELER_CANCELLATION
+  HOST_CANCELLATION
+  FORCE_MAJEURE
+  GOODWILL
+  PRICE_CORRECTION
+}
+
+enum RefundStatus {
+  REQUESTED
+  // Every approval the threshold needs is in.
+  APPROVED
+  REJECTED
+  // The bank or the provider has it.
+  SENT
+  FAILED
+}
+
 enum DocumentType {
   VOUCHER
   WORK_ORDER
@@ -251,6 +292,11 @@ model User {
   // M3
   consents           ConsentRecord[]
   affidavitsRecorded TravelerAffidavit[] @relation("AffidavitRecordedBy")
+  // M4
+  proofsUploaded   PaymentProof[]   @relation("ProofUploadedBy")
+  proofsReviewed   PaymentProof[]   @relation("ProofReviewedBy")
+  refundsRequested Refund[]         @relation("RefundRequestedBy")
+  refundApprovals  RefundApproval[]
 
   // Better Auth relations
   sessions Session[]
@@ -737,6 +783,8 @@ model Reservation {
   priceLines  ReservationPriceLine[]
   affidavits  TravelerAffidavit[]
   consents    ConsentRecord[]
+  instalments PaymentInstalment[]
+  refunds     Refund[]
 
   @@index([userId])
   @@index([status])
@@ -971,15 +1019,118 @@ model PaymentReceipt {
   rail         PaymentRail
   currency     String        @default("EUR")
   amount       Decimal       @db.Decimal(10, 2)
+  // M4 D6: the rail's fee on top of the amount (card surcharge); 0 for transfers.
+  feeAmount    Decimal       @default(0) @map("fee_amount") @db.Decimal(10, 2)
+  // M4 D1: the instalment this payment is for; null on payments made before M4.
+  instalmentId String?       @map("instalment_id") @db.Uuid
   status       PaymentStatus @default(PENDING)
   payoutStatus PayoutStatus  @default(ACCRUED) @map("payout_status")
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
-  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservation Reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  instalment  PaymentInstalment? @relation(fields: [instalmentId], references: [id], onDelete: SetNull)
+  proofs      PaymentProof[]
+  refunds     Refund[]
 
   @@index([reservationId])
+  @@index([instalmentId])
   @@map("payment_receipts")
+}
+
+/// M4 D1: one amount the traveler owes, with its due date.
+model PaymentInstalment {
+  id            String           @id @default(uuid()) @db.Uuid
+  reservationId String           @map("reservation_id") @db.Uuid
+  kind          InstalmentKind
+  position      Int
+  amount        Decimal          @db.Decimal(10, 2)
+  currency      String           @default("EUR")
+  dueAt         DateTime         @map("due_at")
+  status        InstalmentStatus @default(DUE)
+  paidAt        DateTime?        @map("paid_at")
+  /// The manifest deposit policy key the schedule was built from.
+  policyKey     String?          @map("policy_key")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  receipts    PaymentReceipt[]
+
+  @@unique([reservationId, position])
+  @@index([status, dueAt])
+  @@map("payment_instalments")
+}
+
+/// M4 D5: a traveler's proof of transfer, reviewed by operations.
+model PaymentProof {
+  id           String      @id @default(uuid()) @db.Uuid
+  receiptId    String      @map("receipt_id") @db.Uuid
+  storageKey   String      @map("storage_key")
+  uploadedById String?     @map("uploaded_by_id") @db.Uuid
+  status       ProofStatus @default(SUBMITTED)
+  reviewedById String?     @map("reviewed_by_id") @db.Uuid
+  reviewedAt   DateTime?   @map("reviewed_at")
+  /// What the traveler is told on a rejection, or the desk's note.
+  reviewNote   String?     @map("review_note")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  receipt    PaymentReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  uploadedBy User?          @relation("ProofUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  reviewedBy User?          @relation("ProofReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([receiptId])
+  @@map("payment_proofs")
+}
+
+/// M4 D7: money returned from one receipt, with its approvals.
+model Refund {
+  id               String       @id @default(uuid()) @db.Uuid
+  reservationId    String       @map("reservation_id") @db.Uuid
+  receiptId        String       @map("receipt_id") @db.Uuid
+  amount           Decimal      @db.Decimal(10, 2)
+  currency         String       @default("EUR")
+  reason           RefundReason
+  /// Mandatory; it also goes to the audit log.
+  note             String
+  /// The policy key, band and share kept it was computed with; null for a set amount.
+  rule             Json?
+  status           RefundStatus @default(REQUESTED)
+  requestedById    String?      @map("requested_by_id") @db.Uuid
+  /// The provider's refund id, or the bank reference; stored before the provider call.
+  providerRefundId String?      @unique @map("provider_refund_id")
+  sentAt           DateTime?    @map("sent_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  // NoAction (checked at the end of the statement) lets a booking's cascade
+  // remove both rows, while a receipt with refunds cannot be deleted alone.
+  receipt     PaymentReceipt   @relation(fields: [receiptId], references: [id], onDelete: NoAction)
+  requestedBy User?            @relation("RefundRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvals   RefundApproval[]
+
+  @@index([status, createdAt])
+  @@index([reservationId])
+  @@index([receiptId])
+  @@map("refunds")
+}
+
+/// M4 D7: one person's vote on a refund; dual approval needs two different people.
+model RefundApproval {
+  id         String   @id @default(uuid()) @db.Uuid
+  refundId   String   @map("refund_id") @db.Uuid
+  approverId String   @map("approver_id") @db.Uuid
+  approve    Boolean
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  refund   Refund @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  approver User   @relation(fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@unique([refundId, approverId])
+  @@map("refund_approvals")
 }
 
 model Document {

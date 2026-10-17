@@ -1,6 +1,12 @@
 # M4 Payment schedule: schema diff for review
 
-**Status:** **Draft for the owner's review (Q9). No migration is generated until it is approved.**
+**Status:** **Approved and generated 2026-10-17.** The owner took D1–D8 as recommended and will
+take the counsel questions (§5) later; the sample terms ship as placeholders in the manifest. The
+migration `20261017144721_payment_schedule` was applied: `PaymentInstalment`, `PaymentProof`,
+`Refund`, `RefundApproval`, five enums and `PaymentReceipt.feeAmount`/`instalmentId`. Additive; no
+backfill. One change from the diff below: a refund's link to its receipt is `ON DELETE NO ACTION`
+rather than `RESTRICT`, so deleting a booking can remove both rows in one statement while a
+receipt with refunds still cannot be deleted alone.
 **Date:** 2026-10-17
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M4: deposit and balance instalments, due dates,
 proof-of-transfer uploads, fees, and refunds with an approval chain. Read against the Payment,
