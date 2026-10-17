@@ -86,6 +86,8 @@ export interface OpsDeskProps {
   /** The month's figures (bookings, revenue), rendered on the server. */
   figures: ReactNode;
   credentials: CredentialAlert;
+  /** Open bookings with a US traveler still to certify (M3): payment and vouchers held. */
+  ofacMissing: number;
   canManage: boolean;
 }
 
@@ -100,6 +102,7 @@ export function OpsDesk({
   serverNow,
   figures,
   credentials,
+  ofacMissing,
   canManage,
 }: OpsDeskProps) {
   const t = useTranslations('backoffice.dashboard');
@@ -337,7 +340,7 @@ export function OpsDesk({
         </KpiCard>
 
         <KpiCard overline={t('kpi.alerts')}>
-          {red.length + amber.length + credentials.count === 0 ? (
+          {red.length + amber.length + credentials.count + ofacMissing === 0 ? (
             <p className="text-body-sm text-muted">{t('kpi.noAlerts')}</p>
           ) : (
             <ul className="flex flex-col gap-2 text-body-sm">
@@ -357,6 +360,19 @@ export function OpsDesk({
                     </Badge>
                     {t('kpi.amberNote')}
                   </a>
+                </li>
+              ) : null}
+              {ofacMissing > 0 ? (
+                <li>
+                  <Link
+                    href="/bookings?view=ofac"
+                    className="flex flex-wrap items-center gap-2"
+                  >
+                    <Badge variant="warning">
+                      {t('kpi.ofac', { count: ofacMissing })}
+                    </Badge>
+                    {t('kpi.ofacNote')}
+                  </Link>
                 </li>
               ) : null}
               {credentials.count > 0 ? (

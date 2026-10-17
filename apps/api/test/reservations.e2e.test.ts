@@ -105,6 +105,12 @@ interface FakePayment {
   reservationId: string;
   amount: string;
 }
+interface FakeTraveler {
+  id: string;
+  reservationId: string;
+  usPerson: boolean | null;
+  nationality: string | null;
+}
 
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
@@ -113,6 +119,8 @@ function createFakePrisma(state: {
   counter: { value: number };
   serviceItems?: FakeServiceItem[];
   payments?: FakePayment[];
+  travelers?: FakeTraveler[];
+  affidavits?: { reservationId: string; travelerId: string }[];
 }) {
   const withRelations = (reservation: Reservation) => ({
     ...reservation,
@@ -123,6 +131,12 @@ function createFakePrisma(state: {
     package: null,
     payments: (state.payments ?? []).filter(
       (payment) => payment.reservationId === reservation.id,
+    ),
+    travelers: (state.travelers ?? []).filter(
+      (traveler) => traveler.reservationId === reservation.id,
+    ),
+    affidavits: (state.affidavits ?? []).filter(
+      (affidavit) => affidavit.reservationId === reservation.id,
     ),
   });
 
@@ -258,6 +272,8 @@ describe('reservations API', () => {
     counter: { value: number };
     serviceItems: FakeServiceItem[];
     payments: FakePayment[];
+    travelers?: FakeTraveler[];
+    affidavits?: { reservationId: string; travelerId: string }[];
   };
 
   beforeEach(async () => {
@@ -397,7 +413,33 @@ describe('reservations API', () => {
         provinces: ['Pinar del Río', 'La Habana'],
         paidAmount: '120.30',
         packageName: null,
+        ofacMissing: 0,
       });
+    });
+
+    it('counts the US travelers still without an OFAC affidavit (M3)', async () => {
+      state.travelers = [
+        {
+          id: 't-us-1',
+          reservationId: RESERVATION_ID,
+          usPerson: null,
+          nationality: 'US',
+        },
+        {
+          id: 't-us-2',
+          reservationId: RESERVATION_ID,
+          usPerson: true,
+          nationality: 'MX',
+        },
+        { id: 't-ca', reservationId: RESERVATION_ID, usPerson: null, nationality: 'CA' },
+      ];
+      state.affidavits = [{ reservationId: RESERVATION_ID, travelerId: 't-us-1' }];
+
+      const response = await request(app.getHttpServer())
+        .get(`/reservations/${RESERVATION_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.ofacMissing).toBe(1);
     });
 
     it('filters by status', async () => {

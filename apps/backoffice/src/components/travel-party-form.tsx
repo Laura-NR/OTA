@@ -19,12 +19,15 @@ interface RoomRow {
   capacity: string;
 }
 
+type UsPersonChoice = 'auto' | 'yes' | 'no';
+
 interface TravelerRow {
   id?: string;
   kind: TravelerKindDto;
   fullName: string;
   dateOfBirth: string;
   nationality: string;
+  usPerson: UsPersonChoice;
   hasPassport: boolean;
   passportNumber: string;
   clearPassport: boolean;
@@ -39,6 +42,7 @@ const blankTraveler = (): TravelerRow => ({
   fullName: '',
   dateOfBirth: '',
   nationality: '',
+  usPerson: 'auto',
   hasPassport: false,
   passportNumber: '',
   clearPassport: false,
@@ -83,6 +87,8 @@ export function TravelPartyForm({
           fullName: traveler.fullName,
           dateOfBirth: traveler.dateOfBirth ?? '',
           nationality: traveler.nationality ?? '',
+          usPerson:
+            traveler.usPerson === null ? 'auto' : traveler.usPerson ? 'yes' : 'no',
           hasPassport: traveler.hasPassport,
           passportNumber: '',
           clearPassport: false,
@@ -154,6 +160,7 @@ export function TravelPartyForm({
             fullName: row.fullName.trim(),
             dateOfBirth: orNull(row.dateOfBirth),
             nationality: orNull(row.nationality),
+            usPerson: row.usPerson === 'auto' ? null : row.usPerson === 'yes',
             // Omitted keeps the stored number; null clears it.
             ...(row.clearPassport
               ? { passportNumber: null }
@@ -345,6 +352,24 @@ export function TravelPartyForm({
                     })
                   }
                 />
+              </div>
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <Label htmlFor={id('usPerson')}>{t('usPerson')}</Label>
+                <Select
+                  id={id('usPerson')}
+                  value={row.usPerson}
+                  onChange={(event) =>
+                    updateTraveler(index, {
+                      usPerson: event.target.value as UsPersonChoice,
+                    })
+                  }
+                >
+                  {(['auto', 'yes', 'no'] as const).map((choice) => (
+                    <option key={choice} value={choice}>
+                      {t(`usPersonOptions.${choice}`)}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div className="flex min-w-0 flex-col gap-1.5">
                 <Label htmlFor={id('room')}>{t('room')}</Label>

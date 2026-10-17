@@ -685,7 +685,8 @@
         "label": "Vistas guardadas",
         "all": "Todas las reservas",
         "attention": "Rojo y ámbar",
-        "arriving": "Llegan en ≤ 7 días"
+        "arriving": "Llegan en ≤ 7 días",
+        "ofac": "Falta OFAC"
       },
       "states": {
         "title": "Máquina de estados · spec §4.2",
@@ -915,7 +916,14 @@
         "extraLabel": "Descripción",
         "extraUnit": "Se cobra",
         "unitAmount": "Precio unitario",
-        "extraFailed": "No se pudo cambiar el extra."
+        "extraFailed": "No se pudo cambiar el extra.",
+        "usPerson": "Persona estadounidense (OFAC)",
+        "usPersonOptions": {
+          "auto": "Según la nacionalidad",
+          "yes": "Sí, p. ej. residente en EE. UU.",
+          "no": "No"
+        },
+        "usPersonBadge": "Persona estadounidense"
       },
       "price": {
         "title": "Desglose del precio · {currency}",
@@ -935,6 +943,47 @@
         "total": "Total",
         "item": "Concepto",
         "amount": "Importe"
+      },
+      "ofac": {
+        "title": "Certificación OFAC",
+        "description": "Los viajeros estadounidenses certifican una categoría de viaje antes del pago; los vouchers esperan a ello. Los registros se conservan 5 años tras el viaje.",
+        "none": "No hay viajeros estadounidenses en esta reserva.",
+        "missingAlert": "{count, plural, one {# viajero estadounidense no ha} other {# viajeros estadounidenses no han}} certificado aún: el enlace de pago y los vouchers están en espera.",
+        "certified": "Certificado · {category}",
+        "signedMeta": "{source} · firmado el {date}",
+        "sources": {
+          "ONLINE": "en línea",
+          "PAPER": "formulario en papel"
+        },
+        "missing": "Sin certificar",
+        "signOnline": "Los viajeros firman desde la página de la reserva en su cuenta.",
+        "viewRecord": "Ver el registro",
+        "viewing": "Abriendo…",
+        "viewed": "Consultado ahora · registrado en el historial",
+        "recordFailed": "No se pudo abrir el registro.",
+        "record": {
+          "signature": "Firma",
+          "ip": "Dirección IP",
+          "userAgent": "Navegador",
+          "statement": "Declaración",
+          "recordedBy": "Registrado por",
+          "retainUntil": "Se conserva hasta",
+          "scan": "Abrir el formulario escaneado"
+        },
+        "paper": {
+          "open": "Registrar una declaración en papel",
+          "title": "Declaración en papel de {name}",
+          "category": "Categoría de viaje",
+          "signerName": "Nombre en el formulario",
+          "signedAt": "Firmado el",
+          "file": "Escaneo (PDF, JPEG o PNG, hasta 10 MB)",
+          "submit": "Registrar la declaración",
+          "submitting": "Registrando…",
+          "cancel": "Cancelar",
+          "failed": "No se pudo registrar la declaración.",
+          "chooseFile": "Elige el formulario escaneado.",
+          "tooLarge": "El escaneo supera los 10 MB."
+        }
       }
     },
     "reservationActions": {
@@ -1102,7 +1151,9 @@
         "credential": "Credencial · {count}",
         "credentialDays": "la licencia más próxima vence en {days, plural, one {# día} other {# días}}",
         "credentialNote": "una licencia vence en menos de 30 días",
-        "noAlerts": "No hay alertas ahora."
+        "noAlerts": "No hay alertas ahora.",
+        "ofac": "{count, plural, one {# reserva} other {# reservas}} · falta OFAC",
+        "ofacNote": "pago y vouchers en espera"
       },
       "matrix": {
         "title": "Matriz de despacho",
@@ -1429,13 +1480,49 @@
       "lastCompleted": "Último viaje completado",
       "noCompleted": "Aún no hay viaje completado",
       "retentionNote": "6 meses después del último viaje completado se envía un correo de continuidad; tras 30 días de gracia la cuenta se anonimiza. Spec §3.5.",
-      "later": "Las preferencias, los documentos de pasaporte, la certificación OFAC y el historial de comunicación llegan con M2/M3; hoy solo se muestran la cuenta, sus viajes y la retención.",
+      "later": "Las preferencias, los documentos del pasaporte y el historial de comunicaciones llegarán con sus modelos; hoy se muestran la cuenta, sus viajes con su estado OFAC, el registro de consentimientos y la retención.",
       "retentionStatus": {
         "ACTIVE": "Activa",
         "NOTICE_DUE": "Aviso pendiente",
         "GRACE_PERIOD": "Periodo de gracia",
         "PURGE_DUE": "Purga pendiente",
         "ANONYMIZED": "Anonimizada"
+      },
+      "ofacColumn": "OFAC",
+      "ofacStatus": {
+        "none": "—",
+        "certified": "Certificado",
+        "missing": "faltan {count}"
+      },
+      "consentTitle": "Registro de consentimientos",
+      "consentDescription": "Cada autorización y retirada, de la más reciente a la más antigua, con la versión del texto que vio el viajero.",
+      "consentNone": "Aún no hay consentimientos registrados.",
+      "consentGranted": "Autorizado",
+      "consentWithdrawn": "Retirado",
+      "consentPurposes": {
+        "TERMS": "Condiciones",
+        "PRIVACY_NOTICE": "Aviso de privacidad",
+        "CANCELLATION_POLICY": "Política de cancelación",
+        "INSURANCE_ACKNOWLEDGEMENT": "Conformidad con el seguro",
+        "PAYMENT_TERMS": "Condiciones de pago",
+        "MARKETING_EMAIL": "Historias y viajes nuevos (correo)",
+        "TRIP_MESSAGES": "Informe previo y seguimiento diario",
+        "COOKIES_ANALYTICS": "Cookies de análisis",
+        "COOKIES_MARKETING": "Cookies de marketing"
+      },
+      "consentSources": {
+        "BOOKING": "reserva",
+        "ACCOUNT": "cuenta",
+        "COOKIE_BANNER": "aviso de cookies",
+        "PAYMENT": "pago",
+        "CUSTOM_REQUEST": "solicitud a medida",
+        "DESK": "oficina"
+      },
+      "consentTable": {
+        "purpose": "Finalidad",
+        "state": "Estado",
+        "version": "Versión",
+        "when": "Cuándo"
       }
     },
     "retention": {
@@ -1958,5 +2045,21 @@
     "note": "Las filas con valores idénticos se atenúan cuando «Resaltar solo las diferencias» está activo. En el móvil, desliza para ver más viajes; la primera columna queda fija.",
     "whatsapp": "Escríbenos por WhatsApp",
     "mix": "Combínalos en una ruta a medida"
+  },
+  "ofac": {
+    "categories": {
+      "FAMILY_VISITS": "Visitas familiares",
+      "OFFICIAL_GOVERNMENT_BUSINESS": "Asuntos oficiales de gobierno",
+      "JOURNALISTIC_ACTIVITY": "Actividad periodística",
+      "PROFESSIONAL_RESEARCH": "Investigación y reuniones profesionales",
+      "EDUCATIONAL_ACTIVITIES": "Actividades educativas",
+      "RELIGIOUS_ACTIVITIES": "Actividades religiosas",
+      "PUBLIC_PERFORMANCES": "Actuaciones públicas, talleres, competiciones y exposiciones",
+      "SUPPORT_FOR_THE_CUBAN_PEOPLE": "Apoyo al pueblo cubano",
+      "HUMANITARIAN_PROJECTS": "Proyectos humanitarios",
+      "PRIVATE_FOUNDATIONS_RESEARCH": "Fundaciones privadas e instituciones de investigación y educación",
+      "INFORMATIONAL_MATERIALS": "Información y materiales informativos",
+      "AUTHORIZED_EXPORT_TRANSACTIONS": "Exportaciones autorizadas"
+    }
   }
 }

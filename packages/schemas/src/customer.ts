@@ -17,6 +17,9 @@ export const customerTripSchema = z.object({
   status: reservationStatusSchema,
   totalAmount: z.string(),
   totalCurrency: z.string(),
+  /** US persons on the trip, and those still without an OFAC affidavit (M3). */
+  ofacRequired: z.number().int().nonnegative(),
+  ofacMissing: z.number().int().nonnegative(),
 });
 
 export type CustomerTripDto = z.infer<typeof customerTripSchema>;

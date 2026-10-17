@@ -1,6 +1,6 @@
 'use client';
 
-import { ageOn } from '@ota/domain';
+import { ageOn, isUsPerson } from '@ota/domain';
 import type {
   PackageDepartureDto,
   PackageExtraDto,
@@ -137,6 +137,9 @@ export function TravelParty({
                 <Badge variant={traveler.isLead ? 'secondary' : 'outline'}>
                   {role(traveler)}
                 </Badge>
+                {isUsPerson(traveler) ? (
+                  <Badge variant="info">{t('usPersonBadge')}</Badge>
+                ) : null}
               </div>
               <p className="text-caption text-muted">
                 {[

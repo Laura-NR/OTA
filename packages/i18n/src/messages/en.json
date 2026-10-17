@@ -685,7 +685,8 @@
         "label": "Saved views",
         "all": "All bookings",
         "attention": "Red & amber",
-        "arriving": "Arriving ≤ 7 days"
+        "arriving": "Arriving ≤ 7 days",
+        "ofac": "Missing OFAC"
       },
       "states": {
         "title": "State machine · spec §4.2",
@@ -915,7 +916,14 @@
         "extraLabel": "Description",
         "extraUnit": "Charged",
         "unitAmount": "Unit price",
-        "extraFailed": "The extra could not be changed."
+        "extraFailed": "The extra could not be changed.",
+        "usPerson": "US person (OFAC)",
+        "usPersonOptions": {
+          "auto": "From nationality",
+          "yes": "Yes, e.g. a US resident",
+          "no": "No"
+        },
+        "usPersonBadge": "US person"
       },
       "price": {
         "title": "Price breakdown · {currency}",
@@ -935,6 +943,47 @@
         "total": "Total",
         "item": "Item",
         "amount": "Amount"
+      },
+      "ofac": {
+        "title": "OFAC certification",
+        "description": "US travelers certify a travel category before payment; vouchers wait for it. Records are kept 5 years after the trip.",
+        "none": "No US travelers on this booking.",
+        "missingAlert": "{count, plural, one {# US traveler has} other {# US travelers have}} not certified yet: the payment link and the vouchers are held.",
+        "certified": "Certified · {category}",
+        "signedMeta": "{source} · signed {date}",
+        "sources": {
+          "ONLINE": "online",
+          "PAPER": "paper form"
+        },
+        "missing": "Not certified",
+        "signOnline": "Travelers sign from their account's booking page.",
+        "viewRecord": "View record",
+        "viewing": "Opening…",
+        "viewed": "Viewed now · logged in the audit trail",
+        "recordFailed": "The record could not be opened.",
+        "record": {
+          "signature": "Signature",
+          "ip": "IP address",
+          "userAgent": "Browser",
+          "statement": "Statement",
+          "recordedBy": "Recorded by",
+          "retainUntil": "Kept until",
+          "scan": "Open the scanned form"
+        },
+        "paper": {
+          "open": "Record a paper affidavit",
+          "title": "Paper affidavit for {name}",
+          "category": "Travel category",
+          "signerName": "Name on the form",
+          "signedAt": "Signed on",
+          "file": "Scan (PDF, JPEG or PNG, up to 10 MB)",
+          "submit": "Record affidavit",
+          "submitting": "Recording…",
+          "cancel": "Cancel",
+          "failed": "The affidavit could not be recorded.",
+          "chooseFile": "Choose the scanned form.",
+          "tooLarge": "The scan is over 10 MB."
+        }
       }
     },
     "reservationActions": {
@@ -1102,7 +1151,9 @@
         "credential": "Credential · {count}",
         "credentialDays": "soonest licence expires in {days, plural, one {# day} other {# days}}",
         "credentialNote": "a licence expires within 30 days",
-        "noAlerts": "No alerts right now."
+        "noAlerts": "No alerts right now.",
+        "ofac": "{count, plural, one {# booking} other {# bookings}} · OFAC missing",
+        "ofacNote": "payment and vouchers held"
       },
       "matrix": {
         "title": "Dispatch matrix",
@@ -1429,13 +1480,49 @@
       "lastCompleted": "Last completed trip",
       "noCompleted": "No completed trip yet",
       "retentionNote": "6 months after the last completed trip a keep-alive email goes out; after a 30-day grace the account is anonymized. Spec §3.5.",
-      "later": "Preferences, passport documents, OFAC certification and the communication history arrive with M2/M3; only the account, its trips and retention are shown today.",
+      "later": "Preferences, passport documents and the communication history arrive with their models; the account, its trips with their OFAC position, the consent log and retention are shown today.",
       "retentionStatus": {
         "ACTIVE": "Active",
         "NOTICE_DUE": "Notice due",
         "GRACE_PERIOD": "Grace period",
         "PURGE_DUE": "Purge due",
         "ANONYMIZED": "Anonymized"
+      },
+      "ofacColumn": "OFAC",
+      "ofacStatus": {
+        "none": "—",
+        "certified": "Certified",
+        "missing": "{count} missing"
+      },
+      "consentTitle": "Consent log",
+      "consentDescription": "Every grant and withdrawal, newest first, with the version of the words the traveler saw.",
+      "consentNone": "No consents recorded yet.",
+      "consentGranted": "Granted",
+      "consentWithdrawn": "Withdrawn",
+      "consentPurposes": {
+        "TERMS": "Terms",
+        "PRIVACY_NOTICE": "Privacy notice",
+        "CANCELLATION_POLICY": "Cancellation policy",
+        "INSURANCE_ACKNOWLEDGEMENT": "Insurance acknowledgement",
+        "PAYMENT_TERMS": "Payment terms",
+        "MARKETING_EMAIL": "Stories and new trips (email)",
+        "TRIP_MESSAGES": "Pre-departure briefing and check-ins",
+        "COOKIES_ANALYTICS": "Analytics cookies",
+        "COOKIES_MARKETING": "Marketing cookies"
+      },
+      "consentSources": {
+        "BOOKING": "booking",
+        "ACCOUNT": "account",
+        "COOKIE_BANNER": "cookie banner",
+        "PAYMENT": "payment",
+        "CUSTOM_REQUEST": "custom request",
+        "DESK": "desk"
+      },
+      "consentTable": {
+        "purpose": "Purpose",
+        "state": "State",
+        "version": "Version",
+        "when": "When"
       }
     },
     "retention": {
@@ -1958,5 +2045,21 @@
     "note": "Rows with identical values are dimmed when “Highlight differences only” is on. On a phone, swipe sideways for more trips; the first column stays fixed.",
     "whatsapp": "WhatsApp us",
     "mix": "Mix them into a custom route"
+  },
+  "ofac": {
+    "categories": {
+      "FAMILY_VISITS": "Family visits",
+      "OFFICIAL_GOVERNMENT_BUSINESS": "Official government business",
+      "JOURNALISTIC_ACTIVITY": "Journalistic activity",
+      "PROFESSIONAL_RESEARCH": "Professional research and meetings",
+      "EDUCATIONAL_ACTIVITIES": "Educational activities",
+      "RELIGIOUS_ACTIVITIES": "Religious activities",
+      "PUBLIC_PERFORMANCES": "Public performances, clinics, workshops, competitions and exhibitions",
+      "SUPPORT_FOR_THE_CUBAN_PEOPLE": "Support for the Cuban people",
+      "HUMANITARIAN_PROJECTS": "Humanitarian projects",
+      "PRIVATE_FOUNDATIONS_RESEARCH": "Private foundations, research and educational institutes",
+      "INFORMATIONAL_MATERIALS": "Information and informational materials",
+      "AUTHORIZED_EXPORT_TRANSACTIONS": "Authorized export transactions"
+    }
   }
 }

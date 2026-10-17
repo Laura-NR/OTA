@@ -37,7 +37,7 @@ import { bookingDates, countdown, money, opsTime } from '@/lib/ops-format';
 const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /** A-Bookings' saved views that today's data can answer. */
-const VIEWS = ['all', 'attention', 'arriving'] as const;
+const VIEWS = ['all', 'attention', 'arriving', 'ofac'] as const;
 type View = (typeof VIEWS)[number];
 
 const PAGE_SIZE = 25;
@@ -87,6 +87,10 @@ function inView(row: Row, view: View, now: Date): boolean {
   if (view === 'attention') return ALERTS.includes(row.alert);
   if (view === 'arriving')
     return isArrivingWithin(new Date(row.startDate), row.status, now);
+  if (view === 'ofac')
+    return (
+      row.ofacMissing > 0 && row.status !== 'COMPLETED' && row.status !== 'CANCELLED'
+    );
   return true;
 }
 

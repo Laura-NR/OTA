@@ -49,20 +49,29 @@ export default async function DashboardPage() {
   const month = monthRange(now);
   const previousMonth = monthRange(now, -1);
 
-  const [rows, overview, previous, expiring, retention, submitted] = await Promise.all([
-    apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
-    apiFetch<AnalyticsOverviewDto>(`/analytics/overview${rangeQuery(month)}`).catch(
-      () => null,
-    ),
-    apiFetch<AnalyticsOverviewDto>(
-      `/analytics/overview${rangeQuery(previousMonth)}`,
-    ).catch(() => null),
-    apiFetch<SupplierDto[]>('/suppliers/expiring?days=30').catch(() => []),
-    apiFetch<RetentionPendingUserDto[]>('/retention/pending').catch(() => []),
-    apiFetch<ReservationListItemDto[]>(
-      '/reservations?status=ITINERARY_SUBMITTED&limit=200',
-    ).catch(() => []),
-  ]);
+  const [rows, overview, previous, expiring, retention, submitted, recent] =
+    await Promise.all([
+      apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
+      apiFetch<AnalyticsOverviewDto>(`/analytics/overview${rangeQuery(month)}`).catch(
+        () => null,
+      ),
+      apiFetch<AnalyticsOverviewDto>(
+        `/analytics/overview${rangeQuery(previousMonth)}`,
+      ).catch(() => null),
+      apiFetch<SupplierDto[]>('/suppliers/expiring?days=30').catch(() => []),
+      apiFetch<RetentionPendingUserDto[]>('/retention/pending').catch(() => []),
+      apiFetch<ReservationListItemDto[]>(
+        '/reservations?status=ITINERARY_SUBMITTED&limit=200',
+      ).catch(() => []),
+      apiFetch<ReservationListItemDto[]>('/reservations?limit=200').catch(() => []),
+    ]);
+  // M3: open bookings whose payment and vouchers wait for an OFAC certification.
+  const ofacMissing = recent.filter(
+    (reservation) =>
+      reservation.ofacMissing > 0 &&
+      reservation.status !== 'COMPLETED' &&
+      reservation.status !== 'CANCELLED',
+  ).length;
 
   const mix = overview ? bookingMix(overview.operations.funnel) : null;
   const previousMix = previous ? bookingMix(previous.operations.funnel) : null;
@@ -174,6 +183,7 @@ export default async function DashboardPage() {
         initialRows={rows ?? []}
         serverNow={now.getTime()}
         figures={figures}
+        ofacMissing={ofacMissing}
         credentials={{
           count: expiring.length,
           soonestDays:

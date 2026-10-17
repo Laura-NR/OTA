@@ -72,6 +72,8 @@ export const reservationListItemSchema = reservationSchema.extend({
   serviceItemsAccepted: z.number().int().nonnegative(),
   /** The sum of its PAID receipts, in the booking's currency. */
   paidAmount: z.string(),
+  /** US persons still without an OFAC affidavit; any holds payment and vouchers (M3). */
+  ofacMissing: z.number().int().nonnegative(),
 });
 
 export type ReservationListItemDto = z.infer<typeof reservationListItemSchema>;

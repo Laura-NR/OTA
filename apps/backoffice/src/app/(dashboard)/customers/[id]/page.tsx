@@ -1,4 +1,4 @@
-import type { CustomerDetailDto } from '@ota/schemas';
+import type { ConsentRecordDto, CustomerDetailDto, CustomerTripDto } from '@ota/schemas';
 import { Badge, buttonClassName } from '@ota/ui';
 import type { BadgeVariant } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -27,10 +27,14 @@ function initials(name: string | null, email: string): string {
     .join('');
 }
 
+function ofacVariant(trip: CustomerTripDto): BadgeVariant {
+  return trip.ofacMissing > 0 ? 'warning' : 'success';
+}
+
 /**
- * A-Customers profile: the account's identity, its trips, and the GDPR
- * retention state. Preferences, documents, OFAC certification and the
- * communication history wait for M2/M3; only what today's data holds is shown.
+ * A-Customers profile: the account's identity, its trips with their OFAC
+ * position, the consent log and the GDPR retention state (M3). Preferences,
+ * documents and the communication history wait for their models.
  */
 export default async function CustomerDetailPage({
   params,
@@ -50,6 +54,9 @@ export default async function CustomerDetailPage({
     },
   );
 
+  const consents = await apiFetch<ConsentRecordDto[]>(`/customers/${id}/consents`).catch(
+    () => [],
+  );
   const name = customer.fullName ?? customer.email;
 
   return (
@@ -104,7 +111,7 @@ export default async function CustomerDetailPage({
           <p className="text-body-sm text-muted">{t('noTrips')}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] border-collapse text-body-sm">
+            <table className="w-full min-w-[640px] border-collapse text-body-sm">
               <thead>
                 <tr className="text-left text-caption uppercase text-muted">
                   <th scope="col" className="pb-2 pr-4 font-medium">
@@ -115,6 +122,9 @@ export default async function CustomerDetailPage({
                   </th>
                   <th scope="col" className="pb-2 pr-4 font-medium">
                     {t('table.status')}
+                  </th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">
+                    {t('ofacColumn')}
                   </th>
                   <th scope="col" className="pb-2 text-right font-medium">
                     {t('table.total')}
@@ -142,6 +152,17 @@ export default async function CustomerDetailPage({
                     </td>
                     <td className="py-2 pr-4 align-top">
                       <StatusBadge status={trip.status} />
+                    </td>
+                    <td className="py-2 pr-4 align-top">
+                      {trip.ofacRequired === 0 ? (
+                        <span className="text-muted">{t('ofacStatus.none')}</span>
+                      ) : (
+                        <Badge variant={ofacVariant(trip)}>
+                          {trip.ofacMissing > 0
+                            ? t('ofacStatus.missing', { count: trip.ofacMissing })
+                            : t('ofacStatus.certified')}
+                        </Badge>
+                      )}
                     </td>
                     <td className="py-2 text-right align-top font-mono">
                       {money(Number(trip.totalAmount), trip.totalCurrency, locale)}
@@ -175,6 +196,58 @@ export default async function CustomerDetailPage({
           </div>
         </dl>
         <p className="text-caption text-muted">{t('retentionNote')}</p>
+      </section>
+
+      <section className="flex min-w-0 flex-col gap-3 rounded-lg border bg-surface px-5 py-4">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-h4">{t('consentTitle')}</h2>
+          <p className="text-caption text-muted">{t('consentDescription')}</p>
+        </div>
+        {consents.length === 0 ? (
+          <p className="text-body-sm text-muted">{t('consentNone')}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] border-collapse text-body-sm">
+              <thead>
+                <tr className="text-left text-caption uppercase text-muted">
+                  <th scope="col" className="pb-2 pr-4 font-medium">
+                    {t('consentTable.purpose')}
+                  </th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">
+                    {t('consentTable.state')}
+                  </th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">
+                    {t('consentTable.version')}
+                  </th>
+                  <th scope="col" className="pb-2 font-medium">
+                    {t('consentTable.when')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {consents.map((consent) => (
+                  <tr key={consent.id} className="border-t">
+                    <td className="py-2 pr-4 align-top">
+                      {t(`consentPurposes.${consent.purpose}`)}
+                    </td>
+                    <td className="py-2 pr-4 align-top">
+                      <Badge variant={consent.granted ? 'success' : 'secondary'}>
+                        {consent.granted ? t('consentGranted') : t('consentWithdrawn')}
+                      </Badge>
+                    </td>
+                    <td className="py-2 pr-4 align-top font-mono text-caption">
+                      {consent.textVersion}
+                    </td>
+                    <td className="py-2 align-top text-caption text-muted">
+                      {opsDate(consent.createdAt, locale)} ·{' '}
+                      {t(`consentSources.${consent.source}`)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <p className="rounded-lg border bg-surface px-5 py-3 text-caption text-muted">

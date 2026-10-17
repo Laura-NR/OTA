@@ -12,6 +12,7 @@ import type {
   PackageDto,
   PaymentReceiptDto,
   ReservationDetailDto,
+  ReservationOfacDto,
   ReservationPartyDto,
   ReservationPriceLinesDto,
 } from '@ota/schemas';
@@ -26,6 +27,7 @@ import { BookingServices, type ItemOffer } from '@/components/booking-services';
 import { IncidentLogForm } from '@/components/incident-log-form';
 import { IncidentResolveButton } from '@/components/incident-resolve-button';
 import { KpiCard } from '@/components/kpi-card';
+import { OfacPanel } from '@/components/ofac-panel';
 import { PaymentPanel } from '@/components/payment-panel';
 import { PriceBreakdown } from '@/components/price-breakdown';
 import { ReservationActions } from '@/components/reservation-actions';
@@ -89,7 +91,7 @@ export default async function BookingPage({
     },
   );
 
-  const [audit, documents, payments, incidents, dispatch, party, priceLines, pkg] =
+  const [audit, documents, payments, incidents, dispatch, party, priceLines, pkg, ofac] =
     await Promise.all([
       apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
       apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
@@ -103,6 +105,7 @@ export default async function BookingPage({
       reservation.packageId
         ? apiFetch<PackageDto>(`/packages/${reservation.packageId}`).catch(() => null)
         : Promise.resolve(null),
+      apiFetch<ReservationOfacDto>(`/reservations/${id}/ofac`).catch(() => null),
     ]);
 
   const now = new Date();
@@ -314,6 +317,18 @@ export default async function BookingPage({
               currency={currency}
               canManage={canManage}
             />
+          </div>
+        </Section>
+      ) : null}
+
+      {ofac ? (
+        <Section
+          id="ofac-title"
+          title={t('ofac.title')}
+          description={t('ofac.description')}
+        >
+          <div className="px-5">
+            <OfacPanel reservationId={reservation.id} ofac={ofac} canManage={canManage} />
           </div>
         </Section>
       ) : null}

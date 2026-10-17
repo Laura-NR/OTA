@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import type { Prisma, Reservation } from '@ota/db';
-import { ReservationStatus, assertTransition } from '@ota/domain';
+import { ReservationStatus, assertTransition, ofacGate } from '@ota/domain';
 import type {
   AuditLogEntryDto,
   ClassifyReservationRequest,
@@ -28,6 +28,8 @@ import { PrismaService } from '../prisma/prisma.service';
 const ROW_CONTEXT = {
   package: { select: { name: true } },
   payments: { where: { status: 'PAID' }, select: { amount: true } },
+  travelers: { select: { id: true, usPerson: true, nationality: true } },
+  affidavits: { select: { travelerId: true } },
 } as const;
 
 type ListRow = Prisma.ReservationGetPayload<{
@@ -66,7 +68,7 @@ function toDto(reservation: Reservation): ReservationDto {
 
 const SECURED_ITEM_STATUSES: readonly string[] = ['ACCEPTED', 'FULFILLED'];
 
-/** The context a row carries beyond the reservation: package, places, progress, money. */
+/** The context a row carries beyond the reservation: package, places, progress, money, OFAC. */
 function rowContext(row: ListRow | DetailRow) {
   return {
     serviceItemCount: row.serviceItems.length,
@@ -84,6 +86,7 @@ function rowContext(row: ListRow | DetailRow) {
     paidAmount: row.payments
       .reduce((sum, payment) => sum + Number(payment.amount), 0)
       .toFixed(2),
+    ofacMissing: ofacGate(row.travelers, row.affidavits).missing.length,
   };
 }
 

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@ota/db';
 import {
+  ofacGate,
   retentionStatus,
   type ReservationStatus,
   type RetentionStatus,
@@ -32,6 +33,8 @@ interface TripRow {
   completedAt: Date | null;
   createdAt: Date;
   package: { name: string } | null;
+  travelers: { id: string; usPerson: boolean | null; nationality: string | null }[];
+  affidavits: { travelerId: string | null }[];
 }
 
 function iso(date: Date | null): string | null {
@@ -41,7 +44,7 @@ function iso(date: Date | null): string | null {
 /**
  * A-Customers read model: the traveler accounts the desk looks after, with the
  * trip count and the GDPR retention state. The profile adds the customer's
- * trips. Passport numbers, preferences and OFAC records wait for M2/M3.
+ * trips, with each trip's OFAC position (M3). Preferences wait for their model.
  */
 @Injectable()
 export class CustomersService {
@@ -88,6 +91,8 @@ export class CustomersService {
             completedAt: true,
             createdAt: true,
             package: { select: { name: true } },
+            travelers: { select: { id: true, usPerson: true, nationality: true } },
+            affidavits: { select: { travelerId: true } },
           },
         },
       },
@@ -144,6 +149,7 @@ export class CustomersService {
   }
 
   private toTrip(row: TripRow): CustomerTripDto {
+    const gate = ofacGate(row.travelers ?? [], row.affidavits ?? []);
     return {
       id: row.id,
       bookingCode: row.bookingCode,
@@ -153,6 +159,8 @@ export class CustomersService {
       status: row.status,
       totalAmount: String(row.totalAmount),
       totalCurrency: row.totalCurrency,
+      ofacRequired: gate.required.length,
+      ofacMissing: gate.missing.length,
     };
   }
 }
