@@ -1,105 +1,109 @@
-# Handoff — vereda — updated 2026-10-17 18:30
+# Handoff — vereda — updated 2026-10-17 20:11
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
 Decisions: ADR 0006 (design system; amended for v1.2, change request 02, Phases 3 & 5, the
-Phase 4 Booking form and M4 payments) and ADR 0007 (worker app).
+Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done.** Commits are local
   on `vereda`; the owner pushes (check `git log --oneline origin/vereda..vereda`).
 - **M1, M2, M3 and M4 are complete**, with their surfaces; the storefront Booking form (sign-in
-  first) landed earlier today (`2671aa6`…`e7afb49`), and the API enforces the publish checks.
-- **M4 (payment schedule) approved D1–D8 as recommended and landed 2026-10-17**, one commit each:
-  - `4fa9bf7` migration `20261017144721_payment_schedule`: `PaymentInstalment`, `PaymentProof`,
-    `Refund`, `RefundApproval`, five enums, `PaymentReceipt.feeAmount`/`instalmentId`.
-  - `75d3520` manifest `policies` (deposit plans, cancellation scales by key) and payment terms
-    (`windowHours`, `cardFeePercent` 0, `refundApproval`) as placeholders; domain rules
-    (`buildSchedule`, `depositEligible`, `cardFee`, `addBusinessDays`, `cancellationRefund`,
-    `refundDecision`); the seeded package names the `standard` policies. `ac7b395` the publish
-    checks read the manifest's keys (`knownPolicyKeys`).
-  - `75befdd`/`49191dd` API (`apps/api/src/payments`): links pay instalments (the first fixes the
-    plan and moves to PENDING_PAYMENT; the first PAID confirms; a balance only marks its
-    instalment), schedule reads (`/reservations/:id/schedule`, `/me/...`), extend, proofs (owner
-    upload, queue, audited file, accept extends a business day, reject with note), refunds
-    (quote, request, votes by limits, gateway refund with idempotency key or bank reference,
-    queue); booking rows carry `nextInstalment`. `2e77ef9` optional `PaymentProvider.refund`.
-  - `1149aeb` storefront trip page payment section; `940723f` desk (A-Booking panel, A-Payments
-    queues, dashboard alerts, "Payment due" view); `b90feaa` `paymentAlert`; `fbc172f` refunds in
-    finance (net revenue) and the fiscal CSV (fee and kind columns, REFUND rows).
-- **`099e0c0` fixes a pre-existing bug**: `express.json()` kept its 100 KB default, so every
-  base64 upload over ~73 KB (photos, credentials, scans, imports) got 413. Upload routes now take
-  15 MB (`apps/api/src/common/json-body.ts`).
+  first) landed on 2026-10-17 (`2671aa6`…`e7afb49`), and the API enforces the publish checks.
+- **Phase 6 notifications (no migration) landed 2026-10-17:**
+  - `feat(email)` new branded templates in `packages/email`: `bookingReceivedEmail`,
+    `ofacReminderEmail`, `instalmentReminderEmail`, with en/es/fr copy and the tenant's
+    `EmailBranding`; `packages/email/src/locale.ts` formats money/dates/lists.
+  - `feat(api)` the Booking form sends **E-Received** best-effort after the booking transaction
+    (`MeService.sendBookingReceived`); a mail failure never rolls back a stored request. The
+    "Request received" panel now says a copy was emailed (`sent.emailed` in all three catalogs).
+  - `feat(api,backoffice)` **E-OFAC**: `POST /customers/:id/certification-reminder` sends the
+    reminder for one of the customer's trips, audited as `ofac.reminder_sent`; A-Customers shows
+    **Send certification reminder** on each trip with missing US certifications
+    (`certification-reminder-button.tsx`).
+  - `feat(api)` **balance reminders**: `POST /payments/reminders/scan` (ops write) and a daily
+    BullMQ job (`payment-reminders`, 07:00) email 7, 3 and 1 days before a DUE instalment. The
+    scan is idempotent per instalment and day through the audit log (`payment.reminder_sent`,
+    `metadata.days`), so **no migration**. `RemindersService` / `BullmqReminderScheduler` live in
+    `apps/api/src/payments`.
+- **M5 is drafted, not built:** `docs/schema-m5-proposal.md` proposes `CustomRequest` +
+  versioned `Proposal`/`ProposalVersion` + `ProposalPriceLine`, the D-Proposal document and the
+  request → proposal → acceptance path. It waits for the owner's answers (Q9); no migration.
+- **Not built:** the Confirmation screen (Task 3 of this session), the remaining Phase 6 emails
+  (E-Reminder 24 h/2 h, E-Confirmed, E-Invoice, E-NPS, …), SMS/push, the M5 surfaces, Phase 8.
+- **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
+  samples, the deposit's refundability and proof retention.
 
-## Verified (2026-10-17, after `7b1afdf`; dev stack stopped for the build)
-- lint, format:check green; `TURBO_FORCE=true` typecheck 33/33, test **555 passed / 12 skipped**
-  (domain 158, api 247/11 skipped, schemas 35, …), build 18/18 — all 0 cached.
-- `pnpm e2e` **51/51** (`.next` deleted first): new `payment-schedule.spec.ts` (deposit link,
-  expired window on the dashboard and the view, proof accepted on A-Payments, deposit confirms,
-  balance, refund approved and sent); `storefront-checkout` now chooses the plan and uploads a
-  proof; `storefront-ofac` and `payments` follow M4. A first run failed on the OFAC spec's old
-  button name; fixed (`7b1afdf`).
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL`) 11/11: retention, packages, affidavits 3,
-  package-booking 2, **payment-schedule 2** (deposit → proof → balance → dual-approved refund on
-  real FKs; deleting a booking removes its refunds while a refunded receipt cannot be deleted
-  alone), dispatch and compliance BullMQ.
-- The upload fix: the new `json-body.test.ts` fails on the old parser; the dev API refused a
-  200 KB upload body with 413 before and lets it reach the guard (401) after.
-- Browser (temporary spec, removed): trip payment section (choice, schedule, proof), A-Booking
-  panel and A-Payments at 390/1024/1280 — scrollWidth == viewport everywhere.
+## Verified (2026-10-17, after this increment; dev stack stopped for the build)
+- `pnpm lint` and `pnpm format:check` green.
+- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
+- `TURBO_FORCE=true pnpm test` **558 passed / 12 skipped** (domain 158, api 247/11 skipped,
+  email 9, schemas 35, ui 31, config 26, theming 14, documents 10, payments 8, imports 5,
+  reports 4, ai 4, i18n 4, storage 3/1 skipped), 0 cached.
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (API + both Next apps).
+- `pnpm e2e` **53/53** (`.next` deleted first), 6.6 min. New/updated Mailpit checks:
+  `storefront-packages.spec.ts` (E-Received to the lead, plus the "emailed" line),
+  `customers.spec.ts` (E-OFAC from A-Customers, audit row asserted), and
+  `payment-reminders.spec.ts` (7/3/1 balance reminders, second scan sends 0, 3 audit rows).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL`) **11/11**: retention, packages, affidavits 3,
+  package-booking 2, payment-schedule 2, dispatch and compliance BullMQ.
+- Browser (temporary spec, removed): A-Customers with the reminder button at **390/1024/1280**
+  and the Request received panel at **390/1024**; `scrollWidth == viewport` everywhere,
+  screenshots in `/tmp/ota-customers-*.png` and `/tmp/ota-request-received-*.png`. The full suite
+  already covers 1280.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
-- **Placeholders awaiting the owner/counsel**: the M4 terms (20 % deposit, 60/30 days, 48 h
-  window, the cancellation bands beyond 45–31 10 % and 30–15 25 %, the € 60 fee, the € 500 /
-  € 2,000 limits), the card fee (0 % pending PSD2 advice), whether a deposit is refundable, how
-  long proofs are kept; the legal texts and OFAC wording; the pricing samples.
-- The cancellation scale keeps a share of **what was paid** (A-Payments' worked examples), not
-  of the total (the Booking board's summary); confirm with the owner.
-- Places are checked, then booked, without a lock (same as the desk's party panel).
-- Proof files of the e2e fixtures are not removed from object storage (rows are).
-- Not built: the PAYMENT_TERMS consent on payment, the override "confirm on proof", statement
-  import, payouts, rails health, travel credit, the Confirmation screen, M5, Phase 6 emails
-  (incl. balance reminders), Phase 8 cookie banner.
+- Reminder days are counted on **UTC calendar days** (the balance due date is UTC midnight), and
+  the daily scan runs at **07:00 server time** after the retention (05:00) and compliance (06:00)
+  scans. A missed day is skipped rather than caught up, so 7/3/1 are the only sends.
+- The audit log is the sent ledger for reminders. It is durable, indexed by entity and already
+  audited; no new column or table was needed. The metadata is not PII.
+- Storefront links use `STOREFRONT_PUBLIC_URL ?? PAYMENT_CHECKOUT_BASE_URL ?? localhost:3000`;
+  a non-primary locale is prefixed (`/en`, `/fr`), the tenant primary locale is not.
+- E-OFAC is sent per booking from A-Customers; a customer with several incomplete trips gets one
+  email per trip. The board's SMS channel is not built.
+- The M5 decisions (separate request, versioning, sign-in-only proposal, acceptance → request to
+  book) are recommendations, not approved. No migration was generated.
 
 ## Traps
-- **Stage only the increment's files**: a `git rm` staged earlier rides along with the next
-  commit. On 2026-10-17 it landed in an API commit and was moved by a soft reset of two
-  unpushed commits.
-- **`json.dump` reformats a whole JSON file** (the manifest): insert keys as text and check the
-  diff only adds lines. Catalog JSON round-trips cleanly through Prettier; the manifest does not.
-- `ops-format` already has `calendarDate` (UTC); a balance due date must use it, not `opsDate`
-  (Havana shows the previous evening).
-- A client form that seeds `useState` from props keeps a stale first value when the list grows
-  after a refresh (the refund form's receipt); derive the selection from props.
-- React-controlled `<select>`s: wait for hydration (`__react*` keys on the node) before
-  `selectOption`, or the choice is reset (`e2e/payment-schedule.spec.ts` `hydrated()`).
-- The payments spec and the global setup must clear `E2E0001`'s instalments: once a schedule
-  exists, a second run gets "Nothing is due".
-- Earlier traps still apply (stale briefs, Turbo replays, `pkill -f` kills the calling shell,
-  no `prisma format`, append-only affidavits, ICU spaces, `.next` after a build, Playwright
-  leaves 3000–3002 listening, `getByText` substrings need `exact`).
+- **Rebuild `@ota/email`, `@ota/schemas` and `@ota/i18n` before the dev API sees template/type/copy
+  changes.** Typecheck does it; a running `pnpm dev` still needs its API process restarted.
+- Prisma JSON filtering for the reminder ledger uses
+  `metadata: { path: ['days'], equals: days }`; a whole-object `equals` never matches.
+- The reminder e2e fixture owns three audit rows with `entityType: 'PaymentInstalment'`; delete
+  them by the fixture's instalment ids (no FK), then the reservation cascades its instalments.
+- `signIn()` clears Mailpit at the start, so a spec that checks a later email must clear it again
+  after sign-in (the magic-link message is harmless but the booking/reminder subject match is not).
+- E-Received is best-effort: the e2e polls Mailpit, and the UI copy does not wait for SMTP.
+- `docs/schema-m4-payment-schedule.md` said the balance reminders would "land with Phase 6"; they
+  have. The M4 read-time `paymentAlert` is still the desk alert; the scan only sends email.
+- Earlier traps still apply (stale briefs, Turbo replays, `pkill -f` kills the calling shell, no
+  `prisma format`, append-only affidavits, ICU spaces, `.next` after a build/moving routes,
+  Playwright leaves 3000–3002 listening, `getByText` substrings need `exact`).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones:
-  - "2026-10-17: M4 payments: a payment link pays the next `PaymentInstalment`; the first link
-    fixes the plan (FULL, or DEPOSIT + BALANCE from the package's `depositPolicy` in the
-    manifest `policies`); the first PAID receipt confirms the booking, a balance only marks its
-    instalment. Expired windows and overdue balances are read with `paymentAlert` from the
-    booking's `nextInstalment`; nothing auto-cancels (M4 D4)."
-  - "2026-10-17: refunds need approvals by the manifest's `payments.refundApproval` limits
-    (`refundDecision`); a card refund calls `PaymentProvider.refund` with the refund id as the
-    idempotency key, a transfer refund is recorded with the bank reference. A refund's receipt
-    FK is NO ACTION."
-  - "2026-10-17: base64 upload routes are listed in `apps/api/src/common/json-body.ts`
-    (15 MB); every other route keeps the 100 KB JSON limit. Add a new upload route there."
+  - "2026-10-17: Phase 6 emails live in `packages/email` and take `locale` (en/es/fr) + the tenant
+    `EmailBranding`. The Booking form sends E-Received best-effort after its transaction; a mail
+    failure never rolls back the booking. Rebuild `@ota/email` before the dev API sees a change."
+  - "2026-10-17: A-Customers sends the E-OFAC reminder per booking
+    (`POST /customers/:id/certification-reminder`, audited `ofac.reminder_sent`). Instalment
+    reminders are 7/3/1 UTC days before a DUE instalment; the daily `payment-reminders` BullMQ scan
+    (07:00) uses the audit log (`payment.reminder_sent`, `metadata.days`) as the idempotency ledger,
+    so no migration. `POST /payments/reminders/scan` forces a pass."
+  - "2026-10-17: M5 is drafted in `docs/schema-m5-proposal.md` (CustomRequest + versioned Proposal +
+    ProposalPriceLine; acceptance creates an ITINERARY_SUBMITTED request to book). No M5 migration
+    exists until the owner answers the seven questions in that document."
 
 ## Next
-1. Owner: confirm or change the M4 placeholder terms and the share-of-paid reading; counsel on
-   the card surcharge, the cancellation scale, the deposit's refundability and proof retention;
-   back up the passport key.
-2. Phase 6 notifications without a migration: the booking-received email, the E-OFAC reminder
-   and the balance reminders (7, 3, 1 days) from the instalments' due dates.
-3. Draft M5 (proposal) for review; the Confirmation screen; Phase 8 cookie banner.
+1. Owner: answer the M5 questions (§7 of `docs/schema-m5-proposal.md`): acceptance semantics,
+   sign-in vs public proposal, planning fee, validity, document shape, retention. Also the M4
+   placeholders and the passport-key backup remain open.
+2. Build the Confirmation screen (Task 3, Confirmation/M-Confirmation boards) on today's data,
+   with the Review model's CSAT where a completed trip has one.
+3. Finish Phase 6: E-Reminder 24 h/2 h, E-Confirmed, E-Invoice, E-NPS, E-Advisory, E-Options,
+   E-Reconfirm, E-Retention; SMS/push behind a provider; proposal email/PDF after M5.
+4. Phase 8 cookie banner and the remaining customer/admin surfaces.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -268,3 +272,18 @@ Phase 4 Booking form and M4 payments) and ADR 0007 (worker app).
   are a counsel question.
 - 2026-10-17 — the JSON body limit fix (`099e0c0`) is route-scoped (upload routes at 15 MB)
   rather than global, so ordinary routes keep the 100 KB limit.
+- 2026-10-17 — Phase 6 emails are branded with the tenant manifest and written in the traveler's
+  locale (en/es/fr); the E-Received email is sent best-effort after the booking transaction and
+  never rolls a stored request back.
+- 2026-10-17 — the E-OFAC reminder is sent per booking from A-Customers, only for a trip with
+  missing US certifications, and audited as `ofac.reminder_sent`; no OFAC record changes.
+- 2026-10-17 — balance reminders are 7, 3 and 1 UTC calendar days before a DUE instalment. The
+  audit log (`payment.reminder_sent` with `metadata.days`) is the idempotency ledger, so no
+  migration was needed; the repeatable scan runs daily at 07:00 and `POST /payments/reminders/scan`
+  forces a pass. A missed day is skipped, not caught up.
+- 2026-10-17 — M5 is a draft only: a separate `CustomRequest`, versioned `Proposal` and
+  `ProposalPriceLine`, a sign-in-only proposal and acceptance that creates an
+  `ITINERARY_SUBMITTED` request to book. The owner's answers in `docs/schema-m5-proposal.md` decide
+  the migration.
+- 2026-10-17 — Task 3 (the Confirmation screen) was not built this session; it stays first in
+  `Next`.

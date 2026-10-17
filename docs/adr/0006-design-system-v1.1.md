@@ -407,3 +407,29 @@ counsel and the owner confirm them.
 - **Alerts.** A-Dashboard adds "payment window over" and "balances overdue",
   both opening a new **Payment due** saved view on A-Bookings; neither changes
   a booking's status (D3, D4).
+
+## Amendment, 2026-10-17: Phase 6 notifications, resolved by the build
+
+The E-Received, E-OFAC and 7/3/1 instalment emails are built on the existing tokens, the tenant
+`EmailBranding` and the traveler's locale. No token was added.
+
+- **Email shell.** Email clients do not load the web token stylesheet, so the templates keep the
+  existing inline Arial/neutral shell and use the tenant's `branding.primaryColor` for the heading,
+  button and links. The new templates live in `packages/email` and take `locale` (en/es/fr), the
+  same `EmailBranding` and plain-text bodies. This is the email counterpart of the token rule, not a
+  second visual system.
+- **E-Received.** The Booking form's "Request received" panel now says a copy was emailed
+  (`sent.emailed`, `text-body-sm text-muted`). The email follows the board's facts (booking code,
+  nothing charged, package, dates, total, track link) in the traveler's locale. The board's
+  host-confirmation promises and the 24-hour reply are tenant copy, not hard-coded: the email says
+  the dates are being confirmed without promising a specific hour.
+- **E-OFAC.** The board is Spanish; the template is localized en/es/fr and uses the board's
+  two-minute form, the 31 CFR § 515.561 reference, the five-year retention note and the account
+  link. The desk action lives on each A-Customers trip row with missing certifications, using the
+  existing DS Button (tertiary, sm); a send is audited and changes no OFAC record.
+- **Balance reminders.** The E-Confirmed board promises reminders 7, 3 and 1 day before the balance;
+  the template carries the amount, the UTC calendar due date and the days left. The board's live
+  countdown, the 24 h/2 h E-Reminder and the SMS channel are not drawn: they need a different
+  trigger and a provider.
+- **Not resolved here.** The M5 D-Proposal screen is drafted in `docs/schema-m5-proposal.md` and is
+  not built, so its document layout stays a Phase 6/M5 design task.

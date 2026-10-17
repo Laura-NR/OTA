@@ -12,7 +12,7 @@ each: manifest terms and the pure rules (`75d3520`), publish checks on the manif
 storefront trip page (`1149aeb`), the payment alert (`b90feaa`), the desk (`940723f`), finance and
 the fiscal CSV (`fbc172f`). Two departures from §5: the expired-window and overdue-balance alerts
 are read from each booking's next instalment (`paymentAlert`) rather than set by a scheduled scan,
-which lands with the Phase 6 reminders; and the payment page does not ask a PAYMENT_TERMS consent
+which landed with the Phase 6 reminders on 2026-10-17 (`payment-reminders`, 7/3/1 days, audit-log idempotency); and the payment page does not ask a PAYMENT_TERMS consent
 yet (the deposit's refundability is a counsel question). The cancellation scale keeps its share of
 what was paid, as A-Payments works it, not of the total as the Booking board's summary reads.
 **Date:** 2026-10-17
