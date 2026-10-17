@@ -29,7 +29,7 @@ the request → proposal → acceptance flow below.
 
 ## 2. Data changes (this is why it is Article 2)
 
-Four new tables and three enums:
+Four new tables and four enums:
 
 - `custom_requests` — the builder's answers and the 90-day request record;
 - `proposals` — the thread: status, current version, assignment, acceptance and the booking it created;
