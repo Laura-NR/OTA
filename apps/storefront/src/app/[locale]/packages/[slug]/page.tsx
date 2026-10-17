@@ -470,7 +470,6 @@ export default async function PackageDetailPage({
           <PackageTabs items={tabs} label={t('detail.tabsLabel')} />
         </div>
         <PackageBookingForm
-          packageId={pkg.id}
           slug={pkg.slug}
           signedIn={Boolean(session)}
           price={formatMoney(pkg.basePrice, pkg.currency, locale)}
