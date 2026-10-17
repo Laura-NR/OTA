@@ -277,6 +277,24 @@ tokens; no token was added.
   deposit and balance line waits for M4; "Locked to package v3.2" waits for package
   versions (M1 D3c). Once a payment link exists the section says the price is
   locked and only corrections that leave it unchanged save.
+- **M3 compliance surfaces (2026-10-17).** The booking page gains an **OFAC
+  certification** section: each US traveler certified (category, online or paper,
+  date) or "Not certified", a warning that payment and vouchers are held, the
+  board's "Upload signed affidavit" as **Record a paper affidavit** (category,
+  name, date, scan) and "View affidavit (logged)" as **View record** (signature,
+  IP, browser, statement; the read is audited). A-Dashboard's alert reads
+  "N bookings · OFAC missing" and opens a **Missing OFAC** saved view on
+  A-Bookings. A-Customers shows an OFAC column on the trips and the **Consent
+  log** (purpose, granted or withdrawn, text version, when, source); the board's
+  cookies/marketing/terms/region summary is the log itself, newest first. "Send
+  certification reminder" waits for the E-OFAC email (Phase 6). On the
+  storefront the Booking form's step 4 does not exist yet, so the certification
+  step sits on the account trip page above Payment, which shows the locked notice
+  instead of "Proceed to payment" until every US traveler has signed. Account
+  gains **Preferences** with the board's two consent-based notifications as
+  switches, each with the words it records; the board's language, currency,
+  travel-style and accessibility rows and the transactional booking updates are
+  not consents and wait for a preferences model.
 - **A-Reports (merge).** One `/reports` page carries the spec §4.9 sections as
   anchors (financial, regulatory, dispatch, quality, geography), and
   `/analytics`, `/regulatory`, `/quality`, `/reports/regulatory` and

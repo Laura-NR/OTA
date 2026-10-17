@@ -5,7 +5,13 @@ migration `20261017075012_compliance` was applied: `TravelerAffidavit`, `Consent
 enums, `ReservationTraveler.usPerson` and the append-only trigger, proven on live Postgres by
 `apps/api/test/affidavits.integration.test.ts`. Additive; no backfill. The trigger also lets the
 recording user's link (`recorded_by_id`) turn null, a fourth `ON DELETE SET NULL` the draft
-missed. The surfaces in §5 follow.
+missed. **Surfaces landed 2026-10-17:** the domain rules (`a4255b7`), DTOs and the tenant's legal
+texts (`4354b7b`), the API with the payment and voucher gate (`783040a`), the retention sweep and
+consent anonymization (`cff508a`), the desk surfaces (`694e25f`) and the storefront certification
+step and notification consents (`3660290`). Not built yet: the public `POST /consents` for the
+cookie banner (it lands with the banner, Phase 8, so no unused public write route ships), the
+E-OFAC reminder (Phase 6) and the Booking form's step 4 (the account trip page hosts the step
+until then).
 **Date:** 2026-10-16
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M3: the OFAC affidavit (category, signature,
 IP, timestamp; 5-year retention, reconciled with the retention purge) and consent records

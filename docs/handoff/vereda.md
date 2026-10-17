@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-16 22:30
+# Handoff — vereda — updated 2026-10-17 12:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -7,116 +7,96 @@ Decisions: ADR 0006 (design system; amended for v1.2, change request 02 and Phas
 ADR 0007 (worker app).
 
 ## State
-- **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done** (Dashboard
-  `47ed5dd`, Bookings/Booking `fca9a4c`, Reports `af0aff0`, Suppliers `715d216`/`1790c68`,
-  Payments `6a429e1`, Customers `435ecf3`, Packages editor `91a0dbb`). Commits are local on
-  `vereda`; the owner pushes (check `git log --oneline origin/vereda..vereda`).
-- **M1 (Package v2) is complete**, including the editor's **Photos** and **Translations** tabs
-  (`d8b646b`): `components/package-editor-tabs.tsx`, `package-media-manager.tsx`,
-  `package-translations.tsx`. `PackageDto` gained `sourceLocale`, `contentUpdatedAt` and media
-  `hasConsent` (the consent reference stays internal); the editor's publish check now sees photos.
-- **M2 (party and travelers) surfaces landed (2026-10-16)**, one commit each:
-  - `37b5c6e` domain: `priceBooking` (price lines: base, tier, child per traveler, single
-    supplement, extras, fees; each line rounded, total = sum), `isPriceLocked` (from
-    PENDING_PAYMENT), `ageOn`, `departurePlacesLeft`; the passport cipher (AES-256-GCM, payload
-    `v1.<iv>.<tag>.<ct>`, traveler id as AAD) as the **separate entry `@ota/domain/passport-cipher`**
-    (package.json `exports`) so browser bundles never load `node:crypto`. Manifest
-    `pricing.childBands`/`pricing.fees` (M1 D4; Vereda carries the Booking board's sample terms).
-  - `da24767` schemas: party/traveler/room/extra/price-line/passport DTOs; no list carries the
-    passport number (`hasPassport` only); PUT replaces the party, an omitted passport keeps the
-    stored one, null clears it.
-  - `482c7c7` API (`apps/api/src/travelers`): `GET/PUT /reservations/:id/travelers`,
-    `POST/DELETE /reservations/:id/extras[/:extraId]`, `GET /reservations/:id/price-lines`,
-    `GET /reservations/:id/travelers/:travelerId/passport` (ops+super, audited
-    `traveler.passport_viewed`, `Cache-Control: no-store`). A package booking is repriced on every
-    change and its total set from the lines; a custom trip keeps its hand-set total and refuses
-    extras (409); a locked price refuses any change that moves it (409); a full departure is 409.
-    No key → 503 on passport write/read only. All six routes in the authorization matrix.
-  - `b392bbc` documents: the invoice prints each service's `travelerPrice` ("Included" when
-    bundled) and the price breakdown; the custom builder stamps catalog prices per service and
-    totals the trip as their sum.
-  - `ae4ef0b` back-office: A-Booking **Travelers** (edit in place, rooming list, extras, "Show
-    passport number") and **Price breakdown** sections; detail DTO gained `packageId`.
-  - `36ffba1` retention: anonymization scrubs every `ReservationTraveler` on the traveler's
-    bookings (kind/lead/room kept).
-- `b8c6c0d` fixed a latent dev bug: Turbo 2 strict env mode dropped `RATE_LIMIT_*` (so e2e never
-  raised the limits) and an env-supplied passport key; `turbo.json` dev now passes them through.
-- **M3 drafted for review**: `docs/schema-m3-compliance.md` (D1–D6). No migration generated.
+- **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done.** Commits are local
+  on `vereda`; the owner pushes (check `git log --oneline origin/vereda..vereda`).
+- **M1 (Package v2) and M2 (party/travelers) are complete** (M2 surfaces `37b5c6e`…`36ffba1`,
+  editor tabs `d8b646b`). The storefront Booking form (5 steps) is the open M2/Phase 4 screen.
+- **M3 (compliance) approved 2026-10-17 (D1–D6 as recommended) and landed**, one commit each:
+  - `5f6cd29` migration `20261017075012_compliance`: `TravelerAffidavit`, `ConsentRecord`,
+    enums, `ReservationTraveler.usPerson`, and a hand-written **append-only trigger** on
+    `traveler_affidavits` (only the `ON DELETE SET NULL` of its four links may update a row).
+  - `a4255b7` domain `compliance/`: `isUsPerson`, `signatureMatches` (accents/case folded),
+    `affidavitRetainUntil` (trip end + 5 y), `ofacGate`, `currentConsents`, `needsConsent`.
+  - `4354b7b` schemas: affidavit/consent DTOs (lists never carry signature, IP or user agent) and
+    the tenant `content.legal` block (OFAC statement and consent words with version ids,
+    placeholder from the boards, in `tenant/messages/en.json`).
+  - `783040a` API `apps/api/src/compliance`: status (`/reservations/:id/ofac`,
+    `/me/reservations/:id/ofac`), online signing by the booking's owner (name must match, the
+    statement version must be current, IP/browser/statement hash kept, a new one supersedes),
+    paper affidavit with scan (ops), audited record/scan (ops+super), Super Admin CSV export
+    (formulas defused), `GET/POST /me/consents`, `GET /customers/:id/consents`. **Gate:** a
+    payment link is 409 while a US person lacks an affidavit; document generation then issues
+    the invoice only and audits `documents.held`. Shared helper `compliance/ofac-gate.ts`.
+  - `cff508a` retention: the daily scan sweeps affidavits past `retainUntil` (with scans,
+    `affidavitsDeleted` in the result); anonymization detaches the consent log.
+  - `694e25f` back-office: OFAC section on the booking page, US-person override in the party
+    form, `ofacMissing` on booking rows and customer trips → Dashboard alert, "Missing OFAC"
+    view, customer OFAC column and consent log. Category names in a shared `ofac` namespace.
+  - `3660290` storefront: the certification step on the account trip page (payment shows the
+    locked notice until all US travelers sign) and Account › Preferences consent switches.
 
-## Verified (2026-10-16, after `d8b646b`)
+## Verified (2026-10-17, after `3660290`)
 - lint, format:check, typecheck (33 tasks), build 18/18 green (dev stack stopped).
-- `pnpm test`: **462 passed / 5 skipped** (domain 129, api 200/4 skipped, schemas 21,
-  config 25, documents 10, and the rest).
-- `pnpm e2e`: **48/48** with `apps/*/.next` deleted first (new: `travel-party.spec.ts`, and a
-  photos + translation draft test in `packages-edit.spec.ts`).
-- Live DB (`RUN_DB_INTEGRATION=1`): `test/retention.integration.test.ts` (now with the traveler scrub), `test/packages.integration.test.ts` (now with media `hasConsent` and the consent reference kept out of the DTO) and, with `REDIS_URL`, `test/dispatch.bullmq.integration.test.ts` — 1/1 each.
-- Retention scrub mutation check: with the service change reverted the live test fails on
-  `fullName`; with it, passes.
-- Browser (repo Playwright, cached chromium; temporary spec, removed): A-Booking travel party at
-  390/1024/1280 — no overflow (scrollWidth == viewport), section titles Fraunces 22/28/600,
-  names Inter 14/20/500, totals IBM Plex Mono 14/20/600; total €1,216.00 matches hand
-  arithmetic (2 × (240+120) + child 216 + horseback 105 + card 75 + fee 100). The server HTML
-  never contains the passport; one reveal wrote one audit row holding only `travelerId`. The edit
-  form at 390 has no overflow. Package editor Photos/Translations at 390/1024/1280: no overflow;
-  selected tab Inter 16/600 with the primary underline; consent badge warning-toned when missing;
-  an outdated FR translation shows its badge and the warning.
-- `turbo.json` fix: before, none of `PASSPORT_ENCRYPTION_KEY`/`RATE_LIMIT_*` was in the API
-  process environment under `pnpm dev`; after, all three are (names checked, values not printed).
+- `pnpm test`: **485 passed / 8 skipped** (domain 138, api 210/7 skipped, schemas 25, …).
+- `pnpm e2e`: **50/50** with `apps/*/.next` deleted (new: `ofac.spec.ts`,
+  `storefront-ofac.spec.ts`).
+- Live DB (`RUN_DB_INTEGRATION=1`): `retention` 1/1 (now with the affidavit sweep, the kept affidavit
+  and the detached consent), `packages` 1/1, `affidavits` 3/3 (trigger refuses a change; deleting
+  booking, traveler or a superseded affidavit clears the link); with `REDIS_URL`, dispatch BullMQ 1/1.
+- Browser (temporary spec, removed): booking OFAC section, customer profile and the storefront
+  certification step and Preferences at 390/1024/1280 — no overflow (scrollWidth == viewport);
+  back-office section titles Fraunces 22/28/600, storefront card title Inter 20/28/600 like the
+  page's other cards; "View record" showed the IP and wrote one `affidavit.viewed` row.
+- **Not verified:** the passport flow under the owner's real key. The owner said the key was
+  added, but the running API answered 503 and `apps/api/.env` was last modified 2026-09-20 (file
+  metadata only; contents not read), so the edit was most likely not saved. The passport path
+  itself was proven on 2026-10-16 with a throwaway key.
 
 ## Assumptions & unknowns
-- **Schema gates (Q9):** M1, M2 done. **M3 waits for the owner's answers to D1–D6** in
-  `docs/schema-m3-compliance.md`; counsel questions are listed there and do not block the schema.
-- `PASSPORT_ENCRYPTION_KEY` is **not** in `apps/api/.env` (I did not read or write it). Until the
-  owner adds one (`openssl rand -base64 32`), passport writes/reads answer 503; the rest works.
-  The browser check used a throwaway key passed on the command line; its fixture was deleted.
-- Passport reveal is ops+super only (support sees status), the conservative reading.
-- `pricing` terms in the Vereda manifest are the Booking board's samples (infants < 2 free,
-  children ≤ 12 at 60 %, €25 tourist card pp, €100 service fee) — placeholder per tenant/README.
-- A child's age is taken at the departure date when one is chosen, else the booking start.
-  `singleRooms` = rooms with capacity 1.
-- A locked booking priced before M2 (no lines) keeps its total; its party can still be entered.
-- Not built: the storefront Booking form (5 steps), OFAC/consent (M3), deposit schedule (M4),
-  proposal (M5), traveler document uploads, package versions, server-side publish checks (the
-  publish gate still runs only in the editor — the API PATCH does not enforce it; flagged).
-- ES/FR for the new back-office copy are agent-drafted.
+- `PASSPORT_ENCRYPTION_KEY`: see "Not verified" above. Save it in `apps/api/.env`, then
+  restart the API.
+- Legal texts (OFAC statement, consent words) and the category wording are placeholders for
+  counsel; changing words needs a new version id. Who may sign for a companion or a minor is a
+  counsel question: today the booking's owner can sign for any US traveler on it, with that
+  traveler's own name as the signature.
+- The public cookie-banner consent route waits for the banner (Phase 8); `ipCountry` stays null
+  until a geo-IP source is approved (D5).
+- Pricing samples in the manifest (child bands, fees) are still unconfirmed (asked 2026-10-16).
+- Not built: storefront Booking form, M4 deposit schedule, M5 proposal, E-OFAC reminders,
+  server-side package publish checks (the API PATCH does not enforce them; flagged earlier).
 
 ## Traps
-- **Turbo strict env:** a variable set on `pnpm dev` reaches the apps only if `turbo.json`'s dev
-  task lists it in `passThroughEnv`. Values in `apps/api/.env` are unaffected (the API loads them).
-- **Rebuild a changed workspace package** (`@ota/i18n`, `@ota/schemas`) before the dev server
-  sees it: new copy rendered as raw keys until `pnpm --filter @ota/i18n run build`.
-- **Fixtures predate new columns:** API tests build Prisma rows by hand; a new non-null field read
-  in a mapper (`contentUpdatedAt`, `travelerPrice`, `priceLines`) 500s until the fixture has it.
-- `getByLabel` substring/case: "Language" also matched "show this language…" — use `exact`.
-- `@ota/domain` has an `exports` map now: deep imports other than `./passport-cipher` fail.
+- **`prisma format` rewrites the whole schema's alignment**: don't run it; hand-edit and run
+  `prisma validate` (a formatted run had to be reverted).
+- `traveler_affidavits` refuses UPDATE by trigger: fixtures and cleanups must DELETE rows (allowed)
+  and must never update one. A new FK to this table needs the trigger's link list extended.
+- Fakes in API tests must carry `reservationTraveler.findMany`/`travelerAffidavit.findMany` (the
+  OFAC gate reads them in payments and documents) and new read-model includes.
+- Turbo strict env, rebuild changed packages before the dev server, `getByLabel` substrings
+  ("Not certified" vs "not certified yet" needs `exact`), fixtures missing new columns: see
+  2026-10-16 traps, still true.
 - Earlier traps still apply (ICU spaces, `next-server` survives `pkill -f 'next dev'`, delete
   `apps/*/.next` after a build, Playwright leaves 3000–3002 listening, tenant tokens on `<html>`,
   `cn()` sizes, Tailwind literal classes, no values from `'use client'` into server components,
   grid items need `min-w-0`, `TENANT_CONFIG` overrides in API tests).
-- **AGENTS.md §C lines proposed (owner edit),** in addition to the earlier ones still pending:
-  - "M2 party: `GET/PUT /reservations/:id/travelers`, `POST/DELETE /reservations/:id/extras`,
-    `GET /reservations/:id/price-lines` (apps/api/src/travelers). Package bookings are repriced by
-    the domain `priceBooking` and their lines frozen; from PENDING_PAYMENT a change that moves the
-    price is 409 (`isPriceLocked`). Custom trips keep their hand-set total."
-  - "Passport numbers: AES-256-GCM under `PASSPORT_ENCRYPTION_KEY` via `@ota/domain/passport-cipher`
-    (a separate entry so browser bundles never load node:crypto). No list DTO carries the number;
-    only `GET /reservations/:id/travelers/:travelerId/passport` (ops+super) returns it, audited as
-    `traveler.passport_viewed`. Unset key → 503 on passport write/read only."
-  - "Agency booking terms live in the manifest `pricing` block (`childBands`, `fees`); they are
-    frozen onto price lines, so a change applies to bookings repriced after it."
-  - "The invoice now itemises per-service `travelerPrice` (custom trips) and the frozen price
-    lines" (replaces the 2026-09-21 line saying per-service traveler prices do not exist).
-  - "`turbo.json` dev passes `PASSPORT_ENCRYPTION_KEY` and `RATE_LIMIT_*` through (Turbo 2 strict
-    env mode drops undeclared variables)."
-  - "The package editor is tabs: Details, Photos, Translations. `PackageDto` carries
-    `sourceLocale`, `contentUpdatedAt` and media `hasConsent`."
+- **AGENTS.md §C lines proposed (owner edit),** in addition to the 2026-10-16 ones:
+  - "M3 OFAC: `TravelerAffidavit` is append-only (DB trigger; a correction is a superseding row)
+    and outlives the traveler purge for 5 years after the trip; the daily retention scan deletes
+    it at `retainUntil`. A US person (`usPerson` override, else nationality US) without an
+    affidavit blocks payment links (409) and holds vouchers/work orders (`documents.held`)."
+  - "Legal texts live in tenant content `content.legal` (OFAC statement, consent words by purpose,
+    each with a version id); the API stamps the version and SHA-256 on every affidavit and
+    consent and refuses a stale version (409)."
+  - "Affidavit records, scans (ops+super) and the CSV export (Super Admin) are audited reads;
+    lists never carry the signature, IP or user agent."
 
 ## Next
-1. Owner: answer M3 D1–D6 (`docs/schema-m3-compliance.md`); add `PASSPORT_ENCRYPTION_KEY` to
-   `apps/api/.env`; confirm the placeholder `pricing` terms.
-2. Build the storefront Booking form (5 steps) on the M2 party/price API (a traveler-scoped
-   route), then M3's migration and surfaces once approved, then M4–M5.
-3. Phase 5: Content/Disruption/Settings as their migrations land (M6–M9 asked for as they come up).
+1. Owner: save `PASSPORT_ENCRYPTION_KEY` in `apps/api/.env` and restart the API; counsel review
+   of the legal texts and categories; confirm the pricing samples.
+2. The storefront Booking form (5 steps, M2 party + M3 step 4 + consents at review), then
+   M4 (deposit schedule) and M5 (proposal) — each migration asked for first.
+3. Phase 6: the E-OFAC reminder and the other C-Spec emails; Phase 8: cookie banner + public
+   consent route.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -237,3 +217,15 @@ ADR 0007 (worker app).
 - 2026-10-16 — Turbo dev passes `PASSPORT_ENCRYPTION_KEY` and `RATE_LIMIT_*` through; the
   e2e webServer's raised limits had silently never applied.
 - 2026-10-16 — M3 drafted (`docs/schema-m3-compliance.md`); no migration until approved.
+- 2026-10-17 — the owner approved M3 D1–D6 as recommended. The trigger also allows the
+  recording user's link to turn null (a fourth ON DELETE SET NULL the draft missed).
+- 2026-10-17 — legal texts are tenant content (`content.legal`, English source with fallback);
+  the API stamps their version and SHA-256 and refuses a stale version, so a record proves which
+  words were shown.
+- 2026-10-17 — the voucher hold issues the invoice alone and audits `documents.held`, rather than
+  failing generation, so the fiscal document is never blocked by OFAC.
+- 2026-10-17 — the public cookie-banner consent route is deferred to the banner (Phase 8): no
+  unused public write endpoint ships.
+- 2026-10-17 — the online certification lives on the account trip page until the Booking form
+  exists; the booking's owner may sign for each US traveler with that traveler's own name
+  (counsel question recorded).
