@@ -39,8 +39,26 @@ export const bankTransferDetailsSchema = z.object({
 
 export type BankTransferDetails = z.infer<typeof bankTransferDetailsSchema>;
 
+/** Who must approve a refund (M4 D7): one person up to `singleUpTo`, two up to `dualUpTo`, a Super Admin above. */
+export const refundApprovalSchema = z
+  .object({
+    singleUpTo: z.number().nonnegative().default(500),
+    dualUpTo: z.number().nonnegative().default(2000),
+  })
+  .refine((limits) => limits.dualUpTo >= limits.singleUpTo, {
+    message: 'dualUpTo must be at least singleUpTo',
+  });
+
 export const paymentsSchema = z.object({
   bankTransfer: bankTransferDetailsSchema.nullable().default(null),
+  /** M4: hours to make the first payment once the link is sent (spec §4.2). */
+  windowHours: z.number().int().positive().default(48),
+  /**
+   * M4 D6: the card surcharge in percent. 0 until counsel sets it: EU rules
+   * restrict surcharges on consumer cards issued in the EEA (PSD2 art. 62(4)).
+   */
+  cardFeePercent: z.number().min(0).max(10).default(0),
+  refundApproval: refundApprovalSchema.prefault({}),
 });
 
 export type PaymentsConfig = z.infer<typeof paymentsSchema>;
@@ -75,6 +93,44 @@ export const pricingSchema = z.object({
 });
 
 export type PricingConfig = z.infer<typeof pricingSchema>;
+
+/**
+ * A deposit plan (M4 D2): the share paid first, offered only when departure is
+ * further away than `minDaysBeforeDeparture`; the balance falls due
+ * `balanceDaysBeforeDeparture` days before departure.
+ */
+export const depositPolicySchema = z
+  .object({
+    percent: z.number().gt(0).lt(100),
+    minDaysBeforeDeparture: z.number().int().min(0),
+    balanceDaysBeforeDeparture: z.number().int().min(0),
+  })
+  .refine((plan) => plan.balanceDaysBeforeDeparture < plan.minDaysBeforeDeparture, {
+    message: 'The balance must fall due after the deposit window',
+  });
+
+/** From `fromDays` before departure, the share of what was paid that is kept, plus a fixed fee. */
+export const cancellationBandSchema = z.object({
+  fromDays: z.number().int().min(0),
+  keepPercent: z.number().min(0).max(100),
+  fee: z.number().nonnegative().default(0),
+});
+
+export const cancellationScaleSchema = z.object({
+  bands: z.array(cancellationBandSchema).min(1),
+});
+
+/**
+ * The agency's payment terms by policy key (M1 D4, M4 D2): a package names a
+ * deposit plan and a cancellation scale by key, and these keys are the known
+ * ones the publish checks accept.
+ */
+export const policiesSchema = z.object({
+  deposit: z.record(z.string(), depositPolicySchema).default({}),
+  cancellation: z.record(z.string(), cancellationScaleSchema).default({}),
+});
+
+export type PoliciesConfig = z.infer<typeof policiesSchema>;
 
 export const tenantConfigSchema = z.object({
   tenantId: z.string().min(1),
@@ -111,10 +167,21 @@ export const tenantConfigSchema = z.object({
     .prefault({}),
   payments: paymentsSchema.prefault({}),
   pricing: pricingSchema.prefault({}),
+  policies: policiesSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
 });
 
 export type TenantConfig = z.infer<typeof tenantConfigSchema>;
+
+/** Every policy key the manifest defines, deposit and cancellation (the publish checks' known keys). */
+export function knownPolicyKeys(config: Pick<TenantConfig, 'policies'>): string[] {
+  return [
+    ...new Set([
+      ...Object.keys(config.policies.deposit),
+      ...Object.keys(config.policies.cancellation),
+    ]),
+  ];
+}
 
 /**
  * Validate a tenant manifest. This is the fork-specific `agency.config` — the

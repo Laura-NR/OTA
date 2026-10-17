@@ -8,7 +8,9 @@ around as data.
 - `agency.config.json` — the agency manifest: `tenantId`, branding (including the
   MINTUR `licenseNumber` injected into every generated document), locales, theme
   tokens, feature flags, destination geography, and the booking terms
-  (`pricing`: child bands and per-booking or per-traveler fees).
+  (`pricing`: child bands and per-booking or per-traveler fees; `policies`: the
+  deposit plans and cancellation scales a package names by key; `payments`: the
+  first-payment window, the card fee and the refund approval limits).
 - `provinces.json` and `destinations.json` — where the agency operates, as data:
   per province (ISO code `CU01`…`CU16`, `CU99` the isle) the network state,
   casas, guides and drivers, advisory level, power cuts, fuel, road distance
@@ -58,7 +60,13 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   are the Booking board's samples: infants under 2 free, children up to 12 at
   60 %, a € 25 tourist card per traveler and a € 100 service fee per booking.
   They are frozen onto every package booking's price lines, so confirm them
-  before launch.
+  before launch. The M4 payment terms are samples too: the `standard` deposit
+  plan (20 % when departure is more than 60 days away, balance due 30 days
+  before), the `standard` cancellation scale (only the 45–31 day 10 % and 30–15
+  day 25 % bands come from the boards; the other day ranges and the € 60 fee are
+  guesses; the share kept is of what was paid), the 48-hour first-payment
+  window, the refund limits (€ 500 alone, € 2,000 with two approvers) and a card
+  fee of 0 % until counsel rules on surcharges (PSD2 art. 62(4)).
 
 ## Forking for a new agency
 

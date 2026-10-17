@@ -213,3 +213,24 @@ export {
   type RouteStopInput,
   type RouteSummary,
 } from './geography/route';
+export {
+  addBusinessDays,
+  buildSchedule,
+  cardFee,
+  daysBeforeDeparture,
+  depositEligible,
+  type DepositPolicy,
+  type InstalmentKind,
+  type PaymentPlan,
+  type ScheduleInput,
+  type ScheduledInstalment,
+} from './payments/schedule';
+export {
+  cancellationRefund,
+  refundDecision,
+  type CancellationBand,
+  type CancellationQuote,
+  type RefundDecision,
+  type RefundThresholds,
+  type RefundVote,
+} from './payments/refunds';

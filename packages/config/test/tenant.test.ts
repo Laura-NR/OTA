@@ -89,6 +89,50 @@ describe('parseTenantConfig', () => {
     ).toThrow();
   });
 
+  it('defaults the M4 payment terms and validates the policies', () => {
+    const defaults = parseTenantConfig(minimal);
+    expect(defaults.policies).toEqual({ deposit: {}, cancellation: {} });
+    expect(defaults.payments).toMatchObject({
+      windowHours: 48,
+      cardFeePercent: 0,
+      refundApproval: { singleUpTo: 500, dualUpTo: 2000 },
+    });
+
+    const config = parseTenantConfig({
+      ...minimal,
+      policies: {
+        deposit: {
+          standard: {
+            percent: 20,
+            minDaysBeforeDeparture: 60,
+            balanceDaysBeforeDeparture: 30,
+          },
+        },
+        cancellation: { standard: { bands: [{ fromDays: 0, keepPercent: 100 }] } },
+      },
+    });
+    expect(config.policies.cancellation.standard?.bands[0]).toEqual({
+      fromDays: 0,
+      keepPercent: 100,
+      fee: 0,
+    });
+    // The balance cannot fall due before the deposit window has closed.
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        policies: {
+          deposit: {
+            late: {
+              percent: 20,
+              minDaysBeforeDeparture: 30,
+              balanceDaysBeforeDeparture: 45,
+            },
+          },
+        },
+      }),
+    ).toThrow();
+  });
+
   it('has no WhatsApp line unless the manifest sets one', () => {
     expect(parseTenantConfig(minimal).branding.whatsappNumber).toBeNull();
     expect(

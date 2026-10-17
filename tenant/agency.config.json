@@ -32,7 +32,10 @@
       "iban": "ES00 0000 0000 0000 0000 0000",
       "bic": "DEMOES00",
       "referenceNote": "Quote your booking code as the transfer reference."
-    }
+    },
+    "windowHours": 48,
+    "cardFeePercent": 0,
+    "refundApproval": { "singleUpTo": 500, "dualUpTo": 2000 }
   },
   "pricing": {
     "childBands": [
@@ -43,6 +46,28 @@
       { "label": "Cuban tourist card", "unit": "PER_PERSON", "amount": 25 },
       { "label": "Service fee", "unit": "PER_BOOKING", "amount": 100 }
     ]
+  },
+  "policies": {
+    "deposit": {
+      "standard": {
+        "percent": 20,
+        "minDaysBeforeDeparture": 60,
+        "balanceDaysBeforeDeparture": 30
+      }
+    },
+    "cancellation": {
+      "standard": {
+        "bands": [
+          { "fromDays": 46, "keepPercent": 0, "fee": 60 },
+          { "fromDays": 31, "keepPercent": 10 },
+          { "fromDays": 15, "keepPercent": 25 },
+          { "fromDays": 8, "keepPercent": 40 },
+          { "fromDays": 3, "keepPercent": 60 },
+          { "fromDays": 1, "keepPercent": 80 },
+          { "fromDays": 0, "keepPercent": 100 }
+        ]
+      }
+    }
   },
   "emergencyContacts": [
     { "label": "Operations desk (24/7)", "phone": "+53 5555 0100" },

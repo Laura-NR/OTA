@@ -117,7 +117,12 @@ async function main(): Promise<void> {
 
   const curatedPackage = await prisma.package.upsert({
     where: { slug: 'trinidad-heritage-trail' },
-    update: { status: 'PUBLISHED' },
+    // M4: the manifest's sample deposit plan and cancellation scale.
+    update: {
+      status: 'PUBLISHED',
+      depositPolicy: 'standard',
+      cancellationPolicy: 'standard',
+    },
     create: {
       name: 'Trinidad Heritage Trail',
       slug: 'trinidad-heritage-trail',
@@ -133,6 +138,8 @@ async function main(): Promise<void> {
       leadTimeDays: 2,
       tourismCategory: 'CULTURAL',
       themes: ['colonial', 'mountains'],
+      depositPolicy: 'standard',
+      cancellationPolicy: 'standard',
       services: {
         create: [
           { inventoryItemId: stay.id, dayOffset: 0, position: 0 },
