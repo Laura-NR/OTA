@@ -93,7 +93,7 @@ Phase 4 Booking form, M4 payments and Phase 6 notifications) and ADR 0007 (worke
     so no migration. `POST /payments/reminders/scan` forces a pass."
   - "2026-10-17: M5 is drafted in `docs/schema-m5-proposal.md` (CustomRequest + versioned Proposal +
     ProposalPriceLine; acceptance creates an ITINERARY_SUBMITTED request to book). No M5 migration
-    exists until the owner answers the seven questions in that document."
+    exists until the owner answers the six questions in that document."
 
 ## Next
 1. Owner: answer the M5 questions (§7 of `docs/schema-m5-proposal.md`): acceptance semantics,
