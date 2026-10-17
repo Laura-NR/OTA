@@ -40,6 +40,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     base: '/bookings',
     pages: [
       { key: 'board', href: '/bookings' },
+      { key: 'proposals', href: '/bookings/proposals' },
       { key: 'messages', href: '/bookings/messages' },
       { key: 'documents', href: '/bookings/documents' },
     ],

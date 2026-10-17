@@ -1,13 +1,29 @@
 'use client';
 
 import type { InventoryItemDto } from '@ota/schemas';
-import { Alert, Badge, Button, Card, CardContent, Input, Label } from '@ota/ui';
-import { useTranslations } from 'next-intl';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Label,
+  Textarea,
+  buttonClassName,
+} from '@ota/ui';
+import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 
-import { useRouter } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 
 const STEP_KEYS = ['dates', 'stays', 'transport', 'experiences', 'review'] as const;
+
+interface SentRequest {
+  id: string;
+  requestId: string;
+  reference: string;
+}
 
 function ItemPicker({
   items,
@@ -59,20 +75,25 @@ function ItemPicker({
 }
 
 /**
- * Five-step dynamic package builder (spec §4.2): dates, then stays, transport,
- * and experiences from the published catalog, then review. Submitting creates
- * an ITINERARY_SUBMITTED booking for the signed-in traveler.
+ * Five-step custom-trip builder (Custom / M-Custom boards; M5): dates and
+ * party, then stays, transport, experiences and a review with the traveler's
+ * notes. Submitting creates a CustomRequest — not a booking — so the desk can
+ * price a proposal the traveler accepts.
  */
 export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
   const t = useTranslations('build');
   const tc = useTranslations('catalog');
-  const router = useRouter();
+  const locale = useLocale();
   const [step, setStep] = useState(0);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState<SentRequest | null>(null);
 
   const byType = useMemo(
     () => ({
@@ -87,6 +108,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
   const total = selectedItems.reduce((sum, item) => sum + Number(item.basePrice), 0);
   const datesValid =
     Boolean(startDate && endDate) && new Date(endDate) >= new Date(startDate);
+  const hasSomething = selected.length > 0 || notes.trim().length > 0;
 
   function toggle(id: string) {
     setSelected((previous) =>
@@ -100,25 +122,53 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch('/api/ota/me/reservations', {
+      const response = await fetch('/api/ota/me/custom-requests', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           startDate,
           endDate,
-          serviceItems: selected.map((inventoryItemId) => ({ inventoryItemId })),
+          adults,
+          children,
+          inventoryItemIds: selected,
+          ...(notes.trim() ? { notes: notes.trim() } : {}),
+          locale,
         }),
       });
       if (!response.ok) {
         throw new Error(t('error'));
       }
-      const reservation = (await response.json()) as { id: string };
-      router.push(`/account/reservations/${reservation.id}`);
+      const request = (await response.json()) as SentRequest;
+      setSent(request);
+      window.scrollTo({ top: 0 });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : t('error'));
     } finally {
       setBusy(false);
     }
+  }
+
+  if (sent) {
+    return (
+      <Card>
+        <CardContent className="space-y-4 pt-6">
+          <Badge variant="success">{t('requestedTitle')}</Badge>
+          <h2 className="text-h3 font-display">{t('requestedTitle')}</h2>
+          <p className="text-body text-secondary">{t('requestedLede')}</p>
+          <p className="text-body-sm">
+            {t('reference')}:{' '}
+            <span className="font-mono font-semibold">{sent.reference}</span>
+          </p>
+          <p className="text-body-sm text-muted">{t('requestedNote')}</p>
+          <Link
+            href={`/account/proposals/${sent.id}`}
+            className={buttonClassName({ size: 'lg' })}
+          >
+            {t('openProposal')}
+          </Link>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -154,6 +204,32 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
                 onChange={(event) => setEndDate(event.target.value)}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="build-adults">{t('adults')}</Label>
+              <Input
+                id="build-adults"
+                type="number"
+                min={1}
+                max={20}
+                value={adults}
+                onChange={(event) =>
+                  setAdults(Math.max(1, Number(event.target.value) || 1))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="build-children">{t('children')}</Label>
+              <Input
+                id="build-children"
+                type="number"
+                min={0}
+                max={20}
+                value={children}
+                onChange={(event) =>
+                  setChildren(Math.max(0, Number(event.target.value) || 0))
+                }
+              />
+            </div>
             {startDate && endDate && !datesValid ? (
               <Alert variant="destructive">{t('dateError')}</Alert>
             ) : null}
@@ -176,7 +252,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
 
         {step === 4 ? (
           <div className="space-y-3">
-            {selectedItems.length === 0 ? (
+            {selectedItems.length === 0 && !notes.trim() ? (
               <Alert>{t('addAtLeastOne')}</Alert>
             ) : (
               <ul className="space-y-2 text-body-sm">
@@ -193,9 +269,21 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
                 ))}
               </ul>
             )}
-            <p className="text-body-sm font-medium">
-              {t('estimatedTotal', { currency: 'EUR', amount: total.toFixed(2) })}
-            </p>
+            {selectedItems.length > 0 ? (
+              <p className="text-body-sm font-medium">
+                {t('estimatedTotal', { currency: 'EUR', amount: total.toFixed(2) })}
+              </p>
+            ) : null}
+            <div className="space-y-2">
+              <Label htmlFor="build-notes">{t('notesLabel')}</Label>
+              <Textarea
+                id="build-notes"
+                rows={4}
+                value={notes}
+                placeholder={t('notesPlaceholder')}
+                onChange={(event) => setNotes(event.target.value)}
+              />
+            </div>
           </div>
         ) : null}
 
@@ -217,7 +305,7 @@ export function PackageBuilder({ items }: { items: InventoryItemDto[] }) {
               {t('continue')}
             </Button>
           ) : (
-            <Button disabled={selected.length === 0 || busy} onClick={submit}>
+            <Button disabled={!hasSomething || busy} onClick={submit}>
               {busy ? t('submitting') : t('submit')}
             </Button>
           )}

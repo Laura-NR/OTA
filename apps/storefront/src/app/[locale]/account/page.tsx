@@ -5,8 +5,10 @@ import type {
   MyConsentDto,
   MyReservationDetailDto,
   MyReservationListItemDto,
+  ProposalListItemDto,
 } from '@ota/schemas';
 import { Badge, buttonClassName, Icon } from '@ota/ui';
+import type { BadgeVariant } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
@@ -29,6 +31,14 @@ const CLOSED = new Set(['COMPLETED', 'CANCELLED']);
 const DOCUMENT_TRIPS = 10;
 
 const DAY_MS = 86_400_000;
+
+const PROPOSAL_VARIANTS: Record<ProposalListItemDto['status'], BadgeVariant> = {
+  DRAFT: 'outline',
+  SENT: 'info',
+  ACCEPTED: 'success',
+  DECLINED: 'secondary',
+  EXPIRED: 'warning',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('account');
@@ -62,14 +72,17 @@ export default async function AccountPage({
   }
 
   const current = section((await searchParams).tab);
-  const [t, format, locale, profile, reservations, conditions] = await Promise.all([
-    getTranslations('account'),
-    getFormatter(),
-    getLocale(),
-    apiFetch<MeProfileDto>('/me').catch(() => null),
-    apiFetch<MyReservationListItemDto[]>('/me/reservations'),
-    getPageContent('conditions', conditionsContentSchema),
-  ]);
+  const [t, tp, format, locale, profile, reservations, proposals, conditions] =
+    await Promise.all([
+      getTranslations('account'),
+      getTranslations('proposal'),
+      getFormatter(),
+      getLocale(),
+      apiFetch<MeProfileDto>('/me').catch(() => null),
+      apiFetch<MyReservationListItemDto[]>('/me/reservations'),
+      apiFetch<ProposalListItemDto[]>('/me/proposals').catch(() => []),
+      getPageContent('conditions', conditionsContentSchema),
+    ]);
   const tenant = getTenantConfig();
   const consents =
     current === 'preferences'
@@ -350,6 +363,39 @@ export default async function AccountPage({
           <h1 id="trips-title" className="text-h1-compact text-default md:text-h1">
             {t('title')}
           </h1>
+          {proposals.length > 0 ? (
+            <section aria-labelledby="proposals-title" className="flex flex-col gap-3">
+              <h2 id="proposals-title" className="text-h4 text-default">
+                {tp('listTitle')}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {proposals.map((proposal) => (
+                  <li key={proposal.id}>
+                    <Link
+                      href={`/account/proposals/${proposal.id}`}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-surface px-4 py-3 text-body-sm hover:bg-neutral-100"
+                    >
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono font-semibold">
+                          {proposal.reference}
+                        </span>
+                        <Badge variant={PROPOSAL_VARIANTS[proposal.status]}>
+                          {tp(`statuses.${proposal.status}`)}
+                        </Badge>
+                      </span>
+                      <span className="text-muted">
+                        {format.dateTimeRange(
+                          new Date(proposal.startDate),
+                          new Date(proposal.endDate),
+                          { day: 'numeric', month: 'short', year: 'numeric' },
+                        )}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
           {reservations.length === 0 ? (
             <p className="text-body text-secondary">{t('empty')}</p>
           ) : (
