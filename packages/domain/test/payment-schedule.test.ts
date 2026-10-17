@@ -6,6 +6,7 @@ import {
   cancellationRefund,
   cardFee,
   depositEligible,
+  paymentAlert,
   refundDecision,
   type CancellationBand,
 } from '../src';
@@ -152,5 +153,30 @@ describe('refund approvals', () => {
     expect(
       refundDecision(100, [ops('a'), { ...ops('b'), approve: false }], limits),
     ).toEqual({ state: 'REJECTED' });
+  });
+});
+
+describe('payment alert', () => {
+  const now = new Date('2026-10-17T12:00:00Z');
+  const past = new Date('2026-10-16T12:00:00Z');
+
+  it('reads an expired window from a deposit or full payment past its date', () => {
+    expect(paymentAlert({ kind: 'DEPOSIT', dueAt: past }, 'PENDING_PAYMENT', now)).toBe(
+      'WINDOW_EXPIRED',
+    );
+    expect(paymentAlert({ kind: 'FULL', dueAt: past }, 'PENDING_PAYMENT', now)).toBe(
+      'WINDOW_EXPIRED',
+    );
+  });
+
+  it('reads an overdue balance, and nothing before the date or once settled', () => {
+    expect(paymentAlert({ kind: 'BALANCE', dueAt: past }, 'CONFIRMED', now)).toBe(
+      'BALANCE_OVERDUE',
+    );
+    expect(
+      paymentAlert({ kind: 'BALANCE', dueAt: new Date('2026-11-01') }, 'CONFIRMED', now),
+    ).toBeNull();
+    expect(paymentAlert({ kind: 'BALANCE', dueAt: past }, 'CANCELLED', now)).toBeNull();
+    expect(paymentAlert(null, 'PENDING_PAYMENT', now)).toBeNull();
   });
 });

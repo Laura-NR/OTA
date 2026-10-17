@@ -103,3 +103,29 @@ export function addBusinessDays(from: Date, days: number): Date {
   }
   return result;
 }
+
+export type PaymentAlert = 'WINDOW_EXPIRED' | 'BALANCE_OVERDUE';
+
+/** Bookings that no longer expect a payment. */
+const SETTLED_STATUSES: readonly string[] = ['COMPLETED', 'CANCELLED'];
+
+/**
+ * What the next instalment means for the desk once its date has passed (M4
+ * D3–D4): a deposit or full payment past its window waits for the desk to
+ * extend or cancel; a balance past due is overdue. Neither changes the
+ * booking's status by itself.
+ */
+export function paymentAlert(
+  next: { kind: InstalmentKind; dueAt: Date } | null,
+  status: string,
+  now: Date,
+): PaymentAlert | null {
+  if (
+    !next ||
+    SETTLED_STATUSES.includes(status) ||
+    next.dueAt.getTime() > now.getTime()
+  ) {
+    return null;
+  }
+  return next.kind === 'BALANCE' ? 'BALANCE_OVERDUE' : 'WINDOW_EXPIRED';
+}
