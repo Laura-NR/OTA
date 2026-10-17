@@ -1,7 +1,11 @@
 # M3 Compliance: schema diff for review
 
-**Status:** Draft for the owner's review (Q9). No migration is generated until D1–D6 are
-answered.
+**Status:** **Approved and generated 2026-10-17.** The owner took D1–D6 as recommended and the
+migration `20261017075012_compliance` was applied: `TravelerAffidavit`, `ConsentRecord`, their
+enums, `ReservationTraveler.usPerson` and the append-only trigger, proven on live Postgres by
+`apps/api/test/affidavits.integration.test.ts`. Additive; no backfill. The trigger also lets the
+recording user's link (`recorded_by_id`) turn null, a fourth `ON DELETE SET NULL` the draft
+missed. The surfaces in §5 follow.
 **Date:** 2026-10-16
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M3: the OFAC affidavit (category, signature,
 IP, timestamp; 5-year retention, reconciled with the retention purge) and consent records
@@ -285,18 +289,19 @@ cookie banner texts and the limitation period in D6(c).
 
 The hand-written part of the migration (D2a). A foreign key's `ON DELETE SET NULL` is performed
 as an `UPDATE` of the row, so the trigger lets exactly that through: a change where only the
-booking, traveler or superseded-affidavit link turns null (the sweep deleting an old affidavit
-nulls the newer row's `supersedes_id`). Every other change is refused.
+booking, traveler, superseded-affidavit or recording-user link turns null (the sweep deleting an
+old affidavit nulls the newer row's `supersedes_id`). Every other change is refused.
 
 ```sql
 CREATE FUNCTION traveler_affidavits_append_only() RETURNS trigger AS $$
 DECLARE
-  links CONSTANT text[] := ARRAY['reservation_id', 'traveler_id', 'supersedes_id'];
+  links CONSTANT text[] := ARRAY['reservation_id', 'traveler_id', 'supersedes_id', 'recorded_by_id'];
 BEGIN
   IF (to_jsonb(NEW) - links) = (to_jsonb(OLD) - links)
      AND (NEW.reservation_id IS NULL OR NEW.reservation_id = OLD.reservation_id)
      AND (NEW.traveler_id IS NULL OR NEW.traveler_id = OLD.traveler_id)
-     AND (NEW.supersedes_id IS NULL OR NEW.supersedes_id = OLD.supersedes_id) THEN
+     AND (NEW.supersedes_id IS NULL OR NEW.supersedes_id = OLD.supersedes_id)
+     AND (NEW.recorded_by_id IS NULL OR NEW.recorded_by_id = OLD.recorded_by_id) THEN
     RETURN NEW;
   END IF;
   RAISE EXCEPTION 'traveler_affidavits is append-only; record a superseding affidavit instead';

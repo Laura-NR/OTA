@@ -182,6 +182,49 @@ enum PriceLineKind {
   FEE
 }
 
+// M3: the twelve general-licence categories of 31 CFR 515.560(a)
+// (counsel to confirm the wording).
+enum OfacCategory {
+  FAMILY_VISITS                  // 515.561
+  OFFICIAL_GOVERNMENT_BUSINESS   // 515.562
+  JOURNALISTIC_ACTIVITY          // 515.563
+  PROFESSIONAL_RESEARCH          // 515.564
+  EDUCATIONAL_ACTIVITIES         // 515.565
+  RELIGIOUS_ACTIVITIES           // 515.566
+  PUBLIC_PERFORMANCES            // 515.567
+  SUPPORT_FOR_THE_CUBAN_PEOPLE   // 515.574
+  HUMANITARIAN_PROJECTS          // 515.575
+  PRIVATE_FOUNDATIONS_RESEARCH   // 515.576
+  INFORMATIONAL_MATERIALS        // 515.545
+  AUTHORIZED_EXPORT_TRANSACTIONS // 515.533, 515.559
+}
+
+enum AffidavitSource {
+  ONLINE
+  PAPER
+}
+
+enum ConsentPurpose {
+  TERMS
+  PRIVACY_NOTICE
+  CANCELLATION_POLICY
+  INSURANCE_ACKNOWLEDGEMENT
+  PAYMENT_TERMS
+  MARKETING_EMAIL
+  TRIP_MESSAGES // pre-departure briefing and daily WhatsApp check-ins
+  COOKIES_ANALYTICS
+  COOKIES_MARKETING
+}
+
+enum ConsentSource {
+  BOOKING
+  ACCOUNT
+  COOKIE_BANNER
+  PAYMENT
+  CUSTOM_REQUEST
+  DESK
+}
+
 model User {
   id            String   @id @default(uuid()) @db.Uuid
   email         String   @unique
@@ -205,6 +248,9 @@ model User {
   supplierProfile SupplierProfile?
   reservations    Reservation[]
   auditLogs       AuditLog[]
+  // M3
+  consents           ConsentRecord[]
+  affidavitsRecorded TravelerAffidavit[] @relation("AffidavitRecordedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -689,6 +735,8 @@ model Reservation {
   rooms       ReservationRoom[]
   extras      ReservationExtra[]
   priceLines  ReservationPriceLine[]
+  affidavits  TravelerAffidavit[]
+  consents    ConsentRecord[]
 
   @@index([userId])
   @@index([status])
@@ -711,6 +759,9 @@ model ReservationTraveler {
   fullName              String       @map("full_name")
   dateOfBirth           DateTime?    @map("date_of_birth") @db.Date
   nationality           String?
+  // M3 D3: null derives US-person status from nationality; the desk sets it for
+  // US residents on another passport.
+  usPerson              Boolean?     @map("us_person")
   passportNumberEnc     String?      @map("passport_number_enc")
   passportExpiresAt     DateTime?    @map("passport_expires_at") @db.Date
   emergencyContactName  String?      @map("emergency_contact_name")
@@ -721,6 +772,7 @@ model ReservationTraveler {
   reservation Reservation           @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   room        ReservationRoom?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
   priceLines  ReservationPriceLine[]
+  affidavits  TravelerAffidavit[]
 
   @@index([reservationId])
   @@index([roomId])
@@ -783,6 +835,78 @@ model ReservationPriceLine {
 
   @@index([reservationId])
   @@map("reservation_price_lines")
+}
+
+// One US person's travel-category certification for one booking (M3, D1). It
+// snapshots who signed for what, so it outlives the traveler purge (D6), and is
+// append-only (D2, enforced by a trigger): a correction is a new row that
+// supersedes this one.
+model TravelerAffidavit {
+  id                String          @id @default(uuid()) @db.Uuid
+  reservationId     String?         @map("reservation_id") @db.Uuid
+  travelerId        String?         @map("traveler_id") @db.Uuid
+  supersedesId      String?         @unique @map("supersedes_id") @db.Uuid
+  category          OfacCategory
+  signerName        String          @map("signer_name")
+  signerNationality String?         @map("signer_nationality")
+  bookingCode       String          @map("booking_code")
+  travelStart       DateTime        @map("travel_start") @db.Date
+  travelEnd         DateTime        @map("travel_end") @db.Date
+  statementVersion  String          @map("statement_version")
+  statementHash     String          @map("statement_hash")
+  // The typed name (ONLINE) or the name on the scanned form (PAPER).
+  signature         String
+  source            AffidavitSource @default(ONLINE)
+  // The signed scan (PAPER), behind packages/storage.
+  documentKey       String?         @map("document_key")
+  ipAddress         String?         @map("ip_address")
+  userAgent         String?         @map("user_agent")
+  recordedById      String?         @map("recorded_by_id") @db.Uuid
+  signedAt          DateTime        @map("signed_at")
+  // travelEnd + 5 years (D6); the sweep deletes the row and its document after it.
+  retainUntil       DateTime        @map("retain_until")
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  reservation  Reservation?         @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  traveler     ReservationTraveler? @relation(fields: [travelerId], references: [id], onDelete: SetNull)
+  recordedBy   User?                @relation("AffidavitRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  supersedes   TravelerAffidavit?   @relation("AffidavitSupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
+  supersededBy TravelerAffidavit?   @relation("AffidavitSupersedes")
+
+  @@index([reservationId])
+  @@index([travelerId])
+  @@index([retainUntil])
+  @@map("traveler_affidavits")
+}
+
+// Append-only consent log (M3, D4): the latest row per subject and purpose is
+// the current state; a withdrawal is a new row with granted = false.
+model ConsentRecord {
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String?        @map("user_id") @db.Uuid
+  // A random id from the consent cookie, before the visitor signs in.
+  visitorId     String?        @map("visitor_id")
+  reservationId String?        @map("reservation_id") @db.Uuid
+  purpose       ConsentPurpose
+  granted       Boolean
+  // Declared by the tenant content that holds the text, e.g. "privacy@2026-10-14".
+  textVersion   String         @map("text_version")
+  textHash      String?        @map("text_hash")
+  source        ConsentSource
+  locale        String?
+  // Which banner variant applied: "EU", "UK", "US-CA", …
+  region        String?
+  // Null until a geo-IP source is approved (D5).
+  ipCountry     String?        @map("ip_country")
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, purpose, createdAt])
+  @@index([visitorId])
+  @@index([reservationId])
+  @@map("consent_records")
 }
 
 model ServiceItem {
