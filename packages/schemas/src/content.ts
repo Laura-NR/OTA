@@ -1,3 +1,4 @@
+import { CONSENT_PURPOSES } from '@ota/domain';
 import { z } from 'zod';
 
 /**
@@ -312,6 +313,20 @@ export const joinContentSchema = z.object({
   faq: z.object({ title: text, items: z.array(faqItemSchema).min(1) }).optional(),
 });
 
+/**
+ * A text a traveler agrees to, with the version id stamped on what they sign
+ * or consent to (M3, D4). Change the version whenever the words change, so a
+ * consent given to the old words is asked for again.
+ */
+export const legalTextSchema = z.object({ version: z.string().min(1).max(100), text });
+
+/** The agency's legal statements: the OFAC certification and each consent's words. */
+export const legalContentSchema = z.object({
+  status: contentStatusSchema,
+  ofacStatement: legalTextSchema.optional(),
+  consents: z.partialRecord(z.enum(CONSENT_PURPOSES), legalTextSchema).default({}),
+});
+
 export type ContentStatus = z.infer<typeof contentStatusSchema>;
 export type ContentBlock = z.infer<typeof contentBlockSchema>;
 export type ContentSection = z.infer<typeof contentSectionSchema>;
@@ -328,6 +343,8 @@ export type ConditionsContent = z.infer<typeof conditionsContentSchema>;
 export type EventBannerContent = z.infer<typeof eventBannerContentSchema>;
 export type DestinationCard = z.infer<typeof destinationCardSchema>;
 export type DestinationDetail = z.infer<typeof destinationDetailSchema>;
+export type LegalText = z.infer<typeof legalTextSchema>;
+export type LegalContent = z.infer<typeof legalContentSchema>;
 export type DestinationsContent = z.infer<typeof destinationsContentSchema>;
 export type PackagesContent = z.infer<typeof packagesContentSchema>;
 export type JoinContent = z.infer<typeof joinContentSchema>;

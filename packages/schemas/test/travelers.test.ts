@@ -24,6 +24,7 @@ describe('reservationTravelerSchema', () => {
       fullName: 'Margaret Chen',
       dateOfBirth: null,
       nationality: 'CA',
+      usPerson: null,
       hasPassport: true,
       passportExpiresAt: null,
       emergencyContactName: null,

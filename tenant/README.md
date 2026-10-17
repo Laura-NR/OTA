@@ -39,7 +39,10 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
 - `messages/en.json` → `content`: built from the design's copy (handoff v1.2). Its
   policies (deposit, fees, cancellation scale), figures and team are the design's
   sample content, not confirmed terms; the privacy notice is a draft written from
-  `docs/pii-at-rest-review.md` for the owner and counsel to review. The
+  `docs/pii-at-rest-review.md` for the owner and counsel to review. `legal` holds
+  the OFAC certification statement and each consent's words with a version id
+  (M3), taken from the Booking and Account boards; counsel must approve them, and
+  any change to the words needs a new version so consent is asked again. The
   `conditions` briefing (advisory level, power, fuel) and the `event` strip are
   design samples, not current information, and show a "Sample" badge until
   published. Join's figures (partners, payouts, review time) are the design's

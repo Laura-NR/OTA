@@ -1445,6 +1445,39 @@
           }
         ]
       }
+    },
+    "legal": {
+      "status": "placeholder",
+      "ofacStatement": {
+        "version": "ofac-statement@2026-10-17",
+        "text": "I certify that my travel falls under the category above and that I will keep a full-time schedule of qualifying activities."
+      },
+      "consents": {
+        "TERMS": {
+          "version": "booking-terms@2026-10-17",
+          "text": "I've read the terms, the cancellation policy and the privacy notice, and I understand how Vereda uses my data to arrange this trip."
+        },
+        "PRIVACY_NOTICE": {
+          "version": "booking-terms@2026-10-17",
+          "text": "I've read the terms, the cancellation policy and the privacy notice, and I understand how Vereda uses my data to arrange this trip."
+        },
+        "CANCELLATION_POLICY": {
+          "version": "booking-terms@2026-10-17",
+          "text": "I've read the terms, the cancellation policy and the privacy notice, and I understand how Vereda uses my data to arrange this trip."
+        },
+        "INSURANCE_ACKNOWLEDGEMENT": {
+          "version": "insurance@2026-10-17",
+          "text": "I understand that every traveler must carry travel insurance covering medical care and evacuation to enter Cuba, and that cards do not work inside Cuba."
+        },
+        "TRIP_MESSAGES": {
+          "version": "trip-messages@2026-10-17",
+          "text": "Send me the Pre-departure Reality Briefing 30 days before I travel, and a daily WhatsApp check-in at 08:00 while I'm in Cuba."
+        },
+        "MARKETING_EMAIL": {
+          "version": "marketing@2026-10-17",
+          "text": "Send me stories and new trips by email, once a month."
+        }
+      }
     }
   },
   "packages": {

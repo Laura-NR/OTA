@@ -35,6 +35,8 @@ export const reservationTravelerSchema = z.object({
   /** `YYYY-MM-DD`. */
   dateOfBirth: z.string().nullable(),
   nationality: z.string().nullable(),
+  /** M3: the desk's US-person override; null derives it from the nationality. */
+  usPerson: z.boolean().nullable(),
   /** A passport number is stored (encrypted); read it through the vault route. */
   hasPassport: z.boolean(),
   /** `YYYY-MM-DD`. */
@@ -137,6 +139,8 @@ export const travelerInputSchema = z
     fullName: z.string().trim().min(1).max(200),
     dateOfBirth: z.coerce.date().nullable().default(null),
     nationality: nationalitySchema.nullable().default(null),
+    /** M3: true or false overrides the nationality for the OFAC gate; null derives it. */
+    usPerson: z.boolean().nullable().default(null),
     /**
      * Omitted keeps the stored number (the client never holds it); null
      * clears it; a value replaces it.
