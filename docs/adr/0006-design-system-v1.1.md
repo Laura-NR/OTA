@@ -309,3 +309,62 @@ tokens; no token was added.
   panel, search, CSV export, version locks, internal notes, travelers and
   itinerary on the booking, the GBV-by-month chart, the reinvestment ledger and
   NPS.
+
+## Amendment, 2026-10-17: Phase 4 Booking form, resolved by the build
+
+The storefront Booking form (Booking / M-Booking boards) is built at
+`/packages/<slug>/book` on M1–M3, with the existing tokens and no new one. The
+owner chose sign-in first (2026-10-17): a signed-out visitor signs in by magic
+link and returns to the form, so the board's "You don't need an account: we
+create one with a sign-in link" is not drawn and the lead's email is the
+account's, read-only. This amendment supersedes the Phase 5 amendment's note
+that the certification step lives only on the account trip page; that step
+stays there for bookings made before the form.
+
+- **Frame and values.** The site header stays (no checkout-only header, no
+  "Save & exit": drafts are not saved). The DS 03 `Stepper` sits above, at the
+  board's 760 px; its dots are not buttons, so going back is the Back buttons
+  and the review's Edit links. Step titles are `text-h2` (Fraunces 32/40) and
+  `text-h2-compact` below `md`; panels are `rounded-lg` (12 px) with 28 px
+  padding (20 px on phones); the summary is a 360 px sticky aside from `lg`,
+  stacked under the step below it.
+- **Travelers and kinds.** The counters read adults 18 and over, children 2 to
+  17 and infants under 2, and the API reads each traveler's kind from the date
+  of birth on the departure day; a date of birth that contradicts the counted
+  kind holds step 4. The board's "2–12 pay 60 %" comes from the manifest's
+  child bands, listed under the counters. The 10 % group rate for six or more
+  is not shown: pricing has no group rule.
+- **Rooms.** "Share" puts two to a room and makes the last a triple for an odd
+  party, with no supplement; "A private room for each traveler" gives every
+  traveler with a bed a room of one, and the tier's single supplement is
+  charged per such room (the board labels it "pp"). A traveler alone sees "a
+  room of your own" with the roommate request, which is stored for the desk
+  and not priced.
+- **Stay and extras.** A tier card shows its name, its per-person price
+  (departure or base plus the delta) and its description; the board's casa
+  names and backup-power lines per tier wait for tier content. Insurance plans
+  are not modelled, so step 3 shows a **Required** card saying the traveler
+  brings their own policy, and the insurance acknowledgement is recorded at
+  review. "Already in your price" lists the package's included items.
+- **Travelers step.** Every traveler may give a passport number (the board
+  shows it for the lead only), because a traveler cannot edit the party after
+  booking. Country names are formatted on the server. The lead's mobile and
+  emergency contact are required, as the board does not mark them optional.
+  The US certification sits inline under each US traveler with the account
+  OFAC copy; "Answer three questions" and "Read more" are not drawn.
+- **Review.** "What happens next" follows the system: no 24 h answer, no 20 %
+  deposit, no 48 h window and no deposit or balance lines until M4; the
+  summary's note says the price is fixed when the payment link is sent (it
+  locks at PENDING_PAYMENT). "Cancellation, in short" is not drawn until the
+  manifest has the scale (M4 D2). The consent boxes show the tenant's legal
+  texts, one box per distinct text (terms, privacy and cancellation share one
+  today); only the privacy notice is linked, as the other pages wait for
+  counsel. The submit label wraps on phones instead of widening the page.
+- **Request received.** The panel shows the booking code, "Nothing has been
+  charged", the four-step timeline and "Go to My trips". "We've emailed a copy
+  and sent you a sign-in link" is not drawn (no email is sent at submit and the
+  traveler is signed in), nor is "How was this?", which belongs to the
+  Confirmation screen.
+- **Package page.** The sticky summary keeps the price, the booking-model pill
+  and the support links; its date inputs are gone and "Check availability &
+  request" opens the form.

@@ -7,8 +7,10 @@ AES-256-GCM ciphertext), `ReservationRoom`, `ReservationExtra`, `ReservationPric
 **Surfaces landed 2026-10-16:** the booking pricing reducer and the passport cipher (`37b5c6e`),
 the DTOs (`da24767`), the API routes with the audited passport vault (`482c7c7`), the invoice
 amounts and price breakdown (`b392bbc`), the A-Booking travel party and price breakdown
-(`ae4ef0b`) and the retention purge of traveler PII (`36ffba1`). Still open: the storefront
-Booking form (Phase 4 screens), which will submit the same party through a traveler route.
+(`ae4ef0b`) and the retention purge of traveler PII (`36ffba1`). **The storefront Booking form
+landed 2026-10-17:** the traveler route `POST /me/reservations/package-booking` (`c531266`) prices
+the same party with the shared M2 rules and freezes the lines, and the five-step form
+(`e7afb49`) submits it.
 **Date:** 2026-10-15
 **Scope:** `docs/design-v1.1-plan.md` Phase 4, M2, read against the Booking, Account and
 A-Booking boards (`design/vereda-v1.2/project/`).
