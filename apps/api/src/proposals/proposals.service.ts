@@ -20,7 +20,8 @@ import {
   proposalTotal,
   type ProposalStatus,
 } from '@ota/domain';
-import { proposalSentEmail, type Mailer } from '@ota/email';
+import { renderProposalHtml } from '@ota/documents';
+import { proposalSentEmail, type EmailAttachment, type Mailer } from '@ota/email';
 import {
   proposalDocumentSchema,
   proposalRequestPayloadDtoSchema,
@@ -29,18 +30,22 @@ import {
   type CreateCustomRequestResultDto,
   type CreateProposalVersionRequest,
   type DeclineProposalRequest,
+  type ProposalDocument,
   type ProposalDto,
   type ProposalListItemDto,
   type ProposalQueueQuery,
   type ProposalRequestDto,
   type ProposalVersionDto,
 } from '@ota/schemas';
+import type { ObjectStorage } from '@ota/storage';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
 import { accountProposalUrl } from '../common/storefront-url';
+import { DOCUMENT_RENDERER, type DocumentRenderer } from '../documents/document-renderer';
 import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OBJECT_STORAGE } from '../storage/storage.module';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 
 const PROPOSAL_INCLUDE = {
@@ -112,6 +117,7 @@ function toVersionDto(row: ProposalRow['versions'][number]): ProposalVersionDto 
     document: proposalDocumentSchema.parse(row.document),
     terms: (row.terms as Record<string, unknown> | null) ?? null,
     createdAt: row.createdAt.toISOString(),
+    hasPdf: row.pdfKey !== null,
     lines: row.priceLines.map((line) => ({
       id: line.id,
       kind: line.kind,
@@ -195,6 +201,8 @@ export class ProposalsService {
     private readonly prisma: PrismaService,
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    @Inject(DOCUMENT_RENDERER) private readonly renderer: DocumentRenderer,
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
   ) {}
 
   async createRequest(
@@ -461,19 +469,38 @@ export class ProposalsService {
     });
 
     const locale = proposal.request.locale ?? proposal.request.user.locale;
+    const portalUrl = accountProposalUrl(this.tenant, locale, proposalId);
+    const travelerName = proposal.request.user.fullName ?? proposal.request.user.email;
+    const pdf = await this.storeVersionPdf({
+      versionId: created.id,
+      proposalId,
+      reference: proposal.request.reference,
+      version,
+      travelerName,
+      createdAt: created.createdAt,
+      validUntil,
+      document,
+      lines,
+      currency: input.currency,
+      total,
+      perPerson: created.perPerson ? created.perPerson.toFixed(2) : null,
+      portalUrl,
+      locale,
+    });
     try {
       await this.mailer.send(
         proposalSentEmail({
           to: proposal.request.user.email,
-          name: proposal.request.user.fullName ?? proposal.request.user.email,
+          name: travelerName,
           reference: proposal.request.reference,
           summary: document.summary,
           total,
           currency: input.currency,
           validUntil,
-          portalUrl: accountProposalUrl(this.tenant, locale, proposalId),
+          portalUrl,
           locale,
           branding: this.tenant.branding,
+          pdf,
         }),
       );
     } catch (error) {
@@ -485,6 +512,141 @@ export class ProposalsService {
     }
 
     return this.getForOps(proposalId);
+  }
+
+  /**
+   * Render the version as the D-Proposal PDF, store it under `pdfKey` and
+   * return it for the email. Best-effort, like the booking documents: a
+   * renderer or storage failure is logged and the version is still sent,
+   * without a PDF.
+   */
+  private async storeVersionPdf(input: {
+    versionId: string;
+    proposalId: string;
+    reference: string;
+    version: number;
+    travelerName: string;
+    createdAt: Date;
+    validUntil: Date;
+    document: ProposalDocument;
+    lines: {
+      label: string;
+      description: string | null;
+      quantity: number;
+      amount: number;
+    }[];
+    currency: string;
+    total: number;
+    perPerson: string | null;
+    portalUrl: string;
+    locale: string | null;
+  }): Promise<EmailAttachment | null> {
+    try {
+      const html = renderProposalHtml(
+        {
+          reference: input.reference,
+          version: input.version,
+          travelerName: input.travelerName,
+          createdAt: input.createdAt.toISOString(),
+          validUntil: input.validUntil.toISOString(),
+          startDate: input.document.startDate,
+          endDate: input.document.endDate,
+          adults: input.document.adults,
+          children: input.document.children,
+          summary: input.document.summary,
+          notes: input.document.notes ?? null,
+          stops: input.document.stops,
+          days: input.document.days,
+          options: input.document.options,
+          lines: input.lines.map((line) => ({
+            label: line.label,
+            description: line.description,
+            quantity: line.quantity.toFixed(2),
+            amount: line.amount.toFixed(2),
+          })),
+          currency: input.currency,
+          total: input.total.toFixed(2),
+          perPerson: input.perPerson,
+          planningFee: this.tenant.proposals.planningFee,
+          portalUrl: input.portalUrl,
+        },
+        {
+          agencyName: this.tenant.branding.agencyName,
+          licenseNumber: this.tenant.branding.licenseNumber,
+          primaryColor: this.tenant.branding.primaryColor,
+          supportEmail: this.tenant.branding.supportEmail,
+          supportPhone: this.tenant.branding.supportPhone,
+          emergencyContacts: this.tenant.emergencyContacts,
+        },
+        input.locale,
+      );
+      const bytes = await this.renderer.render(html);
+      const key = `proposals/${input.proposalId}/v${input.version}.pdf`;
+      await this.storage.put(key, bytes, 'application/pdf');
+      await this.prisma.proposalVersion.update({
+        where: { id: input.versionId },
+        data: { pdfKey: key },
+      });
+      return {
+        filename: `${input.reference}-v${input.version}.pdf`,
+        content: Buffer.from(bytes),
+        contentType: 'application/pdf',
+      };
+    } catch (error) {
+      this.logger.warn(
+        `Proposal PDF failed for ${input.reference} v${input.version}: ${
+          error instanceof Error ? error.message : 'unknown error'
+        }`,
+      );
+      return null;
+    }
+  }
+
+  /** A version's PDF for the traveler who made the request. */
+  async pdfForUser(
+    userId: string,
+    proposalId: string,
+    versionId: string,
+  ): Promise<{ body: Uint8Array; filename: string }> {
+    return this.versionPdf(proposalId, versionId, userId);
+  }
+
+  /** A version's PDF for the desk. */
+  async pdfForOps(
+    proposalId: string,
+    versionId: string,
+  ): Promise<{ body: Uint8Array; filename: string }> {
+    return this.versionPdf(proposalId, versionId, null);
+  }
+
+  private async versionPdf(
+    proposalId: string,
+    versionId: string,
+    ownerId: string | null,
+  ): Promise<{ body: Uint8Array; filename: string }> {
+    const version = await this.prisma.proposalVersion.findFirst({
+      where: {
+        id: versionId,
+        proposalId,
+        ...(ownerId ? { proposal: { request: { userId: ownerId } } } : {}),
+      },
+      select: {
+        version: true,
+        pdfKey: true,
+        proposal: { select: { request: { select: { reference: true } } } },
+      },
+    });
+    if (!version?.pdfKey) {
+      throw new NotFoundException('No PDF for this proposal version');
+    }
+    const stored = await this.storage.get(version.pdfKey);
+    if (!stored) {
+      throw new NotFoundException('No PDF for this proposal version');
+    }
+    return {
+      body: stored.body,
+      filename: `${version.proposal.request.reference}-v${version.version}.pdf`,
+    };
   }
 
   /**

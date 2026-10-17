@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  Res,
   UseFilters,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
@@ -19,12 +20,14 @@ import {
   type ProposalListItemDto,
   type ProposalQueueQuery,
 } from '@ota/schemas';
+import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { sendPdf } from './proposal-pdf';
 import { ProposalsService } from './proposals.service';
 
 const READ_ROLES = [
@@ -55,6 +58,17 @@ export class ProposalsController {
   @Roles(...READ_ROLES)
   get(@Param('id', ParseUUIDPipe) id: string): Promise<ProposalDto> {
     return this.proposals.getForOps(id);
+  }
+
+  @Get(':id/versions/:versionId/pdf')
+  @Roles(...READ_ROLES)
+  async pdf(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { body, filename } = await this.proposals.pdfForOps(id, versionId);
+    sendPdf(response, body, filename);
   }
 
   @Post(':id/versions')

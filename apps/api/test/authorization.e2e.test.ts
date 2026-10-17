@@ -60,6 +60,7 @@ const INSTALMENT = 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1';
 const PROOF = 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2';
 const REFUND = 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3';
 const PROPOSAL = 'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4';
+const PROPOSAL_VERSION = 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -159,6 +160,11 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/me/proposals', allowed: 'authenticated' },
   { method: 'get', path: `/me/proposals/${PROPOSAL}`, allowed: 'authenticated' },
   {
+    method: 'get',
+    path: `/me/proposals/${PROPOSAL}/versions/${PROPOSAL_VERSION}/pdf`,
+    allowed: 'authenticated',
+  },
+  {
     method: 'post',
     path: `/me/proposals/${PROPOSAL}/accept`,
     allowed: 'authenticated',
@@ -203,6 +209,11 @@ const ROUTES: Route[] = [
   // M5 proposal queue: reads by ops roles, pricing by writers.
   { method: 'get', path: '/proposals', allowed: 'opsRead' },
   { method: 'get', path: `/proposals/${PROPOSAL}`, allowed: 'opsRead' },
+  {
+    method: 'get',
+    path: `/proposals/${PROPOSAL}/versions/${PROPOSAL_VERSION}/pdf`,
+    allowed: 'opsRead',
+  },
   { method: 'post', path: `/proposals/${PROPOSAL}/versions`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/approve`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/reject`, allowed: 'opsWrite' },

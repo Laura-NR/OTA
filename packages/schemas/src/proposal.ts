@@ -194,6 +194,8 @@ export const proposalVersionSchema = z.object({
   terms: z.record(z.string(), z.unknown()).nullable(),
   createdAt: z.string(),
   lines: z.array(proposalPriceLineSchema),
+  /** The D-Proposal PDF was rendered and stored; read it through the PDF route. */
+  hasPdf: z.boolean(),
 });
 
 export type ProposalVersionDto = z.infer<typeof proposalVersionSchema>;

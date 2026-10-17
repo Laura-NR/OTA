@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Res,
   UseFilters,
 } from '@nestjs/common';
 import {
@@ -21,11 +22,13 @@ import {
   type ProposalDto,
   type ProposalListItemDto,
 } from '@ota/schemas';
+import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { sendPdf } from './proposal-pdf';
 import { ProposalsService } from './proposals.service';
 
 /**
@@ -59,6 +62,18 @@ export class MeProposalsController {
     @CurrentUser() actor: AuthUser,
   ): Promise<ProposalDto> {
     return this.proposals.getForUser(actor.id, id);
+  }
+
+  /** The version's D-Proposal PDF, only for the traveler who asked for it. */
+  @Get('proposals/:id/versions/:versionId/pdf')
+  async pdf(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+    @CurrentUser() actor: AuthUser,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { body, filename } = await this.proposals.pdfForUser(actor.id, id, versionId);
+    sendPdf(response, body, filename);
   }
 
   @Post('proposals/:id/accept')

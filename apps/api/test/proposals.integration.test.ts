@@ -1,6 +1,7 @@
 import { parseTenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import type { EmailMessage } from '@ota/email';
+import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
@@ -24,8 +25,10 @@ const tenant = parseTenantConfig({
 
 /**
  * Live proof of the M5 flow against Postgres: a request becomes a priced,
- * immutable version; accepting it creates the booking, its frozen price lines
- * and its service items in one transaction; a second acceptance is idempotent.
+ * immutable version with its D-Proposal PDF stored and attached to the email;
+ * accepting it creates the booking, its frozen price lines and its service
+ * items in one transaction; a second acceptance is idempotent. A renderer
+ * failure still sends the version, without a PDF.
  * Run with `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest run
  * test/proposals.integration.test.ts` against a migrated dev database.
  */
@@ -36,6 +39,9 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
   let itemId = '';
   const stamp = Date.now();
   const sent: EmailMessage[] = [];
+  const storage = new InMemoryObjectStorage();
+  const rendered: string[] = [];
+  let failRender = false;
 
   beforeAll(async () => {
     prisma = new PrismaClient();
@@ -47,6 +53,17 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
         },
       },
       tenant,
+      {
+        // A stand-in for Chromium: the PDF is the HTML's bytes behind a PDF header.
+        render: async (html) => {
+          if (failRender) {
+            throw new Error('renderer down');
+          }
+          rendered.push(html);
+          return new TextEncoder().encode(`%PDF-1.7\n${html.length}`);
+        },
+      },
+      storage,
     );
 
     const user = await prisma.user.create({
@@ -163,6 +180,32 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
     expect(sent.at(-1)?.to).toBe(actor.email);
     expect(sent.at(-1)?.subject).toContain(request.reference);
 
+    // The D-Proposal PDF: rendered from the version, stored, attached, and
+    // readable by its traveler and the desk only.
+    expect(priced.versions[0]!.hasPdf).toBe(true);
+    expect(rendered.at(-1)).toContain('Fourteen days west to Trinidad.');
+    expect(rendered.at(-1)).toContain('Casas, 13 nights');
+    const stored = await prisma.proposalVersion.findUniqueOrThrow({
+      where: { id: priced.versions[0]!.id },
+    });
+    expect(stored.pdfKey).toBe(`proposals/${request.id}/v1.pdf`);
+    expect(sent.at(-1)?.attachments?.[0]).toMatchObject({
+      filename: `${request.reference}-v1.pdf`,
+      contentType: 'application/pdf',
+    });
+    const own = await service.pdfForUser(actor.id, request.id, priced.versions[0]!.id);
+    expect(new TextDecoder().decode(own.body)).toMatch(/^%PDF-/);
+    expect(own.filename).toBe(`${request.reference}-v1.pdf`);
+    await expect(
+      service.pdfForUser(
+        '00000000-0000-4000-8000-000000000000',
+        request.id,
+        priced.versions[0]!.id,
+      ),
+    ).rejects.toThrow('No PDF');
+    const desk = await service.pdfForOps(request.id, priced.versions[0]!.id);
+    expect(desk.body).toEqual(own.body);
+
     const accepted = await service.acceptForUser(
       actor,
       request.id,
@@ -208,5 +251,44 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
 
     const again = await service.acceptForUser(actor, request.id, priced.versions[0]!.id);
     expect(again).toEqual(accepted);
+  });
+
+  it('sends the version without a PDF when the renderer fails', async () => {
+    const request = await service.createRequest(actor, {
+      startDate: new Date('2027-05-01T00:00:00Z'),
+      endDate: new Date('2027-05-08T00:00:00Z'),
+      adults: 1,
+      children: 0,
+      inventoryItemIds: [itemId],
+      locale: 'es',
+    });
+    failRender = true;
+    try {
+      const priced = await service.createVersion(actor, request.id, {
+        summary: 'Una semana en Trinidad.',
+        currency: 'EUR',
+        lines: [
+          {
+            kind: 'LODGING',
+            unit: 'PER_BOOKING',
+            label: 'Casa',
+            quantity: 1,
+            unitAmount: 500,
+          },
+        ],
+        stops: [],
+        days: [],
+        options: [],
+      });
+      expect(priced.status).toBe('SENT');
+      expect(priced.versions[0]!.hasPdf).toBe(false);
+      expect(sent.at(-1)?.subject).toContain(request.reference);
+      expect(sent.at(-1)?.attachments).toBeUndefined();
+      await expect(
+        service.pdfForUser(actor.id, request.id, priced.versions[0]!.id),
+      ).rejects.toThrow('No PDF');
+    } finally {
+      failRender = false;
+    }
   });
 });
