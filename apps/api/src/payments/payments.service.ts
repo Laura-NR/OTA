@@ -31,6 +31,8 @@ function toReceiptDto(receipt: PaymentReceipt): PaymentReceiptDto {
     reservationId: receipt.reservationId,
     rail: receipt.rail,
     amount: receipt.amount.toString(),
+    feeAmount: receipt.feeAmount.toString(),
+    instalmentId: receipt.instalmentId,
     currency: receipt.currency,
     status: receipt.status,
     createdAt: receipt.createdAt.toISOString(),

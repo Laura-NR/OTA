@@ -13,6 +13,11 @@ export const paymentStatusSchema = z.enum([
 
 export const createPaymentIntentSchema = z.object({
   rail: paymentRailSchema,
+  /**
+   * M4: deposit or full, chosen with the first link; ignored once the booking
+   * has a schedule. Omitted means full.
+   */
+  plan: z.enum(['DEPOSIT', 'FULL']).optional(),
 });
 
 export type CreatePaymentIntentRequest = z.infer<typeof createPaymentIntentSchema>;
@@ -22,6 +27,10 @@ export const paymentReceiptSchema = z.object({
   reservationId: z.string().uuid(),
   rail: paymentRailSchema,
   amount: z.string(),
+  /** M4 D6: the rail's fee charged on top of the amount. */
+  feeAmount: z.string(),
+  /** M4 D1: the instalment it pays; null for payments made before M4. */
+  instalmentId: z.string().uuid().nullable(),
   currency: z.string(),
   status: paymentStatusSchema,
   createdAt: z.string(),

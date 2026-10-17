@@ -49,6 +49,8 @@ function makeReceipt(overrides: Partial<PaymentReceipt> = {}): PaymentReceipt {
     rail: 'CARD',
     currency: 'EUR',
     amount: new Prisma.Decimal('321.00'),
+    feeAmount: new Prisma.Decimal('0'),
+    instalmentId: null,
     status: 'PENDING',
     payoutStatus: 'ACCRUED',
     createdAt: new Date('2026-09-20T11:00:00Z'),

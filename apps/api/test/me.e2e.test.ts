@@ -109,6 +109,8 @@ function createFakePrisma(state: FakeState) {
         const receipt = {
           id: `receipt-${state.counter.value + 1}`,
           status: 'PENDING',
+          feeAmount: 0,
+          instalmentId: null,
           createdAt: new Date(),
           updatedAt: new Date(),
           ...args.data,
