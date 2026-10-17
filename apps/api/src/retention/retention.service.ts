@@ -432,6 +432,74 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         });
       }
 
+      // M5: a custom request is a planning record. Keep its dates, party and
+      // chosen item ids for reporting; drop the traveler's notes and the
+      // personal itinerary narrative, and remove the proposal PDF.
+      const customRequests = await tx.customRequest.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          payload: true,
+          proposals: {
+            select: {
+              versions: { select: { id: true, document: true, pdfKey: true } },
+            },
+          },
+        },
+      });
+      if (customRequests.length > 0) {
+        for (const request of customRequests) {
+          const payload = (request.payload ?? {}) as Record<string, unknown>;
+          await tx.customRequest.update({
+            where: { id: request.id },
+            data: {
+              notes: null,
+              payload: {
+                startDate: payload.startDate ?? null,
+                endDate: payload.endDate ?? null,
+                adults: payload.adults ?? 1,
+                children: payload.children ?? 0,
+                inventoryItemIds: Array.isArray(payload.inventoryItemIds)
+                  ? payload.inventoryItemIds
+                  : [],
+              } as Prisma.InputJsonValue,
+            },
+          });
+          for (const proposal of request.proposals) {
+            for (const version of proposal.versions) {
+              const document = (version.document ?? {}) as Record<string, unknown>;
+              if (version.pdfKey) {
+                await this.storage.delete(version.pdfKey).catch(() => undefined);
+              }
+              await tx.proposalVersion.update({
+                where: { id: version.id },
+                data: {
+                  pdfKey: null,
+                  document: {
+                    summary: '[redacted]',
+                    startDate: document.startDate ?? '',
+                    endDate: document.endDate ?? '',
+                    adults: document.adults ?? 1,
+                    children: document.children ?? 0,
+                    stops: [],
+                    days: [],
+                    options: [],
+                  } as Prisma.InputJsonValue,
+                },
+              });
+            }
+          }
+        }
+        await tx.auditLog.create({
+          data: {
+            action: 'retention.custom_requests_scrubbed',
+            entityType: 'User',
+            entityId: userId,
+            metadata: { count: customRequests.length },
+          },
+        });
+      }
+
       // Better Auth verification rows are keyed by the old address.
       await tx.verification.deleteMany({
         where: { identifier: { contains: email } },

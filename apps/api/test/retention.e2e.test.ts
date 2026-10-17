@@ -77,6 +77,8 @@ function createFakePrisma(state: RetentionState) {
     serviceItem: { updateMany: noopWrite },
     dispatchOffer: { updateMany: noopWrite },
     verification: { deleteMany: noopWrite },
+    customRequest: { findMany: async () => [], update: noopWrite },
+    proposalVersion: { update: noopWrite },
     user: {
       findUnique: async (args: { where: { id: string } }) =>
         state.users.find((user) => user.id === args.where.id) ?? null,

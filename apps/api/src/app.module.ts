@@ -20,6 +20,7 @@ import { MessagesModule } from './messages/messages.module';
 import { PackagesModule } from './packages/packages.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ProposalsModule } from './proposals/proposals.module';
 import { QualityModule } from './quality/quality.module';
 import { RegulatoryModule } from './regulatory/regulatory.module';
 import { ReportsModule } from './reports/reports.module';
@@ -59,6 +60,7 @@ const isTest = process.env.NODE_ENV === 'test';
     MessagesModule,
     ImportsModule,
     PaymentsModule,
+    ProposalsModule,
     PackagesModule,
     MeModule,
     SupplierApplicationsModule,

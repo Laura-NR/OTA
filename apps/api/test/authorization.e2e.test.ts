@@ -59,6 +59,7 @@ const AFFIDAVIT = '90909090-9090-4090-8090-909090909090';
 const INSTALMENT = 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1';
 const PROOF = 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2';
 const REFUND = 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3';
+const PROPOSAL = 'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -153,6 +154,20 @@ const ROUTES: Route[] = [
   },
   { method: 'get', path: '/me/consents', allowed: 'authenticated' },
   { method: 'post', path: '/me/consents', allowed: 'authenticated' },
+  // M5: the traveler's own custom requests and proposals.
+  { method: 'post', path: '/me/custom-requests', allowed: 'authenticated' },
+  { method: 'get', path: '/me/proposals', allowed: 'authenticated' },
+  { method: 'get', path: `/me/proposals/${PROPOSAL}`, allowed: 'authenticated' },
+  {
+    method: 'post',
+    path: `/me/proposals/${PROPOSAL}/accept`,
+    allowed: 'authenticated',
+  },
+  {
+    method: 'post',
+    path: `/me/proposals/${PROPOSAL}/decline`,
+    allowed: 'authenticated',
+  },
   // The Booking form: books for the caller, so any signed-in role.
   { method: 'post', path: '/me/reservations/package-booking', allowed: 'authenticated' },
   // M4: the caller's own schedule and proofs of transfer (scoped in the service).
@@ -185,6 +200,10 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/payments/proofs/${PROOF}/accept`, allowed: 'opsWrite' },
   { method: 'post', path: `/payments/proofs/${PROOF}/reject`, allowed: 'opsWrite' },
   { method: 'get', path: '/refunds', allowed: 'opsRead' },
+  // M5 proposal queue: reads by ops roles, pricing by writers.
+  { method: 'get', path: '/proposals', allowed: 'opsRead' },
+  { method: 'get', path: `/proposals/${PROPOSAL}`, allowed: 'opsRead' },
+  { method: 'post', path: `/proposals/${PROPOSAL}/versions`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/approve`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/reject`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/sent`, allowed: 'opsWrite' },
