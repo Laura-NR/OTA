@@ -9,6 +9,7 @@ import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 import { setAuthRuntime } from './auth/auth.runtime';
+import { registerJsonParsers } from './common/json-body';
 import { createRateLimiter } from './common/rate-limit';
 import { resolveTenantConfigPath } from './tenant/tenant.path';
 
@@ -87,7 +88,7 @@ async function bootstrap(): Promise<void> {
         .catch(next);
     },
   );
-  expressApp.use(express.json());
+  registerJsonParsers(expressApp);
 
   await app.init();
   app.useLogger(app.get(Logger));
