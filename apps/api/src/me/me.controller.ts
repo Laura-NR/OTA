@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import {
@@ -15,6 +16,7 @@ import {
   createPackageBookingSchema,
   createPaymentIntentSchema,
   createReviewSchema,
+  myReservationQuerySchema,
   proofUploadSchema,
   type BookPackageRequest,
   type CreateMyReservationRequest,
@@ -24,6 +26,7 @@ import {
   type MeProfileDto,
   type MyReservationDetailDto,
   type MyReservationListItemDto,
+  type MyReservationQuery,
   type MyReviewDto,
   type PaymentIntentDto,
   type PaymentScheduleDto,
@@ -145,8 +148,9 @@ export class MeController {
   @Get('reservations/:id')
   reservation(
     @Param('id', ParseUUIDPipe) id: string,
+    @Query(new ZodValidationPipe(myReservationQuerySchema)) query: MyReservationQuery,
     @CurrentUser() actor: AuthUser,
   ): Promise<MyReservationDetailDto> {
-    return this.me.getReservation(actor.id, id);
+    return this.me.getReservation(actor.id, id, query.locale);
   }
 }

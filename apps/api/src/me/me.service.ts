@@ -53,9 +53,33 @@ type DetailRow = Prisma.ReservationGetPayload<{
     serviceItems: true;
     documents: true;
     reviews: true;
+    package: {
+      select: {
+        name: true;
+        translations: { select: { name: true; tiers: true } };
+      };
+    };
+    tier: { select: { code: true; name: true } };
+    travelers: { select: { fullName: true; isLead: true } };
     _count: { select: { serviceItems: true; documents: true } };
   };
 }>;
+
+/**
+ * The trip's package and tier names, overlaid by the locale's published
+ * translation (M1 D1) where it has one; tiers overlay by code.
+ */
+function toTripDto(row: DetailRow): MyReservationDetailDto['trip'] {
+  if (!row.package) {
+    return null;
+  }
+  const translation = row.package.translations[0];
+  const tiers = (translation?.tiers ?? {}) as Record<string, { name?: string }>;
+  return {
+    name: translation?.name ?? row.package.name,
+    tier: row.tier ? (tiers[row.tier.code]?.name ?? row.tier.name) : null,
+  };
+}
 
 function toListDto(row: ListRow): MyReservationListItemDto {
   return {
@@ -83,6 +107,11 @@ function toDetailDto(row: DetailRow): MyReservationDetailDto {
           createdAt: review.createdAt.toISOString(),
         }
       : null,
+    trip: toTripDto(row),
+    travelers: row.travelers.map((traveler) => ({
+      fullName: traveler.fullName,
+      isLead: traveler.isLead,
+    })),
     serviceItems: row.serviceItems.map((item) => ({
       id: item.id,
       serviceType: item.serviceType,
@@ -189,13 +218,37 @@ export class MeService {
     return rows.map(toListDto);
   }
 
-  async getReservation(userId: string, id: string): Promise<MyReservationDetailDto> {
+  /**
+   * One of the caller's trips. `locale` picks the package's published
+   * translation for the trip and tier names; without it they are the source
+   * text.
+   */
+  async getReservation(
+    userId: string,
+    id: string,
+    locale?: string,
+  ): Promise<MyReservationDetailDto> {
     const row = await this.prisma.reservation.findFirst({
       where: { id, userId },
       include: {
         serviceItems: { orderBy: { serviceDateStart: 'asc' } },
         documents: { orderBy: { generatedAt: 'desc' } },
         reviews: { orderBy: { createdAt: 'desc' }, take: 1 },
+        package: {
+          select: {
+            name: true,
+            translations: {
+              // `in: []` matches nothing, so no locale means the source text.
+              where: { locale: { in: locale ? [locale] : [] }, published: true },
+              select: { name: true, tiers: true },
+            },
+          },
+        },
+        tier: { select: { code: true, name: true } },
+        travelers: {
+          orderBy: { position: 'asc' },
+          select: { fullName: true, isLead: true },
+        },
         _count: { select: { serviceItems: true, documents: true } },
       },
     });

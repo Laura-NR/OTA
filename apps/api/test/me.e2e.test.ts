@@ -37,6 +37,7 @@ const DOCUMENT = '66666666-6666-4666-8666-666666666666';
 const CATALOG_ITEM = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const PACKAGE_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const INACTIVE_PACKAGE_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const TIER_ID = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 
 function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
   return {
@@ -65,6 +66,7 @@ interface FakeState {
   packages: Record<string, unknown>[];
   receipts: Record<string, unknown>[];
   reviews: Record<string, unknown>[];
+  travelers: Record<string, unknown>[];
   audits: { action: string }[];
   counter: { value: number };
 }
@@ -160,14 +162,42 @@ function createFakePrisma(state: FakeState) {
         // M4: a payment link reads the schedule (none yet) and the package's plan.
         return args.include ? { ...row, instalments: [], package: null } : row;
       },
-      findFirst: async (args: { where: { id: string; userId: string } }) => {
+      findFirst: async (args: {
+        where: { id: string; userId: string };
+        include?: {
+          package?: {
+            select: { translations: { where: { locale: { in: string[] } } } };
+          };
+        };
+      }) => {
         const row = [...state.reservations.values()].find(
           (candidate) =>
             candidate.id === args.where.id && candidate.userId === args.where.userId,
         );
         if (!row) return null;
+        const trip = row as Reservation & { packageId?: string; tierId?: string };
+        const pkg = state.packages.find((candidate) => candidate.id === trip.packageId);
+        const locales = args.include?.package?.select.translations.where.locale.in ?? [];
+        const translations = (pkg?.translations ?? []) as {
+          locale: string;
+          published: boolean;
+        }[];
+        const tiers = (pkg?.tiers ?? []) as { id: string }[];
         return {
           ...row,
+          package: pkg
+            ? {
+                name: pkg.name,
+                translations: translations.filter(
+                  (translation) =>
+                    translation.published && locales.includes(translation.locale),
+                ),
+              }
+            : null,
+          tier: tiers.find((tier) => tier.id === trip.tierId) ?? null,
+          travelers: state.travelers.filter(
+            (traveler) => traveler.reservationId === row.id,
+          ),
           serviceItems: state.serviceItems.filter(
             (item) => item.reservationId === row.id,
           ),
@@ -311,6 +341,16 @@ describe('me API', () => {
           name: 'Vinales Agro-Ecology Trail',
           slug: 'vinales-agro-ecology-trail',
           status: 'PUBLISHED',
+          tiers: [{ id: TIER_ID, code: 'mid', name: 'Mid-range' }],
+          translations: [
+            {
+              locale: 'es',
+              published: true,
+              name: 'Ruta agroecológica de Viñales',
+              tiers: { mid: { name: 'Gama media' } },
+            },
+            { locale: 'fr', published: false, name: 'Brouillon', tiers: null },
+          ],
           currency: 'EUR',
           basePrice: new Prisma.Decimal('180.00'),
           services: [
@@ -350,6 +390,10 @@ describe('me API', () => {
       ],
       receipts: [],
       reviews: [],
+      travelers: [
+        { reservationId: MY_RESERVATION, fullName: 'Example Traveler', isLead: true },
+        { reservationId: MY_RESERVATION, fullName: 'Dana Companion', isLead: false },
+      ],
       audits: [],
       counter: { value: 0 },
     };
@@ -407,6 +451,42 @@ describe('me API', () => {
     expect(response.body.documents).toHaveLength(1);
     expect(response.body.documents[0].type).toBe('VOUCHER');
     expect(response.body.documents[0].storageKey).toBeUndefined();
+    expect(response.body.trip).toBeNull();
+    expect(response.body.travelers).toEqual([
+      { fullName: 'Example Traveler', isLead: true },
+      { fullName: 'Dana Companion', isLead: false },
+    ]);
+  });
+
+  it('names a package trip and its tier in the published translation of the locale', async () => {
+    state.reservations.set(
+      MY_RESERVATION,
+      makeReservation({ packageId: PACKAGE_ID, tierId: TIER_ID } as Partial<Reservation>),
+    );
+    const read = (query: string) =>
+      request(app.getHttpServer())
+        .get(`/me/reservations/${MY_RESERVATION}${query}`)
+        .set('x-test-user', TRAVELER.email);
+
+    const translated = await read('?locale=es');
+    expect(translated.status).toBe(200);
+    expect(translated.body.trip).toEqual({
+      name: 'Ruta agroecológica de Viñales',
+      tier: 'Gama media',
+    });
+
+    // A draft translation is never shown; the source text stands in.
+    const draft = await read('?locale=fr');
+    expect(draft.body.trip).toEqual({
+      name: 'Vinales Agro-Ecology Trail',
+      tier: 'Mid-range',
+    });
+
+    const source = await read('');
+    expect(source.body.trip).toEqual({
+      name: 'Vinales Agro-Ecology Trail',
+      tier: 'Mid-range',
+    });
   });
 
   it('returns 404 for another traveler reservation', async () => {

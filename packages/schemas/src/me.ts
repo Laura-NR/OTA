@@ -38,14 +38,37 @@ export const myReservationListItemSchema = z.object({
 
 export type MyReservationListItemDto = z.infer<typeof myReservationListItemSchema>;
 
+/** The package a trip was booked from, in the requested locale where translated. */
+export const myTripSchema = z.object({
+  name: z.string(),
+  /** The chosen tier's name, or null when the booking has none. */
+  tier: z.string().nullable(),
+});
+
+/** A member of the travel party, by name only (no passport or birth date). */
+export const myTravelerSchema = z.object({
+  fullName: z.string(),
+  isLead: z.boolean(),
+});
+
 export const myReservationDetailSchema = myReservationListItemSchema.extend({
   serviceItems: z.array(reservationServiceItemSchema),
   documents: z.array(myDocumentSchema),
   /** The caller's CSAT review, when the trip has been reviewed. */
   review: myReviewSchema.nullable(),
+  /** Null for a custom trip (builder or accepted proposal). */
+  trip: myTripSchema.nullable(),
+  travelers: z.array(myTravelerSchema),
 });
 
 export type MyReservationDetailDto = z.infer<typeof myReservationDetailSchema>;
+
+/** `GET /me/reservations/:id?locale=` picks the package's published translation. */
+export const myReservationQuerySchema = z.object({
+  locale: z.string().trim().min(2).max(5).optional(),
+});
+
+export type MyReservationQuery = z.infer<typeof myReservationQuerySchema>;
 
 /**
  * A traveler-built itinerary (spec §4.2 / storefront dynamic package builder).

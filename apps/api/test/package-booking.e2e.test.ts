@@ -221,6 +221,11 @@ function createFakePrisma(state: State) {
           serviceItems: items,
           documents: [],
           reviews: [],
+          package: null,
+          tier: null,
+          travelers: state.travelers.filter(
+            (traveler) => traveler.reservationId === row.id,
+          ),
           _count: { serviceItems: items.length, documents: 0 },
         };
       },

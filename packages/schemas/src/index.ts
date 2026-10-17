@@ -208,11 +208,15 @@ export {
   myDocumentSchema,
   myReservationDetailSchema,
   myReservationListItemSchema,
+  myReservationQuerySchema,
+  myTravelerSchema,
+  myTripSchema,
   type CreateMyReservationRequest,
   type MeProfileDto,
   type MyDocumentDto,
   type MyReservationDetailDto,
   type MyReservationListItemDto,
+  type MyReservationQuery,
 } from './me';
 export {
   createPaymentIntentSchema,
