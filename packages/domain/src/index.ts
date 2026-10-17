@@ -33,6 +33,15 @@ export {
   type TravelWindow,
 } from './reservation/booking-views';
 export {
+  CONFIRMATION_STATUSES,
+  hasConfirmation,
+  preTripSteps,
+  tripCalendar,
+  type PreTripInput,
+  type PreTripStep,
+  type TripCalendarInput,
+} from './reservation/confirmation';
+export {
   AMBER_THRESHOLD,
   DEFAULT_DISPATCH_TIMEOUT_MS,
   SHORT_NOTICE_DISPATCH_TIMEOUT_MS,
