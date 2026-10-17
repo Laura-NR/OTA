@@ -102,6 +102,7 @@ export {
   type PriceLineKind,
   type TravelerKind,
 } from './packages/booking-price';
+export { planRooms, type RoomPlan, type Rooming } from './packages/rooming';
 export {
   OFAC_CATEGORIES,
   OFAC_RETENTION_YEARS,
