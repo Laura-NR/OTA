@@ -46,8 +46,11 @@ these stop; synchronous API traffic continues but readiness fails.
 
 | Queue | Schedule | Job |
 |---|---|---|
-| `retention-lifecycle` | daily 05:00 | send keep-alive notices (6 months after completion) and anonymize past the 30-day grace |
+| `retention-lifecycle` | daily 05:00 | send keep-alive notices (6 months after completion), their one reminder at day 23, and anonymize past the 30-day grace |
 | `compliance-expiry` | daily 06:00 | flag supplier credentials expiring within 30 days (also pauses auto-dispatch) |
+| `payment-reminders` | daily 07:00 | email balance reminders 7, 3 and 1 days before a BALANCE instalment is due (`POST /payments/reminders/scan`) |
+| `payment-window-reminders` | every 15 min | email 24 h and 2 h before a deposit or full payment window closes (`POST /payments/reminders/window-scan`) |
+| `traveler-notifications` | daily 08:00 | trip review request a day after completion (one reminder after 5 days) and the reconfirmation 7 days before departure (`POST /notifications/scan`) |
 | `analytics-digest` | Monday 07:00 | email the weekly XLSX + PDF BI digest to `ANALYTICS_DIGEST_EMAIL`/`OPS_NOTIFY_EMAIL` |
 | `dispatch` | on dispatch | delayed job that fires the offer timeout (2h standard / 30min under 48h) |
 
