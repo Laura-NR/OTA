@@ -70,6 +70,8 @@ export interface BookingFlowProps {
   leadName: string;
   /** Today (YYYY-MM-DD) on the server, the latest date of birth allowed. */
   today: string;
+  /** The active advisories for the trip's provinces (M7), shown on step 1. */
+  notices?: ReactNode;
 }
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -164,6 +166,7 @@ export function BookingFlow({
   email,
   leadName,
   today,
+  notices,
 }: BookingFlowProps) {
   const t = useTranslations('booking');
   const tofac = useTranslations('account.ofac');
@@ -559,6 +562,7 @@ export function BookingFlow({
     content = (
       <div className={panel}>
         {stepHead(t('departure.title'), t('departure.lede', { name: pkg.name, length }))}
+        {notices}
         {departures.length === 0 ? (
           <Alert variant="info">{t('departure.none')}</Alert>
         ) : (

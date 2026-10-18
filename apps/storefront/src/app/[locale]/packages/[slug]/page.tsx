@@ -7,12 +7,14 @@ import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
+import { AdvisoryNotice } from '@/components/advisory-notice';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { PackageBookingForm } from '@/components/package-booking-form';
 import { BookingModelPill, PackageCard } from '@/components/package-card';
 import { PackageActions, PackageTabs } from '@/components/packages/package-actions';
 import { SectionHead } from '@/components/section-head';
 import { Link, permanentRedirect } from '@/i18n/navigation';
+import { advisoriesForProvinces, getActiveAdvisories } from '@/lib/advisories';
 import { getServerSession } from '@/lib/api';
 import { getPageContent } from '@/lib/content';
 import { formatMoney } from '@/lib/format';
@@ -62,9 +64,9 @@ function departureDate(value: string, locale: string): string {
 /**
  * A curated package (Package / M-Package boards): its length, provinces and
  * services, photos from the catalogue, the conditions of the provinces it
- * visits, and the sticky request summary. M1 adds the day texts, the
- * accommodation tiers, the departures and the optional extras. Reviews and the
- * FAQ are still not drawn.
+ * visits, the active advisories for those provinces (M7), and the sticky
+ * request summary. M1 adds the day texts, the accommodation tiers, the
+ * departures and the optional extras. Reviews and the FAQ are still not drawn.
  */
 export default async function PackageDetailPage({
   params,
@@ -95,6 +97,7 @@ export default async function PackageDetailPage({
   const instant = isFeatureEnabled(tenant, 'instantBooking');
   const builder = isFeatureEnabled(tenant, 'customItineraryBuilder');
   const provinces = packageProvinces(pkg);
+  const advisories = advisoriesForProvinces(await getActiveAdvisories(locale), provinces);
   const nights = pkg.durationDays - 1;
   const length =
     nights > 0
@@ -431,6 +434,9 @@ export default async function PackageDetailPage({
           </div>
           <PackageActions slug={pkg.slug} name={pkg.name} />
         </div>
+        {advisories.map((advisory) => (
+          <AdvisoryNotice key={advisory.id} advisory={advisory} link />
+        ))}
       </div>
 
       <div className={cn(wrap, 'grid gap-3 md:grid-cols-[2fr_1fr_1fr] md:grid-rows-2')}>

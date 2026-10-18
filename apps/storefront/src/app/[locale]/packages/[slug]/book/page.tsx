@@ -1,13 +1,16 @@
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import { BOOKING_OPTIONAL_CONSENTS, BOOKING_REQUIRED_CONSENTS } from '@ota/schemas';
 import { legalContentSchema } from '@ota/schemas';
+import { packageProvinces } from '@ota/domain';
 import { cn } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
+import { AdvisoryNotice } from '@/components/advisory-notice';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { BookingFlow, type BookingLegal } from '@/components/booking/booking-flow';
+import { advisoriesForProvinces, getActiveAdvisories } from '@/lib/advisories';
 import { getServerSession } from '@/lib/api';
 import { getPageContent } from '@/lib/content';
 import { countryOptions } from '@/lib/countries';
@@ -64,6 +67,10 @@ export default async function BookPackagePage({
   }
 
   const tenant = getTenantConfig();
+  const advisories = advisoriesForProvinces(
+    await getActiveAdvisories(locale),
+    packageProvinces(pkg),
+  );
   const now = new Date();
   const earliest = new Date(now);
   earliest.setUTCDate(earliest.getUTCDate() + pkg.leadTimeDays);
@@ -122,6 +129,13 @@ export default async function BookPackagePage({
         email={session.user.email}
         leadName={session.user.name ?? ''}
         today={now.toISOString().slice(0, 10)}
+        notices={
+          advisories.length > 0
+            ? advisories.map((advisory) => (
+                <AdvisoryNotice key={advisory.id} advisory={advisory} link />
+              ))
+            : null
+        }
       />
     </div>
   );

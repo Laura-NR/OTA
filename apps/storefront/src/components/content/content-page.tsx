@@ -7,14 +7,18 @@ import { OnThisPage, PageIntro } from './page-intro';
 /**
  * A long-form tenant content page (Travel info, About, Privacy): the intro, then
  * the sections, with "On this page" beside them from `lg` and above them below.
+ * `lead` goes before the sections (live data, such as Travel info's
+ * advisories), `children` after them.
  */
 export function ContentPageView({
   content,
   agencyName,
+  lead,
   children,
 }: {
   content: ContentPage;
   agencyName: string;
+  lead?: ReactNode;
   children?: ReactNode;
 }) {
   return (
@@ -34,6 +38,7 @@ export function ContentPageView({
           </aside>
         ) : null}
         <div className="flex min-w-0 flex-col gap-14">
+          {lead}
           {content.sections.map((section) => (
             <ContentSection key={section.id} section={section} />
           ))}

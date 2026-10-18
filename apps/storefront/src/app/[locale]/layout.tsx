@@ -62,7 +62,10 @@ export default async function LocaleLayout({
       <body className="flex min-h-screen flex-col pb-16 antialiased md:pb-0">
         <IconSprite />
         <NextIntlClientProvider messages={messages}>
-          <SiteStrips events={isFeatureEnabled(tenant, 'culturalEventsBanner')} />
+          <SiteStrips
+            events={isFeatureEnabled(tenant, 'culturalEventsBanner')}
+            signedIn={signedIn}
+          />
           <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
           <main className="flex-1">{children}</main>
           <SiteFooter tenant={tenant} />
