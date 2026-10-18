@@ -498,33 +498,190 @@
   },
   "build": {
     "title": "Crea tu itinerario",
-    "description": "Elige tus fechas y los alojamientos, transportes y experiencias que quieras. Un especialista lo convierte en una propuesta con precio; aún no se cobra nada.",
+    "description": "Propuesta gratuita, sin compromiso. Cuéntanos la ruta, el ritmo y lo que buscas; un especialista la convierte en una propuesta día a día con precio.",
+    "stepOf": "Paso {step} de {total}",
+    "progress": "Paso {step} de {total} · {label}",
     "steps": {
-      "dates": "Fechas",
-      "stays": "Alojamiento",
+      "route": "Fechas y ruta",
       "transport": "Transporte",
-      "experiences": "Experiencias",
-      "review": "Revisión"
+      "stays": "Alojamiento",
+      "activities": "Actividades y guías",
+      "summary": "Resumen"
     },
-    "startDate": "Fecha de inicio",
-    "endDate": "Fecha de fin",
-    "dateError": "La fecha de fin debe ser igual o posterior a la de inicio.",
-    "noOptions": "Aún no hay opciones en esta categoría — continúa al siguiente paso.",
-    "addAtLeastOne": "Añade al menos un servicio antes de enviar.",
-    "estimatedTotal": "Total estimado: {currency} {amount}",
     "back": "Atrás",
     "continue": "Continuar",
-    "adults": "Adultos",
-    "children": "Niños",
-    "notesLabel": "Imprescindibles, qué evitar y cualquier otra cosa",
-    "notesPlaceholder": "Cuéntanos qué haría que el viaje fuera el adecuado para ti.",
-    "submit": "Solicitar mi propuesta",
-    "submitting": "Enviando…",
-    "error": "No se pudo enviar la solicitud",
+    "route": {
+      "title": "¿Cuándo, quiénes y en qué orden?",
+      "lede": "Primero las fechas: las temporadas cambian precios y disponibilidad. Después elige, en orden, las provincias donde quieres dormir.",
+      "arrival": "Llegada a Cuba",
+      "arrivalHint": "¿Fechas flexibles? Dínoslo en las notas.",
+      "nights": "Noches en total",
+      "returns": "Regreso el {date}",
+      "nightFewer": "Una noche menos",
+      "nightMore": "Una noche más",
+      "adults": "Adultos",
+      "children": "Niños",
+      "childrenHint": "Menores de 13",
+      "adultFewer": "Quitar un adulto",
+      "adultMore": "Añadir un adulto",
+      "childFewer": "Quitar un niño",
+      "childMore": "Añadir un niño",
+      "provinces": "Provincias · toca para añadir, en el orden del viaje",
+      "limited": "Limitada",
+      "limitedNote": "«Limitada» significa menos alojamientos verificados y una confirmación más larga.",
+      "routeTitle": "Tu ruta · {placed} de {total} noches asignadas",
+      "routeEmpty": "Añade al menos una provincia.",
+      "arrivalCity": "Ciudad de llegada",
+      "fromAirport": "Desde el aeropuerto de La Habana · {km} km",
+      "drive": "En coche ≈ {km} km",
+      "stopNights": "{count, plural, one {# noche} other {# noches}}",
+      "stopFewer": "Una noche menos en {name}",
+      "stopMore": "Una noche más en {name}",
+      "stopRemove": "Quitar {name}",
+      "short": "{count, plural, one {Queda # noche} other {Quedan # noches}} por asignar. Añádelas a una parada o reduce el total.",
+      "over": "{count, plural, one {# noche} other {# noches}} más que tu total. Quita alguna o alarga el viaje.",
+      "longLeg": "Un tramo supera los {km} km. Te sugerimos un vuelo interno o una noche intermedia; tu especialista valora ambas.",
+      "full": "Una ruta admite hasta {max} paradas.",
+      "pace": "Ritmo",
+      "paces": {
+        "gentle": {
+          "label": "Tranquilo",
+          "hint": "Paseos de menos de 2 horas, sin madrugones, 2–3 noches por parada."
+        },
+        "moderate": {
+          "label": "Moderado",
+          "hint": "Un día completo casi todos los días, una tarde libre por parada."
+        },
+        "active": {
+          "label": "Activo",
+          "hint": "Caminatas, aves al amanecer, trayectos más largos."
+        }
+      },
+      "interests": "Qué buscas",
+      "interestNames": {
+        "nature": "Naturaleza y aves",
+        "farm": "Vida en el campo",
+        "music": "Música y baile",
+        "food": "Comida y cocina",
+        "architecture": "Arquitectura e historia",
+        "afro": "Herencia afrocubana",
+        "beach": "Un día de playa",
+        "diving": "Esnórquel y buceo"
+      },
+      "browse": "Ver viajes ya diseñados"
+    },
+    "transport": {
+      "title": "Cómo te mueves entre paradas",
+      "lede": "Elige un estilo; tu especialista confirma el conductor y el vehículo.",
+      "perDay": "≈ {amount} por persona / día",
+      "none": "Aún no hay estilos de transporte; tu especialista te propondrá uno.",
+      "options": {
+        "minivan": {
+          "name": "Minivan privada con conductor",
+          "description": "Para ti toda la ruta. Ideal para 3 o más personas con equipaje."
+        },
+        "classic": {
+          "name": "Coche clásico en La Habana, minivan entre provincias",
+          "description": "Un coche de los años 50 con su dueño en La Habana; minivan para los tramos largos. Sin aire acondicionado."
+        },
+        "sedan": {
+          "name": "Sedán privado con conductor",
+          "description": "Un sedán moderno para hasta 3 pasajeros y poco equipaje. Ideal para parejas."
+        },
+        "colectivo": {
+          "name": "Taxi colectivo entre provincias",
+          "description": "Taxis compartidos con licencia en rutas fijas, reservados con nosotros. Lo más económico; horarios menos seguros."
+        }
+      }
+    },
+    "stays": {
+      "title": "Dónde duermes en cada parada",
+      "lede": "Elige un estilo por parada; tu especialista propone el alojamiento exacto.",
+      "stop": "{index}. {name} · {nights}",
+      "perNight": "{amount} / noche",
+      "styles": {
+        "standard": "Casa estándar",
+        "comfort": "Casa con aire acondicionado y energía de respaldo",
+        "agro": "Casa de campo",
+        "heritage": "Casa colonial con historia",
+        "eco": "Ecovilla",
+        "boutique": "Hotel boutique"
+      },
+      "styleFor": "Estilo de alojamiento en {name}",
+      "stepFree": "Necesitamos habitaciones sin escalones o en planta baja",
+      "stepFreeHint": "Reduce las opciones; te diremos dónde no es posible."
+    },
+    "activities": {
+      "title": "Actividades, guías y especialistas",
+      "lede": "Las sugerencias siguen tu ruta. Tu especialista confirma cada una.",
+      "none": "Aún no hay actividades en {name}; cuéntanos en las notas qué te gustaría.",
+      "perPerson": "{amount} por persona",
+      "guiding": "Guía",
+      "guides": {
+        "none": {
+          "name": "Solo anfitriones y guías de actividad",
+          "description": "Cada actividad tiene su propio guía; nadie viaja contigo entre paradas."
+        },
+        "shared": {
+          "name": "Guía compartido los días de actividad",
+          "price": "{amount} por persona / día",
+          "description": "Un guía certificado te acompaña los días de actividad, compartido con tu grupo."
+        },
+        "private": {
+          "name": "Guía privado todo el viaje",
+          "price": "{amount} / día por grupo",
+          "description": "Un guía viaja contigo de la llegada a la salida."
+        }
+      },
+      "interpreter": "Añadir intérprete los días sin guía",
+      "interpreterHint": "{amount} / día por grupo"
+    },
+    "summary": {
+      "title": "Tu borrador y cómo contactarte",
+      "lede": "Un especialista lo convierte en una propuesta día a día con precio. Es gratis; decides después.",
+      "route": "Ruta",
+      "transportStays": "Transporte y alojamiento",
+      "activities": "Actividades y guías",
+      "edit": "Editar",
+      "from": "Desde el {date} · {nights} · {party} · ritmo {pace}",
+      "party": "{adults, plural, one {# adulto} other {# adultos}}{children, plural, =0 {} one {, # niño} other {, # niños}}",
+      "activityCount": "{count, plural, =0 {Aún sin actividades} one {# actividad} other {# actividades}}",
+      "noTransport": "Transporte por proponer",
+      "nationality": "Nacionalidad",
+      "nationalityNone": "Prefiero no decirlo",
+      "language": "Idioma de la propuesta",
+      "budget": "Presupuesto por persona, sin vuelos (opcional)",
+      "usNote": "Los viajeros de EE. UU. certifican su categoría de viaje en la página del viaje antes de cualquier pago.",
+      "notesLabel": "Imprescindibles, qué evitar y cualquier otra cosa",
+      "notesPlaceholder": "Cuéntanos qué haría que el viaje sea perfecto para ti.",
+      "privacy": "Usamos estas respuestas solo para preparar tu propuesta. <link>Aviso de privacidad</link>.",
+      "submit": "Solicitar mi propuesta con precio",
+      "submitting": "Enviando…",
+      "nothingCharged": "Pedir una propuesta no tiene ningún coste.",
+      "error": "No se pudo enviar la solicitud"
+    },
+    "estimate": {
+      "label": "Estimación",
+      "title": "Estimación · por persona",
+      "range": "{low} – {high}",
+      "lede": "{nights} · {party} · el precio firme está en tu propuesta",
+      "stays": "Alojamiento · {nights}",
+      "transport": "Transporte",
+      "activities": "Actividades · {count}",
+      "guides": "Guías e intérprete",
+      "offset": "Compensación de carbono",
+      "fee": "Comisión de la agencia · {percent} %",
+      "excludes": "No incluye vuelos, visado electrónico, seguro ni comidas fuera de los alojamientos.",
+      "sample": "Tarifas de ejemplo: la agencia aún no ha publicado sus precios.",
+      "none": "Añade una parada para ver una estimación.",
+      "unavailable": "Tu especialista pone precio al viaje en la propuesta.",
+      "routeTitle": "Tu ruta",
+      "routeEmpty": "Aún sin provincias."
+    },
     "requestedTitle": "Propuesta solicitada",
-    "requestedLede": "Un especialista te enviará la propuesta con precio por correo.",
+    "requestedLede": "Un especialista te enviará tu propuesta con precio por email.",
     "reference": "Referencia",
-    "requestedNote": "Aún no se ha cobrado nada.",
+    "requestedNote": "Aún no se cobra nada.",
     "openProposal": "Abrir mi propuesta"
   },
   "login": {
@@ -2570,6 +2727,17 @@
     "validUntil": "Precios garantizados hasta el {date}",
     "pdf": "Abrir el PDF",
     "providers": "Proveedores: {confirmed} de {services} confirmados · {awaiting} esperando · {arranging} por organizar · {sent} solicitudes enviadas",
+    "request": {
+      "route": "Ruta",
+      "pace": "Ritmo",
+      "interests": "Intereses",
+      "transport": "Transporte",
+      "guiding": "Guía",
+      "interpreter": "con intérprete",
+      "budget": "Presupuesto por persona",
+      "nationality": "Nacionalidad",
+      "access": "Accesibilidad"
+    },
     "route": "Ruta",
     "routeEmpty": "Aún no hay paradas.",
     "stopProvince": "Parada {stop}: lugar",

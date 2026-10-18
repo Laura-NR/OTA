@@ -71,18 +71,39 @@ test.describe('custom-trip proposals', () => {
       page.getByRole('heading', { name: 'Build your itinerary' }),
     ).toBeVisible();
 
-    await page.getByLabel('Start date').fill('2027-03-01');
-    await page.getByLabel('End date').fill('2027-03-05');
-    await page.getByRole('button', { name: 'Continue' }).click();
-
-    const stay = page.getByRole('checkbox').first();
-    if ((await stay.count()) > 0) {
-      await stay.check();
+    // Step 1: one adult, three nights in Sancti Spíritus (the seed's
+    // experience is there), a moderate pace and an interest.
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Remove one adult' }).click();
+      await expect(page.getByRole('button', { name: 'Remove one adult' })).toBeDisabled({
+        timeout: 2_000,
+      });
+    }).toPass();
+    await page.getByLabel('Arrival in Cuba').fill('2027-03-01');
+    await page.getByRole('button', { name: /^Sancti Spíritus/ }).click();
+    for (let night = 10; night > 3; night -= 1) {
+      await page.getByRole('button', { name: 'One night fewer', exact: true }).click();
     }
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Your route · 3 of 3 nights placed')).toBeVisible();
+    await page.getByRole('button', { name: 'Nature & birding' }).click();
     await page.getByRole('button', { name: 'Continue' }).click();
 
+    // Step 2: transport style; step 3: a stay style per stop.
+    await page.getByLabel(/^Private minivan with driver/).check();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByLabel('Stay style in Sancti Spíritus').selectOption('heritage');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    // Step 4: the stop's activity and a shared guide; the estimate follows.
+    await page.getByLabel('Trinidad Heritage Walk').check();
+    await page.getByLabel(/^Shared guide on activity days/).check();
+    const estimate = page.getByRole('complementary', { name: 'Estimate' });
+    await expect(estimate.getByText('Activities · 1')).toBeVisible();
+    await expect(estimate.getByText(/^Sample rates/)).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    // Step 5: the summary and the notes.
+    await expect(page.getByText('Sancti Spíritus (3 nights)')).toBeVisible();
     await page
       .getByLabel('Must-haves, no-gos, anything else')
       .fill('Birding first, long walks, casas only.');
@@ -116,14 +137,16 @@ test.describe('custom-trip proposals', () => {
       .getByLabel('Proposal summary')
       .fill('Fourteen days west to Trinidad, birding first.');
     // The structured route, day plan and options travel with the version.
-    await expect(async () => {
-      await page.getByRole('button', { name: 'Add a stop' }).click();
-      await expect(page.getByLabel('Stop 1: place')).toBeVisible({ timeout: 2_000 });
-    }).toPass();
-    await page.getByLabel('Stop 1: place').fill('Sancti Spíritus');
-    await page.getByLabel('Stop 1: nights').fill('3');
+    // The request's route reaches the desk and seeds the first version's stops.
+    await expect(page.getByText('1. Sancti Spíritus')).toBeVisible();
+    await expect(page.getByLabel('Stop 1: place')).toHaveValue('Sancti Spíritus');
+    await expect(page.getByLabel('Stop 1: nights')).toHaveValue('3');
+    await expect(page.getByLabel('Stop 1: stay')).toHaveValue('Colonial heritage casa');
     await page.getByLabel('Stop 1: stay').fill('Casa Yolanda');
-    await page.getByRole('button', { name: 'Add a day' }).click();
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Add a day' }).click();
+      await expect(page.getByLabel('Day 1: where')).toBeVisible({ timeout: 2_000 });
+    }).toPass();
     await page.getByLabel('Day 1: where').fill('Trinidad');
     await page.getByLabel('Day 1: plan').fill('Colonial centre on foot.');
     await page.getByLabel('Day 1: with').fill('Guide Osvaldo');

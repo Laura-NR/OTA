@@ -1,6 +1,6 @@
 'use client';
 
-import { PROPOSAL_LINE_KINDS, PROPOSAL_LINE_UNITS } from '@ota/domain';
+import { PROPOSAL_LINE_KINDS, PROPOSAL_LINE_UNITS, cubaProvinceName } from '@ota/domain';
 import type { ProposalRequestPayloadDto, ProposalVersionDto } from '@ota/schemas';
 import {
   Alert,
@@ -117,7 +117,8 @@ function initialLines(
  * summary, the route's stops, the day-by-day plan, the options the traveler
  * can add and the price lines. The server snapshots the terms, computes the
  * total from the lines, sends the email and marks the proposal SENT; a
- * revision is another version, and the composer starts from the current one.
+ * revision is another version, and the composer starts from the current one
+ * (or, for the first, from the traveler's route).
  */
 export function ProposalComposer({
   proposalId,
@@ -131,6 +132,7 @@ export function ProposalComposer({
   current: ProposalVersionDto | undefined;
 }) {
   const t = useTranslations('proposalsDesk');
+  const tb = useTranslations('build');
   const locale = useLocale();
   const router = useRouter();
   const [summary, setSummary] = useState(
@@ -146,13 +148,19 @@ export function ProposalComposer({
   const [lines, setLines] = useState<LineDraft[]>(() =>
     initialLines(payload, items, current),
   );
-  const [stops, setStops] = useState<StopDraft[]>(
-    () =>
-      current?.document.stops.map((stop) => ({
-        province: stop.province,
-        nights: String(stop.nights),
-        accommodation: stop.accommodation ?? '',
-      })) ?? [],
+  // A first version starts from the traveler's route and stay styles.
+  const [stops, setStops] = useState<StopDraft[]>(() =>
+    current
+      ? current.document.stops.map((stop) => ({
+          province: stop.province,
+          nights: String(stop.nights),
+          accommodation: stop.accommodation ?? '',
+        }))
+      : payload.route.map((stop) => ({
+          province: cubaProvinceName(stop.province),
+          nights: String(stop.nights),
+          accommodation: stop.stay ? tb(`stays.styles.${stop.stay}`) : '',
+        })),
   );
   const [days, setDays] = useState<DayDraft[]>(() =>
     [...(current?.document.days ?? [])]

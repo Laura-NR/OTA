@@ -1,3 +1,4 @@
+import { cubaProvinceName } from '@ota/domain';
 import type { InventoryItemDto, ProposalDto } from '@ota/schemas';
 import {
   Alert,
@@ -40,7 +41,11 @@ export default async function ProposalDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [t, locale] = await Promise.all([getTranslations('proposalsDesk'), getLocale()]);
+  const [t, tb, locale] = await Promise.all([
+    getTranslations('proposalsDesk'),
+    getTranslations('build'),
+    getLocale(),
+  ]);
   const proposal = await apiFetch<ProposalDto>(`/proposals/${id}`).catch(
     (error: unknown) => {
       if (error instanceof ApiError && error.status === 404) {
@@ -126,6 +131,99 @@ export default async function ProposalDetailPage({
               <dt className="text-caption uppercase text-muted">{t('created')}</dt>
               <dd className="mt-1">{calendarDate(proposal.createdAt, locale)}</dd>
             </div>
+          </dl>
+          {payload.route.length > 0 ? (
+            <div>
+              <p className="text-caption uppercase text-muted">{t('request.route')}</p>
+              <ol className="mt-1 flex flex-col gap-1 text-body-sm">
+                {payload.route.map((stop, index) => (
+                  <li
+                    key={stop.province}
+                    className="flex flex-wrap justify-between gap-2"
+                  >
+                    <span>
+                      {index + 1}. {cubaProvinceName(stop.province)}
+                      {stop.stay ? (
+                        <span className="text-muted">
+                          {' '}
+                          · {tb(`stays.styles.${stop.stay}`)}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="font-mono">
+                      {tb('route.stopNights', { count: stop.nights })}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+          <dl className="grid gap-3 text-body-sm sm:grid-cols-2">
+            {payload.pace ? (
+              <div>
+                <dt className="text-caption uppercase text-muted">{t('request.pace')}</dt>
+                <dd className="mt-1">{tb(`route.paces.${payload.pace}.label`)}</dd>
+              </div>
+            ) : null}
+            {payload.interests.length > 0 ? (
+              <div>
+                <dt className="text-caption uppercase text-muted">
+                  {t('request.interests')}
+                </dt>
+                <dd className="mt-1">
+                  {payload.interests
+                    .map((key) => tb(`route.interestNames.${key}`))
+                    .join(' · ')}
+                </dd>
+              </div>
+            ) : null}
+            {payload.transport ? (
+              <div>
+                <dt className="text-caption uppercase text-muted">
+                  {t('request.transport')}
+                </dt>
+                <dd className="mt-1">
+                  {tb(`transport.options.${payload.transport}.name`)}
+                </dd>
+              </div>
+            ) : null}
+            {payload.guiding ? (
+              <div>
+                <dt className="text-caption uppercase text-muted">
+                  {t('request.guiding')}
+                </dt>
+                <dd className="mt-1">
+                  {tb(`activities.guides.${payload.guiding}.name`)}
+                  {payload.interpreter ? ` · ${t('request.interpreter')}` : ''}
+                </dd>
+              </div>
+            ) : null}
+            {payload.budgetPerPerson !== null ? (
+              <div>
+                <dt className="text-caption uppercase text-muted">
+                  {t('request.budget')}
+                </dt>
+                <dd className="mt-1 font-mono">
+                  {money(payload.budgetPerPerson, 'EUR', locale)}
+                </dd>
+              </div>
+            ) : null}
+            {payload.nationality ? (
+              <div>
+                <dt className="text-caption uppercase text-muted">
+                  {t('request.nationality')}
+                </dt>
+                <dd className="mt-1">{payload.nationality}</dd>
+              </div>
+            ) : null}
+            {payload.stepFree ? (
+              <div>
+                <dt className="text-caption uppercase text-muted">
+                  {t('request.access')}
+                </dt>
+                <dd className="mt-1">{tb('stays.stepFree')}</dd>
+              </div>
+            ) : null}
           </dl>
           {proposal.request.notes ? (
             <div>
