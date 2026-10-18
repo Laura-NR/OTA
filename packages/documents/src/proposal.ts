@@ -26,7 +26,8 @@ export interface ProposalPdfModel {
   summary: string;
   notes: string | null;
   stops: { province: string; nights: number; accommodation?: string }[];
-  days: { day: number; date?: string; location: string; plan: string; with?: string }[];
+  /** Numbered from 1; each day's date is counted from `startDate`. */
+  days: { day: number; location: string; plan: string; with?: string }[];
   options: { label: string; description?: string; price?: number }[];
   lines: {
     label: string;
@@ -210,6 +211,16 @@ function day(value: string, locale: ProposalPdfLocale): string {
   );
 }
 
+/** Day `number` of the trip, counted from its first calendar day ("Thu 4 Mar"). */
+function tripDay(start: string, number: number, locale: ProposalPdfLocale): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(Date.parse(start) + (number - 1) * 86_400_000));
+}
+
 /** Nights between two calendar days (the trip's last day is a departure). */
 function nightsBetween(start: string, end: string): number {
   return Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 86_400_000));
@@ -257,7 +268,7 @@ export function renderProposalHtml(
   <tbody>${model.days
     .map(
       (entry) => `<tr>
-        <td>${entry.day}${entry.date ? `<br/><span class="muted">${escapeHtml(entry.date)}</span>` : ''}</td>
+        <td>${entry.day}<br/><span class="muted">${escapeHtml(tripDay(model.startDate, entry.day, locale))}</span></td>
         <td>${escapeHtml(entry.location)}</td>
         <td>${escapeHtml(entry.plan)}</td>
         <td>${escapeHtml(entry.with ?? '—')}</td>

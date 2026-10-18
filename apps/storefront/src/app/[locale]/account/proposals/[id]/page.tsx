@@ -145,6 +145,73 @@ export default async function ProposalPage({
             ) : null}
           </section>
 
+          {version.document.stops.length > 0 ? (
+            <section aria-labelledby="route-title" className={card}>
+              <h2 id="route-title" className="text-h4 text-default">
+                {t('route')}
+              </h2>
+              <ol className="flex flex-col divide-y">
+                {version.document.stops.map((stop, index) => (
+                  <li
+                    key={index}
+                    className="flex flex-wrap items-baseline justify-between gap-2 py-2 first:pt-0 last:pb-0"
+                  >
+                    <span className="text-body font-medium text-default">
+                      {stop.province}
+                    </span>
+                    <span className="text-body-sm text-secondary">
+                      {[t('nights', { count: stop.nights }), stop.accommodation]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+
+          {version.document.days.length > 0 ? (
+            <section aria-labelledby="days-title" className={card}>
+              <h2 id="days-title" className="text-h4 text-default">
+                {t('days')}
+              </h2>
+              <ol className="flex flex-col divide-y">
+                {[...version.document.days]
+                  .sort((a, b) => a.day - b.day)
+                  .map((day) => (
+                    <li
+                      key={day.day}
+                      className="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4"
+                    >
+                      <span className="text-body-sm font-semibold text-default">
+                        {t('day', { day: day.day })} ·{' '}
+                        {formatDay(
+                          new Date(
+                            Date.parse(version.document.startDate) +
+                              (day.day - 1) * 86_400_000,
+                          ).toISOString(),
+                          locale,
+                        )}
+                      </span>
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-body font-medium text-default">
+                          {day.location}
+                        </span>
+                        <span className="whitespace-pre-line text-body-sm text-secondary">
+                          {day.plan}
+                        </span>
+                        {day.with ? (
+                          <span className="text-caption text-muted">
+                            {t('with', { name: day.with })}
+                          </span>
+                        ) : null}
+                      </span>
+                    </li>
+                  ))}
+              </ol>
+            </section>
+          ) : null}
+
           <section className={card}>
             <h2 className="text-h4 text-default">{t('lines')}</h2>
             <div className="overflow-x-auto">
@@ -207,6 +274,41 @@ export default async function ProposalPage({
               </div>
             </div>
           </section>
+
+          {version.document.options.length > 0 ? (
+            <section aria-labelledby="options-title" className={card}>
+              <h2 id="options-title" className="text-h4 text-default">
+                {t('options')}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {version.document.options.map((option, index) => (
+                  <li
+                    key={index}
+                    className="flex flex-wrap items-baseline justify-between gap-2"
+                  >
+                    <span className="flex min-w-0 flex-col">
+                      <span className="text-body font-medium text-default">
+                        {option.label}
+                      </span>
+                      {option.description ? (
+                        <span className="text-body-sm text-secondary">
+                          {option.description}
+                        </span>
+                      ) : null}
+                    </span>
+                    {typeof option.price === 'number' ? (
+                      <span className="font-mono text-body-sm text-default">
+                        {t('optionPrice', {
+                          amount: formatMoney(option.price, version.currency, locale),
+                        })}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-caption text-muted">{t('optionsNote')}</p>
+            </section>
+          ) : null}
 
           {proposal.status === 'SENT' ? (
             <section className={card}>

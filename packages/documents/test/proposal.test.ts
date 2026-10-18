@@ -61,6 +61,8 @@ describe('renderProposalHtml (D-Proposal)', () => {
     expect(html).toContain('Pinar del Río');
     expect(html).toContain('3 nights · Casa Yamilé');
     expect(html).toContain('Arrive; walk the Malecón.');
+    // Day 1 is the trip's first calendar day.
+    expect(html).toContain('Thu, Mar 4');
     expect(html).toContain('€1,640.00');
     expect(html).toContain('€2,940.00');
     expect(html).toContain('€1,470.00 per person');

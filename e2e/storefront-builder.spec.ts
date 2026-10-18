@@ -115,6 +115,21 @@ test.describe('custom-trip proposals', () => {
     await page
       .getByLabel('Proposal summary')
       .fill('Fourteen days west to Trinidad, birding first.');
+    // The structured route, day plan and options travel with the version.
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Add a stop' }).click();
+      await expect(page.getByLabel('Stop 1: place')).toBeVisible({ timeout: 2_000 });
+    }).toPass();
+    await page.getByLabel('Stop 1: place').fill('Sancti Spíritus');
+    await page.getByLabel('Stop 1: nights').fill('3');
+    await page.getByLabel('Stop 1: stay').fill('Casa Yolanda');
+    await page.getByRole('button', { name: 'Add a day' }).click();
+    await page.getByLabel('Day 1: where').fill('Trinidad');
+    await page.getByLabel('Day 1: plan').fill('Colonial centre on foot.');
+    await page.getByLabel('Day 1: with').fill('Guide Osvaldo');
+    await page.getByRole('button', { name: 'Add an option' }).click();
+    await page.getByLabel('Option 1', { exact: true }).fill('Sail Cienfuegos bay');
+    await page.getByLabel('Option 1: price').fill('90');
     await page.getByRole('button', { name: 'Publish and send' }).click();
     await expect(page.getByText('Sent', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Version 1')).toBeVisible();
@@ -162,6 +177,15 @@ test.describe('custom-trip proposals', () => {
     await expect(
       page.getByText('Fourteen days west to Trinidad, birding first.'),
     ).toBeVisible();
+    const route = page.getByRole('region', { name: 'Route' });
+    await expect(route.getByText('Sancti Spíritus')).toBeVisible();
+    await expect(route.getByText('3 nights · Casa Yolanda')).toBeVisible();
+    const days = page.getByRole('region', { name: 'Day by day' });
+    await expect(days.getByText('Colonial centre on foot.')).toBeVisible();
+    await expect(days.getByText('With Guide Osvaldo')).toBeVisible();
+    const options = page.getByRole('region', { name: 'Options you can add' });
+    await expect(options.getByText('Sail Cienfuegos bay')).toBeVisible();
+    await expect(options.getByText('+ €90')).toBeVisible();
     const travelerPdf = await page.request.get(
       `${STOREFRONT_URL}${await page.getByRole('link', { name: 'Download the PDF' }).getAttribute('href')}`,
     );
