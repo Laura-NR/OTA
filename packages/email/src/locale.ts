@@ -43,8 +43,15 @@ export function emailList(values: readonly string[], locale: EmailLocale): strin
   ]);
 }
 
-/** An instant such as a payment window's end, read in UTC and labelled so. */
-export function emailInstant(value: Date | string, locale: EmailLocale): string {
+/**
+ * An instant such as a payment window's end, read in UTC (or the given IANA
+ * zone, such as a deadline in Havana time) and labelled with its zone.
+ */
+export function emailInstant(
+  value: Date | string,
+  locale: EmailLocale,
+  timeZone = 'UTC',
+): string {
   return plainSpaces(
     new Intl.DateTimeFormat(locale, {
       year: 'numeric',
@@ -52,7 +59,7 @@ export function emailInstant(value: Date | string, locale: EmailLocale): string 
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'UTC',
+      timeZone,
       timeZoneName: 'short',
     }).format(new Date(value)),
   );

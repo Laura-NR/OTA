@@ -16,6 +16,7 @@ import {
   proposalSentEmail,
   retentionNoticeEmail,
   reviewRequestEmail,
+  disruptionOptionsEmail,
   travelAdvisoryEmail,
   tripReconfirmEmail,
   type EmailBranding,
@@ -550,5 +551,55 @@ describe('travelAdvisoryEmail (E-Advisory)', () => {
     );
     const fr = travelAdvisoryEmail({ ...input, locale: 'fr' });
     expect(fr.text).toContain('Avis · vigilance');
+  });
+});
+
+describe('disruptionOptionsEmail (E-Options)', () => {
+  const input = {
+    to: 'jane@example.test',
+    name: 'Anders, Birgit',
+    severity: 'MAJOR' as const,
+    title: 'Power outage in Viñales',
+    summary: 'Pinar del Río has had no grid power since last night.',
+    options: [
+      { key: 'A', title: 'Stay at the casa', detail: 'Price unchanged.' },
+      { key: 'B', title: 'Move tonight', detail: 'Same price.' },
+    ],
+    defaultOptionKey: 'A',
+    deadline: new Date('2026-10-06T22:00:00Z'),
+    policy: 'Meal vouchers for outages over 12 h.',
+    reference: 'DC-0931',
+    bookingCode: 'VX6RQ4JD',
+    sentAt: new Date('2026-10-06T18:33:00Z'),
+    tripUrl: 'https://example.test/account/trips/abc',
+    branding: { ...branding, supportPhone: '+53 7 204 2516' },
+  };
+
+  it('lists every option with its money consequence and the deadline in Havana time', () => {
+    const email = disruptionOptionsEmail(input);
+    expect(email.subject).toContain('Power outage in Viñales');
+    // 22:00 UTC is 18:00 in Havana (UTC-4 in October).
+    expect(email.subject).toContain('6:00');
+    expect(email.text).toContain('A · Stay at the casa: Price unchanged.');
+    expect(email.text).toContain('B · Move tonight: Same price.');
+    expect(email.text).toContain('we keep option A and the desk calls you');
+    expect(email.text).toContain('Compensation: Meal vouchers');
+    expect(email.text).toContain('+53 7 204 2516');
+    expect(email.html).toContain('https://example.test/account/trips/abc');
+    expect(email.text).toContain('VX6RQ4JD · case DC-0931');
+  });
+
+  it("frames the desk's words in the traveler's language", () => {
+    const es = disruptionOptionsEmail({ ...input, locale: 'es' });
+    expect(es.text).toContain('Elige una opción antes de');
+    expect(es.text).toContain('mantenemos la opción A');
+    expect(es.text).toContain('Stay at the casa');
+    const fr = disruptionOptionsEmail({ ...input, locale: 'fr-FR' });
+    expect(fr.html).toContain('Choisir dans votre compte');
+  });
+
+  it('leaves out the phone line when the agency has none', () => {
+    const email = disruptionOptionsEmail({ ...input, branding });
+    expect(email.text).not.toContain('call the desk any time');
   });
 });

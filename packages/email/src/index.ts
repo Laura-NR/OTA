@@ -33,6 +33,11 @@ export type { ReviewRequestEmailInput } from './templates/review-request';
 export { tripReconfirmEmail } from './templates/trip-reconfirm';
 export type { TripReconfirmEmailInput } from './templates/trip-reconfirm';
 export { travelAdvisoryEmail } from './templates/travel-advisory';
+export { disruptionOptionsEmail } from './templates/disruption-options';
+export type {
+  DisruptionEmailSeverity,
+  DisruptionOptionsEmailInput,
+} from './templates/disruption-options';
 export type {
   AdvisoryEmailSeverity,
   TravelAdvisoryEmailInput,
