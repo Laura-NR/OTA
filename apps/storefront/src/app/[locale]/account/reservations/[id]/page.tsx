@@ -1,6 +1,7 @@
-import { hasConfirmation } from '@ota/domain';
+import { OPS_TIME_ZONE, hasConfirmation } from '@ota/domain';
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type {
+  MeDisruptionDto,
   MyReservationDetailDto,
   PaymentScheduleDto,
   ReservationOfacDto,
@@ -21,6 +22,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
 import { AccountShell } from '@/components/account/account-shell';
+import { DisruptionChoice } from '@/components/account/disruption-choice';
 import { OfacCertification } from '@/components/account/ofac-certification';
 import { PaymentSchedule } from '@/components/account/payment-schedule';
 import { ProviderProgress } from '@/components/account/provider-progress';
@@ -30,7 +32,7 @@ import { ReviewForm } from '@/components/review-form';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
-import { formatMoney } from '@/lib/format';
+import { formatMoney, plainSpaces } from '@/lib/format';
 import { getTenantConfig } from '@/lib/tenant';
 
 /** While the desk confirms the trip with its providers. */
@@ -48,7 +50,8 @@ const CONFIRMING: readonly string[] = [
  * travel-category certification when a traveler needs it (M3), the payment
  * step when it is due (locked until every US traveler has certified), the
  * itinerary, the documents, the review once completed, and the thread with
- * operations (`#messages`).
+ * operations (`#messages`). A disruption's options (M8) lead the page while the
+ * case is open (`#disruption-options`, the E-Options link).
  */
 export default async function AccountReservationPage({
   params,
@@ -69,21 +72,23 @@ export default async function AccountReservationPage({
     notFound();
   }
 
-  const [t, trv, tsi, tst, td, format, locale] = await Promise.all([
+  const [t, trv, tsi, tst, td, tdo, format, locale] = await Promise.all([
     getTranslations('account'),
     getTranslations('review'),
     getTranslations('status.serviceItem'),
     getTranslations('status.serviceType'),
     getTranslations('status.document'),
+    getTranslations('disruptionOptions'),
     getFormatter(),
     getLocale(),
   ]);
   const tenant = getTenantConfig();
-  const [ofac, schedule] = await Promise.all([
+  const [ofac, schedule, disruptions] = await Promise.all([
     apiFetch<ReservationOfacDto>(`/me/reservations/${id}/ofac?locale=${locale}`).catch(
       () => null,
     ),
     apiFetch<PaymentScheduleDto>(`/me/reservations/${id}/schedule`).catch(() => null),
+    apiFetch<MeDisruptionDto[]>(`/me/disruptions?reservationId=${id}`).catch(() => []),
   ]);
   const ofacRequired = ofac?.travelers.some((traveler) => traveler.required) ?? false;
   const ofacLocked = (ofac?.missing ?? 0) > 0;
@@ -131,6 +136,85 @@ export default async function AccountReservationPage({
           · {formatMoney(reservation.totalAmount, reservation.totalCurrency, locale)}
         </p>
       </header>
+
+      {disruptions.map((offer) => {
+        // The deadline in the agency's time, as E-Options words it.
+        const deadline = offer.offerDeadline
+          ? plainSpaces(
+              format.dateTime(new Date(offer.offerDeadline), {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: OPS_TIME_ZONE,
+                timeZoneName: 'short',
+              }),
+            )
+          : '';
+        const chosenKey = offer.effectiveChoice?.key ?? null;
+        return (
+          <section
+            key={offer.id}
+            id="disruption-options"
+            aria-labelledby={`disruption-${offer.id}`}
+            className="flex scroll-mt-24 flex-col gap-4 rounded-lg border border-warning-500 bg-surface p-6"
+          >
+            <div className="flex flex-col gap-1">
+              <p className="text-overline uppercase text-warning-700">
+                {tdo('overline', { reference: offer.reference })}
+              </p>
+              <h2 id={`disruption-${offer.id}`} className="text-h4 text-default">
+                {offer.title}
+              </h2>
+              <p className="text-body text-secondary">{offer.summary}</p>
+            </div>
+            {offer.offerState === 'AWAITING' ? (
+              <>
+                <p className="text-body font-semibold">{tdo('choose', { deadline })}</p>
+                <DisruptionChoice
+                  offerId={offer.id}
+                  options={offer.options}
+                  defaultKey={offer.defaultOptionKey}
+                />
+                <p className="text-body-sm text-secondary">
+                  {tdo('silence', { deadline, key: offer.defaultOptionKey ?? '' })}
+                </p>
+              </>
+            ) : (
+              <>
+                <Alert variant={offer.offerState === 'DEFAULTED' ? 'warning' : 'success'}>
+                  {offer.offerState === 'DEFAULTED'
+                    ? tdo('defaulted', { key: chosenKey ?? '' })
+                    : offer.choiceSource === 'TRAVELER'
+                      ? tdo('chosen', { key: chosenKey ?? '' })
+                      : tdo('desk', { key: chosenKey ?? '' })}
+                </Alert>
+                <ul className="flex flex-col gap-2">
+                  {offer.options.map((option) => (
+                    <li
+                      key={option.key}
+                      className={
+                        option.key === chosenKey
+                          ? 'rounded-md border border-primary-600 bg-primary-50 p-3'
+                          : 'rounded-md border p-3 text-secondary'
+                      }
+                    >
+                      <p className="font-semibold">
+                        <span className="font-mono">{option.key}</span> · {option.title}
+                      </p>
+                      <p className="text-body-sm">{option.detail}</p>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <p className="text-body-sm text-secondary">
+              {tdo('policy', { policy: offer.policy })}
+            </p>
+          </section>
+        );
+      })}
 
       <section className={card} aria-label={t('progressLabel')}>
         <TripProgress status={reservation.status} />
