@@ -62,6 +62,8 @@ export function AdvisoryActions({
       : advisory.approvals.length === 0
         ? t('approval.approveFirst')
         : t('approval.approveSecond');
+  // Only the approval that publishes needs every translation (D6).
+  const publishes = advisory.severity !== 'CRITICAL' || advisory.approvals.length > 0;
   const live =
     advisory.displayStatus === 'PUBLISHED' || advisory.displayStatus === 'SCHEDULED';
 
@@ -70,7 +72,11 @@ export function AdvisoryActions({
       {open && mode === 'idle' ? (
         <div className="flex flex-wrap gap-2">
           <Button
-            disabled={busy || approvedByMe || advisory.missingTranslations.length > 0}
+            disabled={
+              busy ||
+              approvedByMe ||
+              (publishes && advisory.missingTranslations.length > 0)
+            }
             onClick={() => post('approve', {})}
           >
             {approveLabel}

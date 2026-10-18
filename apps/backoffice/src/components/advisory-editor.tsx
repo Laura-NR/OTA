@@ -271,7 +271,7 @@ export function AdvisoryEditor({
 
         <Card className="min-w-0">
           <CardContent className="flex flex-col gap-5 pt-6">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="advisory-from">{t('editor.effectiveFrom')}</Label>
                 <Input

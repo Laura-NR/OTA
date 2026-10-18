@@ -104,7 +104,7 @@ export function CrisisBanner({
     >
       <div className="mx-auto flex max-w-container flex-wrap items-center gap-x-4 gap-y-2">
         <Icon name={icons[severity]} />
-        <p className="line-clamp-2 min-w-0 flex-1 text-body-sm md:line-clamp-none">
+        <p className="line-clamp-2 min-w-0 grow basis-48 text-body-sm md:line-clamp-none">
           <strong className="font-semibold">{title}</strong>
           {children ? <> {children}</> : null}
         </p>

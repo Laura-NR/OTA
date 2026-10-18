@@ -137,8 +137,8 @@ export default async function AdvisoryPage({
       ) : null}
 
       {open && canManage ? (
-        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
-          <aside className="min-w-0 lg:sticky lg:top-6 lg:order-2">{approval}</aside>
+        <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[1fr_20rem] xl:items-start">
+          <aside className="min-w-0 xl:sticky xl:top-6 xl:order-2">{approval}</aside>
           <div className="min-w-0">
             <AdvisoryEditor
               advisory={advisory}
@@ -164,6 +164,13 @@ export default async function AdvisoryPage({
                     label={t('editor.preview')}
                     title={text?.headline ?? advisory.reference}
                     className="static"
+                    action={
+                      text?.cta ? (
+                        <span className="whitespace-nowrap font-semibold underline underline-offset-[3px]">
+                          {text.cta}
+                        </span>
+                      ) : null
+                    }
                     acknowledgeLabel={traveler('acknowledge')}
                   >
                     {text?.body}
