@@ -2805,5 +2805,146 @@
       "PER_DAY": "Per day",
       "PER_GROUP": "Per group"
     }
+  },
+  "advisoriesDesk": {
+    "title": "Advisories & crisis banners",
+    "description": "Info and caution: an Operations Admin or a Super Admin publishes. Critical: an Operations Admin and a Super Admin, two people; it publishes on the second approval. Every step is audited.",
+    "new": "New advisory",
+    "empty": "No advisories yet.",
+    "advisory": "Advisory",
+    "severity": "Severity",
+    "regionsDates": "Regions · dates",
+    "status": "Status",
+    "footnote": "Expired and lifted advisories move to the Current Conditions history on Travel info. Caution and critical advisories email travelers with a secured trip in an affected region within 60 days, the moment they publish.",
+    "by": "by {name}",
+    "wholeCountry": "Whole country",
+    "back": "← Advisories",
+    "newTitle": "New advisory",
+    "severities": {
+      "INFO": "Info",
+      "CAUTION": "Caution",
+      "CRITICAL": "Critical"
+    },
+    "severityHints": {
+      "INFO": "Blue, dismissible. Shown on the site only; no email.",
+      "CAUTION": "Amber, dismissible. Emailed to travelers with a trip in the region within 60 days.",
+      "CRITICAL": "Red, cannot be dismissed; signed-in travelers acknowledge it. Emailed like caution."
+    },
+    "statuses": {
+      "DRAFT": "Draft",
+      "IN_REVIEW": "Awaiting approval",
+      "PUBLISHED": "Published",
+      "SCHEDULED": "Scheduled",
+      "EXPIRED": "Expired",
+      "SUPERSEDED": "Superseded",
+      "LIFTED": "Lifted"
+    },
+    "roles": {
+      "OPERATIONS_ADMIN": "Operations Admin",
+      "SUPER_ADMIN": "Super Admin"
+    },
+    "editor": {
+      "severity": "Severity",
+      "regions": "Regions",
+      "regionsHint": "With no province ticked it covers the whole country. It also shows a notice on package pages and on the booking form’s first step for these regions.",
+      "wholeCountry": "Whole country",
+      "regionGroups": {
+        "west": "West",
+        "centre": "Centre",
+        "east": "Oriente",
+        "isle": "Isla de la Juventud"
+      },
+      "effectiveFrom": "Effective from (Havana time)",
+      "expiresAt": "Expires (Havana time)",
+      "expiresHint": "Mandatory. A banner without an end date is a stale banner.",
+      "showsOn": "Shows on",
+      "showOnSite": "Site banner and Travel info · Current conditions",
+      "showOnPackages": "Package pages and booking step 1 in the region",
+      "notifyTravelers": "Email to affected travelers (caution and critical)",
+      "source": "Source (shown to travelers)",
+      "sourceLocale": "Source language",
+      "texts": "Text by language",
+      "headline": "Headline",
+      "body": "Body · what happened, why, what to do",
+      "cta": "Call to action",
+      "ctaHint": "The link text to Travel info; optional.",
+      "translationsHint": "Info and caution fall back to the source language; a critical advisory needs every language before it publishes.",
+      "missing": "missing",
+      "preview": "Banner preview · as travelers see it",
+      "previewEmpty": "The headline appears here.",
+      "create": "Create draft",
+      "save": "Save draft",
+      "saving": "Saving…",
+      "saveFailed": "The advisory could not be saved.",
+      "invalidDate": "Enter a date and time.",
+      "needsSource": "Write the headline and body in the source language.",
+      "clearsApproval": "Saving changes clears the approval already given."
+    },
+    "approval": {
+      "title": "Approval",
+      "rule": {
+        "INFO": "An Operations Admin or a Super Admin publishes it alone.",
+        "CAUTION": "An Operations Admin or a Super Admin publishes it alone.",
+        "CRITICAL": "An Operations Admin and a Super Admin, two people. It publishes the moment the second approval lands."
+      },
+      "given": "{name} · {role} · {time}",
+      "none": "No approval yet.",
+      "needs": {
+        "APPROVER": "Waiting for an Operations Admin or a Super Admin.",
+        "OPERATIONS_ADMIN": "Waiting for an Operations Admin.",
+        "SUPER_ADMIN": "Waiting for a Super Admin."
+      },
+      "approvePublish": "Approve & publish",
+      "approveFirst": "Approve (1 of 2)",
+      "approveSecond": "Approve & publish (2 of 2)",
+      "missingTranslations": "Translations missing before publishing: {locales}",
+      "requestChanges": "Request changes",
+      "changesNote": "What needs to change",
+      "sendBack": "Send back to draft",
+      "cancel": "Cancel",
+      "actionFailed": "The action failed.",
+      "readOnly": "Only an Operations Admin or a Super Admin drafts and approves advisories."
+    },
+    "live": {
+      "title": "On the site",
+      "published": "Published {date} · {approvals, plural, one {# approval} other {# approvals}} · {delivered, plural, =0 {no traveler emailed} one {# traveler emailed} other {# travelers emailed}} · {acknowledged, plural, =0 {no acknowledgement} one {# acknowledgement} other {# acknowledgements}}.",
+      "lifted": "Lifted {date}.",
+      "newVersion": "Edit (new version)",
+      "openVersion": "Open the new version",
+      "supersedes": "Replaces {reference} when it publishes.",
+      "supersededBy": "A newer version replaces this one.",
+      "lift": "Lift advisory",
+      "unschedule": "Unschedule",
+      "liftNote": "Why (optional)",
+      "confirmLift": "Lift now"
+    }
+  },
+  "advisories": {
+    "label": "Travel advisory",
+    "severities": {
+      "INFO": "Info",
+      "CAUTION": "Caution",
+      "CRITICAL": "Critical"
+    },
+    "dismiss": "Dismiss this advisory",
+    "acknowledge": "I understand",
+    "reopen": "Show the critical advisory",
+    "details": "Details",
+    "currentTitle": "Current advisories",
+    "currentLede": "Published by our operations desk. Each one names its source, the regions it covers and when it ends.",
+    "none": "No advisories are in force right now.",
+    "historyTitle": "Earlier advisories",
+    "historyNone": "No earlier advisories in the last year.",
+    "wholeCountry": "Whole country",
+    "source": "Source: {source}",
+    "window": "{from} to {to}",
+    "acknowledged": "Acknowledged",
+    "ended": {
+      "EXPIRED": "Ended",
+      "LIFTED": "Lifted",
+      "SUPERSEDED": "Updated"
+    },
+    "noticeTitle": "Advisory for this trip’s region",
+    "noticeMore": "More on Travel info"
   }
 }

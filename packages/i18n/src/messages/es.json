@@ -2805,5 +2805,146 @@
       "PER_DAY": "Por día",
       "PER_GROUP": "Por grupo"
     }
+  },
+  "advisoriesDesk": {
+    "title": "Avisos y banners de crisis",
+    "description": "Información y precaución: publica un Operations Admin o un Super Admin. Crítico: un Operations Admin y un Super Admin, dos personas; se publica con la segunda aprobación. Cada paso queda auditado.",
+    "new": "Nuevo aviso",
+    "empty": "Aún no hay avisos.",
+    "advisory": "Aviso",
+    "severity": "Nivel",
+    "regionsDates": "Regiones · fechas",
+    "status": "Estado",
+    "footnote": "Los avisos vencidos o retirados pasan al historial de Situación actual en Información de viaje. Los avisos de precaución y críticos se envían por email, en cuanto se publican, a los viajeros con un viaje asegurado en una región afectada en los próximos 60 días.",
+    "by": "por {name}",
+    "wholeCountry": "Todo el país",
+    "back": "← Avisos",
+    "newTitle": "Nuevo aviso",
+    "severities": {
+      "INFO": "Información",
+      "CAUTION": "Precaución",
+      "CRITICAL": "Crítico"
+    },
+    "severityHints": {
+      "INFO": "Azul, se puede cerrar. Solo en la web; sin email.",
+      "CAUTION": "Ámbar, se puede cerrar. Se envía por email a los viajeros con un viaje en la región en los próximos 60 días.",
+      "CRITICAL": "Rojo, no se puede cerrar; los viajeros con sesión lo confirman. Se envía por email como precaución."
+    },
+    "statuses": {
+      "DRAFT": "Borrador",
+      "IN_REVIEW": "Pendiente de aprobación",
+      "PUBLISHED": "Publicado",
+      "SCHEDULED": "Programado",
+      "EXPIRED": "Vencido",
+      "SUPERSEDED": "Sustituido",
+      "LIFTED": "Retirado"
+    },
+    "roles": {
+      "OPERATIONS_ADMIN": "Operations Admin",
+      "SUPER_ADMIN": "Super Admin"
+    },
+    "editor": {
+      "severity": "Nivel",
+      "regions": "Regiones",
+      "regionsHint": "Sin ninguna provincia marcada cubre todo el país. También muestra un aviso en las fichas de paquete y en el primer paso de la reserva para estas regiones.",
+      "wholeCountry": "Todo el país",
+      "regionGroups": {
+        "west": "Occidente",
+        "centre": "Centro",
+        "east": "Oriente",
+        "isle": "Isla de la Juventud"
+      },
+      "effectiveFrom": "Vigente desde (hora de La Habana)",
+      "expiresAt": "Vence (hora de La Habana)",
+      "expiresHint": "Obligatorio. Un banner sin fecha de fin es un banner obsoleto.",
+      "showsOn": "Se muestra en",
+      "showOnSite": "Banner de la web e Información de viaje · Situación actual",
+      "showOnPackages": "Fichas de paquete y paso 1 de la reserva en la región",
+      "notifyTravelers": "Email a los viajeros afectados (precaución y crítico)",
+      "source": "Fuente (visible para los viajeros)",
+      "sourceLocale": "Idioma de origen",
+      "texts": "Texto por idioma",
+      "headline": "Titular",
+      "body": "Texto · qué pasó, por qué, qué hacer",
+      "cta": "Llamada a la acción",
+      "ctaHint": "El texto del enlace a Información de viaje; opcional.",
+      "translationsHint": "Información y precaución usan el idioma de origen si falta una traducción; un aviso crítico necesita todos los idiomas para publicarse.",
+      "missing": "falta",
+      "preview": "Vista previa del banner · como lo ven los viajeros",
+      "previewEmpty": "Aquí aparece el titular.",
+      "create": "Crear borrador",
+      "save": "Guardar borrador",
+      "saving": "Guardando…",
+      "saveFailed": "No se pudo guardar el aviso.",
+      "invalidDate": "Indica una fecha y una hora.",
+      "needsSource": "Escribe el titular y el texto en el idioma de origen.",
+      "clearsApproval": "Guardar cambios anula la aprobación ya dada."
+    },
+    "approval": {
+      "title": "Aprobación",
+      "rule": {
+        "INFO": "Lo publica un Operations Admin o un Super Admin solo.",
+        "CAUTION": "Lo publica un Operations Admin o un Super Admin solo.",
+        "CRITICAL": "Un Operations Admin y un Super Admin, dos personas. Se publica en cuanto llega la segunda aprobación."
+      },
+      "given": "{name} · {role} · {time}",
+      "none": "Aún sin aprobación.",
+      "needs": {
+        "APPROVER": "Falta un Operations Admin o un Super Admin.",
+        "OPERATIONS_ADMIN": "Falta un Operations Admin.",
+        "SUPER_ADMIN": "Falta un Super Admin."
+      },
+      "approvePublish": "Aprobar y publicar",
+      "approveFirst": "Aprobar (1 de 2)",
+      "approveSecond": "Aprobar y publicar (2 de 2)",
+      "missingTranslations": "Faltan traducciones para publicar: {locales}",
+      "requestChanges": "Pedir cambios",
+      "changesNote": "Qué hay que cambiar",
+      "sendBack": "Devolver a borrador",
+      "cancel": "Cancelar",
+      "actionFailed": "La acción falló.",
+      "readOnly": "Solo un Operations Admin o un Super Admin redacta y aprueba avisos."
+    },
+    "live": {
+      "title": "En la web",
+      "published": "Publicado el {date} · {approvals, plural, one {# aprobación} other {# aprobaciones}} · {delivered, plural, =0 {ningún viajero avisado por email} one {# viajero avisado por email} other {# viajeros avisados por email}} · {acknowledged, plural, =0 {ninguna confirmación} one {# confirmación} other {# confirmaciones}}.",
+      "lifted": "Retirado el {date}.",
+      "newVersion": "Editar (nueva versión)",
+      "openVersion": "Abrir la nueva versión",
+      "supersedes": "Sustituye a {reference} cuando se publique.",
+      "supersededBy": "Una versión más reciente sustituye a esta.",
+      "lift": "Retirar aviso",
+      "unschedule": "Desprogramar",
+      "liftNote": "Motivo (opcional)",
+      "confirmLift": "Retirar ahora"
+    }
+  },
+  "advisories": {
+    "label": "Aviso de viaje",
+    "severities": {
+      "INFO": "Información",
+      "CAUTION": "Precaución",
+      "CRITICAL": "Crítico"
+    },
+    "dismiss": "Cerrar este aviso",
+    "acknowledge": "Entendido",
+    "reopen": "Mostrar el aviso crítico",
+    "details": "Detalles",
+    "currentTitle": "Avisos vigentes",
+    "currentLede": "Los publica nuestro equipo de operaciones. Cada uno indica su fuente, las regiones que cubre y cuándo termina.",
+    "none": "No hay avisos vigentes ahora mismo.",
+    "historyTitle": "Avisos anteriores",
+    "historyNone": "No hubo avisos en el último año.",
+    "wholeCountry": "Todo el país",
+    "source": "Fuente: {source}",
+    "window": "Del {from} al {to}",
+    "acknowledged": "Confirmado",
+    "ended": {
+      "EXPIRED": "Terminado",
+      "LIFTED": "Retirado",
+      "SUPERSEDED": "Actualizado"
+    },
+    "noticeTitle": "Aviso para la región de este viaje",
+    "noticeMore": "Más en Información de viaje"
   }
 }

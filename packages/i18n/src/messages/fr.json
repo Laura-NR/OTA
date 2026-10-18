@@ -2805,5 +2805,146 @@
       "PER_DAY": "Par jour",
       "PER_GROUP": "Par groupe"
     }
+  },
+  "advisoriesDesk": {
+    "title": "Avis et bannières de crise",
+    "description": "Info et vigilance : un Operations Admin ou un Super Admin publie. Critique : un Operations Admin et un Super Admin, deux personnes ; publication à la seconde approbation. Chaque étape est tracée.",
+    "new": "Nouvel avis",
+    "empty": "Aucun avis pour le moment.",
+    "advisory": "Avis",
+    "severity": "Niveau",
+    "regionsDates": "Régions · dates",
+    "status": "Statut",
+    "footnote": "Les avis expirés ou levés rejoignent l'historique des Conditions actuelles dans Infos voyage. Les avis de vigilance et critiques sont envoyés par e-mail, dès leur publication, aux voyageurs ayant un voyage garanti dans une région concernée dans les 60 jours.",
+    "by": "par {name}",
+    "wholeCountry": "Tout le pays",
+    "back": "← Avis",
+    "newTitle": "Nouvel avis",
+    "severities": {
+      "INFO": "Info",
+      "CAUTION": "Vigilance",
+      "CRITICAL": "Critique"
+    },
+    "severityHints": {
+      "INFO": "Bleu, peut être fermé. Sur le site uniquement ; pas d’e-mail.",
+      "CAUTION": "Ambre, peut être fermé. Envoyé par e-mail aux voyageurs ayant un voyage dans la région dans les 60 jours.",
+      "CRITICAL": "Rouge, ne peut pas être fermé ; les voyageurs connectés en confirment la lecture. Envoyé par e-mail comme la vigilance."
+    },
+    "statuses": {
+      "DRAFT": "Brouillon",
+      "IN_REVIEW": "En attente d’approbation",
+      "PUBLISHED": "Publié",
+      "SCHEDULED": "Programmé",
+      "EXPIRED": "Expiré",
+      "SUPERSEDED": "Remplacé",
+      "LIFTED": "Levé"
+    },
+    "roles": {
+      "OPERATIONS_ADMIN": "Operations Admin",
+      "SUPER_ADMIN": "Super Admin"
+    },
+    "editor": {
+      "severity": "Niveau",
+      "regions": "Régions",
+      "regionsHint": "Sans province cochée, il couvre tout le pays. Il affiche aussi une notice sur les pages des circuits et à la première étape de la réservation pour ces régions.",
+      "wholeCountry": "Tout le pays",
+      "regionGroups": {
+        "west": "Ouest",
+        "centre": "Centre",
+        "east": "Oriente",
+        "isle": "Île de la Jeunesse"
+      },
+      "effectiveFrom": "En vigueur à partir de (heure de La Havane)",
+      "expiresAt": "Expire (heure de La Havane)",
+      "expiresHint": "Obligatoire. Une bannière sans date de fin est une bannière périmée.",
+      "showsOn": "Affiché sur",
+      "showOnSite": "Bannière du site et Infos voyage · Conditions actuelles",
+      "showOnPackages": "Pages des circuits et étape 1 de la réservation dans la région",
+      "notifyTravelers": "E-mail aux voyageurs concernés (vigilance et critique)",
+      "source": "Source (visible par les voyageurs)",
+      "sourceLocale": "Langue source",
+      "texts": "Texte par langue",
+      "headline": "Titre",
+      "body": "Texte · ce qui se passe, pourquoi, que faire",
+      "cta": "Appel à l’action",
+      "ctaHint": "Le texte du lien vers Infos voyage ; facultatif.",
+      "translationsHint": "Info et vigilance reprennent la langue source à défaut de traduction ; un avis critique doit exister dans toutes les langues pour être publié.",
+      "missing": "manquant",
+      "preview": "Aperçu de la bannière · telle que les voyageurs la voient",
+      "previewEmpty": "Le titre apparaît ici.",
+      "create": "Créer le brouillon",
+      "save": "Enregistrer le brouillon",
+      "saving": "Enregistrement…",
+      "saveFailed": "L'avis n'a pas pu être enregistré.",
+      "invalidDate": "Indiquez une date et une heure.",
+      "needsSource": "Rédigez le titre et le texte dans la langue source.",
+      "clearsApproval": "Enregistrer des modifications annule l'approbation déjà donnée."
+    },
+    "approval": {
+      "title": "Approbation",
+      "rule": {
+        "INFO": "Un Operations Admin ou un Super Admin le publie seul.",
+        "CAUTION": "Un Operations Admin ou un Super Admin le publie seul.",
+        "CRITICAL": "Un Operations Admin et un Super Admin, deux personnes. Publication dès la seconde approbation."
+      },
+      "given": "{name} · {role} · {time}",
+      "none": "Pas encore d’approbation.",
+      "needs": {
+        "APPROVER": "En attente d’un Operations Admin ou d’un Super Admin.",
+        "OPERATIONS_ADMIN": "En attente d’un Operations Admin.",
+        "SUPER_ADMIN": "En attente d’un Super Admin."
+      },
+      "approvePublish": "Approuver et publier",
+      "approveFirst": "Approuver (1 sur 2)",
+      "approveSecond": "Approuver et publier (2 sur 2)",
+      "missingTranslations": "Traductions manquantes avant publication : {locales}",
+      "requestChanges": "Demander des modifications",
+      "changesNote": "Ce qui doit changer",
+      "sendBack": "Renvoyer en brouillon",
+      "cancel": "Annuler",
+      "actionFailed": "L'action a échoué.",
+      "readOnly": "Seuls un Operations Admin ou un Super Admin rédigent et approuvent les avis."
+    },
+    "live": {
+      "title": "Sur le site",
+      "published": "Publié le {date} · {approvals, plural, one {# approbation} other {# approbations}} · {delivered, plural, =0 {aucun voyageur prévenu par e-mail} one {# voyageur prévenu par e-mail} other {# voyageurs prévenus par e-mail}} · {acknowledged, plural, =0 {aucune confirmation} one {# confirmation} other {# confirmations}}.",
+      "lifted": "Levé le {date}.",
+      "newVersion": "Modifier (nouvelle version)",
+      "openVersion": "Ouvrir la nouvelle version",
+      "supersedes": "Remplace {reference} à sa publication.",
+      "supersededBy": "Une version plus récente remplace celle-ci.",
+      "lift": "Lever l'avis",
+      "unschedule": "Déprogrammer",
+      "liftNote": "Pourquoi (facultatif)",
+      "confirmLift": "Lever maintenant"
+    }
+  },
+  "advisories": {
+    "label": "Avis aux voyageurs",
+    "severities": {
+      "INFO": "Info",
+      "CAUTION": "Vigilance",
+      "CRITICAL": "Critique"
+    },
+    "dismiss": "Fermer cet avis",
+    "acknowledge": "J'ai compris",
+    "reopen": "Afficher l'avis critique",
+    "details": "Détails",
+    "currentTitle": "Avis en vigueur",
+    "currentLede": "Publiés par notre bureau des opérations. Chacun indique sa source, les régions concernées et sa fin.",
+    "none": "Aucun avis n'est en vigueur en ce moment.",
+    "historyTitle": "Avis précédents",
+    "historyNone": "Aucun avis au cours de l'année écoulée.",
+    "wholeCountry": "Tout le pays",
+    "source": "Source : {source}",
+    "window": "Du {from} au {to}",
+    "acknowledged": "Lu et confirmé",
+    "ended": {
+      "EXPIRED": "Terminé",
+      "LIFTED": "Levé",
+      "SUPERSEDED": "Mis à jour"
+    },
+    "noticeTitle": "Avis pour la région de ce voyage",
+    "noticeMore": "En savoir plus dans Infos voyage"
   }
 }
