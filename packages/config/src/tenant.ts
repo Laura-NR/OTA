@@ -187,6 +187,72 @@ export const customBuilderSchema = z
 
 export type CustomBuilderConfig = z.infer<typeof customBuilderSchema>;
 
+/**
+ * M8: the agency's crisis framework (A-Disruption). A case copies its
+ * scenario's steps, options and compensation text when it opens (D1), so a
+ * later edit here never rewrites an open case. Texts are in the desk's
+ * language; the desk adapts the options before sending them.
+ */
+export const disruptionScenarioSchema = z
+  .object({
+    key: z.string().min(1),
+    label: z.string().min(1),
+    /** What opens a case of this kind, as the framework words it. */
+    trigger: z.string().min(1),
+    steps: z
+      .array(
+        z.object({
+          text: z.string().min(1),
+          owner: z.string().min(1),
+          due: z.string().min(1),
+        }),
+      )
+      .default([]),
+    /** At most four, keyed A–D in order; each states its money consequence. */
+    options: z
+      .array(
+        z.object({
+          key: z.enum(['A', 'B', 'C', 'D']),
+          title: z.string().min(1),
+          detail: z.string().min(1),
+        }),
+      )
+      .max(4)
+      .default([]),
+    /** The option that stands when the deadline passes with no answer. */
+    defaultOption: z.enum(['A', 'B', 'C', 'D']).default('A'),
+    /** The compensation rule; money moves through M4 refunds (D9). */
+    policy: z.string().min(1),
+  })
+  .refine(
+    (scenario) => scenario.options.every((option, index) => option.key === 'ABCD'[index]),
+    { message: 'options must be keyed A, B, C, D in order', path: ['options'] },
+  )
+  .refine(
+    (scenario) =>
+      scenario.options.length === 0 ||
+      scenario.options.some((option) => option.key === scenario.defaultOption),
+    { message: 'defaultOption must be one of options', path: ['defaultOption'] },
+  );
+
+export const disruptionsSchema = z
+  .object({
+    /** `placeholder` marks the sample framework until the agency confirms it. */
+    status: z.enum(['placeholder', 'published']).default('placeholder'),
+    /** The options deadline the desk's form proposes, in hours from sending. */
+    deadlineHours: z.number().int().positive().max(72).default(4),
+    scenarios: z.array(disruptionScenarioSchema).default([]),
+  })
+  .refine(
+    (block) =>
+      new Set(block.scenarios.map((scenario) => scenario.key)).size ===
+      block.scenarios.length,
+    { message: 'scenario keys must be unique', path: ['scenarios'] },
+  );
+
+export type DisruptionScenarioConfig = z.infer<typeof disruptionScenarioSchema>;
+export type DisruptionsConfig = z.infer<typeof disruptionsSchema>;
+
 export const tenantConfigSchema = z.object({
   tenantId: z.string().min(1),
   branding: z.object({
@@ -226,6 +292,8 @@ export const tenantConfigSchema = z.object({
   proposals: proposalsSchema.prefault({}),
   /** Null hides the builder's estimate and offers no transport or stay styles. */
   customBuilder: customBuilderSchema.nullable().default(null),
+  /** No scenarios means the desk cannot open a case. */
+  disruptions: disruptionsSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
 });
 

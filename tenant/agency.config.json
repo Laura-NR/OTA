@@ -100,6 +100,267 @@
     "feePercent": 12,
     "spreadPercent": 6
   },
+  "disruptions": {
+    "status": "placeholder",
+    "deadlineHours": 4,
+    "scenarios": [
+      {
+        "key": "outage",
+        "label": "Power outage > 12 h",
+        "trigger": "Outage > 6 h at a traveler's accommodation opens a case; > 12 h affecting travelers = major; > 24 h = restructure or early return.",
+        "steps": [
+          {
+            "text": "Confirm safety and location of every traveler on site",
+            "owner": "Reservations",
+            "due": "within 30 min of report"
+          },
+          {
+            "text": "Confirm generator, water and food at each casa",
+            "owner": "Local coordinator",
+            "due": "within 2 h"
+          },
+          {
+            "text": "Relocate to accommodation with backup power if outage > 12 h",
+            "owner": "Local coordinator",
+            "due": "within 6 h of threshold"
+          },
+          {
+            "text": "Offer cash advance for emergency expenses",
+            "owner": "Local coordinator",
+            "due": "as needed"
+          },
+          {
+            "text": "If > 24 h: restructure itinerary or early return",
+            "owner": "Operations Director",
+            "due": "within 12 h of threshold"
+          },
+          {
+            "text": "Document duration and impact",
+            "owner": "Operations Director",
+            "due": "within 48 h"
+          }
+        ],
+        "options": [
+          {
+            "key": "A",
+            "title": "Stay at the casa with the generator windows",
+            "detail": "Meal vouchers for the remaining dinners · power banks delivered · no change to price"
+          },
+          {
+            "key": "B",
+            "title": "Move to accommodation with backup power tonight",
+            "detail": "Same price · transfer arranged by the desk"
+          },
+          {
+            "key": "C",
+            "title": "Swap the remaining days for another region",
+            "detail": "Casa, driver and guide re-booked · any price difference absorbed"
+          },
+          {
+            "key": "D",
+            "title": "Early return to Havana + credit",
+            "detail": "Pro-rata credit for unused services · hotel with 24 h power"
+          }
+        ],
+        "defaultOption": "A",
+        "policy": "Operational disruption: complimentary meal vouchers and a 10–15 % discount on a future booking for outages over 12 h. Full refunds only if services cannot be delivered at all."
+      },
+      {
+        "key": "hurricane",
+        "label": "Hurricane",
+        "trigger": "Insmet Hurricane Watch (36–48 h) or Warning (24–36 h) for any province with travelers, or Civil Defense phase 2/3.",
+        "steps": [
+          {
+            "text": "Activate watch protocol, brief all travelers in the cone",
+            "owner": "Operations Director",
+            "due": "within 1 h of watch"
+          },
+          {
+            "text": "Pre-position water, food, flashlights, power banks at casas",
+            "owner": "Local coordinator",
+            "due": "within 12 h of watch"
+          },
+          {
+            "text": "Issue warning with evacuation instructions",
+            "owner": "Operations Director",
+            "due": "within 1 h of warning"
+          },
+          {
+            "text": "Relocate to hotel with backup power or community shelter",
+            "owner": "Local coordinator",
+            "due": "within 4 h of warning"
+          },
+          {
+            "text": "Confirm flight status and rebooking options with airlines",
+            "owner": "Reservations",
+            "due": "within 2 h of warning"
+          },
+          {
+            "text": "Confirm every traveler safe after passage",
+            "owner": "All staff",
+            "due": "within 24 h"
+          }
+        ],
+        "options": [
+          {
+            "key": "A",
+            "title": "Relocate to a Havana hotel with 24 h power now",
+            "detail": "Transfer today · accommodation difference absorbed"
+          },
+          {
+            "key": "B",
+            "title": "Shelter in place at the casa (if Civil Defense allows)",
+            "detail": "Supplies pre-positioned · hourly contact · no change to price"
+          },
+          {
+            "key": "C",
+            "title": "Early return · pro-rata refund + free rebooking",
+            "detail": "Airline rebooking assisted · unused services refunded"
+          }
+        ],
+        "defaultOption": "A",
+        "policy": "Force majeure: full refund or free date change within 30 days of departure; during the trip, pro-rata refund for unused services plus rebooking assistance."
+      },
+      {
+        "key": "fuel",
+        "label": "Fuel shortage",
+        "trigger": "Driver cannot confirm fuel 24 h before a transfer, station queues > 2 h, or Viazul route cancellations.",
+        "steps": [
+          {
+            "text": "Confirm fuel with every transport provider 48 h ahead",
+            "owner": "Local coordinator",
+            "due": "48 h prior"
+          },
+          {
+            "text": "Activate backup driver with independent reserve",
+            "owner": "Local coordinator",
+            "due": "within 1 h"
+          },
+          {
+            "text": "Consolidate transfers, shift to state operator allotment if needed",
+            "owner": "Operations Director",
+            "due": "within 4 h"
+          },
+          {
+            "text": "Offer itinerary credit for missed activities",
+            "owner": "Operations Director",
+            "due": "within 12 h"
+          }
+        ],
+        "options": [
+          {
+            "key": "A",
+            "title": "Keep the plan with a standby driver",
+            "detail": "Same times · no change to price"
+          },
+          {
+            "key": "B",
+            "title": "Shift the transfer by one day, extra night at the casa",
+            "detail": "Night covered by the agency"
+          },
+          {
+            "key": "C",
+            "title": "Replace the day trip with a local activity",
+            "detail": "Itinerary credit for the difference"
+          }
+        ],
+        "defaultOption": "A",
+        "policy": "Force majeure: itinerary credit for missed services and rebooking at no extra cost; cash refunds case by case."
+      },
+      {
+        "key": "casa",
+        "label": "Casa closure",
+        "trigger": "Supplier closes, loses its licence or cannot deliver a confirmed stay.",
+        "steps": [
+          {
+            "text": "Source alternative of equal or higher standard",
+            "owner": "Reservations",
+            "due": "within 2 h"
+          },
+          {
+            "text": "Communicate options with clear explanation",
+            "owner": "Reservations",
+            "due": "within 4 h"
+          },
+          {
+            "text": "Re-dispatch stay item, regenerate vouchers",
+            "owner": "Operations",
+            "due": "same day"
+          },
+          {
+            "text": "Document closure, update supplier reliability",
+            "owner": "Operations Director",
+            "due": "within 72 h"
+          }
+        ],
+        "options": [
+          {
+            "key": "A",
+            "title": "Alternative casa · same standard · same price",
+            "detail": "Nearby, equal standard · no change to price"
+          },
+          {
+            "key": "B",
+            "title": "Hotel · higher standard",
+            "detail": "Difference absorbed by the agency"
+          },
+          {
+            "key": "C",
+            "title": "Cancel the affected nights",
+            "detail": "Full refund of the accommodation portion"
+          }
+        ],
+        "defaultOption": "A",
+        "policy": "Lower-quality alternative: rate adjustment or partial refund. No alternative: full refund of the accommodation portion plus a complimentary activity."
+      },
+      {
+        "key": "flight",
+        "label": "Flight cancellation",
+        "trigger": "Airline cancels an inbound or outbound flight affecting a booking, or a NOTAM on aviation fuel.",
+        "steps": [
+          {
+            "text": "Notify traveler within 2 h of the cancellation notice",
+            "owner": "Reservations",
+            "due": "within 2 h"
+          },
+          {
+            "text": "Contact airline for rebooking options",
+            "owner": "Reservations",
+            "due": "within 1 h"
+          },
+          {
+            "text": "Shift land services by the delay, hold suppliers",
+            "owner": "Operations",
+            "due": "within 6 h"
+          },
+          {
+            "text": "Process refund or credit per airline policy",
+            "owner": "Reservations",
+            "due": "within 72 h"
+          }
+        ],
+        "options": [
+          {
+            "key": "A",
+            "title": "Shift the whole trip by one day",
+            "detail": "All suppliers re-confirmed · no change to price"
+          },
+          {
+            "key": "B",
+            "title": "Keep dates, lose night 1, credit",
+            "detail": "Night 1 credited · transfer rebooked"
+          },
+          {
+            "key": "C",
+            "title": "Cancel · full refund of land package",
+            "detail": "Help with the airline claim"
+          }
+        ],
+        "defaultOption": "A",
+        "policy": "Airline cancels with no alternative: full refund of the land package and help with the airline refund claim. If the traveler rebooks, the land package moves at no cost."
+      }
+    ]
+  },
   "emergencyContacts": [
     { "label": "Operations desk (24/7)", "phone": "+53 5555 0100" },
     { "label": "Medical emergency", "phone": "+53 5555 0104" },

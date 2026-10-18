@@ -78,7 +78,15 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   € 25 per person per day, a private one € 55 per group per day, an interpreter
   € 40 per group per day; € 5 carbon offset per night; a 12 % agency fee; a ± 6 %
   range). The builder shows a sample-rates notice while the status is
-  `placeholder`; without the block it offers no styles and no estimate.
+  `placeholder`; without the block it offers no styles and no estimate. The M8
+  `disruptions` block (status `placeholder`) is the A-Disruption board's sample
+  crisis framework: five scenarios (power outage, hurricane, fuel shortage, casa
+  closure, flight cancellation), each with its trigger, playbook steps (owner and
+  due time), traveler options A–D stating their money consequence, option A as the
+  default when the deadline passes, and its compensation rule; the desk proposes a
+  4-hour options deadline. A case copies these texts when it opens, so editing them
+  never changes an open case. Supplier names were taken out of the options; the
+  desk adapts each option before sending it.
 
 ## Forking for a new agency
 

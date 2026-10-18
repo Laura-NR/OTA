@@ -52,6 +52,64 @@ describe('custom builder terms', () => {
   });
 });
 
+const scenario = {
+  key: 'outage',
+  label: 'Power outage > 12 h',
+  trigger: 'Outage > 6 h at a traveler accommodation',
+  steps: [{ text: 'Confirm safety', owner: 'Reservations', due: 'within 30 min' }],
+  options: [
+    { key: 'A', title: 'Stay', detail: 'No change to price' },
+    { key: 'B', title: 'Move', detail: 'Same price' },
+  ],
+  policy: 'Meal vouchers for outages over 12 h.',
+};
+
+describe('disruption playbooks', () => {
+  it('has no scenarios by default, so the desk cannot open a case', () => {
+    expect(parseTenantConfig(minimal).disruptions).toEqual({
+      status: 'placeholder',
+      deadlineHours: 4,
+      scenarios: [],
+    });
+  });
+
+  it('keeps option A as the default answer unless the scenario names another', () => {
+    const config = parseTenantConfig({
+      ...minimal,
+      disruptions: { scenarios: [scenario] },
+    });
+    expect(config.disruptions.scenarios[0]?.defaultOption).toBe('A');
+  });
+
+  it('refuses options that are not keyed A, B, C, D in order', () => {
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        disruptions: {
+          scenarios: [
+            { ...scenario, options: [{ key: 'B', title: 'Move', detail: 'Same price' }] },
+          ],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('refuses a default option the scenario does not offer', () => {
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        disruptions: { scenarios: [{ ...scenario, defaultOption: 'D' }] },
+      }),
+    ).toThrow();
+  });
+
+  it('refuses two scenarios with the same key', () => {
+    expect(() =>
+      parseTenantConfig({ ...minimal, disruptions: { scenarios: [scenario, scenario] } }),
+    ).toThrow();
+  });
+});
+
 describe('parseTenantConfig', () => {
   it('applies defaults for theme, features, and locales', () => {
     const config = parseTenantConfig(minimal);
