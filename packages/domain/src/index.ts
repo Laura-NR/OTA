@@ -260,6 +260,16 @@ export {
   type ReservationPriceLineKind,
 } from './proposals/proposal';
 export {
+  BUILDER_INTERESTS,
+  BUILDER_PACES,
+  GUIDING_CHOICES,
+  customTripEstimate,
+  type EstimateInput,
+  type EstimateRates,
+  type GuidingChoice,
+  type TripEstimate,
+} from './proposals/estimate';
+export {
   cancellationRefund,
   refundDecision,
   type CancellationBand,
@@ -268,3 +278,4 @@ export {
   type RefundThresholds,
   type RefundVote,
 } from './payments/refunds';
+export { CUBA_PROVINCE_NAMES, cubaProvinceName } from './geography/provinces';

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { CUBA_PROVINCE_NAMES, cubaProvinceName } from '../src/geography/provinces';
 import {
   MAX_ROUTE_STOPS,
   nearestByRoad,
@@ -70,5 +71,14 @@ describe('network panel', () => {
         { ...base, network: 'none' },
       ]),
     ).toEqual({ active: 1, provinces: 3, casas: 11, hotels: 1, guides: 4, drivers: 4 });
+  });
+});
+
+describe('cubaProvinceName', () => {
+  it('names the sixteen provinces by code and passes anything else through', () => {
+    expect(Object.keys(CUBA_PROVINCE_NAMES)).toHaveLength(16);
+    expect(cubaProvinceName('CU03')).toBe('La Habana');
+    expect(cubaProvinceName('CU07')).toBe('Sancti Spíritus');
+    expect(cubaProvinceName('XX01')).toBe('XX01');
   });
 });
