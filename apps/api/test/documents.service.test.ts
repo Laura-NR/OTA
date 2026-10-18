@@ -249,4 +249,50 @@ describe('DocumentsService', () => {
       ForbiddenException,
     );
   });
+
+  it('forbids a service worker from reading a booking’s document', async () => {
+    const prisma = {
+      document: {
+        findUnique: async () => ({
+          id: 'doc-1',
+          type: 'VOUCHER',
+          storageKey: 'ABC12345/voucher-1.pdf',
+          reservation: { userId: 'user-traveler' },
+        }),
+      },
+    } as unknown as PrismaService;
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
+    const worker: AuthUser = {
+      id: 'user-worker',
+      email: 'guide@example.test',
+      role: 'SERVICE_WORKER',
+    };
+
+    await expect(service.read('doc-1', worker)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('lets the booking’s owner read its traveler documents', async () => {
+    const prisma = {
+      document: {
+        findUnique: async () => ({
+          id: 'doc-1',
+          type: 'VOUCHER',
+          storageKey: 'ABC12345/voucher-1.pdf',
+          reservation: { userId: 'user-traveler' },
+        }),
+      },
+    } as unknown as PrismaService;
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
+    const owner: AuthUser = {
+      id: 'user-traveler',
+      email: 'jane@example.test',
+      role: 'TRAVELER',
+    };
+
+    const result = await service.read('doc-1', owner);
+
+    expect(result.data).toBeInstanceOf(Uint8Array);
+  });
 });

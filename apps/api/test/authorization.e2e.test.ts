@@ -316,8 +316,19 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/customers/${CUSTOMER}`, allowed: 'opsRead' },
 ];
 
+const DOCUMENT = 'f6f6f6f6-f6f6-4f6f-8f6f-f6f6f6f6f6f6';
+
 const fakePrisma = {
   serviceItem: { findUnique: async () => null },
+  // A traveler voucher on a booking the fixture traveler owns.
+  document: {
+    findUnique: async () => ({
+      id: DOCUMENT,
+      type: 'VOUCHER',
+      storageKey: 'missing/voucher.pdf',
+      reservation: { userId: USERS.traveler.id },
+    }),
+  },
   paymentReceipt: { findFirst: async () => null },
   $queryRaw: async () => [{ '?column?': 1 }],
 };
@@ -412,6 +423,29 @@ describe('authorization matrix', () => {
 
       // Past the guard, the service simply cannot find the fixture item.
       expect(response.status, action).toBe(404);
+    }
+  });
+
+  it('limits document downloads to the booking’s owner and the ops roles', async () => {
+    const path = `/documents/${DOCUMENT}/download`;
+    expect((await request(app.getHttpServer()).get(path)).status).toBe(401);
+    const worker = await request(app.getHttpServer())
+      .get(path)
+      .set('x-test-user', USERS.worker.email);
+    expect(worker.status, 'service worker').toBe(403);
+
+    // Past the check, the fixture file does not exist in storage; what matters
+    // is that the owner and every ops role get through it.
+    for (const user of [
+      USERS.traveler,
+      USERS.support,
+      USERS.operations,
+      USERS.superAdmin,
+    ]) {
+      const response = await request(app.getHttpServer())
+        .get(path)
+        .set('x-test-user', user.email);
+      expect([401, 403], user.role).not.toContain(response.status);
     }
   });
 

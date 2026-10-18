@@ -34,6 +34,12 @@ import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { DOCUMENT_RENDERER, type DocumentRenderer } from './document-renderer';
 import { DOCUMENT_STORAGE, type DocumentStorage } from './document-storage';
 
+const OPS_ROLES: readonly string[] = [
+  UserRole.OperationsAdmin,
+  UserRole.AdministrativeSupport,
+  UserRole.SuperAdmin,
+];
+
 type ReservationForDocuments = Reservation & {
   user: User;
   serviceItems: Array<
@@ -118,9 +124,10 @@ export class DocumentsService {
   }
 
   /**
-   * Load a stored document for download. A traveler may only fetch the
-   * traveler documents of their own reservations, never a supplier work order
-   * (it carries the internal payout rate); other roles are not restricted here.
+   * Load a stored document for download. The operations roles may read any
+   * document. Anyone else, a service worker included, may only fetch the
+   * traveler documents of a booking they own, never a supplier work order (it
+   * carries the internal payout rate).
    */
   async read(
     documentId: string,
@@ -133,11 +140,13 @@ export class DocumentsService {
     if (!document) {
       throw new NotFoundException(`Document ${documentId} not found`);
     }
-    if (actor.role === UserRole.Traveler && document.reservation.userId !== actor.id) {
-      throw new ForbiddenException('Document belongs to another traveler');
-    }
-    if (actor.role === UserRole.Traveler && document.type === DocumentType.WorkOrder) {
-      throw new ForbiddenException('Supplier work orders are not traveler documents');
+    if (!OPS_ROLES.includes(actor.role)) {
+      if (document.reservation.userId !== actor.id) {
+        throw new ForbiddenException('Document belongs to another booking');
+      }
+      if (document.type === DocumentType.WorkOrder) {
+        throw new ForbiddenException('Supplier work orders are not traveler documents');
+      }
     }
     return { document, data: await this.storage.read(document.storageKey) };
   }
