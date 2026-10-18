@@ -3039,7 +3039,6 @@
       "status": "Statut",
       "lastContact": "Dernier contact",
       "answer": "Réponse",
-      "act": "Agir",
       "party": "{nationality} · groupe de {count}",
       "underWay": "En voyage · {dates}",
       "arriving": "Arrive le {date}",

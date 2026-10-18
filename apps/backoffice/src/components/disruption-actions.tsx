@@ -392,7 +392,7 @@ export function SafetyForm({
 
   return (
     <form
-      className="flex flex-col gap-2"
+      className="flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault();
         void run(`/bookings/${reservationId}/safety`, 'POST', {
@@ -405,6 +405,7 @@ export function SafetyForm({
     >
       <Select
         aria-label={`${t('board.statusLabel')} · ${bookingCode}`}
+        className="w-40"
         value={value}
         onChange={(event) => setValue(event.target.value as TravelerSafety)}
       >
@@ -418,15 +419,14 @@ export function SafetyForm({
         aria-label={`${t('board.note')} · ${bookingCode}`}
         placeholder={t('board.notePlaceholder')}
         value={note}
+        className="min-w-48 flex-1 sm:max-w-xs"
         maxLength={500}
         onChange={(event) => setNote(event.target.value)}
       />
-      <div>
-        <Button type="submit" size="sm" variant="secondary" disabled={busy}>
-          {t('board.saveStatus')}
-        </Button>
-      </div>
-      {failure}
+      <Button type="submit" size="sm" variant="secondary" disabled={busy}>
+        {t('board.saveStatus')}
+      </Button>
+      {failure ? <div className="w-full">{failure}</div> : null}
     </form>
   );
 }

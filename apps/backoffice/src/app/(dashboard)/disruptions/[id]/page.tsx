@@ -410,7 +410,6 @@ export default async function DisruptionCasePage({
                     <TableHead>{t('board.status')}</TableHead>
                     <TableHead>{t('board.lastContact')}</TableHead>
                     <TableHead>{t('board.answer')}</TableHead>
-                    {canManage ? <TableHead>{t('board.act')}</TableHead> : null}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -426,7 +425,7 @@ export default async function DisruptionCasePage({
                         : booking.needsCall
                           ? 'attention'
                           : undefined;
-                    return (
+                    return [
                       <TableRow key={booking.id} tone={tone}>
                         <TableCell className="min-w-[12rem]">
                           <div className="flex flex-col">
@@ -543,9 +542,13 @@ export default async function DisruptionCasePage({
                                   : t('board.offer.NOT_SENT')}
                           </span>
                         </TableCell>
-                        {canManage ? (
-                          <TableCell className="min-w-[14rem]">
-                            <div className="flex flex-col gap-3">
+                      </TableRow>,
+                      // The desk's actions sit on their own full-width row, so
+                      // the five columns stay in view (A-Disruption "Act").
+                      canManage ? (
+                        <TableRow key={`${booking.id}-act`} tone={tone}>
+                          <TableCell colSpan={5} className="pt-0">
+                            <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
                               <SafetyForm
                                 caseId={item.id}
                                 reservationId={booking.reservationId}
@@ -564,9 +567,9 @@ export default async function DisruptionCasePage({
                               ) : null}
                             </div>
                           </TableCell>
-                        ) : null}
-                      </TableRow>
-                    );
+                        </TableRow>
+                      ) : null,
+                    ];
                   })}
                 </TableBody>
               </Table>

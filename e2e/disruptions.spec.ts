@@ -113,7 +113,8 @@ test.describe('M8 disruptions', () => {
     await expect(page.getByRole('checkbox', { name: new RegExp(BOOKING) })).toBeVisible();
     await page.getByLabel('Booking code', { exact: true }).fill(BOOKING);
     await page.getByRole('button', { name: 'Attach by code' }).click();
-    const row = page.getByRole('row', { name: new RegExp(BOOKING) });
+    // The first row is the booking's; the actions row under it names it too.
+    const row = page.getByRole('row', { name: new RegExp(BOOKING) }).first();
     await expect(row).toContainText('Unknown');
     await expect(row).toContainText('Options not sent');
 
@@ -165,9 +166,9 @@ test.describe('M8 disruptions', () => {
     // The desk sees the answer on the status board and in the case log.
     await signIn(page);
     await page.goto(caseUrl);
-    await expect(page.getByRole('row', { name: new RegExp(BOOKING) })).toContainText(
-      'Option B · chosen online',
-    );
+    await expect(
+      page.getByRole('row', { name: new RegExp(BOOKING) }).first(),
+    ).toContainText('Option B · chosen online');
     await expect(
       page.getByText(`recorded option B for ${BOOKING} (chosen online)`),
     ).toBeVisible();
