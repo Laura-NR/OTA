@@ -1,7 +1,7 @@
 # M7 Content (advisories): schema diff for review
 
-**Status:** Draft for review, 2026-10-18. **No migration has been generated.** The owner asked for
-M7 to be drafted first (before M8) on 2026-10-18; the decisions in §3 decide the migration.
+**Status:** **Approved 2026-10-18 as recommended (D1a–D8a).** The migration has **not** been
+generated yet; the next session generates it from §6 and builds §5.
 **Date:** 2026-10-18
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 8, M7 ("Content: advisories with two
 approvals, blog, conditions, FAQ, media"), read against the A-Content and E-Advisory boards

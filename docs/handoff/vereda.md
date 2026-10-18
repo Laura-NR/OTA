@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-18 04:30
+# Handoff — vereda — updated 2026-10-18 05:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -50,7 +50,8 @@ the Confirmation screen) and ADR 0007 (worker app).
     (placeholder rates). The request payload gains optional `route`, `transport`, `guiding`,
     `interpreter`, `stepFree`; unknown styles are refused. The desk sees the answers and the
     composer seeds its stops from the route. `package-builder.tsx` is gone.
-  - **M7 drafted** in `docs/schema-m7-advisories.md` (D1–D8, no migration).
+  - **M7 drafted and approved** (D1a–D8a) in `docs/schema-m7-advisories.md`; the migration is
+    not generated yet.
 - **Not built:** E-Advisory/E-Options (M7/M8 migrations), SMS/push, Phase 8.
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
   samples, the deposit's refundability and proof retention, the M5 sample terms.
@@ -81,10 +82,11 @@ the Confirmation screen) and ADR 0007 (worker app).
 - E-NPS asks for the 1–5 Review, not a 0–10 NPS; trips completed more than 30 days ago are never
   asked (so shipping the scan does not mail old travelers).
 - The proposal PDF goes to the account's own email; the proposal page stays sign-in only.
-- **Open question:** `DocumentsService.read` restricts only TRAVELER; any other authenticated
-  role, including SERVICE_WORKER, can download any booking's documents, and the docstring used to
-  claim "operations roles may fetch any". Not changed (an authorization change beyond the owner's
-  approval); recommendation: owner or ops roles only.
+- **Approved, not yet done:** `DocumentsService.read` restricts only TRAVELER; any other
+  authenticated role, including SERVICE_WORKER, can download any booking's documents. The owner
+  approved (2026-10-18) limiting downloads to the booking's owner and the operations roles
+  (OPERATIONS_ADMIN, ADMINISTRATIVE_SUPPORT, SUPER_ADMIN); the next session implements it with a
+  test and an authorization-matrix entry.
 - The builder's estimate uses the manifest's placeholder rates; `customBuilder` null hides it.
 
 ## Traps
@@ -126,13 +128,15 @@ the Confirmation screen) and ADR 0007 (worker app).
     stop it by port PID (kill -9 if needed) and restart `pnpm dev` after rebuilding a package."
 
 ## Next
-1. Owner: M7 D1–D8 (`docs/schema-m7-advisories.md`); the SERVICE_WORKER document-download
-   question; the standing M4/M5/builder placeholders and the passport-key backup; the AGENTS.md
-   §C lines proposed above.
-2. Once M7 is approved: generate it and build the advisories tab, the site banner, E-Advisory and
-   the critical acknowledgement (§5 of the draft); then draft M8 (disruption cases, E-Options).
+1. Generate M7 as approved (`docs/schema-m7-advisories.md` §6; `prisma migrate dev --name
+   advisories`, never `prisma format`) and build §5: domain rules, API + authorization matrix,
+   desk advisories tab, storefront banner / Travel info list / package and booking notices,
+   E-Advisory with a Mailpit e2e, the critical acknowledgement, retention.
+2. Limit `GET /documents/:id/download` to the booking's owner and the ops roles (approved).
 3. Investigate why the API does not exit on SIGTERM (BullMQ/Redis handles or the PDF browser).
-4. Phase 8 cookie banner (the deferred public consent route).
+4. Draft M8 (disruption cases, playbooks, traveler options; E-Options) for review.
+5. Owner, still open: the M4/M5/builder placeholders, the passport-key backup, the AGENTS.md §C
+   lines proposed above.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -350,4 +354,10 @@ the Confirmation screen) and ADR 0007 (worker app).
   90-day consent (no purpose fits); the request stays sign-in only.
 - 2026-10-18 — M7 is drafted as advisories only (D1a recommended); blog, FAQ, media and
   conditions stay tenant content until a CMS decision.
+- 2026-10-18 — the owner approved M7 D1a–D8a as recommended (advisories only; superseding
+  versions; province-code regions; approval table with two distinct approvers for critical;
+  audit-log delivery ledger; per-locale translations; caution/critical emails within 60 days;
+  critical acknowledgements). Migration to be generated next session.
+- 2026-10-18 — the owner approved limiting document downloads to the booking's owner and the
+  operations roles (closes the SERVICE_WORKER gap); not implemented this session.
 
