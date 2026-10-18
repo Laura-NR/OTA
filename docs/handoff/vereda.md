@@ -28,7 +28,7 @@ Confirmation screen, the Custom builder and M7) and ADR 0007 (worker app).
     `defaultAcknowledged`. `docs/schema-m7-advisories.md` §7 records what the build added.
   - **SIGTERM bug fixed** (`ba3e9c0`, Article 7 below): `@ota/documents` launches Chromium with
     Playwright's signal handlers off.
-  - **M8 drafted** for review: `docs/schema-m8-disruptions.md` (D1–D9, no migration).
+  - **M8 drafted and approved** (D1a–D9a): `docs/schema-m8-disruptions.md`; no migration yet.
 - **Not built:** E-Options (M8), SMS/push, Phase 8; A-Content's blog/FAQ/media/conditions tabs
   (M7 D1, tenant content).
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
@@ -67,7 +67,7 @@ Confirmation screen, the Custom builder and M7) and ADR 0007 (worker app).
 - The advisory banner is not sticky (the header is); recorded in the ADR 0006 M7 amendment.
 - Scans skip a missed day (7/3/1, T−7); the window scan runs every 15 minutes. E-NPS asks for the
   1–5 Review. The proposal PDF goes to the account's own email.
-- **For the owner:** M8 D1–D9 (`docs/schema-m8-disruptions.md`), and the open items under Next.
+- **For the owner:** the open items under Next (M8 is approved).
 
 ## Traps
 - **SIGTERM (fixed, `ba3e9c0`).** Mechanism: Playwright's `launch()` defaults
@@ -98,8 +98,9 @@ Confirmation screen, the Custom builder and M7) and ADR 0007 (worker app).
   - "2026-10-18: document downloads are the booking's owner (no work orders) or the ops roles."
 
 ## Next
-1. Owner: answer M8 D1–D9 (`docs/schema-m8-disruptions.md`); then generate it and build §5
-   (Disruptions section, E-Options, trip-page options card).
+1. Generate M8 as approved (`docs/schema-m8-disruptions.md` §6; `prisma migrate dev --name
+   disruptions`, never `prisma format`) and build §5 (manifest playbooks, domain rules, API +
+   authorization matrix, E-Options, the desk Disruptions section, the trip-page options card).
 2. Owner, still open: the M4/M5/builder placeholders, counsel's legal texts, OFAC categories, card
    surcharge, deposit refundability and proof retention, the passport-key backup, the AGENTS.md §C
    lines above.
@@ -344,3 +345,7 @@ Confirmation screen, the Custom builder and M7) and ADR 0007 (worker app).
   attached bookings, desk-set severity, one option set per case with a deadline whose default is
   derived on read, choice behind sign-in, the desk executes choices with existing tools, a
   per-booking status board, an advisory link, the audit log as case log, compensation via M4.
+- 2026-10-18 — the owner approved M8 D1a–D9a as recommended (manifest playbooks; cases with
+  attached bookings; desk-set severity; one option set per case with a deadline and a default
+  derived on read; choice behind sign-in; the desk executes choices; a per-booking status board;
+  the advisory link; the audit log as case log; compensation via M4). Migration next session.

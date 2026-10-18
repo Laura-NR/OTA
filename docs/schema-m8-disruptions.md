@@ -1,7 +1,7 @@
 # M8 Disruptions: schema diff for review
 
-**Status:** **Draft for the owner's review (2026-10-18).** No migration is generated until
-D1–D9 are answered.
+**Status:** **Approved 2026-10-18 as recommended (D1a–D9a).** The migration has **not** been
+generated yet; the next session generates it from §6 and builds §5.
 **Date:** 2026-10-18
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 (Disruptions, M8) and Phase 6 (E-Options), read
 against the A-Disruption, G-Disruption and E-Options boards (`design/vereda-v1.2/project/`) and
@@ -285,4 +285,4 @@ model DisruptionCaseBooking {
 ```
 
 The migration would be generated with `pnpm --filter @ota/db exec prisma migrate dev --name
-disruptions` once D1–D9 are answered (never `prisma format`).
+disruptions` (never `prisma format`).
