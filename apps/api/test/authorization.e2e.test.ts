@@ -62,6 +62,9 @@ const REFUND = 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3';
 const PROPOSAL = 'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4';
 const PROPOSAL_VERSION = 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5';
 const ADVISORY = 'a7a7a7a7-a7a7-4a7a-8a7a-a7a7a7a7a7a7';
+const DISRUPTION = 'b8b8b8b8-b8b8-4b8b-8b8b-b8b8b8b8b8b8';
+const STEP = 'c9c9c9c9-c9c9-4c9c-8c9c-c9c9c9c9c9c9';
+const CASE_BOOKING = 'dadadada-dada-4ada-8ada-dadadadadada';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -327,6 +330,43 @@ const ROUTES: Route[] = [
   {
     method: 'post',
     path: `/me/advisories/${ADVISORY}/acknowledge`,
+    allowed: 'authenticated',
+  },
+
+  // M8 disruptions: the desk reads; every case action is a write.
+  { method: 'get', path: '/disruptions', allowed: 'opsRead' },
+  { method: 'get', path: '/disruptions/alerts', allowed: 'opsRead' },
+  { method: 'post', path: '/disruptions', allowed: 'opsWrite' },
+  { method: 'get', path: `/disruptions/${DISRUPTION}`, allowed: 'opsRead' },
+  { method: 'patch', path: `/disruptions/${DISRUPTION}`, allowed: 'opsWrite' },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/steps/${STEP}/done`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/disruptions/${DISRUPTION}/bookings`, allowed: 'opsWrite' },
+  { method: 'put', path: `/disruptions/${DISRUPTION}/options`, allowed: 'opsWrite' },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/send-options`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/bookings/${RESERVATION}/safety`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/bookings/${RESERVATION}/choice`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/disruptions/${DISRUPTION}/advisory`, allowed: 'opsWrite' },
+  // The traveler's own offers and answer.
+  { method: 'get', path: '/me/disruptions', allowed: 'authenticated' },
+  {
+    method: 'post',
+    path: `/me/disruptions/${CASE_BOOKING}/choice`,
     allowed: 'authenticated',
   },
 

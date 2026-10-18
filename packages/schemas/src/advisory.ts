@@ -144,6 +144,8 @@ export const advisorySchema = advisoryListItemSchema.extend({
   supersedesReference: z.string().nullable(),
   /** The draft or published version that replaces this one, if any. */
   supersededById: z.string().uuid().nullable(),
+  /** The M8 disruption case this banner speaks for (D7), if any. */
+  disruptionCase: z.object({ id: z.string().uuid(), reference: z.string() }).nullable(),
   translations: z.array(advisoryTranslationSchema),
   approvals: z.array(advisoryApprovalSchema),
   /** What publishing still waits for; empty once published. */

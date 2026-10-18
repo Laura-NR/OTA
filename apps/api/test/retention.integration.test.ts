@@ -28,6 +28,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
   let send: ReturnType<typeof vi.fn>;
   let userId = '';
   let reservationId = '';
+  let disruptionCaseId = '';
   let keptAffidavitId = '';
   let expiredAffidavitId = '';
   const email = `retention-e2e-${Date.now()}@example.test`;
@@ -161,6 +162,40 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
         metadata: { from: 'A', to: 'B', reason: 'PII audit reason' },
       },
     });
+    // M8: a case's status-board note and its log line about this booking;
+    // the line about another booking in the same case must survive.
+    const disruption = await prisma.disruptionCase.create({
+      data: {
+        reference: `DC-RET-${Date.now()}`,
+        scenario: 'outage',
+        severity: 'MAJOR',
+        title: 'Outage',
+        summary: 'Outage',
+        policy: 'Vouchers',
+        bookings: {
+          create: [
+            { reservationId, safety: 'SAFE', safetyNote: 'SMS from +53 5555 1234' },
+          ],
+        },
+      },
+    });
+    disruptionCaseId = disruption.id;
+    await prisma.auditLog.createMany({
+      data: [
+        {
+          action: 'disruption.safety_marked',
+          entityType: 'DisruptionCase',
+          entityId: disruption.id,
+          metadata: { reservationId, safety: 'SAFE', note: 'SMS from +53 5555 1234' },
+        },
+        {
+          action: 'disruption.safety_marked',
+          entityType: 'DisruptionCase',
+          entityId: disruption.id,
+          metadata: { reservationId: randomUUID(), safety: 'SAFE', note: 'other party' },
+        },
+      ],
+    });
     await prisma.verification.create({
       data: {
         id: randomUUID(),
@@ -180,9 +215,11 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
         OR: [
           { entityType: 'User', entityId: userId },
           { entityType: 'Reservation', entityId: reservationId },
+          { entityType: 'DisruptionCase', entityId: disruptionCaseId },
         ],
       },
     });
+    await prisma.disruptionCase.deleteMany({ where: { id: disruptionCaseId } });
     await prisma.verification.deleteMany({
       where: { identifier: { contains: email } },
     });
@@ -306,5 +343,23 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     });
     expect(audit.metadata).toMatchObject({ from: 'A', to: 'B' });
     expect((audit.metadata as Record<string, unknown>).reason).toBeUndefined();
+
+    // M8: the safety state stays for the incident report; the notes go, and
+    // only this traveler's lines in the shared case log lose theirs.
+    const caseBooking = await prisma.disruptionCaseBooking.findFirstOrThrow({
+      where: { reservationId },
+    });
+    expect(caseBooking.safety).toBe('SAFE');
+    expect(caseBooking.safetyNote).toBeNull();
+    const caseLog = await prisma.auditLog.findMany({
+      where: { entityType: 'DisruptionCase', entityId: disruptionCaseId },
+    });
+    const notes = caseLog.map((row) => row.metadata as Record<string, unknown>);
+    expect(
+      notes.find((row) => row.reservationId === reservationId)?.note,
+    ).toBeUndefined();
+    expect(notes.find((row) => row.reservationId !== reservationId)?.note).toBe(
+      'other party',
+    );
   }, 20_000);
 });

@@ -459,8 +459,9 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
    * bookings is redacted, every traveler in their parties loses name, date of
    * birth, nationality, passport and emergency contact, and their consent log
    * loses its link to them (`docs/pii-at-rest-review.md`, Tier 1; M3 D6). OFAC
-   * affidavits are kept for their five years, and critical-advisory
-   * acknowledgements stay with the anonymized user (M7 D8).
+   * affidavits are kept for their five years, critical-advisory
+   * acknowledgements stay with the anonymized user (M7 D8), and disruption
+   * cases keep the booking's safety state and choice but lose its notes (M8).
    */
   private async anonymize(userId: string, email: string, now: Date): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
@@ -522,6 +523,13 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
           data: { declineReason: null },
         });
       }
+
+      // M8: the status board's notes about the party go; the case, its
+      // safety states and choices stay for the incident report.
+      await tx.disruptionCaseBooking.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: { safetyNote: null },
+      });
 
       // M5: a custom request is a planning record. Keep its dates, party and
       // chosen item ids for reporting; drop the traveler's notes and the
@@ -598,16 +606,35 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
 
       // Strip free-text PII keys from the traveler's audit metadata.
       if (reservationIds.length > 0 || serviceItemIds.length > 0) {
+        const cases = await tx.disruptionCaseBooking.findMany({
+          where: { reservationId: { in: reservationIds } },
+          select: { caseId: true },
+        });
         const audits = await tx.auditLog.findMany({
           where: {
             OR: [
               { entityType: 'Reservation', entityId: { in: reservationIds } },
               { entityType: 'ServiceItem', entityId: { in: serviceItemIds } },
+              {
+                entityType: 'DisruptionCase',
+                entityId: { in: cases.map((item) => item.caseId) },
+              },
             ],
           },
-          select: { id: true, metadata: true },
+          select: { id: true, entityType: true, metadata: true },
         });
         for (const audit of audits) {
+          // A case log also holds other travelers' lines; only this traveler's go.
+          if (
+            audit.entityType === 'DisruptionCase' &&
+            !reservationIds.includes(
+              String(
+                (audit.metadata as { reservationId?: unknown } | null)?.reservationId,
+              ),
+            )
+          ) {
+            continue;
+          }
           const cleaned = redactAuditMetadata(audit.metadata);
           if (cleaned) {
             await tx.auditLog.update({

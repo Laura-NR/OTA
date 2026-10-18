@@ -64,6 +64,7 @@ const INCLUDE = {
   createdBy: { select: { fullName: true, email: true } },
   supersedes: { select: { reference: true } },
   supersededBy: { select: { id: true } },
+  disruptionCase: { select: { id: true, reference: true } },
 } satisfies Prisma.AdvisoryInclude;
 
 type AdvisoryRow = Prisma.AdvisoryGetPayload<{ include: typeof INCLUDE }>;
@@ -118,7 +119,12 @@ export class AdvisoriesService {
     return this.toDto(await this.load(id), new Date());
   }
 
-  async create(actor: AuthUser, input: AdvisoryWriteRequest): Promise<AdvisoryDto> {
+  /** `links.disruptionCaseId` ties the draft to the M8 case whose banner it is (D7). */
+  async create(
+    actor: AuthUser,
+    input: AdvisoryWriteRequest,
+    links: { disruptionCaseId?: string } = {},
+  ): Promise<AdvisoryDto> {
     const year = new Date().getUTCFullYear();
     for (let attempt = 0; attempt < REFERENCE_ATTEMPTS; attempt += 1) {
       const issued = await this.prisma.advisory.count({
@@ -132,6 +138,7 @@ export class AdvisoriesService {
               reference,
               ...this.document(input),
               createdById: actor.id,
+              disruptionCaseId: links.disruptionCaseId ?? null,
               translations: { create: this.translations(input) },
             },
           });
@@ -228,6 +235,7 @@ export class AdvisoriesService {
             showOnPackages: source.showOnPackages,
             notifyTravelers: source.notifyTravelers,
             supersedesId: source.id,
+            disruptionCaseId: source.disruptionCaseId,
             createdById: actor.id,
             translations: {
               create: source.translations.map((item) => ({
@@ -751,6 +759,7 @@ export class AdvisoriesService {
       notifyTravelers: row.notifyTravelers,
       supersedesReference: row.supersedes?.reference ?? null,
       supersededById: row.supersededBy?.id ?? null,
+      disruptionCase: row.disruptionCase,
       translations: row.translations.map((item) => ({
         locale: item.locale,
         headline: item.headline,
