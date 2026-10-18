@@ -198,6 +198,31 @@ enum AdvisoryStatus {
   LIFTED
 }
 
+/// M8: who is paged and how often travelers are contacted (D3).
+enum DisruptionSeverity {
+  MINOR
+  MAJOR
+  EMERGENCY
+}
+
+enum DisruptionStatus {
+  OPEN
+  CLOSED
+}
+
+enum TravelerSafety {
+  UNKNOWN
+  SAFE
+  NEEDS_HELP
+}
+
+enum DisruptionChoiceSource {
+  TRAVELER
+  DESK
+  /// The deadline passed with no answer; recorded when the desk confirms it.
+  DEFAULT
+}
+
 enum ProposalLineUnit {
   PER_PERSON
   PER_BOOKING
@@ -357,6 +382,11 @@ model User {
   advisoriesCreated        Advisory[]                @relation("AdvisoryCreatedBy")
   advisoryApprovals        AdvisoryApproval[]        @relation("AdvisoryApprovals")
   advisoryAcknowledgements AdvisoryAcknowledgement[]
+  // M8
+  disruptionsOwned    DisruptionCase[]        @relation("DisruptionOwner")
+  disruptionStepsDone DisruptionStep[]        @relation("DisruptionStepDoneBy")
+  safetyConfirmations DisruptionCaseBooking[] @relation("DisruptionSafetyConfirmedBy")
+  disruptionChoices   DisruptionCaseBooking[] @relation("DisruptionChoiceBy")
 
   // Better Auth relations
   sessions Session[]
@@ -847,6 +877,7 @@ model Reservation {
   instalments PaymentInstalment[]
   refunds     Refund[]
   proposal    Proposal?
+  disruptions DisruptionCaseBooking[]
 
   @@index([userId])
   @@index([status])
@@ -1330,6 +1361,9 @@ model Advisory {
   translations     AdvisoryTranslation[]
   approvals        AdvisoryApproval[]
   acknowledgements AdvisoryAcknowledgement[]
+  /// M8: the disruption case this banner speaks for (D7).
+  disruptionCaseId String?                   @map("disruption_case_id") @db.Uuid
+  disruptionCase   DisruptionCase?           @relation(fields: [disruptionCaseId], references: [id], onDelete: SetNull)
 
   @@index([status, expiresAt])
   @@map("advisories")
@@ -1378,6 +1412,103 @@ model AdvisoryAcknowledgement {
 
   @@unique([advisoryId, userId])
   @@map("advisory_acknowledgements")
+}
+
+/// M8: a disruption case (A-Disruption). Its log is the audit trail (D8).
+model DisruptionCase {
+  id        String             @id @default(uuid()) @db.Uuid
+  /// The visible reference (DC-0931), unique.
+  reference String             @unique
+  /// The manifest scenario key (outage, hurricane, fuel, casa, flight).
+  scenario  String
+  severity  DisruptionSeverity
+  status    DisruptionStatus   @default(OPEN)
+  /// A province code (CU01…); null when it is not regional (a flight).
+  province  String?
+  title     String
+  summary   String
+  /// The scenario's compensation rule as it read when the case opened.
+  policy    String
+  ownerId   String?            @map("owner_id") @db.Uuid
+  openedAt  DateTime           @default(now()) @map("opened_at")
+  closedAt  DateTime?          @map("closed_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  owner      User?                   @relation("DisruptionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  steps      DisruptionStep[]
+  options    DisruptionOption[]
+  bookings   DisruptionCaseBooking[]
+  advisories Advisory[]
+
+  @@index([status, openedAt])
+  @@map("disruption_cases")
+}
+
+/// A playbook step, copied from the manifest when the case opens (D1).
+model DisruptionStep {
+  id        String    @id @default(uuid()) @db.Uuid
+  caseId    String    @map("case_id") @db.Uuid
+  position  Int
+  text      String
+  /// The owner as the playbook names it ("Local coordinator").
+  owner     String
+  /// The due time as the playbook words it ("within 2 h").
+  due       String
+  doneAt    DateTime? @map("done_at")
+  doneById  String?   @map("done_by_id") @db.Uuid
+
+  case   DisruptionCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  doneBy User?          @relation("DisruptionStepDoneBy", fields: [doneById], references: [id], onDelete: SetNull)
+
+  @@unique([caseId, position])
+  @@map("disruption_steps")
+}
+
+/// The options offered to the case's bookings (D4), each stating its money consequence.
+model DisruptionOption {
+  id       String @id @default(uuid()) @db.Uuid
+  caseId   String @map("case_id") @db.Uuid
+  /// A, B, C, D.
+  key      String
+  position Int
+  title    String
+  detail   String
+
+  case DisruptionCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, key])
+  @@map("disruption_options")
+}
+
+/// One attached booking: its safety on the status board (D6) and its offer and choice (D4).
+model DisruptionCaseBooking {
+  id                String                  @id @default(uuid()) @db.Uuid
+  caseId            String                  @map("case_id") @db.Uuid
+  reservationId     String                  @map("reservation_id") @db.Uuid
+  safety            TravelerSafety          @default(UNKNOWN)
+  lastContactAt     DateTime?               @map("last_contact_at")
+  /// "SMS reply: all fine" — redacted with the traveler (retention Tier 1).
+  safetyNote        String?                 @map("safety_note")
+  safetyConfirmedBy String?                 @map("safety_confirmed_by_id") @db.Uuid
+  offerSentAt       DateTime?               @map("offer_sent_at")
+  offerDeadline     DateTime?               @map("offer_deadline")
+  defaultOptionKey  String?                 @map("default_option_key")
+  chosenOptionKey   String?                 @map("chosen_option_key")
+  choiceSource      DisruptionChoiceSource? @map("choice_source")
+  chosenAt          DateTime?               @map("chosen_at")
+  chosenById        String?                 @map("chosen_by_id") @db.Uuid
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+
+  case        DisruptionCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  reservation Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  confirmedBy User?          @relation("DisruptionSafetyConfirmedBy", fields: [safetyConfirmedBy], references: [id], onDelete: SetNull)
+  chosenBy    User?          @relation("DisruptionChoiceBy", fields: [chosenById], references: [id], onDelete: SetNull)
+
+  @@unique([caseId, reservationId])
+  @@index([reservationId])
+  @@map("disruption_case_bookings")
 }
 
 model Document {
