@@ -57,8 +57,7 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
 - The playbooks and options are in the desk's language; E-Options frames them in the traveler's.
 - One unexplained e2e failure (0.5 s, during a run started right after edits to the dev
   servers' sources); it did not recur in three later runs.
-- **For the owner:** graceful shutdown (Task 2, question raised this session) and the open items
-  under Next.
+- **For the owner:** the open items under Next.
 
 ## Traps
 - **Client state survives `router.refresh()`.** The send-options form seeded its selection when
@@ -90,8 +89,9 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
     (`entityType: 'DisruptionCase'`)."
 
 ## Next
-1. Owner: graceful shutdown for deploys (options in this session's closing message; record the
-   answer under Decisions). Build it next session if approved.
+1. Build graceful shutdown as approved (Decisions, 2026-10-18): `app.enableShutdownHooks()`,
+   close BullMQ workers/queues, the Redis clients and the PDF browser, force-exit after ~10 s;
+   prove it with a SIGTERM test (after a PDF render, and with a hung close stubbed).
 2. Draft M6 (supplier backup power, fuel, last job) for review — it feeds A-Suppliers' Power
    column and A-Disruption's "Resources in the province" card.
 3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
@@ -349,3 +349,6 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
   MAJOR→CAUTION, EMERGENCY→CRITICAL, three days); writes are Operations/Super Admin only.
 - 2026-10-18 — Graceful shutdown (Task 2) raised with the owner as a question with options; not
   built.
+- 2026-10-18 — the owner chose to build graceful shutdown with a timeout (close BullMQ, Redis and
+  the PDF browser; force-exit after about 10 s so a hung close cannot recreate the SIGTERM hang),
+  over waiting for the deploy topology or keeping the immediate exit. Next session.

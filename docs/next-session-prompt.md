@@ -42,11 +42,10 @@ design team is not asked; the build resolves design gaps itself with existing to
 the ADRs.
 
 OWNER DECISIONS ALREADY TAKEN (do not re-ask): M1–M5, M7 and M8 as recommended; document
-downloads for the owner and the ops roles. Graceful shutdown: see the handoff's Decisions (raised
-2026-10-18 with options; act on the owner's answer, or ask again if none is recorded).
+downloads for the owner and the ops roles. Graceful shutdown: build it with a timeout (2026-10-18;
+close BullMQ, Redis and the PDF browser, force-exit after about 10 s).
 
-TASK 1 — Graceful shutdown for deploys, as the owner decided (handoff Decisions / Next). If the
-answer was to build it: `app.enableShutdownHooks()` with BullMQ workers/queues, the Redis clients
+TASK 1 — Graceful shutdown for deploys, as the owner decided: `app.enableShutdownHooks()` with BullMQ workers/queues, the Redis clients
 and the PDF browser closed in `onModuleDestroy`/`beforeApplicationShutdown`, under an overall
 timeout that force-exits so a hung close cannot recreate the SIGTERM symptom; prove it with a
 SIGTERM test (API exits within the timeout after a PDF render and with a hung close stubbed).
