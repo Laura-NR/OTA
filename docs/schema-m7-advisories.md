@@ -1,7 +1,7 @@
 # M7 Content (advisories): schema diff for review
 
-**Status:** **Approved 2026-10-18 as recommended (D1a–D8a).** The migration has **not** been
-generated yet; the next session generates it from §6 and builds §5.
+**Status:** **Landed 2026-10-18** as approved (D1a–D8a): migration `20261018100924_advisories`
+generated from §6 unchanged, and §5 built (see §7 for what the build added or resolved).
 **Date:** 2026-10-18
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 8, M7 ("Content: advisories with two
 approvals, blog, conditions, FAQ, media"), read against the A-Content and E-Advisory boards
@@ -229,3 +229,30 @@ model AdvisoryAcknowledgement {
 
 The migration would be generated with `pnpm --filter @ota/db exec prisma migrate dev --name
 advisories` once D1–D8 are answered (never `prisma format`).
+
+## 7. As built (2026-10-18)
+
+- **Migration** `20261018100924_advisories` (`2557ae4`): §6 verbatim, additive.
+- **Rules** (`96ba6ee`, `packages/domain/src/advisories/advisory.ts`): a support role never
+  approves; nobody approves twice; on CRITICAL a second approval from the role already given is
+  refused (it would not move the advisory) rather than recorded. The first critical approval moves
+  it to IN_REVIEW; the translation check runs on the approval that would publish. The window must
+  end after it starts and publishing an already expired one is refused. Versions are referenced
+  `ADV-2026-031-2`, `-3`, … so they share their stem.
+- **Audience** (D7): as recommended, plus the trip must overlap the advisory's window (a trip that
+  starts after it expires is not emailed). One email per traveler, naming their earliest reached
+  booking; anonymized travelers are skipped.
+- **API** (`6304499`): beyond §5, `POST /advisories/:id/request-changes` (the board's button;
+  back to DRAFT, approvals cleared, note audited), public `GET /advisories/history` (lifted,
+  superseded and expired in the last year) and `GET /me/advisories/acknowledgements`. Saving a
+  draft (PATCH) sends the whole document; saving one in review returns it to DRAFT and clears its
+  approval. "Edit (new version)" returns the version already in progress. The approval locks the
+  advisory row (`SELECT … FOR UPDATE`) so two approvers at once cannot both miss the publishing
+  vote (proved live: without the lock the concurrent test fails). Audit actions:
+  `advisory.created`, `.updated`, `.version_created`, `.approved`, `.published`,
+  `.changes_requested`, `.lifted`, `.acknowledged`, `.delivered` (the ledger).
+- **E-Advisory** (`955b1f3`): sent after the publishing transaction commits, best-effort per
+  traveler; a failed send is logged and not recorded, so a later delivery pass retries it.
+- **Retention:** nothing deletes a user row, so acknowledgements stay with the anonymized user.
+- **Surfaces:** desk `554d2e1`, storefront `59941eb`, layout fixes `20da8fc`; resolutions in the
+  ADR 0006 M7 amendment. E2E `9bb1889`; live `dba07e8`.

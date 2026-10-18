@@ -578,3 +578,48 @@ migration, and show provider progress from the dispatch ledger. No token was add
   arranged; no provider is named. It shows on the trip page while the desk confirms the trip and
   on the accepted proposal; the desk's proposal detail carries a one-line summary.
 
+
+## Amendment, 2026-10-18: M7 advisories, resolved by the build
+
+The owner approved M7 as recommended (D1a–D8a). The desk tab and the storefront surfaces are
+built on the existing tokens and DS 03's `CrisisBanner`; no token was added.
+
+- **Desk list (A-Content).** The board's table (advisory with reference and author, severity,
+  regions · dates, status), rows awaiting approval tinted with the existing `attention` row tone.
+  Only the Advisories tab exists, so the section shows no tab row and `/content` opens on it; the
+  board's Blog, Destinations, FAQ and Media tabs wait for a CMS decision (M7 D1).
+- **Editor.** The banner preview on top in the travelers' wording (acknowledge, dismiss), then
+  severity as radios with the board's rule under each, regions as the 16 province checkboxes plus
+  "Whole country" and region shortcuts read from the tenant's `provinces.json` (West, Centre,
+  Oriente, Isla) instead of the board's five fixed chips, the window in Havana time (the desk's
+  zone), "Shows on" as checkboxes (the worker-app broadcast is not drawn, ADR 0007), the source,
+  the source language, and the texts per tenant language as DS 03 tabs marked "missing" until
+  filled. The approval card sits beside the editor from `xl` and above it below; it lists who
+  approved with role and time, what is still awaited, and the missing translations. "Publish
+  now" for a scheduled advisory is not drawn (a new version changes the window); "Unschedule" is
+  the lift of a scheduled one.
+- **Published view.** The banner as travelers see it, the facts, and the board's live note built
+  from data: when it published, approvals, travelers emailed (the delivery ledger) and
+  acknowledgements; "Edit (new version)" and "Lift advisory".
+- **Site banner.** Every active critical advisory, then the most severe info or caution the
+  visitor has not dismissed. It sits above the header in the page flow and scrolls away like the
+  other strips, because the header is the sticky element and two sticky bars would overlap; it
+  takes the "Cuba right now" strip's place while it shows. Dismissal is a first-party cookie (a
+  per-browser convenience the server can read, so a dismissed banner never flashes back); a
+  critical banner has no close, a signed-in traveler's acknowledgement is recorded and the banner
+  starts collapsed to DS 03's dot afterwards, and an anonymous visitor's collapses for the visit.
+  The banner's text keeps a 12 rem basis so a long call to action wraps under it on a phone.
+- **Travel info.** "Current advisories" leads the page (`#advisories`, the banner's link target)
+  as DS 03 alerts with severity, regions, window and source, then "Earlier advisories" from the
+  last year as quiet cards marked Ended, Lifted or Updated. The board's per-region conditions
+  table, review cadence and 30-day log are not drawn (no conditions source).
+- **Package page and Booking step 1.** The same alert under the title (package) and under the
+  step heading (booking) for each active advisory covering the trip's provinces, whole-country
+  ones included.
+- **E-Advisory.** The shared email shell: severity label, the advisory's own headline, body and
+  source in the traveler's language (else the source language), the reached trip, dates and
+  regions, a line that the desk contacts them before a service changes, the acknowledgement
+  request for critical, the conditions button and the board's footer (published, reference,
+  expiry, booking). The board's per-service impact lines ("Cayo Jutías might move"), "no price
+  changes" and the SMS/emergency-contact line are not written: the platform holds no such data
+  and SMS has no provider.

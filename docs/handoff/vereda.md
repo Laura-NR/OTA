@@ -1,142 +1,110 @@
-# Handoff — vereda — updated 2026-10-18 05:00
+# Handoff — vereda — updated 2026-10-18 17:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
-Decisions: ADR 0006 (design system; amended through 2026-10-18 for Phase 4, M4, M5, Phase 6 and
-the Confirmation screen) and ADR 0007 (worker app).
+Decisions: ADR 0006 (design system; amended through 2026-10-18 for Phase 4, M4, M5, Phase 6, the
+Confirmation screen, the Custom builder and M7) and ADR 0007 (worker app).
 
 ## State
-- **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done; M1–M5 are complete**
-  with their surfaces. Commits are local on `vereda`; the owner pushes
+- **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done; M1–M5 and M7 are
+  complete with their surfaces.** Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-17/18), no migration, 15 commits `a0344d0`…`bd8010a` plus the docs commit:**
-  - **Confirmation screen** (`/account/reservations/<id>/confirmation`): opens when the booking is
-    CONFIRMED/IN_PROGRESS/COMPLETED and money was received (`hasConfirmation` in `@ota/domain`),
-    else redirects to the trip page; the trip page shows a success strip with "View your
-    confirmation". Hero (voucher download, an iCalendar file from `tripCalendar`, Message us),
-    "Before you fly" (`preTripSteps`: US certification, next payment, Travel info), traveler
-    documents only (no work orders), services with Confirmed/Being arranged chips, a summary
-    aside (total, paid instalments with rail, refunds, balance due, Pay early), the Review only
-    when COMPLETED. `GET /me/reservations/:id?locale=` gained `trip` (package/tier names, locale
-    overlay) and `travelers` (names).
-  - **D-Proposal PDF**: rendered on publish (`renderProposalHtml`, en/es/fr), stored in object
-    storage at `proposals/<id>/v<n>.pdf` (`pdfKey`), attached to the proposal email; read at
-    `GET /me/proposals/:id/versions/:vid/pdf` (owner) and `GET /proposals/:id/versions/:vid/pdf`
-    (ops). Best-effort: a render failure sends the version without it (`hasPdf: false`).
-  - **Renderer fix** (`b85a1db`): `@ota/documents` relaunches a disconnected or failed Chromium
-    instead of reusing the dead handle forever.
-  - **Composer**: Route, Day by day and Options lists, seeded from the current version; shown on
-    the traveler's proposal page and in the PDF.
-  - **Phase 6 emails** (`NotificationsModule`, `RemindersService`, `RetentionService`):
-    E-Invoice on entering SECURED_AND_INVOICED, E-Confirmed (voucher + invoice attached) on
-    entering CONFIRMED; 24 h/2 h window reminders (15-minute BullMQ scan, audit
-    `payment.window_reminder_sent` keyed by deadline, `POST /payments/reminders/window-scan`);
-    the 7/3/1 scan now BALANCE only; a daily 08:00 scan (`POST /notifications/scan`) for the trip
-    review request + one reminder after 5 days (`email.review_request_sent`) and the T−7
-    reconfirmation (`email.trip_reconfirm_sent`); E-Retention localized + reminder at day 23
-    (`retention.reminder_sent`, scan result gains `reminded`).
-- **After the owner's answers (2026-10-18, "all your recommendations"), no migration:**
-  - **Work orders** (`5a8356e`): the traveler's trip queries leave WORK_ORDER out (list, count,
-    detail) and a traveler's download of one is 403; ops roles still read them.
-  - **Provider progress** (`0087946`): `providerProgress` in `@ota/domain` reads the dispatch
-    ledger (services confirmed / awaiting / being arranged, requests sent / answered); on the trip
-    detail and the proposal DTO, shown on the trip page while confirming, on the accepted
-    proposal, and as a line on the desk proposal.
-  - **Designed Custom builder** (`c550a58`…`125e3bf`): `/custom` is the board's five steps with a
-    route of provinces (nights, stay style), pace, interests, transport, activities from the
-    catalogue, guiding, interpreter, step-free, nationality, language, budget, notes and a
-    running estimate (`customTripEstimate`) from the manifest's new `customBuilder` block
-    (placeholder rates). The request payload gains optional `route`, `transport`, `guiding`,
-    `interpreter`, `stepFree`; unknown styles are refused. The desk sees the answers and the
-    composer seeds its stops from the route. `package-builder.tsx` is gone.
-  - **M7 drafted and approved** (D1a–D8a) in `docs/schema-m7-advisories.md`; the migration is
-    not generated yet.
-- **Not built:** E-Advisory/E-Options (M7/M8 migrations), SMS/push, Phase 8.
+- **This session (2026-10-18), 16 commits `1c70a1e`…`20da8fc` plus the docs commit:**
+  - **Document downloads** (`1c70a1e`, approved): `DocumentsService.read` lets the ops roles read
+    any document and anyone else only a booking they own (traveler documents, never work
+    orders); a SERVICE_WORKER is 403. Unit test + matrix test, both fail on the old code.
+  - **M7 advisories** (approved D1a–D8a), migration `20261018100924_advisories` (`2557ae4`, §6
+    verbatim). Rules `packages/domain/src/advisories/advisory.ts`; DTOs
+    `packages/schemas/src/advisory.ts`; API `apps/api/src/advisories/` (desk list/create/save/
+    version/approve/request-changes/lift, public `active` + `history`, `/me/advisories/
+    acknowledgements` + `/:id/acknowledge`; row-locked approvals; E-Advisory after commit with the
+    `advisory.delivered` audit ledger); E-Advisory template `travel-advisory.ts`; desk
+    `/content/advisories` (list, `new`, `[id]` editor + approval card + live view; nav link
+    shown); storefront `AdvisoryBanner` in `site-strips.tsx` (replaces the conditions strip while
+    shown; dismissal cookie `ota_advisories_dismissed`; critical acknowledged), Travel info
+    `#advisories` list + history, `AdvisoryNotice` on package pages and booking step 1.
+    `CrisisBanner` gained optional `onDismiss`/`dismissLabel`/`onAcknowledge`/
+    `defaultAcknowledged`. `docs/schema-m7-advisories.md` §7 records what the build added.
+  - **SIGTERM bug fixed** (`ba3e9c0`, Article 7 below): `@ota/documents` launches Chromium with
+    Playwright's signal handlers off.
+  - **M8 drafted** for review: `docs/schema-m8-disruptions.md` (D1–D9, no migration).
+- **Not built:** E-Options (M8), SMS/push, Phase 8; A-Content's blog/FAQ/media/conditions tabs
+  (M7 D1, tenant content).
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
-  samples, the deposit's refundability and proof retention, the M5 sample terms.
+  samples, the deposit's refundability and proof retention, the M5 sample terms, the builder rates.
 
-## Verified (2026-10-18 04:20, dev stack stopped for the build)
+## Verified (2026-10-18, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **618 passed / 15 skipped**, 0 cached (domain 182, api 259/14
-  skipped, schemas 39, config 29, email 18, documents 18, ui 31, theming 14, payments 8,
+- `TURBO_FORCE=true pnpm test` **657 passed / 18 skipped**, 29/29 tasks (domain 204, api 266/17
+  skipped, schemas 43, ui 33, config 29, email 21, documents 19, theming 14, payments 8,
   imports 5, reports 4, ai 4, i18n 4, storage 3/1 skipped).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- `pnpm e2e` **58/58** (`.next` deleted first), 6.4 min; the M5 spec now drives the designed
-  builder (route, styles, activity, guide, estimate) and checks the desk's seeded stop and the
-  provider card.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **14/14** (proposals 3:
-  the builder's route is stored and an unknown stay style refused).
-- The work-order test fails on the old code and passes on the new (stash check).
-- Browser (temporary specs, removed): the builder's route and activities steps at
-  390/1024/1280, `scrollWidth == viewport`; `/tmp/ota-builder-*.png`. Earlier this session:
-  Confirmation, proposal page and composer, trip strip (`/tmp/ota-confirmation-*`,
-  `/tmp/ota-proposal-*`, `/tmp/ota-trip-strip-390.png`).
+- `pnpm e2e` **59/59** (`.next` deleted first), 6.7 min; adds `advisories.spec.ts` (draft → Super
+  Admin + Operations Admin approve → E-Advisory in Mailpit → storefront acknowledgement → Travel
+  info) and `admin-shell.spec` now expects the Content link. After the run the API (which had
+  rendered PDFs) exited on a plain SIGTERM.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **17/17** (adds advisories 3).
+  No advisory, `adv*` user or E2EADV01 rows left afterwards.
+- M7 live: `advisories.integration.test.ts` 3/3; with the `FOR UPDATE` removed the concurrent
+  two-person approval fails 3/3 runs (the lock is load-bearing). The download tests fail on the
+  old code (stash check).
+- SIGTERM: standalone repro (render one PDF, SIGTERM self) stayed alive before the fix and exits
+  143 after, with no Chromium left; live on the dev API, after a PDF render a `node --watch`
+  restart left the old PID on :3001 before the fix and replaced it after.
+- Browser (temporary spec, removed): home, package, Travel info, desk list, editor and live view
+  at 390/1024/1280, `scrollWidth == viewport`; computed banner colours caution `#FEF3C7`/`#92400E`,
+  info `#E3F2FD` (the board's); dismissal survives a reload. Screenshots
+  `/tmp/claude-1000/-home-genyst-OTA/97a1e45d-b41c-4925-b6b8-427530ac580a/scratchpad/m7-*.png`.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
-- Scans skip a missed day (7/3/1, T−7); the window scan runs every 15 minutes, so the "2 hours"
-  email goes out 1¾–2 h before the deadline. E-Invoice/E-Confirmed fire once by construction
-  (each status is entered once).
-- E-NPS asks for the 1–5 Review, not a 0–10 NPS; trips completed more than 30 days ago are never
-  asked (so shipping the scan does not mail old travelers).
-- The proposal PDF goes to the account's own email; the proposal page stays sign-in only.
-- **Approved, not yet done:** `DocumentsService.read` restricts only TRAVELER; any other
-  authenticated role, including SERVICE_WORKER, can download any booking's documents. The owner
-  approved (2026-10-18) limiting downloads to the booking's owner and the operations roles
-  (OPERATIONS_ADMIN, ADMINISTRATIVE_SUPPORT, SUPER_ADMIN); the next session implements it with a
-  test and an authorization-matrix entry.
-- The builder's estimate uses the manifest's placeholder rates; `customBuilder` null hides it.
+- E-Advisory adds a rule the doc did not state: the trip must overlap the advisory's window.
+  Re-publishing a new version emails again unless the desk unticks "Email to affected travelers".
+- Anonymous visitors can collapse a critical banner for the visit (no record); only signed-in
+  acknowledgements are stored (D8).
+- The advisory banner is not sticky (the header is); recorded in the ADR 0006 M7 amendment.
+- Scans skip a missed day (7/3/1, T−7); the window scan runs every 15 minutes. E-NPS asks for the
+  1–5 Review. The proposal PDF goes to the account's own email.
+- **For the owner:** M8 D1–D9 (`docs/schema-m8-disruptions.md`), and the open items under Next.
 
 ## Traps
-- **A dev API that ignores SIGTERM.** After a `node --watch` restart (e.g. rebuilding
-  `@ota/documents`) or at the end of `pnpm e2e`, the API logs "Waiting for graceful
-  termination…" and keeps serving the old code; the signal kills its Chromium child. Stop the
-  stack by port PID and `kill -9` the API if :3001 is still listening after ~15 s; restart
-  `pnpm dev` after rebuilding a workspace package.
-- **A staged `git rm` rides into the next commit** (hit again this session: the builder's deletion
-  landed in the config commit). Commit the deletion with its replacement, or check
-  `git status` before each commit; the fix used was `git reset --soft` of the unpushed commits.
-- `pgrep -f "turbo run dev"` matches the calling shell (its command line contains the pattern):
-  find PIDs with `ss -ltnp "sport = :300x"` and `ps -eo pid,args | awk … $0 !~ /awk/`.
-- The `en` locale formats US dates ("Jan 14, 2027", "06:35 PM UTC"); e2e expectations follow it.
-- `page.request` resolves a relative URL against the back-office `baseURL`; prefix storefront
-  links with `STOREFRONT_URL`.
-- The scans email every matching booking in the dev DB, not only fixtures; e2e filters Mailpit by
-  booking code. `notifications.spec` clears Mailpit after `signIn`.
-- Live tests that build `ReservationsService` by hand now pass a `NotificationsService` stub.
-- Earlier traps still apply (rebuild `@ota/email`/`@ota/schemas`/`@ota/i18n` before the dev API
-  sees changes; Prisma JSON path filters; reminder fixtures own audit rows; M5 unique
-  `acceptedVersionId`; `Prisma` as a value import in `ProposalsService`; ICU spaces; `.next` after
-  a build; `getByText` substrings need `exact`; no `prisma format`; append-only affidavits).
+- **SIGTERM (fixed, `ba3e9c0`).** Mechanism: Playwright's `launch()` defaults
+  `handleSIGTERM: true`; its handler closes the browsers and never exits, and any SIGTERM
+  listener turns off Node's default exit, so after the first PDF the API survived `node --watch`
+  restarts and the end of `pnpm e2e`. If it recurs, check `process.listenerCount('SIGTERM')` in the
+  API. Note `kill` on the top `pnpm dev` only kills pnpm; signal turbo
+  (`@turbo/linux-64/bin/turbo run dev`) to stop the tasks.
+- `/advisories/active` and `/history` must stay declared before `/:id` in
+  `advisories.controller.ts` (the UUID pipe would 400 them, the role guard 401 them).
+- The e2e advisory spec creates `advisory-ops-e2e@example.test` (OPERATIONS_ADMIN) and booking
+  `E2EADV01`, and deletes them with every advisory whose headline starts "E2E storm watch".
+- A published critical advisory shows on every storefront page; a leftover one would add a second
+  "Travel advisory" region to other specs. `select count(*) from advisories` should be 0 after
+  the suites.
+- A desk editor inside the 20 rem approval layout needs `xl`; at `lg` the cards overflow.
+- Earlier traps still apply (rebuild a workspace package before the dev servers see it; `.next`
+  after a build; `getByText` substrings need `exact`; no `prisma format`; append-only affidavits;
+  ICU spaces; `pgrep -f` matches the calling shell; filter Mailpit by booking code; hand-built
+  `ReservationsService` needs a `NotificationsService` stub).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones:
-  - "2026-10-18: the Confirmation screen is `/account/reservations/<id>/confirmation`; it opens
-    only when `hasConfirmation(status, paid)` (CONFIRMED or later and money received), else it
-    redirects to the trip page. It lists traveler documents only, never WORK_ORDER."
-  - "2026-10-18: proposal PDFs live in object storage at `proposals/<id>/v<n>.pdf`
-    (`ProposalVersion.pdfKey`), rendered best-effort on publish and attached to the proposal
-    email; read through `/me/proposals/:id/versions/:vid/pdf` (owner) or
-    `/proposals/:id/versions/:vid/pdf` (ops)."
-  - "2026-10-18: Phase 6 traveler emails: E-Invoice/E-Confirmed fire from
-    `ReservationsService.transition`; `NotificationsModule` runs a daily 08:00 scan (review request
-    + reminder, T−7 reconfirm; `POST /notifications/scan`); `RemindersService.scanWindows` runs
-    every 15 min (24 h/2 h; `POST /payments/reminders/window-scan`) and the 7/3/1 scan covers
-    BALANCE only; retention sends one reminder at day 23. All are idempotent through audit rows
-    (`email.*`, `payment.window_reminder_sent`, `retention.reminder_sent`), no migration."
-  - "2026-10-18: a dev API can ignore SIGTERM after a watch restart and keep serving stale code;
-    stop it by port PID (kill -9 if needed) and restart `pnpm dev` after rebuilding a package."
+  - "2026-10-18: M7 advisories live in `apps/api/src/advisories`; publication is an approval
+    (INFO/CAUTION one Operations/Super Admin, CRITICAL one of each, two people) under a row lock,
+    and E-Advisory is idempotent through `advisory.delivered` audit rows. Public reads are
+    `/advisories/active` and `/advisories/history`; acknowledgements `/me/advisories/*`."
+  - "2026-10-18: `@ota/documents` launches Chromium with `handleSIGINT/SIGTERM/SIGHUP: false`;
+    Playwright's handlers would keep the API alive after SIGTERM. Keep them off."
+  - "2026-10-18: document downloads are the booking's owner (no work orders) or the ops roles."
 
 ## Next
-1. Generate M7 as approved (`docs/schema-m7-advisories.md` §6; `prisma migrate dev --name
-   advisories`, never `prisma format`) and build §5: domain rules, API + authorization matrix,
-   desk advisories tab, storefront banner / Travel info list / package and booking notices,
-   E-Advisory with a Mailpit e2e, the critical acknowledgement, retention.
-2. Limit `GET /documents/:id/download` to the booking's owner and the ops roles (approved).
-3. Investigate why the API does not exit on SIGTERM (BullMQ/Redis handles or the PDF browser).
-4. Draft M8 (disruption cases, playbooks, traveler options; E-Options) for review.
-5. Owner, still open: the M4/M5/builder placeholders, the passport-key backup, the AGENTS.md §C
-   lines proposed above.
+1. Owner: answer M8 D1–D9 (`docs/schema-m8-disruptions.md`); then generate it and build §5
+   (Disruptions section, E-Options, trip-page options card).
+2. Owner, still open: the M4/M5/builder placeholders, counsel's legal texts, OFAC categories, card
+   surcharge, deposit refundability and proof retention, the passport-key backup, the AGENTS.md §C
+   lines above.
+3. Then the remaining Phase 5/6 items as their migrations land (M6, M9, M10), SMS once a provider
+   is chosen.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -361,3 +329,18 @@ the Confirmation screen) and ADR 0007 (worker app).
 - 2026-10-18 — the owner approved limiting document downloads to the booking's owner and the
   operations roles (closes the SERVICE_WORKER gap); not implemented this session.
 
+- 2026-10-18 — M7 generated and built as approved; the build added `request-changes`, a public
+  history and an acknowledgements read, a row lock on approvals, and the window-overlap rule for
+  E-Advisory (`docs/schema-m7-advisories.md` §7; ADR 0006 M7 amendment).
+- 2026-10-18 — a critical advisory's first approval may come before every translation; only the
+  publishing approval checks them (D6 says a missing translation blocks *publishing*).
+- 2026-10-18 — info/caution dismissal is a first-party cookie rather than localStorage, so the
+  server leaves dismissed banners out and nothing flashes back; it holds advisory ids only.
+- 2026-10-18 — the SIGTERM fix is the narrow one (Playwright's handlers off); Nest
+  `enableShutdownHooks` was not added, because a hanging `onModuleDestroy` (BullMQ close) would
+  bring the same symptom back. Graceful shutdown for deploys is a separate decision.
+- 2026-10-18 — document downloads limited to the owner and the ops roles, as approved.
+- 2026-10-18 — M8 drafted with recommendations D1(a)–D9(a): manifest playbooks, a case with
+  attached bookings, desk-set severity, one option set per case with a deadline whose default is
+  derived on read, choice behind sign-in, the desk executes choices with existing tools, a
+  per-booking status board, an advisory link, the audit log as case log, compensation via M4.
