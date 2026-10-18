@@ -246,6 +246,37 @@ describe('CrisisBanner', () => {
     expect(markup).toContain('I understand');
     expect(markup).not.toContain('icon-x');
   });
+
+  it('offers a named close on info and warning, never on critical', () => {
+    const props = {
+      label: 'Travel advisory',
+      title: 'Fuel queues',
+      dismissLabel: 'Dismiss',
+    };
+    const caution = html(
+      createElement(CrisisBanner, { ...props, severity: 'warning', onDismiss: noop }),
+    );
+    expect(caution).toContain('aria-label="Dismiss"');
+    const critical = html(
+      createElement(CrisisBanner, { ...props, severity: 'critical', onDismiss: noop }),
+    );
+    expect(critical).not.toContain('aria-label="Dismiss"');
+  });
+
+  it('starts collapsed to the reopen dot once acknowledged', () => {
+    const markup = html(
+      createElement(CrisisBanner, {
+        severity: 'critical',
+        label: 'Travel advisory',
+        title: 'Hurricane warning',
+        acknowledgeLabel: 'I understand',
+        reopenLabel: 'Show the advisory',
+        defaultAcknowledged: true,
+      }),
+    );
+    expect(markup).toContain('aria-label="Show the advisory"');
+    expect(markup).not.toContain('Hurricane warning');
+  });
 });
 
 describe('Dialog', () => {

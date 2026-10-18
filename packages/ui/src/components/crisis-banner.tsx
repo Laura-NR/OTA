@@ -24,6 +24,16 @@ export interface CrisisBannerProps {
   acknowledgeLabel?: string;
   /** The accessible name of the collapsed dot, which reopens the banner. */
   reopenLabel?: string;
+  /** Starts a critical banner collapsed, e.g. once the visitor has acknowledged it. */
+  defaultAcknowledged?: boolean;
+  /** Called when the acknowledge button is pressed, e.g. to record it. */
+  onAcknowledge?: () => void;
+  /**
+   * Info and warning only: shows a ✕ with this accessible name, which calls
+   * `onDismiss`. A critical banner is never dismissed.
+   */
+  dismissLabel?: string;
+  onDismiss?: () => void;
   className?: string;
 }
 
@@ -52,9 +62,13 @@ export function CrisisBanner({
   action,
   acknowledgeLabel,
   reopenLabel,
+  defaultAcknowledged = false,
+  onAcknowledge,
+  dismissLabel,
+  onDismiss,
   className,
 }: CrisisBannerProps) {
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(defaultAcknowledged);
 
   if (severity === 'critical' && acknowledged) {
     return (
@@ -98,10 +112,23 @@ export function CrisisBanner({
         {severity === 'critical' && acknowledgeLabel ? (
           <button
             type="button"
-            onClick={() => setAcknowledged(true)}
+            onClick={() => {
+              setAcknowledged(true);
+              onAcknowledge?.();
+            }}
             className="h-8 rounded-md border border-neutral-0 px-3 text-body-sm font-semibold focus-visible:outline-accent-500"
           >
             {acknowledgeLabel}
+          </button>
+        ) : null}
+        {severity !== 'critical' && onDismiss && dismissLabel ? (
+          <button
+            type="button"
+            aria-label={dismissLabel}
+            onClick={onDismiss}
+            className="-my-2 -mr-2 inline-flex h-touch w-touch items-center justify-center rounded-full"
+          >
+            <Icon name="x" />
           </button>
         ) : null}
       </div>
