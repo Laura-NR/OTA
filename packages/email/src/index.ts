@@ -19,3 +19,16 @@ export type {
   InstalmentReminderEmailInput,
   ReminderInstalmentKind,
 } from './templates/instalment-reminder';
+export { paymentWindowReminderEmail } from './templates/payment-window-reminder';
+export type {
+  PaymentWindowReminderEmailInput,
+  WindowInstalmentKind,
+} from './templates/payment-window-reminder';
+export { bookingSecuredEmail } from './templates/booking-secured';
+export type { BookingSecuredEmailInput } from './templates/booking-secured';
+export { bookingConfirmedEmail } from './templates/booking-confirmed';
+export type { BookingConfirmedEmailInput } from './templates/booking-confirmed';
+export { reviewRequestEmail } from './templates/review-request';
+export type { ReviewRequestEmailInput } from './templates/review-request';
+export { tripReconfirmEmail } from './templates/trip-reconfirm';
+export type { TripReconfirmEmailInput } from './templates/trip-reconfirm';

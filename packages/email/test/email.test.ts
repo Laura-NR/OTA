@@ -10,8 +10,13 @@ import {
   instalmentReminderEmail,
   magicLinkEmail,
   ofacReminderEmail,
+  bookingConfirmedEmail,
+  bookingSecuredEmail,
+  paymentWindowReminderEmail,
   proposalSentEmail,
   retentionNoticeEmail,
+  reviewRequestEmail,
+  tripReconfirmEmail,
   type EmailBranding,
 } from '../src';
 
@@ -48,10 +53,38 @@ describe('retentionNoticeEmail', () => {
 
     expect(email.to).toBe('jane@example.test');
     expect(email.subject).toContain('Authentic Cuba Expeditions');
+    expect(email.subject).toContain('August 9, 2026');
     expect(email.html).toContain('token=abc');
-    expect(email.html).toContain('2026-08-09');
-    expect(email.html).toContain('Keep My Account Active');
+    expect(email.html).toContain('Keep my account active');
+    expect(email.html).toContain('MINTUR-TEST-1234');
     expect(email.text).toContain('token=abc');
+  });
+
+  it("names what is removed and kept, in the traveler's locale, and marks the reminder", () => {
+    const notice = retentionNoticeEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      keepAliveUrl: 'https://app.example.test/retention/keep-alive?token=abc',
+      purgeAt: new Date('2027-04-20T00:00:00Z'),
+      branding,
+      locale: 'es',
+    });
+    expect(notice.subject).toBe(
+      'Tu cuenta de Authentic Cuba Expeditions: consérvala o la anonimizaremos el 20 de abril de 2027',
+    );
+    expect(notice.text).toContain('Hola Jane:');
+    expect(notice.text).toContain('datos de pasaporte');
+    expect(notice.text).toContain('Conservar mi cuenta');
+
+    const reminder = retentionNoticeEmail({
+      to: 'jane@example.test',
+      keepAliveUrl: 'https://app.example.test/retention/keep-alive?token=abc',
+      purgeAt: new Date('2027-04-20T00:00:00Z'),
+      branding,
+      reminder: true,
+    });
+    expect(reminder.subject).toMatch(/^Reminder: /);
+    expect(reminder.text).toContain('Hello,');
   });
 });
 
@@ -228,5 +261,227 @@ describe('createMailer', () => {
     expect(
       createMailer({ SMTP_HOST: 'localhost', MAIL_FROM: 'no-reply@example.test' }),
     ).toBeInstanceOf(SmtpMailer);
+  });
+});
+
+describe('paymentWindowReminderEmail (E-Reminder)', () => {
+  it('gives the hours left, the amount and the UTC deadline, without promising a release', () => {
+    const email = paymentWindowReminderEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      kind: 'DEPOSIT',
+      amount: 620,
+      currency: 'EUR',
+      dueAt: new Date('2026-10-14T18:35:00Z'),
+      hoursLeft: 2,
+      portalUrl: 'https://example.test/account/reservations/r1',
+      locale: 'en',
+      branding,
+    });
+    expect(email.subject).toBe('2 hours left to pay your deposit · ABC12345');
+    expect(email.text).toContain('€620.00');
+    expect(email.text).toContain('October 14, 2026 at 06:35 PM UTC');
+    expect(email.text).toContain('https://example.test/account/reservations/r1');
+    expect(email.text).not.toMatch(/released/i);
+
+    const fr = paymentWindowReminderEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      kind: 'FULL',
+      amount: 1000,
+      currency: 'EUR',
+      dueAt: new Date('2026-10-14T18:35:00Z'),
+      hoursLeft: 24,
+      portalUrl: 'https://example.test/fr/account/reservations/r1',
+      locale: 'fr',
+      branding,
+    });
+    expect(fr.subject).toBe('Plus que 24 heures pour payer votre paiement · ABC12345');
+  });
+});
+
+describe('bookingSecuredEmail (E-Invoice)', () => {
+  it('offers the deposit or the full amount and the window that starts with the choice', () => {
+    const email = bookingSecuredEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      tripName: 'Eco-Tourism in Viñales',
+      startDate: new Date('2027-02-13T00:00:00Z'),
+      endDate: new Date('2027-02-20T00:00:00Z'),
+      total: 3100,
+      currency: 'EUR',
+      deposit: {
+        amount: 620,
+        percent: 20,
+        balance: 2480,
+        balanceDueAt: new Date('2026-12-15T00:00:00Z'),
+      },
+      windowHours: 48,
+      portalUrl: 'https://example.test/account/reservations/r1',
+      locale: 'en',
+      branding,
+    });
+    expect(email.subject).toBe('Your trip is secured · choose how to pay · ABC12345');
+    expect(email.text).toContain('Eco-Tourism in Viñales, February 13 – 20, 2027');
+    expect(email.text).toContain(
+      '- a 20 % deposit of €620.00 now, and the balance of €2,480.00 by December 15, 2026;',
+    );
+    expect(email.text).toContain('- or the full €3,100.00 now.');
+    expect(email.text).toContain('you have 48 hours to pay');
+    expect(email.html.indexOf('48 hours')).toBeLessThan(
+      email.html.indexOf('Choose and pay'),
+    );
+    expect(email.attachments).toBeUndefined();
+
+    const full = bookingSecuredEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      tripName: null,
+      startDate: new Date('2027-02-13T00:00:00Z'),
+      endDate: new Date('2027-02-20T00:00:00Z'),
+      total: 900,
+      currency: 'EUR',
+      deposit: null,
+      windowHours: 48,
+      portalUrl: 'https://example.test/es/account/reservations/r1',
+      locale: 'es',
+      branding,
+    });
+    expect(full.text).toContain('Tu viaje a medida');
+    expect(full.text).toContain('- el importe completo de 900,00 €.');
+  });
+});
+
+describe('bookingConfirmedEmail (E-Confirmed)', () => {
+  const voucher = {
+    filename: 'voucher-ABC12345.pdf',
+    content: Buffer.from('%PDF-1.7'),
+    contentType: 'application/pdf',
+  };
+
+  it('acknowledges the payment, attaches the documents and links the confirmation', () => {
+    const email = bookingConfirmedEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      tripName: 'Eco-Tourism in Viñales',
+      startDate: new Date('2027-02-13T00:00:00Z'),
+      endDate: new Date('2027-02-20T00:00:00Z'),
+      currency: 'EUR',
+      paid: { kind: 'DEPOSIT', amount: 620 },
+      next: { kind: 'BALANCE', amount: 2480, dueAt: new Date('2026-12-15T00:00:00Z') },
+      voucherHeld: false,
+      attachments: [voucher],
+      confirmationUrl: 'https://example.test/account/reservations/r1/confirmation',
+      locale: 'en',
+      branding,
+    });
+    expect(email.subject).toBe(
+      'Confirmed: Eco-Tourism in Viñales, February 13 – 20, 2027 · ABC12345',
+    );
+    expect(email.text).toContain('We received your deposit of €620.00.');
+    expect(email.text).toContain('Your voucher and invoice are attached.');
+    expect(email.text).toContain('the balance of €2,480.00 by December 15, 2026');
+    expect(email.text).toContain(
+      'Open your confirmation: https://example.test/account/reservations/r1/confirmation',
+    );
+    expect(email.attachments).toEqual([voucher]);
+  });
+
+  it('says the voucher waits for the US certification and when it is paid in full', () => {
+    const email = bookingConfirmedEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      tripName: null,
+      startDate: new Date('2027-02-13T00:00:00Z'),
+      endDate: new Date('2027-02-20T00:00:00Z'),
+      currency: 'EUR',
+      paid: { kind: 'FULL', amount: 900 },
+      next: null,
+      voucherHeld: true,
+      attachments: [],
+      confirmationUrl: 'https://example.test/account/reservations/r1/confirmation',
+      locale: 'en',
+      branding,
+    });
+    expect(email.text).toContain(
+      'The voucher follows once every US traveler has certified',
+    );
+    expect(email.text).toContain('Your trip is paid in full.');
+    expect(email.attachments).toBeUndefined();
+  });
+});
+
+describe('reviewRequestEmail (E-NPS, adapted)', () => {
+  it('asks for the trip rating once, and says the reminder is the last', () => {
+    const first = reviewRequestEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      tripName: 'Eco-Tourism in Viñales',
+      reminder: false,
+      portalUrl: 'https://example.test/account/reservations/r1',
+      locale: 'en',
+      branding,
+    });
+    expect(first.subject).toBe('How was Eco-Tourism in Viñales? · ABC12345');
+    expect(first.text).toContain('Rate it from 1 to 5');
+    expect(first.text).not.toContain('only reminder');
+
+    const reminder = reviewRequestEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      tripName: null,
+      reminder: true,
+      portalUrl: 'https://example.test/account/reservations/r1',
+      locale: 'fr',
+      branding,
+    });
+    expect(reminder.subject).toBe('Une minute pour votre voyage ? · ABC12345');
+    expect(reminder.text).toContain("C'est le seul rappel que nous envoyons.");
+  });
+});
+
+describe('tripReconfirmEmail (E-Reconfirm, reduced)', () => {
+  it('gives the first meeting, asks for the flight, the balance and attaches the voucher', () => {
+    const voucher = {
+      filename: 'voucher-ABC12345.pdf',
+      content: Buffer.from('%PDF-1.7'),
+      contentType: 'application/pdf',
+    };
+    const email = tripReconfirmEmail({
+      to: 'jane@example.test',
+      name: 'Jane',
+      bookingCode: 'ABC12345',
+      tripName: 'Eco-Tourism in Viñales',
+      startDate: new Date('2027-02-13T00:00:00Z'),
+      endDate: new Date('2027-02-20T00:00:00Z'),
+      firstMeeting: {
+        province: 'Pinar del Río',
+        startsAt: new Date('2027-02-13T15:00:00Z'),
+      },
+      balance: { amount: 2480, currency: 'EUR', dueAt: new Date('2027-01-14T00:00:00Z') },
+      voucher,
+      portalUrl: 'https://example.test/account/reservations/r1',
+      travelInfoUrl: 'https://example.test/travel-info',
+      locale: 'en',
+      branding,
+    });
+    expect(email.subject).toBe('One week to go · Eco-Tourism in Viñales · ABC12345');
+    expect(email.text).toContain(
+      '- Your first service starts in Pinar del Río on February 13, 2027 at 03:00 PM UTC.',
+    );
+    expect(email.text).toContain('arrival flight');
+    expect(email.text).toContain(
+      '- Your balance of €2,480.00 is due by January 14, 2027.',
+    );
+    expect(email.text).toContain('https://example.test/travel-info');
+    expect(email.attachments).toEqual([voucher]);
   });
 });

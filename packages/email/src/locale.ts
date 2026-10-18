@@ -42,3 +42,32 @@ export function emailList(values: readonly string[], locale: EmailLocale): strin
     ...values,
   ]);
 }
+
+/** An instant such as a payment window's end, read in UTC and labelled so. */
+export function emailInstant(value: Date | string, locale: EmailLocale): string {
+  return plainSpaces(
+    new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC',
+      timeZoneName: 'short',
+    }).format(new Date(value)),
+  );
+}
+
+/** A trip's calendar days, stored at UTC midnight ("13–20 February 2027"). */
+export function emailDateRange(
+  start: Date | string,
+  end: Date | string,
+  locale: EmailLocale,
+): string {
+  return plainSpaces(
+    new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'UTC' }).formatRange(
+      new Date(start),
+      new Date(end),
+    ),
+  );
+}
