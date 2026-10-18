@@ -76,6 +76,34 @@ export function zonedCalendarDay(instant: Date, timeZone: string = OPS_TIME_ZONE
   return new Date(Date.UTC(field('year'), field('month') - 1, field('day')));
 }
 
+/**
+ * The wall clock of `instant` in `timeZone` as a `datetime-local` value
+ * ("2026-10-06T15:00"), so a desk form shows Havana time.
+ */
+export function zonedWallClock(instant: Date, timeZone: string = OPS_TIME_ZONE): string {
+  const local = new Date(instant.getTime() + zoneOffsetMs(instant, timeZone));
+  return local.toISOString().slice(0, 16);
+}
+
+/**
+ * The instant a `datetime-local` value ("2026-10-06T15:00") names in
+ * `timeZone`, or null when it is not one. As in `zonedMidnight`, the offset
+ * is read twice across a daylight-saving change.
+ */
+export function zonedInstant(
+  wallClock: string,
+  timeZone: string = OPS_TIME_ZONE,
+): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(wallClock);
+  if (!match) {
+    return null;
+  }
+  const [, year, month, day, hour, minute] = match.map(Number) as number[];
+  const asUtc = Date.UTC(year!, month! - 1, day!, hour!, minute!);
+  const guess = asUtc - zoneOffsetMs(new Date(asUtc), timeZone);
+  return new Date(asUtc - zoneOffsetMs(new Date(guess), timeZone));
+}
+
 export interface MonthRange {
   year: number;
   month: number;

@@ -182,7 +182,9 @@ export {
   OPS_TIME_ZONE,
   monthRange,
   zonedCalendarDay,
+  zonedInstant,
   zonedMidnight,
+  zonedWallClock,
   zonedYearMonth,
   type MonthRange,
 } from './time/ops-calendar';

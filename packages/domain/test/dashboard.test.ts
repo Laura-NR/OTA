@@ -10,7 +10,9 @@ import {
   relativeChange,
   serviceItemAlert,
   timerElapsed,
+  zonedInstant,
   zonedMidnight,
+  zonedWallClock,
 } from '../src';
 
 const NOW = new Date('2026-10-14T18:00:00Z');
@@ -159,5 +161,23 @@ describe('monthRange (Havana)', () => {
     // Cuba falls back at 01:00 on the first Sunday of November (1 Nov 2026).
     expect(zonedMidnight(2026, 11, 1).toISOString()).toBe('2026-11-01T04:00:00.000Z');
     expect(zonedMidnight(2026, 11, 2).toISOString()).toBe('2026-11-02T05:00:00.000Z');
+  });
+});
+
+describe('Havana wall clock for desk forms', () => {
+  it('shows an instant as Havana time and reads it back', () => {
+    // Havana is UTC−4 in October (daylight time) and UTC−5 in December.
+    expect(zonedWallClock(new Date('2026-10-06T19:00:00Z'))).toBe('2026-10-06T15:00');
+    expect(zonedInstant('2026-10-06T15:00')?.toISOString()).toBe(
+      '2026-10-06T19:00:00.000Z',
+    );
+    expect(zonedInstant('2026-12-01T09:30')?.toISOString()).toBe(
+      '2026-12-01T14:30:00.000Z',
+    );
+  });
+
+  it('refuses a value that is not a date and time', () => {
+    expect(zonedInstant('2026-10-06')).toBeNull();
+    expect(zonedInstant('soon')).toBeNull();
   });
 });
