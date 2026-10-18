@@ -9,7 +9,8 @@ export function storefrontBaseUrl(): string {
   ).replace(/\/$/, '');
 }
 
-function accountPath(
+/** A storefront page in the traveler's locale; the tenant's primary locale is unprefixed. */
+export function storefrontPageUrl(
   tenant: TenantConfig,
   locale: string | null | undefined,
   path: string,
@@ -25,7 +26,20 @@ export function accountReservationUrl(
   locale: string | null | undefined,
   reservationId: string,
 ): string {
-  return accountPath(tenant, locale, `/account/reservations/${reservationId}`);
+  return storefrontPageUrl(tenant, locale, `/account/reservations/${reservationId}`);
+}
+
+/** A trip's Confirmation screen, reached once the first payment confirmed it. */
+export function accountConfirmationUrl(
+  tenant: TenantConfig,
+  locale: string | null | undefined,
+  reservationId: string,
+): string {
+  return storefrontPageUrl(
+    tenant,
+    locale,
+    `/account/reservations/${reservationId}/confirmation`,
+  );
 }
 
 /** A traveler's proposal page, behind the same sign-in as the trip page. */
@@ -34,5 +48,5 @@ export function accountProposalUrl(
   locale: string | null | undefined,
   proposalId: string,
 ): string {
-  return accountPath(tenant, locale, `/account/proposals/${proposalId}`);
+  return storefrontPageUrl(tenant, locale, `/account/proposals/${proposalId}`);
 }

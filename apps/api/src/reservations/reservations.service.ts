@@ -23,6 +23,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
 import { DocumentsService } from '../documents/documents.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const ROW_CONTEXT = {
@@ -165,6 +166,7 @@ export class ReservationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly documents: DocumentsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -348,7 +350,9 @@ export class ReservationsService {
 
     // Entering CONFIRMED issues the legal document set (spec §4.4). Generation
     // is best-effort: the transition is already persisted, and documents can be
-    // regenerated via POST /reservations/:id/documents if this fails.
+    // regenerated via POST /reservations/:id/documents if this fails. The
+    // traveler is then emailed (E-Confirmed, with the documents); entering
+    // SECURED_AND_INVOICED emails E-Invoice. Both sends are best-effort too.
     if (input.to === ReservationStatus.Confirmed) {
       try {
         await this.documents.generate(id, actor);
@@ -358,6 +362,10 @@ export class ReservationsService {
           error instanceof Error ? error.stack : undefined,
         );
       }
+      await this.notifications.bookingConfirmed(id);
+    }
+    if (input.to === ReservationStatus.SecuredAndInvoiced) {
+      await this.notifications.bookingSecured(id);
     }
 
     return toDto(updated);

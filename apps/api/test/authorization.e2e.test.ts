@@ -90,6 +90,8 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsRead' },
   { method: 'get', path: '/payments', allowed: 'opsRead' },
   { method: 'post', path: '/payments/reminders/scan', allowed: 'opsWrite' },
+  { method: 'post', path: '/payments/reminders/window-scan', allowed: 'opsWrite' },
+  { method: 'post', path: '/notifications/scan', allowed: 'opsWrite' },
   { method: 'post', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsWrite' },
   {
     method: 'post',

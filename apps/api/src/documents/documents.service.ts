@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
@@ -88,6 +89,8 @@ function toDocumentInput(reservation: ReservationForDocuments): ReservationDocum
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(DOCUMENT_RENDERER) private readonly renderer: DocumentRenderer,
@@ -133,6 +136,45 @@ export class DocumentsService {
       throw new ForbiddenException('Document belongs to another traveler');
     }
     return { document, data: await this.storage.read(document.storageKey) };
+  }
+
+  /**
+   * The latest stored file of each requested type, named for an email
+   * attachment (`voucher-<code>.pdf`). Types never issued, and files that
+   * cannot be read, are left out (and logged), so a missing file never stops
+   * the email; the supplier work orders are never asked for here.
+   */
+  async attachments(
+    reservationId: string,
+    types: readonly DocumentType[],
+  ): Promise<{ type: DocumentType; filename: string; content: Uint8Array }[]> {
+    const documents = await this.prisma.document.findMany({
+      where: { reservationId, type: { in: [...types] } },
+      orderBy: { generatedAt: 'desc' },
+      include: { reservation: { select: { bookingCode: true } } },
+    });
+    const latest = types
+      .map((type) => documents.find((document) => document.type === type))
+      .filter((document): document is (typeof documents)[number] => Boolean(document));
+    const files = await Promise.all(
+      latest.map(async (document) => {
+        try {
+          return {
+            type: document.type as DocumentType,
+            filename: `${document.type.toLowerCase()}-${document.reservation.bookingCode}.pdf`,
+            content: await this.storage.read(document.storageKey),
+          };
+        } catch (error) {
+          this.logger.warn(
+            `Document ${document.id} could not be read for an email: ${
+              error instanceof Error ? error.message : 'unknown error'
+            }`,
+          );
+          return null;
+        }
+      }),
+    );
+    return files.filter((file): file is NonNullable<typeof file> => file !== null);
   }
 
   /**

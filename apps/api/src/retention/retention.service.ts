@@ -10,6 +10,7 @@ import { Prisma, Role } from '@ota/db';
 import {
   isRetentionNoticeDue,
   isRetentionPurgeDue,
+  isRetentionReminderDue,
   retentionPurgeAt,
   retentionStatus,
   type RetentionClock,
@@ -116,20 +117,22 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * One pass of the lifecycle job: notices first, then due purges, then the
-   * OFAC affidavits whose five years have run out (M3, D6).
+   * One pass of the lifecycle job: notices first, then their one reminder a
+   * week before the deadline, then due purges, then the OFAC affidavits whose
+   * five years have run out (M3, D6).
    */
   async scan(): Promise<RetentionScanResultDto> {
     const now = new Date();
     const noticed = await this.sendDueNotices(now);
+    const reminded = await this.sendDueReminders(now);
     const purged = await this.purgeExpired(now);
     const affidavitsDeleted = await this.sweepAffidavits(now);
-    if (noticed > 0 || purged > 0 || affidavitsDeleted > 0) {
+    if (noticed > 0 || reminded > 0 || purged > 0 || affidavitsDeleted > 0) {
       this.logger.log(
-        `Retention scan: ${noticed} notice(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted`,
+        `Retention scan: ${noticed} notice(s) sent, ${reminded} reminder(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted`,
       );
     }
-    return { noticed, purged, affidavitsDeleted };
+    return { noticed, reminded, purged, affidavitsDeleted };
   }
 
   /**
@@ -304,6 +307,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
             keepAliveUrl: `${this.linkBaseUrl()}/retention/keep-alive?token=${encodeURIComponent(token)}`,
             purgeAt,
             branding: this.tenant.branding,
+            name: user.fullName,
+            locale: user.locale,
           }),
         );
       } catch (error) {
@@ -333,6 +338,91 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     }
 
     return noticed;
+  }
+
+  /**
+   * E-Retention's one reminder: a week before the deadline, to a traveler who
+   * has not kept the account. The audit log, keyed by the notice it follows,
+   * is the sent ledger, so a re-run never sends twice and no column is added.
+   */
+  private async sendDueReminders(now: Date): Promise<number> {
+    const authSecret = process.env.AUTH_SECRET;
+    if (!authSecret) {
+      return 0;
+    }
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: Role.TRAVELER,
+        anonymizedAt: null,
+        retentionNoticeSentAt: { not: null },
+      },
+    });
+
+    let reminded = 0;
+    for (const user of users) {
+      const noticeSentAt = user.retentionNoticeSentAt!;
+      const clock: RetentionClock = {
+        latestCompletedAt: null,
+        noticeSentAt,
+        consentGrantedAt: user.retentionConsentGrantedAt,
+        anonymizedAt: user.anonymizedAt,
+      };
+      if (!isRetentionReminderDue(clock, now)) {
+        continue;
+      }
+      const already = await this.prisma.auditLog.findFirst({
+        where: {
+          action: 'retention.reminder_sent',
+          entityType: 'User',
+          entityId: user.id,
+          metadata: { path: ['noticeSentAt'], equals: noticeSentAt.toISOString() },
+        },
+        select: { id: true },
+      });
+      if (already) {
+        continue;
+      }
+
+      const purgeAt = retentionPurgeAt(noticeSentAt);
+      const token = signRetentionToken({
+        userId: user.id,
+        expiresAt: purgeAt,
+        secret: authSecret,
+      });
+      try {
+        await this.mailer.send(
+          retentionNoticeEmail({
+            to: user.email,
+            keepAliveUrl: `${this.linkBaseUrl()}/retention/keep-alive?token=${encodeURIComponent(token)}`,
+            purgeAt,
+            branding: this.tenant.branding,
+            name: user.fullName,
+            locale: user.locale,
+            reminder: true,
+          }),
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Retention reminder failed for user ${user.id}: ${
+            error instanceof Error ? error.message : 'unknown error'
+          }`,
+        );
+        continue;
+      }
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'retention.reminder_sent',
+          entityType: 'User',
+          entityId: user.id,
+          metadata: {
+            noticeSentAt: noticeSentAt.toISOString(),
+            purgeAt: purgeAt.toISOString(),
+          },
+        },
+      });
+      reminded += 1;
+    }
+    return reminded;
   }
 
   private async purgeExpired(now: Date): Promise<number> {

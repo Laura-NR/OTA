@@ -13,7 +13,11 @@ import { RefundsController } from './refunds.controller';
 import { RefundsService } from './refunds.service';
 import { BullmqReminderScheduler } from './bullmq-reminders.scheduler';
 import { RemindersController } from './reminders.controller';
-import { NoopReminderScheduler, REMINDER_SCHEDULER } from './reminders.scheduler';
+import {
+  NoopReminderScheduler,
+  REMINDER_SCHEDULER,
+  WINDOW_REMINDER_SCHEDULER,
+} from './reminders.scheduler';
 import { RemindersService } from './reminders.service';
 import { ScheduleController } from './schedule.controller';
 import { ScheduleService } from './schedule.service';
@@ -50,6 +54,21 @@ import { ScheduleService } from './schedule.service';
           return new NoopReminderScheduler();
         }
         return new BullmqReminderScheduler(redisUrl);
+      },
+    },
+    {
+      provide: WINDOW_REMINDER_SCHEDULER,
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL;
+        if (process.env.NODE_ENV === 'test' || !redisUrl) {
+          return new NoopReminderScheduler();
+        }
+        return new BullmqReminderScheduler(redisUrl, {
+          queueName: 'payment-window-reminders',
+          schedulerId: 'payment-window-reminder-scan',
+          // Every 15 minutes, so a 2-hour reminder goes out 1¾–2 hours ahead.
+          repeatEveryMs: 15 * 60_000,
+        });
       },
     },
     {

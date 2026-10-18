@@ -475,3 +475,7 @@ export {
   type ReminderScanResultDto,
   type ScheduleReceiptDto,
 } from './payment-schedule';
+export {
+  notificationScanResultSchema,
+  type NotificationScanResultDto,
+} from './notifications';
