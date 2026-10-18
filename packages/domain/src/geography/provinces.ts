@@ -27,3 +27,26 @@ export const CUBA_PROVINCE_NAMES: Readonly<Record<string, string>> = {
 export function cubaProvinceName(code: string): string {
   return CUBA_PROVINCE_NAMES[code] ?? code;
 }
+
+const fold = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+/**
+ * The code of a province named as catalogue items and service items carry it
+ * ("La Habana" → CU03, accents and case ignored); a code passes through. Null
+ * when the value is not a Cuban province.
+ */
+export function cubaProvinceCode(value: string): string | null {
+  if (CUBA_PROVINCE_NAMES[value]) {
+    return value;
+  }
+  const wanted = fold(value);
+  const entry = Object.entries(CUBA_PROVINCE_NAMES).find(
+    ([, name]) => fold(name) === wanted,
+  );
+  return entry?.[0] ?? null;
+}
