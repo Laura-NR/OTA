@@ -1,7 +1,7 @@
 # M8 Disruptions: schema diff for review
 
-**Status:** **Approved 2026-10-18 as recommended (D1a–D9a).** The migration has **not** been
-generated yet; the next session generates it from §6 and builds §5.
+**Status:** **Approved 2026-10-18 as recommended (D1a–D9a) and landed 2026-10-18.** Migration
+`20261018161050_disruptions` is §6 verbatim; §7 records what the build added.
 **Date:** 2026-10-18
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 (Disruptions, M8) and Phase 6 (E-Options), read
 against the A-Disruption, G-Disruption and E-Options boards (`design/vereda-v1.2/project/`) and
@@ -286,3 +286,45 @@ model DisruptionCaseBooking {
 
 The migration would be generated with `pnpm --filter @ota/db exec prisma migrate dev --name
 disruptions` (never `prisma format`).
+
+## 7. As built (2026-10-18)
+
+- **Migration** `20261018161050_disruptions` (`ed96b87`): §6 verbatim, additive.
+- **Manifest** (`5523ea1`): `disruptions` with `status` (placeholder), `deadlineHours` (4, the
+  desk form's proposal) and the five A-Disruption scenarios. Options are keyed A–D in order and
+  the default must be one of them; supplier names were taken out of the board's options (the
+  desk adapts each option before sending). Texts are in the desk's language.
+- **Rules** (`f83a467`, `packages/domain/src/disruptions/disruption.ts`): the offer state
+  (NOT_SENT, AWAITING, CHOSEN, DEFAULTED) and the effective choice on read; red "Unknown" after
+  4 h (major) or 1 h (emergency) since the last contact, or since the attachment when there was
+  none; a minor case has no timer. Suggested bookings: the advisory's secured statuses, the
+  case's province, under way or starting within 72 h; a case without a province suggests none.
+- **Choice rules the doc left open:** the traveler answers **once**, before the deadline, on an
+  open case; a change goes through the desk (which may already be acting on it). The desk records
+  a phone answer at any time on an open case (source DESK) and may confirm the default only after
+  the deadline (source DEFAULT), which takes the booking off the call list. The traveler's write
+  is conditional (`chosenOptionKey IS NULL`, deadline ahead, case open): proved live, two answers
+  at once record one, and without the condition the test fails 3/3.
+- **Options:** one set per case, editable until any booking was sent it, then fixed. Sending again
+  to an unanswered booking is a new offer (a deadline extension) and is emailed again; an
+  answered booking is refused.
+- **API** (`b2c6f58`): §5's routes plus `GET /disruptions/alerts` (the dashboard figures) and
+  `POST /disruptions/:id/advisory` (drafts the banner as an M7 advisory: severity MINOR→INFO,
+  MAJOR→CAUTION, EMERGENCY→CRITICAL, the province as region, three days, the case's title and
+  summary; an existing draft or review is returned instead). `:bookingId` in the desk routes is the
+  reservation id; `/me/disruptions/:id` is the attached booking's row. Reads: ops roles; writes:
+  Operations Admin and Super Admin. A new advisory version keeps the case link; the advisory DTO
+  gained `disruptionCase`. Audit actions (`entityType: 'DisruptionCase'`): `disruption.opened`,
+  `.booking_attached`, `.severity_changed`, `.owner_changed`, `.updated`, `.step_done`,
+  `.options_updated`, `.options_sent`, `.options_delivered` (the E-Options ledger, keyed by the
+  booking row and the offer's sent time), `.safety_marked` (the note in `note`),
+  `.choice_recorded`, `.advisory_drafted`, `.closed`. A case cannot be reopened.
+- **E-Options** (`d5c8d04`): the shared shell in the traveler's language around the desk's words;
+  the deadline in Havana time; it links to `#disruption-options` on the trip page. Sent after the
+  commit, best-effort; a failed send is retried by the next delivery pass (the next send).
+- **Retention:** the anonymization nulls the bookings' `safetyNote` and drops `note` from this
+  traveler's lines in the shared case log (other travelers' lines stay); states, choices and the
+  case are kept. Proved live in `retention.integration.test.ts` (fails on the old code).
+- **Surfaces:** desk `a823319` (+ layout `da50490`), storefront `50cf8ed`, e2e `f3dbf85`;
+  resolutions in the ADR 0006 M8 amendment.
+

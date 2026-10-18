@@ -623,3 +623,50 @@ built on the existing tokens and DS 03's `CrisisBanner`; no token was added.
   expiry, booking). The board's per-service impact lines ("Cayo Jutías might move"), "no price
   changes" and the SMS/emergency-contact line are not written: the platform holds no such data
   and SMS has no provider.
+
+## Amendment, 2026-10-18: M8 disruptions, resolved by the build
+
+The owner approved M8 as recommended (D1a–D9a). The desk section, the trip-page card and
+E-Options are built on the existing tokens; no token was added.
+
+- **Desk list.** The board has no list, so the section opens on a table of cases (title with
+  reference, scenario and province; opened time and owner; severity; affected bookings with on the
+  ground and arriving in 72 h; status). An open case with a red "Unknown", a call due or a party
+  needing help takes the `attention` row tone, and the reason is written in the row.
+- **New case.** The scenario picker as radios with each scenario's trigger under it, severity as
+  radios with the board's rule under each, the province (16 codes, or "Not regional" for a
+  flight), a title and a summary. The sample-framework notice shows while the manifest block is
+  `placeholder`. The opener becomes the owner.
+- **Case page.** The board's header (reference, severity badge, "Open · 14 h 10 m", opened by,
+  owner, province) and its counts as tags; "Escalate to Super Admin" is not drawn (there is no
+  paging), "Take over" sets the owner and "Close case" ends the case after a confirmation. Severity
+  and the playbook sit side by side from `lg`; the escalation path is the board's text per level.
+  Playbook steps show owner and due time and are ticked with "Mark done" (who and when recorded).
+  Traveler options are the board's A–D cards with who chose each; they are editable as inline
+  fields until sent, then fixed. The send form takes the deadline in Havana time (proposed from the
+  manifest's `deadlineHours`), the default and the attached bookings; the board's channel line is
+  reduced to email, as SMS and in-app buttons have no provider. "Preview as traveler" is not drawn.
+- **Status board.** The board's columns (traveler with nationality and party size, trip, status,
+  last contact with the note and who confirmed it, the answer). An overdue "Unknown" is the solid
+  `timeout` badge with "Past the contact timer" and the `destructive` row tone; a call due is the
+  `attention` tone. The desk's actions (status with how it was confirmed, an answer by phone,
+  "Confirm default") sit on a full-width row under each booking, so the five columns stay in view
+  at `lg`; the board's "Driver" button is not drawn (no driver contact on the booking).
+- **Attach, communications, log.** Attaching lists the suggested bookings as checkboxes plus a
+  booking-code field. Communications shows the linked advisories with their M7 status, "Draft site
+  banner" (which opens the draft in Content) and the count of E-Options sent; the emergency
+  contacts, insurer and supplier broadcast rows are one note that they are not connected yet. The
+  board's "Resources in the province" card is not drawn (no data source). The case log is the
+  audit trail, newest first, in the desk's language.
+- **Dashboard.** The alerts card gains red Unknowns (`timeout`), parties needing help
+  (`destructive`) and calls due (`attention`), each linking to Disruptions.
+- **Trip page.** The options card leads the trip page while the case is open, framed with the
+  `warning-500` border: the case reference as an overline, title, summary, the deadline in Havana
+  time, the options as DS 02 radio cards (the default marked), "Confirm option B", the silence rule
+  and the compensation text. After an answer, or past the deadline, it shows what stands. There is
+  no public short link (D4).
+- **E-Options.** The shared shell: booking and case reference, the case title and summary, the
+  options as points with their money consequence, the deadline in Havana time, the silence rule,
+  the compensation rule, the desk's phone when the manifest has one, and "Choose in your account".
+  The board's SMS line, "automatically" for the future-trip discount and the named desk member are
+  not written: no SMS provider, no credits model, and the email does not name staff.
