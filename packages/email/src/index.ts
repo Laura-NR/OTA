@@ -32,3 +32,8 @@ export { reviewRequestEmail } from './templates/review-request';
 export type { ReviewRequestEmailInput } from './templates/review-request';
 export { tripReconfirmEmail } from './templates/trip-reconfirm';
 export type { TripReconfirmEmailInput } from './templates/trip-reconfirm';
+export { travelAdvisoryEmail } from './templates/travel-advisory';
+export type {
+  AdvisoryEmailSeverity,
+  TravelAdvisoryEmailInput,
+} from './templates/travel-advisory';

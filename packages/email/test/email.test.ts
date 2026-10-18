@@ -16,6 +16,7 @@ import {
   proposalSentEmail,
   retentionNoticeEmail,
   reviewRequestEmail,
+  travelAdvisoryEmail,
   tripReconfirmEmail,
   type EmailBranding,
 } from '../src';
@@ -483,5 +484,71 @@ describe('tripReconfirmEmail (E-Reconfirm, reduced)', () => {
     );
     expect(email.text).toContain('https://example.test/travel-info');
     expect(email.attachments).toEqual([voucher]);
+  });
+});
+
+describe('travelAdvisoryEmail (E-Advisory)', () => {
+  const input = {
+    to: 'jane@example.test',
+    name: 'Jane',
+    severity: 'CAUTION' as const,
+    headline: 'Fuel queues in Pinar del Río, 6 Oct.',
+    body: 'Station queues of 2 h or more around Viñales.',
+    cta: 'See current conditions',
+    source: 'Vereda drivers on the ground',
+    reference: 'ADV-2026-031',
+    publishedAt: new Date('2026-10-06T14:38:00Z'),
+    expiresAt: new Date('2026-10-20T00:00:00Z'),
+    regionNames: ['Pinar del Río'],
+    bookingCode: 'ABC12345',
+    tripName: 'Eco-Tourism in Viñales',
+    startDate: new Date('2026-10-13T00:00:00Z'),
+    endDate: new Date('2026-10-20T00:00:00Z'),
+    travelInfoUrl: 'https://example.test/travel-info#advisories',
+    tripUrl: 'https://example.test/account/reservations/r1',
+    locale: 'en',
+    branding,
+  };
+
+  it('leads with the advisory, names the trip and the region, and links the conditions', () => {
+    const email = travelAdvisoryEmail(input);
+    expect(email.to).toBe('jane@example.test');
+    expect(email.subject).toBe(
+      'Travel advisory · Fuel queues in Pinar del Río, 6 Oct. · what it means for your trip',
+    );
+    expect(email.text).toContain('Advisory · caution');
+    expect(email.text).toContain('Station queues of 2 h or more around Viñales.');
+    expect(email.text).toContain('Source: Vereda drivers on the ground.');
+    expect(email.text).toContain(
+      'Eco-Tourism in Viñales (ABC12345), October 13 – 20, 2026, is in the area this advisory covers: Pinar del Río.',
+    );
+    expect(email.text).toContain(
+      'See current conditions: https://example.test/travel-info#advisories',
+    );
+    expect(email.text).toContain('advisory ADV-2026-031');
+    expect(email.text).not.toContain('acknowledge');
+    expect(email.html).toContain('MINTUR License MINTUR-TEST-1234');
+  });
+
+  it('asks for the acknowledgement on a critical advisory and names the whole country', () => {
+    const email = travelAdvisoryEmail({
+      ...input,
+      severity: 'CRITICAL',
+      regionNames: [],
+    });
+    expect(email.text).toContain('Advisory · critical');
+    expect(email.text).toContain('acknowledge it on the site');
+    expect(email.text).toContain('covers: the whole country.');
+  });
+
+  it('writes the frame in the traveler’s language', () => {
+    const email = travelAdvisoryEmail({ ...input, locale: 'es', cta: null });
+    expect(email.subject.startsWith('Aviso de viaje · ')).toBe(true);
+    expect(email.text).toContain('Aviso · precaución');
+    expect(email.text).toContain(
+      'Situación actual: https://example.test/travel-info#advisories',
+    );
+    const fr = travelAdvisoryEmail({ ...input, locale: 'fr' });
+    expect(fr.text).toContain('Avis · vigilance');
   });
 });
