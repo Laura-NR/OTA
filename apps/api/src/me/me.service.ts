@@ -44,6 +44,14 @@ const INVENTORY_TO_SERVICE: Record<InventoryType, ServiceType> = {
   EXPERIENCE: ServiceType.Experience,
 };
 
+/**
+ * The documents a traveler holds. Supplier work orders carry the internal
+ * payout rate, so they are never listed or counted for the traveler.
+ */
+const TRAVELER_DOCUMENTS = {
+  type: { not: 'WORK_ORDER' },
+} satisfies Prisma.DocumentWhereInput;
+
 type ListRow = Prisma.ReservationGetPayload<{
   include: { _count: { select: { serviceItems: true; documents: true } } };
 }>;
@@ -213,7 +221,11 @@ export class MeService {
     const rows = await this.prisma.reservation.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { serviceItems: true, documents: true } } },
+      include: {
+        _count: {
+          select: { serviceItems: true, documents: { where: TRAVELER_DOCUMENTS } },
+        },
+      },
     });
     return rows.map(toListDto);
   }
@@ -232,7 +244,7 @@ export class MeService {
       where: { id, userId },
       include: {
         serviceItems: { orderBy: { serviceDateStart: 'asc' } },
-        documents: { orderBy: { generatedAt: 'desc' } },
+        documents: { where: TRAVELER_DOCUMENTS, orderBy: { generatedAt: 'desc' } },
         reviews: { orderBy: { createdAt: 'desc' }, take: 1 },
         package: {
           select: {
@@ -249,7 +261,9 @@ export class MeService {
           orderBy: { position: 'asc' },
           select: { fullName: true, isLead: true },
         },
-        _count: { select: { serviceItems: true, documents: true } },
+        _count: {
+          select: { serviceItems: true, documents: { where: TRAVELER_DOCUMENTS } },
+        },
       },
     });
     if (!row) {

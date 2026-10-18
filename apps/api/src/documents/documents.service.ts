@@ -118,8 +118,9 @@ export class DocumentsService {
   }
 
   /**
-   * Load a stored document for download. A traveler may only fetch documents
-   * for their own reservations; operations roles may fetch any.
+   * Load a stored document for download. A traveler may only fetch the
+   * traveler documents of their own reservations, never a supplier work order
+   * (it carries the internal payout rate); other roles are not restricted here.
    */
   async read(
     documentId: string,
@@ -134,6 +135,9 @@ export class DocumentsService {
     }
     if (actor.role === UserRole.Traveler && document.reservation.userId !== actor.id) {
       throw new ForbiddenException('Document belongs to another traveler');
+    }
+    if (actor.role === UserRole.Traveler && document.type === DocumentType.WorkOrder) {
+      throw new ForbiddenException('Supplier work orders are not traveler documents');
     }
     return { document, data: await this.storage.read(document.storageKey) };
   }
