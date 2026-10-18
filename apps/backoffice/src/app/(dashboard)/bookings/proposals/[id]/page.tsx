@@ -95,6 +95,17 @@ export default async function ProposalDetailPage({
           >
             {t('openBooking')}
           </Link>
+          {proposal.providers ? (
+            <span className="mt-1 block text-body-sm">
+              {t('providers', {
+                confirmed: proposal.providers.confirmed,
+                services: proposal.providers.services,
+                awaiting: proposal.providers.awaiting,
+                arranging: proposal.providers.arranging,
+                sent: proposal.providers.requestsSent,
+              })}
+            </span>
+          ) : null}
         </Alert>
       ) : null}
       {proposal.status === 'DECLINED' ? <Alert>{t('declined')}</Alert> : null}

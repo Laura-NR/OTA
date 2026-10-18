@@ -66,6 +66,11 @@ export {
 } from './dispatch/aging';
 export { SERVICE_TYPE_TO_SUPPLIER_CATEGORIES } from './dispatch/assignment';
 export {
+  providerProgress,
+  type ProviderProgress,
+  type ProviderProgressItem,
+} from './dispatch/provider-progress';
+export {
   calculateSupplierReliability,
   type ReliabilityOffer,
   type SupplierReliability,

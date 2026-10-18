@@ -206,9 +206,9 @@ function createFakePrisma(state: FakeState) {
           travelers: state.travelers.filter(
             (traveler) => traveler.reservationId === row.id,
           ),
-          serviceItems: state.serviceItems.filter(
-            (item) => item.reservationId === row.id,
-          ),
+          serviceItems: state.serviceItems
+            .filter((item) => item.reservationId === row.id)
+            .map((item) => ({ dispatchOffers: [], ...item })),
           documents: travelerDocuments(state, row.id),
           reviews: state.reviews.filter((review) => review.reservationId === row.id),
           _count: counts(row.id),
@@ -483,6 +483,15 @@ describe('me API', () => {
     expect(response.body.documents[0].type).toBe('VOUCHER');
     expect(response.body.documents[0].storageKey).toBeUndefined();
     expect(response.body.trip).toBeNull();
+    // The one service is taken (ACCEPTED), with no offer on the ledger.
+    expect(response.body.providers).toEqual({
+      services: 1,
+      confirmed: 1,
+      awaiting: 0,
+      arranging: 0,
+      requestsSent: 0,
+      answered: 0,
+    });
     expect(response.body.travelers).toEqual([
       { fullName: 'Example Traveler', isLead: true },
       { fullName: 'Dana Companion', isLead: false },

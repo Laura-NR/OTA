@@ -193,6 +193,12 @@ test.describe('custom-trip proposals', () => {
     expect((await travelerPdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
     await page.getByRole('button', { name: 'Accept this proposal' }).click();
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
+    // The desk has not dispatched yet: the provider requests have not started.
+    const providers = page.getByRole('region', {
+      name: 'Your hosts, guides and drivers',
+    });
+    await expect(providers.getByText('0 of 1 services confirmed')).toBeVisible();
+    await expect(providers.getByText(/^Our desk sends a request/)).toBeVisible();
 
     const proposal = await prisma.proposal.findUniqueOrThrow({
       where: { id: proposalId },

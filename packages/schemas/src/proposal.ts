@@ -9,6 +9,8 @@ import {
 } from '@ota/domain';
 import { z } from 'zod';
 
+import { providerProgressSchema } from './me';
+
 import { nationalitySchema } from './regulatory';
 
 /** M5 custom-trip proposals (`docs/schema-m5-proposal.md`). */
@@ -221,6 +223,8 @@ export const proposalSchema = z.object({
   acceptedVersionId: z.string().uuid().nullable(),
   reservationId: z.string().uuid().nullable(),
   reservationCode: z.string().nullable(),
+  /** The accepted booking's provider requests, once there is a booking. */
+  providers: providerProgressSchema.nullable(),
   sentAt: z.string().nullable(),
   acceptedAt: z.string().nullable(),
   declinedAt: z.string().nullable(),

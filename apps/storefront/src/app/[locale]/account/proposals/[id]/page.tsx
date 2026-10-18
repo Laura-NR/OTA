@@ -18,6 +18,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { AccountShell } from '@/components/account/account-shell';
 import { ProposalActions } from '@/components/account/proposal-actions';
+import { ProviderProgress } from '@/components/account/provider-progress';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { formatDay, formatMoney } from '@/lib/format';
@@ -107,6 +108,10 @@ export default async function ProposalPage({
             {t('openTrip')}
           </Link>
         </section>
+      ) : null}
+
+      {proposal.status === 'ACCEPTED' && proposal.providers ? (
+        <ProviderProgress progress={proposal.providers} />
       ) : null}
 
       {proposal.status === 'DECLINED' ? <Alert>{t('declined')}</Alert> : null}

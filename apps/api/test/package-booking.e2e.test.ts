@@ -215,7 +215,7 @@ function createFakePrisma(state: State) {
         if (!row) return null;
         const items = state.serviceItems
           .filter((item) => item.reservationId === row.id)
-          .map((item) => ({ ...item, supplierId: null }));
+          .map((item) => ({ ...item, supplierId: null, dispatchOffers: [] }));
         return {
           ...row,
           serviceItems: items,

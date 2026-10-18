@@ -239,6 +239,15 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
     expect(acceptedProposal.status).toBe('ACCEPTED');
     expect(acceptedProposal.reservationId).toBe(accepted.reservationId);
     expect(acceptedProposal.request.status).toBe('CONVERTED');
+    // Nothing is dispatched yet: one service, waiting for the desk.
+    expect(acceptedProposal.providers).toEqual({
+      services: 1,
+      confirmed: 0,
+      awaiting: 0,
+      arranging: 1,
+      requestsSent: 0,
+      answered: 0,
+    });
 
     const audits = await prisma.auditLog.findMany({
       where: { entityType: 'Proposal', entityId: request.id },

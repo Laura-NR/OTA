@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
 import type { InventoryItem, InventoryType, PackageService, Prisma } from '@ota/db';
-import { ReservationStatus, ServiceType } from '@ota/domain';
+import { ReservationStatus, ServiceType, providerProgress } from '@ota/domain';
 import { bookingReceivedEmail, type Mailer } from '@ota/email';
 import type {
   BookPackageRequest,
@@ -58,7 +58,7 @@ type ListRow = Prisma.ReservationGetPayload<{
 
 type DetailRow = Prisma.ReservationGetPayload<{
   include: {
-    serviceItems: true;
+    serviceItems: { include: { dispatchOffers: { select: { status: true } } } };
     documents: true;
     reviews: true;
     package: {
@@ -120,6 +120,12 @@ function toDetailDto(row: DetailRow): MyReservationDetailDto {
       fullName: traveler.fullName,
       isLead: traveler.isLead,
     })),
+    providers: providerProgress(
+      row.serviceItems.map((item) => ({
+        status: item.status,
+        offers: item.dispatchOffers,
+      })),
+    ),
     serviceItems: row.serviceItems.map((item) => ({
       id: item.id,
       serviceType: item.serviceType,
@@ -243,7 +249,10 @@ export class MeService {
     const row = await this.prisma.reservation.findFirst({
       where: { id, userId },
       include: {
-        serviceItems: { orderBy: { serviceDateStart: 'asc' } },
+        serviceItems: {
+          orderBy: { serviceDateStart: 'asc' },
+          include: { dispatchOffers: { select: { status: true } } },
+        },
         documents: { where: TRAVELER_DOCUMENTS, orderBy: { generatedAt: 'desc' } },
         reviews: { orderBy: { createdAt: 'desc' }, take: 1 },
         package: {

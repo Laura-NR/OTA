@@ -18,6 +18,7 @@ import {
   proposalPerPerson,
   proposalToPriceLineKind,
   proposalTotal,
+  providerProgress,
   type ProposalStatus,
 } from '@ota/domain';
 import { renderProposalHtml } from '@ota/documents';
@@ -56,7 +57,15 @@ const PROPOSAL_INCLUDE = {
     orderBy: { version: 'desc' as const },
     include: { priceLines: { orderBy: { position: 'asc' as const } } },
   },
-  reservation: { select: { id: true, bookingCode: true } },
+  reservation: {
+    select: {
+      id: true,
+      bookingCode: true,
+      serviceItems: {
+        select: { status: true, dispatchOffers: { select: { status: true } } },
+      },
+    },
+  },
 } satisfies Prisma.ProposalInclude;
 
 type ProposalRow = Prisma.ProposalGetPayload<{ include: typeof PROPOSAL_INCLUDE }>;
@@ -155,6 +164,14 @@ function toProposalDto(row: ProposalRow, now: Date): ProposalDto {
     acceptedVersionId: row.acceptedVersionId,
     reservationId: row.reservationId,
     reservationCode: row.reservation?.bookingCode ?? null,
+    providers: row.reservation
+      ? providerProgress(
+          row.reservation.serviceItems.map((item) => ({
+            status: item.status,
+            offers: item.dispatchOffers,
+          })),
+        )
+      : null,
     sentAt: iso(row.sentAt),
     acceptedAt: iso(row.acceptedAt),
     declinedAt: iso(row.declinedAt),

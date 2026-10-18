@@ -558,6 +558,12 @@
     "back": "Mis viajes",
     "confirmed": "Tu viaje está reservado.",
     "viewConfirmation": "Ver tu confirmación",
+    "providers": {
+      "title": "Tus anfitriones, guías y conductores",
+      "confirmed": "{confirmed} de {services} servicios confirmados",
+      "notStarted": "Nuestro equipo envía una solicitud a cada anfitrión, guía y conductor; las respuestas aparecen aquí según llegan.",
+      "status": "{sent, plural, one {# solicitud enviada} other {# solicitudes enviadas}} · {awaiting} esperando respuesta · {arranging} en preparación por nuestro equipo."
+    },
     "columns": {
       "type": "Tipo",
       "status": "Estado",
@@ -2563,6 +2569,7 @@
     "version": "Versión {version}",
     "validUntil": "Precios garantizados hasta el {date}",
     "pdf": "Abrir el PDF",
+    "providers": "Proveedores: {confirmed} de {services} confirmados · {awaiting} esperando · {arranging} por organizar · {sent} solicitudes enviadas",
     "route": "Ruta",
     "routeEmpty": "Aún no hay paradas.",
     "stopProvince": "Parada {stop}: lugar",

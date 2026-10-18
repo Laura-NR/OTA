@@ -558,6 +558,12 @@
     "back": "My trips",
     "confirmed": "Your trip is booked.",
     "viewConfirmation": "View your confirmation",
+    "providers": {
+      "title": "Your hosts, guides and drivers",
+      "confirmed": "{confirmed} of {services} services confirmed",
+      "notStarted": "Our desk sends a request to each host, guide and driver, and the answers show here as they come in.",
+      "status": "{sent, plural, one {# request sent} other {# requests sent}} · {awaiting} waiting for a reply · {arranging} being arranged by our desk."
+    },
     "columns": {
       "type": "Type",
       "status": "Status",
@@ -2563,6 +2569,7 @@
     "version": "Version {version}",
     "validUntil": "Prices held until {date}",
     "pdf": "Open the PDF",
+    "providers": "Providers: {confirmed} of {services} confirmed · {awaiting} waiting · {arranging} to arrange · {sent} requests sent",
     "route": "Route",
     "routeEmpty": "No stops yet.",
     "stopProvince": "Stop {stop}: place",

@@ -211,12 +211,14 @@ export {
   myReservationQuerySchema,
   myTravelerSchema,
   myTripSchema,
+  providerProgressSchema,
   type CreateMyReservationRequest,
   type MeProfileDto,
   type MyDocumentDto,
   type MyReservationDetailDto,
   type MyReservationListItemDto,
   type MyReservationQuery,
+  type ProviderProgressDto,
 } from './me';
 export {
   createPaymentIntentSchema,

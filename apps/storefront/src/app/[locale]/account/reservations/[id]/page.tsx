@@ -23,6 +23,7 @@ import { notFound, redirect } from 'next/navigation';
 import { AccountShell } from '@/components/account/account-shell';
 import { OfacCertification } from '@/components/account/ofac-certification';
 import { PaymentSchedule } from '@/components/account/payment-schedule';
+import { ProviderProgress } from '@/components/account/provider-progress';
 import { TripProgress } from '@/components/account/trip-progress';
 import { MessageThread } from '@/components/message-thread';
 import { ReviewForm } from '@/components/review-form';
@@ -32,9 +33,18 @@ import { apiFetch, getServerSession } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 import { getTenantConfig } from '@/lib/tenant';
 
+/** While the desk confirms the trip with its providers. */
+const CONFIRMING: readonly string[] = [
+  'ITINERARY_SUBMITTED',
+  'DISPATCH_IN_PROGRESS',
+  'ASSEMBLY_AND_ESCALATION',
+  'ACTION_REQUIRED',
+];
+
 /**
- * One trip in the Account frame: its progress in the traveler's words, the
- * link to the confirmation once the first payment has confirmed it, the US
+ * One trip in the Account frame: its progress in the traveler's words, where
+ * the provider requests stand while the desk confirms it, the link to the
+ * confirmation once the first payment has confirmed it, the US
  * travel-category certification when a traveler needs it (M3), the payment
  * step when it is due (locked until every US traveler has certified), the
  * itinerary, the documents, the review once completed, and the thread with
@@ -125,6 +135,10 @@ export default async function AccountReservationPage({
       <section className={card} aria-label={t('progressLabel')}>
         <TripProgress status={reservation.status} />
       </section>
+
+      {CONFIRMING.includes(reservation.status) && reservation.providers.services > 0 ? (
+        <ProviderProgress progress={reservation.providers} />
+      ) : null}
 
       {confirmed ? (
         <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-success-200 bg-success-100 p-4">

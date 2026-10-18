@@ -45,6 +45,18 @@ export const myTripSchema = z.object({
   tier: z.string().nullable(),
 });
 
+/** Where the provider requests stand (the dispatch ledger, no provider named). */
+export const providerProgressSchema = z.object({
+  services: z.number().int(),
+  confirmed: z.number().int(),
+  awaiting: z.number().int(),
+  arranging: z.number().int(),
+  requestsSent: z.number().int(),
+  answered: z.number().int(),
+});
+
+export type ProviderProgressDto = z.infer<typeof providerProgressSchema>;
+
 /** A member of the travel party, by name only (no passport or birth date). */
 export const myTravelerSchema = z.object({
   fullName: z.string(),
@@ -59,6 +71,7 @@ export const myReservationDetailSchema = myReservationListItemSchema.extend({
   /** Null for a custom trip (builder or accepted proposal). */
   trip: myTripSchema.nullable(),
   travelers: z.array(myTravelerSchema),
+  providers: providerProgressSchema,
 });
 
 export type MyReservationDetailDto = z.infer<typeof myReservationDetailSchema>;
