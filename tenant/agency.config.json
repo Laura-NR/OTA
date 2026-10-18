@@ -76,6 +76,30 @@
     "defaultDepositPolicy": "standard",
     "defaultCancellationPolicy": "standard"
   },
+  "customBuilder": {
+    "status": "placeholder",
+    "currency": "EUR",
+    "transports": [
+      { "key": "minivan", "pricePerPersonDay": 28 },
+      { "key": "classic", "pricePerPersonDay": 35 },
+      { "key": "sedan", "pricePerPersonDay": 24 },
+      { "key": "colectivo", "pricePerPersonDay": 15 }
+    ],
+    "stayStyles": [
+      { "key": "standard", "pricePerNight": 30 },
+      { "key": "comfort", "pricePerNight": 45 },
+      { "key": "agro", "pricePerNight": 40 },
+      { "key": "heritage", "pricePerNight": 55 },
+      { "key": "eco", "pricePerNight": 70 },
+      { "key": "boutique", "pricePerNight": 110 }
+    ],
+    "defaultStayStyle": "comfort",
+    "guiding": { "sharedPerPersonDay": 25, "privatePerGroupDay": 55 },
+    "interpreterPerGroupDay": 40,
+    "offsetPerNight": 5,
+    "feePercent": 12,
+    "spreadPercent": 6
+  },
   "emergencyContacts": [
     { "label": "Operations desk (24/7)", "phone": "+53 5555 0100" },
     { "label": "Medical emergency", "phone": "+53 5555 0104" },

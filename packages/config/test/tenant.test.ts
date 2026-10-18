@@ -15,6 +15,43 @@ const minimal = {
   },
 };
 
+const builder = {
+  transports: [{ key: 'minivan', pricePerPersonDay: 28 }],
+  stayStyles: [
+    { key: 'standard', pricePerNight: 30 },
+    { key: 'comfort', pricePerNight: 45 },
+  ],
+  defaultStayStyle: 'comfort',
+  guiding: { sharedPerPersonDay: 25, privatePerGroupDay: 55 },
+  interpreterPerGroupDay: 40,
+  offsetPerNight: 5,
+  feePercent: 12,
+};
+
+describe('custom builder terms', () => {
+  it('has none by default, so the builder shows no estimate', () => {
+    expect(parseTenantConfig(minimal).customBuilder).toBeNull();
+  });
+
+  it('reads the rates as placeholder data unless published', () => {
+    const config = parseTenantConfig({ ...minimal, customBuilder: builder });
+    expect(config.customBuilder).toMatchObject({
+      status: 'placeholder',
+      currency: 'EUR',
+      spreadPercent: 6,
+    });
+  });
+
+  it('refuses a default stay style that is not offered', () => {
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        customBuilder: { ...builder, defaultStayStyle: 'castle' },
+      }),
+    ).toThrow();
+  });
+});
+
 describe('parseTenantConfig', () => {
   it('applies defaults for theme, features, and locales', () => {
     const config = parseTenantConfig(minimal);

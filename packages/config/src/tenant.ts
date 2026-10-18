@@ -147,6 +147,46 @@ export const proposalsSchema = z.object({
 
 export type ProposalsConfig = z.infer<typeof proposalsSchema>;
 
+/**
+ * The custom builder's choices and the rates behind its estimate (Custom
+ * board). Keys name the options (their words live in the message catalogs);
+ * every price is per person unless the key says per group. The estimate is a
+ * range for orientation: the desk's proposal is the price.
+ */
+export const customBuilderSchema = z
+  .object({
+    /** `placeholder` shows the sample-content notice next to the estimate. */
+    status: z.enum(['placeholder', 'published']).default('placeholder'),
+    currency: z.string().length(3).default('EUR'),
+    transports: z
+      .array(
+        z.object({ key: z.string().min(1), pricePerPersonDay: z.number().nonnegative() }),
+      )
+      .min(1),
+    stayStyles: z
+      .array(
+        z.object({ key: z.string().min(1), pricePerNight: z.number().nonnegative() }),
+      )
+      .min(1),
+    defaultStayStyle: z.string().min(1),
+    guiding: z.object({
+      sharedPerPersonDay: z.number().nonnegative(),
+      privatePerGroupDay: z.number().nonnegative(),
+    }),
+    interpreterPerGroupDay: z.number().nonnegative(),
+    offsetPerNight: z.number().nonnegative(),
+    feePercent: z.number().min(0).max(100),
+    /** The estimate shows the total ± this share. */
+    spreadPercent: z.number().min(0).max(50).default(6),
+  })
+  .refine(
+    (builder) =>
+      builder.stayStyles.some((style) => style.key === builder.defaultStayStyle),
+    { message: 'defaultStayStyle must be one of stayStyles', path: ['defaultStayStyle'] },
+  );
+
+export type CustomBuilderConfig = z.infer<typeof customBuilderSchema>;
+
 export const tenantConfigSchema = z.object({
   tenantId: z.string().min(1),
   branding: z.object({
@@ -184,6 +224,8 @@ export const tenantConfigSchema = z.object({
   pricing: pricingSchema.prefault({}),
   policies: policiesSchema.prefault({}),
   proposals: proposalsSchema.prefault({}),
+  /** Null hides the builder's estimate and offers no transport or stay styles. */
+  customBuilder: customBuilderSchema.nullable().default(null),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
 });
 
