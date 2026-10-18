@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 
+import { AdvisoriesModule } from './advisories/advisories.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AssistantModule } from './assistant/assistant.module';
 import { AuthGuard } from './auth/auth.guard';
@@ -74,6 +75,7 @@ const isTest = process.env.NODE_ENV === 'test';
     CustomersModule,
     TravelersModule,
     ComplianceModule,
+    AdvisoriesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })

@@ -61,6 +61,7 @@ const PROOF = 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2';
 const REFUND = 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3';
 const PROPOSAL = 'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4';
 const PROPOSAL_VERSION = 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5';
+const ADVISORY = 'a7a7a7a7-a7a7-4a7a-8a7a-a7a7a7a7a7a7';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -307,6 +308,28 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/reviews', allowed: 'opsRead' },
   { method: 'get', path: '/quality/supplier-reliability', allowed: 'opsRead' },
 
+  // M7 advisories: the desk reads; drafting, approving, versions and lifting
+  // are writes (the approval rule itself is in the service).
+  { method: 'get', path: '/advisories', allowed: 'opsRead' },
+  { method: 'post', path: '/advisories', allowed: 'opsWrite' },
+  { method: 'get', path: `/advisories/${ADVISORY}`, allowed: 'opsRead' },
+  { method: 'patch', path: `/advisories/${ADVISORY}`, allowed: 'opsWrite' },
+  { method: 'post', path: `/advisories/${ADVISORY}/versions`, allowed: 'opsWrite' },
+  { method: 'post', path: `/advisories/${ADVISORY}/approve`, allowed: 'opsWrite' },
+  {
+    method: 'post',
+    path: `/advisories/${ADVISORY}/request-changes`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/advisories/${ADVISORY}/lift`, allowed: 'opsWrite' },
+  // The caller's own critical acknowledgements.
+  { method: 'get', path: '/me/advisories/acknowledgements', allowed: 'authenticated' },
+  {
+    method: 'post',
+    path: `/me/advisories/${ADVISORY}/acknowledge`,
+    allowed: 'authenticated',
+  },
+
   // GDPR retention lifecycle (the keep-alive link itself is public).
   { method: 'get', path: '/retention/pending', allowed: 'opsRead' },
   { method: 'post', path: '/retention/scan', allowed: 'opsWrite' },
@@ -331,6 +354,7 @@ const fakePrisma = {
   },
   paymentReceipt: { findFirst: async () => null },
   $queryRaw: async () => [{ '?column?': 1 }],
+  advisory: { findMany: async () => [] },
 };
 
 const fakeAuthService = {
@@ -466,6 +490,22 @@ describe('authorization matrix', () => {
       '/payments/intents/unknown-reference',
     );
     expect(intent.status).toBe(404);
+
+    // The advisory banner, package notices and Current Conditions history are
+    // public reads; a malformed province is a 400, not a 401.
+    expect((await request(app.getHttpServer()).get('/advisories/active')).status).toBe(
+      200,
+    );
+    expect(
+      (await request(app.getHttpServer()).get('/advisories/active?province=CU01')).status,
+    ).toBe(200);
+    expect(
+      (await request(app.getHttpServer()).get('/advisories/active?province=Havana'))
+        .status,
+    ).toBe(400);
+    expect((await request(app.getHttpServer()).get('/advisories/history')).status).toBe(
+      200,
+    );
 
     // The Support form is public; an empty body fails validation (400), not auth.
     const contact = await request(app.getHttpServer()).post('/contact').send({});

@@ -459,7 +459,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
    * bookings is redacted, every traveler in their parties loses name, date of
    * birth, nationality, passport and emergency contact, and their consent log
    * loses its link to them (`docs/pii-at-rest-review.md`, Tier 1; M3 D6). OFAC
-   * affidavits are kept for their five years.
+   * affidavits are kept for their five years, and critical-advisory
+   * acknowledgements stay with the anonymized user (M7 D8).
    */
   private async anonymize(userId: string, email: string, now: Date): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
