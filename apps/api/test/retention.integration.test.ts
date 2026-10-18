@@ -198,7 +198,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
 
   it('sends the notice, records consent, then anonymizes after the grace', async () => {
     const first = await service.scan();
-    expect(first).toEqual({ noticed: 1, purged: 0, affidavitsDeleted: 1 });
+    expect(first).toEqual({ noticed: 1, reminded: 0, purged: 0, affidavitsDeleted: 1 });
     expect(
       await prisma.travelerAffidavit.findUnique({ where: { id: expiredAffidavitId } }),
     ).toBeNull();
@@ -227,7 +227,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     });
 
     const second = await service.scan();
-    expect(second).toEqual({ noticed: 0, purged: 1, affidavitsDeleted: 0 });
+    expect(second).toEqual({ noticed: 0, reminded: 0, purged: 1, affidavitsDeleted: 0 });
 
     // M3 D6: the consent log loses who; the affidavit keeps its five years.
     const consentRow = await prisma.consentRecord.findFirstOrThrow({

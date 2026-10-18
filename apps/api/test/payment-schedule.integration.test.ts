@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type { DocumentsService } from '../src/documents/documents.service';
+import type { NotificationsService } from '../src/notifications/notifications.service';
 import { PaymentsService } from '../src/payments/payments.service';
 import { ProofsService } from '../src/payments/proofs.service';
 import { RefundsService } from '../src/payments/refunds.service';
@@ -69,9 +70,14 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
       OTHER: new BankTransferProvider(),
       CARD: new MockPaymentProvider(),
     };
-    const reservations = new ReservationsService(db, {
-      generate: async () => undefined,
-    } as unknown as DocumentsService);
+    const reservations = new ReservationsService(
+      db,
+      { generate: async () => undefined } as unknown as DocumentsService,
+      {
+        bookingConfirmed: async () => undefined,
+        bookingSecured: async () => undefined,
+      } as unknown as NotificationsService,
+    );
     payments = new PaymentsService(db, reservations, providers, tenant);
     schedule = new ScheduleService(db, tenant);
     proofs = new ProofsService(db, new InMemoryObjectStorage());
