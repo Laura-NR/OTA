@@ -28,33 +28,32 @@ work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done. M1–M5 are
 complete with their surfaces. The Confirmation screen is built (/account/reservations/<id>/
-confirmation, opened once money was received, linked from the trip page). The M5 follow-ups (a)
+confirmation, opened once money was received, linked from the trip page). The designed Custom
+builder is built (route, styles, activities, guiding, estimate from the manifest's placeholder
+customBuilder rates); provider progress is read from the dispatch ledger; supplier work orders are
+hidden from travelers; M7 (advisories) is drafted for review. The M5 follow-ups (a)
 and (b) are done: the D-Proposal PDF (stored at ProposalVersion.pdfKey, attached to the proposal
 email, owner/desk download routes) and structured stops/days/options editing. Phase 6 now sends
 E-Received, E-OFAC, E-Invoice, E-Confirmed (documents attached), the 24 h/2 h window reminders,
 the 7/3/1 balance reminders, the trip review request (E-NPS adapted to the Review CSAT), the T−7
 reconfirmation and E-Retention with its reminder, all verified in Mailpit. Not built: E-Advisory
-(M7), E-Options (M8), SMS/push, the full designed Custom builder, provider request tracking. The
+(M7), E-Options (M8), SMS/push. The
 M4/M5 terms in the manifest are placeholders; the card fee is 0 % until counsel rules.
 PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or rotate it).
-The last full verify is in the handoff (604 unit, 58/58 e2e, 13/13 live). The owner decided:
+The last full verify is in the handoff (618 unit, 58/58 e2e, 14/14 live). The owner decided:
 placeholder/mock data until real data is published; the design team is not asked; the build
 resolves design gaps itself with existing tokens, recorded in the ADRs.
 
-TASK 1 (primary) — Act on the owner's answers to last session's questions (see the handoff's
-Next and the session summary): if approved, hide supplier WORK_ORDER documents from travelers
-(the trip DTO filter plus a guard on GET /documents/:id/download; this tightens authorization, so
-only with the owner's yes), and start whichever of the full Custom builder or the M7/M8 drafts the
-owner chose. Do not start a schema batch without an approved draft.
+TASK 1 (primary) — If the owner has answered the M7 draft (docs/schema-m7-advisories.md,
+D1–D8): generate the migration as approved and build §5 (advisories tab with approvals, the site
+banner from active advisories, the Travel info list and package/booking notices, E-Advisory with
+Mailpit e2e, the critical acknowledgement). Without answers, do not generate anything; ask.
 
-TASK 2 — Investigate why the dev API ignores SIGTERM ("Waiting for graceful termination…" after
-a node --watch restart or at the end of pnpm e2e, so a stale process keeps serving). Suspects:
-open BullMQ workers/Redis connections or the PDF browser. Reproduce, name the mechanism, fix it
-with a test (Article 7).
+TASK 2 — The SERVICE_WORKER document-download question (only with the owner's yes), then the
+SIGTERM investigation (Article 7: reproduce, name the mechanism, test, fix).
 
-TASK 3 (if time remains) — Phase 6 leftovers that need no migration, if any remain after the
-owner's answers; otherwise the Phase 8 cookie banner (the public consent route was deferred to
-it).
+TASK 3 (if time remains) — Draft M8 (disruption cases, playbooks, traveler options with a
+deadline; E-Options) for review, or the Phase 8 cookie banner.
 
 TASK 4 — DOCS and VERIFY as before: keep docs/handoff/vereda.md a current snapshot (Decisions
 append-only), update the Progress table and the ADR 0006 amendment for design resolutions; run

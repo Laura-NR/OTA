@@ -71,7 +71,14 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   response promise, a € 140 planning fee shown for transparency only (it is not
   added to the amount due), and the `standard` deposit/cancellation policy
   keys. The planning fee and validity are placeholders until the owner confirms
-  them.
+  them. The `customBuilder` block (status `placeholder`) holds the custom
+  builder's transport and stay styles and the sample rates behind its estimate,
+  taken from the Custom board (minivan € 28, classic car € 35, sedan € 24,
+  colectivo € 15 per person per day; stays € 30–110 per night; a shared guide
+  € 25 per person per day, a private one € 55 per group per day, an interpreter
+  € 40 per group per day; € 5 carbon offset per night; a 12 % agency fee; a ± 6 %
+  range). The builder shows a sample-rates notice while the status is
+  `placeholder`; without the block it offers no styles and no estimate.
 
 ## Forking for a new agency
 

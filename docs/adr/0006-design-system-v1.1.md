@@ -545,3 +545,36 @@ the existing tokens and the email shell. No token and no migration were added.
   are not drawn (no self-service flows).
 - **Not built:** E-Advisory (needs an advisory record, M7) and E-Options (needs disruption cases
   and their options, M8).
+
+## Amendment, 2026-10-18: the designed Custom builder and provider progress, resolved by the build
+
+The owner took the recommendations on 2026-10-18: build the full Custom builder without a
+migration, and show provider progress from the dispatch ledger. No token was added.
+
+- **Layout.** The booking flow's frame: the DS 03 stepper, the step's overline and heading, cards
+  for each group, and a sticky 360 px side panel from `lg` with the estimate and the route; below
+  `lg` the panel follows the step, as on the Booking form.
+- **Route.** Provinces are the tenant's served provinces (`network` not `none`), west to east,
+  as two-column toggle buttons with their destination summary and a Limited badge. Stops reuse
+  the Destinations map's route rules (six stops at most, km between stops, the long-leg warning
+  over 600 km); nights per stop are − / + icon buttons and the mismatch with the total is a
+  warning that blocks Continue. Pace is a radio group; interests are toggle chips.
+- **Transport, stays, guiding.** Radio groups and one `Select` per stop, with the manifest's
+  prices in the labels. The board's vehicle tags, host examples, power notes ("Generator 4 h")
+  and "Viazul is not offered" are not drawn: they are agency facts the platform does not hold.
+- **Activities.** The route's catalogue experiences as checkboxes per stop, so the chosen ones
+  become the request's catalogue items (and later its service items); a stop without any says to
+  use the notes.
+- **Estimate.** A per-person range from `customTripEstimate` with its breakdown, and an info
+  notice while the manifest's rates are placeholders. The board's € 140 planning fee line is not
+  repeated (M5: transparency copy on the proposal only).
+- **Summary.** Edit links per section; nationality, proposal language (the tenant's locales, not
+  the board's German), budget and notes. The board's name, email and WhatsApp fields are not
+  drawn (the builder is behind sign-in, and adding a phone is a PII decision), nor the 90-day
+  consent checkbox (no consent purpose fits; a privacy-notice line stands in). The 4-hour reply
+  promise and "Ana in Havana" are not written.
+- **Provider progress.** A card titled "Your hosts, guides and drivers" with "n of m services
+  confirmed", a success-600 bar and the counts of requests sent, awaiting a reply and being
+  arranged; no provider is named. It shows on the trip page while the desk confirms the trip and
+  on the accepted proposal; the desk's proposal detail carries a one-line summary.
+

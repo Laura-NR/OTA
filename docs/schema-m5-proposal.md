@@ -367,11 +367,6 @@ retention scrub; the authorization matrix; a live-DB integration test; and the b
 
 Not built in this increment:
 
-- the full designed Custom builder (provinces, pace, interests, transport styles, per-stop stays,
-  activities and guides). The existing builder still collects dates, party, catalog items and
-  notes; the desk prices the rest.
-- provider request/response tracking after acceptance (the board's "11 requests"); the desk uses
-  today's dispatch.
 - an anonymous proposal link, planning-fee charging, and a proposal audit export.
 
 Landed after the first cut (2026-10-18, no migration):
@@ -385,6 +380,18 @@ Landed after the first cut (2026-10-18, no migration):
   version so a revision keeps them; the traveler's proposal page and the PDF show them. A day's
   date is counted from the trip's start, so the document's optional free-text `date` is not
   written by the composer.
+
+Landed on 2026-10-18 after the owner's decisions (no migration):
+
+- the full designed Custom builder: an ordered route of provinces with nights and a stay style
+  per stop, pace, interests, a transport style, the route's catalogue activities, guiding, an
+  interpreter and step-free access, stored as optional fields of the request's JSON payload
+  (`route`, `transport`, `guiding`, `interpreter`, `stepFree`); the styles and the estimate's
+  sample rates come from the manifest's `customBuilder` block. The desk sees the answers and the
+  composer starts a first version's stops from the route.
+- provider request/response tracking, read from today's dispatch ledger rather than a new table:
+  `providerProgress` (services confirmed, awaiting a reply, being arranged, requests sent and
+  answered) on the trip detail and the accepted proposal.
 
 The proposal reference is `VX-C-` plus the existing 8-character booking code, unique on
 `CustomRequest.reference`.

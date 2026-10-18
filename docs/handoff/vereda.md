@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-18 01:30
+# Handoff — vereda — updated 2026-10-18 04:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -36,29 +36,42 @@ the Confirmation screen) and ADR 0007 (worker app).
     review request + one reminder after 5 days (`email.review_request_sent`) and the T−7
     reconfirmation (`email.trip_reconfirm_sent`); E-Retention localized + reminder at day 23
     (`retention.reminder_sent`, scan result gains `reminded`).
-- **Not built:** E-Advisory (M7), E-Options (M8), SMS/push, the full designed Custom builder
-  (Task 2c, owner's call), provider request/response tracking (schema decision), Phase 8.
+- **After the owner's answers (2026-10-18, "all your recommendations"), no migration:**
+  - **Work orders** (`5a8356e`): the traveler's trip queries leave WORK_ORDER out (list, count,
+    detail) and a traveler's download of one is 403; ops roles still read them.
+  - **Provider progress** (`0087946`): `providerProgress` in `@ota/domain` reads the dispatch
+    ledger (services confirmed / awaiting / being arranged, requests sent / answered); on the trip
+    detail and the proposal DTO, shown on the trip page while confirming, on the accepted
+    proposal, and as a line on the desk proposal.
+  - **Designed Custom builder** (`c550a58`…`125e3bf`): `/custom` is the board's five steps with a
+    route of provinces (nights, stay style), pace, interests, transport, activities from the
+    catalogue, guiding, interpreter, step-free, nationality, language, budget, notes and a
+    running estimate (`customTripEstimate`) from the manifest's new `customBuilder` block
+    (placeholder rates). The request payload gains optional `route`, `transport`, `guiding`,
+    `interpreter`, `stepFree`; unknown styles are refused. The desk sees the answers and the
+    composer seeds its stops from the route. `package-builder.tsx` is gone.
+  - **M7 drafted** in `docs/schema-m7-advisories.md` (D1–D8, no migration).
+- **Not built:** E-Advisory/E-Options (M7/M8 migrations), SMS/push, Phase 8.
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
   samples, the deposit's refundability and proof retention, the M5 sample terms.
 
-## Verified (2026-10-18, dev stack stopped for the build)
+## Verified (2026-10-18 04:20, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **604 passed / 14 skipped**, 0 cached (domain 176, api 258/13
-  skipped, email 18, documents 18, schemas 35, ui 31, config 26, theming 14, payments 8,
+- `TURBO_FORCE=true pnpm test` **618 passed / 15 skipped**, 0 cached (domain 182, api 259/14
+  skipped, schemas 39, config 29, email 18, documents 18, ui 31, theming 14, payments 8,
   imports 5, reports 4, ai 4, i18n 4, storage 3/1 skipped).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- `pnpm e2e` **58/58** (`.next` deleted first), 6.9 min; new: `storefront-confirmation`,
-  `notifications` (4 Mailpit checks), the M5 spec now checks the PDF attachment and both links.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **13/13**: retention,
-  packages, affidavits 3, package-booking 2, payment-schedule 2, proposals 2, dispatch and
-  compliance BullMQ.
-- Renderer fix, Gate 4: published a proposal, killed the API's Chromium child by PID, published
-  again: the PDF was attached and no "Proposal PDF failed" line was logged.
-- Browser (temporary specs, removed): Confirmation en/es at 390/1024/1280 and the proposal page +
-  composer at 390/1024/1280, `scrollWidth == viewport` everywhere; screenshots in
-  `/tmp/ota-confirmation-*.png`, `/tmp/ota-proposal-*.png`, a sample PDF in
-  `/tmp/ota-proposal-sample.pdf`.
+- `pnpm e2e` **58/58** (`.next` deleted first), 6.4 min; the M5 spec now drives the designed
+  builder (route, styles, activity, guide, estimate) and checks the desk's seeded stop and the
+  provider card.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **14/14** (proposals 3:
+  the builder's route is stored and an unknown stay style refused).
+- The work-order test fails on the old code and passes on the new (stash check).
+- Browser (temporary specs, removed): the builder's route and activities steps at
+  390/1024/1280, `scrollWidth == viewport`; `/tmp/ota-builder-*.png`. Earlier this session:
+  Confirmation, proposal page and composer, trip strip (`/tmp/ota-confirmation-*`,
+  `/tmp/ota-proposal-*`, `/tmp/ota-trip-strip-390.png`).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -68,10 +81,11 @@ the Confirmation screen) and ADR 0007 (worker app).
 - E-NPS asks for the 1–5 Review, not a 0–10 NPS; trips completed more than 30 days ago are never
   asked (so shipping the scan does not mail old travelers).
 - The proposal PDF goes to the account's own email; the proposal page stays sign-in only.
-- **Pre-existing, not changed:** the trip page and Documents list show supplier WORK_ORDER PDFs to
-  the traveler, and `GET /documents/:id/download` lets the owner download them (they carry the
-  internal payout rate). The Confirmation screen and emails never show them. Question for the
-  owner below.
+- **Open question:** `DocumentsService.read` restricts only TRAVELER; any other authenticated
+  role, including SERVICE_WORKER, can download any booking's documents, and the docstring used to
+  claim "operations roles may fetch any". Not changed (an authorization change beyond the owner's
+  approval); recommendation: owner or ops roles only.
+- The builder's estimate uses the manifest's placeholder rates; `customBuilder` null hides it.
 
 ## Traps
 - **A dev API that ignores SIGTERM.** After a `node --watch` restart (e.g. rebuilding
@@ -79,6 +93,9 @@ the Confirmation screen) and ADR 0007 (worker app).
   termination…" and keeps serving the old code; the signal kills its Chromium child. Stop the
   stack by port PID and `kill -9` the API if :3001 is still listening after ~15 s; restart
   `pnpm dev` after rebuilding a workspace package.
+- **A staged `git rm` rides into the next commit** (hit again this session: the builder's deletion
+  landed in the config commit). Commit the deletion with its replacement, or check
+  `git status` before each commit; the fix used was `git reset --soft` of the unpushed commits.
 - `pgrep -f "turbo run dev"` matches the calling shell (its command line contains the pattern):
   find PIDs with `ss -ltnp "sport = :300x"` and `ps -eo pid,args | awk … $0 !~ /awk/`.
 - The `en` locale formats US dates ("Jan 14, 2027", "06:35 PM UTC"); e2e expectations follow it.
@@ -109,14 +126,13 @@ the Confirmation screen) and ADR 0007 (worker app).
     stop it by port PID (kill -9 if needed) and restart `pnpm dev` after rebuilding a package."
 
 ## Next
-1. Owner: the questions in this session's summary (WORK_ORDER visibility, the full Custom builder,
-   provider tracking schema, E-Advisory/E-Options models) plus the standing M4/M5 placeholders
-   and the passport-key backup.
-2. If approved: hide supplier work orders from travelers (DTO filter + download guard).
-3. Phase 6 remainder once M7/M8 exist (E-Advisory, E-Options); SMS behind a provider; Phase 8
-   cookie banner.
-4. Investigate why the API does not exit on SIGTERM (open BullMQ/Redis handles or the PDF
-   browser are the suspects) so `pnpm dev` restarts cleanly.
+1. Owner: M7 D1–D8 (`docs/schema-m7-advisories.md`); the SERVICE_WORKER document-download
+   question; the standing M4/M5/builder placeholders and the passport-key backup; the AGENTS.md
+   §C lines proposed above.
+2. Once M7 is approved: generate it and build the advisories tab, the site banner, E-Advisory and
+   the critical acknowledgement (§5 of the draft); then draft M8 (disruption cases, E-Options).
+3. Investigate why the API does not exit on SIGTERM (BullMQ/Redis handles or the PDF browser).
+4. Phase 8 cookie banner (the deferred public consent route).
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -324,3 +340,14 @@ the Confirmation screen) and ADR 0007 (worker app).
   E-Reconfirm is reduced to what the platform holds; E-Advisory and E-Options wait for M7/M8.
 - 2026-10-18 — Task 2(c), the full designed Custom builder, was not started: the brief asks to
   ask the owner first.
+- 2026-10-18 — the owner took every recommendation: (1a) hide work orders from travelers and
+  refuse their download; (2a) build the designed builder with no migration; (3a) provider
+  tracking from the dispatch ledger; (4) draft M7 first.
+- 2026-10-18 — the builder's styles and sample rates live in the manifest (`customBuilder`,
+  placeholder), not in code; option words live in the core catalogs so a fork overrides them in
+  `tenant/messages`. Province names for the desk come from a domain list of the 16 ISO codes.
+- 2026-10-18 — the builder asks no name, email or phone (it is behind sign-in) and records no
+  90-day consent (no purpose fits); the request stays sign-in only.
+- 2026-10-18 — M7 is drafted as advisories only (D1a recommended); blog, FAQ, media and
+  conditions stay tenant content until a CMS decision.
+
