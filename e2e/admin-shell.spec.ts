@@ -18,6 +18,7 @@ test.describe('admin shell (A-Dashboard)', () => {
     );
     for (const section of [
       'Bookings',
+      'Disruptions',
       'Packages',
       'Customers',
       'Suppliers',
@@ -27,10 +28,6 @@ test.describe('admin shell (A-Dashboard)', () => {
       'Settings',
     ]) {
       await expect(sidebar.getByRole('link', { name: section })).toBeVisible();
-    }
-    // Not built yet (design plan Phase 5): never a link to a missing page.
-    for (const missing of ['Disruptions']) {
-      await expect(sidebar.getByRole('link', { name: missing })).toHaveCount(0);
     }
     await expect(page.getByText('Super Admin', { exact: true })).toBeVisible();
   });
