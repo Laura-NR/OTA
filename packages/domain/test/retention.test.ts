@@ -5,6 +5,7 @@ import {
   addMonths,
   isRetentionNoticeDue,
   isRetentionPurgeDue,
+  isRetentionReminderDue,
   retentionPurgeAt,
   retentionStatus,
   type RetentionClock,
@@ -96,6 +97,31 @@ describe('retention purge', () => {
 
   it('uses exactly the 30-day grace window', () => {
     expect(RETENTION_GRACE_DAYS).toBe(30);
+  });
+});
+
+describe('retention reminder (E-Retention)', () => {
+  const noticeSentAt = new Date('2026-07-10T00:00:00Z');
+
+  it('is due in the last week of the grace period, from day 23 to the purge', () => {
+    const clock = { ...emptyClock, noticeSentAt };
+
+    expect(isRetentionReminderDue(clock, new Date('2026-08-01T23:59:00Z'))).toBe(false);
+    expect(isRetentionReminderDue(clock, new Date('2026-08-02T00:00:00Z'))).toBe(true);
+    expect(isRetentionReminderDue(clock, new Date('2026-08-08T23:59:00Z'))).toBe(true);
+    expect(isRetentionReminderDue(clock, new Date('2026-08-09T00:00:00Z'))).toBe(false);
+  });
+
+  it('is not due once the traveler kept the account, or without a notice', () => {
+    const kept = {
+      ...emptyClock,
+      noticeSentAt,
+      consentGrantedAt: new Date('2026-07-12T00:00:00Z'),
+    };
+    expect(isRetentionReminderDue(kept, new Date('2026-08-03T00:00:00Z'))).toBe(false);
+    expect(isRetentionReminderDue(emptyClock, new Date('2026-08-03T00:00:00Z'))).toBe(
+      false,
+    );
   });
 });
 

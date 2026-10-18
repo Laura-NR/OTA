@@ -184,11 +184,13 @@ export {
 export {
   RETENTION_EXTENSION_MONTHS,
   RETENTION_GRACE_DAYS,
+  RETENTION_REMINDER_DAYS,
   RETENTION_TRIGGER_MONTHS,
   addDays,
   addMonths,
   isRetentionNoticeDue,
   isRetentionPurgeDue,
+  isRetentionReminderDue,
   retentionPurgeAt,
   retentionStatus,
   type RetentionClock,

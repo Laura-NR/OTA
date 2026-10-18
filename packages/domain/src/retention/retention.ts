@@ -4,6 +4,7 @@
  *
  * Timeline:
  *   6 months after the latest COMPLETED booking  -> send the keep-alive notice
+ *   23 days after the notice, with no consent    -> send the one reminder
  *   30 days after the notice, with no consent    -> anonymize the traveler
  *   consent confirmed                             -> extend the account 12 months
  */
@@ -14,6 +15,8 @@ export const RETENTION_TRIGGER_MONTHS = 6;
 export const RETENTION_GRACE_DAYS = 30;
 /** Months the account is kept after a keep-alive confirmation. */
 export const RETENTION_EXTENSION_MONTHS = 12;
+/** Days after the notice when its one reminder goes out (E-Retention: a week left). */
+export const RETENTION_REMINDER_DAYS = 23;
 
 export interface RetentionClock {
   /** When the traveler's latest reservation reached COMPLETED. */
@@ -85,6 +88,23 @@ export function isRetentionNoticeDue(clock: RetentionClock, now: Date): boolean 
     return false;
   }
   return !(clock.noticeSentAt && clock.noticeSentAt >= cycle.start);
+}
+
+/**
+ * True during the last week of the grace period when the traveler has not
+ * confirmed: the notice's one reminder is due (the scan sends it once).
+ */
+export function isRetentionReminderDue(clock: RetentionClock, now: Date): boolean {
+  if (clock.anonymizedAt || !clock.noticeSentAt) {
+    return false;
+  }
+  if (clock.consentGrantedAt && clock.consentGrantedAt >= clock.noticeSentAt) {
+    return false;
+  }
+  return (
+    now >= addDays(clock.noticeSentAt, RETENTION_REMINDER_DAYS) &&
+    now < retentionPurgeAt(clock.noticeSentAt)
+  );
 }
 
 /**
