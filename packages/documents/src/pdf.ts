@@ -19,7 +19,15 @@ async function getBrowser(): Promise<Browser> {
       browserPromise = undefined;
     }
   }
-  browserPromise ??= chromium.launch();
+  // Playwright's default signal handlers close the browser on SIGTERM but never
+  // exit, and a SIGTERM listener disables Node's default exit: the host process
+  // would survive `node --watch` restarts and deploy stops. The host app owns
+  // its signals; Chromium exits on its own when its pipe to us closes.
+  browserPromise ??= chromium.launch({
+    handleSIGINT: false,
+    handleSIGTERM: false,
+    handleSIGHUP: false,
+  });
   return browserPromise;
 }
 

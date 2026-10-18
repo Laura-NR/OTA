@@ -1,3 +1,4 @@
+import { chromium } from 'playwright';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const launches: { connected: boolean; pages: number }[] = [];
@@ -65,5 +66,19 @@ describe('renderHtmlToPdf', () => {
 
     expect(launches).toHaveLength(2);
     expect(launches[1]!.pages).toBe(2);
+  });
+
+  it('leaves the process signals to the host app', async () => {
+    // Playwright's own SIGTERM handler closes the browser but never exits, and
+    // any SIGTERM listener stops Node's default exit: the API would outlive a
+    // `node --watch` restart or the end of `pnpm e2e`.
+    await renderHtmlToPdf('<p>1</p>');
+    expect(chromium.launch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        handleSIGINT: false,
+        handleSIGTERM: false,
+        handleSIGHUP: false,
+      }),
+    );
   });
 });
