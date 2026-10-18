@@ -182,6 +182,22 @@ enum ProposalLineKind {
   OTHER
 }
 
+/// M7: an advisory's severity. INFO and CAUTION are dismissible; CRITICAL is acknowledged.
+enum AdvisorySeverity {
+  INFO
+  CAUTION
+  CRITICAL
+}
+
+/// M7: Scheduled (published, not yet effective) and Expired are derived on read.
+enum AdvisoryStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  SUPERSEDED
+  LIFTED
+}
+
 enum ProposalLineUnit {
   PER_PERSON
   PER_BOOKING
@@ -337,6 +353,10 @@ model User {
   customRequests       CustomRequest[]
   proposalsAssigned    Proposal[]        @relation("ProposalAssignedTo")
   proposalVersionsMade ProposalVersion[] @relation("ProposalVersionCreatedBy")
+  // M7
+  advisoriesCreated        Advisory[]                @relation("AdvisoryCreatedBy")
+  advisoryApprovals        AdvisoryApproval[]        @relation("AdvisoryApprovals")
+  advisoryAcknowledgements AdvisoryAcknowledgement[]
 
   // Better Auth relations
   sessions Session[]
@@ -1275,6 +1295,89 @@ model ProposalPriceLine {
 
   @@index([versionId, position])
   @@map("proposal_price_lines")
+}
+
+/// M7: a travel advisory and crisis banner. A published advisory is edited by
+/// a new row that supersedes it (D2).
+model Advisory {
+  id              String           @id @default(uuid()) @db.Uuid
+  /// The visible reference (ADV-2026-031), unique.
+  reference       String           @unique
+  severity        AdvisorySeverity
+  status          AdvisoryStatus   @default(DRAFT)
+  /// Province codes (CU01…); empty is the whole country (D3).
+  regions         String[]         @default([])
+  effectiveFrom   DateTime         @map("effective_from")
+  /// Mandatory: a banner without an end date is a stale banner.
+  expiresAt       DateTime         @map("expires_at")
+  /// Shown to travelers ("Vereda drivers on the ground · …").
+  source          String
+  sourceLocale    String           @default("en") @map("source_locale")
+  showOnSite      Boolean          @default(true) @map("show_on_site")
+  showOnPackages  Boolean          @default(true) @map("show_on_packages")
+  notifyTravelers Boolean          @default(true) @map("notify_travelers")
+  /// The published advisory this version replaces (D2).
+  supersedesId    String?          @unique @map("supersedes_id") @db.Uuid
+  createdById     String?          @map("created_by_id") @db.Uuid
+  publishedAt     DateTime?        @map("published_at")
+  liftedAt        DateTime?        @map("lifted_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  supersedes       Advisory?                 @relation("AdvisorySupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
+  supersededBy     Advisory?                 @relation("AdvisorySupersedes")
+  createdBy        User?                     @relation("AdvisoryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  translations     AdvisoryTranslation[]
+  approvals        AdvisoryApproval[]
+  acknowledgements AdvisoryAcknowledgement[]
+
+  @@index([status, expiresAt])
+  @@map("advisories")
+}
+
+model AdvisoryTranslation {
+  id         String   @id @default(uuid()) @db.Uuid
+  advisoryId String   @map("advisory_id") @db.Uuid
+  locale     String
+  headline   String
+  /// What happened, why, what to do.
+  body       String
+  cta        String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  advisory Advisory @relation(fields: [advisoryId], references: [id], onDelete: Cascade)
+
+  @@unique([advisoryId, locale])
+  @@map("advisory_translations")
+}
+
+model AdvisoryApproval {
+  id         String   @id @default(uuid()) @db.Uuid
+  advisoryId String   @map("advisory_id") @db.Uuid
+  approverId String?  @map("approver_id") @db.Uuid
+  /// The approver's role when they approved (D4 counts roles).
+  role       Role
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  advisory Advisory @relation(fields: [advisoryId], references: [id], onDelete: Cascade)
+  approver User?    @relation("AdvisoryApprovals", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@unique([advisoryId, approverId])
+  @@map("advisory_approvals")
+}
+
+model AdvisoryAcknowledgement {
+  id         String   @id @default(uuid()) @db.Uuid
+  advisoryId String   @map("advisory_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  advisory Advisory @relation(fields: [advisoryId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([advisoryId, userId])
+  @@map("advisory_acknowledgements")
 }
 
 model Document {
