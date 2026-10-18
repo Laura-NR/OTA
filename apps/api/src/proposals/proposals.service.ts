@@ -108,6 +108,11 @@ function toRequestDto(row: ProposalRow['request']): ProposalRequestDto {
       budgetPerPerson: payload.budgetPerPerson ?? null,
       interests: Array.isArray(payload.interests) ? payload.interests : [],
       pace: payload.pace ?? null,
+      route: Array.isArray(payload.route) ? payload.route : [],
+      transport: payload.transport ?? null,
+      guiding: payload.guiding ?? null,
+      interpreter: payload.interpreter === true,
+      stepFree: payload.stepFree === true,
     }),
     notes: row.notes,
     locale: row.locale,
@@ -222,10 +227,32 @@ export class ProposalsService {
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
   ) {}
 
+  /**
+   * The designed builder's transport and stay styles are the tenant's
+   * (`customBuilder` in the manifest); a key it does not offer is refused.
+   */
+  private assertBuilderChoices(input: CreateCustomRequestRequest): void {
+    const builder = this.tenant.customBuilder;
+    const stays = input.route.flatMap((stop) => (stop.stay ? [stop.stay] : []));
+    if (!input.transport && stays.length === 0) {
+      return;
+    }
+    const transports = new Set(builder?.transports.map((option) => option.key) ?? []);
+    const styles = new Set(builder?.stayStyles.map((option) => option.key) ?? []);
+    if (input.transport && !transports.has(input.transport)) {
+      throw new BadRequestException(`Unknown transport style ${input.transport}`);
+    }
+    const unknown = stays.find((stay) => !styles.has(stay));
+    if (unknown) {
+      throw new BadRequestException(`Unknown stay style ${unknown}`);
+    }
+  }
+
   async createRequest(
     actor: AuthUser,
     input: CreateCustomRequestRequest,
   ): Promise<CreateCustomRequestResultDto> {
+    this.assertBuilderChoices(input);
     const ids = [...new Set(input.inventoryItemIds)];
     if (ids.length > 0) {
       const found = await this.prisma.inventoryItem.count({
@@ -246,6 +273,15 @@ export class ProposalsService {
       budgetPerPerson: input.budgetPerPerson ?? null,
       interests: input.interests,
       pace: input.pace ?? null,
+      route: input.route.map((stop) => ({
+        province: stop.province,
+        nights: stop.nights,
+        ...(stop.stay ? { stay: stop.stay } : {}),
+      })),
+      transport: input.transport ?? null,
+      guiding: input.guiding ?? null,
+      interpreter: input.interpreter ?? false,
+      stepFree: input.stepFree ?? false,
     };
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -283,6 +319,7 @@ export class ProposalsService {
                 adults: input.adults,
                 children: input.children,
                 inventoryItemCount: ids.length,
+                stops: input.route.length,
               },
             },
           });

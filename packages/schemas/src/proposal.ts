@@ -1,4 +1,6 @@
 import {
+  GUIDING_CHOICES,
+  MAX_ROUTE_STOPS,
   PROPOSAL_LINE_KINDS,
   PROPOSAL_LINE_UNITS,
   PROPOSAL_STATUSES,
@@ -39,6 +41,25 @@ const serviceTypeSchema = z.enum([
   ServiceType.Experience,
 ]);
 
+const DAY_MS = 86_400_000;
+
+/**
+ * One stop of the builder's route, in travel order: a province code
+ * (`CU01`…), its nights and the stay style the traveler would like there.
+ */
+export const requestStopSchema = z.object({
+  province: z.string().regex(/^CU\d{2}$/),
+  nights: z.number().int().min(1).max(30),
+  stay: z.string().trim().min(1).max(40).optional(),
+});
+
+export type RequestStopDto = z.infer<typeof requestStopSchema>;
+
+export const guidingChoiceSchema = z.enum([...GUIDING_CHOICES] as [
+  (typeof GUIDING_CHOICES)[number],
+  ...(typeof GUIDING_CHOICES)[number][],
+]);
+
 /** The builder's answers, stored on the request and validated before writing. */
 export const proposalRequestPayloadSchema = z
   .object({
@@ -53,11 +74,24 @@ export const proposalRequestPayloadSchema = z
     budgetPerPerson: z.number().nonnegative().optional(),
     interests: z.array(z.string().trim().min(1).max(60)).max(20).default([]),
     pace: z.string().trim().max(40).optional(),
+    /** The designed builder's route, transport, guiding and access needs. */
+    route: z.array(requestStopSchema).max(MAX_ROUTE_STOPS).default([]),
+    transport: z.string().trim().min(1).max(40).optional(),
+    guiding: guidingChoiceSchema.optional(),
+    interpreter: z.boolean().optional(),
+    stepFree: z.boolean().optional(),
   })
   .refine((payload) => payload.endDate >= payload.startDate, {
     message: 'endDate must be on or after startDate',
     path: ['endDate'],
-  });
+  })
+  .refine(
+    (payload) =>
+      payload.route.length === 0 ||
+      payload.route.reduce((sum, stop) => sum + stop.nights, 0) ===
+        Math.round((payload.endDate.getTime() - payload.startDate.getTime()) / DAY_MS),
+    { message: "The route's nights must add up to the trip's nights", path: ['route'] },
+  );
 
 export type ProposalRequestPayload = z.infer<typeof proposalRequestPayloadSchema>;
 
@@ -72,6 +106,11 @@ export const proposalRequestPayloadDtoSchema = z.object({
   budgetPerPerson: z.number().nullable(),
   interests: z.array(z.string()),
   pace: z.string().nullable(),
+  route: z.array(requestStopSchema),
+  transport: z.string().nullable(),
+  guiding: guidingChoiceSchema.nullable(),
+  interpreter: z.boolean(),
+  stepFree: z.boolean(),
 });
 
 export type ProposalRequestPayloadDto = z.infer<typeof proposalRequestPayloadDtoSchema>;

@@ -21,6 +21,15 @@ const tenant = parseTenantConfig({
     defaultDepositPolicy: 'standard',
     defaultCancellationPolicy: 'standard',
   },
+  customBuilder: {
+    transports: [{ key: 'minivan', pricePerPersonDay: 28 }],
+    stayStyles: [{ key: 'comfort', pricePerNight: 45 }],
+    defaultStayStyle: 'comfort',
+    guiding: { sharedPerPersonDay: 25, privatePerGroupDay: 55 },
+    interpreterPerGroupDay: 40,
+    offsetPerNight: 5,
+    feePercent: 12,
+  },
 });
 
 /**
@@ -137,6 +146,8 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
       inventoryItemIds: [itemId],
       notes: 'Birding first, long walks, casas only.',
       locale: 'en',
+      interests: [],
+      route: [],
     });
     expect(request.reference).toMatch(/^VX-C-/);
 
@@ -262,6 +273,52 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
     expect(again).toEqual(accepted);
   });
 
+  it("stores the designed builder's route and choices, and refuses an unknown style", async () => {
+    const request = await service.createRequest(actor, {
+      startDate: new Date('2027-06-01T00:00:00Z'),
+      endDate: new Date('2027-06-08T00:00:00Z'),
+      adults: 2,
+      children: 0,
+      inventoryItemIds: [],
+      interests: ['nature'],
+      pace: 'gentle',
+      route: [
+        { province: 'CU03', nights: 3, stay: 'comfort' },
+        { province: 'CU01', nights: 4 },
+      ],
+      transport: 'minivan',
+      guiding: 'private',
+      interpreter: true,
+      stepFree: true,
+    });
+    const proposal = await service.getForOps(request.id);
+    expect(proposal.request.payload).toMatchObject({
+      route: [
+        { province: 'CU03', nights: 3, stay: 'comfort' },
+        { province: 'CU01', nights: 4 },
+      ],
+      transport: 'minivan',
+      guiding: 'private',
+      interpreter: true,
+      stepFree: true,
+      pace: 'gentle',
+      interests: ['nature'],
+    });
+
+    await expect(
+      service.createRequest(actor, {
+        startDate: new Date('2027-06-01T00:00:00Z'),
+        endDate: new Date('2027-06-08T00:00:00Z'),
+        adults: 2,
+        children: 0,
+        inventoryItemIds: [],
+        interests: [],
+        route: [{ province: 'CU03', nights: 7, stay: 'castle' }],
+        transport: 'minivan',
+      }),
+    ).rejects.toThrow('Unknown stay style castle');
+  });
+
   it('sends the version without a PDF when the renderer fails', async () => {
     const request = await service.createRequest(actor, {
       startDate: new Date('2027-05-01T00:00:00Z'),
@@ -270,6 +327,8 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
       children: 0,
       inventoryItemIds: [itemId],
       locale: 'es',
+      interests: [],
+      route: [],
     });
     failRender = true;
     try {
