@@ -1,7 +1,7 @@
 # ADR 0006 — Design system v1.1: the Vereda canvas replaces docs/design.md
 
 - **Date:** 2026-10-13
-- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phases 3 and 5 (see the end)
+- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phases 3 and 5, and through 2026-10-18 for Phase 4, M4, M5, Phase 6 and the Confirmation screen (see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `design/vereda-v1.1/` (design handoff v1.1), `docs/design-v1.1-plan.md`,
   `docs/design-change-request-01.md`, `packages/theming`, `packages/ui`, `packages/config`
@@ -454,3 +454,94 @@ D-Proposal board. No token was added.
   marks it SENT; the previous version stays readable.
 - **Not drawn:** the D-Proposal PDF, structured stops/days/options editing, the provider-request
   step and the anonymous proposal link. They are recorded in `docs/schema-m5-proposal.md` §8.
+
+## Amendment, 2026-10-17: Confirmation screen, resolved by the build
+
+The Confirmation / M-Confirmation boards are built on today's data with the existing tokens; no
+token and no migration were added.
+
+- **Where it lives.** `/account/reservations/<id>/confirmation`, a standalone page like the board
+  (no Account sidebar): the hero, then the main column and a sticky 360 px summary from `lg`.
+  Below `lg` the summary follows the hero, as on M-Confirmation. It opens only when the booking is
+  CONFIRMED, IN_PROGRESS or COMPLETED **and** money has been received (`hasConfirmation` in
+  `@ota/domain`); otherwise it returns to the trip page. The trip page links to it with a success
+  strip once the first payment has confirmed the booking.
+- **Sizes.** The 44 px hero title → `display-2` (48) from `md`, `h1-compact` below, as Phase 3
+  snapped the other 44 px titles; the 24/32 section headings → `h3`; the 64 px success disc uses
+  `success-100`/`success-700`; the first step's number uses `accent-500`, the rest an outlined
+  `neutral-300` disc, as drawn.
+- **Hero actions.** The board's primary "Download your offline kit" becomes **Download your
+  voucher** (the offline kit is not built); "Add to calendar" is an all-day iCalendar file built by
+  the pure `tripCalendar`; "Share with David" is replaced by **Message us** (the trip thread). The
+  lede does not claim an emailed confirmation or a host who "already knows": E-Confirmed is sent
+  best-effort (bookings confirmed before it shipped never got one), and the platform tells no
+  host anything; copy that describes the system follows the system.
+- **Before you fly.** Only steps backed by data, in order: a missing US certification (M3), the
+  next instalment due with the real 7/3/1 email reminders (M4, Phase 6), then **Check the entry
+  requirements** pointing to the tenant's Travel info pages. The e-visa status, passport-number
+  and Reality Briefing steps are not drawn (no traveler-side passport edit, no e-visa data, no
+  pre-trip hub). Once the trip has started the list is gone.
+- **Documents.** The traveler's documents only (voucher, invoice, receipt, emergency card), as the
+  board's `.doc` tiles with the issue date; supplier work orders are never listed. A voucher held
+  by the OFAC gate shows a warning instead. Insurance and e-visa tiles are not drawn.
+- **The people expecting you → Your services.** Hosts' names, portraits and phone numbers are not
+  shared with travelers today, so the section lists each service by type, province and dates with
+  a Confirmed / Being arranged chip, plus an operations-desk tile that opens the trip's messages.
+- **CSAT.** The board's "How easy was booking this trip?" measures the booking flow, not the trip;
+  the `Review` model is the completed-trip CSAT, and storing a separate booking-ease score needs a
+  new field (a migration). So the confirmation shows the existing **Rate your trip** review only
+  once the trip is COMPLETED, under its honest title, and never asks the booking-ease question.
+- **Summary.** Trip total, each paid instalment with its date and rail, refunds, and the balance
+  due (or "Paid in full"), with **Pay early** linking to the trip's payment section. The board's
+  cancellation-window line, "Change dates", impact statement and referral link are not drawn: the
+  cancellation scale is a placeholder awaiting counsel, and there is no date-change flow, impact
+  data or referral programme.
+- **Advisory.** The footnote points to Travel info without promising weekly checks or alerts
+  (E-Advisory is not sent yet).
+
+## Amendment, 2026-10-18: M5 follow-ups and Phase 6 emails, resolved by the build
+
+The D-Proposal PDF, the composer's structured lists and the remaining Phase 6 emails are built on
+the existing tokens and the email shell. No token and no migration were added.
+
+- **D-Proposal PDF.** It uses the same A4 shell as the voucher and invoice (agency header with the
+  MINTUR licence, Arial, the tenant primary colour), localized en/es/fr by the request's locale.
+  The board's route and day tables, price table, options and "what happens next" are kept; the
+  prepared-by name, driver and vehicle line, km estimate, host names and "11 requests" are not
+  drawn (no data), and the next steps follow M5 as built (accept → the desk confirms each
+  provider → deposit or full on the trip page → documents on the first payment). Each day's
+  date is counted from the trip's start.
+- **Composer.** Route, Day by day and Options are fieldsets of inline rows (existing `Input`,
+  `Textarea`, `Button`) between the summary and the price lines; a day's number is its position.
+  The traveler's proposal page shows them as cards around the price breakdown; options say they
+  are not in the total and that a revised version is sent on request before acceptance, because
+  a proposal has no message thread yet.
+- **Email shell.** The new Phase 6 templates share one internal shell (`templates/shell.ts`) with
+  the existing inline look; the earlier templates are unchanged.
+- **E-Reminder.** 24 h and 2 h before a deposit's or full payment's window closes, with the
+  deadline in UTC (as the storefront shows it). The board's "your hosts are automatically
+  released" is not written: under M4 D4 the desk decides. The 7/3/1 reminders now cover balances
+  only, so a window is not reminded twice. The SMS twin waits for a provider.
+- **E-Invoice.** M4 lets the traveler choose deposit or full, and the window starts with that
+  choice, so the email lists both amounts and the window length instead of a deadline; no invoice
+  is attached because it is issued at confirmation (spec §4.4). The card and FX lines are not
+  drawn (card fee 0 %, no FX source).
+- **E-Confirmed.** Sent after the documents are issued, with the voucher and invoice attached
+  (or the invoice alone and a note while the OFAC gate holds the voucher), the balance and its
+  7/3/1 reminders, and a link to the Confirmation screen. Insurance, offline kit, host and
+  "Ana calls you" blocks are not drawn.
+- **E-NPS → trip review request.** The board's 0–10 recommendation score and per-host ratings
+  need fields the schema lacks, so the email asks for the existing `Review` (1–5, comment
+  optional) a day after completion, with one reminder five days later; "where your money went",
+  public reviews and referral are not drawn.
+- **E-Reconfirm.** Seven UTC days before a confirmed trip: the first service's place and time, a
+  request to send the arrival flight in the trip's messages, any balance due, the voucher
+  attached and the Travel info link. The flight check, desk call, offline kit and morning
+  check-in SMS are not drawn (no flight data, no SMS provider).
+- **E-Retention.** The notice is now in the traveler's locale and lists what the anonymization
+  actually removes (identity and contact details, the party's names, passports and emergency
+  contacts, the personal text of messages and reviews) and what is kept anonymised for the tax
+  office; one reminder goes out a week before the deadline. "Delete today" and "Download my data"
+  are not drawn (no self-service flows).
+- **Not built:** E-Advisory (needs an advisory record, M7) and E-Options (needs disruption cases
+  and their options, M8).

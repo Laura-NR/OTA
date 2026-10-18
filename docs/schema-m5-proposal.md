@@ -370,13 +370,21 @@ Not built in this increment:
 - the full designed Custom builder (provinces, pace, interests, transport styles, per-stop stays,
   activities and guides). The existing builder still collects dates, party, catalog items and
   notes; the desk prices the rest.
-- structured editing of stops/days/options in the composer. The API accepts them and stores them
-  in `ProposalVersion.document`; the composer currently edits the summary and price lines.
-- the D-Proposal PDF (`pdfKey` stays null) and the account's PDF download. The email links to the
-  signed-in proposal page.
 - provider request/response tracking after acceptance (the board's "11 requests"); the desk uses
   today's dispatch.
 - an anonymous proposal link, planning-fee charging, and a proposal audit export.
+
+Landed after the first cut (2026-10-18, no migration):
+
+- the D-Proposal PDF. Publishing a version renders it (`@ota/documents`, en/es/fr), stores it in
+  object storage under `ProposalVersion.pdfKey` (`proposals/<id>/v<n>.pdf`) and attaches it to the
+  proposal email, best-effort. The traveler reads it at `GET /me/proposals/:id/versions/:vid/pdf`
+  (owner only) and the desk at `GET /proposals/:id/versions/:vid/pdf`; the version DTO carries
+  `hasPdf`.
+- structured editing of stops, days and options in the desk composer, seeded from the current
+  version so a revision keeps them; the traveler's proposal page and the PDF show them. A day's
+  date is counted from the trip's start, so the document's optional free-text `date` is not
+  written by the composer.
 
 The proposal reference is `VX-C-` plus the existing 8-character booking code, unique on
 `CustomRequest.reference`.

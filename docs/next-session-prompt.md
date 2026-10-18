@@ -27,46 +27,34 @@ Verify the handoff against the code; run `git log --oneline main..vereda`. If th
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done. M1–M5 are
-complete with their surfaces. The M4 payment schedule (deposit/balance, proofs, refunds) and the
-M5 custom-trip flow (builder request → desk-priced proposal → traveler acceptance) are live.
-M5 landed on migration 20261017181739_custom_proposals: /custom creates a CustomRequest, the desk
-prices immutable ProposalVersions from /bookings/proposals, and acceptance creates an
-ITINERARY_SUBMITTED booking with the accepted price lines in one transaction (nothing is charged).
-The proposal page is sign-in only; the planning fee is transparency copy only. The M5 first cut is
-minimal: the full designed Custom builder, structured stops/days/options editing and the D-Proposal
-PDF are not built. Phase 6 has the booking-received, E-OFAC and 7/3/1 balance-reminder emails,
-verified in Mailpit. The Confirmation screen is NOT built. The M4/M5 terms in the manifest are
-placeholders; the card fee is 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in
-apps/api/.env and verified (never print, read or rotate it). The dev stack is stopped and ports
-3000–3002 are free; the last full verify is in the handoff. The owner decided: placeholder/mock
-data until real data is published; the design team is not asked; the build resolves design gaps
-itself with existing tokens, recorded in the ADRs.
+complete with their surfaces. The Confirmation screen is built (/account/reservations/<id>/
+confirmation, opened once money was received, linked from the trip page). The M5 follow-ups (a)
+and (b) are done: the D-Proposal PDF (stored at ProposalVersion.pdfKey, attached to the proposal
+email, owner/desk download routes) and structured stops/days/options editing. Phase 6 now sends
+E-Received, E-OFAC, E-Invoice, E-Confirmed (documents attached), the 24 h/2 h window reminders,
+the 7/3/1 balance reminders, the trip review request (E-NPS adapted to the Review CSAT), the T−7
+reconfirmation and E-Retention with its reminder, all verified in Mailpit. Not built: E-Advisory
+(M7), E-Options (M8), SMS/push, the full designed Custom builder, provider request tracking. The
+M4/M5 terms in the manifest are placeholders; the card fee is 0 % until counsel rules.
+PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or rotate it).
+The last full verify is in the handoff (604 unit, 58/58 e2e, 13/13 live). The owner decided:
+placeholder/mock data until real data is published; the design team is not asked; the build
+resolves design gaps itself with existing tokens, recorded in the ADRs.
 
-TASK 1 (primary) — The Confirmation screen on today's data, no migration. Build the
-Confirmation / M-Confirmation boards as the post-deposit confirmation the traveler reaches after
-the booking is CONFIRMED. Use today's data: the trip detail (/me/reservations/:id), its documents,
-the M4 schedule (paid/balance), the OFAC state and the Review model. The board's "How easy was
-booking this trip?" is not the Review model (that is a completed-trip CSAT): either show the
-review only for COMPLETED trips or label it honestly and record the resolution in ADR 0006. Do
-not invent host phone numbers, e-visa status, insurance certificates or offline-kit generation;
-show what exists and omit the rest with the board's "later"/placeholder treatment. Link it from
-the trip page after the first payment confirms. Add e2e coverage and check 390/1024/1280.
+TASK 1 (primary) — Act on the owner's answers to last session's questions (see the handoff's
+Next and the session summary): if approved, hide supplier WORK_ORDER documents from travelers
+(the trip DTO filter plus a guard on GET /documents/:id/download; this tightens authorization, so
+only with the owner's yes), and start whichever of the full Custom builder or the M7/M8 drafts the
+owner chose. Do not start a schema batch without an approved draft.
 
-TASK 2 (if time remains) — M5 follow-ups, in this order:
-(a) the D-Proposal PDF using the existing ProposalVersion.pdfKey, packages/storage and the
-document renderer (no migration; verify with a real file and the proposal email);
-(b) structured stops/days/options editing in the desk composer (the JSON document already stores
-them; no migration);
-(c) the full designed Custom builder (provinces, pace, interests, transport styles, per-stop stays,
-activities/guides) — no migration, but large; ask the owner before taking it on.
-Provider request/response tracking after acceptance needs a schema decision (M8 or a new batch):
-ask first with options, do not assume it.
+TASK 2 — Investigate why the dev API ignores SIGTERM ("Waiting for graceful termination…" after
+a node --watch restart or at the end of pnpm e2e, so a stale process keeps serving). Suspects:
+open BullMQ workers/Redis connections or the PDF browser. Reproduce, name the mechanism, fix it
+with a test (Article 7).
 
-TASK 3 (if time remains) — The remaining Phase 6 emails, no migration, branded and localized
-(en/es/fr) through packages/email, each verified in Mailpit by an e2e spec: E-Reminder 24 h/2 h,
-E-Confirmed, E-Invoice, E-NPS, E-Advisory, E-Options, E-Reconfirm, E-Retention. Reuse the
-proposal/booking templates' locale helpers and the existing audit/idempotency patterns where a
-scan is involved.
+TASK 3 (if time remains) — Phase 6 leftovers that need no migration, if any remain after the
+owner's answers; otherwise the Phase 8 cookie banner (the public consent route was deferred to
+it).
 
 TASK 4 — DOCS and VERIFY as before: keep docs/handoff/vereda.md a current snapshot (Decisions
 append-only), update the Progress table and the ADR 0006 amendment for design resolutions; run
@@ -115,5 +103,11 @@ TENANT_CONFIG; a live single test needs the workspace packages built first; an e
 storefront client components take Intl-formatted text from the server or plainSpaces(formatMoney());
 booking stamps the lead's nationality and phone, so e2e fixtures on traveler@example.test restore
 them; a `git rm` stays staged for the next commit; `json.dump` reformats the manifest, so insert its
-keys as text; a balance due date is a UTC calendar day (`calendarDate`).
+keys as text; a balance due date is a UTC calendar day (`calendarDate`). New this session: a dev
+API can ignore SIGTERM and keep serving stale code with its Chromium killed (stop it by port PID,
+kill -9 if :3001 stays up, restart pnpm dev after rebuilding a package); `pgrep -f "turbo run dev"`
+matches the calling shell; the `en` locale formats US dates in e2e expectations; `page.request`
+resolves relative URLs against the back-office, so prefix storefront links; the notification
+scans mail every matching dev booking, so filter Mailpit by booking code; hand-built
+ReservationsService needs a NotificationsService stub.
 ```
