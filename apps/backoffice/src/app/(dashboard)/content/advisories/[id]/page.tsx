@@ -40,9 +40,10 @@ export default async function AdvisoryPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [t, traveler, locale, session] = await Promise.all([
+  const [t, traveler, disruptionsT, locale, session] = await Promise.all([
     getTranslations('advisoriesDesk'),
     getTranslations('advisories'),
+    getTranslations('disruptionsDesk'),
     getLocale(),
     getServerSession(),
   ]);
@@ -130,6 +131,16 @@ export default async function AdvisoryPage({
           </Badge>
         </div>
       </PageHeader>
+      {advisory.disruptionCase ? (
+        <p className="text-body-sm">
+          <Link
+            href={`/disruptions/${advisory.disruptionCase.id}`}
+            className="text-primary-600 underline-offset-4 hover:underline"
+          >
+            {disruptionsT('fromCase', { reference: advisory.disruptionCase.reference })}
+          </Link>
+        </p>
+      ) : null}
       {advisory.supersedesReference ? (
         <p className="text-body-sm text-muted">
           {t('live.supersedes', { reference: advisory.supersedesReference })}

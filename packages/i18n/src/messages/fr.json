@@ -1674,7 +1674,11 @@
         "windowExpired": "{count, plural, one {# réservation} other {# réservations}} · délai de paiement dépassé",
         "windowExpiredNote": "prolongez-le ou annulez",
         "balanceOverdue": "{count, plural, one {# solde en retard} other {# soldes en retard}}",
-        "balanceOverdueNote": "relancez le voyageur"
+        "balanceOverdueNote": "relancez le voyageur",
+        "disruptionUnknown": "{count, plural, one {# groupe} other {# groupes}} · inconnu au-delà du délai",
+        "disruptionCall": "{count, plural, one {# réservation} other {# réservations}} · à appeler",
+        "disruptionHelp": "{count, plural, one {# groupe} other {# groupes}} · besoin d'aide",
+        "disruptionNote": "Dossiers de perturbation"
       },
       "matrix": {
         "title": "Matrice de dispatch",
@@ -2919,6 +2923,201 @@
       "confirmLift": "Lever maintenant"
     }
   },
+  "disruptionsDesk": {
+    "title": "Perturbations",
+    "description": "Dossiers de perturbation : gravité, protocole du scénario, options des voyageurs et tableau de suivi.",
+    "new": "Nouveau dossier",
+    "empty": "Aucun dossier de perturbation.",
+    "case": "Dossier",
+    "severity": "Gravité",
+    "scenario": "Scénario",
+    "affected": "Concernés",
+    "status": "Statut",
+    "owner": "responsable {name}",
+    "noOwner": "Sans responsable",
+    "notRegional": "Non régional",
+    "affectedLine": "{count, plural, one {# réservation} other {# réservations}} · {ground} sur place · {arriving} arrivent sous 72 h",
+    "overdueLine": "{count, plural, one {# groupe} other {# groupes}} sans nouvelles au-delà du délai",
+    "callLine": "{count, plural, one {# réservation} other {# réservations}} à appeler",
+    "footnote": "Les protocoles viennent du cadre de crise de l'agence. Les dossiers sont conservés pour le rapport d'incidents et d'urgences.",
+    "sampleNotice": "Cadre de crise d'exemple : scénarios, étapes et options sont provisoires jusqu'à confirmation par l'agence.",
+    "statuses": {
+      "OPEN": "Ouvert",
+      "CLOSED": "Clos"
+    },
+    "severities": {
+      "MINOR": "Mineur",
+      "MAJOR": "Majeur",
+      "EMERGENCY": "Urgence"
+    },
+    "severityRules": {
+      "MINOR": "Gêne, l'itinéraire tient. Le bureau s'en charge ; voyageurs contactés une fois.",
+      "MAJOR": "Services perdus ou relogement nécessaire. Super Admin informé ; contact toutes les 4 h.",
+      "EMERGENCY": "Sécurité en jeu. Cellule de crise alertée, contact toutes les heures, bandeau critique, assureur prévenu."
+    },
+    "paths": {
+      "MINOR": "Le bureau s'en charge. Le Super Admin le voit dans le récapitulatif du jour. Voyageurs contactés une fois avec les options ; pas de bandeau public sauf si des arrivées sont touchées.",
+      "MAJOR": "Le bureau s'en charge ; le Super Admin est informé sous 1 h et approuve le bandeau public. Voyageurs contactés toutes les 4 h jusqu'à résolution. Incident consigné pour le bilan annuel du MINTUR.",
+      "EMERGENCY": "Cellule de crise alertée (Super Admin, directeur des opérations, coordinateur local). Contact toutes les heures, bandeau critique avec deux approbations, ligne 24/7 assurée par roulement."
+    },
+    "back": "Tous les dossiers",
+    "newTitle": "Nouveau dossier de perturbation",
+    "noScenarios": "Le manifeste du tenant ne définit aucun scénario de perturbation : aucun dossier ne peut être ouvert.",
+    "form": {
+      "scenario": "Scénario",
+      "scenarioHint": "Choisit le protocole, les options des voyageurs et la règle de compensation. Le dossier en garde une copie : une modification ultérieure du cadre ne le réécrit pas.",
+      "trigger": "Déclencheur enregistré : {trigger}",
+      "province": "Province",
+      "notRegional": "Non régional (un vol, par exemple)",
+      "title": "Titre",
+      "summary": "Résumé",
+      "summaryHint": "Ce qui s'est passé, où et qui est concerné. Les voyageurs le voient avec les options.",
+      "open": "Ouvrir le dossier",
+      "failed": "Le dossier n'a pas pu être ouvert."
+    },
+    "header": {
+      "openFor": "Ouvert · {hours} h {minutes} min",
+      "closedOn": "Clos le {when}",
+      "opened": "Ouvert le {when} par {name}",
+      "province": "province {name}",
+      "takeOver": "Prendre le dossier",
+      "close": "Clore le dossier",
+      "confirmClose": "Clore le dossier ? Les voyageurs ne pourront plus répondre et le bureau ne pourra plus le modifier.",
+      "cancel": "Annuler"
+    },
+    "counts": {
+      "affected": "Réservations concernées : {count}",
+      "onTheGround": "Sur place : {count}",
+      "arriving": "Arrivent sous 72 h : {count}",
+      "banner": "Bandeau public : {state}"
+    },
+    "severityCard": {
+      "title": "Gravité",
+      "hint": "Détermine qui est alerté, la fréquence des contacts avec les voyageurs et si le bandeau du site requiert une seconde approbation. Elle peut être relevée ou abaissée à tout moment.",
+      "path": "Escalade · {severity}",
+      "save": "Changer la gravité"
+    },
+    "playbook": {
+      "title": "Protocole · {scenario}",
+      "progress": "{done} sur {total} faits · responsables et délais du cadre de crise",
+      "markDone": "Marquer fait",
+      "doneBy": "Fait le {when} par {name}",
+      "empty": "Le scénario n'a pas d'étapes de protocole."
+    },
+    "options": {
+      "title": "Options des voyageurs",
+      "hint": "Chaque option indique sa conséquence financière avant le choix du voyageur. Sans réponse à l'échéance, l'option par défaut s'applique et le bureau appelle.",
+      "locked": "Envoyées : le jeu d'options est désormais figé.",
+      "optionTitle": "Option {key} · titre",
+      "optionDetail": "Option {key} · conséquence financière",
+      "add": "Ajouter une option",
+      "remove": "Retirer l'option {key}",
+      "save": "Enregistrer les options",
+      "picked": "{count, plural, =0 {pas encore de réponse} one {# réponse} other {# réponses}}",
+      "empty": "Pas encore d'options."
+    },
+    "send": {
+      "title": "Envoyer les options",
+      "deadline": "Réponse avant (heure de La Havane)",
+      "default": "Option par défaut sans réponse",
+      "recipients": "Réservations",
+      "noRecipients": "Rattachez d'abord une réservation.",
+      "answered": "répondu",
+      "submit": "Envoyer les options à {count, plural, one {# réservation} other {# réservations}}",
+      "channels": "Envoyées par e-mail (E-Options) avec un lien vers la page du voyage ; le SMS et les boutons dans l'app attendent un fournisseur. Un nouvel envoi à une réservation sans réponse remplace son échéance."
+    },
+    "policy": {
+      "title": "Règle de compensation · {scenario}",
+      "note": "L'argent passe par des remboursements sur la réservation ; les avoirs sur un futur voyage attendent un modèle d'avoirs."
+    },
+    "board": {
+      "title": "Tableau de suivi des voyageurs",
+      "legend": "En sécurité {safe} · Besoin d'aide {help} · Inconnu {unknown}",
+      "rule": "« Inconnu » passe au rouge après 4 h sans contact (majeur) ou 1 h (urgence). Marquer en sécurité enregistre qui l'a confirmé et comment.",
+      "traveler": "Voyageur",
+      "trip": "Voyage",
+      "status": "Statut",
+      "lastContact": "Dernier contact",
+      "answer": "Réponse",
+      "act": "Agir",
+      "party": "{nationality} · groupe de {count}",
+      "underWay": "En voyage · {dates}",
+      "arriving": "Arrive le {date}",
+      "later": "{dates}",
+      "anonymized": "Voyageur anonymisé",
+      "safety": {
+        "UNKNOWN": "Inconnu",
+        "SAFE": "En sécurité",
+        "NEEDS_HELP": "Besoin d'aide"
+      },
+      "overdue": "Délai de contact dépassé",
+      "noContact": "Pas encore de contact",
+      "confirmedBy": "confirmé par {name}",
+      "offer": {
+        "NOT_SENT": "Options non envoyées",
+        "AWAITING": "En attente · réponse avant {time}",
+        "CHOSEN": "Option {key} · {source}",
+        "DEFAULTED": "Sans réponse · {key} s'applique · appeler"
+      },
+      "sources": {
+        "TRAVELER": "choisie en ligne",
+        "DESK": "par téléphone",
+        "DEFAULT": "défaut confirmé"
+      },
+      "statusLabel": "Statut",
+      "note": "Comment il a été confirmé",
+      "notePlaceholder": "Chauffeur au téléphone : tous deux bien",
+      "saveStatus": "Enregistrer le statut",
+      "answerLabel": "Réponse par téléphone",
+      "recordAnswer": "Enregistrer la réponse",
+      "confirmDefault": "Confirmer le défaut {key}",
+      "call": "Appeler",
+      "email": "E-mail",
+      "empty": "Aucune réservation rattachée."
+    },
+    "attach": {
+      "title": "Rattacher des réservations",
+      "hint": "Réservations confirmées en {province} en cours ou arrivant sous 72 h.",
+      "noProvince": "Non régional : rattachez les réservations par code.",
+      "none": "Aucune autre réservation confirmée de la province n'est en cours ou n'arrive sous 72 h.",
+      "code": "Code de réservation",
+      "byCode": "Rattacher par code",
+      "selected": "Rattacher la sélection"
+    },
+    "comms": {
+      "title": "Communication",
+      "hint": "Un seul point de référence public : le bandeau du site, approuvé selon les règles de Contenu.",
+      "none": "Non rédigé",
+      "draft": "Rédiger le bandeau du site",
+      "open": "Relire dans Contenu",
+      "line": "{reference} · {severity} · {status}",
+      "emailed": "E-mails E-Options envoyés : {count}",
+      "deferred": "Le SMS, les contacts d'urgence, l'assureur et la diffusion aux prestataires ne sont pas encore connectés."
+    },
+    "log": {
+      "title": "Journal du dossier",
+      "hint": "Alimente le rapport d'incidents et d'urgences.",
+      "empty": "Rien n'est encore consigné.",
+      "system": "Système",
+      "actions": {
+        "opened": "a ouvert le dossier en {severity}",
+        "booking_attached": "a rattaché {code}",
+        "severity_changed": "a changé la gravité de {from} à {to}",
+        "owner_changed": "a changé le responsable",
+        "updated": "a modifié le titre ou le résumé",
+        "step_done": "a terminé : {text}",
+        "options_updated": "a modifié les options",
+        "options_sent": "a envoyé les options à {codes} · réponse avant {time}",
+        "options_delivered": "E-Options envoyé pour {code}",
+        "safety_marked": "a marqué {code} {safety}",
+        "choice_recorded": "a enregistré l'option {key} pour {code} ({source})",
+        "advisory_drafted": "a rédigé le bandeau du site {reference}",
+        "closed": "a clos le dossier"
+      }
+    },
+    "fromCase": "Bandeau du dossier de perturbation {reference}",
+    "actionFailed": "La modification n'a pas été enregistrée."
+  },
   "advisories": {
     "label": "Avis aux voyageurs",
     "severities": {
@@ -2946,5 +3145,18 @@
     },
     "noticeTitle": "Avis pour la région de ce voyage",
     "noticeMore": "En savoir plus dans Infos voyage"
+  },
+  "disruptionOptions": {
+    "overline": "Perturbation · dossier {reference}",
+    "choose": "Choisissez une option avant {deadline}.",
+    "silence": "Sans réponse avant {deadline}, nous gardons l'option {key} et le bureau vous appelle.",
+    "policy": "Compensation : {policy}",
+    "legend": "Vos options",
+    "confirm": "Confirmer l'option {key}",
+    "chosen": "Vous avez choisi l'option {key}. Le bureau l'organise ; appelez-le pour la changer.",
+    "desk": "Le bureau a enregistré l'option {key} pour vous.",
+    "defaulted": "L'échéance est passée : l'option {key} s'applique et le bureau vous appellera.",
+    "failed": "Votre réponse n'a pas été enregistrée. Réessayez ou appelez le bureau.",
+    "default": "par défaut"
   }
 }

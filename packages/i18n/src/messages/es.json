@@ -1674,7 +1674,11 @@
         "windowExpired": "{count, plural, one {# reserva} other {# reservas}} · plazo de pago vencido",
         "windowExpiredNote": "amplíalo o cancela",
         "balanceOverdue": "{count, plural, one {# resto vencido} other {# restos vencidos}}",
-        "balanceOverdueNote": "recuérdaselo al viajero"
+        "balanceOverdueNote": "recuérdaselo al viajero",
+        "disruptionUnknown": "{count, plural, one {# grupo} other {# grupos}} · desconocido pasado el plazo",
+        "disruptionCall": "{count, plural, one {# reserva} other {# reservas}} · llamar ya",
+        "disruptionHelp": "{count, plural, one {# grupo} other {# grupos}} · necesita ayuda",
+        "disruptionNote": "Casos de incidencia"
       },
       "matrix": {
         "title": "Matriz de despacho",
@@ -2919,6 +2923,201 @@
       "confirmLift": "Retirar ahora"
     }
   },
+  "disruptionsDesk": {
+    "title": "Incidencias",
+    "description": "Casos de incidencia: gravedad, protocolo del escenario, opciones para los viajeros y tablero de estado.",
+    "new": "Nuevo caso",
+    "empty": "No hay casos de incidencia.",
+    "case": "Caso",
+    "severity": "Gravedad",
+    "scenario": "Escenario",
+    "affected": "Afectados",
+    "status": "Estado",
+    "owner": "responsable {name}",
+    "noOwner": "Sin responsable",
+    "notRegional": "No regional",
+    "affectedLine": "{count, plural, one {# reserva} other {# reservas}} · {ground} en destino · {arriving} llegan en 72 h",
+    "overdueLine": "{count, plural, one {# grupo} other {# grupos}} sin contacto pasado el plazo",
+    "callLine": "{count, plural, one {# reserva} other {# reservas}} por llamar",
+    "footnote": "Los protocolos vienen del marco de crisis de la agencia. Los casos se conservan para el informe de incidentes y emergencias.",
+    "sampleNotice": "Marco de crisis de muestra: escenarios, pasos y opciones son provisionales hasta que la agencia los confirme.",
+    "statuses": {
+      "OPEN": "Abierto",
+      "CLOSED": "Cerrado"
+    },
+    "severities": {
+      "MINOR": "Leve",
+      "MAJOR": "Grave",
+      "EMERGENCY": "Emergencia"
+    },
+    "severityRules": {
+      "MINOR": "Molestia, el itinerario se mantiene. Lo gestiona el equipo; se contacta una vez a los viajeros.",
+      "MAJOR": "Servicios perdidos o reubicación necesaria. Se informa al Super Admin; contacto cada 4 h.",
+      "EMERGENCY": "Seguridad en riesgo. Se avisa al equipo de crisis, contacto cada hora, aviso crítico, aseguradora notificada."
+    },
+    "paths": {
+      "MINOR": "Lo gestiona el equipo. El Super Admin lo ve en el resumen diario. Se contacta una vez a los viajeros con opciones; sin aviso público salvo que afecte a llegadas.",
+      "MAJOR": "Lo gestiona el equipo; el Super Admin es informado en 1 h y aprueba el aviso público. Contacto con los viajeros cada 4 h hasta resolverlo. Incidente registrado para el resumen anual del MINTUR.",
+      "EMERGENCY": "Se avisa al equipo de crisis (Super Admin, Director de Operaciones, coordinador local). Contacto cada hora, aviso crítico con dos aprobaciones, línea 24/7 por turnos."
+    },
+    "back": "Todos los casos",
+    "newTitle": "Nuevo caso de incidencia",
+    "noScenarios": "El manifiesto del tenant no define escenarios de incidencia, así que no se puede abrir un caso.",
+    "form": {
+      "scenario": "Escenario",
+      "scenarioHint": "Elige el protocolo, las opciones para los viajeros y la regla de compensación. El caso guarda una copia: un cambio posterior en el marco no lo reescribe.",
+      "trigger": "Desencadenante registrado: {trigger}",
+      "province": "Provincia",
+      "notRegional": "No regional (un vuelo, por ejemplo)",
+      "title": "Título",
+      "summary": "Resumen",
+      "summaryHint": "Qué pasó, dónde y a quién afecta. Los viajeros lo ven con las opciones.",
+      "open": "Abrir caso",
+      "failed": "No se pudo abrir el caso."
+    },
+    "header": {
+      "openFor": "Abierto · {hours} h {minutes} min",
+      "closedOn": "Cerrado el {when}",
+      "opened": "Abierto el {when} por {name}",
+      "province": "provincia {name}",
+      "takeOver": "Asumir el caso",
+      "close": "Cerrar caso",
+      "confirmClose": "¿Cerrar el caso? Los viajeros ya no podrán responder y el equipo ya no podrá modificarlo.",
+      "cancel": "Cancelar"
+    },
+    "counts": {
+      "affected": "Reservas afectadas: {count}",
+      "onTheGround": "En destino: {count}",
+      "arriving": "Llegan en 72 h: {count}",
+      "banner": "Aviso público: {state}"
+    },
+    "severityCard": {
+      "title": "Gravedad",
+      "hint": "Define a quién se avisa, cada cuánto se contacta a los viajeros y si el aviso del sitio necesita una segunda aprobación. Se puede subir o bajar en cualquier momento.",
+      "path": "Escalado · {severity}",
+      "save": "Cambiar gravedad"
+    },
+    "playbook": {
+      "title": "Protocolo · {scenario}",
+      "progress": "{done} de {total} hechos · responsables y plazos del marco de crisis",
+      "markDone": "Marcar hecho",
+      "doneBy": "Hecho el {when} por {name}",
+      "empty": "El escenario no tiene pasos de protocolo."
+    },
+    "options": {
+      "title": "Opciones para los viajeros",
+      "hint": "Cada opción indica su consecuencia económica antes de que el viajero elija. Sin respuesta al vencer el plazo se mantiene la opción por defecto y el equipo llama.",
+      "locked": "Enviadas: el conjunto de opciones ya es fijo.",
+      "optionTitle": "Opción {key} · título",
+      "optionDetail": "Opción {key} · consecuencia económica",
+      "add": "Añadir opción",
+      "remove": "Quitar opción {key}",
+      "save": "Guardar opciones",
+      "picked": "{count, plural, =0 {aún sin respuestas} one {# respuesta} other {# respuestas}}",
+      "empty": "Aún no hay opciones."
+    },
+    "send": {
+      "title": "Enviar opciones",
+      "deadline": "Responder antes de (hora de La Habana)",
+      "default": "Opción por defecto sin respuesta",
+      "recipients": "Reservas",
+      "noRecipients": "Primero vincula una reserva.",
+      "answered": "respondida",
+      "submit": "Enviar opciones a {count, plural, one {# reserva} other {# reservas}}",
+      "channels": "Se envían por correo (E-Options) con un enlace a la página del viaje; el SMS y los botones en la app esperan un proveedor. Reenviar a una reserva sin respuesta sustituye su plazo."
+    },
+    "policy": {
+      "title": "Regla de compensación · {scenario}",
+      "note": "El dinero se mueve con reembolsos en la reserva; los créditos para viajes futuros esperan un modelo de créditos."
+    },
+    "board": {
+      "title": "Tablero de estado de los viajeros",
+      "legend": "A salvo {safe} · Necesita ayuda {help} · Desconocido {unknown}",
+      "rule": "«Desconocido» pasa a rojo tras 4 h sin contacto (grave) o 1 h (emergencia). Marcar a salvo registra quién lo confirmó y cómo.",
+      "traveler": "Viajero",
+      "trip": "Viaje",
+      "status": "Estado",
+      "lastContact": "Último contacto",
+      "answer": "Respuesta",
+      "act": "Acción",
+      "party": "{nationality} · grupo de {count}",
+      "underWay": "En el viaje · {dates}",
+      "arriving": "Llega el {date}",
+      "later": "{dates}",
+      "anonymized": "Viajero anonimizado",
+      "safety": {
+        "UNKNOWN": "Desconocido",
+        "SAFE": "A salvo",
+        "NEEDS_HELP": "Necesita ayuda"
+      },
+      "overdue": "Pasado el plazo de contacto",
+      "noContact": "Aún sin contacto",
+      "confirmedBy": "confirmado por {name}",
+      "offer": {
+        "NOT_SENT": "Opciones no enviadas",
+        "AWAITING": "Pendiente · responder antes de {time}",
+        "CHOSEN": "Opción {key} · {source}",
+        "DEFAULTED": "Sin respuesta · se mantiene {key} · llamar ya"
+      },
+      "sources": {
+        "TRAVELER": "elegida en línea",
+        "DESK": "por teléfono",
+        "DEFAULT": "por defecto confirmada"
+      },
+      "statusLabel": "Estado",
+      "note": "Cómo se confirmó",
+      "notePlaceholder": "Conductor por teléfono: ambos bien",
+      "saveStatus": "Guardar estado",
+      "answerLabel": "Respuesta por teléfono",
+      "recordAnswer": "Registrar respuesta",
+      "confirmDefault": "Confirmar por defecto {key}",
+      "call": "Llamar",
+      "email": "Correo",
+      "empty": "Aún no hay reservas vinculadas."
+    },
+    "attach": {
+      "title": "Vincular reservas",
+      "hint": "Reservas aseguradas en {province} en curso o que llegan en 72 h.",
+      "noProvince": "No regional: vincula reservas por código.",
+      "none": "Ninguna otra reserva asegurada de la provincia está en curso o llega en 72 h.",
+      "code": "Código de reserva",
+      "byCode": "Vincular por código",
+      "selected": "Vincular seleccionadas"
+    },
+    "comms": {
+      "title": "Comunicación",
+      "hint": "Un único punto de referencia público: el aviso del sitio, aprobado según las reglas de Contenido.",
+      "none": "Sin redactar",
+      "draft": "Redactar aviso del sitio",
+      "open": "Revisar en Contenido",
+      "line": "{reference} · {severity} · {status}",
+      "emailed": "Correos E-Options enviados: {count}",
+      "deferred": "El SMS, los contactos de emergencia, la aseguradora y el aviso a proveedores aún no están conectados."
+    },
+    "log": {
+      "title": "Registro del caso",
+      "hint": "Alimenta el informe de incidentes y emergencias.",
+      "empty": "Aún no hay nada registrado.",
+      "system": "Sistema",
+      "actions": {
+        "opened": "abrió el caso como {severity}",
+        "booking_attached": "vinculó {code}",
+        "severity_changed": "cambió la gravedad de {from} a {to}",
+        "owner_changed": "cambió el responsable",
+        "updated": "editó el título o el resumen",
+        "step_done": "completó: {text}",
+        "options_updated": "editó las opciones",
+        "options_sent": "envió las opciones a {codes} · responder antes de {time}",
+        "options_delivered": "E-Options enviado para {code}",
+        "safety_marked": "marcó {code} como {safety}",
+        "choice_recorded": "registró la opción {key} para {code} ({source})",
+        "advisory_drafted": "redactó el aviso del sitio {reference}",
+        "closed": "cerró el caso"
+      }
+    },
+    "fromCase": "Aviso del caso de incidencia {reference}",
+    "actionFailed": "No se guardó el cambio."
+  },
   "advisories": {
     "label": "Aviso de viaje",
     "severities": {
@@ -2946,5 +3145,18 @@
     },
     "noticeTitle": "Aviso para la región de este viaje",
     "noticeMore": "Más en Información de viaje"
+  },
+  "disruptionOptions": {
+    "overline": "Incidencia · caso {reference}",
+    "choose": "Elige una opción antes de {deadline}.",
+    "silence": "Si no sabemos nada de ti antes de {deadline}, mantenemos la opción {key} y el equipo te llama.",
+    "policy": "Compensación: {policy}",
+    "legend": "Tus opciones",
+    "confirm": "Confirmar la opción {key}",
+    "chosen": "Elegiste la opción {key}. El equipo la está organizando; llámanos para cambiarla.",
+    "desk": "El equipo registró la opción {key} por ti.",
+    "defaulted": "El plazo ha vencido: se mantiene la opción {key} y el equipo te llamará.",
+    "failed": "No se guardó tu respuesta. Inténtalo de nuevo o llama al equipo.",
+    "default": "por defecto"
   }
 }

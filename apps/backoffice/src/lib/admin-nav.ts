@@ -3,9 +3,9 @@ import type { IconName } from '@ota/ui';
 /**
  * The A-Dashboard sidebar: the desk's ten sections, in the design's order.
  * A section whose module is not built yet has no `href` and is not shown, so
- * the sidebar never links to a missing page; it appears once its pages land
- * (Disruptions M8: design plan Phase 5); Content holds the M7 advisories. Payments and Settings are
- * read-only until M4 and M9.
+ * the sidebar never links to a missing page; it appears once its pages land.
+ * Disruptions holds the M8 cases and Content the M7 advisories. Payments and
+ * Settings are read-only until M4 and M9.
  * `pages` are the screens that predate the redesign, re-homed under their
  * section and shown as its sub-navigation; the old paths redirect
  * (`next.config.ts`).
@@ -48,7 +48,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
   {
     key: 'disruptions',
     icon: 'alert-triangle',
-    href: null,
+    href: '/disruptions',
     base: '/disruptions',
     pages: [],
   },

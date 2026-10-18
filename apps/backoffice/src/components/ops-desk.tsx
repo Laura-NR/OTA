@@ -90,6 +90,8 @@ export interface OpsDeskProps {
   ofacMissing: number;
   /** M4: first payments past their window, and balances past due. */
   payments: { windowExpired: number; balanceOverdue: number };
+  /** M8: open cases' red Unknowns, calls due and parties needing help. */
+  disruptions: { overdueUnknown: number; callNow: number; needsHelp: number };
   canManage: boolean;
 }
 
@@ -106,6 +108,7 @@ export function OpsDesk({
   credentials,
   ofacMissing,
   payments,
+  disruptions,
   canManage,
 }: OpsDeskProps) {
   const t = useTranslations('backoffice.dashboard');
@@ -348,7 +351,10 @@ export function OpsDesk({
             credentials.count +
             ofacMissing +
             payments.windowExpired +
-            payments.balanceOverdue ===
+            payments.balanceOverdue +
+            disruptions.overdueUnknown +
+            disruptions.callNow +
+            disruptions.needsHelp ===
           0 ? (
             <p className="text-body-sm text-muted">{t('kpi.noAlerts')}</p>
           ) : (
@@ -369,6 +375,36 @@ export function OpsDesk({
                     </Badge>
                     {t('kpi.amberNote')}
                   </a>
+                </li>
+              ) : null}
+              {disruptions.overdueUnknown > 0 ? (
+                <li>
+                  <Link href="/disruptions" className="flex flex-wrap items-center gap-2">
+                    <Badge variant="timeout">
+                      {t('kpi.disruptionUnknown', { count: disruptions.overdueUnknown })}
+                    </Badge>
+                    {t('kpi.disruptionNote')}
+                  </Link>
+                </li>
+              ) : null}
+              {disruptions.needsHelp > 0 ? (
+                <li>
+                  <Link href="/disruptions" className="flex flex-wrap items-center gap-2">
+                    <Badge variant="destructive">
+                      {t('kpi.disruptionHelp', { count: disruptions.needsHelp })}
+                    </Badge>
+                    {t('kpi.disruptionNote')}
+                  </Link>
+                </li>
+              ) : null}
+              {disruptions.callNow > 0 ? (
+                <li>
+                  <Link href="/disruptions" className="flex flex-wrap items-center gap-2">
+                    <Badge variant="attention">
+                      {t('kpi.disruptionCall', { count: disruptions.callNow })}
+                    </Badge>
+                    {t('kpi.disruptionNote')}
+                  </Link>
                 </li>
               ) : null}
               {ofacMissing > 0 ? (

@@ -1674,7 +1674,11 @@
         "windowExpired": "{count, plural, one {# booking} other {# bookings}} · payment window over",
         "windowExpiredNote": "extend it or cancel",
         "balanceOverdue": "{count, plural, one {# balance} other {# balances}} overdue",
-        "balanceOverdueNote": "remind the traveler"
+        "balanceOverdueNote": "remind the traveler",
+        "disruptionUnknown": "{count, plural, one {# party} other {# parties}} · unknown past the timer",
+        "disruptionCall": "{count, plural, one {# booking} other {# bookings}} · call now",
+        "disruptionHelp": "{count, plural, one {# party} other {# parties}} · needs help",
+        "disruptionNote": "Disruption cases"
       },
       "matrix": {
         "title": "Dispatch matrix",
@@ -2919,6 +2923,201 @@
       "confirmLift": "Lift now"
     }
   },
+  "disruptionsDesk": {
+    "title": "Disruptions",
+    "description": "Disruption cases: severity, the scenario playbook, traveler options and the status board.",
+    "new": "New case",
+    "empty": "No disruption cases.",
+    "case": "Case",
+    "severity": "Severity",
+    "scenario": "Scenario",
+    "affected": "Affected",
+    "status": "Status",
+    "owner": "owner {name}",
+    "noOwner": "No owner",
+    "notRegional": "Not regional",
+    "affectedLine": "{count, plural, one {# booking} other {# bookings}} · {ground} on the ground · {arriving} arriving in 72 h",
+    "overdueLine": "{count, plural, one {# party} other {# parties}} unknown past the contact timer",
+    "callLine": "{count, plural, one {# booking} other {# bookings}} to call",
+    "footnote": "Playbooks come from the agency's crisis framework. Cases are kept for the incident & emergency report.",
+    "sampleNotice": "Sample crisis framework: the scenarios, steps and options are placeholders until the agency confirms them.",
+    "statuses": {
+      "OPEN": "Open",
+      "CLOSED": "Closed"
+    },
+    "severities": {
+      "MINOR": "Minor",
+      "MAJOR": "Major",
+      "EMERGENCY": "Emergency"
+    },
+    "severityRules": {
+      "MINOR": "Inconvenience, itinerary holds. Desk handles; travelers contacted once.",
+      "MAJOR": "Services lost or relocation needed. Super Admin informed; 4-hourly contact.",
+      "EMERGENCY": "Safety at risk. Crisis team paged, hourly contact, critical banner, insurer notified."
+    },
+    "paths": {
+      "MINOR": "Desk owns it. Super Admin sees it in the daily digest. Travelers contacted once with options; no public banner unless it affects arrivals.",
+      "MAJOR": "Desk owns it, Super Admin informed within 1 h and approves the public banner. Travelers contacted every 4 h until resolved. Incident logged for the MINTUR annual summary.",
+      "EMERGENCY": "Crisis team paged (Super Admin, Operations Director, local coordinator). Hourly traveler contact, critical banner with two approvals, 24/7 line staffed in shifts."
+    },
+    "back": "All cases",
+    "newTitle": "New disruption case",
+    "noScenarios": "The tenant manifest has no disruption scenarios, so no case can be opened.",
+    "form": {
+      "scenario": "Scenario",
+      "scenarioHint": "Picks the playbook, the traveler options and the compensation rule. The case keeps a copy, so a later change to the framework does not rewrite it.",
+      "trigger": "Trigger on file: {trigger}",
+      "province": "Province",
+      "notRegional": "Not regional (a flight, for example)",
+      "title": "Title",
+      "summary": "Summary",
+      "summaryHint": "What happened, where, and who is affected. Travelers see it with the options.",
+      "open": "Open case",
+      "failed": "The case could not be opened."
+    },
+    "header": {
+      "openFor": "Open · {hours} h {minutes} m",
+      "closedOn": "Closed {when}",
+      "opened": "Opened {when} by {name}",
+      "province": "province {name}",
+      "takeOver": "Take over",
+      "close": "Close case",
+      "confirmClose": "Close the case? Travelers can no longer answer and the desk can no longer change it.",
+      "cancel": "Cancel"
+    },
+    "counts": {
+      "affected": "Affected bookings: {count}",
+      "onTheGround": "On the ground: {count}",
+      "arriving": "Arriving in 72 h: {count}",
+      "banner": "Public banner: {state}"
+    },
+    "severityCard": {
+      "title": "Severity",
+      "hint": "Sets who is paged, how often travelers are contacted and whether the site banner needs a second approver. It can be raised or lowered at any time.",
+      "path": "Escalation path · {severity}",
+      "save": "Change severity"
+    },
+    "playbook": {
+      "title": "Playbook · {scenario}",
+      "progress": "{done} of {total} done · owners and due times from the crisis framework",
+      "markDone": "Mark done",
+      "doneBy": "Done {when} by {name}",
+      "empty": "The scenario has no playbook steps."
+    },
+    "options": {
+      "title": "Traveler options",
+      "hint": "Each option states the money consequence before the traveler picks. Silence past the deadline keeps the default and the desk calls.",
+      "locked": "Sent: the option set is now fixed.",
+      "optionTitle": "Option {key} · title",
+      "optionDetail": "Option {key} · money consequence",
+      "add": "Add option",
+      "remove": "Remove option {key}",
+      "save": "Save options",
+      "picked": "{count, plural, =0 {no answer yet} one {# answer} other {# answers}}",
+      "empty": "No options yet."
+    },
+    "send": {
+      "title": "Send options",
+      "deadline": "Reply by (Havana time)",
+      "default": "Default without an answer",
+      "recipients": "Bookings",
+      "noRecipients": "Attach a booking first.",
+      "answered": "answered",
+      "submit": "Send options to {count, plural, one {# booking} other {# bookings}}",
+      "channels": "Sent by email (E-Options) with a link to the trip page; SMS and in-app buttons wait for a provider. Sending again to an unanswered booking replaces its deadline."
+    },
+    "policy": {
+      "title": "Compensation rule · {scenario}",
+      "note": "Money moves through refunds on the booking; future-trip credits wait for a credits model."
+    },
+    "board": {
+      "title": "Traveler status board",
+      "legend": "Safe {safe} · Needs help {help} · Unknown {unknown}",
+      "rule": "“Unknown” turns red after 4 h without contact (major) or 1 h (emergency). Marking safe records who confirmed and how.",
+      "traveler": "Traveler",
+      "trip": "Trip",
+      "status": "Status",
+      "lastContact": "Last contact",
+      "answer": "Answer",
+      "act": "Act",
+      "party": "{nationality} · party of {count}",
+      "underWay": "On the trip · {dates}",
+      "arriving": "Arrives {date}",
+      "later": "{dates}",
+      "anonymized": "Anonymized traveler",
+      "safety": {
+        "UNKNOWN": "Unknown",
+        "SAFE": "Safe",
+        "NEEDS_HELP": "Needs help"
+      },
+      "overdue": "Past the contact timer",
+      "noContact": "No contact yet",
+      "confirmedBy": "confirmed by {name}",
+      "offer": {
+        "NOT_SENT": "Options not sent",
+        "AWAITING": "Awaiting · reply by {time}",
+        "CHOSEN": "Option {key} · {source}",
+        "DEFAULTED": "No answer · {key} stands · call now"
+      },
+      "sources": {
+        "TRAVELER": "chosen online",
+        "DESK": "by phone",
+        "DEFAULT": "default confirmed"
+      },
+      "statusLabel": "Status",
+      "note": "How it was confirmed",
+      "notePlaceholder": "Driver by phone: both fine",
+      "saveStatus": "Save status",
+      "answerLabel": "Answer by phone",
+      "recordAnswer": "Record answer",
+      "confirmDefault": "Confirm default {key}",
+      "call": "Call",
+      "email": "Email",
+      "empty": "No booking attached yet."
+    },
+    "attach": {
+      "title": "Attach bookings",
+      "hint": "Secured bookings in {province} under way or arriving within 72 h.",
+      "noProvince": "Not regional: attach bookings by code.",
+      "none": "No other secured booking in the province is under way or arriving within 72 h.",
+      "code": "Booking code",
+      "byCode": "Attach by code",
+      "selected": "Attach selected"
+    },
+    "comms": {
+      "title": "Communications",
+      "hint": "One public reference point: the site banner, approved by the Content rules.",
+      "none": "Not drafted",
+      "draft": "Draft site banner",
+      "open": "Review in Content",
+      "line": "{reference} · {severity} · {status}",
+      "emailed": "E-Options emails sent: {count}",
+      "deferred": "SMS, emergency contacts, the insurer and the supplier broadcast are not connected yet."
+    },
+    "log": {
+      "title": "Case log",
+      "hint": "Feeds the incident & emergency report.",
+      "empty": "Nothing logged yet.",
+      "system": "System",
+      "actions": {
+        "opened": "opened the case as {severity}",
+        "booking_attached": "attached {code}",
+        "severity_changed": "changed the severity from {from} to {to}",
+        "owner_changed": "changed the owner",
+        "updated": "edited the title or summary",
+        "step_done": "completed: {text}",
+        "options_updated": "edited the options",
+        "options_sent": "sent the options to {codes} · reply by {time}",
+        "options_delivered": "E-Options emailed for {code}",
+        "safety_marked": "marked {code} {safety}",
+        "choice_recorded": "recorded option {key} for {code} ({source})",
+        "advisory_drafted": "drafted the site banner {reference}",
+        "closed": "closed the case"
+      }
+    },
+    "fromCase": "Banner for disruption case {reference}",
+    "actionFailed": "The change was not saved."
+  },
   "advisories": {
     "label": "Travel advisory",
     "severities": {
@@ -2946,5 +3145,18 @@
     },
     "noticeTitle": "Advisory for this trip’s region",
     "noticeMore": "More on Travel info"
+  },
+  "disruptionOptions": {
+    "overline": "Disruption · case {reference}",
+    "choose": "Choose one option by {deadline}.",
+    "silence": "If we hear nothing by {deadline} we keep option {key} and the desk calls you.",
+    "policy": "Compensation: {policy}",
+    "legend": "Your options",
+    "confirm": "Confirm option {key}",
+    "chosen": "You chose option {key}. The desk is arranging it; call the desk to change it.",
+    "desk": "The desk recorded option {key} for you.",
+    "defaulted": "The deadline has passed: option {key} stands and the desk will call you.",
+    "failed": "Your answer was not saved. Try again or call the desk.",
+    "default": "default"
   }
 }

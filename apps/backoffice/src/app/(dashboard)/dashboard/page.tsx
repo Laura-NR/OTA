@@ -7,6 +7,7 @@ import {
 } from '@ota/domain';
 import type {
   AnalyticsOverviewDto,
+  DisruptionAlertDto,
   DispatchBoardRowDto,
   ReservationListItemDto,
   RetentionPendingUserDto,
@@ -55,7 +56,7 @@ export default async function DashboardPage() {
   const month = monthRange(now);
   const previousMonth = monthRange(now, -1);
 
-  const [rows, overview, previous, expiring, retention, submitted, recent] =
+  const [rows, overview, previous, expiring, retention, submitted, recent, disruptions] =
     await Promise.all([
       apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
       apiFetch<AnalyticsOverviewDto>(`/analytics/overview${rangeQuery(month)}`).catch(
@@ -70,6 +71,7 @@ export default async function DashboardPage() {
         '/reservations?status=ITINERARY_SUBMITTED&limit=200',
       ).catch(() => []),
       apiFetch<ReservationListItemDto[]>('/reservations?limit=200').catch(() => []),
+      apiFetch<DisruptionAlertDto>('/disruptions/alerts').catch(() => null),
     ]);
   // M3: open bookings whose payment and vouchers wait for an OFAC certification.
   const ofacMissing = recent.filter(
@@ -209,6 +211,11 @@ export default async function DashboardPage() {
         figures={figures}
         ofacMissing={ofacMissing}
         payments={payments}
+        disruptions={{
+          overdueUnknown: disruptions?.overdueUnknown ?? 0,
+          callNow: disruptions?.callNow ?? 0,
+          needsHelp: disruptions?.needsHelp ?? 0,
+        }}
         credentials={{
           count: expiring.length,
           soonestDays:
