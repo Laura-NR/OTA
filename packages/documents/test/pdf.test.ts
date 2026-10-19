@@ -68,6 +68,14 @@ describe('renderHtmlToPdf', () => {
     expect(launches[1]!.pages).toBe(2);
   });
 
+  it('closes cleanly after a launch that failed', async () => {
+    vi.mocked(chromium.launch).mockRejectedValueOnce(new Error('no Chromium'));
+    await expect(renderHtmlToPdf('<p>1</p>')).rejects.toThrow('no Chromium');
+
+    // The host's shutdown hook must not fail on a browser that never started.
+    await expect(closePdfRenderer()).resolves.toBeUndefined();
+  });
+
   it('leaves the process signals to the host app', async () => {
     // Playwright's own SIGTERM handler closes the browser but never exits, and
     // any SIGTERM listener stops Node's default exit: the API would outlive a

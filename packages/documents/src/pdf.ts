@@ -50,10 +50,16 @@ export async function renderHtmlToPdf(html: string): Promise<Uint8Array> {
   }
 }
 
+/**
+ * Close the shared browser, if one was launched. A launch that failed leaves
+ * nothing to close, so it resolves rather than failing the host's shutdown.
+ */
 export async function closePdfRenderer(): Promise<void> {
-  if (browserPromise) {
-    const browser = await browserPromise;
-    browserPromise = undefined;
-    await browser.close();
+  const current = browserPromise;
+  if (!current) {
+    return;
   }
+  browserPromise = undefined;
+  const browser = await current.catch(() => undefined);
+  await browser?.close();
 }
