@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-18 21:00
+# Handoff — vereda — updated 2026-10-19 22:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -10,90 +10,94 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
 - **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done; M1–M5, M7 and M8
   are complete with their surfaces.** Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-18), M8 disruptions as approved (D1a–D9a), 10 commits
-  `ed96b87`…`da50490` plus the docs commit:** migration `20261018161050_disruptions` (§6
-  verbatim); manifest `disruptions` (five placeholder scenarios, `deadlineHours` 4) in
-  `packages/config`; rules `packages/domain/src/disruptions/disruption.ts`; DTOs
-  `packages/schemas/src/disruption.ts`; E-Options `packages/email/src/templates/
-  disruption-options.ts` (`emailInstant` gained an optional time zone); API
-  `apps/api/src/disruptions/` (desk routes, `/disruptions/alerts`, `/disruptions/:id/advisory`,
-  `/me/disruptions`, the traveler's conditional write, the `disruption.options_delivered` ledger;
-  `AdvisoriesService.create` takes an optional case link, kept by new versions); retention nulls
-  safety notes and this traveler's `note` in the shared case log; desk `/disruptions` (list, `new`,
-  `[id]`), dashboard alerts, an advisory's link back to its case; trip-page options card
-  (`#disruption-options`, `disruption-choice.tsx`). `docs/schema-m8-disruptions.md` §7 records
-  what the build added.
-- **Not built:** SMS/push, M6, M9, M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs.
-- **Placeholders** (unchanged plus M8): M4 terms, card fee 0 %, legal texts, OFAC categories,
-  pricing samples, the deposit's refundability and proof retention, the M5 sample terms, the
-  builder rates, the M8 crisis framework (`disruptions.status: placeholder`).
+- **This session (2026-10-19), 3 commits plus the docs commit:**
+  - Graceful shutdown as approved (`c783fb5`, `4c81f2b`). `apps/api/src/common/graceful-shutdown.ts`:
+    `enableShutdownHooks(['SIGTERM','SIGINT'])`, plus a timer armed by the first signal that
+    exits with code 1 after `SHUTDOWN_TIMEOUT_MS` (default 10 000; `.env.example`, runbook
+    "Graceful shutdown").
+    - The dispatch BullMQ worker and queue are now closed (`DispatchService.onModuleDestroy`);
+      they had a `close()` that nothing called.
+    - The PDF browser (`PlaywrightDocumentRenderer`) and Prisma (`PrismaModule`) close in
+      `onApplicationShutdown`, after the HTTP server drains.
+    - `closePdfRenderer` resolves after a failed launch.
+    - The other schedulers and the readiness Redis client already closed in `onModuleDestroy`.
+  - M6 drafted (`e1629d9`, `docs/schema-m6-suppliers.md`). D1–D9 with recommendations: a 1:1
+    `supplier_resources` table with one confirmation stamp; staleness after 7 days, the last
+    job and the console's resources derived on read; the storefront filter, vehicle and guide
+    details deferred. **No migration**: it waits for the owner.
+- **Not built:** SMS/push, M6 (draft only), M9, M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs.
+- **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
+  samples, the deposit's refundability and proof retention, the M5 sample terms, the builder
+  rates, the M8 crisis framework (`disruptions.status: placeholder`).
 
-## Verified (2026-10-18, dev stack stopped for the build)
+## Verified (2026-10-19, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **700 passed / 21 skipped**, 29/29 tasks (api 274/20 skipped,
-  domain 224, schemas 50, config 34, ui 33, email 24, documents 19, theming 14, payments 8,
+- `TURBO_FORCE=true pnpm test` **703 passed / 21 skipped**, 29/29 tasks (api 276/20 skipped,
+  domain 224, schemas 50, config 34, ui 33, email 24, documents 20, theming 14, payments 8,
   imports 5, ai 4, i18n 4, reports 4, storage 3/1 skipped).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- `pnpm e2e` **60/60** (`.next` deleted first), 7.3 min; adds `disruptions.spec.ts` (desk opens a case →
-  attaches E2EDIS01 by code → sends options → E-Options in Mailpit → traveler answers B on the
-  trip page → desk sees "Option B · chosen online" and the log line); `admin-shell.spec` expects
-  the Disruptions link.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files (adds
-  disruptions 3; retention gains the M8 redaction). No disruption case, advisory or E2EDIS01/
-  E2EREN01/E2EADV01 rows left afterwards. After e2e the API (which had rendered PDFs) exited on
-  a plain SIGTERM. Without the `chosenOptionKey: null` condition the concurrent-answer test fails
-  3/3; the retention test fails on the old code (safety note not nulled).
-- Browser (temporary spec, removed): desk list, case and new-case pages and the trip card at
-  390/1024/1280, `scrollWidth == viewport`; overdue Unknown badge `#C62828` on white, trip card
-  border `#F59E0B` (the board's major colours). Screenshots
-  `/tmp/claude-1000/-home-genyst-OTA/724aae9b-b733-4561-9152-0819533df6f0/scratchpad/m8-*.png`.
+- `apps/api/test/shutdown.test.ts` (in the default suite, about 4 s) runs a child Nest app with
+  the real wiring and Chromium.
+  - After a real PDF render, SIGTERM ends the process with the signal, both probe hooks run and
+    Chromium is gone.
+  - With a destroy hook that never settles and a 1.5 s timeout, it exits with code 1 after the
+    timeout.
+  - Disproved: without the forced exit the hung case was still alive at 60 s (the old symptom).
+    Without the renderer's hook, Chromium outlived the API 3/3. `pdf.test.ts`'s
+    failed-launch case fails on the old `closePdfRenderer`.
+- Live: a second API on :3011 with `REDIS_URL` rendered `/analytics/export/pdf` (200, `%PDF-`)
+  and **exited 107 ms after SIGTERM**. Chromium was gone and Redis clients fell from 44 to 22
+  (its BullMQ connections closed). The dev stack's turbo also stopped cleanly on SIGINT.
+- `pnpm e2e` **60/60** (`.next` deleted first), 7.0 min. Afterwards the e2e API, which had
+  rendered PDFs, **exited 103 ms after a plain SIGTERM** with its Chromium child gone. The two
+  Next servers were stopped by PID.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files. No
+  disruption case, no E2EDIS01/E2EREN01/E2EADV01 booking and no published critical advisory was
+  left afterwards.
+- Browser: nothing visible was built this session (shutdown and a draft), so no rendering check.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
-- M8 writes are Operations Admin and Super Admin only (as M7); Administrative Support reads the
-  desk but cannot mark a party safe. Say if support staff should answer the phones on the board.
-- The traveler answers once; a change is a call to the desk. A case cannot be reopened.
-- The playbooks and options are in the desk's language; E-Options frames them in the traveler's.
-- One unexplained e2e failure (0.5 s, during a run started right after edits to the dev
-  servers' sources); it did not recur in three later runs.
-- **For the owner:** the open items under Next.
+- **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS` (runbook).
+  A BullMQ worker waits for its active job; a job still running at the timeout is cut off, and
+  BullMQ runs it again as a stalled job.
+- **Security finding, not fixed (owner question):** `nestjs-pino` logs every request's headers,
+  `cookie` included, so session tokens reach the API log (seen in the :3011 log, since deleted).
+  The fix is a `redact` list (`req.headers.cookie`, `req.headers.authorization`,
+  `res.headers["set-cookie"]`) in `apps/api/src/app.module.ts`.
+- M8 writes are Operations Admin and Super Admin only. Say if support staff should answer the
+  phones (M8's board, and M6 D4).
+- **For the owner:** the M6 decisions and the open items under Next.
 
 ## Traps
-- **Client state survives `router.refresh()`.** The send-options form seeded its selection when
-  no booking was attached, so after attaching it offered "Send options to 0 bookings" (found by
-  the e2e). Forms that seed state from listed data are keyed by that data (`key=` on
-  `SendOptionsForm`, `AttachForm`).
-- Each status-board booking is two table rows (data, then actions); e2e takes `.first()` of a row
-  matched by booking code. `/disruptions/alerts` stays declared before `/:id`.
-- The disruption e2e owns booking E2EDIS01 and every case titled "E2E outage…" (audit rows are
-  deleted first). `select count(*) from disruption_cases` should be 0 after the suites.
-- The M7 traps still apply (`/advisories/active` and `/history` before `/:id`; the advisory e2e's
-  fixtures; a leftover critical advisory; the editor's `xl` layout), as do the earlier ones
-  (rebuild a workspace package before the dev servers see it; `.next` after a build; `getByLabel`
-  substrings need `exact` — "Province" also matched a scenario trigger; no `prisma format`;
+- **Nest re-raises the signal after its shutdown sequence.** Any extra `process.on('SIGTERM')`
+  listener left attached would swallow it and keep the process alive. That is why the
+  force-exit listener removes itself on the first signal. Nest runs destroy hooks, then
+  before-shutdown, then the HTTP dispose, then shutdown hooks, and bounds none of them.
+- The shell defaults to Node 20: run `nvm use` before every pnpm call (the API's Nest is 12.0.3,
+  not the 11 that AGENTS.md says).
+- The dev API runs under `node --watch`, so editing `apps/api/src` restarts it mid-session.
+- The M8 traps still apply: keyed forms after `router.refresh()`; two table rows per status-board
+  booking (`.first()`); `/disruptions/alerts` before `/:id`; the disruption e2e owns E2EDIS01 and
+  "E2E outage…" cases. So do the M7 ones and the earlier ones: rebuild a workspace package before
+  the dev servers see it; `.next` after a build; `getByLabel` needs `exact`; no `prisma format`;
   append-only affidavits; ICU spaces; `pgrep -f` matches the calling shell; filter Mailpit by
-  booking code; hand-built `ReservationsService` needs a `NotificationsService` stub; to stop
-  `pnpm dev`, signal `@turbo/linux-64/bin/turbo run dev`).
-- **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones:
-  - "2026-10-18: M7 advisories live in `apps/api/src/advisories`; publication is an approval
-    (INFO/CAUTION one Operations/Super Admin, CRITICAL one of each, two people) under a row lock,
-    and E-Advisory is idempotent through `advisory.delivered` audit rows."
-  - "2026-10-18: `@ota/documents` launches Chromium with `handleSIGINT/SIGTERM/SIGHUP: false`;
-    Playwright's handlers would keep the API alive after SIGTERM. Keep them off."
-  - "2026-10-18: document downloads are the booking's owner (no work orders) or the ops roles."
-  - "2026-10-18: M8 disruptions live in `apps/api/src/disruptions`; a case copies its manifest
-    scenario (`disruptions.scenarios`) when it opens; the default after the deadline and the red
-    Unknown are derived on read (no job); the traveler's answer is a conditional write; E-Options
-    is idempotent through `disruption.options_delivered` audit rows; the case log is the audit log
-    (`entityType: 'DisruptionCase'`)."
+  booking code; to stop `pnpm dev`, signal `@turbo/linux-64/bin/turbo run dev`.
+- **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones (the M7, SIGTERM,
+  document-download and M8 lines from 2026-10-18 are still pending):
+  - "2026-10-19: the API shuts down through `enableGracefulShutdown`
+    (`apps/api/src/common/graceful-shutdown.ts`): Nest's hooks on SIGTERM/SIGINT under a
+    `SHUTDOWN_TIMEOUT_MS` (10 s) forced exit. Close BullMQ/Redis in `onModuleDestroy`, and the
+    PDF browser and Prisma in `onApplicationShutdown` (after the HTTP drain). Never leave a
+    `process.on('SIGTERM')` listener attached: it swallows the signal Nest re-raises."
+  - "2026-10-19: the API runs Nest 12 (AGENTS.md §A says 11)."
 
 ## Next
-1. Build graceful shutdown as approved (Decisions, 2026-10-18): `app.enableShutdownHooks()`,
-   close BullMQ workers/queues, the Redis clients and the PDF browser, force-exit after ~10 s;
-   prove it with a SIGTERM test (after a PDF render, and with a hung close stubbed).
-2. Draft M6 (supplier backup power, fuel, last job) for review — it feeds A-Suppliers' Power
-   column and A-Disruption's "Resources in the province" card.
+1. Owner: answer M6 D1–D9 (`docs/schema-m6-suppliers.md`). Then generate the migration with
+   `--create-only`, add the checks and build §5.
+2. Owner: the log-redaction finding above (recommended: redact cookies, authorization and
+   set-cookie).
 3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
    passport-key backup, the AGENTS.md §C lines above. Then M9, M10, and SMS once a provider is
@@ -352,3 +356,11 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
 - 2026-10-18 — the owner chose to build graceful shutdown with a timeout (close BullMQ, Redis and
   the PDF browser; force-exit after about 10 s so a hung close cannot recreate the SIGTERM hang),
   over waiting for the deploy topology or keeping the immediate exit. Next session.
+- 2026-10-19 — graceful shutdown built with Nest's hooks and a forced exit armed on the first
+  signal, as decided. The PDF browser and Prisma close after the HTTP drain
+  (`onApplicationShutdown`) so in-flight renders finish. The dispatch scheduler, never closed
+  before, is closed on destroy.
+- 2026-10-19 — M6 drafted with recommendations D1(a)–D9(a): one `supplier_resources` row per
+  supplier with a single confirmation stamp; staleness, the last job and the console's resources
+  derived on read; desk-only writes (ops+super); vehicle/guide details and the storefront filter
+  deferred. No migration until approved.
