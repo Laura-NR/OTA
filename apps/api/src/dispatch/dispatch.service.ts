@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
 import type {
@@ -48,7 +49,7 @@ type ServiceItemWithSupplier = ServiceItem & { supplier: SupplierProfile | null 
 type ReservationWithItems = Reservation & { serviceItems: ServiceItemWithSupplier[] };
 
 @Injectable()
-export class DispatchService implements OnModuleInit {
+export class DispatchService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(DISPATCH_SCHEDULER) private readonly scheduler: DispatchScheduler,
@@ -59,6 +60,10 @@ export class DispatchService implements OnModuleInit {
     this.scheduler.setTimeoutHandler((serviceItemId) =>
       this.handleTimeout(serviceItemId),
     );
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.scheduler.close();
   }
 
   /** Start or resume dispatch for every unassigned service item. */

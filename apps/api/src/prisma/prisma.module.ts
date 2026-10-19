@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { prisma } from '@ota/db';
 
 import { PrismaService } from './prisma.service';
@@ -8,4 +8,9 @@ import { PrismaService } from './prisma.service';
   providers: [{ provide: PrismaService, useValue: prisma }],
   exports: [PrismaService],
 })
-export class PrismaModule {}
+export class PrismaModule implements OnApplicationShutdown {
+  // After the HTTP server has drained, so no request loses its connection.
+  async onApplicationShutdown(): Promise<void> {
+    await prisma.$disconnect();
+  }
+}

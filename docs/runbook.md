@@ -154,6 +154,23 @@ The API mounts a dependency-free fixed-window limiter as Express middleware
 - Behind a reverse proxy set `TRUST_PROXY=1` (hop count) or `TRUST_PROXY=true`,
   otherwise every request keys on the proxy IP and shares one bucket.
 
+## Graceful shutdown
+
+On `SIGTERM` or `SIGINT` the API runs Nest's shutdown hooks, then ends with the
+signal:
+
+1. Destroy hooks: the BullMQ workers and queues (dispatch, compliance scan,
+   reminders, notifications, digest, retention) and the readiness Redis client
+   close. A worker waits for its active job.
+2. The HTTP server and the Socket.IO gateways stop and drain in-flight requests.
+3. Shutdown hooks: the PDF browser and the Prisma connections close.
+
+`SHUTDOWN_TIMEOUT_MS` (default 10000) bounds the whole sequence. A close still
+pending after it logs `Shutdown did not finish within … ms; forcing exit` and the
+process exits with code 1. Keep the orchestrator's kill grace period above it
+(for example a 30 s `terminationGracePeriodSeconds`) so the forced exit, not a
+`SIGKILL`, ends a stuck shutdown.
+
 ## Data, migrations, backups
 
 - Migrations: `pnpm --filter @ota/db exec prisma migrate dev` (dev),

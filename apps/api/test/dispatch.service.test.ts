@@ -106,6 +106,10 @@ class FakeScheduler implements DispatchScheduler {
   async cancelTimeout(serviceItemId: string): Promise<void> {
     this.cancelled.push(serviceItemId);
   }
+
+  async close(): Promise<void> {
+    // nothing to close
+  }
 }
 
 class FakePublisher implements EscalationPublisher {

@@ -9,6 +9,10 @@ import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 import { setAuthRuntime } from './auth/auth.runtime';
+import {
+  DEFAULT_SHUTDOWN_TIMEOUT_MS,
+  enableGracefulShutdown,
+} from './common/graceful-shutdown';
 import { registerJsonParsers } from './common/json-body';
 import { createRateLimiter } from './common/rate-limit';
 import { resolveTenantConfigPath } from './tenant/tenant.path';
@@ -57,6 +61,10 @@ async function bootstrap(): Promise<void> {
     bodyParser: false,
     bufferLogs: true,
   });
+  enableGracefulShutdown(
+    app,
+    positiveInt(process.env.SHUTDOWN_TIMEOUT_MS, DEFAULT_SHUTDOWN_TIMEOUT_MS),
+  );
 
   // Trust the proxy when deployed behind one, so rate limiting keys on the real
   // client IP rather than the proxy's.
