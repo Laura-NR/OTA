@@ -1577,7 +1577,8 @@
         "allProvinces": "All provinces",
         "verification": "Verification",
         "any": "Any",
-        "clear": "Clear filters"
+        "clear": "Clear filters",
+        "backupPower": "Backup power only"
       },
       "register": "Compliance register",
       "suppliersCount": "{count} supplier(s)",
@@ -1588,7 +1589,9 @@
         "auto": "Auto-dispatch",
         "status": "Status",
         "verification": "Verification",
-        "noReliability": "—"
+        "noReliability": "—",
+        "power": "Power",
+        "lastJob": "Last job"
       },
       "credential": {
         "valid": "Valid to {date}",
@@ -1606,7 +1609,18 @@
       "empty": {
         "title": "No suppliers match",
         "hint": "Try clearing a filter."
-      }
+      },
+      "power": {
+        "SOLAR": "Solar",
+        "generator": "Generator",
+        "generatorHours": "Generator {hours} h",
+        "fuel": "Fuel {litres} L",
+        "NONE": "None",
+        "UNCONFIRMED": "Not confirmed",
+        "NOT_APPLICABLE": "—",
+        "stale": "Confirmed {date} · stale"
+      },
+      "noJob": "—"
     },
     "applications": {
       "title": "Applications",
@@ -1836,7 +1850,48 @@
       "response": "Avg response",
       "minutes": "{minutes} min",
       "acceptance": "Acceptance",
-      "noReliability": "No dispatch history yet."
+      "noReliability": "No dispatch history yet.",
+      "jobs12m": "Jobs · 12 m",
+      "lastJob": "Last job",
+      "noJob": "None yet",
+      "resources": {
+        "casaTitle": "Backup power & resilience",
+        "casaDescription": "What the host confirmed: power, water and capacity.",
+        "driverTitle": "Fuel reserve",
+        "driverDescription": "The reserve the driver declared.",
+        "generator": "Generator",
+        "generatorOptions": {
+          "NONE": "None",
+          "OWN": "Yes · own",
+          "SHARED": "Yes · shared"
+        },
+        "hours": "Generator hours per day",
+        "schedule": "Hours as the host gives them",
+        "scheduleHint": "Up to 60 characters, e.g. 06–09, 18–21.",
+        "fuelDays": "Generator fuel on hand · days",
+        "solar": "Solar battery · kWh",
+        "solarHint": "Leave empty when there is no solar.",
+        "water": "Water tank · litres",
+        "rooms": "Rooms",
+        "guests": "Guest capacity",
+        "fuel": "Fuel reserve · litres",
+        "via": "Channel",
+        "channels": {
+          "PHONE": "Phone",
+          "WHATSAPP": "WhatsApp",
+          "VISIT": "Visit",
+          "WORKER_APP": "Worker app"
+        },
+        "confirm": "Confirm",
+        "saving": "Saving…",
+        "confirmed": "Last confirmed {when} · {channel} · {name}",
+        "confirmedNoName": "Last confirmed {when} · {channel}",
+        "never": "Never confirmed.",
+        "stale": "Older than 7 days · confirm by phone",
+        "casaNote": "These fields feed the disruption console's resources and the register's backup-power filter.",
+        "driverNote": "The disruption console reads the reserve for its standby drivers. The desk records it until the worker app's weekly self-declaration.",
+        "failed": "Could not save the confirmation."
+      }
     },
     "reports": {
       "title": "Reports",
@@ -2989,7 +3044,8 @@
       "affected": "Affected bookings: {count}",
       "onTheGround": "On the ground: {count}",
       "arriving": "Arriving in 72 h: {count}",
-      "banner": "Public banner: {state}"
+      "banner": "Public banner: {state}",
+      "suppliers": "Suppliers involved: {count}"
     },
     "severityCard": {
       "title": "Severity",
@@ -3115,7 +3171,29 @@
       }
     },
     "fromCase": "Banner for disruption case {reference}",
-    "actionFailed": "The change was not saved."
+    "actionFailed": "The change was not saved.",
+    "resources": {
+      "title": "Resources in {province}",
+      "titleNoProvince": "Resources",
+      "loadError": "Could not load the resources.",
+      "power": "Backup power",
+      "drivers": "Standby drivers",
+      "official": "Official",
+      "noProvince": "The case is not regional, so no suppliers are listed.",
+      "noCasas": "No verified casa here has confirmed backup power.",
+      "noDrivers": "No verified driver here has declared a fuel reserve.",
+      "noOfficial": "The manifest lists no emergency contacts.",
+      "solar": "solar + battery {kwh} kWh",
+      "generator": "generator {hours} h/day",
+      "generatorShared": "shared generator {hours} h/day",
+      "fuelDays": "fuel for {days, plural, one {# day} other {# days}}",
+      "capacity": "{rooms, plural, one {# room} other {# rooms}}, {guests, plural, one {# guest} other {# guests}}",
+      "fuel": "fuel reserve {litres} L · {provinces}",
+      "stale": "Confirm by phone",
+      "notFree": "Not free today",
+      "paused": "Paused · expiry",
+      "rule": "From the supplier register: verified suppliers working in the province, with a valid credential and a confirmed reserve. Fresh confirmations come first; one older than 7 days needs a call."
+    }
   },
   "advisories": {
     "label": "Travel advisory",

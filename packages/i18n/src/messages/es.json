@@ -1577,7 +1577,8 @@
         "allProvinces": "Todas las provincias",
         "verification": "Verificación",
         "any": "Cualquiera",
-        "clear": "Limpiar filtros"
+        "clear": "Limpiar filtros",
+        "backupPower": "Solo con energía de respaldo"
       },
       "register": "Registro de cumplimiento",
       "suppliersCount": "{count} proveedor(es)",
@@ -1588,7 +1589,9 @@
         "auto": "Auto-despacho",
         "status": "Estado",
         "verification": "Verificación",
-        "noReliability": "—"
+        "noReliability": "—",
+        "power": "Energía",
+        "lastJob": "Último servicio"
       },
       "credential": {
         "valid": "Válida hasta {date}",
@@ -1606,7 +1609,18 @@
       "empty": {
         "title": "Ningún proveedor coincide",
         "hint": "Prueba a limpiar un filtro."
-      }
+      },
+      "power": {
+        "SOLAR": "Solar",
+        "generator": "Generador",
+        "generatorHours": "Generador {hours} h",
+        "fuel": "Combustible {litres} L",
+        "NONE": "Ninguna",
+        "UNCONFIRMED": "Sin confirmar",
+        "NOT_APPLICABLE": "—",
+        "stale": "Confirmado {date} · desactualizado"
+      },
+      "noJob": "—"
     },
     "applications": {
       "title": "Solicitudes",
@@ -1836,7 +1850,48 @@
       "response": "Respuesta media",
       "minutes": "{minutes} min",
       "acceptance": "Aceptación",
-      "noReliability": "Aún no hay historial de despacho."
+      "noReliability": "Aún no hay historial de despacho.",
+      "jobs12m": "Servicios · 12 m",
+      "lastJob": "Último servicio",
+      "noJob": "Ninguno aún",
+      "resources": {
+        "casaTitle": "Energía de respaldo y resiliencia",
+        "casaDescription": "Lo que confirmó el anfitrión: energía, agua y capacidad.",
+        "driverTitle": "Reserva de combustible",
+        "driverDescription": "La reserva que declaró el chofer.",
+        "generator": "Generador",
+        "generatorOptions": {
+          "NONE": "No",
+          "OWN": "Sí · propio",
+          "SHARED": "Sí · compartido"
+        },
+        "hours": "Horas de generador al día",
+        "schedule": "Horario según el anfitrión",
+        "scheduleHint": "Hasta 60 caracteres, p. ej. 06–09, 18–21.",
+        "fuelDays": "Combustible del generador · días",
+        "solar": "Batería solar · kWh",
+        "solarHint": "Déjelo vacío si no hay solar.",
+        "water": "Tanque de agua · litros",
+        "rooms": "Habitaciones",
+        "guests": "Capacidad de huéspedes",
+        "fuel": "Reserva de combustible · litros",
+        "via": "Canal",
+        "channels": {
+          "PHONE": "Teléfono",
+          "WHATSAPP": "WhatsApp",
+          "VISIT": "Visita",
+          "WORKER_APP": "App del proveedor"
+        },
+        "confirm": "Confirmar",
+        "saving": "Guardando…",
+        "confirmed": "Última confirmación {when} · {channel} · {name}",
+        "confirmedNoName": "Última confirmación {when} · {channel}",
+        "never": "Nunca confirmado.",
+        "stale": "Más de 7 días · confirme por teléfono",
+        "casaNote": "Estos campos alimentan los recursos de la consola de incidencias y el filtro de energía de respaldo del registro.",
+        "driverNote": "La consola de incidencias lee la reserva para sus choferes de guardia. La mesa la registra hasta la autodeclaración semanal en la app del proveedor.",
+        "failed": "No se pudo guardar la confirmación."
+      }
     },
     "reports": {
       "title": "Informes",
@@ -2989,7 +3044,8 @@
       "affected": "Reservas afectadas: {count}",
       "onTheGround": "En destino: {count}",
       "arriving": "Llegan en 72 h: {count}",
-      "banner": "Aviso público: {state}"
+      "banner": "Aviso público: {state}",
+      "suppliers": "Proveedores implicados: {count}"
     },
     "severityCard": {
       "title": "Gravedad",
@@ -3115,7 +3171,29 @@
       }
     },
     "fromCase": "Aviso del caso de incidencia {reference}",
-    "actionFailed": "No se guardó el cambio."
+    "actionFailed": "No se guardó el cambio.",
+    "resources": {
+      "title": "Recursos en {province}",
+      "titleNoProvince": "Recursos",
+      "loadError": "No se pudieron cargar los recursos.",
+      "power": "Energía de respaldo",
+      "drivers": "Choferes de guardia",
+      "official": "Oficial",
+      "noProvince": "El caso no es regional, así que no se listan proveedores.",
+      "noCasas": "Ninguna casa verificada de aquí ha confirmado energía de respaldo.",
+      "noDrivers": "Ningún chofer verificado de aquí ha declarado reserva de combustible.",
+      "noOfficial": "El manifiesto no incluye contactos de emergencia.",
+      "solar": "solar + batería {kwh} kWh",
+      "generator": "generador {hours} h/día",
+      "generatorShared": "generador compartido {hours} h/día",
+      "fuelDays": "combustible para {days, plural, one {# día} other {# días}}",
+      "capacity": "{rooms, plural, one {# habitación} other {# habitaciones}}, {guests, plural, one {# huésped} other {# huéspedes}}",
+      "fuel": "reserva de combustible {litres} L · {provinces}",
+      "stale": "Confirmar por teléfono",
+      "notFree": "No disponible hoy",
+      "paused": "En pausa · vencimiento",
+      "rule": "Del registro de proveedores: proveedores verificados que trabajan en la provincia, con credencial vigente y reserva confirmada. Primero las confirmaciones recientes; una de más de 7 días requiere una llamada."
+    }
   },
   "advisories": {
     "label": "Aviso de viaje",

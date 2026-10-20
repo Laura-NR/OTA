@@ -1577,7 +1577,8 @@
         "allProvinces": "Toutes les provinces",
         "verification": "Vérification",
         "any": "Toutes",
-        "clear": "Effacer les filtres"
+        "clear": "Effacer les filtres",
+        "backupPower": "Énergie de secours uniquement"
       },
       "register": "Registre de conformité",
       "suppliersCount": "{count} fournisseur(s)",
@@ -1588,7 +1589,9 @@
         "auto": "Répartition auto",
         "status": "Statut",
         "verification": "Vérification",
-        "noReliability": "—"
+        "noReliability": "—",
+        "power": "Énergie",
+        "lastJob": "Dernière mission"
       },
       "credential": {
         "valid": "Valide jusqu'au {date}",
@@ -1606,7 +1609,18 @@
       "empty": {
         "title": "Aucun fournisseur ne correspond",
         "hint": "Essayez d'effacer un filtre."
-      }
+      },
+      "power": {
+        "SOLAR": "Solaire",
+        "generator": "Groupe électrogène",
+        "generatorHours": "Groupe {hours} h",
+        "fuel": "Carburant {litres} L",
+        "NONE": "Aucune",
+        "UNCONFIRMED": "Non confirmée",
+        "NOT_APPLICABLE": "—",
+        "stale": "Confirmée le {date} · à revoir"
+      },
+      "noJob": "—"
     },
     "applications": {
       "title": "Candidatures",
@@ -1836,7 +1850,48 @@
       "response": "Réponse moy.",
       "minutes": "{minutes} min",
       "acceptance": "Acceptation",
-      "noReliability": "Aucun historique de répartition pour l'instant."
+      "noReliability": "Aucun historique de répartition pour l'instant.",
+      "jobs12m": "Missions · 12 m",
+      "lastJob": "Dernière mission",
+      "noJob": "Aucune pour l'instant",
+      "resources": {
+        "casaTitle": "Énergie de secours et résilience",
+        "casaDescription": "Ce que l'hôte a confirmé : énergie, eau et capacité.",
+        "driverTitle": "Réserve de carburant",
+        "driverDescription": "La réserve déclarée par le chauffeur.",
+        "generator": "Groupe électrogène",
+        "generatorOptions": {
+          "NONE": "Aucun",
+          "OWN": "Oui · propre",
+          "SHARED": "Oui · partagé"
+        },
+        "hours": "Heures de groupe par jour",
+        "schedule": "Horaires selon l'hôte",
+        "scheduleHint": "60 caractères au plus, p. ex. 06–09, 18–21.",
+        "fuelDays": "Carburant du groupe · jours",
+        "solar": "Batterie solaire · kWh",
+        "solarHint": "Laissez vide s'il n'y a pas de solaire.",
+        "water": "Réservoir d'eau · litres",
+        "rooms": "Chambres",
+        "guests": "Capacité d'accueil",
+        "fuel": "Réserve de carburant · litres",
+        "via": "Canal",
+        "channels": {
+          "PHONE": "Téléphone",
+          "WHATSAPP": "WhatsApp",
+          "VISIT": "Visite",
+          "WORKER_APP": "Appli fournisseur"
+        },
+        "confirm": "Confirmer",
+        "saving": "Enregistrement…",
+        "confirmed": "Dernière confirmation {when} · {channel} · {name}",
+        "confirmedNoName": "Dernière confirmation {when} · {channel}",
+        "never": "Jamais confirmé.",
+        "stale": "Plus de 7 jours · confirmer par téléphone",
+        "casaNote": "Ces champs alimentent les ressources de la console de perturbations et le filtre d'énergie de secours du registre.",
+        "driverNote": "La console de perturbations lit la réserve pour ses chauffeurs d'astreinte. Le bureau la saisit jusqu'à l'autodéclaration hebdomadaire dans l'appli fournisseur.",
+        "failed": "Impossible d'enregistrer la confirmation."
+      }
     },
     "reports": {
       "title": "Rapports",
@@ -2989,7 +3044,8 @@
       "affected": "Réservations concernées : {count}",
       "onTheGround": "Sur place : {count}",
       "arriving": "Arrivent sous 72 h : {count}",
-      "banner": "Bandeau public : {state}"
+      "banner": "Bandeau public : {state}",
+      "suppliers": "Fournisseurs concernés : {count}"
     },
     "severityCard": {
       "title": "Gravité",
@@ -3115,7 +3171,29 @@
       }
     },
     "fromCase": "Bandeau du dossier de perturbation {reference}",
-    "actionFailed": "La modification n'a pas été enregistrée."
+    "actionFailed": "La modification n'a pas été enregistrée.",
+    "resources": {
+      "title": "Ressources · {province}",
+      "titleNoProvince": "Ressources",
+      "loadError": "Impossible de charger les ressources.",
+      "power": "Énergie de secours",
+      "drivers": "Chauffeurs d'astreinte",
+      "official": "Officiel",
+      "noProvince": "Le cas n'est pas régional : aucun fournisseur n'est listé.",
+      "noCasas": "Aucune casa vérifiée de la province n'a confirmé d'énergie de secours.",
+      "noDrivers": "Aucun chauffeur vérifié de la province n'a déclaré de réserve de carburant.",
+      "noOfficial": "Le manifeste ne liste aucun contact d'urgence.",
+      "solar": "solaire + batterie {kwh} kWh",
+      "generator": "groupe {hours} h/jour",
+      "generatorShared": "groupe partagé {hours} h/jour",
+      "fuelDays": "carburant pour {days, plural, one {# jour} other {# jours}}",
+      "capacity": "{rooms, plural, one {# chambre} other {# chambres}}, {guests, plural, one {# personne} other {# personnes}}",
+      "fuel": "réserve de carburant {litres} L · {provinces}",
+      "stale": "Confirmer par téléphone",
+      "notFree": "Indisponible aujourd'hui",
+      "paused": "En pause · expiration",
+      "rule": "D'après le registre des fournisseurs : fournisseurs vérifiés travaillant dans la province, avec un justificatif valide et une réserve confirmée. Les confirmations récentes d'abord ; au-delà de 7 jours, il faut appeler."
+    }
   },
   "advisories": {
     "label": "Avis aux voyageurs",
