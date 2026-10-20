@@ -13,6 +13,7 @@ import {
 import { z } from 'zod';
 
 import { advisoryDisplayStatusSchema, advisorySeveritySchema } from './advisory';
+import { generatorAccessSchema, resourceChannelSchema } from './supplier';
 
 /** M8 disruption cases (`docs/schema-m8-disruptions.md`). */
 
@@ -297,9 +298,56 @@ export const disruptionCaseSchema = disruptionListItemSchema.extend({
   suggestions: z.array(disruptionSuggestionSchema),
   advisories: z.array(disruptionAdvisoryLinkSchema),
   log: z.array(disruptionLogEntrySchema),
+  /** Distinct suppliers holding an offered, accepted or fulfilled item on the attached bookings (M6 D5). */
+  suppliersInvolved: z.number().int(),
 });
 
 export type DisruptionCaseDto = z.infer<typeof disruptionCaseSchema>;
+
+/** One supplier on the console's resources card (M6 D5). */
+const disruptionResourceBaseSchema = z.object({
+  supplierId: z.string().uuid(),
+  name: z.string(),
+  phone: z.string(),
+  confirmedAt: z.string(),
+  confirmedVia: resourceChannelSchema,
+  /** Older than seven days: listed last, "confirm by phone". */
+  stale: z.boolean(),
+  /** Free today: the supplier is available and no calendar row blocks the day. */
+  availableToday: z.boolean(),
+  /** Paused from auto-dispatch by the 30-day expiry rule; manual assignment stays possible. */
+  paused: z.boolean(),
+});
+
+export const disruptionCasaResourceSchema = disruptionResourceBaseSchema.extend({
+  generator: generatorAccessSchema.nullable(),
+  generatorHoursPerDay: z.number().int().nullable(),
+  generatorSchedule: z.string().nullable(),
+  generatorFuelDays: z.number().int().nullable(),
+  solarBatteryKwh: z.number().nullable(),
+  rooms: z.number().int().nullable(),
+  guestCapacity: z.number().int().nullable(),
+});
+
+export type DisruptionCasaResourceDto = z.infer<typeof disruptionCasaResourceSchema>;
+
+export const disruptionDriverResourceSchema = disruptionResourceBaseSchema.extend({
+  fuelReserveLitres: z.number().int(),
+  provinces: z.array(z.string()),
+});
+
+export type DisruptionDriverResourceDto = z.infer<typeof disruptionDriverResourceSchema>;
+
+export const disruptionResourcesSchema = z.object({
+  /** The case's province code; null when the case is not regional (no resources). */
+  province: z.string().nullable(),
+  casas: z.array(disruptionCasaResourceSchema),
+  drivers: z.array(disruptionDriverResourceSchema),
+  /** The tenant's emergency directory, the card's "Official" line. */
+  official: z.array(z.object({ label: z.string(), phone: z.string() })),
+});
+
+export type DisruptionResourcesDto = z.infer<typeof disruptionResourcesSchema>;
 
 /** What the traveler sees on the trip page: the offer, its options and the rule. */
 export const meDisruptionSchema = z.object({
