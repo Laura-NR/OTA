@@ -1,14 +1,14 @@
 'use client';
 
 import { VerificationStatus } from '@ota/domain';
-import { Label, Select } from '@ota/ui';
+import { Checkbox, Label, Select } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useTransition } from 'react';
 
 /**
- * A-Suppliers' province and verification filters. Each change rewrites the URL,
- * which the server page reads.
+ * A-Suppliers' province, verification and "Backup power only" filters. Each
+ * change rewrites the URL, which the server page reads.
  */
 export function SupplierFilters({ provinces }: { provinces: readonly string[] }) {
   const t = useTranslations('backoffice.suppliers.filters');
@@ -61,6 +61,12 @@ export function SupplierFilters({ provinces }: { provinces: readonly string[] })
           ))}
         </Select>
       </div>
+      <Checkbox
+        label={t('backupPower')}
+        checked={params.get('power') === '1'}
+        onChange={(event) => update('power', event.target.checked ? '1' : '')}
+        className="text-body-sm"
+      />
     </div>
   );
 }

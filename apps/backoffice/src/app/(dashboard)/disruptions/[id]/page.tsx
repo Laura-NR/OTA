@@ -1,5 +1,9 @@
 import { CUBA_PROVINCE_NAMES, UserRole, zonedWallClock } from '@ota/domain';
-import type { DisruptionCaseDto, DisruptionLogEntryDto } from '@ota/schemas';
+import type {
+  DisruptionCaseDto,
+  DisruptionLogEntryDto,
+  DisruptionResourcesDto,
+} from '@ota/schemas';
 import {
   Alert,
   Badge,
@@ -18,6 +22,7 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { ReactNode } from 'react';
 
 import {
   AttachForm,
@@ -50,8 +55,9 @@ const HOUR_MS = 3_600_000;
 /**
  * One disruption case (A-Disruption): the header and counts, severity and its
  * escalation path, the copied playbook, the traveler options and sending
- * them, the status board, attaching bookings, the linked site banner (M7)
- * and the case log read from the audit trail.
+ * them, the status board, the resources in the province (M6), attaching
+ * bookings, the linked site banner (M7) and the case log read from the audit
+ * trail.
  */
 export default async function DisruptionCasePage({
   params,
@@ -74,6 +80,9 @@ export default async function DisruptionCasePage({
   if (!item) {
     notFound();
   }
+  const resources = await apiFetch<DisruptionResourcesDto>(
+    `/disruptions/${id}/resources`,
+  ).catch(() => null);
   const { disruptions } = getTenantConfig();
   const scenario = disruptions.scenarios.find((entry) => entry.key === item.scenario);
   const now = new Date();
@@ -204,6 +213,9 @@ export default async function DisruptionCasePage({
           </li>
           <li>
             <Tag>{t('counts.arriving', { count: item.counts.arriving })}</Tag>
+          </li>
+          <li>
+            <Tag>{t('counts.suppliers', { count: item.suppliersInvolved })}</Tag>
           </li>
           <li>
             <Tag>
@@ -579,6 +591,150 @@ export default async function DisruptionCasePage({
         </CardContent>
       </Card>
 
+      <Card className="min-w-0">
+        <CardHeader>
+          <CardTitle>
+            {provinceName
+              ? t('resources.title', { province: provinceName })
+              : t('resources.titleNoProvince')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 text-body-sm">
+          {resources === null ? (
+            <Alert variant="destructive">{t('resources.loadError')}</Alert>
+          ) : (
+            <dl className="flex flex-col gap-4">
+              <ResourceRow label={t('resources.power')} tone="success">
+                {!resources.province ? (
+                  <p className="text-muted">{t('resources.noProvince')}</p>
+                ) : resources.casas.length === 0 ? (
+                  <p className="text-muted">{t('resources.noCasas')}</p>
+                ) : (
+                  <ul className="flex flex-col gap-1.5">
+                    {resources.casas.map((casa) => (
+                      <li
+                        key={casa.supplierId}
+                        className="flex flex-wrap items-center gap-x-2 gap-y-1"
+                      >
+                        <Link
+                          href={`/suppliers/${casa.supplierId}`}
+                          className="font-medium text-primary-600 underline-offset-4 hover:underline"
+                        >
+                          {casa.name}
+                        </Link>
+                        <span>
+                          {[
+                            casa.solarBatteryKwh
+                              ? t('resources.solar', { kwh: casa.solarBatteryKwh })
+                              : null,
+                            casa.generator === 'OWN' || casa.generator === 'SHARED'
+                              ? t(
+                                  casa.generator === 'SHARED'
+                                    ? 'resources.generatorShared'
+                                    : 'resources.generator',
+                                  { hours: casa.generatorHoursPerDay ?? 0 },
+                                ) +
+                                (casa.generatorSchedule
+                                  ? ` (${casa.generatorSchedule})`
+                                  : '')
+                              : null,
+                            casa.generatorFuelDays !== null &&
+                            (casa.generator === 'OWN' || casa.generator === 'SHARED')
+                              ? t('resources.fuelDays', { days: casa.generatorFuelDays })
+                              : null,
+                            casa.rooms !== null || casa.guestCapacity !== null
+                              ? t('resources.capacity', {
+                                  rooms: casa.rooms ?? 0,
+                                  guests: casa.guestCapacity ?? 0,
+                                })
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </span>
+                        <ResourceFlags
+                          stale={casa.stale}
+                          availableToday={casa.availableToday}
+                          paused={casa.paused}
+                          t={t}
+                        />
+                        <a
+                          href={`tel:${casa.phone.replace(/[^+\d]/g, '')}`}
+                          className="font-mono text-caption text-secondary"
+                        >
+                          {casa.phone}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </ResourceRow>
+              <ResourceRow label={t('resources.drivers')} tone="success">
+                {!resources.province ? (
+                  <p className="text-muted">{t('resources.noProvince')}</p>
+                ) : resources.drivers.length === 0 ? (
+                  <p className="text-muted">{t('resources.noDrivers')}</p>
+                ) : (
+                  <ul className="flex flex-col gap-1.5">
+                    {resources.drivers.map((driver) => (
+                      <li
+                        key={driver.supplierId}
+                        className="flex flex-wrap items-center gap-x-2 gap-y-1"
+                      >
+                        <Link
+                          href={`/suppliers/${driver.supplierId}`}
+                          className="font-medium text-primary-600 underline-offset-4 hover:underline"
+                        >
+                          {driver.name}
+                        </Link>
+                        <span>
+                          {t('resources.fuel', {
+                            litres: driver.fuelReserveLitres,
+                            provinces: driver.provinces.join(', '),
+                          })}
+                        </span>
+                        <ResourceFlags
+                          stale={driver.stale}
+                          availableToday={driver.availableToday}
+                          paused={driver.paused}
+                          t={t}
+                        />
+                        <a
+                          href={`tel:${driver.phone.replace(/[^+\d]/g, '')}`}
+                          className="font-mono text-caption text-secondary"
+                        >
+                          {driver.phone}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </ResourceRow>
+              <ResourceRow label={t('resources.official')} tone="secondary">
+                {resources.official.length === 0 ? (
+                  <p className="text-muted">{t('resources.noOfficial')}</p>
+                ) : (
+                  <ul className="flex flex-wrap gap-x-4 gap-y-1">
+                    {resources.official.map((contact) => (
+                      <li key={`${contact.label}-${contact.phone}`}>
+                        {contact.label}{' '}
+                        <a
+                          href={`tel:${contact.phone.replace(/[^+\d]/g, '')}`}
+                          className="font-mono text-secondary"
+                        >
+                          {contact.phone}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </ResourceRow>
+            </dl>
+          )}
+          <p className="text-caption text-muted">{t('resources.rule')}</p>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         {canManage ? (
           <Card className="min-w-0">
@@ -676,5 +832,46 @@ export default async function DisruptionCasePage({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/** One line of the resources card: a pill naming the kind, then its entries. */
+function ResourceRow({
+  label,
+  tone,
+  children,
+}: {
+  label: string;
+  tone: 'success' | 'secondary';
+  children: ReactNode;
+}) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-start">
+      <dt>
+        <Badge variant={tone}>{label}</Badge>
+      </dt>
+      <dd className="min-w-0">{children}</dd>
+    </div>
+  );
+}
+
+/** Why the desk should check before relying on an entry. */
+function ResourceFlags({
+  stale,
+  availableToday,
+  paused,
+  t,
+}: {
+  stale: boolean;
+  availableToday: boolean;
+  paused: boolean;
+  t: (key: string) => string;
+}) {
+  return (
+    <>
+      {stale ? <Badge variant="attention">{t('resources.stale')}</Badge> : null}
+      {!availableToday ? <Badge variant="outline">{t('resources.notFree')}</Badge> : null}
+      {paused ? <Badge variant="warning">{t('resources.paused')}</Badge> : null}
+    </>
   );
 }

@@ -6,7 +6,7 @@ import {
   canAutoDispatch,
   isCredentialExpiringSoon,
 } from '@ota/domain';
-import type { SupplierDto, SupplierReliabilityDto } from '@ota/schemas';
+import type { SupplierReliabilityDto, SupplierRowDto } from '@ota/schemas';
 import {
   Alert,
   Badge,
@@ -26,7 +26,8 @@ import Link from 'next/link';
 import { SupplierFilters } from '@/components/supplier-filters';
 import { VerificationActions } from '@/components/verification-actions';
 import { apiFetch, getServerSession } from '@/lib/api';
-import { percent } from '@/lib/ops-format';
+import { opsDayMonth, percent } from '@/lib/ops-format';
+import { lastJobLabel, powerLabel } from '@/lib/suppliers';
 
 const VERIFY_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
@@ -46,6 +47,8 @@ interface Params {
   category?: string;
   province?: string;
   status?: string;
+  /** `1`: "Backup power only" (M6 D1). */
+  power?: string;
 }
 
 function hrefWith(params: Params, changes: Partial<Params>): string {
@@ -62,15 +65,15 @@ function daysUntil(date: string, now: Date): number {
   return Math.ceil((new Date(date).getTime() - now.getTime()) / DAY_MS);
 }
 
-function categoryKey(category: SupplierDto['category']): ChipKey {
+function categoryKey(category: SupplierRowDto['category']): ChipKey {
   return CHIPS.find((candidate) => candidate.category === category)?.key ?? 'all';
 }
 
 /**
  * The suppliers register (A-Suppliers): the compliance list with the expiry
- * rule, category chips, province and verification filters, and each worker's
- * credential, reliability and auto-dispatch state. The credential inspector is
- * the detail page.
+ * rule, category chips, province, verification and backup-power filters, and
+ * each worker's credential, reliability, auto-dispatch state, Power and Last
+ * job (M6). The credential inspector is the detail page.
  */
 export default async function SuppliersPage({
   searchParams,
@@ -79,12 +82,13 @@ export default async function SuppliersPage({
 }) {
   const params = await searchParams;
   const t = await getTranslations('backoffice.suppliers');
+  const serviceTypeT = await getTranslations('status.serviceType');
   const locale = await getLocale();
   const session = await getServerSession();
   const canVerify = session?.user.role ? VERIFY_ROLES.includes(session.user.role) : false;
 
   const [suppliers, reliability] = await Promise.all([
-    apiFetch<SupplierDto[]>('/suppliers').catch(() => null),
+    apiFetch<SupplierRowDto[]>('/suppliers').catch(() => null),
     apiFetch<SupplierReliabilityDto[]>('/quality/supplier-reliability').catch(() => []),
   ]);
   const reliabilityById = new Map(reliability.map((row) => [row.supplierId, row]));
@@ -98,6 +102,7 @@ export default async function SuppliersPage({
     (candidate) => candidate === params.status,
   );
   const province = params.province || undefined;
+  const backupOnly = params.power === '1';
 
   const now = new Date();
   const all = suppliers ?? [];
@@ -112,7 +117,8 @@ export default async function SuppliersPage({
     (supplier) =>
       (!activeCategory || supplier.category === activeCategory) &&
       (!status || supplier.verificationStatus === status) &&
-      (!province || supplier.provincesActive.includes(province)),
+      (!province || supplier.provincesActive.includes(province)) &&
+      (!backupOnly || supplier.power.backup),
   );
 
   const chipCounts = Object.fromEntries(
@@ -133,9 +139,9 @@ export default async function SuppliersPage({
   const pendingCount = all.filter(
     (supplier) => supplier.verificationStatus === VerificationStatus.PendingAudit,
   ).length;
-  const filtering = Boolean(activeCategory || status || province);
+  const filtering = Boolean(activeCategory || status || province || backupOnly);
 
-  function credential(supplier: SupplierDto) {
+  function credential(supplier: SupplierRowDto) {
     if (!supplier.credentialExpiresAt) {
       return <Badge variant="outline">{t('credential.missing')}</Badge>;
     }
@@ -159,7 +165,7 @@ export default async function SuppliersPage({
     );
   }
 
-  function autoDispatch(supplier: SupplierDto) {
+  function autoDispatch(supplier: SupplierRowDto) {
     const eligible = canAutoDispatch(
       {
         verificationStatus: supplier.verificationStatus,
@@ -184,7 +190,7 @@ export default async function SuppliersPage({
     return <Badge variant="outline">{t('auto.unavailable')}</Badge>;
   }
 
-  function reliabilityCell(supplier: SupplierDto) {
+  function reliabilityCell(supplier: SupplierRowDto) {
     const row = reliabilityById.get(supplier.id);
     if (!row || row.offers === 0) {
       return <span className="text-muted">{t('table.noReliability')}</span>;
@@ -204,6 +210,31 @@ export default async function SuppliersPage({
         <span className={cn('font-mono text-caption', low && 'text-warning-700')}>
           {percent(row.acceptanceRate, locale)}
         </span>
+      </div>
+    );
+  }
+
+  function powerCell(supplier: SupplierRowDto) {
+    const { power } = supplier;
+    if (power.kind === 'NOT_APPLICABLE') {
+      return <span className="text-muted">{t('power.NOT_APPLICABLE')}</span>;
+    }
+    // A stale confirmation stays listed but greyed, with its date (M6 D2).
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span
+          className={cn(
+            'whitespace-nowrap text-body-sm',
+            (power.stale || !power.confirmedAt) && 'text-muted',
+          )}
+        >
+          {powerLabel(power, t)}
+        </span>
+        {power.stale && power.confirmedAt ? (
+          <span className="text-caption text-muted">
+            {t('power.stale', { date: opsDayMonth(power.confirmedAt, locale) })}
+          </span>
+        ) : null}
       </div>
     );
   }
@@ -259,6 +290,7 @@ export default async function SuppliersPage({
                     category: candidate.key,
                     status: undefined,
                     province: undefined,
+                    power: undefined,
                   })}
                   aria-current={on ? 'page' : undefined}
                   className={cn(
@@ -323,13 +355,15 @@ export default async function SuppliersPage({
               </div>
             ) : (
               <div className="overflow-x-auto border-t">
-                <Table className="min-w-[760px]">
+                <Table className="min-w-[960px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead scope="col">{t('table.supplier')}</TableHead>
                       <TableHead scope="col">{t('table.credential')}</TableHead>
                       <TableHead scope="col">{t('table.reliability')}</TableHead>
                       <TableHead scope="col">{t('table.auto')}</TableHead>
+                      <TableHead scope="col">{t('table.power')}</TableHead>
+                      <TableHead scope="col">{t('table.lastJob')}</TableHead>
                       <TableHead scope="col">{t('table.status')}</TableHead>
                       <TableHead scope="col">
                         <span className="sr-only">{t('table.verification')}</span>
@@ -362,6 +396,14 @@ export default async function SuppliersPage({
                         </TableCell>
                         <TableCell className="align-top">
                           {autoDispatch(supplier)}
+                        </TableCell>
+                        <TableCell className="align-top">{powerCell(supplier)}</TableCell>
+                        <TableCell className="align-top text-body-sm">
+                          {supplier.lastJob ? (
+                            lastJobLabel(supplier.lastJob, locale, serviceTypeT)
+                          ) : (
+                            <span className="text-muted">{t('noJob')}</span>
+                          )}
                         </TableCell>
                         <TableCell className="align-top">
                           <Badge

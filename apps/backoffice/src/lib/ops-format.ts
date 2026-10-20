@@ -40,6 +40,17 @@ export function opsDate(value: Date | string, locale: string): string {
   );
 }
 
+/** "3 Oct": the day and month in Havana, for a compact column. */
+export function opsDayMonth(value: Date | string, locale: string): string {
+  return plainSpaces(
+    new Intl.DateTimeFormat(locale, {
+      timeZone: OPS_TIME_ZONE,
+      day: 'numeric',
+      month: 'short',
+    }).format(new Date(value)),
+  );
+}
+
 /** "UTC−4": Havana's offset at `value`. */
 export function opsOffset(value: Date): string {
   const part = new Intl.DateTimeFormat('en-US', {

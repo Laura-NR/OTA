@@ -1,11 +1,12 @@
 import {
   CREDENTIAL_EXPIRY_WINDOW_DAYS,
+  SupplierCategory,
   UserRole,
   VerificationStatus,
   canAutoDispatch,
   isCredentialExpiringSoon,
 } from '@ota/domain';
-import type { SupplierDto, SupplierReliabilityDto } from '@ota/schemas';
+import type { SupplierDetailDto, SupplierReliabilityDto } from '@ota/schemas';
 import { Badge, buttonClassName, cn } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
@@ -14,10 +15,12 @@ import type { ReactNode } from 'react';
 
 import { AvailabilityCalendar } from '@/components/availability-calendar';
 import { SupplierCredential } from '@/components/supplier-credential';
+import { SupplierResourcesForm } from '@/components/supplier-resources-form';
 import { VerificationActions } from '@/components/verification-actions';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
-import { percent } from '@/lib/ops-format';
+import { opsDate, opsTime, percent } from '@/lib/ops-format';
+import { lastJobLabel } from '@/lib/suppliers';
 
 const VERIFY_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 const EDIT_ROLES: readonly string[] = [
@@ -55,9 +58,10 @@ function Panel({
 
 /**
  * The supplier inspector (A-Suppliers): the worker's profile, the credential
- * inspector (spec §4.5), the auto-dispatch state and reliability, and the
- * availability calendar. Backup-power, vehicle and payout fields wait for M6
- * and the payments module.
+ * inspector (spec §4.5), the auto-dispatch state, reliability and job history,
+ * a casa's backup power or a driver's fuel reserve (M6), and the availability
+ * calendar. Vehicle and speciality details wait (M6 D7), payouts for the
+ * payments module.
  */
 export default async function SupplierDetailPage({
   params,
@@ -66,13 +70,14 @@ export default async function SupplierDetailPage({
 }) {
   const { id } = await params;
   const t = await getTranslations('backoffice.supplierDetail');
+  const serviceTypeT = await getTranslations('status.serviceType');
   const locale = await getLocale();
   const session = await getServerSession();
   const role = session?.user.role ?? '';
   const canVerify = VERIFY_ROLES.includes(role);
   const canEdit = EDIT_ROLES.includes(role);
 
-  const supplier = await apiFetch<SupplierDto>(`/suppliers/${id}`).catch(
+  const supplier = await apiFetch<SupplierDetailDto>(`/suppliers/${id}`).catch(
     (error: unknown) => {
       if (error instanceof ApiError && error.status === 404) {
         notFound();
@@ -124,6 +129,13 @@ export default async function SupplierDetailPage({
           };
 
   const phone = supplier.primaryPhone.replace(/[^+\d]/g, '');
+  const resourcesKind =
+    supplier.category === SupplierCategory.HomestayHost
+      ? 'casa'
+      : supplier.category === SupplierCategory.PrivateDriver
+        ? 'driver'
+        : null;
+  const resources = supplier.resources;
 
   return (
     <div className="flex flex-col gap-6">
@@ -237,7 +249,39 @@ export default async function SupplierDetailPage({
             />
           </div>
         )}
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)]">
+          <Stat label={t('jobs12m')} value={String(supplier.jobs12m)} />
+          <Stat
+            mono={false}
+            label={t('lastJob')}
+            value={
+              supplier.lastJob
+                ? lastJobLabel(supplier.lastJob, locale, serviceTypeT)
+                : t('noJob')
+            }
+          />
+        </div>
       </Panel>
+
+      {resourcesKind ? (
+        <Panel
+          title={t(`resources.${resourcesKind}Title`)}
+          description={t(`resources.${resourcesKind}Description`)}
+        >
+          <SupplierResourcesForm
+            key={resources?.confirmedAt ?? 'never'}
+            supplierId={supplier.id}
+            kind={resourcesKind}
+            resources={resources}
+            confirmedWhen={
+              resources
+                ? `${opsDate(resources.confirmedAt, locale)} ${opsTime(resources.confirmedAt, locale)}`
+                : null
+            }
+            canEdit={canVerify}
+          />
+        </Panel>
+      ) : null}
 
       <Panel title={t('credentialDocument')} description={t('credentialDescription')}>
         <SupplierCredential
@@ -255,11 +299,20 @@ export default async function SupplierDetailPage({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  mono = true,
+}: {
+  label: string;
+  value: string;
+  /** Figures are set in mono; a sentence such as the last job is not. */
+  mono?: boolean;
+}) {
   return (
     <div className="flex flex-col gap-0.5 rounded-md bg-neutral-50 px-3 py-2">
       <span className="text-caption text-muted">{label}</span>
-      <span className={cn('font-mono text-body')}>{value}</span>
+      <span className={cn('text-body', mono && 'font-mono')}>{value}</span>
     </div>
   );
 }
