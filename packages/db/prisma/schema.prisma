@@ -223,6 +223,22 @@ enum DisruptionChoiceSource {
   DEFAULT
 }
 
+/// M6: a casa's generator (D1).
+enum GeneratorAccess {
+  NONE
+  OWN
+  SHARED
+}
+
+/// M6: how a resources confirmation reached the desk.
+enum ResourceChannel {
+  PHONE
+  WHATSAPP
+  VISIT
+  /// The worker app's self-declaration (Phase 7).
+  WORKER_APP
+}
+
 enum ProposalLineUnit {
   PER_PERSON
   PER_BOOKING
@@ -387,6 +403,8 @@ model User {
   disruptionStepsDone DisruptionStep[]        @relation("DisruptionStepDoneBy")
   safetyConfirmations DisruptionCaseBooking[] @relation("DisruptionSafetyConfirmedBy")
   disruptionChoices   DisruptionCaseBooking[] @relation("DisruptionChoiceBy")
+  // M6
+  supplierResourcesConfirmed SupplierResources[] @relation("SupplierResourcesConfirmedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -483,9 +501,41 @@ model SupplierProfile {
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
   inventoryItems InventoryItem[]
+  // M6
+  resources      SupplierResources?
 
   @@index([verificationStatus])
   @@map("supplier_profiles")
+}
+
+/// M6: a supplier's backup power, water, capacity and fuel, as last confirmed (D1, D2).
+/// No row means never confirmed. History is the audit log (D8).
+model SupplierResources {
+  supplierId           String           @id @map("supplier_id") @db.Uuid
+  /// Casas (HOMESTAY_HOST).
+  generator            GeneratorAccess?
+  generatorHoursPerDay Int?             @map("generator_hours_per_day") @db.SmallInt
+  /// The hours as the host words them ("06–09, 18–21"), at most 60 characters.
+  generatorSchedule    String?          @map("generator_schedule") @db.VarChar(60)
+  generatorFuelDays    Int?             @map("generator_fuel_days") @db.SmallInt
+  /// Null or 0 means no solar.
+  solarBatteryKwh      Decimal?         @map("solar_battery_kwh") @db.Decimal(5, 1)
+  waterTankLitres      Int?             @map("water_tank_litres")
+  rooms                Int?             @db.SmallInt
+  guestCapacity        Int?             @map("guest_capacity") @db.SmallInt
+  /// Drivers (PRIVATE_DRIVER).
+  fuelReserveLitres    Int?             @map("fuel_reserve_litres")
+  confirmedAt          DateTime         @map("confirmed_at")
+  confirmedById        String?          @map("confirmed_by_id") @db.Uuid
+  confirmedVia         ResourceChannel  @map("confirmed_via")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  supplier    SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  confirmedBy User?           @relation("SupplierResourcesConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+
+  @@index([confirmedAt])
+  @@map("supplier_resources")
 }
 
 // Public recruitment application (spec §4.6 supplier management). Approved
