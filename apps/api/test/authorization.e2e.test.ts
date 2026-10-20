@@ -288,6 +288,8 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
   { method: 'get', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsRead' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsWrite' },
+  // M6: support reads the resources on the inspector; only the desk writes them.
+  { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
   { method: 'post', path: `/suppliers/${SUPPLIER}/verification`, allowed: 'opsWrite' },
 
   // Imports, applications, quality.
@@ -338,6 +340,7 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/disruptions/alerts', allowed: 'opsRead' },
   { method: 'post', path: '/disruptions', allowed: 'opsWrite' },
   { method: 'get', path: `/disruptions/${DISRUPTION}`, allowed: 'opsRead' },
+  { method: 'get', path: `/disruptions/${DISRUPTION}/resources`, allowed: 'opsRead' },
   { method: 'patch', path: `/disruptions/${DISRUPTION}`, allowed: 'opsWrite' },
   {
     method: 'post',

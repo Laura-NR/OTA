@@ -11,22 +11,31 @@ import { Prisma } from '@ota/db';
 import {
   DISRUPTION_ARRIVAL_HOURS,
   DISRUPTION_SUGGESTED_STATUSES,
+  ServiceItemStatus,
+  SupplierCategory,
   UserRole,
+  VerificationStatus,
   advisoryDisplayStatus,
+  backupHoursPerDay,
   cubaProvinceCode,
   deskChoiceRefusal,
   disruptionCaseCounts,
   disruptionOfferState,
   disruptionReference,
   effectiveChoice,
+  hasBackupPower,
+  isCredentialExpiringSoon,
+  isResourcesStale,
   isTripArriving,
   isTripUnderWay,
   isUnknownOverdue,
   needsCall,
   pickAdvisoryTranslation,
+  rankResources,
   sendOptionsIssue,
   suggestDisruptionBookings,
   travelerChoiceRefusal,
+  zonedCalendarDay,
   type AdvisorySeverity,
   type AdvisoryStatus,
   type DisruptionCaseRow,
@@ -46,6 +55,7 @@ import type {
   DisruptionListItemDto,
   DisruptionListQuery,
   DisruptionOptionsWriteRequest,
+  DisruptionResourcesDto,
   DisruptionSafetyRequest,
   DisruptionSendOptionsRequest,
   DisruptionUpdateRequest,
@@ -81,6 +91,13 @@ const BANNER_SEVERITY: Record<DisruptionSeverity, AdvisorySeverity> = {
 };
 
 const PERSON = { select: { fullName: true, email: true } } as const;
+
+/** A supplier counts as involved while it holds the item: offered, accepted or done (M6 D5). */
+const INVOLVED_STATUSES = [
+  ServiceItemStatus.Offered,
+  ServiceItemStatus.Accepted,
+  ServiceItemStatus.Fulfilled,
+];
 
 const BOOKING_INCLUDE = {
   reservation: {
@@ -215,13 +232,21 @@ export class DisruptionsService {
   async get(id: string): Promise<DisruptionCaseDto> {
     const row = await this.load(id);
     const now = new Date();
-    const [suggestions, log] = await Promise.all([
+    const [suggestions, log, involved] = await Promise.all([
       row.status === 'OPEN' ? this.suggestions(row, now) : Promise.resolve([]),
       this.prisma.auditLog.findMany({
         where: { entityType: ENTITY, entityId: id },
         orderBy: { createdAt: 'desc' },
         take: 200,
         include: { actor: PERSON },
+      }),
+      this.prisma.serviceItem.findMany({
+        where: {
+          reservationId: { in: row.bookings.map((booking) => booking.reservationId) },
+          supplierId: { not: null },
+          status: { in: INVOLVED_STATUSES },
+        },
+        select: { supplierId: true },
       }),
     ]);
     const scenario = this.scenario(row.scenario);
@@ -277,6 +302,124 @@ export class DisruptionsService {
             ? (entry.metadata as Record<string, unknown>)
             : null,
       })),
+      suppliersInvolved: new Set(involved.map((item) => item.supplierId)).size,
+    };
+  }
+
+  /**
+   * The console's "Resources in {province}" (M6 D5), derived on read: verified
+   * casas with solar or a generator and drivers with fuel in reserve who work
+   * in the case's province and whose credential has not expired, fresh
+   * confirmations first; plus the tenant's emergency directory. A supplier
+   * paused by the 30-day rule is listed with its flag. A case without a
+   * province lists no suppliers.
+   */
+  async resources(id: string): Promise<DisruptionResourcesDto> {
+    const row = await this.prisma.disruptionCase.findUnique({
+      where: { id },
+      select: { province: true },
+    });
+    if (!row) {
+      throw new NotFoundException(`Disruption case ${id} not found`);
+    }
+    const official = this.tenant.emergencyContacts.map(({ label, phone }) => ({
+      label,
+      phone,
+    }));
+    if (!row.province) {
+      return { province: null, casas: [], drivers: [], official };
+    }
+
+    const now = new Date();
+    const suppliers = await this.prisma.supplierProfile.findMany({
+      where: {
+        verificationStatus: VerificationStatus.Verified,
+        category: { in: [SupplierCategory.HomestayHost, SupplierCategory.PrivateDriver] },
+        resources: { isNot: null },
+        OR: [{ credentialExpiresAt: null }, { credentialExpiresAt: { gt: now } }],
+      },
+      include: {
+        user: PERSON,
+        resources: true,
+        availabilities: {
+          where: { date: zonedCalendarDay(now) },
+          select: { isAvailable: true },
+        },
+      },
+    });
+
+    const casas: DisruptionResourcesDto['casas'] = [];
+    const drivers: DisruptionResourcesDto['drivers'] = [];
+    const casaHours = new Map<string, number>();
+    for (const supplier of suppliers) {
+      const resources = supplier.resources;
+      if (!resources) continue;
+      if (
+        !supplier.provincesActive.some((name) => cubaProvinceCode(name) === row.province)
+      ) {
+        continue;
+      }
+      const facts = {
+        generator: resources.generator,
+        generatorHoursPerDay: resources.generatorHoursPerDay,
+        solarBatteryKwh:
+          resources.solarBatteryKwh === null ? null : Number(resources.solarBatteryKwh),
+        fuelReserveLitres: resources.fuelReserveLitres,
+      };
+      if (!hasBackupPower(supplier.category, facts)) continue;
+      const base = {
+        supplierId: supplier.id,
+        name: supplier.user.fullName ?? supplier.user.email,
+        phone: supplier.primaryPhone,
+        confirmedAt: resources.confirmedAt.toISOString(),
+        confirmedVia: resources.confirmedVia,
+        stale: isResourcesStale(resources.confirmedAt, now),
+        availableToday:
+          supplier.isAvailable && (supplier.availabilities[0]?.isAvailable ?? true),
+        paused:
+          supplier.credentialExpiresAt !== null &&
+          isCredentialExpiringSoon(supplier.credentialExpiresAt, now),
+      };
+      if (supplier.category === SupplierCategory.HomestayHost) {
+        casaHours.set(supplier.id, backupHoursPerDay(facts));
+        casas.push({
+          ...base,
+          generator: resources.generator,
+          generatorHoursPerDay: resources.generatorHoursPerDay,
+          generatorSchedule: resources.generatorSchedule,
+          generatorFuelDays: resources.generatorFuelDays,
+          solarBatteryKwh: facts.solarBatteryKwh,
+          rooms: resources.rooms,
+          guestCapacity: resources.guestCapacity,
+        });
+      } else {
+        drivers.push({
+          ...base,
+          fuelReserveLitres: resources.fuelReserveLitres ?? 0,
+          provinces: supplier.provincesActive,
+        });
+      }
+    }
+
+    const ranked = <T extends { name: string; confirmedAt: string }>(
+      entries: T[],
+      amount: (entry: T) => number,
+    ): T[] =>
+      rankResources(
+        entries.map((entry) => ({
+          entry,
+          name: entry.name,
+          confirmedAt: new Date(entry.confirmedAt),
+          amount: amount(entry),
+        })),
+        now,
+      ).map(({ entry }) => entry);
+
+    return {
+      province: row.province,
+      casas: ranked(casas, (casa) => casaHours.get(casa.supplierId) ?? 0),
+      drivers: ranked(drivers, (driver) => driver.fuelReserveLitres),
+      official,
     };
   }
 

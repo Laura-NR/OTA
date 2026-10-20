@@ -31,6 +31,7 @@ import {
   type DisruptionListItemDto,
   type DisruptionListQuery,
   type DisruptionOptionsWriteRequest,
+  type DisruptionResourcesDto,
   type DisruptionSafetyRequest,
   type DisruptionSendOptionsRequest,
   type DisruptionUpdateRequest,
@@ -88,6 +89,13 @@ export class DisruptionsController {
   @Roles(...READ_ROLES)
   get(@Param('id', ParseUUIDPipe) id: string): Promise<DisruptionCaseDto> {
     return this.disruptions.get(id);
+  }
+
+  /** M6 D5: the console's resources in the case's province. */
+  @Get(':id/resources')
+  @Roles(...READ_ROLES)
+  resources(@Param('id', ParseUUIDPipe) id: string): Promise<DisruptionResourcesDto> {
+    return this.disruptions.resources(id);
   }
 
   @Patch(':id')

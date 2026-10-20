@@ -14,6 +14,7 @@ import {
 import { UserRole } from '@ota/domain';
 import {
   availabilityQuerySchema,
+  confirmResourcesSchema,
   expiringSuppliersQuerySchema,
   listSuppliersQuerySchema,
   setAvailabilitySchema,
@@ -21,11 +22,14 @@ import {
   uploadCredentialSchema,
   type AvailabilityDayDto,
   type AvailabilityQuery,
+  type ConfirmResourcesRequest,
   type ExpiringSuppliersQuery,
   type ListSuppliersQuery,
   type SetAvailabilityRequest,
   type SetVerificationRequest,
+  type SupplierDetailDto,
   type SupplierDto,
+  type SupplierRowDto,
   type UploadCredentialRequest,
 } from '@ota/schemas';
 import type { Response } from 'express';
@@ -51,7 +55,7 @@ export class SuppliersController {
   list(
     @Query(new ZodValidationPipe(listSuppliersQuerySchema))
     query: ListSuppliersQuery,
-  ): Promise<SupplierDto[]> {
+  ): Promise<SupplierRowDto[]> {
     return this.suppliers.list(query);
   }
 
@@ -66,7 +70,7 @@ export class SuppliersController {
 
   @Get(':id')
   @Roles(...READ_ROLES)
-  getById(@Param('id', ParseUUIDPipe) id: string): Promise<SupplierDto> {
+  getById(@Param('id', ParseUUIDPipe) id: string): Promise<SupplierDetailDto> {
     return this.suppliers.getById(id);
   }
 
@@ -100,6 +104,18 @@ export class SuppliersController {
     @CurrentUser() actor: AuthUser,
   ): Promise<AvailabilityDayDto> {
     return this.suppliers.setAvailability(id, body, actor);
+  }
+
+  /** M6 D4: the desk confirms a casa's power or a driver's fuel; support reads only. */
+  @Put(':id/resources')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  confirmResources(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(confirmResourcesSchema)) body: ConfirmResourcesRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.suppliers.confirmResources(id, body, actor);
   }
 
   @Post(':id/verification')

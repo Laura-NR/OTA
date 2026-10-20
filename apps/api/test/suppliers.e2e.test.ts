@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { Availability, SupplierProfile } from '@ota/db';
+import type { Availability, SupplierProfile, SupplierResources } from '@ota/db';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -43,14 +43,51 @@ function makeSupplier(
   };
 }
 
+interface FakeJob {
+  supplierId: string;
+  serviceDateStart: Date;
+  status: string;
+  serviceType: string;
+  province: string | null;
+  reservation: { status: string };
+}
+
 function createFakePrisma(
   store: Map<string, ReturnType<typeof makeSupplier>>,
   availability: Map<string, Availability>,
+  resources: Map<string, SupplierResources> = new Map(),
+  jobs: FakeJob[] = [],
 ) {
   const availabilityKey = (supplierId: string, date: Date) =>
     `${supplierId}:${date.toISOString()}`;
+  const withResources = (row: ReturnType<typeof makeSupplier>) => {
+    const own = resources.get(row.id);
+    return { ...row, resources: own ? { ...own, confirmedBy: null } : null };
+  };
 
   const fake = {
+    serviceItem: {
+      findMany: async ({ where }: { where: { supplierId: { in: string[] } } }) =>
+        jobs.filter((job) => where.supplierId.in.includes(job.supplierId)),
+    },
+    supplierResources: {
+      upsert: async ({
+        where,
+        create,
+      }: {
+        where: { supplierId: string };
+        create: Omit<SupplierResources, 'createdAt' | 'updatedAt'>;
+      }) => {
+        const row = {
+          ...create,
+          solarBatteryKwh: create.solarBatteryKwh,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as SupplierResources;
+        resources.set(where.supplierId, row);
+        return row;
+      },
+    },
     availability: {
       findMany: async ({
         where,
@@ -124,10 +161,12 @@ function createFakePrisma(
             (row) => row.credentialExpiresAt !== null && row.credentialExpiresAt <= lte,
           );
         }
-        return rows;
+        return rows.map(withResources);
       },
-      findUnique: async ({ where }: { where: { id: string } }) =>
-        store.get(where.id) ?? null,
+      findUnique: async ({ where }: { where: { id: string } }) => {
+        const row = store.get(where.id);
+        return row ? withResources(row) : null;
+      },
       update: async ({
         where,
         data,
@@ -171,10 +210,14 @@ describe('suppliers', () => {
   let app: INestApplication;
   let store: Map<string, ReturnType<typeof makeSupplier>>;
   let availability: Map<string, Availability>;
+  let resources: Map<string, SupplierResources>;
+  let jobs: FakeJob[];
   let fakePrisma: ReturnType<typeof createFakePrisma>;
 
   beforeEach(async () => {
     availability = new Map();
+    resources = new Map();
+    jobs = [];
     store = new Map([
       [
         GUIDE_ID,
@@ -195,7 +238,7 @@ describe('suppliers', () => {
       ],
     ]);
 
-    fakePrisma = createFakePrisma(store, availability);
+    fakePrisma = createFakePrisma(store, availability, resources, jobs);
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
@@ -382,5 +425,155 @@ describe('suppliers', () => {
       .send({ date: '2027-02-01', isAvailable: true });
 
     expect(response.status).toBe(404);
+  });
+
+  describe('M6 resources', () => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    function confirmed(
+      supplierId: string,
+      overrides: Partial<SupplierResources> = {},
+    ): SupplierResources {
+      return {
+        supplierId,
+        generator: null,
+        generatorHoursPerDay: null,
+        generatorSchedule: null,
+        generatorFuelDays: null,
+        solarBatteryKwh: null,
+        waterTankLitres: null,
+        rooms: null,
+        guestCapacity: null,
+        fuelReserveLitres: null,
+        confirmedAt: new Date(),
+        confirmedById: null,
+        confirmedVia: 'PHONE',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...overrides,
+      };
+    }
+
+    it('shows the Power and Last job columns on the register', async () => {
+      resources.set(DRIVER_ID, confirmed(DRIVER_ID, { fuelReserveLitres: 40 }));
+      jobs.push(
+        {
+          supplierId: DRIVER_ID,
+          serviceDateStart: new Date(Date.now() - 3 * DAY_MS),
+          status: 'ACCEPTED',
+          serviceType: 'TRANSPORTATION',
+          province: 'Matanzas',
+          reservation: { status: 'CONFIRMED' },
+        },
+        {
+          supplierId: DRIVER_ID,
+          serviceDateStart: new Date(Date.now() - DAY_MS),
+          status: 'DECLINED',
+          serviceType: 'TRANSPORTATION',
+          province: 'La Habana',
+          reservation: { status: 'CONFIRMED' },
+        },
+      );
+
+      const response = await request(app.getHttpServer())
+        .get('/suppliers')
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      const driver = response.body.find((row: { id: string }) => row.id === DRIVER_ID);
+      expect(driver.power).toMatchObject({ kind: 'FUEL', litres: 40, backup: true });
+      expect(driver.lastJob).toMatchObject({
+        serviceType: 'TRANSPORTATION',
+        province: 'Matanzas',
+      });
+      const guide = response.body.find((row: { id: string }) => row.id === GUIDE_ID);
+      expect(guide.power.kind).toBe('NOT_APPLICABLE');
+      expect(guide.lastJob).toBeNull();
+    });
+
+    it('keeps only suppliers with backup power under backupPower=1', async () => {
+      resources.set(DRIVER_ID, confirmed(DRIVER_ID, { fuelReserveLitres: 40 }));
+
+      const response = await request(app.getHttpServer())
+        .get('/suppliers?backupPower=1')
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.map((row: { id: string }) => row.id)).toEqual([DRIVER_ID]);
+    });
+
+    it('marks a confirmation older than seven days stale', async () => {
+      resources.set(
+        DRIVER_ID,
+        confirmed(DRIVER_ID, {
+          fuelReserveLitres: 40,
+          confirmedAt: new Date(Date.now() - 8 * DAY_MS),
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .get(`/suppliers/${DRIVER_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.resources.stale).toBe(true);
+      expect(response.body.power.stale).toBe(true);
+    });
+
+    it('confirms a driver fuel reserve with the actor and channel and audits both values', async () => {
+      resources.set(DRIVER_ID, confirmed(DRIVER_ID, { fuelReserveLitres: 60 }));
+
+      const response = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'WHATSAPP', fuelReserveLitres: 40 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.resources).toMatchObject({
+        fuelReserveLitres: 40,
+        confirmedVia: 'WHATSAPP',
+        stale: false,
+      });
+      expect(response.body.jobs12m).toBe(0);
+      expect(resources.get(DRIVER_ID)?.confirmedById).toBe(SUPER_ADMIN.id);
+      expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'supplier.resources_confirmed',
+          entityId: DRIVER_ID,
+          metadata: expect.objectContaining({
+            via: 'WHATSAPP',
+            previous: expect.objectContaining({ fuelReserveLitres: 60 }),
+            next: expect.objectContaining({ fuelReserveLitres: 40 }),
+          }),
+        }),
+      });
+    });
+
+    it('refuses casa fields on a driver and any resources on a guide', async () => {
+      const driver = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'PHONE', fuelReserveLitres: 40, rooms: 2 });
+      const guide = await request(app.getHttpServer())
+        .put(`/suppliers/${GUIDE_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'PHONE', fuelReserveLitres: 40 });
+
+      expect(driver.status).toBe(422);
+      expect(guide.status).toBe(422);
+      expect(resources.size).toBe(0);
+      expect(fakePrisma.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it('refuses the worker app channel and out-of-range hours with 400', async () => {
+      const channel = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'WORKER_APP', fuelReserveLitres: 40 });
+      const hours = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'PHONE', generatorHoursPerDay: 30 });
+
+      expect(channel.status).toBe(400);
+      expect(hours.status).toBe(400);
+    });
   });
 });

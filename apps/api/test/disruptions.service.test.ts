@@ -44,6 +44,7 @@ const tenant = parseTenantConfig({
       },
     ],
   },
+  emergencyContacts: [{ label: 'Ambulance', phone: '104' }],
 });
 
 const DAY = 86_400_000;
@@ -103,6 +104,8 @@ function fakePrisma(now: Date) {
   const options: Row[] = [];
   const bookings: Row[] = [];
   const audits: Row[] = [];
+  const serviceItems: Row[] = [];
+  const suppliers: Row[] = [];
   const user = (id: unknown) => users.find((item) => item.id === id) ?? null;
 
   const bookingView = (row: Row) => {
@@ -155,6 +158,39 @@ function fakePrisma(now: Date) {
   const prisma = {
     audits,
     bookings,
+    serviceItems,
+    suppliers,
+    serviceItem: {
+      findMany: async ({
+        where,
+      }: {
+        where: { reservationId: { in: string[] }; status: { in: string[] } };
+      }) =>
+        serviceItems
+          .filter(
+            (item) =>
+              where.reservationId.in.includes(String(item.reservationId)) &&
+              item.supplierId !== null &&
+              where.status.in.includes(String(item.status)),
+          )
+          .map((item) => ({ supplierId: item.supplierId })),
+    },
+    supplierProfile: {
+      // The console's query: verified, a casa or driver, confirmed, credential not expired.
+      findMany: async ({
+        where,
+      }: {
+        where: { verificationStatus: string; category: { in: string[] } };
+      }) =>
+        suppliers.filter(
+          (row) =>
+            row.verificationStatus === where.verificationStatus &&
+            where.category.in.includes(String(row.category)) &&
+            row.resources !== null &&
+            (row.credentialExpiresAt === null ||
+              (row.credentialExpiresAt as Date).getTime() > now.getTime()),
+        ),
+    },
     disruptionCase: {
       count: async () => cases.length,
       findUnique: async ({ where }: { where: { id: string } }) => {
@@ -547,5 +583,131 @@ describe('DisruptionsService', () => {
       service.markSafety(ANA, opened.id, RES_HOLM, { safety: 'SAFE' }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(await service.mine(HOLM, {})).toEqual([]);
+  });
+
+  describe('M6 resources', () => {
+    let supplierSeq = 0;
+    const supplier = (
+      name: string,
+      overrides: Row | Record<string, unknown>,
+      resources: Record<string, unknown> | null,
+    ) => {
+      const id = `00000000-0000-4000-a000-${String((supplierSeq += 1)).padStart(12, '0')}`;
+      prisma.suppliers.push({
+        id,
+        category: 'HOMESTAY_HOST',
+        verificationStatus: 'VERIFIED',
+        provincesActive: ['Pinar del Río'],
+        primaryPhone: '+53 5555 0001',
+        isAvailable: true,
+        credentialExpiresAt: null,
+        user: { fullName: name, email: `${name}@example.test` },
+        availabilities: [],
+        ...overrides,
+        resources: resources && {
+          generator: null,
+          generatorHoursPerDay: null,
+          generatorSchedule: null,
+          generatorFuelDays: null,
+          solarBatteryKwh: null,
+          rooms: null,
+          guestCapacity: null,
+          fuelReserveLitres: null,
+          confirmedAt: new Date(now.getTime() - DAY),
+          confirmedVia: 'PHONE',
+          ...resources,
+        },
+      });
+      return id;
+    };
+
+    const openIn = (province: string | null) =>
+      service.create(ANA, {
+        scenario: 'outage',
+        severity: 'MAJOR',
+        province,
+        title: 'Power outage · Viñales',
+        summary: 'Province-wide outage since last night.',
+        reservationIds: [RES_HOLM, RES_OTHER],
+      });
+
+    it('counts each supplier holding an item on the attached bookings once', async () => {
+      const item = (reservationId: string, supplierId: string | null, status: string) =>
+        prisma.serviceItems.push({ id: uuid(), reservationId, supplierId, status });
+      item(RES_HOLM, 's-casa', 'ACCEPTED');
+      item(RES_HOLM, 's-casa', 'OFFERED');
+      item(RES_OTHER, 's-driver', 'FULFILLED');
+      item(RES_OTHER, 's-declined', 'DECLINED');
+      item(RES_OTHER, null, 'UNASSIGNED');
+
+      const opened = await openIn('CU01');
+      expect(opened.suppliersInvolved).toBe(2);
+    });
+
+    it('lists the province casas with power and drivers with fuel, fresh first', async () => {
+      const generator = supplier(
+        'Casa Yamile',
+        {},
+        { generator: 'OWN', generatorHoursPerDay: 6 },
+      );
+      const solar = supplier(
+        'Villa Los Pinos',
+        {},
+        { solarBatteryKwh: 5, confirmedAt: new Date(now.getTime() - 9 * DAY) },
+      );
+      supplier('Casa sin planta', {}, { generator: 'NONE' });
+      supplier(
+        'Casa en La Habana',
+        { provincesActive: ['La Habana'] },
+        { solarBatteryKwh: 5 },
+      );
+      supplier('Casa sin confirmar', {}, null);
+      supplier(
+        'Casa suspendida',
+        { verificationStatus: 'SUSPENDED' },
+        { solarBatteryKwh: 5 },
+      );
+      supplier(
+        'Casa vencida',
+        { credentialExpiresAt: new Date(now.getTime() - DAY) },
+        { solarBatteryKwh: 5 },
+      );
+      const driver = supplier(
+        'Lazaro',
+        {
+          category: 'PRIVATE_DRIVER',
+          provincesActive: ['La Habana', 'Pinar del Río'],
+          availabilities: [{ isAvailable: false }],
+          credentialExpiresAt: new Date(now.getTime() + 10 * DAY),
+        },
+        { fuelReserveLitres: 60 },
+      );
+      supplier('Empty tank', { category: 'PRIVATE_DRIVER' }, { fuelReserveLitres: 0 });
+      supplier('Guide', { category: 'TOUR_GUIDE' }, { fuelReserveLitres: 60 });
+
+      const opened = await openIn('CU01');
+      const resources = await service.resources(opened.id);
+
+      expect(resources.province).toBe('CU01');
+      expect(resources.casas.map((casa) => casa.supplierId)).toEqual([generator, solar]);
+      expect(resources.casas[1]).toMatchObject({ stale: true, solarBatteryKwh: 5 });
+      expect(resources.drivers).toHaveLength(1);
+      expect(resources.drivers[0]).toMatchObject({
+        supplierId: driver,
+        fuelReserveLitres: 60,
+        availableToday: false,
+        paused: true,
+        stale: false,
+      });
+      expect(resources.official).toEqual([{ label: 'Ambulance', phone: '104' }]);
+    });
+
+    it('lists no suppliers for a case that is not regional', async () => {
+      supplier('Casa Yamile', {}, { generator: 'OWN', generatorHoursPerDay: 6 });
+      const opened = await openIn(null);
+      const resources = await service.resources(opened.id);
+      expect(resources).toMatchObject({ province: null, casas: [], drivers: [] });
+      expect(resources.official).toHaveLength(1);
+    });
   });
 });
