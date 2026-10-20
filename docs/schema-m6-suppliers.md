@@ -1,7 +1,7 @@
 # M6 Supplier operations: schema diff for review
 
-**Status:** **Draft for the owner (2026-10-19).** Nothing is generated: the migration waits for
-the owner's answers on D1–D9 (Article 2).
+**Status:** **Approved 2026-10-20 as recommended (D1a–D9a).** Not generated yet: the migration
+(§6, with the checks added through `--create-only`) and §5 land next session.
 **Date:** 2026-10-19
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 3 (Suppliers: backup power, **M6**), read
 against the A-Suppliers board (the **Power** and **Last job** columns, the "Backup power only"

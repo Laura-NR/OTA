@@ -42,18 +42,18 @@ the ADRs.
 
 OWNER DECISIONS ALREADY TAKEN (do not re-ask): M1–M5, M7 and M8 as recommended; document
 downloads for the owner and the ops roles; graceful shutdown with a timeout (built 2026-10-19).
-The owner's answers to M6 D1–D9 and to the log-redaction question are recorded in the handoff's
-Decisions once given; if they are not there, ask for them first (batched, with the draft's
-recommendations) and do not generate the migration.
+M6 approved as recommended (D1a–D9a, 2026-10-20); redacting cookies, authorization and set-cookie
+from the API log approved; support staff stay read-only (M6 resources and the M8 board are written
+by Operations Admin and Super Admin only).
 
-TASK 1 — M6 as the owner decided (docs/schema-m6-suppliers.md): generate the migration with
+TASK 1 — M6 as approved (docs/schema-m6-suppliers.md, D1a–D9a): generate the migration with
 `prisma migrate dev --create-only --name supplier_resources`, append the CHECK constraints, apply
 it, then build §5: domain rules (Power label, staleness, last job, resource ordering), DTOs, the API
 routes in the authorization matrix, the A-Suppliers Power/Last job columns and "Backup power only"
 chip, the inspector's resilience and fuel cards, A-Disruption's resources card and "Suppliers
 involved" count, the seed's placeholder rows, and an e2e. Record what the build decides in §7.
 
-TASK 2 — Log redaction, if the owner approved it: nestjs-pino logs request headers, cookies
+TASK 2 — Log redaction, as approved: nestjs-pino logs request headers, cookies
 included. Add a `redact` list (req.headers.cookie, req.headers.authorization,
 res.headers["set-cookie"]) in apps/api/src/app.module.ts, with a test that a logged request
 carries no session token.

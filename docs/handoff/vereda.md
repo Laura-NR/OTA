@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-19 22:00
+# Handoff — vereda — updated 2026-10-20 09:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -21,11 +21,11 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
       `onApplicationShutdown`, after the HTTP server drains.
     - `closePdfRenderer` resolves after a failed launch.
     - The other schedulers and the readiness Redis client already closed in `onModuleDestroy`.
-  - M6 drafted (`e1629d9`, `docs/schema-m6-suppliers.md`). D1–D9 with recommendations: a 1:1
-    `supplier_resources` table with one confirmation stamp; staleness after 7 days, the last
-    job and the console's resources derived on read; the storefront filter, vehicle and guide
-    details deferred. **No migration**: it waits for the owner.
-- **Not built:** SMS/push, M6 (draft only), M9, M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs.
+  - M6 drafted (`e1629d9`, `docs/schema-m6-suppliers.md`) and **approved 2026-10-20 as
+    recommended (D1a–D9a)**: a 1:1 `supplier_resources` table with one confirmation stamp;
+    staleness after 7 days, the last job and the console's resources derived on read; the
+    storefront filter, vehicle and guide details deferred. **Not generated yet.**
+- **Not built:** SMS/push, M6 (approved, not generated), M9, M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs.
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
   samples, the deposit's refundability and proof retention, the M5 sample terms, the builder
   rates, the M8 crisis framework (`disruptions.status: placeholder`).
@@ -62,13 +62,11 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
 - **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS` (runbook).
   A BullMQ worker waits for its active job; a job still running at the timeout is cut off, and
   BullMQ runs it again as a stalled job.
-- **Security finding, not fixed (owner question):** `nestjs-pino` logs every request's headers,
+- **Security finding, approved, not fixed yet:** `nestjs-pino` logs every request's headers,
   `cookie` included, so session tokens reach the API log (seen in the :3011 log, since deleted).
   The fix is a `redact` list (`req.headers.cookie`, `req.headers.authorization`,
   `res.headers["set-cookie"]`) in `apps/api/src/app.module.ts`.
-- M8 writes are Operations Admin and Super Admin only. Say if support staff should answer the
-  phones (M8's board, and M6 D4).
-- **For the owner:** the M6 decisions and the open items under Next.
+- **For the owner:** the open items under Next.
 
 ## Traps
 - **Nest re-raises the signal after its shutdown sequence.** Any extra `process.on('SIGTERM')`
@@ -94,10 +92,9 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
   - "2026-10-19: the API runs Nest 12 (AGENTS.md §A says 11)."
 
 ## Next
-1. Owner: answer M6 D1–D9 (`docs/schema-m6-suppliers.md`). Then generate the migration with
-   `--create-only`, add the checks and build §5.
-2. Owner: the log-redaction finding above (recommended: redact cookies, authorization and
-   set-cookie).
+1. Build M6 as approved: generate the migration with `--create-only`, add the checks, apply it,
+   then build §5 and record what the build decides in §7.
+2. Redact cookies, authorization and set-cookie from the API log, as approved (with a test).
 3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
    passport-key backup, the AGENTS.md §C lines above. Then M9, M10, and SMS once a provider is
@@ -364,3 +361,11 @@ Confirmation screen, the Custom builder, M7 and M8) and ADR 0007 (worker app).
   supplier with a single confirmation stamp; staleness, the last job and the console's resources
   derived on read; desk-only writes (ops+super); vehicle/guide details and the storefront filter
   deferred. No migration until approved.
+- 2026-10-20 — the owner approved M6 D1a–D9a as recommended (one `supplier_resources` row with
+  a confirmation stamp; 7-day staleness, last job and the console's resources derived on read;
+  desk-only writes; vehicle/guide details and the storefront filter deferred; audit log as
+  history; no retention change). Migration next session.
+- 2026-10-20 — the owner approved redacting cookies, authorization and set-cookie from the API
+  log (`nestjs-pino` `redact`). Next session.
+- 2026-10-20 — support staff stay read-only: supplier resources (M6 D4) and the M8 status board
+  are written by Operations Admin and Super Admin only.
