@@ -1,6 +1,8 @@
 import {
+  GeneratorAccess,
   InventoryType,
   PrismaClient,
+  ResourceChannel,
   Role,
   SupplierCategory,
   VerificationStatus,
@@ -68,6 +70,74 @@ async function main(): Promise<void> {
       },
     },
   });
+
+  // M6: a demo casa and driver with placeholder resources (dev data only), so
+  // the register's Power column and the disruption console have rows. A re-seed
+  // keeps whatever the desk confirmed since.
+  const demoSuppliers = [
+    {
+      email: 'casa@example.test',
+      fullName: 'Example Casa Host',
+      category: SupplierCategory.HOMESTAY_HOST,
+      phone: '+53 5555 0001',
+      provinces: ['Pinar del Río'],
+      rtn: 'RTN-DEMO-0002',
+      resources: {
+        generator: GeneratorAccess.OWN,
+        generatorHoursPerDay: 6,
+        generatorSchedule: '06–09, 18–21',
+        generatorFuelDays: 2,
+        waterTankLitres: 1000,
+        rooms: 3,
+        guestCapacity: 6,
+      },
+    },
+    {
+      email: 'driver@example.test',
+      fullName: 'Example Driver',
+      category: SupplierCategory.PRIVATE_DRIVER,
+      phone: '+53 5555 0002',
+      provinces: ['La Habana', 'Pinar del Río'],
+      rtn: 'RTN-DEMO-0003',
+      resources: { fuelReserveLitres: 40 },
+    },
+  ];
+  for (const demo of demoSuppliers) {
+    const user = await prisma.user.upsert({
+      where: { email: demo.email },
+      update: {},
+      create: {
+        email: demo.email,
+        fullName: demo.fullName,
+        role: Role.SERVICE_WORKER,
+        locale: 'es',
+        supplierProfile: {
+          create: {
+            category: demo.category,
+            primaryPhone: demo.phone,
+            provincesActive: demo.provinces,
+            rtnLicenseNumber: demo.rtn,
+            verificationStatus: VerificationStatus.VERIFIED,
+            credentialExpiresAt: new Date('2027-12-31T00:00:00Z'),
+          },
+        },
+      },
+      include: { supplierProfile: true },
+    });
+    if (user.supplierProfile) {
+      await prisma.supplierResources.upsert({
+        where: { supplierId: user.supplierProfile.id },
+        update: {},
+        create: {
+          supplierId: user.supplierProfile.id,
+          ...demo.resources,
+          confirmedAt: new Date(),
+          confirmedById: superAdmin.id,
+          confirmedVia: ResourceChannel.PHONE,
+        },
+      });
+    }
+  }
 
   const reservation = await prisma.reservation.upsert({
     where: { bookingCode: 'DEMO0001' },
