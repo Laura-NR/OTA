@@ -65,7 +65,9 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   before), the `standard` cancellation scale (only the 45–31 day 10 % and 30–15
   day 25 % bands come from the boards; the other day ranges and the € 60 fee are
   guesses; the share kept is of what was paid), the 48-hour first-payment
-  window, the refund limits (€ 500 alone, € 2,000 with two approvers) and a card
+  window, the refund limits (€ 500 alone, € 2,000 with two approvers; since M9
+  these two and the window are the defaults of runtime thresholds that two Super
+  Admins can change in Settings) and a card
   fee of 0 % until counsel rules on surcharges (PSD2 art. 62(4)). The M5
   `proposals` block is also a sample: 21 days of validity, a 4-working-hour
   response promise, a € 140 planning fee shown for transparency only (it is not
@@ -86,7 +88,9 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   default when the deadline passes, and its compensation rule; the desk proposes a
   4-hour options deadline. A case copies these texts when it opens, so editing them
   never changes an open case. Supplier names were taken out of the options; the
-  desk adapts each option before sending it.
+  desk adapts each option before sending it. The optional `staff.allowedEmailDomains` (M9) limits staff
+  invitations to the agency's domains (the board says `@vereda.travel` only); it is
+  empty, so any domain is accepted, until the agency's mail domain is live.
 
 ## Forking for a new agency
 

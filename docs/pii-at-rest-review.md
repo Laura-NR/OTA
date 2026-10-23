@@ -38,6 +38,7 @@ supplier legal documents. Booking codes, UUIDs, and amounts are pseudonymous.
 | `SupplierProfile` | `primaryPhone`, `rtnLicenseNumber`, `vehicleDetails` | No retention path | **G5** |
 | Supplier credential object (`credentials/<supplierId>/…`) | legal ID/licence scans | Private, API-gated, expiry-scanned | **G5** |
 | `SupplierApplication` | `fullName`, `email`, `phone`, `rtnLicenseNumber`, `message` | No retention path | **G4** |
+| `StaffInvite` (M9) | invited work `email` (the token is stored only as a SHA-256 hash) | Deleted by the retention scan 90 days after it closes; the audit log keeps the event | None |
 | `ImportBatch` | `rows` JSON may embed supplier names/emails | No retention path | **G9** |
 | Email content | magic links, message bodies, retention notices | Provider-dependent; Mailpit in dev | **G6** |
 | Application logs | `ConsoleMailer` prints the full email body; expiry scan logs supplier emails; digest logs the recipient | pino; the session cookie, `authorization` and `set-cookie` headers are redacted (2026-10-20), PII is not, no retention | **G7** |

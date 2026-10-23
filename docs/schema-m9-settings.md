@@ -1,9 +1,8 @@
 # M9 Settings: schema diff for review
 
-**Status:** **Approved 2026-10-23 as recommended (D1a–D9a).** Not generated yet: the migration
-(§6, with the checks added through `--create-only`) and §5 land next session. The owner then had
-dispatch enforce the reliability floor and the availability calendar (built 2026-10-23, no
-migration), so the floor and its minimum join the D2 table.
+**Status:** **Approved 2026-10-23 as recommended (D1a–D9a) and built the same day** (§7). The
+owner also had dispatch enforce the reliability floor and the availability calendar, so the floor
+and its minimum joined the D2 table.
 **Date:** 2026-10-23
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 10 (Settings, **M9**: thresholds Q13, invites,
 permission overrides with expiry, currencies, manifest view), read against the A-Settings board
@@ -274,3 +273,60 @@ without the email. Staff accounts stay outside the traveler lifecycle, as today.
 The migration would be generated with `pnpm --filter @ota/db exec prisma migrate dev
 --create-only --name settings_and_staff` (never `prisma format`), the checks appended to its
 SQL, and then applied with `prisma migrate dev`, as M3 and M6 did.
+
+## 7. As built (2026-10-23)
+
+- **Migration** `20261023133937_settings_and_staff` (`eaeb167`): §6 verbatim plus the checks,
+  each proved live against the database (a second PROPOSED row, a decided row without a time, a
+  TRAVELER invite and an unconfirmed Super Admin acceptance are refused; a valid invite inserts).
+  The decided check is `(status = 'PROPOSED') = (decided_at IS NULL)`.
+- **Rules** (`5f77503`): `packages/domain/src/settings/operating.ts` (the document, its defaults,
+  `thresholdsIssues`, `changedThresholds`, `settingsDecisionRefusal`, `dispatchTimerPolicy`) and
+  `settings/staff.ts` (invite states, acceptance and confirmation refusals, the 90-day purge, the
+  last-Super-Admin guard, the staff session limit). The dispatch timers, amber share, credential
+  window, resources staleness, retention policy (the one reminder stays a week before the
+  deadline) and the advisory dual-approval level became optional parameters; the defaults keep
+  every caller's behaviour.
+- **Choices the doc left open:**
+  - The document's defaults are the code's constants plus the manifest's payment window and
+    refund limits, merged by the API; a stored version is parsed over the defaults, so a threshold
+    added later still has a value. "Reset to spec defaults" proposes exactly those values.
+  - A proposal must change something and keep the refund limits rising and the short-notice timer
+    shorter (422). Applying re-checks against the values in force. The proposer may withdraw;
+    any other Super Admin applies or rejects; the write is conditional on the row still being
+    PROPOSED.
+  - `advisoryDualApprovalFrom` is CRITICAL (today) or CAUTION; INFO always needs one approval.
+  - The API caches the applied version 60 s per process and drops its cache on apply. The desk
+    reads `GET /settings/operating`; the storefront does not need it.
+  - **Promotion to Super Admin rides on the invite table:** inviting an existing staff member as
+    SUPER_ADMIN is allowed (every other existing address is refused), a second Super Admin
+    confirms, and the person accepts. So no separate pending-promotion store was needed. A role
+    change by PATCH moves only between Operations Admin and Administrative Support; demoting a
+    Super Admin is allowed unless they are the last active one.
+  - An invite's token is generated when it is sent (at creation, or at confirmation for a Super
+    Admin invite) and only its SHA-256 is stored; "send again" replaces it and restarts the 7
+    days. Acceptance needs the invited address signed in, and a fresh account (no booking, no
+    supplier profile) or a staff member; otherwise 409. A failed email leaves the invite standing
+    (send again).
+  - Nobody acts on themselves (role, deactivation); signing oneself out everywhere is allowed.
+  - The guard reads `deactivatedAt` from the session (a server-owned Better Auth field) and the
+    session's `createdAt`; travelers are unaffected. The dashboard layout applies the same 12 h
+    rule and sends an expired staff session back to sign in.
+  - `STAFF_SESSION_HOURS` (12) and `MAGIC_LINK_EXPIRES_MINUTES` (10) are environment config;
+    `BACKOFFICE_PUBLIC_URL` is the invitation link's origin.
+  - The audit log tab reads the latest 50 events (`GET /audit-log`, filters by entity type and
+    action prefix, paged by `before`). Integration status is `GET /settings/security`, with the two
+    limits; values are never returned.
+  - The retention scan deletes invites 90 days after they close (`invitesDeleted` in its result).
+- **API** (`4724b61`): `GET /settings/operating` (ops roles), the versions and their decisions,
+  `GET /settings/security`, `GET /audit-log`, and the `/staff` routes (Super Admin; accepting is
+  any signed-in user). All are in the RBAC matrix. Dispatch, payments, refunds, notifications,
+  suppliers (and the expiry scan), disruptions, packages, retention, customers and advisories read
+  the thresholds in force.
+- **Desk** (`d725344`): A-Settings' six tabs; `/invite`; the login's `?next=`; every desk page that
+  showed a constant reads the value in force, and the copy that states a threshold takes it as a
+  parameter.
+- **Email** (`9731f36`): the invitation in en/es/fr, sent in the tenant's primary language.
+- **Seed:** `founder@example.test`, a second demo Super Admin (dev data).
+- **e2e** (`9964a1a`): propose → second Super Admin applies; invite → sign in → accept → role;
+  deactivate → refused.

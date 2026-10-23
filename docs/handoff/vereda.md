@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-23 17:00
+# Handoff — vereda — updated 2026-10-23 22:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -7,85 +7,82 @@ Decisions: ADR 0006 (design system; amended through 2026-10-20 for Phase 4, M4, 
 Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app).
 
 ## State
-- **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done; M1–M8 are complete
-  with their surfaces.** Commits are local on `vereda`; the owner pushes
-  (`git log --oneline origin/vereda..vereda`; the owner had pushed through `bcaf000`).
-- **This session (2026-10-23), 10 commits plus the docs commits:**
-  - **M6 D7(b), a driver's vehicle** (`fc22c93`, `2d9b69b`): `PUT /suppliers/:id/vehicle`
-    (ops+super, drivers only) into the existing `vehicle_details` JSON, audited
-    `supplier.vehicle_updated`; the inspector's "Vehicle & fuel" card
-    (`supplier-vehicle-form.tsx`) with an informational insurance badge.
-  - **M6 D6(b), the traveler filter** (`f6f3a4e`, `86a36f2`): `publicBackupPower` and
-    `packageHasBackupPower` in `packages/domain/src/supplier/resources.ts`; each public stay
-    carries `backupPower` from a casa confirmation under 7 days old, the package `backupPower`
-    when every stay does; the storefront Packages "Conditions › Backup power at every stay"
-    filter (`?power=1`) and the stay line on the package page.
-  - **Copy fix** (`d0bb84a`): the register's reliability footnote no longer claims a supplier
-    below 85 % drops out of auto-dispatch (dispatch never read reliability).
-  - **M9 drafted** (`ffae55a`) and **approved as recommended (D1a–D9a)**; not generated yet.
-  - **Dispatch enforces reliability and the calendar** (owner's request; `12f526a`, `3835026`,
-    `140d3ca`, `46db41f`): automatic dispatch skips a supplier below 85 % acceptance over at
-    least 5 answered offers (`meetsReliabilityFloor`) or who blocked any calendar day of the
-    service (`serviceCalendarDays`, `isFreeForService` in
-    `packages/domain/src/dispatch/availability.ts`). The re-dispatch drawer hides blocked
-    suppliers and flags below-floor ones, who stay offerable by hand; a desk-named supplier is
-    offered whatever their rate. Scorecard rates are now over answered offers (open and cancelled
-    offers no longer count as refusals). Register/inspector show "Paused · reliability".
-- **Not built:** SMS/push, M9 (draft), M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs;
-  guide specialities; room-level stock; the worker app's fuel self-declaration.
+- **Phases 0, 1, 0b, 2 and 3 are done; Phase 5 is done; M1–M9 are complete with their
+  surfaces.** Commits are local on `vereda`; the owner pushes
+  (`git log --oneline origin/vereda..vereda`).
+- **This session (2026-10-23):**
+  - **M6 follow-ups** (no migration): a driver's vehicle on the inspector (`fc22c93`, `2d9b69b`);
+    the storefront's "Backup power at every stay" filter and stay lines (`f6f3a4e`, `86a36f2`).
+  - **Dispatch rules** (owner's request; `12f526a`…`46db41f`): automatic dispatch skips a supplier
+    below the reliability floor (85 % over at least 5 answered offers) or who blocked any day of
+    the service; the re-dispatch drawer hides blocked suppliers and flags below-floor ones, whom
+    the desk may still offer by hand. Scorecards count answered offers only.
+  - **M9 built as approved** (`docs/schema-m9-settings.md` §7): migration
+    `20261023133937_settings_and_staff` (`eaeb167`); rules `packages/domain/src/settings/`
+    (`5f77503`); DTOs (`64c3697`); invitation email (`9731f36`); API (`4724b61`):
+    `OperatingSettingsService` (global, 60 s cache) read by every threshold consumer, the
+    propose → second-Super-Admin apply flow, `/staff` (invites, accept, roles, sessions,
+    deactivation), `/audit-log`, `/settings/security`, the guard refusing deactivated users and
+    staff sessions over 12 h, 10-minute sign-in links; desk (`d725344`): A-Settings' six tabs,
+    `/invite`, login `?next=`, the desk reading the thresholds in force (and the copy stating
+    them); e2e `e2e/settings.spec.ts` (`9964a1a`).
+- **Not built:** SMS/push, M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs; guide
+  specialities; M9's deferred items (permission overrides, display currencies, runtime flags and
+  manifest editing, recovery codes, idle lock, mandatory passkeys, IP allowlist, new-device email).
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
   samples, the deposit's refundability and proof retention, the M5 sample terms, the builder
-  rates, the M8 crisis framework; the seed's demo casa and driver; the backup-power wording
-  (core default, overridable in `tenant/messages`).
+  rates, the M8 crisis framework, the backup-power wording; dev seed: the demo casa and driver and
+  a second Super Admin (`founder@example.test`).
 
-## Verified (2026-10-23, dev stack stopped for the build)
+## Verified (2026-10-23 evening, dev stack stopped for the build)
+- Migration applied (`prisma migrate status`: 20 migrations, up to date); each hand-written check
+  refuses its case against the dev database and a valid invite inserts.
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **764 passed / 21 skipped**, 29/29 tasks, 0 cached (api 295/20
-  skipped, domain 260, schemas 56; the others unchanged), after the dispatch change.
-- Dispatch disproved: with `dispatch.service.ts` reverted, the blocked-day and below-floor unit
-  tests fail (2/17); restored, 17/17.
-- Browser: the re-dispatch drawer with a below-floor guide at 390/1024/1280 (no overflow; badge
-  and "60 % acceptance"), the register's "Paused · reliability" at 1280 (temporary TMPREL01/02
-  fixtures, deleted afterwards).
+- `TURBO_FORCE=true pnpm test` **797 passed / 21 skipped**, 29/29 tasks, 0 cached (api 310/20
+  skipped, domain 274, schemas 59, config 34, email 25; the others unchanged).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- `tsc` caught a real bug before it shipped: `packages.map(toPackageDto)` passed the array index
-  as `now` once `toPackageDto` took a second parameter; the unit tests (swc, no type check)
-  passed with it. Fixed to `map((pkg) => toPackageDto(pkg))`.
-- Live: with the seeded Trinidad stay linked to the demo casa, `GET /catalog/packages` returned
-  `backupPower: true` and the stay's `{GENERATOR, 6}`; the storefront list caught up within its
-  60 s cache. The link was removed afterwards.
-- Browser (Playwright, `scrollWidth − innerWidth` = 0): storefront Packages with `?power=1` at
-  1280/1024/390, the package itinerary's stay line at 390/1280 (`success-700`, no overflow), the
-  driver inspector at 1280/1024/390. One hydration warning on the first 390 load of the list did
-  not recur in 8 further loads (see Assumptions).
-- `pnpm e2e` **63/63** (`.next` deleted first, 8.0 min), including the two new dispatch tests
-  (blocked day → no offer and not on the drawer; below the floor → no automatic offer, flagged in
-  the drawer, offered by hand) and the extended M6 spec. The servers e2e left on 3000–3002 were
-  stopped by PID.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files. Left
-  afterwards: no disruption case, no published critical advisory, no blocked calendar day, only
-  the permanent `E2E0001` fixture and the one pre-existing open offer.
+- Disproved: with the old guard, the deactivated and 12 h tests fail (2/4); with the old
+  dispatch, the blocked-day and below-floor tests fail (2/17). `tsc` caught a `.map(toPackageDto)`
+  index-as-`now` bug the unit tests missed (fixed before commit).
+- Live: Better Auth still signs in with the new `deactivatedAt` field and returns the session's
+  `createdAt`; `/settings/operating`, `/staff`, `/settings/security` and `/audit-log` answer.
+- Browser (Playwright, `scrollWidth − innerWidth` = 0): all six Settings tabs at 1280, users,
+  thresholds, permissions, languages and manifest at 390, users and security at 1024, `/invite`
+  signed out at 390; the re-dispatch drawer and register earlier this session.
+- `pnpm e2e`: **65 passed, 1 failed** on the full run (8.7 min): `admin-shell.spec.ts` still
+  expected the old read-only Settings text. Fixed to the tabbed page (`e2e/admin-shell.spec.ts`)
+  and rerun alone: **4/4**. The full suite was **not** rerun after that fix — do it first next
+  session. The new specs (`settings.spec.ts` 3, the 2 dispatch tests, the extended M6 spec) passed
+  in the full run. Servers left on 3000–3002 were stopped by PID.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files; no
+  operating_settings version, staff invite or `settings-e2e-*` user left.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
-- **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS` (runbook).
-- The storefront's public package list is cached 60 s, so a confirmation (or a lapse to stale)
-  reaches the Packages filter within a minute; the package page uses its own cache key.
-- Not reproduced: one React hydration warning ("attributes didn't match") on the first load of
-  `/en/packages?power=1` at 390 while the list cache was refreshing; 8 later loads were clean.
-- The public `GET /catalog` (inventory items) has always returned `supplierId`; the new package
-  fields expose none, but that older field is worth a look when the catalog is next touched.
-- Service days: a booking's service dates are calendar days (UTC midnight) and a desk item's are
-  clock times read on the Havana day; a whole-trip item (M5 proposals) covers every day from start
-  to end, including the departure day, so a host who blocks that day is skipped.
-- The guide's credential image 404s in dev after an API restart (the e2e upload went to the
-  in-memory store; no `S3_*` set) — pre-existing, unrelated.
-- **For the owner:** the items under Next. The storefront's sample
-  "Cuba right now" banner says every stay has backup power, which the new filter can contradict;
-  it is tenant copy for the agency to word.
+- **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. New env:
+  `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`.
+- The settings cache is per process (60 s); a multi-instance deploy sees an applied change within
+  a minute. The back-office reads the same values per request.
+- The dev database holds several Super Admins from old smoke tests (`traveler2@`,
+  `dispatchadmin@`, …); they are dev data, not created by M9.
+- One hydration warning on the first dev compile of `/settings?tab=users` did not recur in later
+  loads (the same first-compile pattern as the storefront list earlier).
+- The public `GET /catalog` still returns inventory `supplierId` (pre-existing).
+- **For the owner:** the items under Next; the storefront's sample "Cuba right now" banner says
+  every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain once
+  its mail is live.
 
 ## Traps
+- **M9:** a service constructed by hand in a test now needs `fakeOperatingSettings()`
+  (`apps/api/test/fixtures/operating-settings.ts`) as its last argument, and an app-level test's
+  fake Prisma needs `withNoSettingsVersion(...)` (no applied version, no invites). A function used
+  as a `.map` callback must not gain an optional parameter. Client components import from
+  `lib/desk-clock.ts`, never `lib/operating.ts` (it pulls `next/headers`). A new next-intl
+  namespace must not reuse an existing string key (`settings.locales` was a string; the tab uses
+  `settings.languages`). The settings e2e owns `settings-e2e-*@example.test` and every
+  operating_settings version whose reason starts with "E2E", and changes only the resources
+  staleness so the 60 s cache cannot disturb later specs.
 - **Dispatch rules:** any fake Prisma used by `DispatchService` needs `availability.findMany`
   and a `dispatchOffer.findMany` that filters by `supplierId: { in }` as well as by
   `serviceItemId`. e2e that start dispatch on the seeded guide depend on the guide's offer ledger:
@@ -131,12 +128,15 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
     logger."
 
 ## Next
-1. Build M9 as approved (D1a–D9a): generate with `--create-only`, add the checks, apply, build
-   §5, record §7. The reliability floor (85 %) and its minimum (5) join the thresholds document.
+0. Rerun `pnpm e2e` once (the admin-shell fix was verified alone only) and restart the dev stack
+   with `RATE_LIMIT_MAX=100000 RATE_LIMIT_AUTH_MAX=100000 pnpm dev` (it was left stopped).
+1. Owner: choose the next batch — M10 (Events) when wanted, or Phase 8 items; M9's deferred items
+   (permission overrides, display currencies, runtime flags, recovery codes, passkey policy) each
+   need their own decision.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
-   passport-key backup, the backup-power wording, the AGENTS.md §C lines above. Then M10, and SMS
-   once a provider is chosen.
+   passport-key backup, the backup-power wording, the staff email domain, the AGENTS.md §C lines
+   above. Then SMS once a provider is chosen.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -433,4 +433,10 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
   (after 5 answered offers; assumed, as proposed) and suppliers who blocked any day of the
   service. The desk keeps a manual offer for below-floor suppliers (the board's rule); blocked
   days are never overridden. Scorecards count answered offers only.
+- 2026-10-23 — M9 built as approved (§7). The build decided: defaults = code constants + the
+  manifest's payment terms, merged by the API; promotion to Super Admin rides on the invite table
+  (no pending-promotion store); the token is generated when an invite is sent and stored hashed;
+  acceptance needs a fresh account or a staff member; nobody changes their own role or
+  deactivates themselves; the session limit and link validity are env config; copy that states a
+  threshold takes the value in force.
 

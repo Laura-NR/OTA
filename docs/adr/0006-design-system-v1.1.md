@@ -745,3 +745,36 @@ token was added.
   like the expiry pause) for a verified worker below the floor; the inspector explains it. The
   register footnote and the calendar caption state the enforced rules. The register's summary
   count of paused workers still counts the expiry pause only, as the rule strip beside it does.
+
+## Amendment, 2026-10-23: M9 Settings, resolved by the build
+
+The owner approved M9 as recommended (D1a–D9a). Built on the existing tokens; no token was added.
+
+- **Tabs.** The board's six tabs are links (`/settings?tab=…`) under the page header, in its
+  order; the row scrolls on its own below `xl`. Users & roles, Permissions and Security & audit
+  are for Super Admins; the rest of the desk sees the thresholds (read-only), languages and the
+  manifest. The board's "Super Admin only" header note became the tab rule.
+- **Users & roles.** The board's table (user, role, passkeys, last sign-in, status, act); "Edit"
+  became the actions themselves: a role select (Operations Admin ↔ Administrative Support),
+  "Sign out everywhere" and Deactivate/Reactivate (`destructive`). The board's "Require a passkey"
+  checkbox, recovery codes and "Revoke all sessions of a user…" menu are not drawn (D5, D9).
+  Invitations list beside the invite form with their state badge and Confirm (another Super
+  Admin), Send again and Revoke. Promotion to Super Admin is the invite form's third role.
+- **Permissions.** The board's matrix, read-only, showing what the code enforces (Yes / View / No
+  badges) rather than the board's values where they differ.
+- **Currencies & languages.** EUR only, with the reason; languages show the platform texts'
+  coverage and whether each is offered. The board's rate table, spread and lock fields and the
+  detection selects are not drawn (D7).
+- **Manifest & feature flags.** Read-only facts, the flags as badges and a JSON preview, with the
+  note that changes are a commit and a deploy (D8). The board's editable fields and "Save
+  manifest" are not drawn.
+- **Approvals & thresholds.** The board's table (rule, value, used by) plus a Default column; the
+  unenforced rows are named in a note instead of shown empty. Below it, for Super Admins, the
+  proposal form in the board's groups with "Reset to spec defaults" and a reason, or, while a
+  proposal waits, a `warning` card listing each change as before → after with Apply/Reject (others)
+  or Withdraw (proposer). History lists the versions.
+- **Security & audit.** Sessions and sign-in as facts (the values in force), integrations as
+  configured/not set badges (Q12, no values), and the latest 50 audit events. The board's IP
+  allowlist, new-device email and idle-lock controls are not drawn.
+- **/invite.** A centred card outside the desk shell: sign in with the invited address, then
+  "Accept the invitation"; on success, "Open the desk".

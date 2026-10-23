@@ -200,6 +200,24 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   it. Keep that list (`httpLoggerOptions`, `apps/api/src/app.module.ts`) when
   changing the logger.
 
+## Staff access (M9)
+
+- Staff are added from Settings › Users & roles by an invitation; a Super Admin
+  invitation (also the way to promote someone) is sent only after a second Super
+  Admin confirms it. Invitations link to `BACKOFFICE_PUBLIC_URL`.
+- To cut someone off at once, a Super Admin deactivates them (their sessions are
+  deleted and the API refuses them) or uses "Sign out everywhere".
+- Staff sessions end `STAFF_SESSION_HOURS` (12) after sign-in; sign-in links last
+  `MAGIC_LINK_EXPIRES_MINUTES` (10). Both are config: change them by a deploy.
+- Operating thresholds (dispatch timers, amber, refund limits, retention clock…)
+  change in Settings › Approvals & thresholds with two Super Admins; each process
+  picks an applied version up within 60 s. A one-person agency changes the
+  defaults by a deploy instead (`packages/domain/src/settings/operating.ts` and the
+  manifest's payment terms).
+- The desk always needs one active Super Admin: the API refuses to demote or
+  deactivate the last one. If it is lost anyway, set a user's `role` to
+  `SUPER_ADMIN` in the database and audit the change by hand.
+
 ## Verify a deploy
 
 ```sh
