@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { calculateSupplierReliability } from '../src';
+import { calculateSupplierReliability, meetsReliabilityFloor } from '../src';
 
 const offeredAt = new Date('2026-09-20T10:00:00Z');
 
@@ -45,5 +45,35 @@ describe('calculateSupplierReliability', () => {
 
     expect(scorecards.map((row) => row.supplierId)).toEqual(['high', 'low']);
     expect(calculateSupplierReliability([])).toEqual([]);
+  });
+
+  it('rates over answered offers, so an open or cancelled offer is not a refusal', () => {
+    const [card] = calculateSupplierReliability([
+      { supplierId: 'a', status: 'ACCEPTED', offeredAt, respondedAt: offeredAt },
+      { supplierId: 'a', status: 'OFFERED', offeredAt, respondedAt: null },
+      { supplierId: 'a', status: 'CANCELLED', offeredAt, respondedAt: null },
+    ]);
+    expect(card).toMatchObject({ offers: 3, answered: 1, acceptanceRate: 1 });
+  });
+});
+
+describe('meetsReliabilityFloor (auto-dispatch)', () => {
+  it('keeps a supplier at or above 85 %', () => {
+    expect(meetsReliabilityFloor({ answered: 20, acceptanceRate: 0.85 })).toBe(true);
+  });
+
+  it('drops a supplier below 85 % once they answered 5 offers', () => {
+    expect(meetsReliabilityFloor({ answered: 5, acceptanceRate: 0.8 })).toBe(false);
+  });
+
+  it('does not judge a supplier on fewer than 5 answers, or none', () => {
+    expect(meetsReliabilityFloor({ answered: 4, acceptanceRate: 0 })).toBe(true);
+    expect(meetsReliabilityFloor(null)).toBe(true);
+  });
+
+  it('takes the floor and the minimum as parameters (M9 thresholds)', () => {
+    expect(meetsReliabilityFloor({ answered: 3, acceptanceRate: 0.7 }, 0.75, 3)).toBe(
+      false,
+    );
   });
 });

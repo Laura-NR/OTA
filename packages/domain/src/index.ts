@@ -71,10 +71,19 @@ export {
   type ProviderProgressItem,
 } from './dispatch/provider-progress';
 export {
+  RELIABILITY_FLOOR,
+  RELIABILITY_MIN_ANSWERED,
   calculateSupplierReliability,
+  meetsReliabilityFloor,
   type ReliabilityOffer,
   type SupplierReliability,
 } from './dispatch/reliability';
+export {
+  MAX_SERVICE_DAYS,
+  isFreeForService,
+  serviceCalendarDay,
+  serviceCalendarDays,
+} from './dispatch/availability';
 export {
   CREDENTIAL_EXPIRY_WINDOW_DAYS,
   SupplierCategory,
