@@ -40,7 +40,7 @@ supplier legal documents. Booking codes, UUIDs, and amounts are pseudonymous.
 | `SupplierApplication` | `fullName`, `email`, `phone`, `rtnLicenseNumber`, `message` | No retention path | **G4** |
 | `ImportBatch` | `rows` JSON may embed supplier names/emails | No retention path | **G9** |
 | Email content | magic links, message bodies, retention notices | Provider-dependent; Mailpit in dev | **G6** |
-| Application logs | `ConsoleMailer` prints the full email body; expiry scan logs supplier emails; digest logs the recipient | pino, no redaction/retention | **G7** |
+| Application logs | `ConsoleMailer` prints the full email body; expiry scan logs supplier emails; digest logs the recipient | pino; the session cookie, `authorization` and `set-cookie` headers are redacted (2026-10-20), PII is not, no retention | **G7** |
 | `Account`/`Session` IP + user agent | as above | Deleted on purge | None |
 | `ReservationTraveler` (M2) | `fullName`, `dateOfBirth`, `nationality`, passport number (`passportNumberEnc`, AES-256-GCM) and expiry, emergency contact name + phone | **Scrubbed** on anonymization (name `[redacted]`, the rest null; kind, lead flag and room kept); the passport number is read only through the audited vault route | None |
 | `TravelerAffidavit` (M3) | signer name and nationality, typed signature, IP address and user agent (online), scanned paper form (`affidavits/<reservationId>/…` in object storage) | **Kept outside the traveler purge** for 5 years after the trip (OFAC record keeping, M3 D6), append-only by trigger; the daily retention scan deletes the row and its scan at `retainUntil`. Full record, scan and export are audited reads (ops+super; export Super Admin) | None (by design) |
@@ -99,7 +99,10 @@ are retained according to the SMTP provider (Mailpit in dev, no policy).
 
 **G7 — Logs can carry PII.** `ConsoleMailer` prints the full email text (dev
 fallback); `ExpiryAlertService` logs supplier emails; the BI digest logs the
-recipient. No redaction or log retention is configured.
+recipient. No log retention is configured. Since 2026-10-20 the request logger
+redacts the session cookie, the `authorization` header and the `set-cookie`
+response header (`httpLoggerOptions` in `apps/api/src/app.module.ts`); other
+fields are not redacted.
 
 **G8 — Field-level encryption for sensitive fields.** Closed for the passport
 number (M2, AES-256-GCM, app-level key; key rotation needs a re-encrypt pass that
@@ -134,7 +137,9 @@ supplier did not consent to retain indefinitely). **Requires legal input.**
 
 **Tier 3 — separate retention policies (not the traveler lifecycle):**
 - `SupplierApplication`: purge rejected/inactive applications after N months.
-- `SupplierProfile` + credentials: erase on verified off-boarding.
+- `SupplierProfile` + credentials: erase on verified off-boarding. The M6
+  `supplier_resources` row (equipment, not personal data) cascades with the
+  profile; its confirming desk user is set null when that user is deleted.
 - `ImportBatch`: purge batches after N months.
 
 ## 6. Recommended baseline controls (independent of the purge)

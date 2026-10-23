@@ -1,7 +1,6 @@
 # M6 Supplier operations: schema diff for review
 
-**Status:** **Approved 2026-10-20 as recommended (D1a–D9a).** Not generated yet: the migration
-(§6, with the checks added through `--create-only`) and §5 land next session.
+**Status:** **Approved 2026-10-20 as recommended (D1a–D9a) and built the same day** (§7).
 **Date:** 2026-10-19
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 3 (Suppliers: backup power, **M6**), read
 against the A-Suppliers board (the **Power** and **Last job** columns, the "Backup power only"
@@ -231,3 +230,51 @@ validates the same bounds first, so the checks are a backstop.
 The migration would be generated with `pnpm --filter @ota/db exec prisma migrate dev
 --create-only --name supplier_resources` (never `prisma format`), the checks appended to its SQL,
 and then applied with `prisma migrate dev`, as M3 did with its trigger.
+
+## 7. As built (2026-10-20)
+
+- **Migration** `20261020170618_supplier_resources` (`6ba9154`): §6 verbatim, generated with
+  `--create-only`, plus two CHECKs appended by hand (`generator_hours_per_day` between 0 and 24;
+  the six amounts at least 0). Proved live: an insert with `generator_fuel_days = -1` and every
+  other amount NULL is refused.
+- **Rules** (`39661e5`, `packages/domain/src/supplier/resources.ts`): `supplierPower`,
+  `hasBackupPower`, `backupHoursPerDay` (solar counts as 24 h), `isResourcesStale` (over 7 days),
+  `lastJob` and `jobsInWindow` (12 months), `rankResources`, `resourcesIssue`.
+- **Choices the doc left open:**
+  - A driver row without litres is **None**; "Fuel 0 L" is shown but is not backup. The "Backup
+    power only" filter keeps casas with solar or a generator (OWN or SHARED, whatever the hours)
+    and drivers with fuel above 0. A stale row stays in the filter and is greyed (D2).
+  - The body is checked per category (422): a casa states its generator, NONE included, and a
+    casa without one gives no hours, schedule or fuel days; casa fields are refused on a driver and
+    the fuel reserve on a casa; guides and translators record nothing. The desk channels are
+    PHONE, WHATSAPP and VISIT; WORKER_APP is refused on the desk route (400). The battery is
+    rounded to one decimal; a blank schedule is null.
+  - Every confirmation replaces the row (an omitted field becomes null) and restamps it, even with
+    unchanged values. Audit `supplier.resources_confirmed` (`entityType: 'SupplierProfile'`) holds
+    `via`, `previous` and `next`.
+  - **Last job** and the 12-month count read service items assigned to the supplier that are
+    ACCEPTED or FULFILLED, have started, and whose booking is not CANCELLED; the query narrows to
+    the same filter the domain applies. The label is the date in Havana time, the service type and
+    the province.
+  - **Suppliers involved** counts distinct suppliers holding an OFFERED, ACCEPTED or FULFILLED
+    item on the attached bookings. A declined or timed-out item keeps its supplier until
+    re-dispatch, so it is not counted.
+  - **Console resources:** VERIFIED casas and drivers with a row whose credential has not expired
+    (no expiry tracked counts as valid), working in the case's province (supplier province names
+    matched to the case's code through `cubaProvinceCode`), with backup power or fuel above 0.
+    "Free today" is the profile's `isAvailable` and no `Availability` row blocking today's Havana
+    calendar day. "Paused" is the 30-day expiry rule. Order: fresh first, then hours (casas) or
+    litres (drivers), then name. The official line is the manifest's `emergencyContacts`, also
+    for a case without a province, which lists no suppliers.
+- **API** (`24f2d4f`): `GET /suppliers` returns `SupplierRowDto` (the supplier plus `power` and
+  `lastJob`) and takes `backupPower=1`; `GET /suppliers/:id` returns `SupplierDetailDto` (plus
+  `resources` and `jobs12m`); the other supplier routes keep `SupplierDto`. `PUT
+  /suppliers/:id/resources` (Operations Admin, Super Admin) returns the detail. `GET
+  /disruptions/:id/resources` (ops roles) and the case's `suppliersInvolved`. Both new routes are in
+  the RBAC matrix.
+- **Seed** (`9316f57`, dev data): `casa@example.test` (generator 6 h, Pinar del Río) and
+  `driver@example.test` (40 L, La Habana and Pinar del Río), verified, with create-only rows so a
+  re-seed keeps a later confirmation.
+- **Surfaces:** desk `012713d`, copy `5e4c77c` (en/es/fr), e2e `0aae98b`; resolutions in the
+  ADR 0006 M6 amendment.
+- **Retention:** unchanged (D9a); `docs/pii-at-rest-review.md` Tier 3 names the row.

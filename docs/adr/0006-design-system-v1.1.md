@@ -670,3 +670,38 @@ E-Options are built on the existing tokens; no token was added.
   the compensation rule, the desk's phone when the manifest has one, and "Choose in your account".
   The board's SMS line, "automatically" for the future-trip discount and the named desk member are
   not written: no SMS provider, no credits model, and the email does not name staff.
+
+## Amendment, 2026-10-20: M6 supplier resources, resolved by the build
+
+The owner approved M6 as recommended (D1a–D9a). The register columns, the inspector cards and the
+console card are built on the existing tokens; no token was added. This supersedes the M8
+amendment's note that the "Resources in the province" card is not drawn.
+
+- **Register.** Power and Last job follow Auto-dispatch, in the board's order; Status and the
+  verification action stay last. Power is the board's label ("Solar", "Generator 6 h", "Fuel
+  40 L", "None") on one line; a casa or driver never confirmed reads "Not confirmed" in muted
+  text, and guides and translators read "—". A stale confirmation keeps its label, greyed, with
+  "Confirmed {date} · stale" under it rather than leaving the list (D2). Last job is "3 Oct ·
+  Transport · Pinar del Río": no route is stored (D3). The table's minimum width is 960 px so the
+  eight columns fit the 1280 content area; narrower, it scrolls inside its card as before.
+- **Filter.** "Backup power only" is the board's checkbox beside the province and verification
+  selects, kept in the URL (`?power=1`). The board's "Expiring ≤ 30 d" checkbox is not built: the
+  rule strip already names the paused suppliers.
+- **Inspector.** "Jobs · 12 m" and "Last job" join the reliability card, with or without dispatch
+  history. The casa card holds the board's "Backup power & resilience" fields as a form (generator
+  none/own/shared, hours per day, the hours as the host gives them, fuel days, solar battery kWh,
+  water tank litres, rooms, guest capacity); the board's yes/none selects for solar and water
+  became amounts, which is what the row stores. The driver card shows only the fuel reserve
+  (vehicle, plate, insurance and routes wait, D7); the guide specialities and payouts cards are not
+  drawn. A channel select (phone, WhatsApp, visit) and "Confirm" stamp the row; the line under the
+  fields says when, by which channel and who, and a confirmation older than 7 days adds the
+  `attention` badge "Older than 7 days · confirm by phone". Support sees the fields disabled with no
+  Confirm (D4). The board's line about "the 'backup power' filter travelers see" is reworded:
+  there is no traveler filter (D6).
+- **A-Disruption.** "Suppliers involved: N" joins the header tags. "Resources in {province}" is a
+  full-width card after the status board with the board's pill rows: Backup power (`success`)
+  lists the casas with their power, schedule, fuel days and capacity; Standby drivers (`success`)
+  their litres and provinces; Official (`secondary`) the manifest's emergency contacts. Each entry
+  links to its inspector and its phone; flags are "Confirm by phone" (`attention`), "Not free
+  today" (`outline`) and "Paused · expiry" (`warning`). "2 rooms free tonight" becomes the rooms
+  and guest capacity plus the day's availability (D5); the board's "Cash" row is not drawn (M6 §4).

@@ -195,6 +195,10 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   Each vault read is audited as `traveler.passport_viewed`.
 - `DATABASE_URL`, `S3_*`, `SMTP_*`, `REDIS_URL` are environment-only. Reference
   the variable name — never paste values into tickets, logs, or docs.
+- The API's request log redacts the `cookie` and `authorization` request
+  headers and the `set-cookie` response header, so session tokens never reach
+  it. Keep that list (`httpLoggerOptions`, `apps/api/src/app.module.ts`) when
+  changing the logger.
 
 ## Verify a deploy
 
