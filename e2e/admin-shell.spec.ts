@@ -70,7 +70,7 @@ test.describe('admin shell (A-Dashboard)', () => {
     }
   });
 
-  test('shows the payment ledger and the read-only settings', async ({ page }) => {
+  test('shows the payment ledger and the settings tabs', async ({ page }) => {
     const sidebar = page.getByRole('navigation', { name: 'Admin' });
 
     await sidebar.getByRole('link', { name: 'Payments' }).click();
@@ -79,7 +79,11 @@ test.describe('admin shell (A-Dashboard)', () => {
 
     await sidebar.getByRole('link', { name: 'Settings' }).click();
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
-    await expect(page.getByText('Operating thresholds', { exact: true })).toBeVisible();
+    // M9: the settings are tabs; a Super Admin lands on Users & roles.
+    await expect(
+      page.getByRole('link', { name: 'Approvals & thresholds' }),
+    ).toBeVisible();
+    await page.getByRole('link', { name: 'Manifest & feature flags' }).click();
     await expect(page.getByText('MINTUR licence', { exact: true })).toBeVisible();
   });
 });
