@@ -19,13 +19,18 @@ import {
   SERVICE_TYPE_TO_SUPPLIER_CATEGORIES,
   ServiceItemStatus,
   assertTransition,
+  calculateSupplierReliability,
   canAutoDispatch,
   canTransition,
   coversProvince,
   escalationAlert,
+  isFreeForService,
+  meetsReliabilityFloor,
   resolveDispatchTimeoutMs,
+  serviceCalendarDays,
   type ServiceType,
   type SupplierCategory,
+  type SupplierReliability,
 } from '@ota/domain';
 import type {
   DispatchBoardRowDto,
@@ -392,10 +397,10 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     const now = new Date();
 
     const supplier = await this.pickSupplier(
+      item,
       categories,
       excluded,
       now,
-      item.province,
       preferredSupplierId,
     );
 
@@ -456,38 +461,106 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  /**
+   * The supplier to offer an item to. A supplier the desk named is offered
+   * when eligible and free on the service's days, whatever their reliability
+   * (a manual choice). Otherwise the first eligible supplier, in registration
+   * order, who is free on every day of the service and meets the reliability
+   * floor (A-Suppliers).
+   */
   private async pickSupplier(
+    item: ServiceItem,
     categories: readonly SupplierCategory[],
     excluded: Set<string>,
     now: Date,
-    province: string | null,
     preferredSupplierId?: string,
   ): Promise<SupplierProfile | null> {
     if (preferredSupplierId && !excluded.has(preferredSupplierId)) {
       const preferred = await this.prisma.supplierProfile.findUnique({
         where: { id: preferredSupplierId },
       });
-      if (preferred && this.isEligible(preferred, categories, now, province)) {
-        return preferred;
+      if (preferred && this.isEligible(preferred, categories, now, item.province)) {
+        const facts = await this.dispatchFacts(item, [preferred.id]);
+        if (facts.isFree(preferred)) {
+          return preferred;
+        }
       }
     }
 
-    const candidates = await this.prisma.supplierProfile.findMany({
-      where: {
-        category: { in: [...categories] as PrismaSupplierCategory[] },
-        isAvailable: true,
-        verificationStatus: VERIFIED,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const candidates = (
+      await this.prisma.supplierProfile.findMany({
+        where: {
+          category: { in: [...categories] as PrismaSupplierCategory[] },
+          isAvailable: true,
+          verificationStatus: VERIFIED,
+        },
+        orderBy: { createdAt: 'asc' },
+      })
+    ).filter(
+      (candidate) =>
+        !excluded.has(candidate.id) &&
+        this.isEligible(candidate, categories, now, item.province),
+    );
+    const facts = await this.dispatchFacts(
+      item,
+      candidates.map((candidate) => candidate.id),
+    );
 
     return (
       candidates.find(
         (candidate) =>
-          !excluded.has(candidate.id) &&
-          this.isEligible(candidate, categories, now, province),
+          facts.isFree(candidate) && meetsReliabilityFloor(facts.scorecard(candidate.id)),
       ) ?? null
     );
+  }
+
+  /**
+   * What dispatch reads beyond the profiles: the service's calendar days, the
+   * days each supplier blocked among them (spec §5.2), and each supplier's
+   * scorecard over the offer ledger.
+   */
+  private async dispatchFacts(item: ServiceItem, supplierIds: readonly string[]) {
+    const days = serviceCalendarDays(item.serviceDateStart, item.serviceDateEnd);
+    const [blockedRows, offers] =
+      supplierIds.length === 0
+        ? [[], []]
+        : await Promise.all([
+            this.prisma.availability.findMany({
+              where: {
+                supplierId: { in: [...supplierIds] },
+                isAvailable: false,
+                date: { in: days.map((day) => new Date(`${day}T00:00:00Z`)) },
+              },
+              select: { supplierId: true, date: true },
+            }),
+            this.prisma.dispatchOffer.findMany({
+              where: { supplierId: { in: [...supplierIds] } },
+              select: {
+                supplierId: true,
+                status: true,
+                offeredAt: true,
+                respondedAt: true,
+              },
+            }),
+          ]);
+    const blocked = new Map<string, Set<string>>();
+    for (const row of blockedRows) {
+      const set = blocked.get(row.supplierId) ?? new Set<string>();
+      set.add(row.date.toISOString().slice(0, 10));
+      blocked.set(row.supplierId, set);
+    }
+    const scorecards = new Map<string, SupplierReliability>(
+      calculateSupplierReliability(offers).map((card) => [card.supplierId, card]),
+    );
+    return {
+      isFree: (supplier: Pick<SupplierProfile, 'id' | 'isAvailable'>) =>
+        isFreeForService(
+          supplier.isAvailable,
+          blocked.get(supplier.id) ?? new Set<string>(),
+          days,
+        ),
+      scorecard: (supplierId: string) => scorecards.get(supplierId) ?? null,
+    };
   }
 
   private isEligible(
@@ -598,7 +671,9 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Manual re-dispatch menu: eligible suppliers that have not already been
-   * offered this item, restricted to those covering the item's province.
+   * offered this item, restricted to those covering the item's province and
+   * free on every day of the service. A supplier below the reliability floor
+   * is listed with the flag: automatic dispatch skips them, the desk may not.
    */
   async getCandidates(serviceItemId: string): Promise<DispatchCandidateDto[]> {
     const item = await this.prisma.serviceItem.findUnique({
@@ -627,22 +702,34 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
       orderBy: { createdAt: 'asc' },
     });
 
-    return candidates
-      .filter(
-        (candidate) =>
-          !excluded.has(candidate.id) &&
-          this.isEligible(candidate, categories, now, item.province),
-      )
-      .map((candidate) => ({
-        supplierId: candidate.id,
-        fullName: candidate.user.fullName,
-        category: candidate.category,
-        primaryPhone: candidate.primaryPhone,
-        provincesActive: candidate.provincesActive,
-        credentialExpiresAt: candidate.credentialExpiresAt
-          ? candidate.credentialExpiresAt.toISOString()
-          : null,
-      }));
+    const eligible = candidates.filter(
+      (candidate) =>
+        !excluded.has(candidate.id) &&
+        this.isEligible(candidate, categories, now, item.province),
+    );
+    const facts = await this.dispatchFacts(
+      item,
+      eligible.map((candidate) => candidate.id),
+    );
+
+    return eligible
+      .filter((candidate) => facts.isFree(candidate))
+      .map((candidate) => {
+        const scorecard = facts.scorecard(candidate.id);
+        return {
+          supplierId: candidate.id,
+          fullName: candidate.user.fullName,
+          category: candidate.category,
+          primaryPhone: candidate.primaryPhone,
+          provincesActive: candidate.provincesActive,
+          credentialExpiresAt: candidate.credentialExpiresAt
+            ? candidate.credentialExpiresAt.toISOString()
+            : null,
+          acceptanceRate:
+            scorecard && scorecard.answered > 0 ? scorecard.acceptanceRate : null,
+          belowReliabilityFloor: !meetsReliabilityFloor(scorecard),
+        };
+      });
   }
 
   private assertOpenForResponse(item: ServiceItem): void {

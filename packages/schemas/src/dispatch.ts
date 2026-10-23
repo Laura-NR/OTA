@@ -56,6 +56,13 @@ export const dispatchCandidateSchema = z.object({
   primaryPhone: z.string(),
   provincesActive: z.array(z.string()),
   credentialExpiresAt: z.string().nullable(),
+  /** Acceptance over answered offers; null before the first answer. */
+  acceptanceRate: z.number().nullable(),
+  /**
+   * Below the reliability floor: automatic dispatch skips the supplier, the
+   * desk may still choose them.
+   */
+  belowReliabilityFloor: z.boolean(),
 });
 
 export type DispatchCandidateDto = z.infer<typeof dispatchCandidateSchema>;

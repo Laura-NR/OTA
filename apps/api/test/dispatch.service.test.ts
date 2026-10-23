@@ -126,6 +126,8 @@ interface Store {
   suppliers: SupplierProfile[];
   offers: DispatchOffer[];
   audits: { action: string }[];
+  /** Blocked calendar days (spec §5.2), as `supplierId` + `YYYY-MM-DD`. */
+  blocked?: { supplierId: string; day: string }[];
 }
 
 // Minimal in-memory stand-in for the Prisma models the dispatch engine touches.
@@ -249,11 +251,31 @@ function createFakePrisma(store: Store) {
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       },
     },
+    availability: {
+      findMany: async (args: {
+        where: { supplierId: { in: string[] }; date: { in: Date[] } };
+      }) => {
+        const days = args.where.date.in.map((date) => date.toISOString().slice(0, 10));
+        return (store.blocked ?? [])
+          .filter(
+            (row) =>
+              args.where.supplierId.in.includes(row.supplierId) && days.includes(row.day),
+          )
+          .map((row) => ({
+            supplierId: row.supplierId,
+            date: new Date(`${row.day}T00:00:00Z`),
+          }));
+      },
+    },
     dispatchOffer: {
-      findMany: async (args: { where: { serviceItemId: string } }) =>
-        store.offers
-          .filter((o) => o.serviceItemId === args.where.serviceItemId)
-          .map((o) => ({ supplierId: o.supplierId })),
+      findMany: async (args: {
+        where: { serviceItemId?: string; supplierId?: { in: string[] } };
+      }) =>
+        store.offers.filter((o) =>
+          args.where.serviceItemId !== undefined
+            ? o.serviceItemId === args.where.serviceItemId
+            : args.where.supplierId!.in.includes(o.supplierId),
+        ),
       create: async (args: { data: Partial<DispatchOffer> }) => {
         const offer = {
           id: `offer-${store.offers.length + 1}`,
@@ -487,6 +509,83 @@ describe('DispatchService', () => {
 
     expect(candidates.map((candidate) => candidate.supplierId)).toEqual([GUIDE_TWO]);
     expect(candidates[0]?.primaryPhone).toBe('+53 5555 0000');
+  });
+
+  describe('calendar and reliability (A-Suppliers)', () => {
+    const answered = (supplierId: string, accepted: number, declined: number) => {
+      for (let index = 0; index < accepted + declined; index += 1) {
+        store.offers.push({
+          id: `history-${supplierId}-${index}`,
+          serviceItemId: 'older-item',
+          supplierId,
+          status: index < accepted ? 'ACCEPTED' : 'DECLINED',
+          offeredAt: new Date('2026-08-01T10:00:00Z'),
+          deadline: new Date('2026-08-01T12:00:00Z'),
+          respondedAt: new Date('2026-08-01T10:05:00Z'),
+          declineReason: null,
+          createdAt: new Date('2026-08-01T10:00:00Z'),
+          updatedAt: new Date('2026-08-01T10:05:00Z'),
+        } as DispatchOffer);
+      }
+    };
+
+    beforeEach(() => {
+      store.suppliers = [
+        makeSupplier({ id: GUIDE_ONE }),
+        makeSupplier({ id: GUIDE_TWO, userId: 'user-worker-2' }),
+      ];
+    });
+
+    it('skips a supplier who blocked a day of the service, and hides them from the desk', async () => {
+      const day = store.serviceItems[0]!.serviceDateStart.toISOString().slice(0, 10);
+      store.blocked = [{ supplierId: GUIDE_ONE, day }];
+
+      const candidates = await service.getCandidates(ITEM_ID);
+      expect(candidates.map((candidate) => candidate.supplierId)).toEqual([GUIDE_TWO]);
+
+      const view = await service.startDispatch(RESERVATION_ID, OPERATOR);
+      expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_TWO);
+    });
+
+    it('skips a supplier below 85 % over 5 answers, but lists them flagged for the desk', async () => {
+      answered(GUIDE_ONE, 3, 2);
+
+      const candidates = await service.getCandidates(ITEM_ID);
+      expect(candidates).toEqual([
+        expect.objectContaining({
+          supplierId: GUIDE_ONE,
+          acceptanceRate: 0.6,
+          belowReliabilityFloor: true,
+        }),
+        expect.objectContaining({
+          supplierId: GUIDE_TWO,
+          acceptanceRate: null,
+          belowReliabilityFloor: false,
+        }),
+      ]);
+
+      const view = await service.startDispatch(RESERVATION_ID, OPERATOR);
+      expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_TWO);
+    });
+
+    it('still offers a below-floor supplier the desk chose by hand', async () => {
+      answered(GUIDE_ONE, 3, 2);
+      store.suppliers = [
+        makeSupplier({ id: GUIDE_TWO, userId: 'user-worker-2' }),
+        makeSupplier({ id: GUIDE_ONE }),
+      ];
+      await service.startDispatch(RESERVATION_ID, OPERATOR);
+
+      const view = await service.reassign(ITEM_ID, { supplierId: GUIDE_ONE }, OPERATOR);
+      expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_ONE);
+    });
+
+    it('does not judge a supplier with fewer than 5 answers', async () => {
+      answered(GUIDE_ONE, 0, 4);
+
+      const view = await service.startDispatch(RESERVATION_ID, OPERATOR);
+      expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_ONE);
+    });
   });
 
   it('publishes escalation events on offer and decline', async () => {
