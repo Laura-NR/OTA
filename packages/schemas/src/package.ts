@@ -28,6 +28,16 @@ export const packageServiceSchema = z.object({
   itemBasePrice: z.string(),
   itemCurrency: z.string(),
   itemMediaId: z.string().uuid().nullable(),
+  /**
+   * A stay's backup power (M6 D6(b)), derived from its casa's confirmation
+   * when that is fresh; null otherwise and for anything but a casa.
+   */
+  backupPower: z
+    .object({
+      kind: z.enum(['SOLAR', 'GENERATOR']),
+      hoursPerDay: z.number().int().nullable(),
+    })
+    .nullable(),
 });
 
 export type PackageServiceDto = z.infer<typeof packageServiceSchema>;
@@ -161,6 +171,8 @@ export const packageSchema = z.object({
   seoTitle: z.string().nullable(),
   seoDescription: z.string().nullable(),
   services: z.array(packageServiceSchema),
+  /** Every stay claims backup power (the storefront filter, M6 D6(b)). */
+  backupPower: z.boolean(),
   days: z.array(packageDaySchema),
   tiers: z.array(packageTierSchema),
   departures: z.array(packageDepartureSchema),

@@ -7,6 +7,8 @@ import {
   isResourcesStale,
   jobsInWindow,
   lastJob,
+  packageHasBackupPower,
+  publicBackupPower,
   rankResources,
   resourcesIssue,
   supplierPower,
@@ -224,5 +226,58 @@ describe('resourcesIssue (validated per category)', () => {
     expect(
       resourcesIssue(CASA, input({ generator: 'NONE', generatorHoursPerDay: 0 })),
     ).toBeNull();
+  });
+});
+
+describe('publicBackupPower (D6(b): what a stay may claim)', () => {
+  it('claims a fresh casa generator with its hours, or solar', () => {
+    expect(
+      publicBackupPower(
+        CASA,
+        facts({ generator: 'OWN', generatorHoursPerDay: 6 }),
+        daysAgo(2),
+        NOW,
+      ),
+    ).toEqual({ kind: 'GENERATOR', hoursPerDay: 6 });
+    expect(
+      publicBackupPower(CASA, facts({ solarBatteryKwh: 5 }), daysAgo(2), NOW),
+    ).toEqual({
+      kind: 'SOLAR',
+      hoursPerDay: null,
+    });
+  });
+
+  it('claims nothing from a stale confirmation, none, or a driver', () => {
+    expect(
+      publicBackupPower(CASA, facts({ solarBatteryKwh: 5 }), daysAgo(8), NOW),
+    ).toBeNull();
+    expect(publicBackupPower(CASA, facts(), daysAgo(1), NOW)).toBeNull();
+    expect(publicBackupPower(CASA, null, null, NOW)).toBeNull();
+    expect(
+      publicBackupPower(DRIVER, facts({ fuelReserveLitres: 40 }), daysAgo(1), NOW),
+    ).toBeNull();
+  });
+});
+
+describe('packageHasBackupPower', () => {
+  const power = { kind: 'SOLAR' as const, hoursPerDay: null };
+
+  it('needs every stay to claim backup power', () => {
+    expect(
+      packageHasBackupPower([
+        { stay: true, backupPower: power },
+        { stay: false, backupPower: null },
+      ]),
+    ).toBe(true);
+    expect(
+      packageHasBackupPower([
+        { stay: true, backupPower: power },
+        { stay: true, backupPower: null },
+      ]),
+    ).toBe(false);
+  });
+
+  it('never claims it for a package without a stay', () => {
+    expect(packageHasBackupPower([{ stay: false, backupPower: null }])).toBe(false);
   });
 });

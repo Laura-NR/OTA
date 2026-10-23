@@ -50,6 +50,8 @@ interface FakeInventoryItem {
   createdAt: Date;
   updatedAt: Date;
   media: never[];
+  /** The casa behind a stay (M6 D6(b)); absent means no supplier. */
+  supplier?: { category: string; resources: Record<string, unknown> | null } | null;
 }
 
 interface FakeService {
@@ -371,6 +373,32 @@ describe('packages API', () => {
       inventoryItemId: ITEM_A,
       itemName: 'Casa Particular',
     });
+  });
+
+  it('claims backup power for a stay only from a fresh casa confirmation, without naming the casa', async () => {
+    const stay = state.packages[0]!.services[0]!.inventoryItem;
+    const resources = {
+      generator: 'OWN',
+      generatorHoursPerDay: 6,
+      solarBatteryKwh: null,
+      fuelReserveLitres: null,
+      confirmedAt: new Date(Date.now() - 2 * 24 * 3_600_000),
+    };
+    stay.supplierId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    stay.supplier = { category: 'HOMESTAY_HOST', resources };
+
+    const fresh = await request(app.getHttpServer()).get('/catalog/packages');
+    expect(fresh.body[0].backupPower).toBe(true);
+    expect(fresh.body[0].services[0].backupPower).toEqual({
+      kind: 'GENERATOR',
+      hoursPerDay: 6,
+    });
+    expect(JSON.stringify(fresh.body[0].services[0])).not.toContain('supplier');
+
+    resources.confirmedAt = new Date(Date.now() - 8 * 24 * 3_600_000);
+    const stale = await request(app.getHttpServer()).get('/catalog/packages');
+    expect(stale.body[0].backupPower).toBe(false);
+    expect(stale.body[0].services[0].backupPower).toBeNull();
   });
 
   it('serves a public package by slug and 404s a draft one', async () => {

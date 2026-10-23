@@ -8,7 +8,12 @@ import {
 import { randomUUID } from 'node:crypto';
 
 import { knownPolicyKeys, type TenantConfig } from '@ota/config';
-import { packagePublishIssues, type PackagePublishInput } from '@ota/domain';
+import {
+  packageHasBackupPower,
+  packagePublishIssues,
+  publicBackupPower,
+  type PackagePublishInput,
+} from '@ota/domain';
 import type {
   InventoryItem,
   InventoryMedia,
@@ -21,6 +26,8 @@ import type {
   PackageTier,
   PackageTranslation,
   Prisma,
+  SupplierProfile,
+  SupplierResources,
 } from '@ota/db';
 import type {
   CreatePackageRequest,
@@ -39,8 +46,33 @@ import { OBJECT_STORAGE } from '../storage/storage.module';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 
 type ServiceWithItem = PackageService & {
-  inventoryItem: InventoryItem & { media: InventoryMedia[] };
+  inventoryItem: InventoryItem & {
+    media: InventoryMedia[];
+    supplier: {
+      category: SupplierProfile['category'];
+      resources: SupplierResources | null;
+    } | null;
+  };
 };
+
+/** A stay's public backup power, from its casa's fresh confirmation (M6 D6(b)). */
+function stayBackupPower(item: ServiceWithItem['inventoryItem'], now: Date) {
+  const supplier = item.supplier;
+  const resources = supplier?.resources ?? null;
+  if (item.type !== 'ACCOMMODATION' || !supplier || !resources) return null;
+  return publicBackupPower(
+    supplier.category,
+    {
+      generator: resources.generator,
+      generatorHoursPerDay: resources.generatorHoursPerDay,
+      solarBatteryKwh:
+        resources.solarBatteryKwh === null ? null : Number(resources.solarBatteryKwh),
+      fuelReserveLitres: resources.fuelReserveLitres,
+    },
+    resources.confirmedAt,
+    now,
+  );
+}
 type PackageWithServices = Package & {
   services: ServiceWithItem[];
   days: PackageDay[];
@@ -80,7 +112,20 @@ function assertPublishable(input: PackagePublishInput): void {
   }
 }
 
-function toPackageDto(pkg: PackageWithServices): PackageDto {
+function toPackageDto(pkg: PackageWithServices, now: Date = new Date()): PackageDto {
+  const services = pkg.services.map((service) => ({
+    id: service.id,
+    inventoryItemId: service.inventoryItemId,
+    dayOffset: service.dayOffset,
+    position: service.position,
+    itemName: service.inventoryItem.name,
+    itemType: service.inventoryItem.type,
+    itemProvince: service.inventoryItem.province,
+    itemBasePrice: service.inventoryItem.basePrice.toString(),
+    itemCurrency: service.inventoryItem.currency,
+    itemMediaId: service.inventoryItem.media[0]?.id ?? null,
+    backupPower: stayBackupPower(service.inventoryItem, now),
+  }));
   return {
     id: pkg.id,
     name: pkg.name,
@@ -110,18 +155,13 @@ function toPackageDto(pkg: PackageWithServices): PackageDto {
     cubaNotes: pkg.cubaNotes,
     seoTitle: pkg.seoTitle,
     seoDescription: pkg.seoDescription,
-    services: pkg.services.map((service) => ({
-      id: service.id,
-      inventoryItemId: service.inventoryItemId,
-      dayOffset: service.dayOffset,
-      position: service.position,
-      itemName: service.inventoryItem.name,
-      itemType: service.inventoryItem.type,
-      itemProvince: service.inventoryItem.province,
-      itemBasePrice: service.inventoryItem.basePrice.toString(),
-      itemCurrency: service.inventoryItem.currency,
-      itemMediaId: service.inventoryItem.media[0]?.id ?? null,
-    })),
+    services,
+    backupPower: packageHasBackupPower(
+      services.map((service) => ({
+        stay: service.itemType === 'ACCOMMODATION',
+        backupPower: service.backupPower,
+      })),
+    ),
     days: pkg.days.map((day) => ({
       id: day.id,
       dayOffset: day.dayOffset,
@@ -192,7 +232,11 @@ const INCLUDE_SERVICES = {
   services: {
     include: {
       inventoryItem: {
-        include: { media: { orderBy: { position: 'asc' as const }, take: 1 } },
+        include: {
+          media: { orderBy: { position: 'asc' as const }, take: 1 },
+          // Only what the public backup-power claim reads; no supplier identity.
+          supplier: { select: { category: true, resources: true } },
+        },
       },
     },
     orderBy: [{ dayOffset: 'asc' as const }, { position: 'asc' as const }],
@@ -376,7 +420,7 @@ export class PackagesService {
       include: INCLUDE_SERVICES,
       orderBy: { createdAt: 'asc' },
     });
-    return packages.map(toPackageDto);
+    return packages.map((pkg) => toPackageDto(pkg));
   }
 
   /** The storefront sees published packages only, in the requested locale. */

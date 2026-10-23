@@ -262,3 +262,41 @@ export function resourcesIssue(
   }
   return null;
 }
+
+/** What a traveler is told about a stay's backup power (M6 D6(b)). */
+export interface PublicBackupPower {
+  kind: 'SOLAR' | 'GENERATOR';
+  /** A generator's hours per day, when the host gave them. */
+  hoursPerDay: number | null;
+}
+
+/**
+ * The backup power a stay may claim publicly: a casa with solar or a
+ * generator whose confirmation is fresh. A stale or missing confirmation
+ * claims nothing, so the storefront never repeats an old fact.
+ */
+export function publicBackupPower(
+  category: SupplierCategory,
+  facts: PowerFacts | null,
+  confirmedAt: Date | null,
+  now: Date,
+): PublicBackupPower | null {
+  if (category !== SupplierCategory.HomestayHost || !facts || !confirmedAt) return null;
+  if (isResourcesStale(confirmedAt, now)) return null;
+  const power = supplierPower(category, facts);
+  if (power.kind === 'SOLAR') return { kind: 'SOLAR', hoursPerDay: null };
+  if (power.kind === 'GENERATOR')
+    return { kind: 'GENERATOR', hoursPerDay: power.hoursPerDay };
+  return null;
+}
+
+/**
+ * A package passes the storefront's backup-power filter when it has at least
+ * one stay and every stay claims backup power.
+ */
+export function packageHasBackupPower(
+  services: readonly { stay: boolean; backupPower: PublicBackupPower | null }[],
+): boolean {
+  const stays = services.filter((service) => service.stay);
+  return stays.length > 0 && stays.every((service) => service.backupPower !== null);
+}
