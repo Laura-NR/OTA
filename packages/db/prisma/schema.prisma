@@ -223,6 +223,14 @@ enum DisruptionChoiceSource {
   DEFAULT
 }
 
+/// M9: a thresholds version's life (D1, D3).
+enum SettingsVersionStatus {
+  PROPOSED
+  APPLIED
+  REJECTED
+  WITHDRAWN
+}
+
 /// M6: a casa's generator (D1).
 enum GeneratorAccess {
   NONE
@@ -378,6 +386,8 @@ model User {
   retentionConsentGrantedAt DateTime? @map("retention_consent_granted_at")
   retentionNoticeSentAt     DateTime? @map("retention_notice_sent_at")
   anonymizedAt              DateTime? @map("anonymized_at")
+  /// M9 D5: a deactivated staff user is refused by the auth guard; null means active.
+  deactivatedAt             DateTime? @map("deactivated_at")
 
   supplierProfile SupplierProfile?
   reservations    Reservation[]
@@ -405,6 +415,12 @@ model User {
   disruptionChoices   DisruptionCaseBooking[] @relation("DisruptionChoiceBy")
   // M6
   supplierResourcesConfirmed SupplierResources[] @relation("SupplierResourcesConfirmedBy")
+  // M9
+  settingsProposed OperatingSettings[] @relation("OperatingSettingsProposedBy")
+  settingsDecided  OperatingSettings[] @relation("OperatingSettingsDecidedBy")
+  invitesSent      StaffInvite[]       @relation("StaffInviteInvitedBy")
+  invitesConfirmed StaffInvite[]       @relation("StaffInviteConfirmedBy")
+  invitesAccepted  StaffInvite[]       @relation("StaffInviteAcceptedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -1646,4 +1662,51 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorUserId])
   @@map("audit_logs")
+}
+
+/// M9: one version of the operating thresholds (D1). Append-only: only a pending
+/// version's status, decider and decision time change.
+model OperatingSettings {
+  id           String                @id @default(uuid()) @db.Uuid
+  version      Int                   @unique
+  /// The thresholds document, validated by @ota/schemas before it is written.
+  values       Json
+  /// Why the change was proposed, shown to the approver.
+  reason       String
+  status       SettingsVersionStatus @default(PROPOSED)
+  proposedById String?               @map("proposed_by_id") @db.Uuid
+  decidedById  String?               @map("decided_by_id") @db.Uuid
+  decidedAt    DateTime?             @map("decided_at")
+  createdAt    DateTime              @default(now()) @map("created_at")
+
+  proposedBy User? @relation("OperatingSettingsProposedBy", fields: [proposedById], references: [id], onDelete: SetNull)
+  decidedBy  User? @relation("OperatingSettingsDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([status, version])
+  @@map("operating_settings")
+}
+
+/// M9: an invitation to join the desk, or to become a Super Admin (D4).
+model StaffInvite {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String
+  role          Role
+  /// SHA-256 of the single-use token in the email; the token itself is never stored.
+  tokenHash     String    @unique @map("token_hash")
+  invitedById   String?   @map("invited_by_id") @db.Uuid
+  /// A Super Admin invite is sent only once a second Super Admin confirms it.
+  confirmedById String?   @map("confirmed_by_id") @db.Uuid
+  confirmedAt   DateTime? @map("confirmed_at")
+  expiresAt     DateTime  @map("expires_at")
+  acceptedAt    DateTime? @map("accepted_at")
+  acceptedById  String?   @map("accepted_by_id") @db.Uuid
+  revokedAt     DateTime? @map("revoked_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  invitedBy   User? @relation("StaffInviteInvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+  confirmedBy User? @relation("StaffInviteConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+  acceptedBy  User? @relation("StaffInviteAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@map("staff_invites")
 }
