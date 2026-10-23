@@ -16,6 +16,7 @@ import type { ReactNode } from 'react';
 import { AvailabilityCalendar } from '@/components/availability-calendar';
 import { SupplierCredential } from '@/components/supplier-credential';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
+import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
 import { VerificationActions } from '@/components/verification-actions';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
@@ -59,8 +60,8 @@ function Panel({
 /**
  * The supplier inspector (A-Suppliers): the worker's profile, the credential
  * inspector (spec §4.5), the auto-dispatch state, reliability and job history,
- * a casa's backup power or a driver's fuel reserve (M6), and the availability
- * calendar. Vehicle and speciality details wait (M6 D7), payouts for the
+ * a casa's backup power or a driver's vehicle and fuel reserve (M6), and the
+ * availability calendar. Guide specialities wait (M6 D7), payouts for the
  * payments module.
  */
 export default async function SupplierDetailPage({
@@ -136,6 +137,23 @@ export default async function SupplierDetailPage({
         ? 'driver'
         : null;
   const resources = supplier.resources;
+  // The insurance date is informational (M6 D7(b)): it never pauses dispatch.
+  const insuranceDays = supplier.vehicle?.insuranceUntil
+    ? Math.ceil(
+        (new Date(supplier.vehicle.insuranceUntil).getTime() - now.getTime()) / DAY_MS,
+      )
+    : null;
+  const insurance: ExpiryBadge | null =
+    insuranceDays === null
+      ? null
+      : insuranceDays < 0
+        ? { label: t('vehicle.insuranceExpired'), variant: 'destructive' }
+        : insuranceDays <= CREDENTIAL_EXPIRY_WINDOW_DAYS
+          ? {
+              label: t('vehicle.insuranceEnds', { days: insuranceDays }),
+              variant: 'warning',
+            }
+          : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -268,6 +286,25 @@ export default async function SupplierDetailPage({
           title={t(`resources.${resourcesKind}Title`)}
           description={t(`resources.${resourcesKind}Description`)}
         >
+          {resourcesKind === 'driver' ? (
+            <>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-body font-semibold">{t('vehicle.title')}</h3>
+                {insurance ? (
+                  <Badge variant={insurance.variant}>{insurance.label}</Badge>
+                ) : null}
+              </div>
+              <SupplierVehicleForm
+                key={JSON.stringify(supplier.vehicle)}
+                supplierId={supplier.id}
+                vehicle={supplier.vehicle}
+                canEdit={canVerify}
+              />
+              <h3 className="border-t pt-4 text-body font-semibold">
+                {t('vehicle.fuelTitle')}
+              </h3>
+            </>
+          ) : null}
           <SupplierResourcesForm
             key={resources?.confirmedAt ?? 'never'}
             supplierId={supplier.id}

@@ -1857,8 +1857,8 @@
       "resources": {
         "casaTitle": "Energía de respaldo y resiliencia",
         "casaDescription": "Lo que confirmó el anfitrión: energía, agua y capacidad.",
-        "driverTitle": "Reserva de combustible",
-        "driverDescription": "La reserva que declaró el chofer.",
+        "driverTitle": "Vehículo y combustible",
+        "driverDescription": "El vehículo registrado y la reserva de combustible que declaró el chofer.",
         "generator": "Generador",
         "generatorOptions": {
           "NONE": "No",
@@ -1891,6 +1891,24 @@
         "casaNote": "Estos campos alimentan los recursos de la consola de incidencias y el filtro de energía de respaldo del registro.",
         "driverNote": "La consola de incidencias lee la reserva para sus choferes de guardia. La mesa la registra hasta la autodeclaración semanal en la app del proveedor.",
         "failed": "No se pudo guardar la confirmación."
+      },
+      "vehicle": {
+        "title": "Vehículo",
+        "fuelTitle": "Reserva de combustible",
+        "model": "Modelo",
+        "seats": "Plazas",
+        "plate": "Matrícula",
+        "airConditioning": "Aire acondicionado",
+        "extras": "Extras",
+        "insurance": "Cobertura del seguro",
+        "insuranceUntil": "Seguro hasta",
+        "routes": "Rutas",
+        "routesHint": "Una ruta por línea, p. ej. HAV ⇄ Viñales.",
+        "save": "Guardar vehículo",
+        "saving": "Guardando…",
+        "failed": "No se pudo guardar el vehículo.",
+        "insuranceExpired": "Seguro vencido",
+        "insuranceEnds": "El seguro vence en {days} d"
       }
     },
     "reports": {

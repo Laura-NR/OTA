@@ -150,8 +150,22 @@ test.describe('M6 supplier resources', () => {
 
     // The driver's fuel card; the transfer is the last job.
     await page.goto(`/suppliers/${driverId}`);
-    await expect(page.getByRole('heading', { name: 'Fuel reserve' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vehicle & fuel' })).toBeVisible();
     await expect(page.getByText('Transport · Matanzas')).toBeVisible();
+    // The vehicle (D7(b)); the insurance ends within 30 days, so it is flagged.
+    const insuranceUntil = new Date(Date.now() + 10 * DAY_MS).toISOString().slice(0, 10);
+    await expect(async () => {
+      await page.getByLabel('Model').fill('Peugeot 5008');
+      await expect(page.getByLabel('Model')).toHaveValue('Peugeot 5008');
+    }).toPass();
+    await page.getByLabel('Seats').fill('7');
+    await page.getByLabel('Plate').fill('P 207 913');
+    await page.getByRole('checkbox', { name: 'Air conditioning' }).check();
+    await page.getByLabel('Insurance until').fill(insuranceUntil);
+    await page.getByLabel('Routes').fill('HAV ⇄ Viñales\nZapata');
+    await page.getByRole('button', { name: 'Save vehicle' }).click();
+    await expect(page.getByText(/Insurance ends in (9|10) d/)).toBeVisible();
+    await expect(page.getByLabel('Routes')).toHaveValue('HAV ⇄ Viñales\nZapata');
     await expect(async () => {
       await page.getByLabel('Fuel reserve · litres').fill('40');
       await page.getByRole('button', { name: 'Confirm', exact: true }).click();

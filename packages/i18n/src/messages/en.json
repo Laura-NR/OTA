@@ -1857,8 +1857,8 @@
       "resources": {
         "casaTitle": "Backup power & resilience",
         "casaDescription": "What the host confirmed: power, water and capacity.",
-        "driverTitle": "Fuel reserve",
-        "driverDescription": "The reserve the driver declared.",
+        "driverTitle": "Vehicle & fuel",
+        "driverDescription": "The vehicle on file and the fuel reserve the driver declared.",
         "generator": "Generator",
         "generatorOptions": {
           "NONE": "None",
@@ -1891,6 +1891,24 @@
         "casaNote": "These fields feed the disruption console's resources and the register's backup-power filter.",
         "driverNote": "The disruption console reads the reserve for its standby drivers. The desk records it until the worker app's weekly self-declaration.",
         "failed": "Could not save the confirmation."
+      },
+      "vehicle": {
+        "title": "Vehicle",
+        "fuelTitle": "Fuel reserve",
+        "model": "Model",
+        "seats": "Seats",
+        "plate": "Plate",
+        "airConditioning": "Air conditioning",
+        "extras": "Extras",
+        "insurance": "Insurance cover",
+        "insuranceUntil": "Insurance until",
+        "routes": "Routes",
+        "routesHint": "One route per line, e.g. HAV ⇄ Viñales.",
+        "save": "Save vehicle",
+        "saving": "Saving…",
+        "failed": "Could not save the vehicle.",
+        "insuranceExpired": "Insurance expired",
+        "insuranceEnds": "Insurance ends in {days} d"
       }
     },
     "reports": {

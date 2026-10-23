@@ -1857,8 +1857,8 @@
       "resources": {
         "casaTitle": "Énergie de secours et résilience",
         "casaDescription": "Ce que l'hôte a confirmé : énergie, eau et capacité.",
-        "driverTitle": "Réserve de carburant",
-        "driverDescription": "La réserve déclarée par le chauffeur.",
+        "driverTitle": "Véhicule et carburant",
+        "driverDescription": "Le véhicule enregistré et la réserve de carburant déclarée par le chauffeur.",
         "generator": "Groupe électrogène",
         "generatorOptions": {
           "NONE": "Aucun",
@@ -1891,6 +1891,24 @@
         "casaNote": "Ces champs alimentent les ressources de la console de perturbations et le filtre d'énergie de secours du registre.",
         "driverNote": "La console de perturbations lit la réserve pour ses chauffeurs d'astreinte. Le bureau la saisit jusqu'à l'autodéclaration hebdomadaire dans l'appli fournisseur.",
         "failed": "Impossible d'enregistrer la confirmation."
+      },
+      "vehicle": {
+        "title": "Véhicule",
+        "fuelTitle": "Réserve de carburant",
+        "model": "Modèle",
+        "seats": "Places",
+        "plate": "Immatriculation",
+        "airConditioning": "Climatisation",
+        "extras": "Équipements",
+        "insurance": "Couverture d'assurance",
+        "insuranceUntil": "Assurance jusqu'au",
+        "routes": "Itinéraires",
+        "routesHint": "Un itinéraire par ligne, p. ex. HAV ⇄ Viñales.",
+        "save": "Enregistrer le véhicule",
+        "saving": "Enregistrement…",
+        "failed": "Impossible d'enregistrer le véhicule.",
+        "insuranceExpired": "Assurance expirée",
+        "insuranceEnds": "L'assurance expire dans {days} j"
       }
     },
     "reports": {
