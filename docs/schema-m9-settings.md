@@ -1,7 +1,8 @@
 # M9 Settings: schema diff for review
 
-**Status:** **DRAFT for the owner (2026-10-23).** No migration is generated until the decisions
-below are taken (Q9).
+**Status:** **Approved 2026-10-23 as recommended (D1a–D9a).** Not generated yet: the migration
+(§6, with the checks added through `--create-only`) and §5 land next session. The D2 question of
+enforcing a reliability floor in dispatch is still open with the owner.
 **Date:** 2026-10-23
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 10 (Settings, **M9**: thresholds Q13, invites,
 permission overrides with expiry, currencies, manifest view), read against the A-Settings board

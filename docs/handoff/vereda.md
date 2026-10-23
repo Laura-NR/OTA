@@ -110,8 +110,9 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
     logger."
 
 ## Next
-1. Owner: decide M9 (`docs/schema-m9-settings.md`, D1–D9; recommendations a), and whether to
-   enforce the 85 % reliability floor in dispatch (D2 note). Then generate and build M9.
+1. Build M9 as approved (D1a–D9a): generate with `--create-only`, add the checks, apply, build
+   §5, record §7. Owner, still open: whether dispatch should enforce a reliability floor and
+   honour the per-day availability calendar (neither is read by dispatch today).
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
    passport-key backup, the backup-power wording, the AGENTS.md §C lines above. Then M10, and SMS
@@ -406,4 +407,5 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
 - 2026-10-23 — the register's reliability footnote was reworded to what the system does (copy
   follows the system, 2026-10-14); enforcing an 85 % floor is left to the owner (M9 D2).
 - 2026-10-23 — M9 drafted with recommendations D1(a)–D9(a); no migration until approved.
-
+- 2026-10-23 — the owner approved M9 D1a–D9a as recommended. The reliability floor (D2 note)
+  stays open: the owner asked what "dispatch never checks reliability" means.

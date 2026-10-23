@@ -45,10 +45,9 @@ M6 as recommended and the log redaction (both built 2026-10-20); the M6 follow-u
 D7(b) (built 2026-10-23); support staff stay read-only (M6 resources and vehicles and the M8 board
 are written by Operations Admin and Super Admin only).
 
-TASK 1 — M9 (docs/schema-m9-settings.md). If the owner's answers to D1–D9 (and to the D2
-question of enforcing an 85 % reliability floor) are not in this brief or the handoff's
-Decisions, ask for them first, batched, with the draft's recommendations, and build nothing that
-depends on them. Once approved: generate the migration with `prisma migrate dev --create-only
+TASK 1 — M9 (docs/schema-m9-settings.md), approved as recommended (D1a–D9a, 2026-10-23).
+Check the handoff's Decisions for the owner's answer on dispatch reading reliability and the
+per-day availability calendar; ask if it is missing, and build nothing that depends on it. Generate the migration with `prisma migrate dev --create-only
 --name settings_and_staff`, append the checks (one PROPOSED version at most, a decided row has a
 decider and a time, staff roles only on invites, a Super Admin invite accepted only after
 confirmation), apply it, then build §5 and record what the build decides in a §7.
