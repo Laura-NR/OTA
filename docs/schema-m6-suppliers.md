@@ -1,6 +1,7 @@
 # M6 Supplier operations: schema diff for review
 
-**Status:** **Approved 2026-10-20 as recommended (D1a–D9a) and built the same day** (§7).
+**Status:** **Approved 2026-10-20 as recommended (D1a–D9a) and built the same day** (§7). The
+owner then asked for the D6(b) and D7(b) follow-ups, built 2026-10-23 with no migration (§7).
 **Date:** 2026-10-19
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 3 (Suppliers: backup power, **M6**), read
 against the A-Suppliers board (the **Power** and **Last job** columns, the "Backup power only"
@@ -278,3 +279,21 @@ and then applied with `prisma migrate dev`, as M3 did with its trigger.
 - **Surfaces:** desk `012713d`, copy `5e4c77c` (en/es/fr), e2e `0aae98b`; resolutions in the
   ADR 0006 M6 amendment.
 - **Retention:** unchanged (D9a); `docs/pii-at-rest-review.md` Tier 3 names the row.
+
+### Follow-ups (2026-10-23, no migration)
+
+- **D7(b) vehicle** (`fc22c93`, `2d9b69b`): `PUT /suppliers/:id/vehicle` (Operations and Super
+  Admin, drivers only, 422 otherwise) validates model, seats (1–60), A/C, extras, plate,
+  insurance cover and end date, and up to 12 routes into the existing `vehicle_details` JSON,
+  replacing it; audited `supplier.vehicle_updated` with `previous` and `next`. The inspector DTO
+  gains `vehicle`; a stored value that does not match the shape reads as none. The insurance end
+  date is **informational**: a badge when it ends within 30 days or has ended, and no effect on
+  dispatch (the board's approval block on insurance stays with the credential rules, D7).
+  Guide specialities are still not stored.
+- **D6(b) traveler filter** (`f6f3a4e`, `86a36f2`): each stay in the public package DTO carries
+  `backupPower` (solar, or a generator with its hours) when its casa's confirmation is under
+  7 days old; the package's `backupPower` is true when it has a stay and every stay claims it. A
+  stale or missing confirmation claims nothing; no supplier field is exposed. The storefront
+  Packages filters gain "Backup power at every stay" (count, chip, `?power=1`) and each stay on
+  the package page states its backup. The wording avoids the board's "guaranteed" and sits in the
+  core catalogs, so the agency can override it in `tenant/messages`.

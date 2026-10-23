@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-23 10:00
+# Handoff — vereda — updated 2026-10-23 17:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -9,65 +9,73 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
 ## State
 - **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done; M1–M8 are complete
   with their surfaces.** Commits are local on `vereda`; the owner pushes
-  (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-20), 9 commits plus the docs commit:**
-  - **M6 built as approved** (`docs/schema-m6-suppliers.md` §7 records what the build decided).
-    Migration `20261020170618_supplier_resources` with two hand-written CHECKs (`6ba9154`); rules
-    `packages/domain/src/supplier/resources.ts` (`39661e5`); DTOs (`66b2985`); API (`24f2d4f`):
-    `GET /suppliers` (+`power`, `lastJob`, `?backupPower=1`), `GET /suppliers/:id` (+`resources`,
-    `jobs12m`), `PUT /suppliers/:id/resources` (ops+super, audited `supplier.resources_confirmed`),
-    `GET /disruptions/:id/resources`, the case's `suppliersInvolved`; seed demo casa and driver
-    (`9316f57`); copy (`5e4c77c`); desk (`012713d`): register Power/Last job columns and "Backup
-    power only", inspector resilience and fuel cards (`supplier-resources-form.tsx`), A-Disruption
-    resources card and count; e2e `e2e/supplier-resources.spec.ts` (`0aae98b`).
-  - **Log redaction** (`1271bc5`): `httpLoggerOptions` in `apps/api/src/app.module.ts` redacts
-    `req.headers.cookie`, `req.headers.authorization` and `res.headers["set-cookie"]`;
-    `apps/api/test/http-logging.test.ts` logs a real request through those options.
-- **Not built:** SMS/push, M9, M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs; M6's
-  deferred items (vehicle/guide details D7, traveler backup-power filter D6, worker-app fuel
-  self-declaration, room-level stock, the "Cash" line).
+  (`git log --oneline origin/vereda..vereda`; the owner had pushed through `bcaf000`).
+- **This session (2026-10-23), 6 commits plus the docs commit:**
+  - **M6 D7(b), a driver's vehicle** (`fc22c93`, `2d9b69b`): `PUT /suppliers/:id/vehicle`
+    (ops+super, drivers only) into the existing `vehicle_details` JSON, audited
+    `supplier.vehicle_updated`; the inspector's "Vehicle & fuel" card
+    (`supplier-vehicle-form.tsx`) with an informational insurance badge.
+  - **M6 D6(b), the traveler filter** (`f6f3a4e`, `86a36f2`): `publicBackupPower` and
+    `packageHasBackupPower` in `packages/domain/src/supplier/resources.ts`; each public stay
+    carries `backupPower` from a casa confirmation under 7 days old, the package `backupPower`
+    when every stay does; the storefront Packages "Conditions › Backup power at every stay"
+    filter (`?power=1`) and the stay line on the package page.
+  - **Copy fix** (`d0bb84a`): the register's reliability footnote no longer claims a supplier
+    below 85 % drops out of auto-dispatch (dispatch never read reliability).
+  - **M9 drafted** (`ffae55a`, `docs/schema-m9-settings.md`, D1–D9 with recommendations):
+    thresholds as append-only versions applied by a second Super Admin, staff invites,
+    deactivation and a 12 h staff session; overrides, currencies, runtime flags and recovery
+    codes deferred. **Awaiting the owner; no migration.**
+- **Not built:** SMS/push, M9 (draft), M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs;
+  guide specialities; room-level stock; the worker app's fuel self-declaration.
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
   samples, the deposit's refundability and proof retention, the M5 sample terms, the builder
-  rates, the M8 crisis framework; the seed's demo casa and driver resources are dev data.
+  rates, the M8 crisis framework; the seed's demo casa and driver; the backup-power wording
+  (core default, overridable in `tenant/messages`).
 
-## Verified (2026-10-20, dev stack stopped for the build)
-- Migration applied (`prisma migrate status`: up to date, 19 migrations); an insert with
-  `generator_fuel_days = -1` is refused by `supplier_resources_amounts_check`.
+## Verified (2026-10-23, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **740 passed / 21 skipped**, 29/29 tasks, 0 cached (api 287/20
-  skipped, domain 244, schemas 56, config 34, ui 33, email 24, documents 20, theming 14,
-  payments 8, imports 5, ai 4, i18n 4, reports 4, storage 3/1 skipped).
+- `TURBO_FORCE=true pnpm test` **749 passed / 21 skipped**, 29/29 tasks, 0 cached (api 291/20
+  skipped, domain 249, schemas 56; the others unchanged).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- Log redaction, Gate 1→4: `http-logging.test.ts` failed before the fix with the session cookie,
-  bearer token and set-cookie in the logged line, and passes after. Live: a second API on :3011
-  logged `"cookie":"[Redacted]"` and `"authorization":"[Redacted]"` for a request carrying probe
-  values, and the probe text appeared 0 times in its log (log deleted); it stopped on SIGTERM.
-- Live M6 against the dev API: the register returned `GENERATOR 6 h` and `FUEL 40 L` for the
-  seed; a PUT stamped WhatsApp and the actor; casa fields on a driver → 422; a temporary CU01 case
-  listed the casa and driver and the manifest's four emergency contacts (case, its audit rows and
-  the PUT's audit rows deleted afterwards, the driver restored to 40 L by PHONE).
-- Browser (Playwright screenshots, `scrollWidth − innerWidth` = 0 at every width): register at
-  1280/1024/390 (the table fits 1280 after `min-w-[960px]`; scrolls in its card below), casa
-  inspector 1280/1024/390, driver inspector 390, case page 1280/1024/390 (resources card 342 px
-  wide at 390, no inner overflow).
-- `pnpm e2e` **61/61** (`.next` deleted first, 7.3 min), including the new
-  `supplier-resources.spec.ts` (also run alone twice in a row: passes, and leaves no supplier,
-  booking or case). The three servers e2e left on 3000–3002 were stopped by PID.
+- `tsc` caught a real bug before it shipped: `packages.map(toPackageDto)` passed the array index
+  as `now` once `toPackageDto` took a second parameter; the unit tests (swc, no type check)
+  passed with it. Fixed to `map((pkg) => toPackageDto(pkg))`.
+- Live: with the seeded Trinidad stay linked to the demo casa, `GET /catalog/packages` returned
+  `backupPower: true` and the stay's `{GENERATOR, 6}`; the storefront list caught up within its
+  60 s cache. The link was removed afterwards.
+- Browser (Playwright, `scrollWidth − innerWidth` = 0): storefront Packages with `?power=1` at
+  1280/1024/390, the package itinerary's stay line at 390/1280 (`success-700`, no overflow), the
+  driver inspector at 1280/1024/390. One hydration warning on the first 390 load of the list did
+  not recur in 8 further loads (see Assumptions).
+- `pnpm e2e` **61/61** (`.next` deleted first, 7.7 min); `supplier-resources.spec.ts` now also
+  saves a vehicle and finds its package under the storefront filter (run alone 2× in a row before:
+  passes and leaves nothing). The three servers e2e left on 3000–3002 were stopped by PID.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files. No
-  disruption case, no E2EDIS01/E2EREN01/E2EADV01/E2ESUP01 booking, no published critical advisory
-  and no e2e supplier was left afterwards; `supplier_resources` holds the two seeded rows.
+  disruption case, E2E booking, published critical advisory, e2e package or e2e supplier was left,
+  and no inventory item is linked to a supplier (the temporary Trinidad link was removed).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
 - **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS` (runbook).
-- The register and inspector read every past job of the listed suppliers to pick the last one;
-  fine at agency scale, worth a `distinct`/window query if the register grows to thousands.
-- The redaction covers the three headers only; other PII in logs (G7 of
-  `docs/pii-at-rest-review.md`: ConsoleMailer bodies, expiry-scan emails) is unchanged.
-- **For the owner:** the open items under Next.
+- The storefront's public package list is cached 60 s, so a confirmation (or a lapse to stale)
+  reaches the Packages filter within a minute; the package page uses its own cache key.
+- Not reproduced: one React hydration warning ("attributes didn't match") on the first load of
+  `/en/packages?power=1` at 390 while the list cache was refreshing; 8 later loads were clean.
+- The public `GET /catalog` (inventory items) has always returned `supplierId`; the new package
+  fields expose none, but that older field is worth a look when the catalog is next touched.
+- **For the owner:** the M9 decisions and the items under Next. The storefront's sample
+  "Cuba right now" banner says every stay has backup power, which the new filter can contradict;
+  it is tenant copy for the agency to word.
 
 ## Traps
+- **M6 follow-ups:** the M6 e2e also owns the package `e2e-m6-power-trail` and its stay
+  "E2E M6 Casa Stay" (delete the package before the item: the service FK is RESTRICT). The
+  storefront list is cached 60 s, so the e2e reloads `/en/packages?power=1` until the package
+  shows (`toPass`, 90 s); the filter label is rendered twice (aside and hidden drawer), so assert
+  on headings, not on the label's first match. A function used as a `.map` callback must not
+  gain an optional second parameter (the index arrives as that argument).
 - **M6:** the M6 e2e owns `e2e-casa-resources@example.test`, `e2e-driver-resources@example.test`
   (their resources and audit rows), booking E2ESUP01 and every case titled "E2E M6…"; it works in
   Matanzas because the seeded casa and driver are in Pinar del Río. "Backup power only" is a
@@ -102,12 +110,12 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
     logger."
 
 ## Next
-1. Owner: choose the next batch — draft M9 (Settings: thresholds, invites, permission overrides,
-   currencies, manifest view; recommended), or an M6 follow-up (D7(b) vehicle details on the
-   existing JSON with no migration; D6 traveler backup-power filter).
+1. Owner: decide M9 (`docs/schema-m9-settings.md`, D1–D9; recommendations a), and whether to
+   enforce the 85 % reliability floor in dispatch (D2 note). Then generate and build M9.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
-   passport-key backup, the AGENTS.md §C lines above. Then M10, and SMS once a provider is chosen.
+   passport-key backup, the backup-power wording, the AGENTS.md §C lines above. Then M10, and SMS
+   once a provider is chosen.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -391,4 +399,11 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
   "Expiring ≤ 30 d" checkbox is not built.
 - 2026-10-20 — log redaction built as approved: the three headers, with a test that logs a real
   request through the API's options.
+- 2026-10-23 — the owner asked for both M6 follow-ups and the M9 draft. D7(b): the vehicle lives
+  in the existing `vehicle_details` JSON and its insurance date is informational (no dispatch
+  effect). D6(b): the public claim rests only on a casa confirmation under 7 days old, a package
+  qualifies only when every stay does, and the wording avoids "guaranteed".
+- 2026-10-23 — the register's reliability footnote was reworded to what the system does (copy
+  follows the system, 2026-10-14); enforcing an 85 % floor is left to the owner (M9 D2).
+- 2026-10-23 — M9 drafted with recommendations D1(a)–D9(a); no migration until approved.
 

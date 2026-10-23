@@ -705,3 +705,28 @@ amendment's note that the "Resources in the province" card is not drawn.
   links to its inspector and its phone; flags are "Confirm by phone" (`attention`), "Not free
   today" (`outline`) and "Paused · expiry" (`warning`). "2 rooms free tonight" becomes the rooms
   and guest capacity plus the day's availability (D5); the board's "Cash" row is not drawn (M6 §4).
+
+## Amendment, 2026-10-23: M6 follow-ups, resolved by the build
+
+The owner asked for D6(b) and D7(b). Built on the existing tokens; no token was added.
+
+- **Vehicle & fuel.** The driver card takes the board's title and holds two forms: the vehicle
+  (model, seats, plate, an A/C checkbox, extras, insurance cover and end date, routes one per
+  line) with "Save vehicle", then the fuel reserve with its Confirm. The board's static `dl`
+  became a form, as on the casa card. The insurance end date shows the credential badges' tones
+  (`warning` within 30 days, `destructive` once ended) but, unlike a credential, never pauses
+  dispatch.
+- **Packages filter.** The board's "Backup power guaranteed" checkbox with its count sits in a
+  new last "Conditions" group of the filter panel (and drawer), with a one-line note on what the
+  claim rests on; its chip reads like the label. "Guaranteed" is not written: the platform can
+  only say what a casa confirmed in the last 7 days. The board's other type, sleep and pace
+  filters stay undrawn.
+- **Package page.** A stay with a fresh confirmation adds a line under it in the itinerary,
+  "Backup power: generator, 6 h a day" or "…: solar and battery", in `success-700` text. Stays
+  without one say nothing rather than "no backup power", because the absence of a confirmation is
+  not a fact about the casa.
+- **Copy found stale.** The supplier register's reliability footnote claimed a supplier below
+  85 % drops out of auto-dispatch; dispatch never reads reliability, so the footnote now says the
+  rate turns amber for review (M9 D2 holds the enforcement question). The storefront's
+  placeholder "Cuba right now" banner still says every stay has backup power; it is tenant
+  sample copy for the agency to word.
