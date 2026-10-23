@@ -5,6 +5,7 @@ import {
   VerificationStatus,
   canAutoDispatch,
   isCredentialExpiringSoon,
+  meetsReliabilityFloor,
 } from '@ota/domain';
 import type { SupplierReliabilityDto, SupplierRowDto } from '@ota/schemas';
 import {
@@ -176,6 +177,9 @@ export default async function SuppliersPage({
       },
       now,
     );
+    if (eligible && !meetsReliabilityFloor(reliabilityById.get(supplier.id) ?? null)) {
+      return <Badge variant="warning">{t('auto.reliability')}</Badge>;
+    }
     if (eligible) return <Badge variant="success">{t('auto.on')}</Badge>;
     if (
       supplier.verificationStatus === VerificationStatus.Verified &&

@@ -23,9 +23,11 @@ export interface RedispatchPanelProps {
 }
 
 /**
- * A-Dashboard's re-dispatch drawer: the qualified, available and verified
- * workers who were not offered this service yet (the API also leaves out
- * licences within 30 days of expiry), each with an offer and a call button.
+ * A-Dashboard's re-dispatch drawer: the qualified, verified workers who are
+ * free on every day of the service and were not offered it yet (the API also
+ * leaves out licences within 30 days of expiry), each with their acceptance
+ * rate, an offer and a call button. A worker below the reliability floor is
+ * flagged: auto-dispatch skips them, but the desk may still offer the job.
  */
 export function RedispatchPanel({ target, onClose, onOffered }: RedispatchPanelProps) {
   const t = useTranslations('backoffice.dashboard.panel');
@@ -99,7 +101,17 @@ export function RedispatchPanel({ target, onClose, onOffered }: RedispatchPanelP
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold">{candidate.fullName ?? '—'}</span>
                   <Badge variant="success">{t('verified')}</Badge>
+                  {candidate.belowReliabilityFloor ? (
+                    <Badge variant="attention">{t('belowFloor')}</Badge>
+                  ) : null}
                 </div>
+                <p className="text-caption text-secondary">
+                  {candidate.acceptanceRate === null
+                    ? t('noAnswers')
+                    : t('acceptance', {
+                        rate: Math.round(candidate.acceptanceRate * 100),
+                      })}
+                </p>
                 <p className="text-caption text-secondary">
                   {t('meta', {
                     category: candidate.category.replaceAll('_', ' '),

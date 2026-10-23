@@ -1611,9 +1611,10 @@
         "on": "Actif",
         "paused": "En pause · expiration",
         "off": "Inactif · non vérifié",
-        "unavailable": "Inactif · indisponible"
+        "unavailable": "Inactif · indisponible",
+        "reliability": "En pause · fiabilité"
       },
-      "reliabilityNote": "La fiabilité est le taux d'acceptation du registre des offres de répartition. En dessous de 85 %, elle s'affiche en ambre pour examen ; elle ne suspend pas la répartition automatique.",
+      "reliabilityNote": "La fiabilité est le taux d'acceptation des offres répondues. Sous 85 %, dès que le fournisseur a répondu à 5 offres, la répartition automatique l'écarte ; le bureau peut toujours lui proposer une mission.",
       "empty": {
         "title": "Aucun fournisseur ne correspond",
         "hint": "Essayez d'effacer un filtre."
@@ -1750,7 +1751,7 @@
       "redispatch": "Relancer le dispatch",
       "panel": {
         "title": "Relancer le dispatch : {what}",
-        "rule": "Seulement les prestataires qualifiés, disponibles et vérifiés ; les licences qui expirent dans moins de 30 jours sont exclues automatiquement.",
+        "rule": "Seulement les prestataires qualifiés, vérifiés et libres chaque jour du service ; les licences qui expirent dans moins de 30 jours sont exclues automatiquement. Un prestataire sous 85 % d'acceptation (après 5 réponses) est écarté de la répartition automatique mais peut être proposé ici.",
         "close": "Fermer",
         "loading": "Chargement des prestataires qualifiés…",
         "empty": "Aucun autre prestataire qualifié n'est libre pour ce service pour le moment.",
@@ -1761,7 +1762,10 @@
         "offering": "Envoi de l'offre…",
         "call": "Appeler",
         "loadFailed": "Impossible de charger les prestataires qualifiés.",
-        "offerFailed": "L'offre n'a pas pu être envoyée."
+        "offerFailed": "L'offre n'a pas pu être envoyée.",
+        "acceptance": "{rate} % d'acceptation",
+        "noAnswers": "Aucune offre répondue pour l'instant",
+        "belowFloor": "Sous 85 % · manuel uniquement"
       },
       "tasks": {
         "title": "Tâches du bureau",
@@ -1836,7 +1840,7 @@
       "credentialDocument": "Document justificatif",
       "credentialDescription": "Justificatif Formatur, licence d'exploitation de transport ou carte RTN.",
       "availability": "Calendrier de disponibilité",
-      "availabilityDescription": "Disponibilité en un tap et blocage granulaire. La répartition automatique respecte ces jours (spec §5.2).",
+      "availabilityDescription": "Disponibilité en un tap et blocage granulaire. La répartition automatique et la liste de réaffectation écartent un prestataire un jour bloqué (spec §5.2).",
       "noExpiry": "Aucune expiration suivie",
       "expired": "Expiré il y a {days} j",
       "expiresIn": "Expire dans {days} j",
@@ -1917,7 +1921,9 @@
         "failed": "Impossible d'enregistrer le véhicule.",
         "insuranceExpired": "Assurance expirée",
         "insuranceEnds": "L'assurance expire dans {days} j"
-      }
+      },
+      "autoReliability": "En pause · fiabilité",
+      "autoWhyReliability": "Moins de 85 % d'acceptation sur au moins 5 offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation."
     },
     "reports": {
       "title": "Rapports",

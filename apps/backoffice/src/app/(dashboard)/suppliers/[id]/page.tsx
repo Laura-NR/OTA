@@ -5,6 +5,7 @@ import {
   VerificationStatus,
   canAutoDispatch,
   isCredentialExpiringSoon,
+  meetsReliabilityFloor,
 } from '@ota/domain';
 import type { SupplierDetailDto, SupplierReliabilityDto } from '@ota/schemas';
 import { Badge, buttonClassName, cn } from '@ota/ui';
@@ -117,17 +118,28 @@ export default async function SupplierDetailPage({
     supplier.verificationStatus === VerificationStatus.Verified &&
     expiresAt !== null &&
     isCredentialExpiringSoon(new Date(expiresAt), now);
-  const auto = eligible
-    ? { label: t('autoOn'), variant: 'success' as const, why: t('autoWhyOn') }
-    : paused
-      ? { label: t('autoPaused'), variant: 'warning' as const, why: t('autoWhyPaused') }
-      : supplier.verificationStatus !== VerificationStatus.Verified
-        ? { label: t('autoOff'), variant: 'outline' as const, why: t('autoWhyOff') }
-        : {
-            label: t('autoUnavailable'),
-            variant: 'outline' as const,
-            why: t('autoWhyUnavailable'),
-          };
+  const auto =
+    eligible && !meetsReliabilityFloor(reliability)
+      ? {
+          label: t('autoReliability'),
+          variant: 'warning' as const,
+          why: t('autoWhyReliability'),
+        }
+      : eligible
+        ? { label: t('autoOn'), variant: 'success' as const, why: t('autoWhyOn') }
+        : paused
+          ? {
+              label: t('autoPaused'),
+              variant: 'warning' as const,
+              why: t('autoWhyPaused'),
+            }
+          : supplier.verificationStatus !== VerificationStatus.Verified
+            ? { label: t('autoOff'), variant: 'outline' as const, why: t('autoWhyOff') }
+            : {
+                label: t('autoUnavailable'),
+                variant: 'outline' as const,
+                why: t('autoWhyUnavailable'),
+              };
 
   const phone = supplier.primaryPhone.replace(/[^+\d]/g, '');
   const resourcesKind =

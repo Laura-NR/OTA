@@ -1611,9 +1611,10 @@
         "on": "Activo",
         "paused": "En pausa · vencimiento",
         "off": "Inactivo · sin verificar",
-        "unavailable": "Inactivo · no disponible"
+        "unavailable": "Inactivo · no disponible",
+        "reliability": "En pausa · fiabilidad"
       },
-      "reliabilityNote": "La fiabilidad es la tasa de aceptación del registro de ofertas de despacho. Por debajo del 85 % se marca en ámbar para revisión; no detiene el auto-despacho.",
+      "reliabilityNote": "La fiabilidad es la tasa de aceptación de las ofertas respondidas. Por debajo del 85 %, cuando el proveedor ha respondido 5 ofertas, el auto-despacho lo omite; la mesa aún puede ofrecerle un servicio.",
       "empty": {
         "title": "Ningún proveedor coincide",
         "hint": "Prueba a limpiar un filtro."
@@ -1750,7 +1751,7 @@
       "redispatch": "Redespachar",
       "panel": {
         "title": "Redespachar {what}",
-        "rule": "Solo trabajadores cualificados, disponibles y verificados; las licencias que vencen en menos de 30 días se excluyen automáticamente.",
+        "rule": "Solo trabajadores cualificados, verificados y libres todos los días del servicio; las licencias que vencen en menos de 30 días se excluyen automáticamente. Un trabajador por debajo del 85 % de aceptación (tras 5 respuestas) queda fuera del auto-despacho, pero se le puede ofrecer aquí.",
         "close": "Cerrar",
         "loading": "Cargando trabajadores cualificados…",
         "empty": "Ningún otro trabajador cualificado está libre para este servicio ahora.",
@@ -1761,7 +1762,10 @@
         "offering": "Enviando la oferta…",
         "call": "Llamar",
         "loadFailed": "No se pudieron cargar los trabajadores cualificados.",
-        "offerFailed": "No se pudo enviar la oferta."
+        "offerFailed": "No se pudo enviar la oferta.",
+        "acceptance": "{rate} % de aceptación",
+        "noAnswers": "Aún sin ofertas respondidas",
+        "belowFloor": "Bajo el 85 % · solo manual"
       },
       "tasks": {
         "title": "Tareas del mostrador",
@@ -1836,7 +1840,7 @@
       "credentialDocument": "Documento de credencial",
       "credentialDescription": "Credencial Formatur, licencia de operación de transporte o tarjeta RTN.",
       "availability": "Calendario de disponibilidad",
-      "availabilityDescription": "Disponibilidad con un toque y bloqueo granular. El auto-despacho respeta estos días (spec §5.2).",
+      "availabilityDescription": "Disponibilidad con un toque y bloqueo granular. El auto-despacho y la lista de reasignación omiten a un trabajador en un día bloqueado (spec §5.2).",
       "noExpiry": "Sin vencimiento registrado",
       "expired": "Venció hace {days}d",
       "expiresIn": "Vence en {days}d",
@@ -1917,7 +1921,9 @@
         "failed": "No se pudo guardar el vehículo.",
         "insuranceExpired": "Seguro vencido",
         "insuranceEnds": "El seguro vence en {days} d"
-      }
+      },
+      "autoReliability": "En pausa · fiabilidad",
+      "autoWhyReliability": "Menos del 85 % de aceptación en al menos 5 ofertas respondidas: el auto-despacho omite a este trabajador hasta que la tasa se recupere. La mesa aún puede ofrecerle un servicio desde la lista de reasignación."
     },
     "reports": {
       "title": "Informes",

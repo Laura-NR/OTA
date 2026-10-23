@@ -1611,9 +1611,10 @@
         "on": "On",
         "paused": "Paused · expiry",
         "off": "Off · not verified",
-        "unavailable": "Off · unavailable"
+        "unavailable": "Off · unavailable",
+        "reliability": "Paused · reliability"
       },
-      "reliabilityNote": "Reliability is the acceptance rate over the dispatch-offer ledger. Below 85 % it shows amber for review; it does not pause auto-dispatch.",
+      "reliabilityNote": "Reliability is the acceptance rate over answered offers. Below 85 %, once a supplier has answered 5 offers, auto-dispatch skips them; the desk can still offer them a job.",
       "empty": {
         "title": "No suppliers match",
         "hint": "Try clearing a filter."
@@ -1750,7 +1751,7 @@
       "redispatch": "Re-dispatch",
       "panel": {
         "title": "Re-dispatch {what}",
-        "rule": "Qualified, available and verified only; licences expiring within 30 days are excluded automatically.",
+        "rule": "Qualified, verified and free on every day of the service only; licences expiring within 30 days are excluded automatically. A worker below 85 % acceptance (after 5 answers) is skipped by auto-dispatch but can be offered here.",
         "close": "Close",
         "loading": "Loading qualified workers…",
         "empty": "No other qualified worker is free for this service right now.",
@@ -1761,7 +1762,10 @@
         "offering": "Sending the offer…",
         "call": "Call",
         "loadFailed": "Could not load the qualified workers.",
-        "offerFailed": "The offer could not be sent."
+        "offerFailed": "The offer could not be sent.",
+        "acceptance": "{rate} % acceptance",
+        "noAnswers": "No answered offers yet",
+        "belowFloor": "Below 85 % · manual only"
       },
       "tasks": {
         "title": "Tasks for the desk",
@@ -1836,7 +1840,7 @@
       "credentialDocument": "Credential document",
       "credentialDescription": "Formatur credential, transport operating licence, or RTN card.",
       "availability": "Availability calendar",
-      "availabilityDescription": "Single-tap availability and granular blocking. Auto-dispatch respects these days (spec §5.2).",
+      "availabilityDescription": "Single-tap availability and granular blocking. Auto-dispatch and the re-dispatch list skip a worker on a blocked day (spec §5.2).",
       "noExpiry": "No expiry tracked",
       "expired": "Expired {days}d ago",
       "expiresIn": "Expires in {days}d",
@@ -1917,7 +1921,9 @@
         "failed": "Could not save the vehicle.",
         "insuranceExpired": "Insurance expired",
         "insuranceEnds": "Insurance ends in {days} d"
-      }
+      },
+      "autoReliability": "Paused · reliability",
+      "autoWhyReliability": "Below 85 % acceptance over at least 5 answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list."
     },
     "reports": {
       "title": "Reports",
