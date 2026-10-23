@@ -45,7 +45,7 @@ are written by Operations Admin and Super Admin only).
 
 TASK 0 — Finish last session's verify: run `pnpm e2e` once with `.next` deleted (the
 admin-shell spec fix was verified alone only), kill what it leaves on 3000–3002 by PID, update the
-handoff's Verified line, commit, then start the dev stack for the owner.
+handoff's Verified line, commit, then restart the dev stack for the owner (it was left running).
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
 recommendation: M10 (Events) drafted as a migration doc (decisions with options, no migration

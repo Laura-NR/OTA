@@ -128,8 +128,8 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
     logger."
 
 ## Next
-0. Rerun `pnpm e2e` once (the admin-shell fix was verified alone only) and restart the dev stack
-   with `RATE_LIMIT_MAX=100000 RATE_LIMIT_AUTH_MAX=100000 pnpm dev` (it was left stopped).
+0. Rerun `pnpm e2e` once (the admin-shell fix was verified alone only); the dev stack was left
+   running with the raised rate limits, so stop it first (signal turbo) and restart it after.
 1. Owner: choose the next batch — M10 (Events) when wanted, or Phase 8 items; M9's deferred items
    (permission overrides, display currencies, runtime flags, recovery codes, passkey policy) each
    need their own decision.
