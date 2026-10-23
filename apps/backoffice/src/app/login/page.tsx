@@ -30,9 +30,12 @@ export default function LoginPage() {
     setStatus('sending');
     setError(null);
 
+    // `?next=/path` returns the person there after sign-in (an invitation, M9).
+    const next = new URLSearchParams(window.location.search).get('next');
+    const path = next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
     const { error: authError } = await authClient.signIn.magicLink({
       email,
-      callbackURL: `${window.location.origin}/`,
+      callbackURL: `${window.location.origin}${path}`,
     });
 
     if (authError) {

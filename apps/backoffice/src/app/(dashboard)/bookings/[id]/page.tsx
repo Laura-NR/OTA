@@ -34,6 +34,8 @@ import { ReservationActions } from '@/components/reservation-actions';
 import { StatusBadge } from '@/components/status-badge';
 import { TourismCategoryControl } from '@/components/tourism-category-control';
 import { TravelParty } from '@/components/travel-party';
+import { deskClock } from '@/lib/desk-clock';
+import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { bookingDates, money, opsDate, opsTime, percent } from '@/lib/ops-format';
@@ -294,6 +296,7 @@ export default async function BookingPage({
           items={reservation.serviceItems}
           offers={offers}
           serverNow={now.getTime()}
+          clock={deskClock(await getThresholds())}
           canManage={canManage}
         />
       </Section>

@@ -32,6 +32,7 @@ import Link from 'next/link';
 import { BookingFilters } from '@/components/booking-filters';
 import { StatusBadge } from '@/components/status-badge';
 import { WhoActsLegend } from '@/components/who-acts-legend';
+import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { bookingDates, countdown, money, opsTime } from '@/lib/ops-format';
 
@@ -61,7 +62,11 @@ interface Row extends ReservationListItemDto {
 
 const ALERTS: readonly EscalationAlert[] = ['RED', 'AMBER'];
 
-function worstAlert(board: DispatchBoardRowDto | undefined, now: Date): EscalationAlert {
+function worstAlert(
+  board: DispatchBoardRowDto | undefined,
+  now: Date,
+  amberThreshold: number,
+): EscalationAlert {
   const alerts =
     board?.serviceItems.map((item) =>
       serviceItemAlert({
@@ -69,6 +74,7 @@ function worstAlert(board: DispatchBoardRowDto | undefined, now: Date): Escalati
         offeredAt: item.offeredAt ? new Date(item.offeredAt) : null,
         deadline: item.deadline ? new Date(item.deadline) : null,
         now,
+        amberThreshold,
       }),
     ) ?? [];
   return (
@@ -153,12 +159,13 @@ export default async function BookingsPage({
   const { reservations, error: loadError } = list;
 
   const now = new Date();
+  const amberThreshold = (await getThresholds()).amberPercent / 100;
   const boardById = new Map(board.map((row) => [row.reservationId, row]));
   const rows: Row[] = reservations.map((reservation) => {
     const live = boardById.get(reservation.id);
     return {
       ...reservation,
-      alert: worstAlert(live, now),
+      alert: worstAlert(live, now, amberThreshold),
       deadline: soonestDeadline(live),
     };
   });

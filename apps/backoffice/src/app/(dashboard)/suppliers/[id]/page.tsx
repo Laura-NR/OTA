@@ -1,5 +1,4 @@
 import {
-  CREDENTIAL_EXPIRY_WINDOW_DAYS,
   SupplierCategory,
   UserRole,
   VerificationStatus,
@@ -19,6 +18,7 @@ import { SupplierCredential } from '@/components/supplier-credential';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
 import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
 import { VerificationActions } from '@/components/verification-actions';
+import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { opsDate, opsTime, percent } from '@/lib/ops-format';
@@ -94,6 +94,8 @@ export default async function SupplierDetailPage({
     .catch(() => null);
 
   const now = new Date();
+  const thresholds = await getThresholds();
+  const windowDays = thresholds.credentialExpiryWindowDays;
   const expiresAt = supplier.credentialExpiresAt;
   const expiryDays = expiresAt
     ? Math.ceil((new Date(expiresAt).getTime() - now.getTime()) / DAY_MS)
@@ -102,7 +104,7 @@ export default async function SupplierDetailPage({
     ? { label: t('noExpiry'), variant: 'outline' }
     : expiryDays! < 0
       ? { label: t('expired', { days: Math.abs(expiryDays!) }), variant: 'destructive' }
-      : expiryDays! <= CREDENTIAL_EXPIRY_WINDOW_DAYS
+      : expiryDays! <= windowDays
         ? { label: t('expiresIn', { days: expiryDays! }), variant: 'warning' }
         : { label: new Date(expiresAt).toLocaleDateString(locale), variant: 'success' };
 
@@ -113,25 +115,38 @@ export default async function SupplierDetailPage({
       credentialExpiresAt: expiresAt ? new Date(expiresAt) : null,
     },
     now,
+    windowDays,
   );
   const paused =
     supplier.verificationStatus === VerificationStatus.Verified &&
     expiresAt !== null &&
-    isCredentialExpiringSoon(new Date(expiresAt), now);
+    isCredentialExpiringSoon(new Date(expiresAt), now, windowDays);
   const auto =
-    eligible && !meetsReliabilityFloor(reliability)
+    eligible &&
+    !meetsReliabilityFloor(
+      reliability,
+      thresholds.reliabilityFloorPercent / 100,
+      thresholds.reliabilityMinAnswered,
+    )
       ? {
           label: t('autoReliability'),
           variant: 'warning' as const,
-          why: t('autoWhyReliability'),
+          why: t('autoWhyReliability', {
+            floor: thresholds.reliabilityFloorPercent,
+            min: thresholds.reliabilityMinAnswered,
+          }),
         }
       : eligible
-        ? { label: t('autoOn'), variant: 'success' as const, why: t('autoWhyOn') }
+        ? {
+            label: t('autoOn'),
+            variant: 'success' as const,
+            why: t('autoWhyOn', { days: windowDays }),
+          }
         : paused
           ? {
               label: t('autoPaused'),
               variant: 'warning' as const,
-              why: t('autoWhyPaused'),
+              why: t('autoWhyPaused', { days: windowDays }),
             }
           : supplier.verificationStatus !== VerificationStatus.Verified
             ? { label: t('autoOff'), variant: 'outline' as const, why: t('autoWhyOff') }
@@ -160,7 +175,7 @@ export default async function SupplierDetailPage({
       ? null
       : insuranceDays < 0
         ? { label: t('vehicle.insuranceExpired'), variant: 'destructive' }
-        : insuranceDays <= CREDENTIAL_EXPIRY_WINDOW_DAYS
+        : insuranceDays <= windowDays
           ? {
               label: t('vehicle.insuranceEnds', { days: insuranceDays }),
               variant: 'warning',
@@ -327,6 +342,7 @@ export default async function SupplierDetailPage({
                 ? `${opsDate(resources.confirmedAt, locale)} ${opsTime(resources.confirmedAt, locale)}`
                 : null
             }
+            staleDays={thresholds.resourcesStaleDays}
             canEdit={canVerify}
           />
         </Panel>

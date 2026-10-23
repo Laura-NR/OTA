@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import type { DeskClock } from '@/lib/desk-clock';
 
 export interface RedispatchTarget {
   serviceItemId: string;
@@ -20,6 +21,8 @@ export interface RedispatchPanelProps {
   onClose: () => void;
   /** Called once an offer went out, so the board can refresh. */
   onOffered: () => void;
+  /** The M9 thresholds the rule line states. */
+  clock: DeskClock;
 }
 
 /**
@@ -29,7 +32,12 @@ export interface RedispatchPanelProps {
  * rate, an offer and a call button. A worker below the reliability floor is
  * flagged: auto-dispatch skips them, but the desk may still offer the job.
  */
-export function RedispatchPanel({ target, onClose, onOffered }: RedispatchPanelProps) {
+export function RedispatchPanel({
+  target,
+  onClose,
+  onOffered,
+  clock,
+}: RedispatchPanelProps) {
   const t = useTranslations('backoffice.dashboard.panel');
   const [candidates, setCandidates] = useState<DispatchCandidateDto[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -83,7 +91,13 @@ export function RedispatchPanel({ target, onClose, onOffered }: RedispatchPanelP
       closeLabel={t('close')}
     >
       <div className="flex flex-col gap-4">
-        <p className="text-body-sm text-secondary">{t('rule')}</p>
+        <p className="text-body-sm text-secondary">
+          {t('rule', {
+            days: clock.credentialDays,
+            floor: clock.floorPercent,
+            min: clock.minAnswered,
+          })}
+        </p>
         {error ? <Alert variant="destructive">{error}</Alert> : null}
         {candidates === null && !error ? (
           <p className="text-body-sm text-muted">{t('loading')}</p>
@@ -102,7 +116,9 @@ export function RedispatchPanel({ target, onClose, onOffered }: RedispatchPanelP
                   <span className="font-semibold">{candidate.fullName ?? '—'}</span>
                   <Badge variant="success">{t('verified')}</Badge>
                   {candidate.belowReliabilityFloor ? (
-                    <Badge variant="attention">{t('belowFloor')}</Badge>
+                    <Badge variant="attention">
+                      {t('belowFloor', { floor: clock.floorPercent })}
+                    </Badge>
                   ) : null}
                 </div>
                 <p className="text-caption text-secondary">

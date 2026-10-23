@@ -38,6 +38,19 @@ async function main(): Promise<void> {
     },
   });
 
+  // M9: a second Super Admin, so a thresholds change or a Super Admin
+  // invitation can be confirmed in dev (dev data only).
+  await prisma.user.upsert({
+    where: { email: 'founder@example.test' },
+    update: {},
+    create: {
+      email: 'founder@example.test',
+      fullName: 'Example Founder',
+      role: Role.SUPER_ADMIN,
+      locale: 'es',
+    },
+  });
+
   const traveler = await prisma.user.upsert({
     where: { email: 'traveler@example.test' },
     update: { nationality: 'ES' },

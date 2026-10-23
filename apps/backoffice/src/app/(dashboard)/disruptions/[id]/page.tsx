@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
+import { getThresholds } from '@/lib/operating';
 import {
   AttachForm,
   CaseHeaderActions,
@@ -731,7 +732,9 @@ export default async function DisruptionCasePage({
               </ResourceRow>
             </dl>
           )}
-          <p className="text-caption text-muted">{t('resources.rule')}</p>
+          <p className="text-caption text-muted">
+            {t('resources.rule', { days: (await getThresholds()).resourcesStaleDays })}
+          </p>
         </CardContent>
       </Card>
 

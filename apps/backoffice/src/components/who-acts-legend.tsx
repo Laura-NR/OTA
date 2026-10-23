@@ -2,6 +2,9 @@ import { RESERVATION_STATUSES, nextStatuses, travelerStatus } from '@ota/domain'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
+import { deskClock, timerCopy } from '@/lib/desk-clock';
+import { getThresholds } from '@/lib/operating';
+
 /**
  * A-Bookings' "Who acts in each state": for every system state, the label the
  * traveler sees (DS 03), who moves it on, its clock and the states it can go
@@ -10,6 +13,12 @@ import { getTranslations } from 'next-intl/server';
 export async function WhoActsLegend() {
   const t = await getTranslations('backoffice.bookings.legend');
   const traveler = await getTranslations('status.traveler');
+  const thresholds = await getThresholds();
+  const clockCopy = {
+    ...timerCopy(deskClock(thresholds)),
+    months: thresholds.retentionTriggerMonths,
+    days: thresholds.retentionGraceDays,
+  };
 
   return (
     <section aria-labelledby="who-acts-title" className="rounded-lg border bg-surface">
@@ -31,7 +40,7 @@ export async function WhoActsLegend() {
                 {t(`whoActs.${status}`)}
               </dd>
               <dd className="text-caption text-muted">
-                {t('clock')}: {t(`clocks.${status}`)} · {t('leaves')}:{' '}
+                {t('clock')}: {t(`clocks.${status}`, clockCopy)} · {t('leaves')}:{' '}
                 {next.length > 0 ? next.join(' · ') : '—'}
               </dd>
             </div>
@@ -63,7 +72,7 @@ export async function WhoActsLegend() {
                   {t(`whoActs.${status}`)}
                 </TableCell>
                 <TableCell className="min-w-40 align-top text-secondary">
-                  {t(`clocks.${status}`)}
+                  {t(`clocks.${status}`, clockCopy)}
                 </TableCell>
                 <TableCell className="align-top font-mono text-caption">
                   {next.length > 0 ? next.join(' · ') : '—'}

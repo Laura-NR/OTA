@@ -22,6 +22,8 @@ import { BarList } from '@/components/bar-list';
 import { KpiCard } from '@/components/kpi-card';
 import { OpsClock } from '@/components/ops-clock';
 import { OpsDesk } from '@/components/ops-desk';
+import { deskClock } from '@/lib/desk-clock';
+import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { bookingDates, money, monthName, percent, signedPercent } from '@/lib/ops-format';
 
@@ -53,6 +55,7 @@ export default async function DashboardPage() {
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
 
   const now = new Date();
+  const thresholds = await getThresholds();
   const month = monthRange(now);
   const previousMonth = monthRange(now, -1);
 
@@ -65,7 +68,9 @@ export default async function DashboardPage() {
       apiFetch<AnalyticsOverviewDto>(
         `/analytics/overview${rangeQuery(previousMonth)}`,
       ).catch(() => null),
-      apiFetch<SupplierDto[]>('/suppliers/expiring?days=30').catch(() => []),
+      apiFetch<SupplierDto[]>(
+        `/suppliers/expiring?days=${thresholds.credentialExpiryWindowDays}`,
+      ).catch(() => []),
       apiFetch<RetentionPendingUserDto[]>('/retention/pending').catch(() => []),
       apiFetch<ReservationListItemDto[]>(
         '/reservations?status=ITINERARY_SUBMITTED&limit=200',
@@ -208,6 +213,7 @@ export default async function DashboardPage() {
       <OpsDesk
         initialRows={rows ?? []}
         serverNow={now.getTime()}
+        clock={deskClock(thresholds)}
         figures={figures}
         ofacMissing={ofacMissing}
         payments={payments}
@@ -289,7 +295,9 @@ export default async function DashboardPage() {
                     })}
                   </p>
                   <p className="text-body-sm text-secondary">
-                    {t('tasks.credential.body')}
+                    {t('tasks.credential.body', {
+                      days: thresholds.credentialExpiryWindowDays,
+                    })}
                   </p>
                 </div>
                 <Link
@@ -310,7 +318,10 @@ export default async function DashboardPage() {
                     })}
                   </p>
                   <p className="text-body-sm text-secondary">
-                    {t('tasks.retention.body')}
+                    {t('tasks.retention.body', {
+                      months: thresholds.retentionTriggerMonths,
+                      days: thresholds.retentionGraceDays,
+                    })}
                   </p>
                 </div>
                 <Link

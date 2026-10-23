@@ -23,6 +23,8 @@ export interface SupplierResourcesFormProps {
   confirmedWhen: string | null;
   /** Operations Admin and Super Admin confirm; support reads the fields (M6 D4). */
   canEdit: boolean;
+  /** The staleness in force (M9), stated on the badge. */
+  staleDays: number;
 }
 
 const text = (value: number | string | null | undefined) =>
@@ -44,6 +46,7 @@ export function SupplierResourcesForm({
   resources,
   confirmedWhen,
   canEdit,
+  staleDays,
 }: SupplierResourcesFormProps) {
   const t = useTranslations('backoffice.supplierDetail.resources');
   const router = useRouter();
@@ -192,7 +195,9 @@ export function SupplierResourcesForm({
         ) : (
           <span>{t('never')}</span>
         )}
-        {resources?.stale ? <Badge variant="attention">{t('stale')}</Badge> : null}
+        {resources?.stale ? (
+          <Badge variant="attention">{t('stale', { days: staleDays })}</Badge>
+        ) : null}
       </div>
 
       {canEdit ? (

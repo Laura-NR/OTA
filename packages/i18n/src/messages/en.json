@@ -1067,14 +1067,262 @@
     },
     "settings": {
       "title": "Settings",
-      "description": "The agency manifest and the operating thresholds the desk runs on.",
-      "readOnly": "Read-only. These values change in the tenant manifest and the code, then a deploy; editing them here, with a second approval, arrives later.",
+      "description": "Users and roles, permissions, languages, the agency manifest, the operating thresholds and security.",
+      "tabsLabel": "Settings sections",
+      "tabs": {
+        "users": "Users & roles",
+        "permissions": "Permissions",
+        "locales": "Currencies & languages",
+        "manifest": "Manifest & feature flags",
+        "thresholds": "Approvals & thresholds",
+        "security": "Security & audit"
+      },
+      "loadError": "Could not load this section.",
+      "manifest": {
+        "readOnly": "The manifest is the fork's file (tenant/agency.config.json): it changes by a commit and a deploy, not here.",
+        "staffDomains": "Staff invitation domains",
+        "anyDomain": "any domain",
+        "flagsNote": "Flags change in the manifest and apply on the next deploy.",
+        "previewTitle": "agency.config.json · preview"
+      },
+      "users": {
+        "title": "{count, plural, one {# user} other {# users}}",
+        "description": "Staff roles only; workers and travelers live in Suppliers and Customers.",
+        "user": "User",
+        "role": "Role",
+        "passkeys": "Passkeys",
+        "lastSignIn": "Last sign-in",
+        "status": "Status",
+        "act": "Act",
+        "never": "never",
+        "active": "Active",
+        "deactivated": "Deactivated",
+        "note": "A deactivated user is signed out and refused until reactivated. Promotion to Super Admin is an invitation confirmed by a second Super Admin.",
+        "you": "You",
+        "roleFor": "Role for {name}",
+        "roles": {
+          "SUPER_ADMIN": "Super Admin",
+          "OPERATIONS_ADMIN": "Operations Admin",
+          "ADMINISTRATIVE_SUPPORT": "Administrative Support"
+        },
+        "revokeSessions": "Sign out everywhere",
+        "deactivate": "Deactivate",
+        "reactivate": "Reactivate",
+        "failed": "The change was not saved."
+      },
+      "invites": {
+        "title": "Invite a user",
+        "listTitle": "Invitations",
+        "empty": "No invitations yet.",
+        "meta": "{role} · invited by {inviter} · until {expires}",
+        "states": {
+          "AWAITING_CONFIRMATION": "Awaiting a second Super Admin",
+          "SENT": "Sent",
+          "ACCEPTED": "Accepted",
+          "REVOKED": "Revoked",
+          "EXPIRED": "Expired"
+        },
+        "confirm": "Confirm and send",
+        "resend": "Send again",
+        "revoke": "Revoke",
+        "email": "Work email",
+        "domains": "Only {domains} addresses.",
+        "anyDomain": "Any work address; a traveler's or supplier's address is refused.",
+        "role": "Role",
+        "superAdminOption": "Super Admin (needs a second Super Admin)",
+        "send": "Send invitation · valid 7 days",
+        "note": "The invitee signs in with this address and accepts; the role applies then."
+      },
+      "permissions": {
+        "title": "Permission matrix",
+        "description": "What each role may do, as the platform enforces it today.",
+        "capability": "Capability",
+        "roles": {
+          "superAdmin": "Super Admin",
+          "operations": "Operations Admin",
+          "support": "Administrative Support"
+        },
+        "access": {
+          "yes": "Yes",
+          "view": "View",
+          "no": "No"
+        },
+        "note": "Read-only. Per-action overrides with a reason and an expiry are not built yet.",
+        "rows": {
+          "bookings": {
+            "label": "Bookings and state transitions",
+            "note": "intake, transitions, travel party, extras"
+          },
+          "dispatch": {
+            "label": "Dispatch and re-dispatch",
+            "note": "start, re-route, choose a worker by hand"
+          },
+          "messages": {
+            "label": "Messages with travelers",
+            "note": "the booking thread and its email fallback"
+          },
+          "suppliers": {
+            "label": "Supplier compliance",
+            "note": "verification, resources, vehicles, availability"
+          },
+          "credentials": {
+            "label": "Supplier credential upload",
+            "note": "support may upload a scan"
+          },
+          "advisories": {
+            "label": "Travel advisories",
+            "note": "draft and approve; two roles approve the levels set in thresholds"
+          },
+          "disruptions": {
+            "label": "Disruption cases",
+            "note": "open, attach, options, status board"
+          },
+          "payments": {
+            "label": "Payments, proofs and refunds",
+            "note": "refund approvals follow the limits in thresholds"
+          },
+          "catalog": {
+            "label": "Packages, catalog and imports",
+            "note": "publish, prices, media, bulk import"
+          },
+          "reports": {
+            "label": "Reports and exports",
+            "note": "analytics, regulatory, digests"
+          },
+          "customers": {
+            "label": "Customers and retention",
+            "note": "OFAC records, reminders, retention scan"
+          },
+          "ofacExport": {
+            "label": "OFAC affidavit export",
+            "note": "the five-year archive"
+          },
+          "thresholds": {
+            "label": "Operating thresholds",
+            "note": "a Super Admin proposes, a second one applies"
+          },
+          "staff": {
+            "label": "Users, roles and invitations",
+            "note": "a Super Admin invite needs a second Super Admin"
+          }
+        }
+      },
+      "locales": "Languages",
+      "thresholds": {
+        "title": "Thresholds in force",
+        "defaultsInForce": "The code's defaults with the manifest's payment terms: no version was applied yet.",
+        "inForce": "Version {version}, applied {when} by {name}.",
+        "rule": "Rule",
+        "value": "In force",
+        "default": "Default",
+        "usedBy": "Used by",
+        "notEnforced": "Not enforced yet, so not stored: the traveler answer SLA, the discount review, the minimum margin and override expiry.",
+        "changeTitle": "Change thresholds",
+        "changeDescription": "A Super Admin proposes; a second Super Admin applies or rejects. One proposal waits at a time.",
+        "superOnly": "Only Super Admins change thresholds.",
+        "historyTitle": "History",
+        "historyLine": "proposed by {name} on {when} · {reason}",
+        "decidedBy": "decided by {name}",
+        "statuses": {
+          "PROPOSED": "Waiting",
+          "APPLIED": "Applied",
+          "REJECTED": "Rejected",
+          "WITHDRAWN": "Withdrawn"
+        },
+        "loadError": "Could not load the thresholds.",
+        "units": {
+          "min": "{value} min",
+          "h": "{value} h",
+          "pct": "{value} %",
+          "days": "{value, plural, one {# day} other {# days}}",
+          "months": "{value, plural, one {# month} other {# months}}",
+          "count": "{value}"
+        },
+        "groups": {
+          "dispatch": "Dispatch",
+          "suppliers": "Suppliers",
+          "payments": "Payments",
+          "content": "Content",
+          "customers": "Customers"
+        },
+        "levels": {
+          "CAUTION": "Caution and critical",
+          "CRITICAL": "Critical only"
+        },
+        "bounds": "{min}–{max}",
+        "reason": "Why",
+        "reasonHint": "The second Super Admin reads it before applying.",
+        "noChanges": "Nothing changed yet.",
+        "changes": "Changes: {list}.",
+        "propose": "Propose · needs a second Super Admin",
+        "reset": "Reset to spec defaults",
+        "proposeNote": "Applied values take effect within a minute. A shorter retention grace applies at the next daily scan.",
+        "pendingTitle": "Version {version} waits for a second Super Admin",
+        "pendingBy": "Proposed by {name}: {reason}",
+        "pendingMine": "Another Super Admin applies or rejects it; you can withdraw it.",
+        "pendingOther": "Applying it puts these values in force for the whole platform.",
+        "withdraw": "Withdraw",
+        "apply": "Apply",
+        "reject": "Reject",
+        "failed": "The change was not saved.",
+        "labels": {
+          "dispatchTimeoutMinutes": "Dispatch timer · standard",
+          "shortNoticeTimeoutMinutes": "Dispatch timer · short notice",
+          "shortNoticeWindowHours": "Short notice when arrival is within",
+          "amberPercent": "Amber alert at",
+          "paymentWindowHours": "Payment window after the link",
+          "refundSingleUpTo": "Refund · one approver up to",
+          "refundDualUpTo": "Refund · two approvers up to",
+          "credentialExpiryWindowDays": "Credential expiry pause",
+          "advisoryDualApprovalFrom": "Advisory needing two approvals",
+          "retentionTriggerMonths": "Retention notice after",
+          "retentionGraceDays": "Retention grace",
+          "resourcesStaleDays": "Resources stale after",
+          "reliabilityFloorPercent": "Reliability floor for auto-dispatch",
+          "reliabilityMinAnswered": "Answered offers before the floor applies"
+        },
+        "used": {
+          "dispatchTimeoutMinutes": "Dispatch, Dashboard, Booking",
+          "shortNoticeTimeoutMinutes": "Dispatch, Dashboard, Booking",
+          "shortNoticeWindowHours": "Dispatch, Dashboard, Booking",
+          "amberPercent": "Dashboard matrix, Bookings, Booking",
+          "paymentWindowHours": "Payments, payment emails",
+          "refundSingleUpTo": "Payments › Refunds",
+          "refundDualUpTo": "Payments › Refunds",
+          "credentialExpiryWindowDays": "Suppliers, dispatch, Dashboard, expiry scan",
+          "advisoryDualApprovalFrom": "Content › Advisories",
+          "retentionTriggerMonths": "Customers, retention scan",
+          "retentionGraceDays": "Customers, retention scan",
+          "resourcesStaleDays": "Suppliers, Disruptions, storefront Packages",
+          "reliabilityFloorPercent": "Dispatch, Suppliers, re-dispatch list",
+          "reliabilityMinAnswered": "Dispatch, Suppliers, re-dispatch list"
+        }
+      },
+      "security": {
+        "sessionsTitle": "Sessions and sign-in",
+        "staffSession": "Staff session",
+        "travelerSession": "Traveler session",
+        "travelerSessionValue": "7 days (Better Auth)",
+        "signInLink": "Sign-in link",
+        "deactivation": "Deactivated users",
+        "deactivationValue": "Signed out and refused",
+        "hours": "{count, plural, one {# hour} other {# hours}} after sign-in",
+        "minutes": "{count} minutes, single use",
+        "deferred": "Idle lock on a shared PC, mandatory passkeys, an IP allowlist and new-device emails are not built yet.",
+        "integrationsTitle": "Integrations & keys",
+        "configured": "Configured",
+        "notConfigured": "Not set",
+        "integrationsNote": "Secrets live in the environment, never here; rotating one is a deploy.",
+        "auditTitle": "Audit log",
+        "auditDescription": "The latest 50 events across the platform.",
+        "system": "System",
+        "loadError": "Could not load this section."
+      },
       "agency": "Agency",
       "agencyName": "Name",
       "license": "MINTUR licence",
       "primaryColor": "Brand colour",
       "palette": "Palette · radius",
-      "locales": "Languages",
       "primaryLocale": "primary {locale}",
       "supportEmail": "Support email",
       "supportPhone": "Support phone",
@@ -1082,22 +1330,24 @@
       "features": "Features",
       "yes": "on",
       "no": "off",
-      "thresholds": "Operating thresholds",
-      "thresholdsDescription": "Dispatch timers, the amber warning, credential and retention windows.",
-      "dispatchTimeout": "Offer timeout",
-      "hours": "{count, plural, one {# hour} other {# hours}}",
-      "shortNoticeTimeout": "Short-notice timeout",
-      "shortNotice": "{minutes} min when the service starts within {hours} h",
-      "amber": "Amber warning at",
-      "credentialWindow": "Credential expiry window",
-      "days": "{count, plural, one {# day} other {# days}}",
-      "retention": "Data retention",
-      "retentionRule": "Notice {months} months after the last trip, anonymised {days} days later; keeping the account extends it {extension} months",
-      "payments": "Payment rails",
       "bankTransfer": "Wire transfer details set",
       "cardRail": "Card rail",
       "cardMock": "on (mock until the card gateway)",
-      "emergency": "Emergency contacts"
+      "emergency": "Emergency contacts",
+      "languages": {
+        "currenciesTitle": "Currencies",
+        "currencies": "EUR only: prices, invoices and the ledger are in euros.",
+        "currenciesNote": "Display currencies with a daily rate and a rate locked at the deposit are a later batch; they change the payment schedule and need a finance decision.",
+        "title": "Languages",
+        "description": "The platform's texts per language; the agency's pages are checked when they are published.",
+        "locale": "Language",
+        "coverage": "Coverage",
+        "status": "Status",
+        "primary": "primary",
+        "live": "Live",
+        "off": "Not offered",
+        "note": "Coverage counts the platform's own texts against English. Languages are switched on in the manifest."
+      }
     },
     "locale": {
       "label": "Language"
@@ -1214,14 +1464,14 @@
         "clocks": {
           "DRAFT": "—",
           "ITINERARY_SUBMITTED": "—",
-          "DISPATCH_IN_PROGRESS": "2 h per offer · 30 min if arrival is under 48 h · amber at 75 %",
+          "DISPATCH_IN_PROGRESS": "{standard} per offer · {short} if arrival is under {window} h · amber at {amber} %",
           "ASSEMBLY_AND_ESCALATION": "—",
           "SECURED_AND_INVOICED": "—",
           "PENDING_PAYMENT": "—",
           "ACTION_REQUIRED": "Red on the dashboard until re-dispatched",
           "CONFIRMED": "Documents at confirmation",
           "IN_PROGRESS": "—",
-          "COMPLETED": "Retention notice at 6 months, then 30 days' grace",
+          "COMPLETED": "Retention notice at {months} months, then {days} days' grace",
           "CANCELLED": "—"
         }
       }
@@ -1570,7 +1820,7 @@
       "loadError": "Could not load suppliers.",
       "rule": {
         "title": "Expiry rule (spec §4.5):",
-        "body": "a Formatur credential, RTN card or transport licence within 30 days of expiry pauses the worker for auto-dispatch. Manual assignment stays possible with a note; no voucher is ever generated for an unlicensed provider.",
+        "body": "a Formatur credential, RTN card or transport licence within {days} days of expiry pauses the worker for auto-dispatch. Manual assignment stays possible with a note; no voucher is ever generated for an unlicensed provider.",
         "pausedNow": "{count} paused now · {names}"
       },
       "categories": {
@@ -1614,7 +1864,7 @@
         "unavailable": "Off · unavailable",
         "reliability": "Paused · reliability"
       },
-      "reliabilityNote": "Reliability is the acceptance rate over answered offers. Below 85 %, once a supplier has answered 5 offers, auto-dispatch skips them; the desk can still offer them a job.",
+      "reliabilityNote": "Reliability is the acceptance rate over answered offers. Below {floor} %, once a supplier has answered {min} offers, auto-dispatch skips them; the desk can still offer them a job.",
       "empty": {
         "title": "No suppliers match",
         "hint": "Try clearing a filter."
@@ -1687,10 +1937,10 @@
         "red": "Red · {count}",
         "redNote": "dispatch timeout + decline",
         "amber": "Amber · {count}",
-        "amberNote": "offer past 75 % of its timer",
+        "amberNote": "offer past {amber} % of its timer",
         "credential": "Credential · {count}",
         "credentialDays": "soonest licence expires in {days, plural, one {# day} other {# days}}",
-        "credentialNote": "a licence expires within 30 days",
+        "credentialNote": "a licence expires within {days} days",
         "noAlerts": "No alerts right now.",
         "ofac": "{count, plural, one {# booking} other {# bookings}} · OFAC missing",
         "ofacNote": "payment and vouchers held",
@@ -1708,7 +1958,7 @@
         "description": "Bookings in DISPATCH_IN_PROGRESS, ASSEMBLY_AND_ESCALATION or ACTION_REQUIRED · one column per service · timers in Havana time",
         "legend": {
           "NONE": "offered, on time",
-          "AMBER": "amber ≥ 75 %",
+          "AMBER": "amber ≥ {amber} %",
           "RED": "red 100 % or declined"
         },
         "live": "Live",
@@ -1725,7 +1975,7 @@
         "timer": "Timer",
         "open": "Open",
         "started": "{timer} · started {time}",
-        "rule": "Timer: 2 h standard, 30 min when arrival is under 48 h. Amber at 75 %, red at 100 % or on decline. A re-dispatch restarts the timer for the new worker only; the booking keeps its original clock."
+        "rule": "Timer: {standard} standard, {short} when arrival is under {window} h. Amber at {amber} %, red at 100 % or on decline. A re-dispatch restarts the timer for the new worker only; the booking keeps its original clock."
       },
       "status": {
         "offered": "Offered · {elapsed}",
@@ -1751,7 +2001,7 @@
       "redispatch": "Re-dispatch",
       "panel": {
         "title": "Re-dispatch {what}",
-        "rule": "Qualified, verified and free on every day of the service only; licences expiring within 30 days are excluded automatically. A worker below 85 % acceptance (after 5 answers) is skipped by auto-dispatch but can be offered here.",
+        "rule": "Qualified, verified and free on every day of the service only; licences expiring within {days} days are excluded automatically. A worker below {floor} % acceptance (after {min} answers) is skipped by auto-dispatch but can be offered here.",
         "close": "Close",
         "loading": "Loading qualified workers…",
         "empty": "No other qualified worker is free for this service right now.",
@@ -1765,7 +2015,7 @@
         "offerFailed": "The offer could not be sent.",
         "acceptance": "{rate} % acceptance",
         "noAnswers": "No answered offers yet",
-        "belowFloor": "Below 85 % · manual only"
+        "belowFloor": "Below {floor} % · manual only"
       },
       "tasks": {
         "title": "Tasks for the desk",
@@ -1777,12 +2027,12 @@
         },
         "credential": {
           "title": "Licence expires {date} · {name}",
-          "body": "Automatic dispatch leaves this worker out from 30 days before the expiry.",
+          "body": "Automatic dispatch leaves this worker out from {days} days before the expiry.",
           "action": "Inspect"
         },
         "retention": {
           "title": "GDPR retention · {count, plural, one {# account purges} other {# accounts purge}} from {date}",
-          "body": "6 months after COMPLETED, a 30-day grace and no \"keep my account\" click. Nothing to do unless a traveler writes in.",
+          "body": "{months} months after COMPLETED, a {days}-day grace and no \"keep my account\" click. Nothing to do unless a traveler writes in.",
           "action": "View"
         }
       }
@@ -1850,8 +2100,8 @@
       "autoPaused": "Paused · expiry",
       "autoOff": "Off · not verified",
       "autoUnavailable": "Off · unavailable",
-      "autoWhyOn": "Eligible: verified, credential valid beyond 30 days.",
-      "autoWhyPaused": "The credential expires within 30 days. Auto-dispatch pauses until it is renewed and verified; manual assignment stays possible with a note.",
+      "autoWhyOn": "Eligible: verified, credential valid beyond {days} days.",
+      "autoWhyPaused": "The credential expires within {days} days. Auto-dispatch pauses until it is renewed and verified; manual assignment stays possible with a note.",
       "autoWhyOff": "Not dispatched until the credential is approved and the onboarding call is done.",
       "autoWhyUnavailable": "The worker is marked unavailable.",
       "reliabilityTitle": "Reliability score",
@@ -1899,7 +2149,7 @@
         "confirmed": "Last confirmed {when} · {channel} · {name}",
         "confirmedNoName": "Last confirmed {when} · {channel}",
         "never": "Never confirmed.",
-        "stale": "Older than 7 days · confirm by phone",
+        "stale": "Older than {days} days · confirm by phone",
         "casaNote": "These fields feed the disruption console's resources and the register's backup-power filter.",
         "driverNote": "The disruption console reads the reserve for its standby drivers. The desk records it until the worker app's weekly self-declaration.",
         "failed": "Could not save the confirmation."
@@ -1923,7 +2173,7 @@
         "insuranceEnds": "Insurance ends in {days} d"
       },
       "autoReliability": "Paused · reliability",
-      "autoWhyReliability": "Below 85 % acceptance over at least 5 answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list."
+      "autoWhyReliability": "Below {floor} % acceptance over at least {min} answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list."
     },
     "reports": {
       "title": "Reports",
@@ -2084,15 +2334,15 @@
       "customItinerary": "Custom itinerary",
       "retentionTitle": "GDPR retention",
       "retentionDetail": {
-        "ACTIVE": "The account is active. The retention clock starts 6 months after the last completed trip.",
+        "ACTIVE": "The account is active. The retention clock starts {months} months after the last completed trip.",
         "NOTICE_DUE": "A keep-alive notice is due; the traveler can confirm to extend the account by 12 months.",
-        "GRACE_PERIOD": "A notice was sent and the 30-day grace period is running; without a confirmation the record is anonymized.",
+        "GRACE_PERIOD": "A notice was sent and the {days}-day grace period is running; without a confirmation the record is anonymized.",
         "PURGE_DUE": "The grace period has lapsed; the record is due for anonymization.",
         "ANONYMIZED": "The record has been anonymized; reservations and fiscal totals are kept."
       },
       "lastCompleted": "Last completed trip",
       "noCompleted": "No completed trip yet",
-      "retentionNote": "6 months after the last completed trip a keep-alive email goes out; after a 30-day grace the account is anonymized. Spec §3.5.",
+      "retentionNote": "{months} months after the last completed trip a keep-alive email goes out; after a {days}-day grace the account is anonymized. Spec §3.5.",
       "later": "Preferences, passport documents and the communication history arrive with their models; the account, its trips with their OFAC position, the consent log and retention are shown today.",
       "retentionStatus": {
         "ACTIVE": "Active",
@@ -2146,7 +2396,7 @@
     },
     "retention": {
       "title": "Data retention",
-      "description": "GDPR lifecycle for travelers: a keep-alive notice 6 months after the last completed booking, a 30-day grace period, then anonymization.",
+      "description": "GDPR lifecycle for travelers: a keep-alive notice {months} months after the last completed booking, a {days}-day grace period, then anonymization.",
       "pipeline": "Retention pipeline",
       "pipelineDescription": "Travelers with a notice due, inside the grace period, or due for anonymization. Anonymized records keep their reservations and fiscal totals.",
       "empty": "No travelers are in the retention lifecycle.",
@@ -2479,6 +2729,19 @@
       "saved": "Translation saved.",
       "saveFailed": "The translation could not be saved.",
       "onlySource": "The tenant has no other language to translate into."
+    },
+    "invite": {
+      "title": "Join the desk",
+      "description": "An invitation to the operations desk.",
+      "noToken": "This link has no invitation in it. Ask for a new one.",
+      "signInFirst": "Sign in with the address the invitation went to, then come back here to accept.",
+      "signIn": "Sign in to accept",
+      "signedInAs": "Signed in as {email}.",
+      "accept": "Accept the invitation",
+      "accepted": "Welcome: you are on the desk as {role}.",
+      "openDesk": "Open the desk",
+      "wrongAddress": "Signed in with another address? Sign out and use the invited one.",
+      "failed": "The invitation could not be accepted."
     }
   },
   "conditions": {
@@ -3224,7 +3487,7 @@
       "stale": "Confirm by phone",
       "notFree": "Not free today",
       "paused": "Paused · expiry",
-      "rule": "From the supplier register: verified suppliers working in the province, with a valid credential and a confirmed reserve. Fresh confirmations come first; one older than 7 days needs a call."
+      "rule": "From the supplier register: verified suppliers working in the province, with a valid credential and a confirmed reserve. Fresh confirmations come first; one older than {days} days needs a call."
     }
   },
   "advisories": {

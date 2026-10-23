@@ -155,7 +155,7 @@ export const systemAuditEntrySchema = z.object({
   id: z.string().uuid(),
   action: z.string(),
   entityType: z.string(),
-  entityId: z.string(),
+  entityId: z.string().nullable(),
   actorName: z.string().nullable(),
   createdAt: z.string(),
   metadata: z.record(z.string(), z.unknown()).nullable(),
@@ -170,3 +170,12 @@ export const integrationStatusSchema = z.object({
 });
 
 export type IntegrationStatusDto = z.infer<typeof integrationStatusSchema>;
+
+/** The Security tab: the sign-in limits in force (config, D9) and the integrations. */
+export const securityStatusSchema = z.object({
+  staffSessionHours: z.number(),
+  signInLinkMinutes: z.number(),
+  integrations: z.array(integrationStatusSchema),
+});
+
+export type SecurityStatusDto = z.infer<typeof securityStatusSchema>;

@@ -16,6 +16,7 @@ import {
 } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
+import { getThresholds } from '@/lib/operating';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch } from '@/lib/api';
 
@@ -40,13 +41,20 @@ function formatDate(value: string | null): string {
 
 export default async function RetentionPage() {
   const t = await getTranslations('backoffice.retention');
+  const thresholds = await getThresholds();
   const pending = await apiFetch<RetentionPendingUserDto[]>(
     '/retention/pending?limit=100',
   ).catch(() => []);
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader
+        title={t('title')}
+        description={t('description', {
+          months: thresholds.retentionTriggerMonths,
+          days: thresholds.retentionGraceDays,
+        })}
+      />
 
       <Card>
         <CardHeader>

@@ -30,13 +30,18 @@ export interface ItemClock {
   deadline: string | null;
 }
 
-/** A service item's alert at `now`. */
-export function itemAlert(item: ItemClock, now: Date): EscalationAlert {
+/** A service item's alert at `now`; amber from the M9 share (0.75 by default). */
+export function itemAlert(
+  item: ItemClock,
+  now: Date,
+  amberThreshold?: number,
+): EscalationAlert {
   return serviceItemAlert({
     status: item.status,
     offeredAt: item.offeredAt ? new Date(item.offeredAt) : null,
     deadline: item.deadline ? new Date(item.deadline) : null,
     now,
+    amberThreshold,
   });
 }
 
@@ -45,10 +50,18 @@ export function itemAlert(item: ItemClock, now: Date): EscalationAlert {
  * pill ("Offered · 1 h 31 m · 76 %") and, while an offer runs or once it timed
  * out, the timer bar in its alert colour. The parent owns the ticking clock.
  */
-export function ServiceItemStatusBadge({ item, now }: { item: ItemClock; now: Date }) {
+export function ServiceItemStatusBadge({
+  item,
+  now,
+  amberThreshold,
+}: {
+  item: ItemClock;
+  now: Date;
+  amberThreshold?: number;
+}) {
   const t = useTranslations('backoffice.dashboard');
   const locale = useLocale();
-  const alert = itemAlert(item, now);
+  const alert = itemAlert(item, now, amberThreshold);
   const offeredAt = item.offeredAt ? new Date(item.offeredAt) : null;
   const deadline = item.deadline ? new Date(item.deadline) : null;
   const elapsed = offeredAt && deadline ? timerElapsed(offeredAt, deadline, now) : null;

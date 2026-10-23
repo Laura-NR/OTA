@@ -1,5 +1,4 @@
 import {
-  CREDENTIAL_EXPIRY_WINDOW_DAYS,
   SupplierCategory,
   UserRole,
   VerificationStatus,
@@ -26,6 +25,7 @@ import Link from 'next/link';
 
 import { SupplierFilters } from '@/components/supplier-filters';
 import { VerificationActions } from '@/components/verification-actions';
+import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { opsDayMonth, percent } from '@/lib/ops-format';
 import { lastJobLabel, powerLabel } from '@/lib/suppliers';
@@ -88,6 +88,14 @@ export default async function SuppliersPage({
   const session = await getServerSession();
   const canVerify = session?.user.role ? VERIFY_ROLES.includes(session.user.role) : false;
 
+  const thresholds = await getThresholds();
+  const windowDays = thresholds.credentialExpiryWindowDays;
+  const floor = (row: SupplierReliabilityDto | null) =>
+    meetsReliabilityFloor(
+      row,
+      thresholds.reliabilityFloorPercent / 100,
+      thresholds.reliabilityMinAnswered,
+    );
   const [suppliers, reliability] = await Promise.all([
     apiFetch<SupplierRowDto[]>('/suppliers').catch(() => null),
     apiFetch<SupplierReliabilityDto[]>('/quality/supplier-reliability').catch(() => []),
@@ -111,7 +119,7 @@ export default async function SuppliersPage({
     (supplier) =>
       supplier.verificationStatus !== VerificationStatus.Rejected &&
       supplier.credentialExpiresAt !== null &&
-      isCredentialExpiringSoon(new Date(supplier.credentialExpiresAt), now),
+      isCredentialExpiringSoon(new Date(supplier.credentialExpiresAt), now, windowDays),
   );
 
   const rows = all.filter(
@@ -154,7 +162,7 @@ export default async function SuppliersPage({
         </Badge>
       );
     }
-    if (days <= CREDENTIAL_EXPIRY_WINDOW_DAYS) {
+    if (days <= windowDays) {
       return <Badge variant="warning">{t('credential.expiring', { days })}</Badge>;
     }
     return (
@@ -176,15 +184,16 @@ export default async function SuppliersPage({
           : null,
       },
       now,
+      windowDays,
     );
-    if (eligible && !meetsReliabilityFloor(reliabilityById.get(supplier.id) ?? null)) {
+    if (eligible && !floor(reliabilityById.get(supplier.id) ?? null)) {
       return <Badge variant="warning">{t('auto.reliability')}</Badge>;
     }
     if (eligible) return <Badge variant="success">{t('auto.on')}</Badge>;
     if (
       supplier.verificationStatus === VerificationStatus.Verified &&
       supplier.credentialExpiresAt &&
-      isCredentialExpiringSoon(new Date(supplier.credentialExpiresAt), now)
+      isCredentialExpiringSoon(new Date(supplier.credentialExpiresAt), now, windowDays)
     ) {
       return <Badge variant="warning">{t('auto.paused')}</Badge>;
     }
@@ -199,7 +208,7 @@ export default async function SuppliersPage({
     if (!row || row.offers === 0) {
       return <span className="text-muted">{t('table.noReliability')}</span>;
     }
-    const low = row.acceptanceRate < 0.85;
+    const low = row.acceptanceRate < thresholds.reliabilityFloorPercent / 100;
     return (
       <div className="flex min-w-24 flex-col gap-1">
         <span aria-hidden="true" className="block h-1.5 rounded-r-sm bg-neutral-100">
@@ -270,7 +279,7 @@ export default async function SuppliersPage({
         <>
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-warning-500 bg-warning-100 px-4 py-3 text-warning-700">
             <p className="min-w-60 flex-1 text-body-sm">
-              <strong>{t('rule.title')}</strong> {t('rule.body')}
+              <strong>{t('rule.title')}</strong> {t('rule.body', { days: windowDays })}
             </p>
             {expiring.length > 0 ? (
               <Badge variant="warning">
@@ -439,7 +448,10 @@ export default async function SuppliersPage({
               </div>
             )}
             <p className="border-t px-5 py-3 text-caption text-muted">
-              {t('reliabilityNote')}
+              {t('reliabilityNote', {
+                floor: thresholds.reliabilityFloorPercent,
+                min: thresholds.reliabilityMinAnswered,
+              })}
             </p>
           </section>
         </>

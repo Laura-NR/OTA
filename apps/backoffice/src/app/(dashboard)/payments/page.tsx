@@ -18,8 +18,8 @@ import Link from 'next/link';
 
 import { ProofReview } from '@/components/proof-review';
 import { RefundActions } from '@/components/refund-actions';
+import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
-import { getTenantConfig } from '@/lib/tenant';
 import { money, moneyExact, opsDate, opsTime } from '@/lib/ops-format';
 
 const STATUSES = ['PENDING', 'AUTHORIZED', 'PAID', 'FAILED', 'REFUNDED'] as const;
@@ -61,7 +61,11 @@ export default async function PaymentsPage({
     getServerSession(),
   ]);
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
-  const limits = getTenantConfig().payments.refundApproval;
+  const thresholds = await getThresholds();
+  const limits = {
+    singleUpTo: thresholds.refundSingleUpTo,
+    dualUpTo: thresholds.refundDualUpTo,
+  };
 
   const all = entries ?? [];
   const rows = filter ? all.filter((entry) => entry.status === filter) : all;

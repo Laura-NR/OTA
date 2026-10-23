@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { useEffect, useState, type ReactNode } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import { timerCopy, type DeskClock } from '@/lib/desk-clock';
 import { bookingDates, countdown, hoursMinutes, opsTime } from '@/lib/ops-format';
 import { connectEscalation } from '@/lib/socket';
 
@@ -66,8 +67,12 @@ const BUCKET_TEXT: Record<AgingBucketId, string> = {
   over24h: 'text-error-700',
 };
 
-function rowAlert(row: DispatchBoardRowDto, now: Date): EscalationAlert {
-  const alerts = row.serviceItems.map((item) => itemAlert(item, now));
+function rowAlert(
+  row: DispatchBoardRowDto,
+  now: Date,
+  amberThreshold: number,
+): EscalationAlert {
+  const alerts = row.serviceItems.map((item) => itemAlert(item, now, amberThreshold));
   if (alerts.includes('RED')) return 'RED';
   if (alerts.includes('AMBER')) return 'AMBER';
   return 'NONE';
@@ -92,6 +97,8 @@ export interface OpsDeskProps {
   payments: { windowExpired: number; balanceOverdue: number };
   /** M8: open cases' red Unknowns, calls due and parties needing help. */
   disruptions: { overdueUnknown: number; callNow: number; needsHelp: number };
+  /** The M9 timers and amber share in force. */
+  clock: DeskClock;
   canManage: boolean;
 }
 
@@ -109,6 +116,7 @@ export function OpsDesk({
   ofacMissing,
   payments,
   disruptions,
+  clock,
   canManage,
 }: OpsDeskProps) {
   const t = useTranslations('backoffice.dashboard');
@@ -145,7 +153,10 @@ export function OpsDesk({
 
   const now = new Date(nowMs);
   const flagged = rows.flatMap((row) =>
-    row.serviceItems.map((item) => ({ row, alert: itemAlert(item, now) })),
+    row.serviceItems.map((item) => ({
+      row,
+      alert: itemAlert(item, now, clock.amberThreshold),
+    })),
   );
   const red = flagged.filter((entry) => entry.alert === 'RED');
   const amber = flagged.filter((entry) => entry.alert === 'AMBER');
@@ -164,6 +175,7 @@ export function OpsDesk({
     const window = resolveDispatchTimeoutMs({
       now: new Date(row.waitingSince),
       arrivalAt: new Date(row.startDate),
+      timers: clock.timers,
     });
     const { hours, minutes } = hoursMinutes(window);
     return hours > 0 ? t('timerHours', { hours }) : t('timerMinutes', { minutes });
@@ -193,7 +205,7 @@ export function OpsDesk({
     item: DispatchBoardItemDto,
     service: string,
   ) {
-    const alert = itemAlert(item, now);
+    const alert = itemAlert(item, now, clock.amberThreshold);
 
     const reroute =
       canManage &&
@@ -202,7 +214,11 @@ export function OpsDesk({
 
     return (
       <div key={item.id} className="flex min-w-32 flex-col gap-1.5">
-        <ServiceItemStatusBadge item={item} now={now} />
+        <ServiceItemStatusBadge
+          item={item}
+          now={now}
+          amberThreshold={clock.amberThreshold}
+        />
         <span className="truncate text-caption text-secondary">
           {[item.supplierName ?? t('noWorker'), item.province]
             .filter(Boolean)
@@ -239,7 +255,7 @@ export function OpsDesk({
     const deadlines = row.serviceItems
       .filter((item) => item.status === 'OFFERED' && item.deadline)
       .map((item) => new Date(item.deadline!).getTime());
-    const alert = rowAlert(row, now);
+    const alert = rowAlert(row, now, clock.amberThreshold);
     const tone =
       alert === 'RED' ? 'text-error-700' : alert === 'AMBER' ? 'text-warning-700' : '';
 
@@ -373,7 +389,7 @@ export function OpsDesk({
                     <Badge variant="attention">
                       {t('kpi.amber', { count: amber.length })}
                     </Badge>
-                    {t('kpi.amberNote')}
+                    {t('kpi.amberNote', { amber: clock.amberPercent })}
                   </a>
                 </li>
               ) : null}
@@ -453,7 +469,7 @@ export function OpsDesk({
                       {t('kpi.credential', { count: credentials.count })}
                     </Badge>
                     {credentials.soonestDays === null
-                      ? t('kpi.credentialNote')
+                      ? t('kpi.credentialNote', { days: clock.credentialDays })
                       : t('kpi.credentialDays', { days: credentials.soonestDays })}
                   </Link>
                 </li>
@@ -482,7 +498,7 @@ export function OpsDesk({
                   aria-hidden="true"
                   className={cn('h-1.5 w-6 rounded-full', TIMER_FILL[alert])}
                 />
-                {t(`matrix.legend.${alert}`)}
+                {t(`matrix.legend.${alert}`, { amber: clock.amberPercent })}
               </li>
             ))}
           </ul>
@@ -521,7 +537,7 @@ export function OpsDesk({
             </TableHeader>
             <TableBody>
               {rows.map((row) => {
-                const alert = rowAlert(row, now);
+                const alert = rowAlert(row, now, clock.amberThreshold);
                 return (
                   <TableRow
                     key={row.reservationId}
@@ -577,10 +593,13 @@ export function OpsDesk({
             </TableBody>
           </Table>
         )}
-        <p className="border-t px-5 py-3 text-caption text-muted">{t('matrix.rule')}</p>
+        <p className="border-t px-5 py-3 text-caption text-muted">
+          {t('matrix.rule', timerCopy(clock))}
+        </p>
       </section>
 
       <RedispatchPanel
+        clock={clock}
         target={target}
         onClose={() => setTarget(null)}
         onOffered={() => void refresh()}

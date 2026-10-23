@@ -1067,14 +1067,262 @@
     },
     "settings": {
       "title": "Paramètres",
-      "description": "Le manifeste de l'agence et les seuils avec lesquels travaille le bureau.",
-      "readOnly": "Lecture seule. Ces valeurs se modifient dans le manifeste et le code, puis par un déploiement ; les modifier ici, avec une seconde approbation, viendra plus tard.",
+      "description": "Utilisateurs et rôles, permissions, langues, le manifeste de l'agence, les seuils opérationnels et la sécurité.",
+      "tabsLabel": "Sections des paramètres",
+      "tabs": {
+        "users": "Utilisateurs et rôles",
+        "permissions": "Permissions",
+        "locales": "Devises et langues",
+        "manifest": "Manifeste et fonctions",
+        "thresholds": "Approbations et seuils",
+        "security": "Sécurité et audit"
+      },
+      "loadError": "Impossible de charger cette section.",
+      "manifest": {
+        "readOnly": "Le manifeste est le fichier du fork (tenant/agency.config.json) : il change par un commit et un déploiement, pas ici.",
+        "staffDomains": "Domaines d'invitation du personnel",
+        "anyDomain": "tout domaine",
+        "flagsNote": "Les fonctions changent dans le manifeste et s'appliquent au prochain déploiement.",
+        "previewTitle": "agency.config.json · aperçu"
+      },
+      "users": {
+        "title": "{count, plural, one {# utilisateur} other {# utilisateurs}}",
+        "description": "Rôles du personnel uniquement ; prestataires et voyageurs sont dans Fournisseurs et Clients.",
+        "user": "Utilisateur",
+        "role": "Rôle",
+        "passkeys": "Clés d'accès",
+        "lastSignIn": "Dernière connexion",
+        "status": "Statut",
+        "act": "Actions",
+        "never": "jamais",
+        "active": "Actif",
+        "deactivated": "Désactivé",
+        "note": "Un utilisateur désactivé est déconnecté et refusé jusqu'à sa réactivation. La promotion Super Admin passe par une invitation confirmée par un second Super Admin.",
+        "you": "Vous",
+        "roleFor": "Rôle de {name}",
+        "roles": {
+          "SUPER_ADMIN": "Super Admin",
+          "OPERATIONS_ADMIN": "Admin des opérations",
+          "ADMINISTRATIVE_SUPPORT": "Support administratif"
+        },
+        "revokeSessions": "Déconnecter partout",
+        "deactivate": "Désactiver",
+        "reactivate": "Réactiver",
+        "failed": "La modification n'a pas été enregistrée."
+      },
+      "invites": {
+        "title": "Inviter un utilisateur",
+        "listTitle": "Invitations",
+        "empty": "Aucune invitation pour le moment.",
+        "meta": "{role} · invité par {inviter} · jusqu'au {expires}",
+        "states": {
+          "AWAITING_CONFIRMATION": "Attend un second Super Admin",
+          "SENT": "Envoyée",
+          "ACCEPTED": "Acceptée",
+          "REVOKED": "Révoquée",
+          "EXPIRED": "Expirée"
+        },
+        "confirm": "Confirmer et envoyer",
+        "resend": "Renvoyer",
+        "revoke": "Révoquer",
+        "email": "E-mail professionnel",
+        "domains": "Adresses {domains} uniquement.",
+        "anyDomain": "Toute adresse professionnelle ; celle d'un voyageur ou d'un fournisseur est refusée.",
+        "role": "Rôle",
+        "superAdminOption": "Super Admin (nécessite un second Super Admin)",
+        "send": "Envoyer l'invitation · valable 7 jours",
+        "note": "La personne invitée se connecte avec cette adresse et accepte ; le rôle s'applique alors."
+      },
+      "permissions": {
+        "title": "Matrice des permissions",
+        "description": "Ce que chaque rôle peut faire, tel que la plateforme l'applique aujourd'hui.",
+        "capability": "Capacité",
+        "roles": {
+          "superAdmin": "Super Admin",
+          "operations": "Admin des opérations",
+          "support": "Support administratif"
+        },
+        "access": {
+          "yes": "Oui",
+          "view": "Lecture",
+          "no": "Non"
+        },
+        "note": "Lecture seule. Les dérogations par action avec motif et expiration n'existent pas encore.",
+        "rows": {
+          "bookings": {
+            "label": "Réservations et changements de statut",
+            "note": "saisie, transitions, voyageurs, suppléments"
+          },
+          "dispatch": {
+            "label": "Dispatch et réaffectation",
+            "note": "lancer, réaffecter, choisir un prestataire à la main"
+          },
+          "messages": {
+            "label": "Messages avec les voyageurs",
+            "note": "le fil de la réservation et son e-mail de secours"
+          },
+          "suppliers": {
+            "label": "Conformité des fournisseurs",
+            "note": "vérification, ressources, véhicules, disponibilité"
+          },
+          "credentials": {
+            "label": "Envoi de justificatifs",
+            "note": "le support peut envoyer un scan"
+          },
+          "advisories": {
+            "label": "Alertes voyage",
+            "note": "rédiger et approuver ; deux rôles approuvent les niveaux fixés dans les seuils"
+          },
+          "disruptions": {
+            "label": "Cas de perturbation",
+            "note": "ouvrir, rattacher, options, tableau de suivi"
+          },
+          "payments": {
+            "label": "Paiements, preuves et remboursements",
+            "note": "les approbations suivent les limites des seuils"
+          },
+          "catalog": {
+            "label": "Forfaits, catalogue et imports",
+            "note": "publier, prix, médias, import en masse"
+          },
+          "reports": {
+            "label": "Rapports et exports",
+            "note": "analytique, réglementaire, synthèses"
+          },
+          "customers": {
+            "label": "Clients et conservation",
+            "note": "dossiers OFAC, rappels, contrôle de conservation"
+          },
+          "ofacExport": {
+            "label": "Export des attestations OFAC",
+            "note": "l'archive de cinq ans"
+          },
+          "thresholds": {
+            "label": "Seuils opérationnels",
+            "note": "un Super Admin propose, un second applique"
+          },
+          "staff": {
+            "label": "Utilisateurs, rôles et invitations",
+            "note": "une invitation Super Admin nécessite un second Super Admin"
+          }
+        }
+      },
+      "locales": "Langues",
+      "thresholds": {
+        "title": "Seuils en vigueur",
+        "defaultsInForce": "Les valeurs par défaut du code avec les conditions de paiement du manifeste : aucune version n'a encore été appliquée.",
+        "inForce": "Version {version}, appliquée le {when} par {name}.",
+        "rule": "Règle",
+        "value": "En vigueur",
+        "default": "Par défaut",
+        "usedBy": "Utilisé par",
+        "notEnforced": "Pas encore appliqués, donc pas enregistrés : le délai de réponse du voyageur, la revue des remises, la marge minimale et l'expiration des dérogations.",
+        "changeTitle": "Modifier les seuils",
+        "changeDescription": "Un Super Admin propose ; un second Super Admin applique ou rejette. Une seule proposition attend à la fois.",
+        "superOnly": "Seuls les Super Admin modifient les seuils.",
+        "historyTitle": "Historique",
+        "historyLine": "proposée par {name} le {when} · {reason}",
+        "decidedBy": "décidée par {name}",
+        "statuses": {
+          "PROPOSED": "En attente",
+          "APPLIED": "Appliquée",
+          "REJECTED": "Rejetée",
+          "WITHDRAWN": "Retirée"
+        },
+        "loadError": "Impossible de charger les seuils.",
+        "units": {
+          "min": "{value} min",
+          "h": "{value} h",
+          "pct": "{value} %",
+          "days": "{value, plural, one {# jour} other {# jours}}",
+          "months": "{value, plural, one {# mois} other {# mois}}",
+          "count": "{value}"
+        },
+        "groups": {
+          "dispatch": "Dispatch",
+          "suppliers": "Fournisseurs",
+          "payments": "Paiements",
+          "content": "Contenu",
+          "customers": "Clients"
+        },
+        "levels": {
+          "CAUTION": "Prudence et critique",
+          "CRITICAL": "Critique uniquement"
+        },
+        "bounds": "{min}–{max}",
+        "reason": "Motif",
+        "reasonHint": "Le second Super Admin le lit avant d'appliquer.",
+        "noChanges": "Aucun changement pour le moment.",
+        "changes": "Changements : {list}.",
+        "propose": "Proposer · nécessite un second Super Admin",
+        "reset": "Revenir aux valeurs de la spécification",
+        "proposeNote": "Les valeurs appliquées prennent effet en moins d'une minute. Un délai de grâce plus court s'applique au prochain contrôle quotidien.",
+        "pendingTitle": "La version {version} attend un second Super Admin",
+        "pendingBy": "Proposée par {name} : {reason}",
+        "pendingMine": "Un autre Super Admin l'applique ou la rejette ; vous pouvez la retirer.",
+        "pendingOther": "L'appliquer met ces valeurs en vigueur sur toute la plateforme.",
+        "withdraw": "Retirer",
+        "apply": "Appliquer",
+        "reject": "Rejeter",
+        "failed": "La modification n'a pas été enregistrée.",
+        "labels": {
+          "dispatchTimeoutMinutes": "Délai de dispatch · standard",
+          "shortNoticeTimeoutMinutes": "Délai de dispatch · préavis court",
+          "shortNoticeWindowHours": "Préavis court si l'arrivée est dans moins de",
+          "amberPercent": "Alerte orange à",
+          "paymentWindowHours": "Délai de paiement après le lien",
+          "refundSingleUpTo": "Remboursement · un approbateur jusqu'à",
+          "refundDualUpTo": "Remboursement · deux approbateurs jusqu'à",
+          "credentialExpiryWindowDays": "Pause avant l'expiration du justificatif",
+          "advisoryDualApprovalFrom": "Alerte nécessitant deux approbations",
+          "retentionTriggerMonths": "Avis de conservation après",
+          "retentionGraceDays": "Délai de grâce de conservation",
+          "resourcesStaleDays": "Ressources périmées après",
+          "reliabilityFloorPercent": "Seuil de fiabilité de la répartition auto",
+          "reliabilityMinAnswered": "Offres répondues avant le seuil"
+        },
+        "used": {
+          "dispatchTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
+          "shortNoticeTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
+          "shortNoticeWindowHours": "Dispatch, Tableau de bord, Réservation",
+          "amberPercent": "Matrice du tableau de bord, Réservations",
+          "paymentWindowHours": "Paiements, e-mails de paiement",
+          "refundSingleUpTo": "Paiements › Remboursements",
+          "refundDualUpTo": "Paiements › Remboursements",
+          "credentialExpiryWindowDays": "Fournisseurs, dispatch, Tableau de bord, contrôle d'expiration",
+          "advisoryDualApprovalFrom": "Contenu › Alertes",
+          "retentionTriggerMonths": "Clients, contrôle de conservation",
+          "retentionGraceDays": "Clients, contrôle de conservation",
+          "resourcesStaleDays": "Fournisseurs, Perturbations, Forfaits du site",
+          "reliabilityFloorPercent": "Dispatch, Fournisseurs, liste de réaffectation",
+          "reliabilityMinAnswered": "Dispatch, Fournisseurs, liste de réaffectation"
+        }
+      },
+      "security": {
+        "sessionsTitle": "Sessions et connexion",
+        "staffSession": "Session du personnel",
+        "travelerSession": "Session voyageur",
+        "travelerSessionValue": "7 jours (Better Auth)",
+        "signInLink": "Lien de connexion",
+        "deactivation": "Utilisateurs désactivés",
+        "deactivationValue": "Déconnectés et refusés",
+        "hours": "{count, plural, one {# heure} other {# heures}} après la connexion",
+        "minutes": "{count} minutes, usage unique",
+        "deferred": "Le verrouillage d'inactivité sur un PC partagé, les clés d'accès obligatoires, la liste d'IP autorisées et les e-mails de nouvel appareil n'existent pas encore.",
+        "integrationsTitle": "Intégrations et clés",
+        "configured": "Configurée",
+        "notConfigured": "Non définie",
+        "integrationsNote": "Les secrets vivent dans l'environnement, jamais ici ; en changer un est un déploiement.",
+        "auditTitle": "Journal d'audit",
+        "auditDescription": "Les 50 derniers événements de la plateforme.",
+        "system": "Système",
+        "loadError": "Impossible de charger cette section."
+      },
       "agency": "Agence",
       "agencyName": "Nom",
       "license": "Licence MINTUR",
       "primaryColor": "Couleur de marque",
       "palette": "Palette · arrondi",
-      "locales": "Langues",
       "primaryLocale": "principale {locale}",
       "supportEmail": "E-mail d'assistance",
       "supportPhone": "Téléphone d'assistance",
@@ -1082,22 +1330,24 @@
       "features": "Fonctions",
       "yes": "activée",
       "no": "désactivée",
-      "thresholds": "Seuils opérationnels",
-      "thresholdsDescription": "Minuteurs de répartition, alerte ambre, fenêtres des justificatifs et de conservation.",
-      "dispatchTimeout": "Expiration de l'offre",
-      "hours": "{count, plural, one {# heure} other {# heures}}",
-      "shortNoticeTimeout": "Expiration à court préavis",
-      "shortNotice": "{minutes} min si la prestation commence dans moins de {hours} h",
-      "amber": "Alerte ambre à",
-      "credentialWindow": "Fenêtre d'expiration des justificatifs",
-      "days": "{count, plural, one {# jour} other {# jours}}",
-      "retention": "Conservation des données",
-      "retentionRule": "Avis {months} mois après le dernier voyage, anonymisation {days} jours plus tard ; garder le compte le prolonge de {extension} mois",
-      "payments": "Moyens de paiement",
       "bankTransfer": "Coordonnées de virement renseignées",
       "cardRail": "Carte bancaire",
       "cardMock": "activée (simulée jusqu'à la passerelle carte)",
-      "emergency": "Contacts d'urgence"
+      "emergency": "Contacts d'urgence",
+      "languages": {
+        "currenciesTitle": "Devises",
+        "currencies": "EUR uniquement : prix, factures et grand livre sont en euros.",
+        "currenciesNote": "Les devises d'affichage avec un taux quotidien et un taux figé à l'acompte viendront plus tard ; elles changent l'échéancier et demandent une décision financière.",
+        "title": "Langues",
+        "description": "Les textes de la plateforme par langue ; les pages de l'agence sont vérifiées à leur publication.",
+        "locale": "Langue",
+        "coverage": "Couverture",
+        "status": "Statut",
+        "primary": "principale",
+        "live": "Active",
+        "off": "Non proposée",
+        "note": "La couverture compte les textes propres à la plateforme par rapport à l'anglais. Les langues s'activent dans le manifeste."
+      }
     },
     "locale": {
       "label": "Langue"
@@ -1214,14 +1464,14 @@
         "clocks": {
           "DRAFT": "—",
           "ITINERARY_SUBMITTED": "—",
-          "DISPATCH_IN_PROGRESS": "2 h par offre · 30 min si l'arrivée a lieu dans moins de 48 h · orange à 75 %",
+          "DISPATCH_IN_PROGRESS": "{standard} par offre · {short} si l'arrivée a lieu dans moins de {window} h · orange à {amber} %",
           "ASSEMBLY_AND_ESCALATION": "—",
           "SECURED_AND_INVOICED": "—",
           "PENDING_PAYMENT": "—",
           "ACTION_REQUIRED": "Rouge sur le tableau de bord jusqu'au nouveau dispatch",
           "CONFIRMED": "Documents à la confirmation",
           "IN_PROGRESS": "—",
-          "COMPLETED": "Avis de conservation à 6 mois, puis 30 jours de grâce",
+          "COMPLETED": "Avis de conservation à {months} mois, puis {days} jours de grâce",
           "CANCELLED": "—"
         }
       }
@@ -1570,7 +1820,7 @@
       "loadError": "Impossible de charger les fournisseurs.",
       "rule": {
         "title": "Règle d'expiration (spec §4.5) :",
-        "body": "un justificatif Formatur, une carte RTN ou un permis de transport expirant sous 30 jours met le travailleur en pause pour la répartition automatique. L'affectation manuelle reste possible avec une note ; aucun bon n'est jamais généré pour un prestataire sans licence.",
+        "body": "un justificatif Formatur, une carte RTN ou un permis de transport expirant sous {days} jours met le travailleur en pause pour la répartition automatique. L'affectation manuelle reste possible avec une note ; aucun bon n'est jamais généré pour un prestataire sans licence.",
         "pausedNow": "{count} en pause · {names}"
       },
       "categories": {
@@ -1614,7 +1864,7 @@
         "unavailable": "Inactif · indisponible",
         "reliability": "En pause · fiabilité"
       },
-      "reliabilityNote": "La fiabilité est le taux d'acceptation des offres répondues. Sous 85 %, dès que le fournisseur a répondu à 5 offres, la répartition automatique l'écarte ; le bureau peut toujours lui proposer une mission.",
+      "reliabilityNote": "La fiabilité est le taux d'acceptation des offres répondues. Sous {floor} %, dès que le fournisseur a répondu à {min} offres, la répartition automatique l'écarte ; le bureau peut toujours lui proposer une mission.",
       "empty": {
         "title": "Aucun fournisseur ne correspond",
         "hint": "Essayez d'effacer un filtre."
@@ -1687,10 +1937,10 @@
         "red": "Rouge · {count}",
         "redNote": "délai dépassé + refus",
         "amber": "Orange · {count}",
-        "amberNote": "offre au-delà de 75 % de son délai",
+        "amberNote": "offre au-delà de {amber} % de son délai",
         "credential": "Licence · {count}",
         "credentialDays": "la plus proche expire dans {days, plural, one {# jour} other {# jours}}",
-        "credentialNote": "une licence expire dans moins de 30 jours",
+        "credentialNote": "une licence expire dans moins de {days} jours",
         "noAlerts": "Aucune alerte pour le moment.",
         "ofac": "{count, plural, one {# réservation} other {# réservations}} · OFAC manquant",
         "ofacNote": "paiement et bons en attente",
@@ -1708,7 +1958,7 @@
         "description": "Réservations en DISPATCH_IN_PROGRESS, ASSEMBLY_AND_ESCALATION ou ACTION_REQUIRED · une colonne par service · délais à l'heure de La Havane",
         "legend": {
           "NONE": "proposé, dans les temps",
-          "AMBER": "orange ≥ 75 %",
+          "AMBER": "orange ≥ {amber} %",
           "RED": "rouge 100 % ou refusé"
         },
         "live": "En direct",
@@ -1725,7 +1975,7 @@
         "timer": "Délai",
         "open": "Ouvrir",
         "started": "{timer} · démarré à {time}",
-        "rule": "Délai : 2 h en standard, 30 min si l'arrivée a lieu dans moins de 48 h. Orange à 75 %, rouge à 100 % ou en cas de refus. Un nouveau dispatch relance le délai pour le nouveau prestataire seulement ; la réservation garde son horloge d'origine."
+        "rule": "Délai : {standard} en standard, {short} si l'arrivée a lieu dans moins de {window} h. Orange à {amber} %, rouge à 100 % ou en cas de refus. Un nouveau dispatch relance le délai pour le nouveau prestataire seulement ; la réservation garde son horloge d'origine."
       },
       "status": {
         "offered": "Proposé · {elapsed}",
@@ -1751,7 +2001,7 @@
       "redispatch": "Relancer le dispatch",
       "panel": {
         "title": "Relancer le dispatch : {what}",
-        "rule": "Seulement les prestataires qualifiés, vérifiés et libres chaque jour du service ; les licences qui expirent dans moins de 30 jours sont exclues automatiquement. Un prestataire sous 85 % d'acceptation (après 5 réponses) est écarté de la répartition automatique mais peut être proposé ici.",
+        "rule": "Seulement les prestataires qualifiés, vérifiés et libres chaque jour du service ; les licences qui expirent dans moins de {days} jours sont exclues automatiquement. Un prestataire sous {floor} % d'acceptation (après {min} réponses) est écarté de la répartition automatique mais peut être proposé ici.",
         "close": "Fermer",
         "loading": "Chargement des prestataires qualifiés…",
         "empty": "Aucun autre prestataire qualifié n'est libre pour ce service pour le moment.",
@@ -1765,7 +2015,7 @@
         "offerFailed": "L'offre n'a pas pu être envoyée.",
         "acceptance": "{rate} % d'acceptation",
         "noAnswers": "Aucune offre répondue pour l'instant",
-        "belowFloor": "Sous 85 % · manuel uniquement"
+        "belowFloor": "Sous {floor} % · manuel uniquement"
       },
       "tasks": {
         "title": "Tâches du bureau",
@@ -1777,12 +2027,12 @@
         },
         "credential": {
           "title": "La licence expire le {date} · {name}",
-          "body": "Le dispatch automatique écarte ce prestataire à partir de 30 jours avant l'expiration.",
+          "body": "Le dispatch automatique écarte ce prestataire à partir de {days} jours avant l'expiration.",
           "action": "Inspecter"
         },
         "retention": {
           "title": "Conservation RGPD · {count, plural, one {# compte anonymisé} other {# comptes anonymisés}} à partir du {date}",
-          "body": "6 mois après COMPLETED, 30 jours de grâce et aucun clic sur « garder mon compte ». Rien à faire sauf si un voyageur écrit.",
+          "body": "{months} mois après COMPLETED, {days} jours de grâce et aucun clic sur « garder mon compte ». Rien à faire sauf si un voyageur écrit.",
           "action": "Voir"
         }
       }
@@ -1850,8 +2100,8 @@
       "autoPaused": "En pause · expiration",
       "autoOff": "Inactif · non vérifié",
       "autoUnavailable": "Inactif · indisponible",
-      "autoWhyOn": "Éligible : vérifié et justificatif valide plus de 30 jours.",
-      "autoWhyPaused": "Le justificatif expire dans 30 jours. La répartition automatique est en pause jusqu'au renouvellement et à la vérification ; l'affectation manuelle reste possible avec une note.",
+      "autoWhyOn": "Éligible : vérifié et justificatif valide plus de {days} jours.",
+      "autoWhyPaused": "Le justificatif expire dans {days} jours. La répartition automatique est en pause jusqu'au renouvellement et à la vérification ; l'affectation manuelle reste possible avec une note.",
       "autoWhyOff": "Pas de répartition tant que le justificatif n'est pas approuvé et l'appel d'intégration effectué.",
       "autoWhyUnavailable": "Le travailleur est marqué indisponible.",
       "reliabilityTitle": "Score de fiabilité",
@@ -1899,7 +2149,7 @@
         "confirmed": "Dernière confirmation {when} · {channel} · {name}",
         "confirmedNoName": "Dernière confirmation {when} · {channel}",
         "never": "Jamais confirmé.",
-        "stale": "Plus de 7 jours · confirmer par téléphone",
+        "stale": "Plus de {days} jours · confirmer par téléphone",
         "casaNote": "Ces champs alimentent les ressources de la console de perturbations et le filtre d'énergie de secours du registre.",
         "driverNote": "La console de perturbations lit la réserve pour ses chauffeurs d'astreinte. Le bureau la saisit jusqu'à l'autodéclaration hebdomadaire dans l'appli fournisseur.",
         "failed": "Impossible d'enregistrer la confirmation."
@@ -1923,7 +2173,7 @@
         "insuranceEnds": "L'assurance expire dans {days} j"
       },
       "autoReliability": "En pause · fiabilité",
-      "autoWhyReliability": "Moins de 85 % d'acceptation sur au moins 5 offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation."
+      "autoWhyReliability": "Moins de {floor} % d'acceptation sur au moins {min} offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation."
     },
     "reports": {
       "title": "Rapports",
@@ -2084,15 +2334,15 @@
       "customItinerary": "Itinéraire sur mesure",
       "retentionTitle": "Conservation RGPD",
       "retentionDetail": {
-        "ACTIVE": "Le compte est actif. Le délai de conservation démarre 6 mois après le dernier voyage terminé.",
+        "ACTIVE": "Le compte est actif. Le délai de conservation démarre {months} mois après le dernier voyage terminé.",
         "NOTICE_DUE": "Un avis de maintien est dû ; le voyageur peut confirmer pour prolonger le compte de 12 mois.",
-        "GRACE_PERIOD": "Un avis a été envoyé et le délai de grâce de 30 jours court ; sans confirmation, le dossier est anonymisé.",
+        "GRACE_PERIOD": "Un avis a été envoyé et le délai de grâce de {days} jours court ; sans confirmation, le dossier est anonymisé.",
         "PURGE_DUE": "Le délai de grâce est écoulé ; le dossier doit être anonymisé.",
         "ANONYMIZED": "Le dossier a été anonymisé ; les réservations et les totaux fiscaux sont conservés."
       },
       "lastCompleted": "Dernier voyage terminé",
       "noCompleted": "Aucun voyage terminé pour l'instant",
-      "retentionNote": "6 mois après le dernier voyage terminé, un e-mail de maintien est envoyé ; après 30 jours de grâce, le compte est anonymisé. Spec §3.5.",
+      "retentionNote": "{months} mois après le dernier voyage terminé, un e-mail de maintien est envoyé ; après {days} jours de grâce, le compte est anonymisé. Spec §3.5.",
       "later": "Les préférences, les documents de passeport et l'historique des communications arriveront avec leurs modèles ; le compte, ses voyages avec leur statut OFAC, le journal des consentements et la conservation sont affichés aujourd'hui.",
       "retentionStatus": {
         "ACTIVE": "Actif",
@@ -2146,7 +2396,7 @@
     },
     "retention": {
       "title": "Conservation des données",
-      "description": "Cycle de vie RGPD des voyageurs : un avis de maintien 6 mois après la dernière réservation terminée, 30 jours de grâce, puis anonymisation.",
+      "description": "Cycle de vie RGPD des voyageurs : un avis de maintien {months} mois après la dernière réservation terminée, {days} jours de grâce, puis anonymisation.",
       "pipeline": "Pipeline de conservation",
       "pipelineDescription": "Voyageurs avec un avis à envoyer, dans la période de grâce ou à anonymiser. Les enregistrements anonymisés conservent leurs réservations et totaux fiscaux.",
       "empty": "Aucun voyageur dans le cycle de conservation.",
@@ -2479,6 +2729,19 @@
       "saved": "Traduction enregistrée.",
       "saveFailed": "La traduction n'a pas pu être enregistrée.",
       "onlySource": "L'agence n'a pas d'autre langue vers laquelle traduire."
+    },
+    "invite": {
+      "title": "Rejoindre le bureau",
+      "description": "Une invitation au bureau des opérations.",
+      "noToken": "Ce lien ne contient pas d'invitation. Demandez-en une nouvelle.",
+      "signInFirst": "Connectez-vous avec l'adresse qui a reçu l'invitation, puis revenez ici pour accepter.",
+      "signIn": "Se connecter pour accepter",
+      "signedInAs": "Connecté en tant que {email}.",
+      "accept": "Accepter l'invitation",
+      "accepted": "Bienvenue : vous êtes au bureau en tant que {role}.",
+      "openDesk": "Ouvrir le bureau",
+      "wrongAddress": "Connecté avec une autre adresse ? Déconnectez-vous et utilisez l'adresse invitée.",
+      "failed": "L'invitation n'a pas pu être acceptée."
     }
   },
   "conditions": {
@@ -3224,7 +3487,7 @@
       "stale": "Confirmer par téléphone",
       "notFree": "Indisponible aujourd'hui",
       "paused": "En pause · expiration",
-      "rule": "D'après le registre des fournisseurs : fournisseurs vérifiés travaillant dans la province, avec un justificatif valide et une réserve confirmée. Les confirmations récentes d'abord ; au-delà de 7 jours, il faut appeler."
+      "rule": "D'après le registre des fournisseurs : fournisseurs vérifiés travaillant dans la province, avec un justificatif valide et une réserve confirmée. Les confirmations récentes d'abord ; au-delà de {days} jours, il faut appeler."
     }
   },
   "advisories": {

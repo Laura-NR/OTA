@@ -401,7 +401,7 @@ const ROUTES: Route[] = [
     path: `/settings/operating/versions/${SETTINGS_VERSION}/withdraw`,
     allowed: 'superAdmin',
   },
-  { method: 'get', path: '/settings/integrations', allowed: 'superAdmin' },
+  { method: 'get', path: '/settings/security', allowed: 'superAdmin' },
   { method: 'get', path: '/audit-log', allowed: 'superAdmin' },
   // M9 staff: Super Admin only, except accepting an invitation.
   { method: 'get', path: '/staff', allowed: 'superAdmin' },

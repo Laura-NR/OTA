@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@ota/db';
-import type {
-  AuditLogQuery,
-  IntegrationStatusDto,
-  SystemAuditEntryDto,
-} from '@ota/schemas';
+import type { AuditLogQuery, SecurityStatusDto, SystemAuditEntryDto } from '@ota/schemas';
 
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -53,7 +49,19 @@ export class AuditLogService {
     }));
   }
 
-  integrations(env: NodeJS.ProcessEnv = process.env): IntegrationStatusDto[] {
-    return INTEGRATION_KEYS.map((key) => ({ key, configured: Boolean(env[key]) }));
+  /** The staff session and sign-in link limits as configured, and the integrations. */
+  security(env: NodeJS.ProcessEnv = process.env): SecurityStatusDto {
+    const positive = (value: string | undefined, fallback: number) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+    };
+    return {
+      staffSessionHours: positive(env.STAFF_SESSION_HOURS, 12),
+      signInLinkMinutes: positive(env.MAGIC_LINK_EXPIRES_MINUTES, 10),
+      integrations: INTEGRATION_KEYS.map((key) => ({
+        key,
+        configured: Boolean(env[key]),
+      })),
+    };
   }
 }

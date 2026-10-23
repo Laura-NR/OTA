@@ -22,6 +22,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import type { DeskClock } from '@/lib/desk-clock';
 import { bookingDates, hoursMinutes, money } from '@/lib/ops-format';
 
 import { StartDispatchButton } from './dispatch-controls';
@@ -56,6 +57,8 @@ export interface BookingServicesProps {
   items: ReservationDeskItemDto[];
   offers: Record<string, ItemOffer>;
   serverNow: number;
+  /** The M9 timers and amber share in force. */
+  clock: DeskClock;
   canManage: boolean;
 }
 
@@ -74,6 +77,7 @@ export function BookingServices({
   items,
   offers,
   serverNow,
+  clock,
   canManage,
 }: BookingServicesProps) {
   const t = useTranslations('backoffice.reservation.services');
@@ -91,7 +95,11 @@ export function BookingServices({
   const now = new Date(nowMs);
   const dispatching = status !== 'DRAFT' && status !== 'ITINERARY_SUBMITTED';
   const { hours, minutes } = hoursMinutes(
-    resolveDispatchTimeoutMs({ now, arrivalAt: new Date(startDate) }),
+    resolveDispatchTimeoutMs({
+      now,
+      arrivalAt: new Date(startDate),
+      timers: clock.timers,
+    }),
   );
   const timerLabel =
     hours > 0
@@ -127,12 +135,12 @@ export function BookingServices({
         <TableBody>
           {items.map((item) => {
             const offer = offers[item.id];
-            const clock = {
+            const itemClock = {
               status: item.status,
               offeredAt: offer?.offeredAt ?? null,
               deadline: offer?.deadline ?? null,
             };
-            const alert = itemAlert(clock, now);
+            const alert = itemAlert(itemClock, now, clock.amberThreshold);
             const service = dashboard(`matrix.columns.${SERVICE_KEYS[item.serviceType]}`);
             const reroute =
               canManage &&
@@ -170,7 +178,11 @@ export function BookingServices({
                 </TableCell>
                 <TableCell className="align-top">
                   <div className="flex min-w-36 flex-col gap-1.5">
-                    <ServiceItemStatusBadge item={clock} now={now} />
+                    <ServiceItemStatusBadge
+                      item={itemClock}
+                      now={now}
+                      amberThreshold={clock.amberThreshold}
+                    />
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-right align-top font-mono">
@@ -218,6 +230,7 @@ export function BookingServices({
       </Table>
       <p className="px-5 text-caption text-muted">{t('rule')}</p>
       <RedispatchPanel
+        clock={clock}
         target={target}
         onClose={() => setTarget(null)}
         onOffered={() => router.refresh()}

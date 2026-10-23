@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { getThresholds } from '@/lib/operating';
 import { CertificationReminderButton } from '@/components/certification-reminder-button';
 import { StatusBadge } from '@/components/status-badge';
 import { apiFetch } from '@/lib/api';
@@ -44,6 +45,11 @@ export default async function CustomerDetailPage({
 }) {
   const { id } = await params;
   const t = await getTranslations('backoffice.customers');
+  const thresholds = await getThresholds();
+  const retentionCopy = {
+    months: thresholds.retentionTriggerMonths,
+    days: thresholds.retentionGraceDays,
+  };
   const locale = await getLocale();
 
   const customer = await apiFetch<CustomerDetailDto>(`/customers/${id}`).catch(
@@ -192,7 +198,7 @@ export default async function CustomerDetailPage({
           </Badge>
         </div>
         <p className="text-body-sm text-secondary">
-          {t(`retentionDetail.${customer.retentionStatus}`)}
+          {t(`retentionDetail.${customer.retentionStatus}`, retentionCopy)}
         </p>
         <dl className="grid grid-cols-2 gap-4 text-body-sm">
           <div>
@@ -204,7 +210,7 @@ export default async function CustomerDetailPage({
             </dd>
           </div>
         </dl>
-        <p className="text-caption text-muted">{t('retentionNote')}</p>
+        <p className="text-caption text-muted">{t('retentionNote', retentionCopy)}</p>
       </section>
 
       <section className="flex min-w-0 flex-col gap-3 rounded-lg border bg-surface px-5 py-4">

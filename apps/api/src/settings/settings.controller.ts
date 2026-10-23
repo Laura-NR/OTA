@@ -14,7 +14,7 @@ import {
   auditLogQuerySchema,
   proposeSettingsSchema,
   type AuditLogQuery,
-  type IntegrationStatusDto,
+  type SecurityStatusDto,
   type OperatingSettingsDto,
   type ProposeSettingsRequest,
   type SettingsVersionDto,
@@ -96,10 +96,10 @@ export class SettingsController {
     return this.settings.decide(actor, id, 'WITHDRAW');
   }
 
-  @Get('settings/integrations')
+  @Get('settings/security')
   @Roles(UserRole.SuperAdmin)
-  integrations(): IntegrationStatusDto[] {
-    return this.audit.integrations();
+  security(): SecurityStatusDto {
+    return this.audit.security();
   }
 
   @Get('audit-log')
