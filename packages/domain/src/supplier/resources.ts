@@ -136,9 +136,13 @@ export function backupHoursPerDay(facts: PowerFacts): number {
   return 0;
 }
 
-/** True once a confirmation is older than seven days (D2). */
-export function isResourcesStale(confirmedAt: Date, now: Date): boolean {
-  return now.getTime() - confirmedAt.getTime() > RESOURCES_STALE_DAYS * DAY_MS;
+/** True once a confirmation is older than seven days (D2), or `staleDays` (M9). */
+export function isResourcesStale(
+  confirmedAt: Date,
+  now: Date,
+  staleDays: number = RESOURCES_STALE_DAYS,
+): boolean {
+  return now.getTime() - confirmedAt.getTime() > staleDays * DAY_MS;
 }
 
 /** A service item assigned to the supplier, as the job history reads it. */
@@ -194,11 +198,12 @@ export interface RankedResource {
 export function rankResources<T extends RankedResource>(
   resources: readonly T[],
   now: Date,
+  staleDays: number = RESOURCES_STALE_DAYS,
 ): T[] {
   return [...resources].sort((a, b) => {
     const stale =
-      Number(isResourcesStale(a.confirmedAt, now)) -
-      Number(isResourcesStale(b.confirmedAt, now));
+      Number(isResourcesStale(a.confirmedAt, now, staleDays)) -
+      Number(isResourcesStale(b.confirmedAt, now, staleDays));
     if (stale !== 0) return stale;
     if (a.amount !== b.amount) return b.amount - a.amount;
     return a.name.localeCompare(b.name);
@@ -280,9 +285,10 @@ export function publicBackupPower(
   facts: PowerFacts | null,
   confirmedAt: Date | null,
   now: Date,
+  staleDays: number = RESOURCES_STALE_DAYS,
 ): PublicBackupPower | null {
   if (category !== SupplierCategory.HomestayHost || !facts || !confirmedAt) return null;
-  if (isResourcesStale(confirmedAt, now)) return null;
+  if (isResourcesStale(confirmedAt, now, staleDays)) return null;
   const power = supplierPower(category, facts);
   if (power.kind === 'SOLAR') return { kind: 'SOLAR', hoursPerDay: null };
   if (power.kind === 'GENERATOR')

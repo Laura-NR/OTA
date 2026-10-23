@@ -54,16 +54,29 @@ export type AdvisoryApprovalDecision =
   { state: 'PUBLISH' } | { state: 'PENDING'; missing: AdvisoryApprovalNeed[] };
 
 /**
- * Where an advisory stands after its approvals (D4). INFO and CAUTION publish
- * on one Operations Admin or Super Admin approval. CRITICAL needs an Operations
- * Admin and a Super Admin, two different people, and publishes on the second.
+ * Whether a severity needs two approvals: CRITICAL always, CAUTION too when
+ * the M9 setting starts dual approval there.
+ */
+export function advisoryNeedsDualApproval(
+  severity: AdvisorySeverity,
+  dualFrom: 'CAUTION' | 'CRITICAL' = 'CRITICAL',
+): boolean {
+  return severity === 'CRITICAL' || (dualFrom === 'CAUTION' && severity === 'CAUTION');
+}
+
+/**
+ * Where an advisory stands after its approvals (D4). A single-approval
+ * severity publishes on one Operations Admin or Super Admin approval; a dual
+ * one (CRITICAL, or from CAUTION per `dualFrom`) needs an Operations Admin and
+ * a Super Admin, two different people, and publishes on the second.
  */
 export function advisoryApprovalDecision(
   severity: AdvisorySeverity,
   votes: readonly AdvisoryApprovalVote[],
+  dualFrom: 'CAUTION' | 'CRITICAL' = 'CRITICAL',
 ): AdvisoryApprovalDecision {
   const counted = votes.filter((vote) => ADVISORY_APPROVER_ROLES.includes(vote.role));
-  if (severity !== 'CRITICAL') {
+  if (!advisoryNeedsDualApproval(severity, dualFrom)) {
     return counted.length > 0
       ? { state: 'PUBLISH' }
       : { state: 'PENDING', missing: ['APPROVER'] };
@@ -87,14 +100,15 @@ export type AdvisoryApprovalRefusal =
 
 /**
  * Why this person's approval cannot be added, or null. A support role never
- * approves; nobody approves twice; on a CRITICAL advisory a second approval
- * from the role already given would not move it, so it is refused rather than
- * recorded as if it counted.
+ * approves; nobody approves twice; on a dual-approval advisory a second
+ * approval from the role already given would not move it, so it is refused
+ * rather than recorded as if it counted.
  */
 export function advisoryApprovalRefusal(
   severity: AdvisorySeverity,
   votes: readonly AdvisoryApprovalVote[],
   next: AdvisoryApprovalVote,
+  dualFrom: 'CAUTION' | 'CRITICAL' = 'CRITICAL',
 ): AdvisoryApprovalRefusal | null {
   if (!ADVISORY_APPROVER_ROLES.includes(next.role)) {
     return 'ROLE';
@@ -102,7 +116,10 @@ export function advisoryApprovalRefusal(
   if (votes.some((vote) => vote.approverId === next.approverId)) {
     return 'ALREADY_APPROVED';
   }
-  if (severity === 'CRITICAL' && votes.some((vote) => vote.role === next.role)) {
+  if (
+    advisoryNeedsDualApproval(severity, dualFrom) &&
+    votes.some((vote) => vote.role === next.role)
+  ) {
     return 'ROLE_ALREADY_APPROVED';
   }
   return null;

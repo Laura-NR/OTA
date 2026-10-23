@@ -57,9 +57,14 @@ export interface DispatchEligibilityInput {
 }
 
 /**
- * True only when a worker may receive an automated dispatch.
+ * True only when a worker may receive an automated dispatch. `windowDays` is
+ * the expiry pause (M9), 30 days by default.
  */
-export function canAutoDispatch(input: DispatchEligibilityInput, now: Date): boolean {
+export function canAutoDispatch(
+  input: DispatchEligibilityInput,
+  now: Date,
+  windowDays: number = CREDENTIAL_EXPIRY_WINDOW_DAYS,
+): boolean {
   if (input.verificationStatus !== VerificationStatus.Verified) {
     return false;
   }
@@ -69,5 +74,5 @@ export function canAutoDispatch(input: DispatchEligibilityInput, now: Date): boo
   if (input.credentialExpiresAt === null) {
     return true;
   }
-  return !isCredentialExpiringSoon(input.credentialExpiresAt, now);
+  return !isCredentialExpiringSoon(input.credentialExpiresAt, now, windowDays);
 }

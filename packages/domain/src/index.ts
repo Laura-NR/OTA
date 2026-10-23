@@ -44,6 +44,7 @@ export {
 export {
   AMBER_THRESHOLD,
   DEFAULT_DISPATCH_TIMEOUT_MS,
+  type DispatchTimers,
   SHORT_NOTICE_DISPATCH_TIMEOUT_MS,
   SHORT_NOTICE_WINDOW_MS,
   escalationAlert,
@@ -229,9 +230,11 @@ export {
   type MonthRange,
 } from './time/ops-calendar';
 export {
+  DEFAULT_RETENTION_POLICY,
   RETENTION_EXTENSION_MONTHS,
   RETENTION_GRACE_DAYS,
   RETENTION_REMINDER_DAYS,
+  RETENTION_REMINDER_LEAD_DAYS,
   RETENTION_TRIGGER_MONTHS,
   addDays,
   addMonths,
@@ -241,6 +244,7 @@ export {
   retentionPurgeAt,
   retentionStatus,
   type RetentionClock,
+  type RetentionPolicy,
   type RetentionStatus,
 } from './retention/retention';
 export {
@@ -336,6 +340,7 @@ export {
   advisoryCoversProvinces,
   advisoryDisplayStatus,
   advisoryMissingTranslations,
+  advisoryNeedsDualApproval,
   advisoryReachesBooking,
   advisoryRecipients,
   advisoryReference,
@@ -393,3 +398,39 @@ export {
   type TravelerChoiceRefusal,
   type TravelerSafety,
 } from './disruptions/disruption';
+export {
+  ADVISORY_DUAL_APPROVAL_LEVELS,
+  DEFAULT_OPERATING_THRESHOLDS,
+  OPERATING_THRESHOLD_KEYS,
+  SETTINGS_VERSION_STATUSES,
+  changedThresholds,
+  dispatchTimerPolicy,
+  settingsDecisionRefusal,
+  thresholdsIssues,
+  type AdvisoryDualApprovalLevel,
+  type OperatingThresholds,
+  type SettingsDecision,
+  type SettingsDecisionRefusal,
+  type SettingsVersionStatus,
+  type ThresholdsIssue,
+} from './settings/operating';
+export {
+  CLOSED_INVITE_RETENTION_DAYS,
+  INVITE_STATES,
+  INVITE_VALID_DAYS,
+  STAFF_ROLES,
+  STAFF_SESSION_HOURS,
+  emailDomainAllowed,
+  inviteAcceptRefusal,
+  inviteClosedAt,
+  inviteConfirmRefusal,
+  inviteState,
+  isInvitePurgeDue,
+  isStaffRole,
+  isStaffSessionExpired,
+  leavesNoSuperAdmin,
+  type InviteAcceptRefusal,
+  type InviteConfirmRefusal,
+  type InviteFacts,
+  type InviteState,
+} from './settings/staff';

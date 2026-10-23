@@ -82,6 +82,8 @@ export interface ServiceItemClock {
   offeredAt: Date | null;
   deadline: Date | null;
   now: Date;
+  /** The share of the timer that turns amber (M9); 0.75 when omitted. */
+  amberThreshold?: number;
 }
 
 /**
@@ -93,12 +95,13 @@ export function serviceItemAlert({
   offeredAt,
   deadline,
   now,
+  amberThreshold,
 }: ServiceItemClock): EscalationAlert {
   if (status === ServiceItemStatus.Declined || status === ServiceItemStatus.Timeout) {
     return 'RED';
   }
   if (status === ServiceItemStatus.Offered && offeredAt && deadline) {
-    return escalationAlert({ offeredAt, deadline, now });
+    return escalationAlert({ offeredAt, deadline, now, amberThreshold });
   }
   return 'NONE';
 }

@@ -2,9 +2,9 @@
  * GDPR retention lifecycle (spec §3.5). Pure scheduling arithmetic, so the
  * trigger/grace/extension rules are unit-tested without a database or a clock.
  *
- * Timeline:
+ * Timeline (the defaults; M9 makes the trigger and the grace runtime settings):
  *   6 months after the latest COMPLETED booking  -> send the keep-alive notice
- *   23 days after the notice, with no consent    -> send the one reminder
+ *   7 days before the deadline, with no consent  -> send the one reminder (day 23)
  *   30 days after the notice, with no consent    -> anonymize the traveler
  *   consent confirmed                             -> extend the account 12 months
  */
@@ -17,6 +17,20 @@ export const RETENTION_GRACE_DAYS = 30;
 export const RETENTION_EXTENSION_MONTHS = 12;
 /** Days after the notice when its one reminder goes out (E-Retention: a week left). */
 export const RETENTION_REMINDER_DAYS = 23;
+/** The reminder goes out this many days before the purge deadline. */
+export const RETENTION_REMINDER_LEAD_DAYS =
+  RETENTION_GRACE_DAYS - RETENTION_REMINDER_DAYS;
+
+/** The two clocks M9 makes runtime settings; the constants above are the defaults. */
+export interface RetentionPolicy {
+  triggerMonths: number;
+  graceDays: number;
+}
+
+export const DEFAULT_RETENTION_POLICY: RetentionPolicy = {
+  triggerMonths: RETENTION_TRIGGER_MONTHS,
+  graceDays: RETENTION_GRACE_DAYS,
+};
 
 export interface RetentionClock {
   /** When the traveler's latest reservation reached COMPLETED. */
@@ -55,32 +69,42 @@ export function addDays(date: Date, days: number): Date {
 /**
  * The start and length of the current retention cycle. Once the traveler
  * confirms, the next cycle runs 12 months from that confirmation; otherwise it
- * runs 6 months from the latest completion.
+ * runs the policy's trigger months (6 by default) from the latest completion.
  */
-function currentCycle(clock: RetentionClock): { start: Date; months: number } | null {
+function currentCycle(
+  clock: RetentionClock,
+  policy: RetentionPolicy,
+): { start: Date; months: number } | null {
   if (!clock.latestCompletedAt) {
     return null;
   }
   if (clock.consentGrantedAt && clock.consentGrantedAt > clock.latestCompletedAt) {
     return { start: clock.consentGrantedAt, months: RETENTION_EXTENSION_MONTHS };
   }
-  return { start: clock.latestCompletedAt, months: RETENTION_TRIGGER_MONTHS };
+  return { start: clock.latestCompletedAt, months: policy.triggerMonths };
 }
 
 /** When a notice sent at the given time stops being confirmable. */
-export function retentionPurgeAt(noticeSentAt: Date): Date {
-  return addDays(noticeSentAt, RETENTION_GRACE_DAYS);
+export function retentionPurgeAt(
+  noticeSentAt: Date,
+  policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+): Date {
+  return addDays(noticeSentAt, policy.graceDays);
 }
 
 /**
  * True when the traveler is due the keep-alive notice: the current cycle has
  * elapsed and no notice has been sent during it yet.
  */
-export function isRetentionNoticeDue(clock: RetentionClock, now: Date): boolean {
+export function isRetentionNoticeDue(
+  clock: RetentionClock,
+  now: Date,
+  policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+): boolean {
   if (clock.anonymizedAt) {
     return false;
   }
-  const cycle = currentCycle(clock);
+  const cycle = currentCycle(clock, policy);
   if (!cycle) {
     return false;
   }
@@ -94,7 +118,11 @@ export function isRetentionNoticeDue(clock: RetentionClock, now: Date): boolean 
  * True during the last week of the grace period when the traveler has not
  * confirmed: the notice's one reminder is due (the scan sends it once).
  */
-export function isRetentionReminderDue(clock: RetentionClock, now: Date): boolean {
+export function isRetentionReminderDue(
+  clock: RetentionClock,
+  now: Date,
+  policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+): boolean {
   if (clock.anonymizedAt || !clock.noticeSentAt) {
     return false;
   }
@@ -102,8 +130,8 @@ export function isRetentionReminderDue(clock: RetentionClock, now: Date): boolea
     return false;
   }
   return (
-    now >= addDays(clock.noticeSentAt, RETENTION_REMINDER_DAYS) &&
-    now < retentionPurgeAt(clock.noticeSentAt)
+    now >= addDays(clock.noticeSentAt, policy.graceDays - RETENTION_REMINDER_LEAD_DAYS) &&
+    now < retentionPurgeAt(clock.noticeSentAt, policy)
   );
 }
 
@@ -111,18 +139,26 @@ export function isRetentionReminderDue(clock: RetentionClock, now: Date): boolea
  * True when the grace period has elapsed with no confirmation after the notice:
  * the record should be anonymized.
  */
-export function isRetentionPurgeDue(clock: RetentionClock, now: Date): boolean {
+export function isRetentionPurgeDue(
+  clock: RetentionClock,
+  now: Date,
+  policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+): boolean {
   if (clock.anonymizedAt || !clock.noticeSentAt) {
     return false;
   }
   if (clock.consentGrantedAt && clock.consentGrantedAt >= clock.noticeSentAt) {
     return false;
   }
-  return now >= retentionPurgeAt(clock.noticeSentAt);
+  return now >= retentionPurgeAt(clock.noticeSentAt, policy);
 }
 
 /** A single label describing where a traveler sits in the lifecycle. */
-export function retentionStatus(clock: RetentionClock, now: Date): RetentionStatus {
+export function retentionStatus(
+  clock: RetentionClock,
+  now: Date,
+  policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+): RetentionStatus {
   if (clock.anonymizedAt) {
     return 'ANONYMIZED';
   }
@@ -130,10 +166,12 @@ export function retentionStatus(clock: RetentionClock, now: Date): RetentionStat
     const confirmed =
       clock.consentGrantedAt && clock.consentGrantedAt >= clock.noticeSentAt;
     if (!confirmed) {
-      return now >= retentionPurgeAt(clock.noticeSentAt) ? 'PURGE_DUE' : 'GRACE_PERIOD';
+      return now >= retentionPurgeAt(clock.noticeSentAt, policy)
+        ? 'PURGE_DUE'
+        : 'GRACE_PERIOD';
     }
   }
-  if (isRetentionNoticeDue(clock, now)) {
+  if (isRetentionNoticeDue(clock, now, policy)) {
     return 'NOTICE_DUE';
   }
   return 'ACTIVE';
