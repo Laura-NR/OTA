@@ -730,3 +730,18 @@ The owner asked for D6(b) and D7(b). Built on the existing tokens; no token was 
   rate turns amber for review (M9 D2 holds the enforcement question). The storefront's
   placeholder "Cuba right now" banner still says every stay has backup power; it is tenant
   sample copy for the agency to word.
+
+## Amendment, 2026-10-23: dispatch reliability and calendar, resolved by the build
+
+The owner had dispatch enforce the reliability floor and the workers' availability calendar. No
+token was added.
+
+- **Re-dispatch drawer.** Each worker shows "{n} % acceptance" (or "No answered offers yet")
+  under the name; a worker below the floor gets the `attention` badge "Below 85 % · manual only"
+  beside "Verified" and keeps the Offer button, because the board lets the desk assign by hand.
+  Workers who blocked a day of the service are not listed. The rule line above the list says
+  both.
+- **Register and inspector.** The Auto-dispatch badge reads "Paused · reliability" (`warning`,
+  like the expiry pause) for a verified worker below the floor; the inspector explains it. The
+  register footnote and the calendar caption state the enforced rules. The register's summary
+  count of paused workers still counts the expiry pause only, as the rule strip beside it does.

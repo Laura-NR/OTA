@@ -1,8 +1,9 @@
 # M9 Settings: schema diff for review
 
 **Status:** **Approved 2026-10-23 as recommended (D1a–D9a).** Not generated yet: the migration
-(§6, with the checks added through `--create-only`) and §5 land next session. The D2 question of
-enforcing a reliability floor in dispatch is still open with the owner.
+(§6, with the checks added through `--create-only`) and §5 land next session. The owner then had
+dispatch enforce the reliability floor and the availability calendar (built 2026-10-23, no
+migration), so the floor and its minimum join the D2 table.
 **Date:** 2026-10-23
 **Scope:** `docs/design-v1.1-plan.md` Phase 5 item 10 (Settings, **M9**: thresholds Q13, invites,
 permission overrides with expiry, currencies, manifest view), read against the A-Settings board
@@ -71,15 +72,13 @@ trail and a lock for multi-key changes. (c) is what Q13 replaced.
 | Advisory needing two approvals | critical | M7 rule |
 | Retention trigger / grace | 6 months / 30 days | `RETENTION_*` |
 | Resources stale after (M6) | 7 days | `RESOURCES_STALE_DAYS` |
+| Reliability floor / answered offers before it applies | 85 % / 5 | `RELIABILITY_FLOOR`, `RELIABILITY_MIN_ANSWERED` |
 
 (b) All the board's rows, the unenforced ones stored for later.
 **Recommend (a).** A stored number nothing reads would look authoritative; the earlier decision
 "no placeholder pages" applies. The page lists the other board rows as "not enforced yet" so the
-desk knows. One of them needed fixing at once: the register's footnote said a supplier "below
-85 % drops out of auto-dispatch", but dispatch does not check reliability. The footnote now says
-the rate shows amber for review and does not pause auto-dispatch (copy follows the system, as
-decided 2026-10-14). Enforcing the floor would be a dispatch change, so it is a separate decision
-for you; if taken, the floor joins this table.
+desk knows. The reliability floor was in that list until 2026-10-23, when the owner had dispatch
+enforce it (and the availability calendar); it is now in the table above.
 
 **D3 · Who changes them, and how the platform reads them.**
 (a) A Super Admin proposes a version; a **different** Super Admin applies or rejects it; the
@@ -169,7 +168,7 @@ never a value.
 ## 4. Deferred, not in M9
 
 - Unenforced board thresholds (D2): traveler answer SLA, discount review, minimum margin,
-  reliability floor (pending its own decision), override expiry.
+  override expiry.
 - Recovery codes (D5); permission overrides (D6); display currencies (D7); runtime flags and
   manifest editing (D8); idle lock, mandatory passkeys, IP allowlist, new-device email (D9).
 - Key rotation from the UI (Q12: never; rotation stays a deploy operation).

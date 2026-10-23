@@ -32,7 +32,8 @@ are complete with their surfaces. Built and verified last session: the M6 follow
 vehicle on the inspector, D7(b); the storefront's "Backup power at every stay" filter and stay
 lines, D6(b), both with no migration), a copy fix (the reliability footnote no longer claims an
 85 % dispatch floor) and the M9 draft (docs/schema-m9-settings.md). Not built: SMS/push, M9
-(draft), M10, Phase 8. Placeholders: the M4/M5 terms, the builder's rates, the crisis framework,
+(approved, not generated), M10, Phase 8. Dispatch now enforces the reliability floor and the
+workers' availability calendar (2026-10-23). Placeholders: the M4/M5 terms, the builder's rates, the crisis framework,
 the backup-power wording, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in
 apps/api/.env and verified (never print, read or rotate it). Last full verify: see the handoff's
 Verified section. The owner decided: placeholder/mock data until real data is published; the
@@ -46,13 +47,13 @@ D7(b) (built 2026-10-23); support staff stay read-only (M6 resources and vehicle
 are written by Operations Admin and Super Admin only).
 
 TASK 1 — M9 (docs/schema-m9-settings.md), approved as recommended (D1a–D9a, 2026-10-23).
-Check the handoff's Decisions for the owner's answer on dispatch reading reliability and the
-per-day availability calendar; ask if it is missing, and build nothing that depends on it. Generate the migration with `prisma migrate dev --create-only
+The reliability floor (85 %) and its minimum answered offers (5), now enforced by dispatch,
+join the thresholds document (§2 D2). Generate the migration with `prisma migrate dev --create-only
 --name settings_and_staff`, append the checks (one PROPOSED version at most, a decided row has a
 decider and a time, staff roles only on invites, a Super Admin invite accepted only after
 confirmation), apply it, then build §5 and record what the build decides in a §7.
 
-TASK 2 — Anything the owner approves alongside (for example the reliability floor), built to
+TASK 2 — Anything the owner approves alongside, built to
 the same standard (domain rules with unit tests, DTOs, routes in the authorization matrix, desk
 surfaces in en/es/fr, an e2e).
 

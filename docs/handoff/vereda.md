@@ -10,7 +10,7 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
 - **Phases 0, 1, 0b, 2 and 3 are done; Phase 5's admin increments are done; M1–M8 are complete
   with their surfaces.** Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`; the owner had pushed through `bcaf000`).
-- **This session (2026-10-23), 6 commits plus the docs commit:**
+- **This session (2026-10-23), 10 commits plus the docs commits:**
   - **M6 D7(b), a driver's vehicle** (`fc22c93`, `2d9b69b`): `PUT /suppliers/:id/vehicle`
     (ops+super, drivers only) into the existing `vehicle_details` JSON, audited
     `supplier.vehicle_updated`; the inspector's "Vehicle & fuel" card
@@ -22,10 +22,15 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
     filter (`?power=1`) and the stay line on the package page.
   - **Copy fix** (`d0bb84a`): the register's reliability footnote no longer claims a supplier
     below 85 % drops out of auto-dispatch (dispatch never read reliability).
-  - **M9 drafted** (`ffae55a`, `docs/schema-m9-settings.md`, D1–D9 with recommendations):
-    thresholds as append-only versions applied by a second Super Admin, staff invites,
-    deactivation and a 12 h staff session; overrides, currencies, runtime flags and recovery
-    codes deferred. **Awaiting the owner; no migration.**
+  - **M9 drafted** (`ffae55a`) and **approved as recommended (D1a–D9a)**; not generated yet.
+  - **Dispatch enforces reliability and the calendar** (owner's request; `12f526a`, `3835026`,
+    `140d3ca`, `46db41f`): automatic dispatch skips a supplier below 85 % acceptance over at
+    least 5 answered offers (`meetsReliabilityFloor`) or who blocked any calendar day of the
+    service (`serviceCalendarDays`, `isFreeForService` in
+    `packages/domain/src/dispatch/availability.ts`). The re-dispatch drawer hides blocked
+    suppliers and flags below-floor ones, who stay offerable by hand; a desk-named supplier is
+    offered whatever their rate. Scorecard rates are now over answered offers (open and cancelled
+    offers no longer count as refusals). Register/inspector show "Paused · reliability".
 - **Not built:** SMS/push, M9 (draft), M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs;
   guide specialities; room-level stock; the worker app's fuel self-declaration.
 - **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
@@ -36,8 +41,13 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
 ## Verified (2026-10-23, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **749 passed / 21 skipped**, 29/29 tasks, 0 cached (api 291/20
-  skipped, domain 249, schemas 56; the others unchanged).
+- `TURBO_FORCE=true pnpm test` **764 passed / 21 skipped**, 29/29 tasks, 0 cached (api 295/20
+  skipped, domain 260, schemas 56; the others unchanged), after the dispatch change.
+- Dispatch disproved: with `dispatch.service.ts` reverted, the blocked-day and below-floor unit
+  tests fail (2/17); restored, 17/17.
+- Browser: the re-dispatch drawer with a below-floor guide at 390/1024/1280 (no overflow; badge
+  and "60 % acceptance"), the register's "Paused · reliability" at 1280 (temporary TMPREL01/02
+  fixtures, deleted afterwards).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
 - `tsc` caught a real bug before it shipped: `packages.map(toPackageDto)` passed the array index
   as `now` once `toPackageDto` took a second parameter; the unit tests (swc, no type check)
@@ -49,12 +59,13 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
   1280/1024/390, the package itinerary's stay line at 390/1280 (`success-700`, no overflow), the
   driver inspector at 1280/1024/390. One hydration warning on the first 390 load of the list did
   not recur in 8 further loads (see Assumptions).
-- `pnpm e2e` **61/61** (`.next` deleted first, 7.7 min); `supplier-resources.spec.ts` now also
-  saves a vehicle and finds its package under the storefront filter (run alone 2× in a row before:
-  passes and leaves nothing). The three servers e2e left on 3000–3002 were stopped by PID.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files. No
-  disruption case, E2E booking, published critical advisory, e2e package or e2e supplier was left,
-  and no inventory item is linked to a supplier (the temporary Trinidad link was removed).
+- `pnpm e2e` **63/63** (`.next` deleted first, 8.0 min), including the two new dispatch tests
+  (blocked day → no offer and not on the drawer; below the floor → no automatic offer, flagged in
+  the drawer, offered by hand) and the extended M6 spec. The servers e2e left on 3000–3002 were
+  stopped by PID.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files. Left
+  afterwards: no disruption case, no published critical advisory, no blocked calendar day, only
+  the permanent `E2E0001` fixture and the one pre-existing open offer.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -65,11 +76,21 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
   `/en/packages?power=1` at 390 while the list cache was refreshing; 8 later loads were clean.
 - The public `GET /catalog` (inventory items) has always returned `supplierId`; the new package
   fields expose none, but that older field is worth a look when the catalog is next touched.
-- **For the owner:** the M9 decisions and the items under Next. The storefront's sample
+- Service days: a booking's service dates are calendar days (UTC midnight) and a desk item's are
+  clock times read on the Havana day; a whole-trip item (M5 proposals) covers every day from start
+  to end, including the departure day, so a host who blocks that day is skipped.
+- The guide's credential image 404s in dev after an API restart (the e2e upload went to the
+  in-memory store; no `S3_*` set) — pre-existing, unrelated.
+- **For the owner:** the items under Next. The storefront's sample
   "Cuba right now" banner says every stay has backup power, which the new filter can contradict;
   it is tenant copy for the agency to word.
 
 ## Traps
+- **Dispatch rules:** any fake Prisma used by `DispatchService` needs `availability.findMany`
+  and a `dispatchOffer.findMany` that filters by `supplierId: { in }` as well as by
+  `serviceItemId`. e2e that start dispatch on the seeded guide depend on the guide's offer ledger:
+  5+ answered offers below 85 % would make the guide undispatchable (the dispatch e2e owns
+  E2EDSP02 for that history and deletes it).
 - **M6 follow-ups:** the M6 e2e also owns the package `e2e-m6-power-trail` and its stay
   "E2E M6 Casa Stay" (delete the package before the item: the service FK is RESTRICT). The
   storefront list is cached 60 s, so the e2e reloads `/en/packages?power=1` until the package
@@ -111,8 +132,7 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
 
 ## Next
 1. Build M9 as approved (D1a–D9a): generate with `--create-only`, add the checks, apply, build
-   §5, record §7. Owner, still open: whether dispatch should enforce a reliability floor and
-   honour the per-day availability calendar (neither is read by dispatch today).
+   §5, record §7. The reliability floor (85 %) and its minimum (5) join the thresholds document.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
    passport-key backup, the backup-power wording, the AGENTS.md §C lines above. Then M10, and SMS
@@ -409,3 +429,8 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
 - 2026-10-23 — M9 drafted with recommendations D1(a)–D9(a); no migration until approved.
 - 2026-10-23 — the owner approved M9 D1a–D9a as recommended. The reliability floor (D2 note)
   stays open: the owner asked what "dispatch never checks reliability" means.
+- 2026-10-23 — the owner chose to enforce both: dispatch skips suppliers below 85 % acceptance
+  (after 5 answered offers; assumed, as proposed) and suppliers who blocked any day of the
+  service. The desk keeps a manual offer for below-floor suppliers (the board's rule); blocked
+  days are never overridden. Scorecards count answered offers only.
+
