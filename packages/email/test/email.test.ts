@@ -2,6 +2,7 @@ import type { Transporter } from 'nodemailer';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  staffInviteEmail,
   ConsoleMailer,
   SmtpMailer,
   bookingReceivedEmail,
@@ -601,5 +602,35 @@ describe('disruptionOptionsEmail (E-Options)', () => {
   it('leaves out the phone line when the agency has none', () => {
     const email = disruptionOptionsEmail({ ...input, branding });
     expect(email.text).not.toContain('call the desk any time');
+  });
+});
+
+describe('staffInviteEmail', () => {
+  it('names the role, the address to sign in with and the expiry, in the given language', () => {
+    const message = staffInviteEmail({
+      to: 'yanet@vereda.travel',
+      roleLabel: 'Administrative Support',
+      inviterName: 'Dayana Rodríguez',
+      url: 'http://localhost:3002/invite?token=abc',
+      expiresOn: '30 October 2026',
+      branding,
+    });
+    expect(message.to).toBe('yanet@vereda.travel');
+    expect(message.text).toContain('Dayana Rodríguez invited you');
+    expect(message.text).toContain('as Administrative Support');
+    expect(message.text).toContain('(yanet@vereda.travel)');
+    expect(message.text).toContain('until 30 October 2026');
+    expect(message.html).toContain('http://localhost:3002/invite?token=abc');
+    expect(
+      staffInviteEmail({
+        to: 'a@b.test',
+        roleLabel: 'Operations Admin',
+        inviterName: null,
+        url: 'http://x.test',
+        expiresOn: '30 de octubre de 2026',
+        locale: 'es',
+        branding,
+      }).subject,
+    ).toMatch(/^Invitación a la mesa de /);
   });
 });

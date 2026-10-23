@@ -42,3 +42,5 @@ export type {
   AdvisoryEmailSeverity,
   TravelAdvisoryEmailInput,
 } from './templates/travel-advisory';
+export { staffInviteEmail } from './templates/staff-invite';
+export type { StaffInviteEmailInput } from './templates/staff-invite';
