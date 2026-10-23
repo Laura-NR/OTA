@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { AdvisoriesService } from '../src/advisories/advisories.service';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 const ANA: AuthUser = {
   id: 'u-ana',
@@ -227,6 +228,7 @@ describe('AdvisoriesService', () => {
       prisma as unknown as PrismaService,
       mail,
       tenant,
+      fakeOperatingSettings(),
     );
 
     const result = await service.approve(ANA, 'adv-1');
@@ -264,6 +266,7 @@ describe('AdvisoriesService', () => {
       prisma as unknown as PrismaService,
       mail,
       tenant,
+      fakeOperatingSettings(),
     );
 
     const first = await service.approve(ANA, 'adv-1');
@@ -298,6 +301,7 @@ describe('AdvisoriesService', () => {
       prisma as unknown as PrismaService,
       mail,
       tenant,
+      fakeOperatingSettings(),
     );
 
     await service.approve(ANA, 'adv-1');
@@ -315,6 +319,7 @@ describe('AdvisoriesService', () => {
       prisma as unknown as PrismaService,
       mail,
       tenant,
+      fakeOperatingSettings(),
     );
 
     const result = await service.approve(ANA, 'adv-1');

@@ -46,6 +46,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { accountReservationUrl, storefrontPageUrl } from '../common/storefront-url';
 import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 
 const DAY_MS = 86_400_000;
@@ -100,7 +101,13 @@ export class AdvisoriesService {
     private readonly prisma: PrismaService,
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly settings: OperatingSettingsService,
   ) {}
+
+  /** The lowest severity that needs two approvals, as set in M9 (CRITICAL by default). */
+  private async dualFrom() {
+    return (await this.settings.thresholds()).advisoryDualApprovalFrom;
+  }
 
   async list(query: AdvisoryListQuery): Promise<AdvisoryListItemDto[]> {
     const now = new Date();
@@ -277,6 +284,7 @@ export class AdvisoriesService {
    */
   async approve(actor: AuthUser, id: string): Promise<AdvisoryDto> {
     const now = new Date();
+    const dualFrom = await this.dualFrom();
     const published = await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM advisories WHERE id = ${id}::uuid FOR UPDATE`;
       const advisory = await tx.advisory.findUnique({
@@ -294,7 +302,7 @@ export class AdvisoriesService {
         role: approval.role,
       }));
       const vote = { approverId: actor.id, role: actor.role };
-      const refusal = advisoryApprovalRefusal(advisory.severity, votes, vote);
+      const refusal = advisoryApprovalRefusal(advisory.severity, votes, vote, dualFrom);
       if (refusal === 'ROLE') {
         throw new ForbiddenException(
           'Only an Operations Admin or a Super Admin approves',
@@ -305,10 +313,14 @@ export class AdvisoriesService {
       }
       if (refusal === 'ROLE_ALREADY_APPROVED') {
         throw new ConflictException(
-          `A critical advisory needs its second approval from the other role than ${actor.role}`,
+          `A ${advisory.severity.toLowerCase()} advisory needs its second approval from the other role than ${actor.role}`,
         );
       }
-      const decision = advisoryApprovalDecision(advisory.severity, [...votes, vote]);
+      const decision = advisoryApprovalDecision(
+        advisory.severity,
+        [...votes, vote],
+        dualFrom,
+      );
       if (decision.state === 'PUBLISH') {
         this.assertPublishable(advisory, now);
       }
@@ -749,6 +761,7 @@ export class AdvisoriesService {
         approverId: approval.approverId ?? `removed-${approval.id}`,
         role: approval.role,
       })),
+      await this.dualFrom(),
     );
     return {
       ...this.toListItem(row, now),

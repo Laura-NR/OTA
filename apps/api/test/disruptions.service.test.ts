@@ -11,6 +11,7 @@ import type { AdvisoriesService } from '../src/advisories/advisories.service';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import { DisruptionsService } from '../src/disruptions/disruptions.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 const ANA: AuthUser = {
   id: 'u-ana',
@@ -411,6 +412,7 @@ describe('DisruptionsService', () => {
       {} as AdvisoriesService,
       mailer,
       tenant,
+      fakeOperatingSettings(),
     );
   });
 

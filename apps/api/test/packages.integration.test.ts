@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { PackagesService } from '../src/packages/packages.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so DATABASE_URL is present; require
 // an explicit opt-in so the default unit suite stays database-free.
@@ -39,6 +40,7 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
         tenantId: 'test-agency',
         branding: { agencyName: 'Test Agency', licenseNumber: 'MINTUR-TEST-1234' },
       }),
+      fakeOperatingSettings(),
     );
 
     const user = await prisma.user.create({

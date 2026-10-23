@@ -4,11 +4,13 @@ import {
   ofacGate,
   retentionStatus,
   type ReservationStatus,
+  type RetentionPolicy,
   type RetentionStatus,
 } from '@ota/domain';
 import type { CustomerDetailDto, CustomerDto, CustomerTripDto } from '@ota/schemas';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 
 interface CustomerUser {
   id: string;
@@ -48,10 +50,14 @@ function iso(date: Date | null): string | null {
  */
 @Injectable()
 export class CustomersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly settings: OperatingSettingsService,
+  ) {}
 
   async list(): Promise<CustomerDto[]> {
     const now = new Date();
+    const policy = await this.settings.retentionPolicy();
     const users = await this.prisma.user.findMany({
       where: { role: Role.TRAVELER },
       orderBy: { createdAt: 'asc' },
@@ -69,12 +75,20 @@ export class CustomersService {
         (max, row) => (!max || row.createdAt > max ? row.createdAt : max),
         null,
       );
-      return this.toDto(user, reservations.length, lastCreatedAt, latestCompletedAt, now);
+      return this.toDto(
+        user,
+        reservations.length,
+        lastCreatedAt,
+        latestCompletedAt,
+        now,
+        policy,
+      );
     });
   }
 
   async getById(id: string): Promise<CustomerDetailDto> {
     const now = new Date();
+    const policy = await this.settings.retentionPolicy();
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -114,7 +128,7 @@ export class CustomersService {
     );
 
     return {
-      ...this.toDto(user, trips.length, lastCreatedAt, latestCompletedAt, now),
+      ...this.toDto(user, trips.length, lastCreatedAt, latestCompletedAt, now, policy),
       createdAt: user.createdAt.toISOString(),
       trips: trips.map((row) => this.toTrip(row)),
     };
@@ -126,6 +140,7 @@ export class CustomersService {
     lastCreatedAt: Date | null,
     latestCompletedAt: Date | null,
     now: Date,
+    policy: RetentionPolicy,
   ): CustomerDto {
     return {
       id: user.id,
@@ -144,6 +159,7 @@ export class CustomersService {
           anonymizedAt: user.anonymizedAt,
         },
         now,
+        policy,
       ) as RetentionStatus,
     };
   }

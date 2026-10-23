@@ -8,6 +8,7 @@ import { AdvisoriesService } from '../src/advisories/advisories.service';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import { DisruptionsService } from '../src/disruptions/disruptions.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so require an explicit opt-in.
 const runIntegration = process.env.RUN_DB_INTEGRATION === '1';
@@ -67,12 +68,14 @@ describe.skipIf(!runIntegration)('disruptions (live Postgres)', () => {
       prisma as unknown as PrismaService,
       mailer,
       tenant,
+      fakeOperatingSettings(),
     );
     service = new DisruptionsService(
       prisma as unknown as PrismaService,
       advisories,
       mailer,
       tenant,
+      fakeOperatingSettings(),
     );
     const make = async (role: AuthUser['role'], email: string) => {
       const user = await prisma.user.create({

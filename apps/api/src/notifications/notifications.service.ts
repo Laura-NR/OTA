@@ -27,6 +27,7 @@ import { MAILER } from '../email/email.module';
 import { depositPolicyFor } from '../payments/payment-terms';
 import type { ReminderScheduler } from '../payments/reminders.scheduler';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { NOTIFICATION_SCHEDULER } from './notifications.tokens';
 
@@ -70,6 +71,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     @Inject(NOTIFICATION_SCHEDULER) private readonly scheduler: ReminderScheduler,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -107,7 +109,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
             policy,
             departure: reservation.startDate,
             now: new Date(),
-            windowHours: this.tenant.payments.windowHours,
+            windowHours: (await this.settings.thresholds()).paymentWindowHours,
           })
         : null;
       await this.mailer.send(
@@ -129,7 +131,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
                   balanceDueAt: plan[1]!.dueAt,
                 }
               : null,
-          windowHours: this.tenant.payments.windowHours,
+          windowHours: (await this.settings.thresholds()).paymentWindowHours,
           portalUrl: accountReservationUrl(
             this.tenant,
             reservation.user.locale,

@@ -25,6 +25,8 @@ export interface CreateAuthOptions {
   google?: GoogleProviderConfig;
   /** Origins allowed to initiate auth (storefront, back-office). */
   trustedOrigins?: string[];
+  /** How long a sign-in link works, in seconds (M9 D9: 600 by default). */
+  magicLinkExpiresInSeconds?: number;
 }
 
 export interface AuthSessionUser {
@@ -32,11 +34,14 @@ export interface AuthSessionUser {
   email: string;
   name?: string | null;
   role?: string | null;
+  /** M9 D5: set when a Super Admin deactivated the user. */
+  deactivatedAt?: Date | null;
 }
 
 export interface AuthSession {
   user: AuthSessionUser;
-  session: { id: string; userId: string; expiresAt: Date };
+  /** `createdAt` is the sign-in time, which the staff session limit reads (M9 D9). */
+  session: { id: string; userId: string; expiresAt: Date; createdAt?: Date };
 }
 
 /**
@@ -99,10 +104,17 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
           type: 'string',
           required: false,
         },
+        // Server-owned (M9 D5): read by the auth guard, never set by a client.
+        deactivatedAt: {
+          type: 'date',
+          required: false,
+          input: false,
+        },
       },
     },
     plugins: [
       magicLink({
+        expiresIn: options.magicLinkExpiresInSeconds ?? 600,
         sendMagicLink: (params) => options.sendMagicLink(params),
       }),
       passkey(),

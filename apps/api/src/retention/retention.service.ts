@@ -13,7 +13,9 @@ import {
   isRetentionReminderDue,
   retentionPurgeAt,
   retentionStatus,
+  isInvitePurgeDue,
   type RetentionClock,
+  type RetentionPolicy,
 } from '@ota/domain';
 import { retentionNoticeEmail, type Mailer } from '@ota/email';
 import type {
@@ -25,6 +27,7 @@ import type { ObjectStorage } from '@ota/storage';
 
 import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { OBJECT_STORAGE } from '../storage/storage.module';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { signRetentionToken, verifyRetentionToken } from './retention-token';
@@ -104,6 +107,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     @Inject(RETENTION_SCHEDULER) private readonly scheduler: RetentionScheduler,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -117,22 +121,53 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * One pass of the lifecycle job: notices first, then their one reminder a
-   * week before the deadline, then due purges, then the OFAC affidavits whose
-   * five years have run out (M3, D6).
+   * One pass of the lifecycle job, under the retention policy in force (M9):
+   * notices first, then their one reminder a week before the deadline, then
+   * due purges, then the OFAC affidavits whose five years have run out (M3,
+   * D6), then staff invitations closed for 90 days (M9).
    */
   async scan(): Promise<RetentionScanResultDto> {
     const now = new Date();
-    const noticed = await this.sendDueNotices(now);
-    const reminded = await this.sendDueReminders(now);
-    const purged = await this.purgeExpired(now);
+    const policy = await this.settings.retentionPolicy();
+    const noticed = await this.sendDueNotices(now, policy);
+    const reminded = await this.sendDueReminders(now, policy);
+    const purged = await this.purgeExpired(now, policy);
     const affidavitsDeleted = await this.sweepAffidavits(now);
-    if (noticed > 0 || reminded > 0 || purged > 0 || affidavitsDeleted > 0) {
+    const invitesDeleted = await this.sweepInvites(now);
+    if (
+      noticed > 0 ||
+      reminded > 0 ||
+      purged > 0 ||
+      affidavitsDeleted > 0 ||
+      invitesDeleted > 0
+    ) {
       this.logger.log(
-        `Retention scan: ${noticed} notice(s) sent, ${reminded} reminder(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted`,
+        `Retention scan: ${noticed} notice(s) sent, ${reminded} reminder(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted, ${invitesDeleted} closed invitation(s) deleted`,
       );
     }
-    return { noticed, reminded, purged, affidavitsDeleted };
+    return { noticed, reminded, purged, affidavitsDeleted, invitesDeleted };
+  }
+
+  /**
+   * Delete staff invitations 90 days after they closed (accepted, revoked or
+   * expired): each holds a work email, and the audit log keeps the event.
+   */
+  private async sweepInvites(now: Date): Promise<number> {
+    const candidates = await this.prisma.staffInvite.findMany({
+      where: {
+        OR: [
+          { acceptedAt: { not: null } },
+          { revokedAt: { not: null } },
+          { expiresAt: { lte: now } },
+        ],
+      },
+    });
+    const due = candidates.filter((invite) => isInvitePurgeDue(invite, now));
+    if (due.length === 0) return 0;
+    const deleted = await this.prisma.staffInvite.deleteMany({
+      where: { id: { in: due.map((invite) => invite.id) } },
+    });
+    return deleted.count;
   }
 
   /**
@@ -170,6 +205,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
   /** Travelers whose lifecycle is not simply ACTIVE, most urgent first. */
   async listPending(query: ListRetentionQuery): Promise<RetentionPendingUserDto[]> {
     const now = new Date();
+    const policy = await this.settings.retentionPolicy();
     const completions = await this.prisma.reservation.groupBy({
       by: ['userId'],
       where: { completedAt: { not: null }, user: { role: Role.TRAVELER } },
@@ -193,6 +229,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         },
         row._max.completedAt,
         now,
+        policy,
       );
       if (dto) {
         pending.push(dto);
@@ -260,7 +297,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  private async sendDueNotices(now: Date): Promise<number> {
+  private async sendDueNotices(now: Date, policy: RetentionPolicy): Promise<number> {
     const completions = await this.prisma.reservation.groupBy({
       by: ['userId'],
       where: { completedAt: { not: null }, user: { role: Role.TRAVELER } },
@@ -289,11 +326,11 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         consentGrantedAt: user.retentionConsentGrantedAt,
         anonymizedAt: user.anonymizedAt,
       };
-      if (!isRetentionNoticeDue(clock, now)) {
+      if (!isRetentionNoticeDue(clock, now, policy)) {
         continue;
       }
 
-      const purgeAt = retentionPurgeAt(now);
+      const purgeAt = retentionPurgeAt(now, policy);
       const token = signRetentionToken({
         userId: user.id,
         expiresAt: purgeAt,
@@ -345,7 +382,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
    * has not kept the account. The audit log, keyed by the notice it follows,
    * is the sent ledger, so a re-run never sends twice and no column is added.
    */
-  private async sendDueReminders(now: Date): Promise<number> {
+  private async sendDueReminders(now: Date, policy: RetentionPolicy): Promise<number> {
     const authSecret = process.env.AUTH_SECRET;
     if (!authSecret) {
       return 0;
@@ -367,7 +404,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         consentGrantedAt: user.retentionConsentGrantedAt,
         anonymizedAt: user.anonymizedAt,
       };
-      if (!isRetentionReminderDue(clock, now)) {
+      if (!isRetentionReminderDue(clock, now, policy)) {
         continue;
       }
       const already = await this.prisma.auditLog.findFirst({
@@ -383,7 +420,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      const purgeAt = retentionPurgeAt(noticeSentAt);
+      const purgeAt = retentionPurgeAt(noticeSentAt, policy);
       const token = signRetentionToken({
         userId: user.id,
         expiresAt: purgeAt,
@@ -425,7 +462,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     return reminded;
   }
 
-  private async purgeExpired(now: Date): Promise<number> {
+  private async purgeExpired(now: Date, policy: RetentionPolicy): Promise<number> {
     const candidates = await this.prisma.user.findMany({
       where: {
         role: Role.TRAVELER,
@@ -442,7 +479,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         consentGrantedAt: user.retentionConsentGrantedAt,
         anonymizedAt: user.anonymizedAt,
       };
-      if (!isRetentionPurgeDue(clock, now)) {
+      if (!isRetentionPurgeDue(clock, now, policy)) {
         continue;
       }
       await this.anonymize(user.id, user.email, now);
@@ -674,6 +711,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     user: RetentionUserRow,
     latestCompletedAt: Date | null,
     now: Date,
+    policy: RetentionPolicy,
   ): RetentionPendingUserDto | null {
     const clock: RetentionClock = {
       latestCompletedAt,
@@ -681,7 +719,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       consentGrantedAt: user.retentionConsentGrantedAt,
       anonymizedAt: user.anonymizedAt,
     };
-    const status = retentionStatus(clock, now);
+    const status = retentionStatus(clock, now, policy);
     if (status === 'ACTIVE') {
       return null;
     }
@@ -689,7 +727,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     const purgeAt = user.anonymizedAt
       ? user.anonymizedAt
       : user.retentionNoticeSentAt
-        ? retentionPurgeAt(user.retentionNoticeSentAt)
+        ? retentionPurgeAt(user.retentionNoticeSentAt, policy)
         : null;
 
     return {

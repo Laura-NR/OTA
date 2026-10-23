@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { MAILER } from '../src/email/email.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 import { signRetentionToken } from '../src/retention/retention-token';
 
 process.env.AUTH_SECRET ??= 'retention-test-secret-0123456789';
@@ -201,7 +202,7 @@ describe('retention API', () => {
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       .overrideProvider(MAILER)
@@ -227,6 +228,7 @@ describe('retention API', () => {
       reminded: 0,
       purged: 0,
       affidavitsDeleted: 0,
+      invitesDeleted: 0,
     });
     expect(mailer.send).toHaveBeenCalledTimes(1);
     const email = mailer.send.mock.calls[0][0] as {
@@ -255,6 +257,7 @@ describe('retention API', () => {
       reminded: 0,
       purged: 0,
       affidavitsDeleted: 0,
+      invitesDeleted: 0,
     });
     expect(mailer.send).not.toHaveBeenCalled();
   });
@@ -272,6 +275,7 @@ describe('retention API', () => {
       reminded: 1,
       purged: 0,
       affidavitsDeleted: 0,
+      invitesDeleted: 0,
     });
     const email = mailer.send.mock.calls[0][0] as { subject: string; html: string };
     expect(email.subject).toMatch(/^Reminder: keep your /);
@@ -297,6 +301,7 @@ describe('retention API', () => {
       reminded: 0,
       purged: 1,
       affidavitsDeleted: 0,
+      invitesDeleted: 0,
     });
     const user = state.users[0];
     expect(user.email).toBe(`anonymized+${TRAVELER_ID}@anonymized.invalid`);
@@ -341,6 +346,7 @@ describe('retention API', () => {
       reminded: 0,
       purged: 0,
       affidavitsDeleted: 0,
+      invitesDeleted: 0,
     });
   });
 

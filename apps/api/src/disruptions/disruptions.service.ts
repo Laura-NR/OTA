@@ -68,6 +68,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { accountReservationUrl } from '../common/storefront-url';
 import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 
 const HOUR_MS = 3_600_000;
@@ -216,6 +217,7 @@ export class DisruptionsService {
     private readonly advisories: AdvisoriesService,
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async list(query: DisruptionListQuery): Promise<DisruptionListItemDto[]> {
@@ -331,6 +333,7 @@ export class DisruptionsService {
     }
 
     const now = new Date();
+    const thresholds = await this.settings.thresholds();
     const suppliers = await this.prisma.supplierProfile.findMany({
       where: {
         verificationStatus: VerificationStatus.Verified,
@@ -373,12 +376,20 @@ export class DisruptionsService {
         phone: supplier.primaryPhone,
         confirmedAt: resources.confirmedAt.toISOString(),
         confirmedVia: resources.confirmedVia,
-        stale: isResourcesStale(resources.confirmedAt, now),
+        stale: isResourcesStale(
+          resources.confirmedAt,
+          now,
+          thresholds.resourcesStaleDays,
+        ),
         availableToday:
           supplier.isAvailable && (supplier.availabilities[0]?.isAvailable ?? true),
         paused:
           supplier.credentialExpiresAt !== null &&
-          isCredentialExpiringSoon(supplier.credentialExpiresAt, now),
+          isCredentialExpiringSoon(
+            supplier.credentialExpiresAt,
+            now,
+            thresholds.credentialExpiryWindowDays,
+          ),
       };
       if (supplier.category === SupplierCategory.HomestayHost) {
         casaHours.set(supplier.id, backupHoursPerDay(facts));
@@ -413,6 +424,7 @@ export class DisruptionsService {
           amount: amount(entry),
         })),
         now,
+        thresholds.resourcesStaleDays,
       ).map(({ entry }) => entry);
 
     return {

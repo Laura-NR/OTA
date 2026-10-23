@@ -1,7 +1,12 @@
 import { Inject, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
 import type { Prisma } from '@ota/db';
-import { ReservationStatus, buildSchedule, refundDecision } from '@ota/domain';
+import {
+  ReservationStatus,
+  buildSchedule,
+  refundDecision,
+  type RefundThresholds,
+} from '@ota/domain';
 import type {
   ExtendInstalmentRequest,
   InstalmentDto,
@@ -11,6 +16,7 @@ import type {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { depositPolicyFor } from './payment-terms';
 import { toReceiptDto } from './payments.service';
@@ -59,7 +65,8 @@ function toInstalmentDto(row: ScheduleRow['instalments'][number]): InstalmentDto
 }
 
 /** A refund with its votes and where its approvals stand (M4 D7). */
-export function toRefundDto(row: RefundRow, tenant: TenantConfig): RefundDto {
+/** A refund with its decision under the refund limits in force (M4 D7, M9). */
+export function toRefundDto(row: RefundRow, limits: RefundThresholds): RefundDto {
   const votes = row.approvals.map((approval) => ({
     approverId: approval.approverId,
     role: approval.approver.role,
@@ -87,7 +94,7 @@ export function toRefundDto(row: RefundRow, tenant: TenantConfig): RefundDto {
       note: approval.note,
       createdAt: approval.createdAt.toISOString(),
     })),
-    decision: refundDecision(Number(row.amount), votes, tenant.payments.refundApproval),
+    decision: refundDecision(Number(row.amount), votes, limits),
   };
 }
 
@@ -102,6 +109,7 @@ export class ScheduleService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async get(
@@ -126,6 +134,7 @@ export class ScheduleService {
       .filter((refund) => refund.status === 'SENT')
       .reduce((sum, refund) => sum + Number(refund.amount), 0);
 
+    const thresholds = await this.settings.thresholds();
     return {
       reservationId: row.id,
       currency: row.totalCurrency,
@@ -135,11 +144,11 @@ export class ScheduleService {
       instalments: row.instalments.map(toInstalmentDto),
       options:
         row.instalments.length === 0 && CHOOSABLE.includes(row.status)
-          ? this.options(row)
+          ? this.options(row, thresholds.paymentWindowHours)
           : null,
       nextInstalmentId:
         row.instalments.find((instalment) => instalment.status === 'DUE')?.id ?? null,
-      windowHours: this.tenant.payments.windowHours,
+      windowHours: thresholds.paymentWindowHours,
       cardFeePercent: this.tenant.payments.cardFeePercent,
       receipts: row.payments.map((receipt) => ({
         ...toReceiptDto(receipt),
@@ -153,7 +162,12 @@ export class ScheduleService {
           reviewedAt: proof.reviewedAt ? proof.reviewedAt.toISOString() : null,
         })),
       })),
-      refunds: row.refunds.map((refund) => toRefundDto(refund, this.tenant)),
+      refunds: row.refunds.map((refund) =>
+        toRefundDto(refund, {
+          singleUpTo: thresholds.refundSingleUpTo,
+          dualUpTo: thresholds.refundDualUpTo,
+        }),
+      ),
     };
   }
 
@@ -204,7 +218,7 @@ export class ScheduleService {
   }
 
   /** Deposit or full, as the first link would build them now. */
-  private options(row: ScheduleRow): PaymentScheduleDto['options'] {
+  private options(row: ScheduleRow, windowHours: number): PaymentScheduleDto['options'] {
     const total = Number(row.totalAmount);
     const policy = depositPolicyFor(this.tenant, row.package?.depositPolicy);
     const deposit = buildSchedule({
@@ -213,7 +227,7 @@ export class ScheduleService {
       policy,
       departure: row.startDate,
       now: new Date(),
-      windowHours: this.tenant.payments.windowHours,
+      windowHours,
     });
     return {
       full: { amount: total.toFixed(2) },

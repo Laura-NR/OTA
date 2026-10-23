@@ -41,6 +41,7 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import {
   ESCALATION_PUBLISHER,
   type EscalationPublisher,
@@ -59,6 +60,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     private readonly prisma: PrismaService,
     @Inject(DISPATCH_SCHEDULER) private readonly scheduler: DispatchScheduler,
     @Inject(ESCALATION_PUBLISHER) private readonly escalation: EscalationPublisher,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   onModuleInit(): void {
@@ -117,6 +119,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
   ): Promise<DispatchViewDto> {
     const reservation = await this.loadReservation(reservationId);
     const now = new Date();
+    const amber = await this.amberThreshold();
 
     return {
       reservationId: reservation.id,
@@ -124,7 +127,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
       status: reservation.status as ReservationStatus,
       serviceItems: reservation.serviceItems
         .filter((item) => !onlySupplierId || item.supplierId === onlySupplierId)
-        .map((item) => this.toItemDto(item, now)),
+        .map((item) => this.toItemDto(item, now, amber)),
     };
   }
 
@@ -161,6 +164,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     });
 
     const now = new Date();
+    const amber = await this.amberThreshold();
     return reservations.map((reservation) => {
       const firstOffers = reservation.serviceItems.flatMap((item) =>
         item.dispatchOffers.map((offer) => offer.offeredAt.getTime()),
@@ -180,7 +184,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
         endDate: reservation.endDate.toISOString(),
         waitingSince: waitingSince.toISOString(),
         serviceItems: reservation.serviceItems.map((item) => ({
-          ...this.toItemDto(item, now),
+          ...this.toItemDto(item, now, amber),
           supplierName: item.supplier?.user.fullName ?? null,
         })),
       };
@@ -412,6 +416,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     const timeoutMs = resolveDispatchTimeoutMs({
       now,
       arrivalAt: item.serviceDateStart,
+      timers: await this.settings.dispatchTimers(),
     });
     const deadline = new Date(now.getTime() + timeoutMs);
 
@@ -479,7 +484,11 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
       const preferred = await this.prisma.supplierProfile.findUnique({
         where: { id: preferredSupplierId },
       });
-      if (preferred && this.isEligible(preferred, categories, now, item.province)) {
+      const window = (await this.settings.thresholds()).credentialExpiryWindowDays;
+      if (
+        preferred &&
+        this.isEligible(preferred, categories, now, item.province, window)
+      ) {
         const facts = await this.dispatchFacts(item, [preferred.id]);
         if (facts.isFree(preferred)) {
           return preferred;
@@ -487,6 +496,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    const thresholds = await this.settings.thresholds();
     const candidates = (
       await this.prisma.supplierProfile.findMany({
         where: {
@@ -499,7 +509,13 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     ).filter(
       (candidate) =>
         !excluded.has(candidate.id) &&
-        this.isEligible(candidate, categories, now, item.province),
+        this.isEligible(
+          candidate,
+          categories,
+          now,
+          item.province,
+          thresholds.credentialExpiryWindowDays,
+        ),
     );
     const facts = await this.dispatchFacts(
       item,
@@ -509,7 +525,12 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     return (
       candidates.find(
         (candidate) =>
-          facts.isFree(candidate) && meetsReliabilityFloor(facts.scorecard(candidate.id)),
+          facts.isFree(candidate) &&
+          meetsReliabilityFloor(
+            facts.scorecard(candidate.id),
+            thresholds.reliabilityFloorPercent / 100,
+            thresholds.reliabilityMinAnswered,
+          ),
       ) ?? null
     );
   }
@@ -568,6 +589,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     categories: readonly SupplierCategory[],
     now: Date,
     province: string | null,
+    credentialWindowDays: number,
   ): boolean {
     if (!categories.includes(supplier.category)) {
       return false;
@@ -582,6 +604,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
         credentialExpiresAt: supplier.credentialExpiresAt,
       },
       now,
+      credentialWindowDays,
     );
   }
 
@@ -702,10 +725,17 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
       orderBy: { createdAt: 'asc' },
     });
 
+    const thresholds = await this.settings.thresholds();
     const eligible = candidates.filter(
       (candidate) =>
         !excluded.has(candidate.id) &&
-        this.isEligible(candidate, categories, now, item.province),
+        this.isEligible(
+          candidate,
+          categories,
+          now,
+          item.province,
+          thresholds.credentialExpiryWindowDays,
+        ),
     );
     const facts = await this.dispatchFacts(
       item,
@@ -727,7 +757,11 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
             : null,
           acceptanceRate:
             scorecard && scorecard.answered > 0 ? scorecard.acceptanceRate : null,
-          belowReliabilityFloor: !meetsReliabilityFloor(scorecard),
+          belowReliabilityFloor: !meetsReliabilityFloor(
+            scorecard,
+            thresholds.reliabilityFloorPercent / 100,
+            thresholds.reliabilityMinAnswered,
+          ),
         };
       });
   }
@@ -738,7 +772,16 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private toItemDto(item: ServiceItemWithSupplier, now: Date): DispatchServiceItemDto {
+  /** The share of an offer's timer that turns the desk amber (M9). */
+  private async amberThreshold(): Promise<number> {
+    return (await this.settings.thresholds()).amberPercent / 100;
+  }
+
+  private toItemDto(
+    item: ServiceItemWithSupplier,
+    now: Date,
+    amberThreshold: number,
+  ): DispatchServiceItemDto {
     let escalation: DispatchServiceItemDto['escalation'] = 'NONE';
     if (
       item.status === ServiceItemStatus.Declined ||
@@ -754,6 +797,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
         offeredAt: item.offeredAt,
         deadline: item.dispatchDeadline,
         now,
+        amberThreshold,
       });
     }
 

@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { NoopRetentionScheduler } from '../src/retention/retention.scheduler';
 import { RetentionService } from '../src/retention/retention.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so DATABASE_URL is always present;
 // require an explicit opt-in so the default unit suite stays database-free.
@@ -49,6 +50,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
       } as unknown as TenantConfig,
       new NoopRetentionScheduler(),
       createObjectStorage({ bucket: 'retention-test', region: 'us-east-1' }),
+      fakeOperatingSettings(),
     );
 
     const user = await prisma.user.create({
@@ -235,7 +237,13 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
 
   it('sends the notice, records consent, then anonymizes after the grace', async () => {
     const first = await service.scan();
-    expect(first).toEqual({ noticed: 1, reminded: 0, purged: 0, affidavitsDeleted: 1 });
+    expect(first).toEqual({
+      noticed: 1,
+      reminded: 0,
+      purged: 0,
+      affidavitsDeleted: 1,
+      invitesDeleted: 0,
+    });
     expect(
       await prisma.travelerAffidavit.findUnique({ where: { id: expiredAffidavitId } }),
     ).toBeNull();
@@ -264,7 +272,13 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     });
 
     const second = await service.scan();
-    expect(second).toEqual({ noticed: 0, reminded: 0, purged: 1, affidavitsDeleted: 0 });
+    expect(second).toEqual({
+      noticed: 0,
+      reminded: 0,
+      purged: 1,
+      affidavitsDeleted: 0,
+      invitesDeleted: 0,
+    });
 
     // M3 D6: the consent log loses who; the affidavit keeps its five years.
     const consentRow = await prisma.consentRecord.findFirstOrThrow({

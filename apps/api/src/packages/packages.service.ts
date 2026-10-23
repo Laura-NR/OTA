@@ -42,6 +42,7 @@ import type { ObjectStorage } from '@ota/storage';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { OBJECT_STORAGE } from '../storage/storage.module';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 
@@ -56,7 +57,11 @@ type ServiceWithItem = PackageService & {
 };
 
 /** A stay's public backup power, from its casa's fresh confirmation (M6 D6(b)). */
-function stayBackupPower(item: ServiceWithItem['inventoryItem'], now: Date) {
+function stayBackupPower(
+  item: ServiceWithItem['inventoryItem'],
+  now: Date,
+  staleDays: number,
+) {
   const supplier = item.supplier;
   const resources = supplier?.resources ?? null;
   if (item.type !== 'ACCOMMODATION' || !supplier || !resources) return null;
@@ -71,6 +76,7 @@ function stayBackupPower(item: ServiceWithItem['inventoryItem'], now: Date) {
     },
     resources.confirmedAt,
     now,
+    staleDays,
   );
 }
 type PackageWithServices = Package & {
@@ -112,7 +118,12 @@ function assertPublishable(input: PackagePublishInput): void {
   }
 }
 
-function toPackageDto(pkg: PackageWithServices, now: Date = new Date()): PackageDto {
+/** `staleDays`: when a casa's confirmation stops backing a public claim (M6, M9). */
+function toPackageDto(
+  pkg: PackageWithServices,
+  staleDays: number,
+  now: Date = new Date(),
+): PackageDto {
   const services = pkg.services.map((service) => ({
     id: service.id,
     inventoryItemId: service.inventoryItemId,
@@ -124,7 +135,7 @@ function toPackageDto(pkg: PackageWithServices, now: Date = new Date()): Package
     itemBasePrice: service.inventoryItem.basePrice.toString(),
     itemCurrency: service.inventoryItem.currency,
     itemMediaId: service.inventoryItem.media[0]?.id ?? null,
-    backupPower: stayBackupPower(service.inventoryItem, now),
+    backupPower: stayBackupPower(service.inventoryItem, now, staleDays),
   }));
   return {
     id: pkg.id,
@@ -408,7 +419,12 @@ export class PackagesService {
     private readonly prisma: PrismaService,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly settings: OperatingSettingsService,
   ) {}
+
+  private async staleDays(): Promise<number> {
+    return (await this.settings.thresholds()).resourcesStaleDays;
+  }
 
   async list(filters: ListPackagesQuery): Promise<PackageDto[]> {
     const where: Prisma.PackageWhereInput = {};
@@ -420,7 +436,8 @@ export class PackagesService {
       include: INCLUDE_SERVICES,
       orderBy: { createdAt: 'asc' },
     });
-    return packages.map((pkg) => toPackageDto(pkg));
+    const staleDays = await this.staleDays();
+    return packages.map((pkg) => toPackageDto(pkg, staleDays));
   }
 
   /** The storefront sees published packages only, in the requested locale. */
@@ -430,7 +447,7 @@ export class PackagesService {
   }
 
   async getById(id: string): Promise<PackageDto> {
-    return toPackageDto(await this.loadWithServices(id));
+    return toPackageDto(await this.loadWithServices(id), await this.staleDays());
   }
 
   async getBySlug(slug: string, locale?: string): Promise<PackageDto> {
@@ -439,7 +456,7 @@ export class PackagesService {
       include: INCLUDE_SERVICES,
     });
     if (pkg && pkg.status === 'PUBLISHED') {
-      return overlayPackage(toPackageDto(pkg), locale);
+      return overlayPackage(toPackageDto(pkg, await this.staleDays()), locale);
     }
 
     // A retired slug redirects to its package (the storefront 308s to the
@@ -453,7 +470,7 @@ export class PackagesService {
         include: INCLUDE_SERVICES,
       });
       if (target && target.status === 'PUBLISHED') {
-        return overlayPackage(toPackageDto(target), locale);
+        return overlayPackage(toPackageDto(target, await this.staleDays()), locale);
       }
     }
 
@@ -525,7 +542,7 @@ export class PackagesService {
     });
 
     await this.audit(actor, 'package.created', created.id);
-    return toPackageDto(created);
+    return toPackageDto(created, await this.staleDays());
   }
 
   async update(
@@ -652,7 +669,7 @@ export class PackagesService {
     });
 
     await this.audit(actor, 'package.updated', id);
-    return toPackageDto(updated);
+    return toPackageDto(updated, await this.staleDays());
   }
 
   /** Upsert one locale's text overlay (M1, D1) and audit it. */

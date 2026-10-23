@@ -13,6 +13,7 @@ import { RefundsService } from '../src/payments/refunds.service';
 import { ScheduleService } from '../src/payments/schedule.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { ReservationsService } from '../src/reservations/reservations.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so require an explicit opt-in.
 const runIntegration = process.env.RUN_DB_INTEGRATION === '1';
@@ -78,10 +79,16 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
         bookingSecured: async () => undefined,
       } as unknown as NotificationsService,
     );
-    payments = new PaymentsService(db, reservations, providers, tenant);
-    schedule = new ScheduleService(db, tenant);
+    payments = new PaymentsService(
+      db,
+      reservations,
+      providers,
+      tenant,
+      fakeOperatingSettings(),
+    );
+    schedule = new ScheduleService(db, tenant, fakeOperatingSettings());
     proofs = new ProofsService(db, new InMemoryObjectStorage());
-    refunds = new RefundsService(db, tenant, providers);
+    refunds = new RefundsService(db, tenant, providers, fakeOperatingSettings());
 
     const user = (role: string, name: string) =>
       prisma.user.create({

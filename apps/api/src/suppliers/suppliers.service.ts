@@ -52,6 +52,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { OBJECT_STORAGE } from '../storage/storage.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 
 type SupplierWithUser = SupplierProfile & {
   user: Pick<User, 'email' | 'fullName'>;
@@ -161,7 +162,11 @@ function powerFacts(resources: SupplierResources | null): PowerFacts | null {
   };
 }
 
-function toResourcesDto(resources: ResourcesRow, now: Date): SupplierResourcesDto {
+function toResourcesDto(
+  resources: ResourcesRow,
+  now: Date,
+  staleDays: number,
+): SupplierResourcesDto {
   return {
     generator: resources.generator,
     generatorHoursPerDay: resources.generatorHoursPerDay,
@@ -178,7 +183,7 @@ function toResourcesDto(resources: ResourcesRow, now: Date): SupplierResourcesDt
       ? (resources.confirmedBy.fullName ?? resources.confirmedBy.email)
       : null,
     confirmedVia: resources.confirmedVia,
-    stale: isResourcesStale(resources.confirmedAt, now),
+    stale: isResourcesStale(resources.confirmedAt, now, staleDays),
   };
 }
 
@@ -196,6 +201,7 @@ function toRowDto(
   supplier: SupplierWithResources,
   jobs: readonly JobRow[],
   now: Date,
+  staleDays: number,
 ): SupplierRowDto {
   const resources = supplier.resources ?? null;
   const facts = powerFacts(resources);
@@ -205,7 +211,7 @@ function toRowDto(
       ...supplierPower(supplier.category, facts),
       backup: hasBackupPower(supplier.category, facts),
       confirmedAt: resources ? resources.confirmedAt.toISOString() : null,
-      stale: resources ? isResourcesStale(resources.confirmedAt, now) : false,
+      stale: resources ? isResourcesStale(resources.confirmedAt, now, staleDays) : false,
     },
     lastJob: toLastJobDto(lastJob(jobs, now)),
   };
@@ -241,6 +247,7 @@ export class SuppliersService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   /**
@@ -264,13 +271,14 @@ export class SuppliersService {
       },
     );
     const now = new Date();
+    const staleDays = (await this.settings.thresholds()).resourcesStaleDays;
     const jobs = await this.jobs(
       suppliers.map((supplier) => supplier.id),
       now,
     );
 
     const rows = suppliers.map((supplier) =>
-      toRowDto(supplier, jobs.get(supplier.id) ?? [], now),
+      toRowDto(supplier, jobs.get(supplier.id) ?? [], now, staleDays),
     );
     return filters.backupPower ? rows.filter((row) => row.power.backup) : rows;
   }
@@ -303,11 +311,12 @@ export class SuppliersService {
     }
 
     const now = new Date();
+    const staleDays = (await this.settings.thresholds()).resourcesStaleDays;
     const jobs = (await this.jobs([id], now)).get(id) ?? [];
     const resources = supplier.resources ?? null;
     return {
-      ...toRowDto(supplier, jobs, now),
-      resources: resources ? toResourcesDto(resources, now) : null,
+      ...toRowDto(supplier, jobs, now, staleDays),
+      resources: resources ? toResourcesDto(resources, now, staleDays) : null,
       jobs12m: jobsInWindow(jobs, now),
       vehicle: storedVehicle(supplier.vehicleDetails),
     };

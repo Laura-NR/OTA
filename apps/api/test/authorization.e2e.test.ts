@@ -65,6 +65,9 @@ const ADVISORY = 'a7a7a7a7-a7a7-4a7a-8a7a-a7a7a7a7a7a7';
 const DISRUPTION = 'b8b8b8b8-b8b8-4b8b-8b8b-b8b8b8b8b8b8';
 const STEP = 'c9c9c9c9-c9c9-4c9c-8c9c-c9c9c9c9c9c9';
 const CASE_BOOKING = 'dadadada-dada-4ada-8ada-dadadadadada';
+const SETTINGS_VERSION = 'ebebebeb-ebeb-4beb-8beb-ebebebebebeb';
+const INVITE = 'fcfcfcfc-fcfc-4cfc-8cfc-fcfcfcfcfcfc';
+const STAFF_USER = '0d0d0d0d-0d0d-4d0d-8d0d-0d0d0d0d0d0d';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -379,6 +382,39 @@ const ROUTES: Route[] = [
   { method: 'post', path: '/retention/scan', allowed: 'opsWrite' },
 
   // Customers read model.
+  // M9 settings: the desk reads the thresholds in force; the rest is Super Admin.
+  { method: 'get', path: '/settings/operating', allowed: 'opsRead' },
+  { method: 'get', path: '/settings/operating/versions', allowed: 'superAdmin' },
+  { method: 'post', path: '/settings/operating/versions', allowed: 'superAdmin' },
+  {
+    method: 'post',
+    path: `/settings/operating/versions/${SETTINGS_VERSION}/apply`,
+    allowed: 'superAdmin',
+  },
+  {
+    method: 'post',
+    path: `/settings/operating/versions/${SETTINGS_VERSION}/reject`,
+    allowed: 'superAdmin',
+  },
+  {
+    method: 'post',
+    path: `/settings/operating/versions/${SETTINGS_VERSION}/withdraw`,
+    allowed: 'superAdmin',
+  },
+  { method: 'get', path: '/settings/integrations', allowed: 'superAdmin' },
+  { method: 'get', path: '/audit-log', allowed: 'superAdmin' },
+  // M9 staff: Super Admin only, except accepting an invitation.
+  { method: 'get', path: '/staff', allowed: 'superAdmin' },
+  { method: 'get', path: '/staff/invites', allowed: 'superAdmin' },
+  { method: 'post', path: '/staff/invites', allowed: 'superAdmin' },
+  { method: 'post', path: '/staff/invites/accept', allowed: 'authenticated' },
+  { method: 'post', path: `/staff/invites/${INVITE}/confirm`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/invites/${INVITE}/resend`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/invites/${INVITE}/revoke`, allowed: 'superAdmin' },
+  { method: 'patch', path: `/staff/${STAFF_USER}`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/revoke-sessions`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/deactivate`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/reactivate`, allowed: 'superAdmin' },
   { method: 'get', path: '/customers', allowed: 'opsRead' },
   { method: 'get', path: `/customers/${CUSTOMER}`, allowed: 'opsRead' },
 ];

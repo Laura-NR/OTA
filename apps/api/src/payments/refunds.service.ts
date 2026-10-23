@@ -22,6 +22,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { cancellationBandsFor } from './payment-terms';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { REFUND_INCLUDE, toRefundDto, type RefundRow } from './schedule.service';
 
 /** Refunds that still count against what a receipt can return. */
@@ -55,6 +56,7 @@ export class RefundsService {
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     @Inject(PAYMENT_PROVIDERS)
     private readonly providers: Record<PaymentRail, PaymentProvider>,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async quote(
@@ -145,6 +147,7 @@ export class RefundsService {
       throw new ConflictException('You have already voted on this refund');
     }
 
+    const limits = await this.refundLimits();
     const decision = refundDecision(
       Number(refund.amount),
       [
@@ -155,7 +158,7 @@ export class RefundsService {
         })),
         { approverId: actor.id, role: actor.role, approve },
       ],
-      this.tenant.payments.refundApproval,
+      limits,
     );
     const status =
       decision.state === 'APPROVED'
@@ -233,7 +236,8 @@ export class RefundsService {
       take: query.limit,
       include: REFUND_INCLUDE,
     });
-    return rows.map((row) => toRefundDto(row, this.tenant));
+    const limits = await this.refundLimits();
+    return rows.map((row) => toRefundDto(row, limits));
   }
 
   /**
@@ -357,6 +361,15 @@ export class RefundsService {
     };
   }
 
+  /** Who must approve a refund, under the limits in force (M4 D7, M9). */
+  private async refundLimits() {
+    const thresholds = await this.settings.thresholds();
+    return {
+      singleUpTo: thresholds.refundSingleUpTo,
+      dualUpTo: thresholds.refundDualUpTo,
+    };
+  }
+
   private async loadRow(id: string): Promise<RefundRow> {
     const row = await this.prisma.refund.findUnique({
       where: { id },
@@ -369,6 +382,6 @@ export class RefundsService {
   }
 
   private async load(id: string): Promise<RefundDto> {
-    return toRefundDto(await this.loadRow(id), this.tenant);
+    return toRefundDto(await this.loadRow(id), await this.refundLimits());
   }
 }

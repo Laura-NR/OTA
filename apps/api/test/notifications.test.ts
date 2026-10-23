@@ -6,6 +6,7 @@ import type { DocumentsService } from '../src/documents/documents.service';
 import { NotificationsService } from '../src/notifications/notifications.service';
 import { NoopReminderScheduler } from '../src/payments/reminders.scheduler';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 const DAY_MS = 86_400_000;
 const NOW = new Date('2026-10-18T09:00:00Z');
@@ -105,6 +106,7 @@ function setup(trips: Trip[]) {
     },
     tenant,
     new NoopReminderScheduler(),
+    fakeOperatingSettings(),
   );
   const scanAt = (at: Date) => {
     clock = at;

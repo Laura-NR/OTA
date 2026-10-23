@@ -28,6 +28,8 @@ import { RegulatoryModule } from './regulatory/regulatory.module';
 import { ReportsModule } from './reports/reports.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { RetentionModule } from './retention/retention.module';
+import { SettingsModule } from './settings/settings.module';
+import { StaffModule } from './staff/staff.module';
 import { StorageModule } from './storage/storage.module';
 import { SupplierApplicationsModule } from './supplier-applications/supplier-applications.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
@@ -62,6 +64,8 @@ export const httpLoggerOptions = {
     HealthModule,
     AuthModule,
     TenantModule,
+    SettingsModule,
+    StaffModule,
     EmailModule,
     StorageModule,
     PrismaModule,

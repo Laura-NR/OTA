@@ -17,6 +17,7 @@ import type {
 } from '../src/dispatch/dispatch.scheduler';
 import { DispatchService } from '../src/dispatch/dispatch.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 const RESERVATION_ID = 'res-1';
 const ITEM_ID = 'item-1';
@@ -334,7 +335,12 @@ describe('DispatchService', () => {
     };
     scheduler = new FakeScheduler();
     publisher = new FakePublisher();
-    service = new DispatchService(createFakePrisma(store), scheduler, publisher);
+    service = new DispatchService(
+      createFakePrisma(store),
+      scheduler,
+      publisher,
+      fakeOperatingSettings(),
+    );
     service.onModuleInit();
   });
 
@@ -577,6 +583,19 @@ describe('DispatchService', () => {
       await service.startDispatch(RESERVATION_ID, OPERATOR);
 
       const view = await service.reassign(ITEM_ID, { supplierId: GUIDE_ONE }, OPERATOR);
+      expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_ONE);
+    });
+
+    it('applies the floor in force (M9): lowered to 50 %, a 60 % guide is offered', async () => {
+      answered(GUIDE_ONE, 3, 2);
+      service = new DispatchService(
+        createFakePrisma(store),
+        scheduler,
+        publisher,
+        fakeOperatingSettings({ reliabilityFloorPercent: 50 }),
+      );
+
+      const view = await service.startDispatch(RESERVATION_ID, OPERATOR);
       expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_ONE);
     });
 

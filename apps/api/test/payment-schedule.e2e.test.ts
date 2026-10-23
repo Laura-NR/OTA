@@ -12,6 +12,7 @@ import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { DocumentsService } from '../src/documents/documents.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 import { OBJECT_STORAGE } from '../src/storage/storage.module';
 import { TENANT_CONFIG } from '../src/tenant/tenant.tokens';
 
@@ -344,7 +345,7 @@ const fakeAuthService = {
 async function buildApp(state: State): Promise<INestApplication> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(PrismaService)
-    .useValue(createFakePrisma(state))
+    .useValue(withNoSettingsVersion(createFakePrisma(state)))
     .overrideProvider(AuthService)
     .useValue(fakeAuthService)
     .overrideProvider(TENANT_CONFIG)

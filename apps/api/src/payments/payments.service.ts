@@ -31,6 +31,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { loadOfacGate } from '../compliance/ofac-gate';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { depositPolicyFor } from './payment-terms';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
@@ -84,6 +85,7 @@ export class PaymentsService {
     @Inject(PAYMENT_PROVIDERS)
     private readonly providers: Record<PaymentRail, PaymentProvider>,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async list(reservationId: string): Promise<PaymentReceiptDto[]> {
@@ -185,7 +187,7 @@ export class PaymentsService {
         policy: depositPolicyFor(this.tenant, policyKey),
         departure: reservation.startDate,
         now: new Date(),
-        windowHours: this.tenant.payments.windowHours,
+        windowHours: (await this.settings.thresholds()).paymentWindowHours,
       });
       if (!schedule) {
         throw new ConflictException(

@@ -41,6 +41,8 @@ export const retentionScanResultSchema = z.object({
   purged: z.number().int(),
   /** OFAC affidavits past their five years, deleted with their scans (M3, D6). */
   affidavitsDeleted: z.number().int(),
+  /** Staff invitations closed for 90 days, deleted with their work email (M9). */
+  invitesDeleted: z.number().int(),
 });
 
 export type RetentionScanResultDto = z.infer<typeof retentionScanResultSchema>;
