@@ -1613,7 +1613,7 @@
         "off": "Inactif · non vérifié",
         "unavailable": "Inactif · indisponible"
       },
-      "reliabilityNote": "La fiabilité est le taux d'acceptation du registre des offres de répartition ; en dessous de 85 %, le fournisseur sort de la répartition automatique.",
+      "reliabilityNote": "La fiabilité est le taux d'acceptation du registre des offres de répartition. En dessous de 85 %, elle s'affiche en ambre pour examen ; elle ne suspend pas la répartition automatique.",
       "empty": {
         "title": "Aucun fournisseur ne correspond",
         "hint": "Essayez d'effacer un filtre."

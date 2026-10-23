@@ -1613,7 +1613,7 @@
         "off": "Inactivo · sin verificar",
         "unavailable": "Inactivo · no disponible"
       },
-      "reliabilityNote": "La fiabilidad es la tasa de aceptación del registro de ofertas de despacho; por debajo del 85 % el proveedor sale del auto-despacho.",
+      "reliabilityNote": "La fiabilidad es la tasa de aceptación del registro de ofertas de despacho. Por debajo del 85 % se marca en ámbar para revisión; no detiene el auto-despacho.",
       "empty": {
         "title": "Ningún proveedor coincide",
         "hint": "Prueba a limpiar un filtro."

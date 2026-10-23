@@ -1613,7 +1613,7 @@
         "off": "Off · not verified",
         "unavailable": "Off · unavailable"
       },
-      "reliabilityNote": "Reliability is the acceptance rate over the dispatch-offer ledger; below 85 % the supplier drops out of auto-dispatch.",
+      "reliabilityNote": "Reliability is the acceptance rate over the dispatch-offer ledger. Below 85 % it shows amber for review; it does not pause auto-dispatch.",
       "empty": {
         "title": "No suppliers match",
         "hint": "Try clearing a filter."
