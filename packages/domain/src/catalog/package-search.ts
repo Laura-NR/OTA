@@ -12,6 +12,8 @@ export interface SearchablePackage {
   durationDays: number;
   basePrice: string | number;
   services: readonly { itemName: string; itemProvince: string | null }[];
+  /** Every stay claims backup power (M6 D6(b)); absent counts as no. */
+  backupPower?: boolean;
 }
 
 /**
@@ -46,6 +48,8 @@ export interface PackageCriteria {
   durations?: readonly DurationBucketId[];
   minPrice?: number;
   maxPrice?: number;
+  /** Keep packages whose every stay claims backup power. */
+  backupPower?: boolean;
   sort?: PackageSort;
 }
 
@@ -95,7 +99,14 @@ export function searchPackages<T extends SearchablePackage>(
   packages: readonly T[],
   criteria: PackageCriteria = {},
 ): T[] {
-  const { query, provinces = [], durations = [], minPrice, maxPrice } = criteria;
+  const {
+    query,
+    provinces = [],
+    durations = [],
+    minPrice,
+    maxPrice,
+    backupPower,
+  } = criteria;
   const kept = packages.filter((pkg) => {
     if (query && !matchesQuery(pkg, query)) {
       return false;
@@ -116,6 +127,9 @@ export function searchPackages<T extends SearchablePackage>(
       return false;
     }
     if (maxPrice !== undefined && price(pkg) > maxPrice) {
+      return false;
+    }
+    if (backupPower && !pkg.backupPower) {
       return false;
     }
     return true;

@@ -207,7 +207,10 @@
       "trayTitle": "{count, plural, one {# voyage sélectionné} other {# voyages sélectionnés}} pour comparer",
       "trayClear": "Effacer",
       "trayGo": "Comparer côte à côte",
-      "trayHint": "Choisissez-en au moins {min}"
+      "trayHint": "Choisissez-en au moins {min}",
+      "conditions": "Conditions",
+      "backupPower": "Énergie de secours à chaque étape",
+      "backupPowerNote": "Chaque casa nous a confirmé son groupe électrogène ou son solaire ces 7 derniers jours."
     },
     "detail": {
       "bookLabel": "Réserver ce voyage",
@@ -260,7 +263,12 @@
       "customEyebrow": "Sur mesure",
       "customTitle": "Créez votre propre itinéraire",
       "customText": "Partez de ce voyage et ajoutez des provinces, des nuits ou une plage.",
-      "customCta": "Ouvrir le configurateur"
+      "customCta": "Ouvrir le configurateur",
+      "backupPower": {
+        "generatorHours": "Énergie de secours : groupe électrogène, {hours} h par jour",
+        "generator": "Énergie de secours : groupe électrogène",
+        "solar": "Énergie de secours : solaire avec batterie"
+      }
     }
   },
   "booking": {

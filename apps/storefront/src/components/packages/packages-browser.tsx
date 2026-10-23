@@ -42,11 +42,13 @@ const EMPTY: Omit<PackageQuery, 'sort'> = {
   durations: [],
   minPrice: null,
   maxPrice: null,
+  power: false,
 };
 
 /**
- * Packages (Packages / M-Packages boards): filters by province, length and
- * price, a sort, the active filters as removable chips, and a Compare box on
+ * Packages (Packages / M-Packages boards): filters by province, length,
+ * price and backup power at every stay (M6 D6(b)), a sort, the active filters
+ * as removable chips, and a Compare box on
  * every card feeding the compare tray. Filtering runs here on the live
  * catalogue and the URL keeps up, so a filtered list can be shared. The
  * board's type, sleep, pace, conditions and impact filters need the package
@@ -90,6 +92,7 @@ export function PackagesBrowser({
     }
   }
   const provinces = [...provinceCounts.keys()].sort((a, b) => a.localeCompare(b, locale));
+  const poweredCount = packages.filter((pkg) => pkg.backupPower).length;
 
   const toggleIn = <T,>(values: readonly T[], value: T): T[] =>
     values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
@@ -133,6 +136,15 @@ export function PackagesBrowser({
                   ? t('priceFrom', { price: money(query.minPrice) })
                   : t('priceTo', { price: money(query.maxPrice ?? 0) }),
             remove: () => setQuery({ ...query, minPrice: null, maxPrice: null }),
+          },
+        ]
+      : []),
+    ...(query.power
+      ? [
+          {
+            key: 'power',
+            label: t('backupPower'),
+            remove: () => setQuery({ ...query, power: false }),
           },
         ]
       : []),
@@ -209,7 +221,7 @@ export function PackagesBrowser({
       <div
         role="group"
         aria-labelledby={`${prefix}-price`}
-        className="flex flex-col gap-2 pt-4"
+        className="flex flex-col gap-2 py-4"
       >
         <p id={`${prefix}-price`} className="text-body font-semibold text-default">
           {t('price')}
@@ -250,6 +262,29 @@ export function PackagesBrowser({
           </label>
         </div>
         <p className="text-caption text-muted">{t('priceNote', { currency })}</p>
+      </div>
+      <div
+        role="group"
+        aria-labelledby={`${prefix}-conditions`}
+        className="flex flex-col pt-4"
+      >
+        <p
+          id={`${prefix}-conditions`}
+          className="pb-1 text-body font-semibold text-default"
+        >
+          {t('conditions')}
+        </p>
+        <label className="flex min-h-touch cursor-pointer items-center gap-3 text-body text-default">
+          <input
+            type="checkbox"
+            className="h-5 w-5 shrink-0 accent-primary-600"
+            checked={query.power}
+            onChange={() => setQuery({ ...query, power: !query.power })}
+          />
+          <span className="flex-1">{t('backupPower')}</span>
+          <span className="text-caption text-muted">{poweredCount}</span>
+        </label>
+        <p className="text-caption text-muted">{t('backupPowerNote')}</p>
       </div>
     </div>
   );

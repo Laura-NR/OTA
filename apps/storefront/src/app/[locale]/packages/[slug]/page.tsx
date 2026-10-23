@@ -324,6 +324,17 @@ export default async function PackageDetailPage({
                               .filter(Boolean)
                               .join(' · ')}
                           </span>
+                          {service.backupPower ? (
+                            <span className="w-full text-body-sm text-success-700">
+                              {service.backupPower.kind === 'SOLAR'
+                                ? t('detail.backupPower.solar')
+                                : service.backupPower.hoursPerDay !== null
+                                  ? t('detail.backupPower.generatorHours', {
+                                      hours: service.backupPower.hoursPerDay,
+                                    })
+                                  : t('detail.backupPower.generator')}
+                            </span>
+                          ) : null}
                         </li>
                       ))}
                   </ul>

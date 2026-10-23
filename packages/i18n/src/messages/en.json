@@ -207,7 +207,10 @@
       "trayTitle": "{count, plural, one {# trip} other {# trips}} selected to compare",
       "trayClear": "Clear",
       "trayGo": "Compare side by side",
-      "trayHint": "Pick at least {min}"
+      "trayHint": "Pick at least {min}",
+      "conditions": "Conditions",
+      "backupPower": "Backup power at every stay",
+      "backupPowerNote": "Each casa confirmed its generator or solar with us in the last 7 days."
     },
     "detail": {
       "bookLabel": "Book this trip",
@@ -260,7 +263,12 @@
       "customEyebrow": "Custom",
       "customTitle": "Build your own route",
       "customText": "Start from this trip and add provinces, nights or a beach.",
-      "customCta": "Open the itinerary builder"
+      "customCta": "Open the itinerary builder",
+      "backupPower": {
+        "generatorHours": "Backup power: generator, {hours} h a day",
+        "generator": "Backup power: generator",
+        "solar": "Backup power: solar and battery"
+      }
     }
   },
   "booking": {

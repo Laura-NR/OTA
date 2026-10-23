@@ -6,13 +6,15 @@ import {
   type PackageSort,
 } from '@ota/domain';
 
-/** What the Packages URL carries: `?q=&province=&duration=&min=&max=&sort=`. */
+/** What the Packages URL carries: `?q=&province=&duration=&min=&max=&power=1&sort=`. */
 export interface PackageQuery {
   query: string;
   provinces: string[];
   durations: DurationBucketId[];
   minPrice: number | null;
   maxPrice: number | null;
+  /** "Backup power at every stay" (M6 D6(b)). */
+  power: boolean;
   sort: PackageSort;
 }
 
@@ -40,6 +42,7 @@ export function parsePackageQuery(params: Params): PackageQuery {
     ),
     minPrice: amount(params.min),
     maxPrice: amount(params.max),
+    power: list(params.power)[0] === '1',
     sort: (PACKAGE_SORTS as readonly string[]).includes(sort ?? '')
       ? (sort as PackageSort)
       : 'recommended',
@@ -54,6 +57,7 @@ export function packageQueryString(query: PackageQuery): string {
   for (const duration of query.durations) params.append('duration', duration);
   if (query.minPrice !== null) params.set('min', String(query.minPrice));
   if (query.maxPrice !== null) params.set('max', String(query.maxPrice));
+  if (query.power) params.set('power', '1');
   if (query.sort !== 'recommended') params.set('sort', query.sort);
   return params.toString();
 }
@@ -65,6 +69,7 @@ export function toCriteria(query: PackageQuery): PackageCriteria {
     durations: query.durations,
     minPrice: query.minPrice ?? undefined,
     maxPrice: query.maxPrice ?? undefined,
+    backupPower: query.power || undefined,
     sort: query.sort,
   };
 }

@@ -9,6 +9,10 @@ const CASA_NAME = 'E2E Casa Resources';
 const DRIVER_NAME = 'E2E Driver Resources';
 const BOOKING = 'E2ESUP01';
 const TITLE = 'E2E M6 outage in Matanzas';
+const STAY = 'E2E M6 Casa Stay';
+const PACKAGE_SLUG = 'e2e-m6-power-trail';
+const PACKAGE_NAME = 'E2E M6 Power Trail';
+const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
 const DAY_MS = 86_400_000;
 
 process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
@@ -16,10 +20,13 @@ const prisma = new PrismaClient();
 
 /**
  * This spec owns the two suppliers above (and their resources and audit
- * rows), booking E2ESUP01 and every case titled "E2E M6…". Matanzas keeps the
- * console's lists to its own suppliers: the seeded ones work in Pinar del Río.
+ * rows), booking E2ESUP01, every case titled "E2E M6…", and the package
+ * e2e-m6-power-trail with its stay. Matanzas keeps the console's lists to its
+ * own suppliers: the seeded ones work in Pinar del Río.
  */
 async function cleanup() {
+  await prisma.package.deleteMany({ where: { slug: PACKAGE_SLUG } });
+  await prisma.inventoryItem.deleteMany({ where: { name: STAY } });
   const cases = await prisma.disruptionCase.findMany({
     where: { title: { startsWith: 'E2E M6' } },
     select: { id: true },
@@ -88,6 +95,29 @@ test.describe('M6 supplier resources', () => {
       'PRIVATE_DRIVER',
       'RTN-E2E-M6-2',
     );
+    // A published package whose only stay is the casa: the storefront claims
+    // backup power once the desk confirms the casa's generator (D6(b)).
+    const stay = await prisma.inventoryItem.create({
+      data: {
+        type: 'ACCOMMODATION',
+        name: STAY,
+        province: 'Matanzas',
+        basePrice: '80.00',
+        supplierId: casaId,
+      },
+    });
+    await prisma.package.create({
+      data: {
+        name: PACKAGE_NAME,
+        slug: PACKAGE_SLUG,
+        province: 'Matanzas',
+        durationDays: 2,
+        basePrice: '160.00',
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        services: { create: { inventoryItemId: stay.id, dayOffset: 0 } },
+      },
+    });
     const traveler = await prisma.user.findUniqueOrThrow({
       where: { email: 'traveler@example.test' },
     });
@@ -215,5 +245,22 @@ test.describe('M6 supplier resources', () => {
     await expect(card).toContainText('fuel for 2 days');
     await expect(card.getByRole('link', { name: DRIVER_NAME })).toBeVisible();
     await expect(card).toContainText('fuel reserve 40 L · Matanzas');
+
+    // The storefront (D6(b)): the stay's line, then the Packages filter. The
+    // list is cached for 60 s, so it is reloaded until the package shows.
+    await page.goto(`${STOREFRONT_URL}/en/packages/${PACKAGE_SLUG}`);
+    await page.getByRole('tab', { name: /Itinerary/ }).click();
+    await expect(page.getByText('Backup power: generator, 6 h a day')).toBeVisible();
+    await page.goto(`${STOREFRONT_URL}/en/packages?power=1`);
+    await expect(async () => {
+      await page.reload();
+      await expect(page.getByRole('heading', { name: PACKAGE_NAME })).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 90_000, intervals: [5_000] });
+    // The seeded package's stay has no confirmed casa, so the filter drops it.
+    await expect(
+      page.getByRole('heading', { name: 'Trinidad Heritage Trail' }),
+    ).toHaveCount(0);
   });
 });

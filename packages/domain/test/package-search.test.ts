@@ -86,6 +86,16 @@ describe('package search', () => {
     expect(found.map((item) => item.id)).toEqual([havana.id]);
   });
 
+  it('keeps only packages whose every stay claims backup power when asked', () => {
+    const powered = { ...vinales, backupPower: true };
+    expect(
+      searchPackages([powered, trinidad, havana], { backupPower: true }).map(
+        (item) => item.id,
+      ),
+    ).toEqual([vinales.id]);
+    expect(searchPackages([powered, trinidad, havana])).toHaveLength(3);
+  });
+
   it('sorts without touching the catalogue order it was given', () => {
     const catalogue = [vinales, trinidad, havana];
     expect(

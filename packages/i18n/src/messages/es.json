@@ -207,7 +207,10 @@
       "trayTitle": "{count, plural, one {# viaje seleccionado} other {# viajes seleccionados}} para comparar",
       "trayClear": "Borrar",
       "trayGo": "Comparar lado a lado",
-      "trayHint": "Elige al menos {min}"
+      "trayHint": "Elige al menos {min}",
+      "conditions": "Condiciones",
+      "backupPower": "Energía de respaldo en cada alojamiento",
+      "backupPowerNote": "Cada casa nos confirmó su generador o su energía solar en los últimos 7 días."
     },
     "detail": {
       "bookLabel": "Reservar este viaje",
@@ -260,7 +263,12 @@
       "customEyebrow": "A medida",
       "customTitle": "Diseña tu propia ruta",
       "customText": "Parte de este viaje y añade provincias, noches o una playa.",
-      "customCta": "Abrir el planificador"
+      "customCta": "Abrir el planificador",
+      "backupPower": {
+        "generatorHours": "Energía de respaldo: generador, {hours} h al día",
+        "generator": "Energía de respaldo: generador",
+        "solar": "Energía de respaldo: solar con batería"
+      }
     }
   },
   "booking": {
