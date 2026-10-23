@@ -295,6 +295,12 @@ export const tenantConfigSchema = z.object({
   /** No scenarios means the desk cannot open a case. */
   disruptions: disruptionsSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
+  /** M9 D4: staff invitations go only to these domains; empty allows any. */
+  staff: z
+    .object({
+      allowedEmailDomains: z.array(z.string().min(1)).default([]),
+    })
+    .prefault({}),
 });
 
 export type TenantConfig = z.infer<typeof tenantConfigSchema>;
