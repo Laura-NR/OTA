@@ -290,6 +290,7 @@ const ROUTES: Route[] = [
   { method: 'put', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsWrite' },
   // M6: support reads the resources on the inspector; only the desk writes them.
   { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
+  { method: 'put', path: `/suppliers/${SUPPLIER}/vehicle`, allowed: 'opsWrite' },
   { method: 'post', path: `/suppliers/${SUPPLIER}/verification`, allowed: 'opsWrite' },
 
   // Imports, applications, quality.

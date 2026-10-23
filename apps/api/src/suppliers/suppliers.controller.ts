@@ -20,6 +20,7 @@ import {
   setAvailabilitySchema,
   setVerificationSchema,
   uploadCredentialSchema,
+  vehicleDetailsInputSchema,
   type AvailabilityDayDto,
   type AvailabilityQuery,
   type ConfirmResourcesRequest,
@@ -31,6 +32,7 @@ import {
   type SupplierDto,
   type SupplierRowDto,
   type UploadCredentialRequest,
+  type VehicleDetailsRequest,
 } from '@ota/schemas';
 import type { Response } from 'express';
 
@@ -116,6 +118,18 @@ export class SuppliersController {
     @CurrentUser() actor: AuthUser,
   ): Promise<SupplierDetailDto> {
     return this.suppliers.confirmResources(id, body, actor);
+  }
+
+  /** M6 D7(b): a driver's vehicle, written by the desk like the resources. */
+  @Put(':id/vehicle')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  setVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(vehicleDetailsInputSchema)) body: VehicleDetailsRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.suppliers.setVehicle(id, body, actor);
   }
 
   @Post(':id/verification')

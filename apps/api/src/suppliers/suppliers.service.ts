@@ -17,6 +17,7 @@ import type {
 import {
   JOB_STATUSES,
   ReservationStatus,
+  SupplierCategory,
   VerificationStatus,
   hasBackupPower,
   isResourcesStale,
@@ -29,6 +30,7 @@ import {
   type SupplierJob,
 } from '@ota/domain';
 import type { ObjectStorage } from '@ota/storage';
+import { vehicleDetailsSchema } from '@ota/schemas';
 import type {
   AvailabilityDayDto,
   AvailabilityQuery,
@@ -43,6 +45,8 @@ import type {
   SupplierResourcesDto,
   SupplierRowDto,
   UploadCredentialRequest,
+  VehicleDetailsDto,
+  VehicleDetailsRequest,
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
@@ -207,6 +211,12 @@ function toRowDto(
   };
 }
 
+/** The stored vehicle, or null when there is none or it does not match the shape. */
+function storedVehicle(value: Prisma.JsonValue | null): VehicleDetailsDto | null {
+  const parsed = vehicleDetailsSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
 /** The resources row's values, as the audit log records them before and after (D8). */
 function resourcesValues(
   resources: SupplierResources | ConfirmResourcesRequest | null,
@@ -299,7 +309,58 @@ export class SuppliersService {
       ...toRowDto(supplier, jobs, now),
       resources: resources ? toResourcesDto(resources, now) : null,
       jobs12m: jobsInWindow(jobs, now),
+      vehicle: storedVehicle(supplier.vehicleDetails),
     };
+  }
+
+  /**
+   * Replace a driver's vehicle (M6 D7(b)) in the profile's `vehicle_details`
+   * JSON and audit the previous and new values as `supplier.vehicle_updated`.
+   * The insurance date is informational: it does not pause dispatch, which
+   * follows the credential rules only. Other categories get a 422.
+   */
+  async setVehicle(
+    id: string,
+    input: VehicleDetailsRequest,
+    actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    const supplier = await this.prisma.supplierProfile.findUnique({
+      where: { id },
+      select: { category: true, vehicleDetails: true },
+    });
+    if (!supplier) {
+      throw new NotFoundException(`Supplier ${id} not found`);
+    }
+    if (supplier.category !== SupplierCategory.PrivateDriver) {
+      throw new UnprocessableEntityException('Vehicle details are recorded for drivers');
+    }
+    const vehicle: VehicleDetailsDto = {
+      ...input,
+      insuranceUntil: input.insuranceUntil
+        ? input.insuranceUntil.toISOString().slice(0, 10)
+        : null,
+    };
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.supplierProfile.update({
+        where: { id },
+        data: { vehicleDetails: vehicle },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: 'supplier.vehicle_updated',
+          entityType: 'SupplierProfile',
+          entityId: id,
+          metadata: {
+            previous: supplier.vehicleDetails ?? null,
+            next: vehicle,
+          } as Prisma.InputJsonValue,
+        },
+      });
+    });
+
+    return this.getById(id);
   }
 
   /**

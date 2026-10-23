@@ -576,4 +576,63 @@ describe('suppliers', () => {
       expect(hours.status).toBe(400);
     });
   });
+
+  describe('M6 D7(b) vehicle', () => {
+    const vehicle = {
+      model: 'Peugeot 5008',
+      seats: 7,
+      airConditioning: true,
+      extras: 'Child seat on request',
+      plate: 'P 207 913',
+      insurance: 'Civil liability',
+      insuranceUntil: '2027-01-31',
+      routes: ['HAV ⇄ Viñales', 'Zapata'],
+    };
+
+    it('stores a driver vehicle, returns it on the inspector and audits both values', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send(vehicle);
+
+      expect(response.status).toBe(200);
+      expect(response.body.vehicle).toEqual(vehicle);
+      expect(store.get(DRIVER_ID)?.vehicleDetails).toEqual(vehicle);
+      expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'supplier.vehicle_updated',
+          entityId: DRIVER_ID,
+          metadata: { previous: null, next: vehicle },
+        }),
+      });
+    });
+
+    it('refuses a vehicle on a guide and an invalid body', async () => {
+      const guide = await request(app.getHttpServer())
+        .put(`/suppliers/${GUIDE_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send(vehicle);
+      const invalid = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ ...vehicle, seats: 0 });
+
+      expect(guide.status).toBe(422);
+      expect(invalid.status).toBe(400);
+      expect(fakePrisma.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it('reads a stored value that does not match the shape as no vehicle', async () => {
+      store.set(DRIVER_ID, {
+        ...store.get(DRIVER_ID)!,
+        vehicleDetails: { legacy: true },
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/suppliers/${DRIVER_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.vehicle).toBeNull();
+    });
+  });
 });

@@ -153,6 +153,8 @@ export {
   supplierRowSchema,
   supplierSchema,
   uploadCredentialSchema,
+  vehicleDetailsInputSchema,
+  vehicleDetailsSchema,
   verificationStatusSchema,
   type AvailabilityDayDto,
   type AvailabilityQuery,
@@ -168,6 +170,8 @@ export {
   type SupplierResourcesDto,
   type SupplierRowDto,
   type UploadCredentialRequest,
+  type VehicleDetailsDto,
+  type VehicleDetailsRequest,
 } from './supplier';
 export {
   declineServiceItemSchema,
