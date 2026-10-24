@@ -25,9 +25,11 @@
  * The palette, type scale, radii, shadows and breakpoints replace Tailwind's
  * defaults, so a value outside the design cannot be written by accident.
  * Colours go through `color-mix` so opacity modifiers (`bg-primary-600/10`)
- * keep working on custom properties. Type, motion and breakpoint values are
- * literal copies of the tokens (a media query cannot read a custom property);
- * `test/ui.test.ts` holds them to `@ota/theming`.
+ * keep working on custom properties. Motion and breakpoint values are literal
+ * copies of the tokens (a media query cannot read a custom property); type
+ * sizes and line heights are the tokens' pixels in rem (16 px = 1 rem), so a
+ * reader's browser text size, and the storefront's larger-text preference,
+ * scale them. `test/ui.test.ts` holds them to `@ota/theming`.
  *
  * @type {import('tailwindcss').Config}
  */
@@ -39,23 +41,29 @@ const color = (token) =>
 const steps = (family, values) =>
   Object.fromEntries(values.map((step) => [step, color(`color-${family}-${step}`)]));
 
+/** A type token's pixels in rem, against the browser's 16 px default. */
+const rem = (px) => `${px / 16}rem`;
+
 export const TYPE_SCALE = {
-  caption: ['12px', { lineHeight: '16px', fontWeight: '500' }],
-  overline: ['12px', { lineHeight: '16px', fontWeight: '700', letterSpacing: '0.08em' }],
-  label: ['13px', { lineHeight: '16px', fontWeight: '600' }],
-  'body-sm': ['14px', { lineHeight: '20px' }],
-  nav: ['15px', { lineHeight: '20px', fontWeight: '500' }],
-  body: ['16px', { lineHeight: '24px' }],
-  'body-lg': ['18px', { lineHeight: '28px' }],
-  button: ['16px', { lineHeight: '24px', fontWeight: '600' }],
-  h4: ['20px', { lineHeight: '28px', fontWeight: '600' }],
-  'h2-compact': ['22px', { lineHeight: '28px', fontWeight: '600' }],
-  h3: ['24px', { lineHeight: '32px', fontWeight: '600' }],
-  'h1-compact': ['28px', { lineHeight: '34px', fontWeight: '600' }],
-  h2: ['32px', { lineHeight: '40px', fontWeight: '600' }],
-  h1: ['40px', { lineHeight: '48px', fontWeight: '600' }],
-  'display-2': ['48px', { lineHeight: '56px', fontWeight: '600' }],
-  'display-1': ['56px', { lineHeight: '64px', fontWeight: '600' }],
+  caption: [rem(12), { lineHeight: rem(16), fontWeight: '500' }],
+  overline: [
+    rem(12),
+    { lineHeight: rem(16), fontWeight: '700', letterSpacing: '0.08em' },
+  ],
+  label: [rem(13), { lineHeight: rem(16), fontWeight: '600' }],
+  'body-sm': [rem(14), { lineHeight: rem(20) }],
+  nav: [rem(15), { lineHeight: rem(20), fontWeight: '500' }],
+  body: [rem(16), { lineHeight: rem(24) }],
+  'body-lg': [rem(18), { lineHeight: rem(28) }],
+  button: [rem(16), { lineHeight: rem(24), fontWeight: '600' }],
+  h4: [rem(20), { lineHeight: rem(28), fontWeight: '600' }],
+  'h2-compact': [rem(22), { lineHeight: rem(28), fontWeight: '600' }],
+  h3: [rem(24), { lineHeight: rem(32), fontWeight: '600' }],
+  'h1-compact': [rem(28), { lineHeight: rem(34), fontWeight: '600' }],
+  h2: [rem(32), { lineHeight: rem(40), fontWeight: '600' }],
+  h1: [rem(40), { lineHeight: rem(48), fontWeight: '600' }],
+  'display-2': [rem(48), { lineHeight: rem(56), fontWeight: '600' }],
+  'display-1': [rem(56), { lineHeight: rem(64), fontWeight: '600' }],
 };
 
 const preset = {

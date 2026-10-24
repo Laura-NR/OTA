@@ -148,14 +148,22 @@ describe('tailwind preset', () => {
     expect(Object.keys(TYPE_SCALE).sort()).toEqual(typeTokens.sort());
   });
 
-  it('copies the type tokens exactly', () => {
+  it('copies the type tokens exactly, in rem', () => {
+    const pixels = (value: string) => `${Number.parseFloat(value) * 16}px`;
     for (const [name, [size, { lineHeight, fontWeight }]] of Object.entries(TYPE_SCALE)) {
       const token =
         (ALIAS_TOKENS as Record<string, string>)[`text-${name}`] ??
         (COMPONENT_TOKENS as Record<string, string>)[`text-${name}`];
       const [weight, sizeAndLine] = token!.split(' ');
-      expect(sizeAndLine, name).toBe(`${size}/${lineHeight}`);
+      expect(sizeAndLine, name).toBe(`${pixels(size)}/${pixels(lineHeight)}`);
       expect(fontWeight ?? '400', name).toBe(weight);
+    }
+  });
+
+  it('sizes type in rem so a reader’s text size setting scales it', () => {
+    for (const [name, [size, { lineHeight }]] of Object.entries(TYPE_SCALE)) {
+      expect(size, name).toMatch(/^\d+(\.\d+)?rem$/);
+      expect(lineHeight, name).toMatch(/^\d+(\.\d+)?rem$/);
     }
   });
 
