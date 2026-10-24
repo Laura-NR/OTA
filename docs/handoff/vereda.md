@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-23 22:00
+# Handoff — vereda — updated 2026-10-24 10:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -50,11 +50,9 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
 - Browser (Playwright, `scrollWidth − innerWidth` = 0): all six Settings tabs at 1280, users,
   thresholds, permissions, languages and manifest at 390, users and security at 1024, `/invite`
   signed out at 390; the re-dispatch drawer and register earlier this session.
-- `pnpm e2e`: **65 passed, 1 failed** on the full run (8.7 min): `admin-shell.spec.ts` still
-  expected the old read-only Settings text. Fixed to the tabbed page (`e2e/admin-shell.spec.ts`)
-  and rerun alone: **4/4**. The full suite was **not** rerun after that fix — do it first next
-  session. The new specs (`settings.spec.ts` 3, the 2 dispatch tests, the extended M6 spec) passed
-  in the full run. Servers left on 3000–3002 were stopped by PID.
+- `pnpm e2e` (2026-10-24, `apps/*/.next` deleted first): **66/66 passed** (8.2 min), including
+  the fixed `admin-shell.spec.ts`, `settings.spec.ts` (3), the 2 dispatch tests and the extended
+  M6 spec. Servers left on 3000–3002 were stopped by PID.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files; no
   operating_settings version, staff invite or `settings-e2e-*` user left.
 
@@ -128,11 +126,9 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
     logger."
 
 ## Next
-0. Rerun `pnpm e2e` once (the admin-shell fix was verified alone only); the dev stack was left
-   running with the raised rate limits, so stop it first (signal turbo) and restart it after.
-1. Owner: choose the next batch — M10 (Events) when wanted, or Phase 8 items; M9's deferred items
-   (permission overrides, display currencies, runtime flags, recovery codes, passkey policy) each
-   need their own decision.
+1. Owner (2026-10-24): chose the M10 (Concierge/Events) draft plus the Phase 8 DS 07 widths.
+   M9's deferred items (permission overrides, display currencies, runtime flags, recovery codes,
+   passkey policy) each still need their own decision.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
    passport-key backup, the backup-power wording, the staff email domain, the AGENTS.md §C lines
