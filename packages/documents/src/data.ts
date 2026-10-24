@@ -23,6 +23,16 @@ export interface DocumentPriceLine {
   amount: string;
 }
 
+/** M10: seats the desk confirmed for an event, printed on the voucher. */
+export interface DocumentEventTickets {
+  eventName: string;
+  place: string;
+  categoryName: string;
+  seats: number;
+  /** The chosen festival nights; empty for a pass, which covers every night. */
+  nights: Array<{ date: string; label: string; venue: string | null }>;
+}
+
 export interface ReservationDocumentInput {
   bookingCode: string;
   startDate: string;
@@ -33,6 +43,7 @@ export interface ReservationDocumentInput {
   traveler: { fullName: string | null; email: string };
   serviceItems: DocumentServiceItem[];
   priceLines?: DocumentPriceLine[];
+  eventTickets?: DocumentEventTickets[];
 }
 
 export interface VoucherModel {
@@ -51,6 +62,7 @@ export interface VoucherModel {
     supplierName: string | null;
     supplierPhone: string | null;
   }>;
+  eventTickets: DocumentEventTickets[];
 }
 
 export interface WorkOrderModel {
@@ -106,6 +118,7 @@ export function buildVoucherModel(input: ReservationDocumentInput): VoucherModel
       supplierName: item.supplier?.fullName ?? null,
       supplierPhone: item.supplier?.primaryPhone ?? null,
     })),
+    eventTickets: input.eventTickets ?? [],
   };
 }
 

@@ -98,6 +98,35 @@ ${body}
 </html>`;
 }
 
+/** M10: the event seats confirmed for this booking; nothing when there are none. */
+function eventTicketsBlock(model: VoucherModel): string {
+  if (model.eventTickets.length === 0) return '';
+  const rows = model.eventTickets
+    .map((tickets) => {
+      const nights =
+        tickets.nights.length === 0
+          ? 'Every festival night'
+          : tickets.nights
+              .map(
+                (night) =>
+                  `${escapeHtml(formatDate(night.date))} · ${escapeHtml(night.label)}${night.venue ? ` · ${escapeHtml(night.venue)}` : ''}`,
+              )
+              .join('<br/>');
+      return `<tr>
+        <td>${escapeHtml(tickets.eventName)}<br/><span class="muted">${escapeHtml(tickets.place)}</span></td>
+        <td>${tickets.seats} × ${escapeHtml(tickets.categoryName)}</td>
+        <td>${nights}</td>
+      </tr>`;
+    })
+    .join('');
+  return `
+<h2>Event tickets</h2>
+<table>
+  <thead><tr><th>Event</th><th>Seats</th><th>Nights</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>`;
+}
+
 export function renderVoucherHtml(
   model: VoucherModel,
   branding: DocumentBranding,
@@ -121,6 +150,7 @@ export function renderVoucherHtml(
   <thead><tr><th>Service</th><th>Rendezvous</th><th>Dates</th><th>Provider</th></tr></thead>
   <tbody>${rows || '<tr><td colspan="4" class="muted">No services scheduled.</td></tr>'}</tbody>
 </table>
+${eventTicketsBlock(model)}
 <p class="total">Total: ${escapeHtml(model.totalAmount)} ${escapeHtml(model.totalCurrency)}</p>
 <h2>Emergency &amp; duty of care</h2>
 <p class="muted">Keep this voucher with you. Present it at each service, and use these contacts in an emergency.</p>
@@ -161,6 +191,8 @@ const PRICE_LINE_KINDS: Record<string, string> = {
   EXTRA: 'Extra',
   SERVICE: 'Service',
   FEE: 'Fee',
+  EVENT_TICKET: 'Event tickets',
+  CONCIERGE_FEE: 'Concierge fee',
 };
 
 export function renderInvoiceHtml(

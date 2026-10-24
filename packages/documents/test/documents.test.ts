@@ -146,6 +146,70 @@ describe('document templates', () => {
     expect(html).toContain('104');
   });
 
+  it('prints confirmed event seats on the voucher, and nothing without them (M10)', () => {
+    const html = renderVoucherHtml(
+      buildVoucherModel({
+        ...input,
+        eventTickets: [
+          {
+            eventName: 'Havana Jazz Festival',
+            place: 'Vedado',
+            categoryName: 'Numbered seat',
+            seats: 2,
+            nights: [
+              {
+                date: '2027-01-18T00:00:00.000Z',
+                label: 'Opening gala',
+                venue: 'Teatro Nacional',
+              },
+            ],
+          },
+          {
+            eventName: 'Jazz <Pass>',
+            place: 'Havana',
+            categoryName: 'Pass',
+            seats: 1,
+            nights: [],
+          },
+        ],
+      }),
+      branding,
+    );
+    expect(html).toContain('Event tickets');
+    expect(html).toContain('2 × Numbered seat');
+    expect(html).toContain('2027-01-18 · Opening gala · Teatro Nacional');
+    expect(html).toContain('Every festival night');
+    expect(html).toContain('Jazz &lt;Pass&gt;');
+    expect(renderVoucherHtml(buildVoucherModel(input), branding)).not.toContain(
+      'Event tickets',
+    );
+  });
+
+  it('labels the event lines on the invoice breakdown (M10)', () => {
+    const html = renderInvoiceHtml(
+      buildInvoiceModel({
+        ...input,
+        priceLines: [
+          {
+            kind: 'EVENT_TICKET',
+            label: 'Jazz · Numbered',
+            quantity: '4',
+            amount: '180.00',
+          },
+          {
+            kind: 'CONCIERGE_FEE',
+            label: 'Concierge fee · Jazz',
+            quantity: '4',
+            amount: '60.00',
+          },
+        ],
+      }),
+      branding,
+    );
+    expect(html).toContain('Event tickets — Jazz · Numbered');
+    expect(html).toContain('Concierge fee — Concierge fee · Jazz');
+  });
+
   it('adds the emergency protocol to the work order', () => {
     const html = renderWorkOrderHtml(buildWorkOrderModels(input)[0]!, branding);
 

@@ -3,6 +3,7 @@ export {
   buildInvoiceModel,
   buildVoucherModel,
   buildWorkOrderModels,
+  type DocumentEventTickets,
   type DocumentPriceLine,
   type DocumentServiceItem,
   type DocumentSupplier,
