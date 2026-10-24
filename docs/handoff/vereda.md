@@ -1,112 +1,104 @@
-# Handoff — vereda — updated 2026-10-24 10:30
+# Handoff — vereda — updated 2026-10-24 17:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
-Decisions: ADR 0006 (design system; amended through 2026-10-20 for Phase 4, M4, M5, Phase 6, the
-Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app).
+Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
+Confirmation screen, the Custom builder and the DS 07 widths) and ADR 0007 (worker app).
 
 ## State
-- **Phases 0, 1, 0b, 2 and 3 are done; Phase 5 is done; M1–M9 are complete with their
-  surfaces.** Commits are local on `vereda`; the owner pushes
+- **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 is
+  started (items 3 and 4).** Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-23):**
-  - **M6 follow-ups** (no migration): a driver's vehicle on the inspector (`fc22c93`, `2d9b69b`);
-    the storefront's "Backup power at every stay" filter and stay lines (`f6f3a4e`, `86a36f2`).
-  - **Dispatch rules** (owner's request; `12f526a`…`46db41f`): automatic dispatch skips a supplier
-    below the reliability floor (85 % over at least 5 answered offers) or who blocked any day of
-    the service; the re-dispatch drawer hides blocked suppliers and flags below-floor ones, whom
-    the desk may still offer by hand. Scorecards count answered offers only.
-  - **M9 built as approved** (`docs/schema-m9-settings.md` §7): migration
-    `20261023133937_settings_and_staff` (`eaeb167`); rules `packages/domain/src/settings/`
-    (`5f77503`); DTOs (`64c3697`); invitation email (`9731f36`); API (`4724b61`):
-    `OperatingSettingsService` (global, 60 s cache) read by every threshold consumer, the
-    propose → second-Super-Admin apply flow, `/staff` (invites, accept, roles, sessions,
-    deactivation), `/audit-log`, `/settings/security`, the guard refusing deactivated users and
-    staff sessions over 12 h, 10-minute sign-in links; desk (`d725344`): A-Settings' six tabs,
-    `/invite`, login `?next=`, the desk reading the thresholds in force (and the copy stating
-    them); e2e `e2e/settings.spec.ts` (`9964a1a`).
-- **Not built:** SMS/push, M10, Phase 8; A-Content's blog/FAQ/media/conditions tabs; guide
-  specialities; M9's deferred items (permission overrides, display currencies, runtime flags and
-  manifest editing, recovery codes, idle lock, mandatory passkeys, IP allowlist, new-device email).
-- **Placeholders** (unchanged): M4 terms, card fee 0 %, legal texts, OFAC categories, pricing
-  samples, the deposit's refundability and proof retention, the M5 sample terms, the builder
-  rates, the M8 crisis framework, the backup-power wording; dev seed: the demo casa and driver and
-  a second Super Admin (`founder@example.test`).
+- **This session (2026-10-24):**
+  - **DS 07 widths** (Phase 8 item 3, no migration): `e2e/responsive.spec.ts` runs as six
+    Playwright projects (`ds07-320` … `ds07-1440`; the behaviour specs stay on `default`),
+    asserting no sideways scroll and the 16/14 px body on customer and desk pages (`d7d8f56`). It
+    found Home's conditions/why grid overflowing at 320 (`dc63f89`). The desk is checked from 768.
+  - **M10 built as approved** (`docs/schema-m10-events.md` §7): migration
+    `20261024111639_events_concierge` (`aee8602`); rules `packages/domain/src/events/`; DTOs;
+    manifest `concierge` block (placeholder fee € 15, 8 seats, 7 days); four request emails; API
+    `apps/api/src/events/` (desk `/events`, public `/catalog/events`, `/me/event-requests`, desk
+    `/event-requests`), proposal acceptance linking requests, booking cancellation closing them,
+    repricing keeping event lines, the TICKETS instalment, retention; seed (Havana Jazz Festival,
+    Romerías de Mayo); voucher tickets; desk Content › Events and Bookings › Event requests with a
+    dashboard task; storefront `/events`, `/events/[slug]` with the three-step request, the nav
+    link, the Home strip and the account/trip lists; e2e `e2e/events.spec.ts` (`a844709`).
+  - Additive API fields: `/me` returns `phone` and `nationality`; public events carry
+    `answerHours`.
+- **Not built:** SMS/push, Phase 8 items 1–2 (T-Events sink, PWA/large text) and the axe audit;
+  A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's deferred items; M10's
+  deferred room holds, event photos and "Keep building the trip".
+- **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
+  deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
+  crisis framework, the backup-power wording, and now the concierge fee and the events copy
+  (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-23 evening, dev stack stopped for the build)
-- Migration applied (`prisma migrate status`: 20 migrations, up to date); each hand-written check
-  refuses its case against the dev database and a valid invite inserts.
+## Verified (2026-10-24, dev stack stopped for the build)
+- M10 migration applied; each of its six hand-written checks refuses its case against the dev
+  database and a valid confirmed request inserts (rolled back).
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **797 passed / 21 skipped**, 29/29 tasks, 0 cached (api 310/20
-  skipped, domain 274, schemas 59, config 34, email 25; the others unchanged).
+- `TURBO_FORCE=true pnpm test` **843 passed / 28 skipped**, 29/29 tasks, 0 cached (api 314/27
+  skipped, domain 302, schemas 66, config 36, email 28, documents 22).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- Disproved: with the old guard, the deactivated and 12 h tests fail (2/4); with the old
-  dispatch, the blocked-day and below-floor tests fail (2/17). `tsc` caught a `.map(toPackageDto)`
-  index-as-`now` bug the unit tests missed (fixed before commit).
-- Live: Better Auth still signs in with the new `deactivatedAt` field and returns the session's
-  `createdAt`; `/settings/operating`, `/staff`, `/settings/security` and `/audit-log` answer.
-- Browser (Playwright, `scrollWidth − innerWidth` = 0): all six Settings tabs at 1280, users,
-  thresholds, permissions, languages and manifest at 390, users and security at 1024, `/invite`
-  signed out at 390; the re-dispatch drawer and register earlier this session.
-- `pnpm e2e` (2026-10-24, `apps/*/.next` deleted first): **66/66 passed** (8.2 min), including
-  the fixed `admin-shell.spec.ts`, `settings.spec.ts` (3), the 2 dispatch tests and the extended
-  M6 spec. Servers left on 3000–3002 were stopped by PID.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **20/20**, 10 files; no
-  operating_settings version, staff invite or `settings-e2e-*` user left.
+- Disproved: with the old repricing (delete every line) the event-lines test fails; without the
+  acceptance hook the live link test fails.
+- Browser (Playwright, `scrollWidth − innerWidth` = 0, no console errors): the event editor at
+  1280 and 1024, the events list, request queue and dashboard at 1280; storefront `/en/events`,
+  the jazz and guide-only event pages and Home at 390 and 1280; the signed-in request form at 390
+  and 1024.
+- `pnpm e2e` (`apps/*/.next` deleted first): **83 passed, 3 skipped** (14.8 min): the 68
+  behaviour tests (66 + the two M10 tests) on `default` and the DS 07 checks at six widths; the
+  3 skips are the desk check at 320/375/414, by design. Servers left on 3000–3002 stopped by PID.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files (adds
+  `events.integration.test.ts` and the acceptance link in `proposals.integration.test.ts`; the
+  retention live test now expects `eventRequestsDeleted`). No event request, live-test event or
+  user left; the two seeded events remain.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
-- **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. New env:
+- **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. Env from M9:
   `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`.
 - The settings cache is per process (60 s); a multi-instance deploy sees an applied change within
-  a minute. The back-office reads the same values per request.
-- The dev database holds several Super Admins from old smoke tests (`traveler2@`,
-  `dispatchadmin@`, …); they are dev data, not created by M9.
-- One hydration warning on the first dev compile of `/settings?tab=users` did not recur in later
-  loads (the same first-compile pattern as the storefront list earlier).
+  a minute.
+- **M10, for finance/counsel:** whether a regenerated invoice is enough when seats are added after
+  the invoice, or a supplementary invoice is needed; the fall-through and refund wording; the US
+  note on concerts.
+- The dev database holds several Super Admins from old smoke tests; dev data, not M9's.
 - The public `GET /catalog` still returns inventory `supplierId` (pre-existing).
 - **For the owner:** the items under Next; the storefront's sample "Cuba right now" banner says
-  every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain once
-  its mail is live.
+  every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
-- **M9:** a service constructed by hand in a test now needs `fakeOperatingSettings()`
-  (`apps/api/test/fixtures/operating-settings.ts`) as its last argument, and an app-level test's
-  fake Prisma needs `withNoSettingsVersion(...)` (no applied version, no invites). A function used
-  as a `.map` callback must not gain an optional parameter. Client components import from
-  `lib/desk-clock.ts`, never `lib/operating.ts` (it pulls `next/headers`). A new next-intl
-  namespace must not reuse an existing string key (`settings.locales` was a string; the tab uses
-  `settings.languages`). The settings e2e owns `settings-e2e-*@example.test` and every
-  operating_settings version whose reason starts with "E2E", and changes only the resources
-  staleness so the 60 s cache cannot disturb later specs.
-- **Dispatch rules:** any fake Prisma used by `DispatchService` needs `availability.findMany`
-  and a `dispatchOffer.findMany` that filters by `supplierId: { in }` as well as by
-  `serviceItemId`. e2e that start dispatch on the seeded guide depend on the guide's offer ledger:
-  5+ answered offers below 85 % would make the guide undispatchable (the dispatch e2e owns
-  E2EDSP02 for that history and deletes it).
-- **M6 follow-ups:** the M6 e2e also owns the package `e2e-m6-power-trail` and its stay
-  "E2E M6 Casa Stay" (delete the package before the item: the service FK is RESTRICT). The
-  storefront list is cached 60 s, so the e2e reloads `/en/packages?power=1` until the package
-  shows (`toPass`, 90 s); the filter label is rendered twice (aside and hidden drawer), so assert
-  on headings, not on the label's first match. A function used as a `.map` callback must not
-  gain an optional second parameter (the index arrives as that argument).
-- **M6:** the M6 e2e owns `e2e-casa-resources@example.test`, `e2e-driver-resources@example.test`
-  (their resources and audit rows), booking E2ESUP01 and every case titled "E2E M6…"; it works in
-  Matanzas because the seeded casa and driver are in Pinar del Río. "Backup power only" is a
-  controlled checkbox driven by the URL, so Playwright's `check()` fails ("did not change its
-  state"): click and wait for `power=1`. A card located by `locator('div').filter({has: heading})
-  .last()` matches the CardHeader; add `.filter({ has: page.locator('dl') })`. The resources form
-  is keyed by `confirmedAt` so `router.refresh()` resets it.
-- `ServiceItem` keeps its `supplierId` after DECLINED/TIMEOUT until re-dispatch: filter by status
-  whenever "who holds this item" matters.
-- `supplierProfile.findMany` fakes in `suppliers.e2e.test.ts` ignore `include`; the service reads
-  `supplier.resources ?? null` so a missing key means "never confirmed".
+- **M10:** repricing (`TravelersService.writePrice`) keeps `EVENT_TICKET`/`CONCIERGE_FEE` lines
+  and re-adds them to the total; any new code that rewrites price lines must do the same. A
+  CONFIRMED request's booking link may turn null (SET NULL), so never assume it. Event nights and
+  categories are updated by id, never replaced. `EventsService` now takes the operating settings
+  (public `answerHours`), so app-level fakes need `operatingSettings.findFirst` (the RBAC matrix
+  has it). The events e2e owns E2EEVT01, every event named "E2E Concierge…" and **all** event
+  requests of `traveler@example.test` (and the custom requests the BUILD path derived). The
+  storefront event pages are cached 60 s like the packages; the e2e uses the seeded jazz event.
+  `tenant/messages` has en and es only; French falls back.
+- **Tooling:** running `npx prettier --write src` from inside an app ignores the root
+  `.prettierignore` and reformats the generated `cuba-provinces.ts`; run prettier from the repo
+  root. A JSON round-trip of the catalogs is byte-identical once prettier runs from the root,
+  but `tenant/` is prettier-ignored, so format tenant JSON through `--stdin-filepath`.
+- **DS 07:** `pnpm e2e` now runs seven projects; run one with `--project=default` or
+  `--project=ds07-320`. The fixed bottom nav covers content in full-page screenshots; that is
+  the capture, not the page.
+- **M9:** a service constructed by hand in a test needs `fakeOperatingSettings()`; an app-level
+  test's fake Prisma needs `withNoSettingsVersion(...)`. A function used as a `.map` callback must
+  not gain an optional parameter. Client components import `lib/desk-clock.ts`, never
+  `lib/operating.ts`. The settings e2e owns `settings-e2e-*@example.test` and "E2E" versions.
+- **Dispatch rules:** fakes for `DispatchService` need `availability.findMany` and a
+  `dispatchOffer.findMany` filtering by `supplierId: { in }`; the dispatch e2e owns E2EDSP02.
+- **M6 and follow-ups:** the M6 e2e owns its two suppliers, E2ESUP01, "E2E M6…" cases and the
+  `e2e-m6-power-trail` package; a URL-driven checkbox needs click + wait for the URL.
+- `ServiceItem` keeps its `supplierId` after DECLINED/TIMEOUT until re-dispatch.
 - **Nest re-raises the signal after its shutdown sequence.** Never leave a
   `process.on('SIGTERM')` listener attached.
-- The shell defaults to Node 20: run `nvm use` before every pnpm call (the API's Nest is 12.0.3,
-  not the 11 that AGENTS.md says).
+- The shell defaults to Node 20: run `nvm use` before every pnpm call (Nest is 12.0.3).
 - The dev API runs under `node --watch`, so editing `apps/api/src` restarts it mid-session.
 - The M8, M7 and earlier traps still apply (keyed forms after `router.refresh()`; two table rows
   per status-board booking; `/disruptions/alerts` before `/:id`; rebuild a workspace package
@@ -114,25 +106,25 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
   `prisma format`; append-only affidavits; ICU spaces; `pgrep -f` matches the calling shell;
   filter Mailpit by booking code; to stop `pnpm dev`, signal `@turbo/linux-64/bin/turbo run dev`).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
-  (M7, SIGTERM, document downloads, M8 from 2026-10-18; graceful shutdown and Nest 12 from
-  2026-10-19):
-  - "2026-10-20: M6 rides on migration 20261020170618_supplier_resources (one row per supplier,
-    CHECKs for hours 0–24 and amounts ≥ 0). Power, staleness (7 days), the last job and the
-    console's resources are derived on read (`packages/domain/src/supplier/resources.ts`).
-    `PUT /suppliers/:id/resources` is Operations/Super Admin only and replaces the row; support
-    reads."
-  - "2026-10-20: the API request log redacts the cookie and authorization headers and
-    set-cookie (`httpLoggerOptions`, apps/api/src/app.module.ts); keep the list when changing the
-    logger."
+  (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-10-24: M10 rides on migration 20261024111639_events_concierge (events, nights, seat
+    categories, translations, event_requests; CHECKs on seats 1–8, dates and frozen prices).
+    Confirmed seats become EVENT_TICKET/CONCIERGE_FEE price lines; once the price is locked they
+    are a TICKETS instalment. Repricing keeps those lines. Desk writes are Operations/Super
+    Admin; travelers request under /me/event-requests."
+  - "2026-10-24: e2e runs a `default` project plus six `ds07-<width>` projects for
+    `e2e/responsive.spec.ts`; run prettier from the repo root (an app-level run ignores
+    `.prettierignore`)."
 
 ## Next
-1. Owner (2026-10-24): chose the M10 (Concierge/Events) draft plus the Phase 8 DS 07 widths.
-   M9's deferred items (permission overrides, display currencies, runtime flags, recovery codes,
-   passkey policy) each still need their own decision.
+1. Owner: choose the next batch — Phase 8 items 1–2 (T-Events needs the analytics sink, Q10;
+   PWA and large text need no dependency), the axe audit (new dependency), or one of M9's deferred
+   items (each its own decision).
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
-   texts, OFAC categories, card surcharge, deposit refundability and proof retention, the
-   passport-key backup, the backup-power wording, the staff email domain, the AGENTS.md §C lines
-   above. Then SMS once a provider is chosen.
+   texts (now including the events copy and the M10 invoice question), OFAC categories, card
+   surcharge, deposit refundability and proof retention, the passport-key backup, the
+   backup-power wording, the staff email domain, the AGENTS.md §C lines above. Then SMS once a
+   provider is chosen.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
