@@ -196,6 +196,8 @@ export const eventBannerContentSchema = z.object({
   headline: text,
   text,
   cta: text,
+  /** The M10 event the strip's action opens; without it the action opens Events. */
+  eventSlug: z.string().trim().min(1).optional(),
 });
 
 /** A destination card's words; its numbers are in the tenant's destinations.json. */

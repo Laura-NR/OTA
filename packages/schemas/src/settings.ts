@@ -36,6 +36,7 @@ export const operatingThresholdsSchema = z.object({
   resourcesStaleDays: whole(1, 60),
   reliabilityFloorPercent: whole(0, 100),
   reliabilityMinAnswered: whole(1, 100),
+  conciergeAnswerHours: whole(1, 168),
 });
 
 export type OperatingThresholdsDto = z.infer<typeof operatingThresholdsSchema>;
