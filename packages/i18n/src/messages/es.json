@@ -3847,5 +3847,47 @@
       "added": "{total} añadidos a tu reserva.",
       "nothingCharged": "Aún no se cobra nada."
     }
+  },
+  "display": {
+    "title": "Visualización",
+    "lede": "Se guarda solo en este dispositivo, para todas las páginas del sitio.",
+    "largeText": "Texto más grande (18 px)",
+    "largeTextHelp": "También respeta el ajuste de tu navegador",
+    "lowBandwidth": "Modo de baja conexión",
+    "lowBandwidthHelp": "Primero el texto, fotos al tocar, sin vídeo",
+    "on": "Activado",
+    "off": "Desactivado",
+    "textOnly": "Modo solo texto activado · las fotos cargan al tocarlas",
+    "turnOff": "Desactivar",
+    "prompt": "Tu conexión parece lenta. El modo solo texto mantiene todo el sitio y carga las fotos solo cuando las tocas.",
+    "turnOn": "Activar",
+    "notNow": "Ahora no",
+    "loadPhoto": "Cargar foto",
+    "loadPhotoOf": "Cargar foto: {alt}"
+  },
+  "offline": {
+    "pill": "Sin conexión · mostrando la página guardada {age}",
+    "metaTitle": "Sin conexión",
+    "title": "Estás sin conexión",
+    "lede": "Sin conexión no se puede reservar ni pagar. Tus viajes guardados y los números de emergencia siguen funcionando.",
+    "savedTitle": "Guardado en este dispositivo",
+    "savedEmpty": "No hay ningún viaje guardado en este dispositivo. Abre un viaje con conexión y elige «Guardar en este dispositivo».",
+    "openTrip": "Abrir {code}",
+    "emergencyTitle": "Emergencias · funciona sin conexión",
+    "retry": "Reintentar",
+    "kit": {
+      "title": "Kit sin conexión",
+      "lede": "Funciona sin cobertura: esta página del viaje con su itinerario y contactos, y sus documentos. Sin conexión no se puede reservar ni pagar.",
+      "contents": "Esta página del viaje y {count, plural, =0 {ningún documento} one {# documento} other {# documentos}}",
+      "save": "Guardar en este dispositivo",
+      "saving": "Guardando…",
+      "saved": "Guardado en este dispositivo · {date} · {size}",
+      "update": "Actualizar el kit",
+      "remove": "Quitar de este dispositivo",
+      "failed": "No se pudo guardar el kit. Comprueba tu conexión y vuelve a intentarlo.",
+      "unsupported": "Este navegador no puede guardar viajes para usarlos sin conexión.",
+      "missing": "{count, plural, one {Se emitió # documento} other {Se emitieron # documentos}} desde que guardaste. Actualiza el kit para añadirlos.",
+      "privacy": "Al cerrar sesión se borran los viajes guardados en este dispositivo."
+    }
   }
 }

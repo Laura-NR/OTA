@@ -3847,5 +3847,47 @@
       "added": "{total} added to your booking.",
       "nothingCharged": "Nothing is charged yet."
     }
+  },
+  "display": {
+    "title": "Display",
+    "lede": "Kept on this device only, for every page of the site.",
+    "largeText": "Larger text (18 px)",
+    "largeTextHelp": "Also respects your browser setting",
+    "lowBandwidth": "Low-bandwidth mode",
+    "lowBandwidthHelp": "Text first, photos on tap, no video",
+    "on": "On",
+    "off": "Off",
+    "textOnly": "Text-only mode on · photos load on tap",
+    "turnOff": "Turn off",
+    "prompt": "Your connection looks slow. Text-only mode keeps the whole site and loads photos only when you tap them.",
+    "turnOn": "Turn on",
+    "notNow": "Not now",
+    "loadPhoto": "Load photo",
+    "loadPhotoOf": "Load photo: {alt}"
+  },
+  "offline": {
+    "pill": "You're offline · showing the page as saved {age}",
+    "metaTitle": "Offline",
+    "title": "You're offline",
+    "lede": "Nothing can be booked or paid offline. Your saved trips and the emergency numbers still work.",
+    "savedTitle": "Saved on this device",
+    "savedEmpty": "No trip is saved on this device. Open a trip while online and choose “Save on this device”.",
+    "openTrip": "Open {code}",
+    "emergencyTitle": "Emergency · works offline",
+    "retry": "Try again",
+    "kit": {
+      "title": "Offline kit",
+      "lede": "Works with no signal: this trip page with its itinerary and contacts, and its documents. Nothing can be booked or paid offline.",
+      "contents": "This trip page and {count, plural, =0 {no documents} one {# document} other {# documents}}",
+      "save": "Save on this device",
+      "saving": "Saving…",
+      "saved": "Saved on this device · {date} · {size}",
+      "update": "Update kit",
+      "remove": "Remove from this device",
+      "failed": "The kit could not be saved. Check your connection and try again.",
+      "unsupported": "This browser cannot keep trips for offline use.",
+      "missing": "{count, plural, one {# document was} other {# documents were}} issued since you saved. Update the kit to add them.",
+      "privacy": "Signing out removes saved trips from this device."
+    }
   }
 }

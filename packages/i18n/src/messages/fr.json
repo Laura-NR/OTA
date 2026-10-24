@@ -3847,5 +3847,47 @@
       "added": "{total} ajoutés à votre réservation.",
       "nothingCharged": "Rien n’est encore débité."
     }
+  },
+  "display": {
+    "title": "Affichage",
+    "lede": "Conservé sur cet appareil uniquement, pour toutes les pages du site.",
+    "largeText": "Texte plus grand (18 px)",
+    "largeTextHelp": "Respecte aussi le réglage de votre navigateur",
+    "lowBandwidth": "Mode faible connexion",
+    "lowBandwidthHelp": "Le texte d’abord, les photos au toucher, pas de vidéo",
+    "on": "Activé",
+    "off": "Désactivé",
+    "textOnly": "Mode texte seul activé · les photos se chargent au toucher",
+    "turnOff": "Désactiver",
+    "prompt": "Votre connexion semble lente. Le mode texte seul garde tout le site et ne charge les photos que si vous les touchez.",
+    "turnOn": "Activer",
+    "notNow": "Pas maintenant",
+    "loadPhoto": "Charger la photo",
+    "loadPhotoOf": "Charger la photo : {alt}"
+  },
+  "offline": {
+    "pill": "Hors ligne · page affichée telle qu’enregistrée {age}",
+    "metaTitle": "Hors ligne",
+    "title": "Vous êtes hors ligne",
+    "lede": "Hors ligne, rien ne peut être réservé ni payé. Vos voyages enregistrés et les numéros d’urgence restent disponibles.",
+    "savedTitle": "Enregistré sur cet appareil",
+    "savedEmpty": "Aucun voyage n’est enregistré sur cet appareil. Ouvrez un voyage en ligne et choisissez « Enregistrer sur cet appareil ».",
+    "openTrip": "Ouvrir {code}",
+    "emergencyTitle": "Urgences · fonctionne hors ligne",
+    "retry": "Réessayer",
+    "kit": {
+      "title": "Kit hors ligne",
+      "lede": "Fonctionne sans réseau : cette page du voyage avec son itinéraire et ses contacts, et ses documents. Hors ligne, rien ne peut être réservé ni payé.",
+      "contents": "Cette page du voyage et {count, plural, =0 {aucun document} one {# document} other {# documents}}",
+      "save": "Enregistrer sur cet appareil",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré sur cet appareil · {date} · {size}",
+      "update": "Mettre à jour le kit",
+      "remove": "Retirer de cet appareil",
+      "failed": "Le kit n’a pas pu être enregistré. Vérifiez votre connexion et réessayez.",
+      "unsupported": "Ce navigateur ne peut pas garder de voyages pour un usage hors ligne.",
+      "missing": "{count, plural, one {# document a été émis} other {# documents ont été émis}} depuis l’enregistrement. Mettez le kit à jour pour les ajouter.",
+      "privacy": "La déconnexion efface les voyages enregistrés sur cet appareil."
+    }
   }
 }
