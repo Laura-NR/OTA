@@ -473,3 +473,22 @@ export {
   type SeatCategoryKind,
   type TicketCharges,
 } from './events/concierge';
+export {
+  DEFAULT_DISPLAY_PREFERENCES,
+  DISPLAY_COOKIE,
+  SLOW_CONNECTION_KBPS,
+  isSlowConnection,
+  offersLowBandwidthMode,
+  parseDisplayPreferences,
+  serializeDisplayPreferences,
+  type ConnectionHint,
+  type DisplayPreferences,
+} from './device/display';
+export {
+  OFFLINE_KIT_ENTRY_PREFIX,
+  offlineAssetPaths,
+  offlineDocumentPath,
+  offlineKitMissingDocuments,
+  parseOfflineKitEntry,
+  type OfflineKitEntry,
+} from './device/offline-kit';
