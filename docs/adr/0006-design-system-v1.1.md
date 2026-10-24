@@ -778,3 +778,49 @@ The owner approved M9 as recommended (D1a–D9a). Built on the existing tokens; 
   allowlist, new-device email and idle-lock controls are not drawn.
 - **/invite.** A centred card outside the desk shell: sign in with the invited address, then
   "Accept the invitation"; on success, "Open the desk".
+
+## Amendment, 2026-10-24: DS 07 test widths, resolved by the build
+
+Phase 8 item 3 started with the DS 07 checks the code can make: `e2e/responsive.spec.ts` runs at
+320, 375, 414, 768, 1024 and 1440 (one Playwright project per width) and asserts that no page
+scrolls sideways and that body text stays 16 px on customer pages and 14 px on the desk. It
+found one break (Home's conditions/why grid at 320, an implicit min-content column) and that was
+fixed with `grid-cols-1`. No token was added.
+
+- **The desk under 560.** DS 07 says the desk points to Ops Lite below 560 px. Ops Lite does not
+  exist yet (Phase 7), so no pointer is drawn (copy follows the system); the desk keeps
+  reflowing and the spec checks it from 768, DS 07's tablet width, up.
+- **Not automated yet.** The table/matrix "stacked cards under sm", sticky first columns and the
+  print stylesheet are visual rules the spec does not assert; the accessibility audit waits for
+  the axe dependency decision.
+
+## Amendment, 2026-10-24: M10 events and the ticket concierge, resolved by the build
+
+The owner approved M10 as recommended (D1a–D10a). Built from the Concierge and M-Concierge
+boards on the existing tokens; no token was added. There is no admin board for events.
+
+- **Storefront.** The nav's Events link now renders (Phase 2 rule). `/events` is the board's "All
+  events" as cards (dates or "month · dates tbc", place, access badge, summary, one action);
+  `/events/[slug]` is the board's hero with the three steps as a numbered card beside it (from
+  `lg`), the programme, the request and the honest notes. The three steps state the answer time
+  in force (the M9 threshold, sent with the public event) and the manifest fee, not the board's
+  "48 hours" text. Sign-in comes first: signed out, the request card holds a "Sign in to request"
+  link back to the event. The form is the board's three steps on the DS 03 Stepper; the board's
+  name/email fields are replaced by "We confirm to <email>", and phone and nationality show only
+  when the account lacks them (D4). The board's "after the festival" chips are a select of the
+  tenant's served provinces; "Keep building the trip", the room hold and the photos are not drawn
+  (§4 of the doc). While the form is shown the separate programme is not, since the form lists
+  the nights. A guide-only event shows "Plan a trip around it" (the builder) instead of a form.
+- **Home strip.** Its action opens the event the tenant copy names (`eventSlug`), else `/events`.
+- **Account.** The Trips tab and the trip page list the traveler's requests with their status,
+  the trip they go on and, once confirmed, what they added; open ones can be withdrawn.
+- **Desk.** Content gains a tab row (Advisories · Events); Bookings gains "Event requests". The
+  event editor follows the advisory editor's cards (details, dates, nights, categories, then the
+  other languages as tabs with the source as placeholders) with a Publishing card beside it
+  listing the publish checks. The request queue tints a request past the answer threshold
+  (`attention`, as the boards' late rows) and filters by status chips; the request page puts the
+  answer actions in a side card and shows, before confirming, what the seats add and whether
+  they become their own instalment. Overdue requests are a dashboard task, not a new alert in
+  the live strip.
+- **Documents.** The voucher gains an "Event tickets" table (event, seats, nights); the invoice
+  labels the two new price lines.

@@ -1,7 +1,6 @@
 # M10 Events (ticket concierge): schema diff for review
 
-**Status:** **Approved 2026-10-24 as recommended (D1a–D10a).** The build follows; §7 records it
-once built.
+**Status:** **Approved 2026-10-24 as recommended (D1a–D10a) and built the same day** (§7).
 **Date:** 2026-10-24
 **Scope:** `docs/design-v1.1-plan.md` Phase 8 item 4 (Concierge: events and requests, **M10**),
 read against the Concierge and M-Concierge boards (event access, a three-step request, trip
@@ -419,3 +418,47 @@ The migration would be generated with `pnpm --filter @ota/db exec prisma migrate
 and then applied with `prisma migrate dev`, as M3, M6 and M9 did. Adding enum values in
 PostgreSQL cannot run inside the same transaction that uses them; the generated SQL only adds
 them, so this is safe.
+
+## 7. As built (2026-10-24)
+
+Migration `20261024111639_events_concierge` (`aee8602`) with the five tables, five enums, the
+three enum values and six hand-written checks, each proven to refuse its case against the dev
+database. Rules in `packages/domain/src/events/concierge.ts` (`28ae944`, `250b8a7`, `c2a8f1c`);
+DTOs (`5c23774`, `c0d4eb4`); manifest `concierge` block (`de958a8`); emails (`9a83a2e`); API
+(`b3932fb`, `d096676`, `c71243d`, `ec8d513`); seed (`f723808`); documents (`3881903`); desk
+(`d83cec0`, `606dfeb`); storefront (`2352fc3`); e2e (`a844709`). The build decided:
+
+- **Checks.** A CONFIRMED request must hold both frozen prices and `confirmed_at`, but not its
+  booking link: that link is SET NULL when a booking is deleted (the M9 decider precedent).
+- **Editing.** The slug is made from the name (suffixed on a clash) and not edited afterwards.
+  Nights and categories keep their ids across saves (requests point at them); removing one a
+  request holds is refused (409); positions move out of the way before they are rewritten.
+  Publishing runs `eventPublishIssues` (a category unless guide-only, nights for a per-night
+  category, nights inside the dates, seats confirmed before the first day, not over) on publish
+  and on every save of a published event. An event is deleted only while nobody requested it.
+- **Paths.** BUILD and TICKETS_ONLY create the derived M5 request and its DRAFT proposal in the
+  request's transaction, its notes naming the event request; EXISTING lists only the traveler's
+  open, not-over bookings and OPEN custom requests. Accepting a proposal links the open requests
+  of its custom request to the new booking (`proposal.accepted` counts them).
+- **Confirming (D6).** The desk may pick one of the traveler's linkable bookings when the request
+  has none. Ticket and fee lines are labelled in the event's source language and placed after
+  the package's lines; M2 repricing keeps them and re-adds them to the total (a real gap: it
+  deleted every line). Once locked, the TICKETS instalment falls due in `ticketPaymentDays` or on
+  an earlier unpaid balance date; it gets the 7/3/1 balance reminders and reads as overdue like a
+  balance. Documents of a CONFIRMED or IN_PROGRESS booking are regenerated (the voucher prints the
+  seats). The invoice question stays with finance/counsel.
+- **Cancelling.** The desk cancels only open requests; a confirmed one is cancelled with its
+  booking (the transition to CANCELLED closes the booking's requests).
+- **D4.** `/me` gained `phone` and `nationality` (nullable, additive) so the form asks only for
+  what the account lacks. The public event carries `answerHours` (the M9 threshold) so the
+  storefront states the answer time in force.
+- **D7.** The 48 h answer is `conciergeAnswerHours` in the thresholds document (Settings ›
+  Approvals & thresholds, group Bookings); older versions read it from the defaults.
+- **D9.** The daily scan deletes requests closed without a booking for 90 days
+  (`eventRequestsDeleted` in the scan result); the Tier 1 purge clears notes and the desk's reason.
+- **Copy.** The agency's words (`content.events`: opening, fall-through rule, arrival advice, US
+  note, honest notes) are placeholder tenant copy in en and es; French falls back as for the other
+  agency pages. The Home strip names its event by `eventSlug`.
+- **Proof.** `apps/api/test/events.integration.test.ts` (live) and the acceptance case in
+  `proposals.integration.test.ts`; the repricing, retention, cancellation and RBAC cases in the
+  unit suite; `e2e/events.spec.ts`.
