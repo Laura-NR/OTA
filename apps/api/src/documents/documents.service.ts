@@ -8,6 +8,7 @@ import {
 import type { TenantConfig } from '@ota/config';
 import type {
   Document,
+  Prisma,
   Reservation,
   ReservationPriceLine,
   ServiceItem,
@@ -46,7 +47,16 @@ type ReservationForDocuments = Reservation & {
     ServiceItem & { supplier: (SupplierProfile & { user: User }) | null }
   >;
   priceLines: ReservationPriceLine[];
+  /** M10: the booking's confirmed event seats (absent in older test fakes). */
+  eventRequests?: Array<
+    Prisma.EventRequestGetPayload<{ include: typeof EVENT_TICKETS_INCLUDE }>
+  >;
 };
+
+const EVENT_TICKETS_INCLUDE = {
+  event: { include: { nights: { orderBy: { position: 'asc' } } } },
+  category: true,
+} satisfies Prisma.EventRequestInclude;
 
 function toDocumentDto(document: Document): DocumentDto {
   return {
@@ -89,6 +99,19 @@ function toDocumentInput(reservation: ReservationForDocuments): ReservationDocum
       label: line.label,
       quantity: line.quantity.toString(),
       amount: line.amount.toFixed(2),
+    })),
+    eventTickets: (reservation.eventRequests ?? []).map((request) => ({
+      eventName: request.event.name,
+      place: request.event.place,
+      categoryName: request.category.name,
+      seats: request.seats,
+      nights: request.event.nights
+        .filter((night) => request.nightIds.includes(night.id))
+        .map((night) => ({
+          date: night.date.toISOString(),
+          label: night.label,
+          venue: night.venue,
+        })),
     })),
   };
 }
@@ -204,6 +227,11 @@ export class DocumentsService {
         user: true,
         serviceItems: { include: { supplier: { include: { user: true } } } },
         priceLines: { orderBy: { position: 'asc' } },
+        eventRequests: {
+          where: { status: 'CONFIRMED' },
+          orderBy: { confirmedAt: 'asc' },
+          include: EVENT_TICKETS_INCLUDE,
+        },
       },
     });
     if (!reservation) {

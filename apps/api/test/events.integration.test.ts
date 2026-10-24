@@ -5,7 +5,7 @@ import type { EmailMessage, Mailer } from '@ota/email';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
-import type { DocumentsService } from '../src/documents/documents.service';
+import { DocumentsService } from '../src/documents/documents.service';
 import { EventRequestsService } from '../src/events/event-requests.service';
 import { EventsService } from '../src/events/events.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
@@ -55,16 +55,27 @@ describe.skipIf(!runIntegration)(
     const stamp = Date.now();
     const sent: EmailMessage[] = [];
     const mailer: Mailer = { send: async (message) => void sent.push(message) };
-    const regenerated: string[] = [];
+    const rendered: string[] = [];
 
     beforeAll(async () => {
       prisma = new PrismaClient();
-      const documents = {
-        generate: async (reservationId: string) => {
-          regenerated.push(reservationId);
-          return [];
+      // The real document service, with a renderer that keeps the HTML and an
+      // in-memory store, so the regenerated voucher can be read.
+      const stored = new Map<string, Uint8Array>();
+      const documents = new DocumentsService(
+        prisma as unknown as PrismaService,
+        {
+          render: async (html: string) => {
+            rendered.push(html);
+            return new TextEncoder().encode('%PDF-test');
+          },
         },
-      } as unknown as DocumentsService;
+        {
+          save: async (key: string, data: Uint8Array) => void stored.set(key, data),
+          read: async (key: string) => stored.get(key)!,
+        },
+        tenant,
+      );
       events = new EventsService(prisma as unknown as PrismaService, tenant);
       requests = new EventRequestsService(
         prisma as unknown as PrismaService,
@@ -322,7 +333,13 @@ describe.skipIf(!runIntegration)(
       expect(tickets.position).toBe(2);
       // Seven days from now come before the balance's day 20.
       expect(Math.round((tickets.dueAt.getTime() - Date.now()) / DAY)).toBe(7);
-      expect(regenerated).toContain(bookingId);
+      // The regenerated voucher prints the seats; the invoice itemises them.
+      const voucher = rendered.find((html) => html.includes('Service Voucher'))!;
+      expect(voucher).toContain('Event tickets');
+      expect(voucher).toContain('3 × Numbered seat');
+      expect(voucher).toContain('Opening gala · Teatro Nacional');
+      const invoice = rendered.find((html) => html.includes('Price breakdown'))!;
+      expect(invoice).toContain('Concierge fee — Concierge fee · IT Jazz Festival');
       expect(sent.at(-1)!.text).toContain('€390.00');
     });
 
