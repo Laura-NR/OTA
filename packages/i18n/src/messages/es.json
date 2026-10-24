@@ -3866,7 +3866,8 @@
     "loadPhotoOf": "Cargar foto: {alt}"
   },
   "offline": {
-    "pill": "Sin conexión · mostrando la página guardada {age}",
+    "pill": "Sin conexión · no se puede reservar, pagar ni enviar nada hasta que vuelvas",
+    "pillSaved": "Sin conexión · mostrando tu viaje guardado, actualizado {age}",
     "metaTitle": "Sin conexión",
     "title": "Estás sin conexión",
     "lede": "Sin conexión no se puede reservar ni pagar. Tus viajes guardados y los números de emergencia siguen funcionando.",

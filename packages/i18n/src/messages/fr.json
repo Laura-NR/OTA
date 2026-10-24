@@ -3866,7 +3866,8 @@
     "loadPhotoOf": "Charger la photo : {alt}"
   },
   "offline": {
-    "pill": "Hors ligne · page affichée telle qu’enregistrée {age}",
+    "pill": "Hors ligne · rien ne peut être réservé, payé ni envoyé avant votre retour en ligne",
+    "pillSaved": "Hors ligne · voici votre voyage enregistré, mis à jour {age}",
     "metaTitle": "Hors ligne",
     "title": "Vous êtes hors ligne",
     "lede": "Hors ligne, rien ne peut être réservé ni payé. Vos voyages enregistrés et les numéros d’urgence restent disponibles.",

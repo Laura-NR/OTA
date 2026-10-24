@@ -3866,7 +3866,8 @@
     "loadPhotoOf": "Load photo: {alt}"
   },
   "offline": {
-    "pill": "You're offline · showing the page as saved {age}",
+    "pill": "You're offline · nothing can be booked, paid or sent until you're back",
+    "pillSaved": "You're offline · showing your saved trip, updated {age}",
     "metaTitle": "Offline",
     "title": "You're offline",
     "lede": "Nothing can be booked or paid offline. Your saved trips and the emergency numbers still work.",
