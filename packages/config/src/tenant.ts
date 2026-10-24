@@ -188,6 +188,24 @@ export const customBuilderSchema = z
 export type CustomBuilderConfig = z.infer<typeof customBuilderSchema>;
 
 /**
+ * M10 D8: the ticket concierge's terms. The fee is per ticket and frozen on a
+ * request when the desk confirms its seats; the fall-through rule and the
+ * confirmation wording are tenant copy (`tenant/messages`), not numbers.
+ */
+export const conciergeSchema = z.object({
+  /** `placeholder` shows the sample-content notice next to the terms. */
+  status: z.enum(['placeholder', 'published']).default('placeholder'),
+  currency: z.string().length(3).default('EUR'),
+  feePerSeat: z.number().nonnegative().default(0),
+  /** At most 8, the database's cap on one request. */
+  maxSeats: z.number().int().min(1).max(8).default(8),
+  /** Days to pay seats confirmed after the price locked (D6). */
+  ticketPaymentDays: z.number().int().min(1).max(60).default(7),
+});
+
+export type ConciergeConfig = z.infer<typeof conciergeSchema>;
+
+/**
  * M8: the agency's crisis framework (A-Disruption). A case copies its
  * scenario's steps, options and compensation text when it opens (D1), so a
  * later edit here never rewrites an open case. Texts are in the desk's
@@ -294,6 +312,7 @@ export const tenantConfigSchema = z.object({
   customBuilder: customBuilderSchema.nullable().default(null),
   /** No scenarios means the desk cannot open a case. */
   disruptions: disruptionsSchema.prefault({}),
+  concierge: conciergeSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
   /** M9 D4: staff invitations go only to these domains; empty allows any. */
   staff: z

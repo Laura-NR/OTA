@@ -91,6 +91,13 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   desk adapts each option before sending it. The optional `staff.allowedEmailDomains` (M9) limits staff
   invitations to the agency's domains (the board says `@vereda.travel` only); it is
   empty, so any domain is accepted, until the agency's mail domain is live.
+  The M10 `concierge` block (status `placeholder`) holds the ticket concierge's
+  terms: a sample € 15 fee per ticket, at most 8 seats per request (the
+  database's cap) and 7 days to pay seats confirmed after the price locked. The
+  event pages' fall-through rule, confirmation wording and arrival advice are
+  placeholder copy in `tenant/messages` (`pages.events`), and the US note on
+  concerts waits for counsel. Events themselves are desk data (Content ›
+  Events); the dev seed adds a sample Havana Jazz Festival.
 
 ## Forking for a new agency
 

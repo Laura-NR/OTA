@@ -321,3 +321,19 @@ describe('buildTenantManifest', () => {
     });
   });
 });
+
+describe('ticket concierge terms (M10 D8)', () => {
+  it('defaults to a placeholder with no fee, 8 seats and 7 days to pay', () => {
+    expect(parseTenantConfig(minimal).concierge).toEqual({
+      status: 'placeholder',
+      currency: 'EUR',
+      feePerSeat: 0,
+      maxSeats: 8,
+      ticketPaymentDays: 7,
+    });
+  });
+
+  it('never allows more seats than the database caps a request at', () => {
+    expect(() => parseTenantConfig({ ...minimal, concierge: { maxSeats: 9 } })).toThrow();
+  });
+});
