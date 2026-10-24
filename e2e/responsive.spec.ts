@@ -6,7 +6,7 @@ import { signIn } from './helpers';
 /**
  * DS 07 (DS-Responsive): no page scrolls sideways at the test widths, and type
  * does not scale with the viewport (16 px body on customer pages, 14 px on the
- * desk). Each `ds07-<width>` project in playwright.config.ts runs this file at
+ * desk); customer pages also fit with the larger-text preference (18 px). Each `ds07-<width>` project in playwright.config.ts runs this file at
  * one width; the desk is a laptop tool, so it is checked from 768 up.
  */
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
@@ -75,38 +75,55 @@ async function expectFits(page: Page, path: string, bodyFontSize: string) {
   expect.soft(layout.bodyFontSize, `${path} body size`).toBe(bodyFontSize);
 }
 
+/** The public customer pages, with the first published package. */
+async function customerPaths(): Promise<string[]> {
+  const packageSlug = (
+    await prisma.package.findFirst({
+      where: { status: 'PUBLISHED' },
+      orderBy: { createdAt: 'asc' },
+      select: { slug: true },
+    })
+  )?.slug;
+  return [
+    '/en',
+    '/en/destinations',
+    '/en/destinations/havana',
+    '/en/packages',
+    ...(packageSlug ? [`/en/packages/${packageSlug}`] : []),
+    '/en/packages/compare',
+    '/en/events',
+    '/en/events/havana-jazz-festival-2027',
+    '/en/travel-info',
+    '/en/blog',
+    '/en/blog/power-outages-in-cuba',
+    '/en/about',
+    '/en/support',
+    '/en/legal/privacy',
+    '/en/login',
+    '/en/offline',
+    '/join',
+    '/en/no-such-page',
+  ];
+}
+
 test.describe('DS 07 responsive widths', () => {
   test('customer pages never scroll sideways', async ({ page }) => {
     test.setTimeout(240_000);
-    const packageSlug = (
-      await prisma.package.findFirst({
-        where: { status: 'PUBLISHED' },
-        orderBy: { createdAt: 'asc' },
-        select: { slug: true },
-      })
-    )?.slug;
-    const paths = [
-      '/en',
-      '/en/destinations',
-      '/en/destinations/havana',
-      '/en/packages',
-      ...(packageSlug ? [`/en/packages/${packageSlug}`] : []),
-      '/en/packages/compare',
-      '/en/events',
-      '/en/events/havana-jazz-festival-2027',
-      '/en/travel-info',
-      '/en/blog',
-      '/en/blog/power-outages-in-cuba',
-      '/en/about',
-      '/en/support',
-      '/en/legal/privacy',
-      '/en/login',
-      '/join',
-      '/en/no-such-page',
-    ];
-    for (const path of paths) {
+    for (const path of await customerPaths()) {
       await page.goto(`${STOREFRONT_URL}${path}`);
       await expectFits(page, path, '16px');
+    }
+  });
+
+  test('customer pages never scroll sideways with larger text', async ({ page }) => {
+    test.setTimeout(240_000);
+    // Account board "Larger text (18 px)": the root grows, so everything in rem does.
+    await page
+      .context()
+      .addCookies([{ name: 'ota_display', value: 'large-text', url: STOREFRONT_URL }]);
+    for (const path of await customerPaths()) {
+      await page.goto(`${STOREFRONT_URL}${path}`);
+      await expectFits(page, path, '18px');
     }
   });
 
