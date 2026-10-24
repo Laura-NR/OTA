@@ -8,6 +8,7 @@ import type {
   AuditLogEntryDto,
   DispatchViewDto,
   DocumentDto,
+  EventRequestListItemDto,
   IncidentDto,
   PackageDto,
   PaymentScheduleDto,
@@ -38,6 +39,7 @@ import { deskClock } from '@/lib/desk-clock';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
+import { EVENT_REQUEST_BADGE } from '@/lib/events';
 import { bookingDates, money, opsDate, opsTime, percent } from '@/lib/ops-format';
 
 const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
@@ -80,6 +82,7 @@ export default async function BookingPage({
   const { id } = await params;
   const t = await getTranslations('backoffice.reservation');
   const traveler = await getTranslations('status.traveler');
+  const requestsT = await getTranslations('eventRequestsDesk');
   const locale = await getLocale();
   const session = await getServerSession();
   const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
@@ -93,22 +96,35 @@ export default async function BookingPage({
     },
   );
 
-  const [audit, documents, schedule, incidents, dispatch, party, priceLines, pkg, ofac] =
-    await Promise.all([
-      apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
-      apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
-      apiFetch<PaymentScheduleDto>(`/reservations/${id}/schedule`).catch(() => null),
-      apiFetch<IncidentDto[]>(`/incidents?reservationId=${id}`).catch(() => []),
-      apiFetch<DispatchViewDto>(`/reservations/${id}/dispatch`).catch(() => null),
-      apiFetch<ReservationPartyDto>(`/reservations/${id}/travelers`).catch(() => null),
-      apiFetch<ReservationPriceLinesDto>(`/reservations/${id}/price-lines`).catch(
-        () => null,
-      ),
-      reservation.packageId
-        ? apiFetch<PackageDto>(`/packages/${reservation.packageId}`).catch(() => null)
-        : Promise.resolve(null),
-      apiFetch<ReservationOfacDto>(`/reservations/${id}/ofac`).catch(() => null),
-    ]);
+  const [
+    audit,
+    documents,
+    schedule,
+    incidents,
+    dispatch,
+    party,
+    priceLines,
+    pkg,
+    ofac,
+    eventRequests,
+  ] = await Promise.all([
+    apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
+    apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
+    apiFetch<PaymentScheduleDto>(`/reservations/${id}/schedule`).catch(() => null),
+    apiFetch<IncidentDto[]>(`/incidents?reservationId=${id}`).catch(() => []),
+    apiFetch<DispatchViewDto>(`/reservations/${id}/dispatch`).catch(() => null),
+    apiFetch<ReservationPartyDto>(`/reservations/${id}/travelers`).catch(() => null),
+    apiFetch<ReservationPriceLinesDto>(`/reservations/${id}/price-lines`).catch(
+      () => null,
+    ),
+    reservation.packageId
+      ? apiFetch<PackageDto>(`/packages/${reservation.packageId}`).catch(() => null)
+      : Promise.resolve(null),
+    apiFetch<ReservationOfacDto>(`/reservations/${id}/ofac`).catch(() => null),
+    apiFetch<EventRequestListItemDto[]>(`/event-requests?reservationId=${id}`).catch(
+      () => [],
+    ),
+  ]);
 
   const now = new Date();
   const currency = reservation.totalCurrency;
@@ -365,6 +381,41 @@ export default async function BookingPage({
           ) : null}
         </div>
       </Section>
+
+      {eventRequests.length > 0 ? (
+        <Section
+          id="event-requests-title"
+          title={requestsT('onBooking')}
+          description={requestsT('onBookingDescription')}
+        >
+          <ul className="flex flex-col gap-2 px-5 text-body-sm">
+            {eventRequests.map((request) => (
+              <li
+                key={request.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border p-3"
+              >
+                <Link
+                  href={`/bookings/event-requests/${request.id}`}
+                  className="font-mono font-medium text-primary-600 underline-offset-4 hover:underline"
+                >
+                  {request.reference}
+                </Link>
+                <span className="min-w-0 flex-1">
+                  {request.event.name} ·{' '}
+                  {requestsT('seatsValue', {
+                    seats: request.seats,
+                    category: request.categoryName,
+                    tickets: request.tickets,
+                  })}
+                </span>
+                <Badge variant={EVENT_REQUEST_BADGE[request.status]}>
+                  {requestsT(`statuses.${request.status}`)}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      ) : null}
 
       <Section
         id="care-title"

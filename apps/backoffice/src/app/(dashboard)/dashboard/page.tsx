@@ -8,6 +8,7 @@ import {
 import type {
   AnalyticsOverviewDto,
   DisruptionAlertDto,
+  EventRequestListItemDto,
   DispatchBoardRowDto,
   ReservationListItemDto,
   RetentionPendingUserDto,
@@ -59,25 +60,39 @@ export default async function DashboardPage() {
   const month = monthRange(now);
   const previousMonth = monthRange(now, -1);
 
-  const [rows, overview, previous, expiring, retention, submitted, recent, disruptions] =
-    await Promise.all([
-      apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
-      apiFetch<AnalyticsOverviewDto>(`/analytics/overview${rangeQuery(month)}`).catch(
-        () => null,
-      ),
-      apiFetch<AnalyticsOverviewDto>(
-        `/analytics/overview${rangeQuery(previousMonth)}`,
-      ).catch(() => null),
-      apiFetch<SupplierDto[]>(
-        `/suppliers/expiring?days=${thresholds.credentialExpiryWindowDays}`,
-      ).catch(() => []),
-      apiFetch<RetentionPendingUserDto[]>('/retention/pending').catch(() => []),
-      apiFetch<ReservationListItemDto[]>(
-        '/reservations?status=ITINERARY_SUBMITTED&limit=200',
-      ).catch(() => []),
-      apiFetch<ReservationListItemDto[]>('/reservations?limit=200').catch(() => []),
-      apiFetch<DisruptionAlertDto>('/disruptions/alerts').catch(() => null),
-    ]);
+  const [
+    rows,
+    overview,
+    previous,
+    expiring,
+    retention,
+    submitted,
+    recent,
+    disruptions,
+    eventRequests,
+  ] = await Promise.all([
+    apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
+    apiFetch<AnalyticsOverviewDto>(`/analytics/overview${rangeQuery(month)}`).catch(
+      () => null,
+    ),
+    apiFetch<AnalyticsOverviewDto>(
+      `/analytics/overview${rangeQuery(previousMonth)}`,
+    ).catch(() => null),
+    apiFetch<SupplierDto[]>(
+      `/suppliers/expiring?days=${thresholds.credentialExpiryWindowDays}`,
+    ).catch(() => []),
+    apiFetch<RetentionPendingUserDto[]>('/retention/pending').catch(() => []),
+    apiFetch<ReservationListItemDto[]>(
+      '/reservations?status=ITINERARY_SUBMITTED&limit=200',
+    ).catch(() => []),
+    apiFetch<ReservationListItemDto[]>('/reservations?limit=200').catch(() => []),
+    apiFetch<DisruptionAlertDto>('/disruptions/alerts').catch(() => null),
+    apiFetch<EventRequestListItemDto[]>(
+      '/event-requests?status=SUBMITTED&limit=200',
+    ).catch(() => []),
+  ]);
+  // M10 D7: event requests the desk has not answered within the threshold.
+  const unansweredRequests = eventRequests.filter((request) => request.overdue).length;
   // M3: open bookings whose payment and vouchers wait for an OFAC certification.
   const ofacMissing = recent.filter(
     (reservation) =>
@@ -124,7 +139,11 @@ export default async function DashboardPage() {
     .map((user) => user.purgeAt)
     .filter((value): value is string => value !== null)
     .sort();
-  const taskCount = toDispatch.length + expiring.length + (purging.length > 0 ? 1 : 0);
+  const taskCount =
+    toDispatch.length +
+    expiring.length +
+    (purging.length > 0 ? 1 : 0) +
+    (unansweredRequests > 0 ? 1 : 0);
 
   const figures = (
     <>
@@ -308,6 +327,26 @@ export default async function DashboardPage() {
                 </Link>
               </li>
             ))}
+            {unansweredRequests > 0 ? (
+              <li className="flex flex-wrap items-start gap-3 px-5 py-4">
+                <div className="min-w-64 flex-1">
+                  <p className="font-semibold">
+                    {t('tasks.eventRequests.title', { count: unansweredRequests })}
+                  </p>
+                  <p className="text-body-sm text-secondary">
+                    {t('tasks.eventRequests.body', {
+                      hours: thresholds.conciergeAnswerHours,
+                    })}
+                  </p>
+                </div>
+                <Link
+                  href="/bookings/event-requests?status=SUBMITTED"
+                  className={buttonClassName({ variant: 'secondary', size: 'md' })}
+                >
+                  {t('tasks.eventRequests.action')}
+                </Link>
+              </li>
+            ) : null}
             {purging.length > 0 ? (
               <li className="flex flex-wrap items-start gap-3 px-5 py-4">
                 <div className="min-w-64 flex-1">

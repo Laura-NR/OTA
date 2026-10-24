@@ -4,7 +4,7 @@ import type { IconName } from '@ota/ui';
  * The A-Dashboard sidebar: the desk's ten sections, in the design's order.
  * A section whose module is not built yet has no `href` and is not shown, so
  * the sidebar never links to a missing page; it appears once its pages land.
- * Disruptions holds the M8 cases and Content the M7 advisories. Payments and
+ * Disruptions holds the M8 cases and Content the M7 advisories and M10 events. Payments and
  * Settings are read-only until M4 and M9.
  * `pages` are the screens that predate the redesign, re-homed under their
  * section and shown as its sub-navigation; the old paths redirect
@@ -41,6 +41,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     pages: [
       { key: 'board', href: '/bookings' },
       { key: 'proposals', href: '/bookings/proposals' },
+      { key: 'eventRequests', href: '/bookings/event-requests' },
       { key: 'messages', href: '/bookings/messages' },
       { key: 'documents', href: '/bookings/documents' },
     ],
@@ -95,7 +96,10 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     icon: 'pencil',
     href: '/content/advisories',
     base: '/content',
-    pages: [],
+    pages: [
+      { key: 'advisories', href: '/content/advisories' },
+      { key: 'events', href: '/content/events' },
+    ],
   },
   {
     key: 'reports',

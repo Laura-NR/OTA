@@ -1008,7 +1008,10 @@
       "customers": "Clients",
       "suppliers": "Fournisseurs",
       "applications": "Candidatures",
-      "proposals": "Propositions"
+      "proposals": "Propositions",
+      "advisories": "Avis",
+      "events": "Événements",
+      "eventRequests": "Demandes d’événements"
     },
     "shell": {
       "signOut": "Se déconnecter",
@@ -2042,6 +2045,11 @@
           "title": "Conservation RGPD · {count, plural, one {# compte anonymisé} other {# comptes anonymisés}} à partir du {date}",
           "body": "{months} mois après COMPLETED, {days} jours de grâce et aucun clic sur « garder mon compte ». Rien à faire sauf si un voyageur écrit.",
           "action": "Voir"
+        },
+        "eventRequests": {
+          "title": "{count, plural, one {# demande d’événement attend} other {# demandes d’événements attendent}} une réponse",
+          "body": "Sans réponse depuis plus de {hours} h. Indiquez si les places peuvent être demandées, ou marquez-les indisponibles.",
+          "action": "Répondre"
         }
       }
     },
@@ -3538,5 +3546,184 @@
     "defaulted": "L'échéance est passée : l'option {key} s'applique et le bureau vous appellera.",
     "failed": "Votre réponse n'a pas été enregistrée. Réessayez ou appelez le bureau.",
     "default": "par défaut"
+  },
+  "eventsDesk": {
+    "title": "Événements",
+    "description": "Festivals et concerts pour lesquels la conciergerie demande des places. Les voyageurs voient les événements publiés jusqu’à leur dernier jour.",
+    "new": "Nouvel événement",
+    "newTitle": "Nouvel événement",
+    "empty": "Aucun événement pour l’instant.",
+    "event": "Événement",
+    "dates": "Dates",
+    "accessColumn": "Accès",
+    "status": "Statut",
+    "requests": "Demandes (ouvertes / toutes)",
+    "requestCount": "{open} / {total}",
+    "footnote": "Un événement avec des demandes est archivé, jamais supprimé. Les prix par place sont indicatifs ; le bureau saisit le prix payé à la confirmation.",
+    "datesTbc": "dates à confirmer",
+    "back": "← Événements",
+    "readOnly": "Le support consulte les événements ; Opérations et Super Admin les modifient.",
+    "access": {
+      "ALLOCATIONS_OPEN": "Allocations ouvertes",
+      "REQUEST_ONLY": "Sur demande",
+      "PASSES": "Pass via la conciergerie",
+      "GUIDE_ONLY": "Gratuit · guide seulement"
+    },
+    "accessHints": {
+      "ALLOCATIONS_OPEN": "L’organisateur libère des places ; les voyageurs peuvent les demander dès maintenant.",
+      "REQUEST_ONLY": "Les voyageurs peuvent demander des places ; le bureau confirme à l’ouverture des allocations.",
+      "PASSES": "Vendu en pass ; le bureau les demande pour le voyageur.",
+      "GUIDE_ONLY": "Événements gratuits : aucune place à demander. La page propose le créateur sur mesure."
+    },
+    "statuses": {
+      "DRAFT": "Brouillon",
+      "PUBLISHED": "Publié",
+      "ARCHIVED": "Archivé"
+    },
+    "kinds": {
+      "GENERAL": "Entrée générale",
+      "NUMBERED": "Place numérotée",
+      "PASS": "Pass (toutes les soirées)"
+    },
+    "editor": {
+      "title": "Éditeur d’événement",
+      "details": "Détails",
+      "name": "Nom",
+      "place": "Lieu",
+      "province": "Province",
+      "access": "Accès",
+      "summary": "Résumé",
+      "notes": "Notes pour les voyageurs",
+      "sourceLocale": "Langue source",
+      "dates": "Dates",
+      "startsOn": "Premier jour",
+      "endsOn": "Dernier jour",
+      "datesConfirmed": "Dates annoncées par l’organisateur",
+      "datesConfirmedHint": "D’ici là, les voyageurs voient le mois et « dates à confirmer ».",
+      "confirmBy": "Places confirmées avant le",
+      "confirmByHint": "Facultatif. Visible des voyageurs ; avant le premier jour.",
+      "nights": "Soirées",
+      "noNights": "Aucune soirée. Un pass n’en a pas besoin ; toute autre catégorie en exige au moins une.",
+      "night": "Soirée {number}",
+      "nightDate": "Date",
+      "nightLabel": "Programme",
+      "nightVenue": "Salle",
+      "remove": "Retirer",
+      "addNight": "Ajouter une soirée",
+      "categories": "Catégories de places",
+      "noCategories": "Aucune catégorie. Tout événement sauf « guide seulement » en exige une.",
+      "category": "Catégorie {number}",
+      "categoryKind": "Type",
+      "categoryName": "Nom",
+      "categoryPrice": "Prix par place (EUR)",
+      "categoryDescription": "Description",
+      "priceHint": "Laissez le prix vide jusqu’à son annonce par l’organisateur.",
+      "addCategory": "Ajouter une catégorie",
+      "save": "Enregistrer l’événement",
+      "create": "Créer le brouillon",
+      "saveFailed": "L’événement n’a pas été enregistré."
+    },
+    "translations": {
+      "title": "Autres langues",
+      "none": "Le site n’a pas d’autre langue.",
+      "published": "Publiée",
+      "draft": "Brouillon",
+      "missing": "Non traduite",
+      "stale": "La source a changé depuis",
+      "nightLabel": "Soirée · {label}",
+      "categoryName": "Catégorie · {name}",
+      "publish": "Montrer cette traduction aux voyageurs",
+      "publishHint": "Les champs vides reprennent le texte source.",
+      "save": "Enregistrer {locale}",
+      "saved": "{locale} enregistré.",
+      "saveFailed": "La traduction n’a pas été enregistrée."
+    },
+    "actions": {
+      "publish": "Publier",
+      "archive": "Archiver",
+      "delete": "Supprimer",
+      "failed": "La modification n’a pas été enregistrée."
+    },
+    "publishing": {
+      "title": "Publication",
+      "requests": "{open} ouvertes sur {total} demandes.",
+      "seeRequests": "Voir les demandes",
+      "ready": "Prêt à publier.",
+      "live": "En ligne sur /events/{slug} jusqu’à son dernier jour."
+    },
+    "issues": {
+      "NO_CATEGORIES": "Ajoutez une catégorie de places.",
+      "NO_NIGHTS": "Ajoutez les soirées d’une catégorie vendue à la soirée.",
+      "NIGHT_OUTSIDE_DATES": "Une soirée tombe hors des dates de l’événement.",
+      "CONFIRM_AFTER_START": "Les places se confirment avant le premier jour.",
+      "ENDED": "L’événement est terminé."
+    }
+  },
+  "eventRequestsDesk": {
+    "title": "Demandes d’événements",
+    "description": "Demandes de places des voyageurs. Répondez sous {hours} h ; rien n’est débité avant la confirmation des places.",
+    "filter": "Filtrer par statut",
+    "all": "Toutes",
+    "empty": "Aucune demande d’événement.",
+    "reference": "Demande",
+    "event": "Événement",
+    "traveler": "Voyageur",
+    "seats": "Places",
+    "trip": "Voyage",
+    "status": "Statut",
+    "received": "Reçue",
+    "seatsValue": "{seats} × {category} · {tickets, plural, one {# billet} other {# billets}}",
+    "overdue": "Plus de {hours} h",
+    "statuses": {
+      "SUBMITTED": "Envoyée",
+      "REQUESTING": "En cours",
+      "CONFIRMED": "Confirmée",
+      "UNAVAILABLE": "Indisponible",
+      "CANCELLED": "Annulée"
+    },
+    "paths": {
+      "BUILD": "Voyage à construire",
+      "EXISTING": "Voyage existant",
+      "TICKETS_ONLY": "Billets seuls"
+    },
+    "back": "← Demandes d’événements",
+    "overdueAlert": "Cette demande attend une réponse depuis plus de {hours} h.",
+    "request": "Demande",
+    "nights": "Soirées",
+    "everyNight": "Toutes les soirées (pass)",
+    "confirmBy": "Places confirmées avant le",
+    "noConfirmBy": "Non fixé",
+    "notes": "Notes du voyageur",
+    "charges": "Sur la réservation",
+    "pricePerSeat": "Prix par billet",
+    "feePerSeat": "Frais de conciergerie par billet",
+    "total": "Ajouté au total",
+    "confirmedAt": "Confirmée",
+    "closed": "Clôturée",
+    "answer": "Réponse",
+    "feeNote": "Les frais de conciergerie sont de {fee} par billet (manifeste).",
+    "readOnly": "Le support consulte les demandes ; Opérations et Super Admin y répondent.",
+    "onBooking": "Demandes d’événements",
+    "onBookingDescription": "Places demandées pour ce voyage. Les places confirmées figurent dans le détail du prix.",
+    "actions": {
+      "failed": "La modification n’a pas été enregistrée.",
+      "closed": "Cette demande est clôturée.",
+      "requesting": "Nous pouvons demander ces places",
+      "confirm": "Confirmer les places",
+      "unavailable": "Marquer indisponible",
+      "cancel": "Annuler la demande",
+      "reason": "Motif (le voyageur le lit)",
+      "confirmCancel": "Annuler la demande",
+      "confirmUnavailable": "Marquer indisponible",
+      "back": "Retour",
+      "confirmTitle": "Confirmer les places",
+      "pricePerSeat": "Prix payé par billet (EUR)",
+      "noBooking": "Le voyageur n’a pas encore de réservation ouverte à ces dates. Les places se confirment sur une réservation.",
+      "booking": "Réservation",
+      "adds": "{tickets, plural, one {# billet} other {# billets}} : {seats} + frais de conciergerie {fee} = {total} ajoutés à la réservation.",
+      "lockedNote": "Le prix de la réservation est figé : les places sont dues comme une échéance de billets à part.",
+      "openNote": "La réservation n’est pas encore chiffrée pour le paiement : les places s’ajoutent à son total et à son échéancier.",
+      "confirmSeats": "Confirmer les places"
+    }
   }
 }

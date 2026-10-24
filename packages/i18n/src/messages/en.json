@@ -1008,7 +1008,10 @@
       "customers": "Customers",
       "suppliers": "Suppliers",
       "applications": "Applications",
-      "proposals": "Proposals"
+      "proposals": "Proposals",
+      "advisories": "Advisories",
+      "events": "Events",
+      "eventRequests": "Event requests"
     },
     "shell": {
       "signOut": "Sign out",
@@ -2042,6 +2045,11 @@
           "title": "GDPR retention · {count, plural, one {# account purges} other {# accounts purge}} from {date}",
           "body": "{months} months after COMPLETED, a {days}-day grace and no \"keep my account\" click. Nothing to do unless a traveler writes in.",
           "action": "View"
+        },
+        "eventRequests": {
+          "title": "{count, plural, one {# event request} other {# event requests}} waiting for an answer",
+          "body": "Unanswered for over {hours} h. Say whether the seats can be requested, or mark them unavailable.",
+          "action": "Answer"
         }
       }
     },
@@ -3538,5 +3546,184 @@
     "defaulted": "The deadline has passed: option {key} stands and the desk will call you.",
     "failed": "Your answer was not saved. Try again or call the desk.",
     "default": "default"
+  },
+  "eventsDesk": {
+    "title": "Events",
+    "description": "Festivals and concerts the concierge requests seats for. Travelers see published events until their last day.",
+    "new": "New event",
+    "newTitle": "New event",
+    "empty": "No events yet.",
+    "event": "Event",
+    "dates": "Dates",
+    "accessColumn": "Access",
+    "status": "Status",
+    "requests": "Requests (open / all)",
+    "requestCount": "{open} / {total}",
+    "footnote": "An event with requests is archived, never deleted. Prices per seat are indicative; the desk enters the price actually paid when it confirms seats.",
+    "datesTbc": "dates tbc",
+    "back": "← Events",
+    "readOnly": "Support reads events; Operations and Super Admins edit them.",
+    "access": {
+      "ALLOCATIONS_OPEN": "Allocations open",
+      "REQUEST_ONLY": "Request only",
+      "PASSES": "Passes via concierge",
+      "GUIDE_ONLY": "Free events · guide only"
+    },
+    "accessHints": {
+      "ALLOCATIONS_OPEN": "The organiser is releasing seats; travelers can request them now.",
+      "REQUEST_ONLY": "Travelers can request seats; the desk confirms once allocations open.",
+      "PASSES": "Sold as passes; the desk requests them for the traveler.",
+      "GUIDE_ONLY": "Free events: no seats to request. The page offers the custom builder instead."
+    },
+    "statuses": {
+      "DRAFT": "Draft",
+      "PUBLISHED": "Published",
+      "ARCHIVED": "Archived"
+    },
+    "kinds": {
+      "GENERAL": "General admission",
+      "NUMBERED": "Numbered seat",
+      "PASS": "Pass (every night)"
+    },
+    "editor": {
+      "title": "Event editor",
+      "details": "Details",
+      "name": "Name",
+      "place": "Place",
+      "province": "Province",
+      "access": "Access",
+      "summary": "Summary",
+      "notes": "Notes for travelers",
+      "sourceLocale": "Source language",
+      "dates": "Dates",
+      "startsOn": "First day",
+      "endsOn": "Last day",
+      "datesConfirmed": "Dates announced by the organiser",
+      "datesConfirmedHint": "Until then travelers see the month and \"dates tbc\".",
+      "confirmBy": "Seats confirmed by",
+      "confirmByHint": "Optional. Shown to travelers; it must fall before the first day.",
+      "nights": "Nights",
+      "noNights": "No nights yet. A pass needs none; any other category needs at least one.",
+      "night": "Night {number}",
+      "nightDate": "Date",
+      "nightLabel": "Programme",
+      "nightVenue": "Venue",
+      "remove": "Remove",
+      "addNight": "Add a night",
+      "categories": "Seat categories",
+      "noCategories": "No categories yet. Every event except a guide-only one needs one.",
+      "category": "Category {number}",
+      "categoryKind": "Kind",
+      "categoryName": "Name",
+      "categoryPrice": "Price per seat (EUR)",
+      "categoryDescription": "Description",
+      "priceHint": "Leave the price empty until the organiser announces it.",
+      "addCategory": "Add a category",
+      "save": "Save event",
+      "create": "Create draft",
+      "saveFailed": "The event was not saved."
+    },
+    "translations": {
+      "title": "Other languages",
+      "none": "The site has no other language.",
+      "published": "Published",
+      "draft": "Draft",
+      "missing": "Not translated",
+      "stale": "Source changed since",
+      "nightLabel": "Night · {label}",
+      "categoryName": "Category · {name}",
+      "publish": "Show this translation to travelers",
+      "publishHint": "Empty fields fall back to the source text.",
+      "save": "Save {locale}",
+      "saved": "{locale} saved.",
+      "saveFailed": "The translation was not saved."
+    },
+    "actions": {
+      "publish": "Publish",
+      "archive": "Archive",
+      "delete": "Delete",
+      "failed": "The change was not saved."
+    },
+    "publishing": {
+      "title": "Publishing",
+      "requests": "{open} open of {total} requests.",
+      "seeRequests": "See requests",
+      "ready": "Ready to publish.",
+      "live": "Live at /events/{slug} until its last day."
+    },
+    "issues": {
+      "NO_CATEGORIES": "Add a seat category.",
+      "NO_NIGHTS": "Add the nights a per-night category is sold for.",
+      "NIGHT_OUTSIDE_DATES": "A night falls outside the event's dates.",
+      "CONFIRM_AFTER_START": "Seats must be confirmed before the first day.",
+      "ENDED": "The event is over."
+    }
+  },
+  "eventRequestsDesk": {
+    "title": "Event requests",
+    "description": "Seat requests from travelers. Answer within {hours} h; nothing is charged until seats are confirmed.",
+    "filter": "Filter by status",
+    "all": "All",
+    "empty": "No event requests.",
+    "reference": "Request",
+    "event": "Event",
+    "traveler": "Traveler",
+    "seats": "Seats",
+    "trip": "Trip",
+    "status": "Status",
+    "received": "Received",
+    "seatsValue": "{seats} × {category} · {tickets, plural, one {# ticket} other {# tickets}}",
+    "overdue": "Over {hours} h",
+    "statuses": {
+      "SUBMITTED": "Submitted",
+      "REQUESTING": "Requesting",
+      "CONFIRMED": "Confirmed",
+      "UNAVAILABLE": "Unavailable",
+      "CANCELLED": "Cancelled"
+    },
+    "paths": {
+      "BUILD": "Trip to build",
+      "EXISTING": "Existing trip",
+      "TICKETS_ONLY": "Tickets only"
+    },
+    "back": "← Event requests",
+    "overdueAlert": "This request has waited over {hours} h for an answer.",
+    "request": "Request",
+    "nights": "Nights",
+    "everyNight": "Every night (pass)",
+    "confirmBy": "Seats confirmed by",
+    "noConfirmBy": "Not set",
+    "notes": "Traveler's notes",
+    "charges": "On the booking",
+    "pricePerSeat": "Price per ticket",
+    "feePerSeat": "Concierge fee per ticket",
+    "total": "Added to the total",
+    "confirmedAt": "Confirmed",
+    "closed": "Closed",
+    "answer": "Answer",
+    "feeNote": "The concierge fee is {fee} per ticket (manifest).",
+    "readOnly": "Support reads requests; Operations and Super Admins answer them.",
+    "onBooking": "Event requests",
+    "onBookingDescription": "Seats requested for this trip. Confirmed ones are in the price breakdown.",
+    "actions": {
+      "failed": "The change was not saved.",
+      "closed": "This request is closed.",
+      "requesting": "We can request these seats",
+      "confirm": "Confirm seats",
+      "unavailable": "Mark unavailable",
+      "cancel": "Cancel request",
+      "reason": "Reason (the traveler reads it)",
+      "confirmCancel": "Cancel the request",
+      "confirmUnavailable": "Mark unavailable",
+      "back": "Back",
+      "confirmTitle": "Confirm the seats",
+      "pricePerSeat": "Price paid per ticket (EUR)",
+      "noBooking": "The traveler has no open booking for these dates yet. Seats are confirmed onto a booking.",
+      "booking": "Booking",
+      "adds": "{tickets, plural, one {# ticket} other {# tickets}}: {seats} + concierge fee {fee} = {total} added to the booking.",
+      "lockedNote": "The booking's price is locked: the seats fall due as their own ticket instalment.",
+      "openNote": "The booking is not priced for payment yet: the seats join its total and its payment schedule.",
+      "confirmSeats": "Confirm seats"
+    }
   }
 }
