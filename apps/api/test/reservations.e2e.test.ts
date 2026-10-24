@@ -252,11 +252,26 @@ function createFakePrisma(state: {
           : rows;
       },
     },
+    eventRequest: {
+      updateMany: async (args: {
+        where: Record<string, unknown>;
+        data: Record<string, unknown>;
+      }) => {
+        eventRequestUpdates.push(args);
+        return { count: 1 };
+      },
+    },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
 
   return fake;
 }
+
+/** M10: the event-request updates a transition made, newest last. */
+const eventRequestUpdates: {
+  where: Record<string, unknown>;
+  data: Record<string, unknown>;
+}[] = [];
 
 // Stands in for Better Auth: maps a test header to a session, so the guard and
 // RBAC can be exercised without a database or the real auth backend.
@@ -323,6 +338,34 @@ describe('reservations API', () => {
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('ITINERARY_SUBMITTED');
       expect(state.reservations.get(RESERVATION_ID)?.status).toBe('ITINERARY_SUBMITTED');
+    });
+
+    it("cancels the booking's event requests when the booking is cancelled (M10 D3)", async () => {
+      eventRequestUpdates.length = 0;
+      await request(app.getHttpServer())
+        .post(`/reservations/${RESERVATION_ID}/transition`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ to: 'CANCELLED' })
+        .expect(200);
+
+      expect(eventRequestUpdates).toHaveLength(1);
+      expect(eventRequestUpdates[0]).toMatchObject({
+        where: {
+          reservationId: RESERVATION_ID,
+          status: { in: ['SUBMITTED', 'REQUESTING', 'CONFIRMED'] },
+        },
+        data: { status: 'CANCELLED', closedReason: 'The booking was cancelled.' },
+      });
+    });
+
+    it('leaves event requests alone on any other transition', async () => {
+      eventRequestUpdates.length = 0;
+      await request(app.getHttpServer())
+        .post(`/reservations/${RESERVATION_ID}/transition`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ to: 'ITINERARY_SUBMITTED' })
+        .expect(200);
+      expect(eventRequestUpdates).toHaveLength(0);
     });
 
     it('rejects an illegal transition with 409', async () => {

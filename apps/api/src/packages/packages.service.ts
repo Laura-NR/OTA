@@ -41,6 +41,7 @@ import type {
 import type { ObjectStorage } from '@ota/storage';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { slugify } from '../common/slug';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { OBJECT_STORAGE } from '../storage/storage.module';
@@ -88,19 +89,6 @@ type PackageWithServices = Package & {
   media: PackageMedia[];
   translations: PackageTranslation[];
 };
-
-/** Lower-case kebab slug for storefront URLs (accents stripped). */
-function slugify(value: string): string {
-  return (
-    value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 200) || 'package'
-  );
-}
 
 /**
  * Refuse a package that fails the M1 publish checks (409 with the reasons), so
@@ -481,7 +469,7 @@ export class PackagesService {
     const ids = input.services.map((service) => service.inventoryItemId);
     await this.assertInventoryItems(ids);
 
-    const slug = input.slug ?? (await this.uniqueSlug(slugify(input.name)));
+    const slug = input.slug ?? (await this.uniqueSlug(slugify(input.name, 'package')));
     if (input.status === 'PUBLISHED') {
       assertPublishable({
         name: input.name,

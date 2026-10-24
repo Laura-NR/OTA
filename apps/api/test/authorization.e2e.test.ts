@@ -68,6 +68,8 @@ const CASE_BOOKING = 'dadadada-dada-4ada-8ada-dadadadadada';
 const SETTINGS_VERSION = 'ebebebeb-ebeb-4beb-8beb-ebebebebebeb';
 const INVITE = 'fcfcfcfc-fcfc-4cfc-8cfc-fcfcfcfcfcfc';
 const STAFF_USER = '0d0d0d0d-0d0d-4d0d-8d0d-0d0d0d0d0d0d';
+const EVENT = '1e1e1e1e-1e1e-4e1e-8e1e-1e1e1e1e1e1e';
+const EVENT_REQUEST = '2f2f2f2f-2f2f-4f2f-8f2f-2f2f2f2f2f2f';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -377,6 +379,47 @@ const ROUTES: Route[] = [
     allowed: 'authenticated',
   },
 
+  // M10 events: the desk reads; writes are ops+super. The catalog is public.
+  { method: 'get', path: '/events', allowed: 'opsRead' },
+  { method: 'post', path: '/events', allowed: 'opsWrite' },
+  { method: 'get', path: `/events/${EVENT}`, allowed: 'opsRead' },
+  { method: 'patch', path: `/events/${EVENT}`, allowed: 'opsWrite' },
+  { method: 'delete', path: `/events/${EVENT}`, allowed: 'opsWrite' },
+  { method: 'put', path: `/events/${EVENT}/translations/es`, allowed: 'opsWrite' },
+  { method: 'post', path: `/events/${EVENT}/publish`, allowed: 'opsWrite' },
+  { method: 'post', path: `/events/${EVENT}/archive`, allowed: 'opsWrite' },
+  // M10 concierge requests: the desk's queue, and the traveler's own requests.
+  { method: 'get', path: '/event-requests', allowed: 'opsRead' },
+  { method: 'get', path: `/event-requests/${EVENT_REQUEST}`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/requesting`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/unavailable`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/cancel`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/confirm`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: '/me/event-requests', allowed: 'authenticated' },
+  { method: 'post', path: '/me/event-requests', allowed: 'authenticated' },
+  { method: 'get', path: '/me/event-requests/link-targets', allowed: 'authenticated' },
+  {
+    method: 'post',
+    path: `/me/event-requests/${EVENT_REQUEST}/cancel`,
+    allowed: 'authenticated',
+  },
+
   // GDPR retention lifecycle (the keep-alive link itself is public).
   { method: 'get', path: '/retention/pending', allowed: 'opsRead' },
   { method: 'post', path: '/retention/scan', allowed: 'opsWrite' },
@@ -435,6 +478,7 @@ const fakePrisma = {
   paymentReceipt: { findFirst: async () => null },
   $queryRaw: async () => [{ '?column?': 1 }],
   advisory: { findMany: async () => [] },
+  event: { findMany: async () => [], findFirst: async () => null },
 };
 
 const fakeAuthService = {
@@ -586,6 +630,12 @@ describe('authorization matrix', () => {
     expect((await request(app.getHttpServer()).get('/advisories/history')).status).toBe(
       200,
     );
+
+    // The M10 events catalog is public; an unknown slug is a 404, not a 401.
+    expect((await request(app.getHttpServer()).get('/catalog/events')).status).toBe(200);
+    expect(
+      (await request(app.getHttpServer()).get('/catalog/events/no-such-event')).status,
+    ).toBe(404);
 
     // The Support form is public; an empty body fails validation (400), not auth.
     const contact = await request(app.getHttpServer()).post('/contact').send({});

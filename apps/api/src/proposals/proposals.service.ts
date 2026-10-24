@@ -35,6 +35,7 @@ import {
   type ProposalDto,
   type ProposalListItemDto,
   type ProposalQueueQuery,
+  type ProposalRequestPayload,
   type ProposalRequestDto,
   type ProposalVersionDto,
 } from '@ota/schemas';
@@ -211,6 +212,36 @@ function toListItem(row: ProposalRow, now: Date): ProposalListItemDto {
 }
 
 /**
+ * A custom request's stored payload (the builder's answers, dates as ISO
+ * strings, optionals null). M10's derived requests are stored the same way.
+ */
+export function customRequestPayload(
+  input: ProposalRequestPayload,
+  inventoryItemIds: readonly string[],
+): Prisma.InputJsonValue {
+  return {
+    startDate: input.startDate.toISOString(),
+    endDate: input.endDate.toISOString(),
+    adults: input.adults,
+    children: input.children,
+    inventoryItemIds: [...inventoryItemIds],
+    nationality: input.nationality ?? null,
+    budgetPerPerson: input.budgetPerPerson ?? null,
+    interests: input.interests,
+    pace: input.pace ?? null,
+    route: input.route.map((stop) => ({
+      province: stop.province,
+      nights: stop.nights,
+      ...(stop.stay ? { stay: stop.stay } : {}),
+    })),
+    transport: input.transport ?? null,
+    guiding: input.guiding ?? null,
+    interpreter: input.interpreter ?? false,
+    stepFree: input.stepFree ?? false,
+  };
+}
+
+/**
  * M5 custom-trip proposals (`docs/schema-m5-proposal.md`): the builder's
  * request, the desk's immutable priced versions, the traveler's acceptance and
  * the booking it creates. Nothing is charged by a proposal.
@@ -263,26 +294,7 @@ export class ProposalsService {
       }
     }
 
-    const payload: Prisma.InputJsonValue = {
-      startDate: input.startDate.toISOString(),
-      endDate: input.endDate.toISOString(),
-      adults: input.adults,
-      children: input.children,
-      inventoryItemIds: ids,
-      nationality: input.nationality ?? null,
-      budgetPerPerson: input.budgetPerPerson ?? null,
-      interests: input.interests,
-      pace: input.pace ?? null,
-      route: input.route.map((stop) => ({
-        province: stop.province,
-        nights: stop.nights,
-        ...(stop.stay ? { stay: stop.stay } : {}),
-      })),
-      transport: input.transport ?? null,
-      guiding: input.guiding ?? null,
-      interpreter: input.interpreter ?? false,
-      stepFree: input.stepFree ?? false,
-    };
+    const payload = customRequestPayload(input, ids);
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const reference = `VX-C-${generateBookingCode()}`;
@@ -830,6 +842,15 @@ export class ProposalsService {
             where: { id: proposal.requestId },
             data: { status: 'CONVERTED' },
           });
+          // M10 D5: event seats requested for this trip go onto its booking.
+          const eventRequests = await tx.eventRequest.updateMany({
+            where: {
+              customRequestId: proposal.requestId,
+              reservationId: null,
+              status: { in: ['SUBMITTED', 'REQUESTING'] },
+            },
+            data: { reservationId: reservation.id },
+          });
           await tx.auditLog.create({
             data: {
               actorUserId: actor.id,
@@ -841,6 +862,7 @@ export class ProposalsService {
                 reservationId: reservation.id,
                 bookingCode,
                 total: current.total.toFixed(2),
+                eventRequestsLinked: eventRequests.count,
               },
             },
           });

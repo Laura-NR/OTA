@@ -13,6 +13,7 @@ import {
   isRetentionReminderDue,
   retentionPurgeAt,
   retentionStatus,
+  eventRequestPurgeDue,
   isInvitePurgeDue,
   type RetentionClock,
   type RetentionPolicy,
@@ -124,7 +125,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
    * One pass of the lifecycle job, under the retention policy in force (M9):
    * notices first, then their one reminder a week before the deadline, then
    * due purges, then the OFAC affidavits whose five years have run out (M3,
-   * D6), then staff invitations closed for 90 days (M9).
+   * D6), then staff invitations closed for 90 days (M9), then event requests
+   * closed without a booking for 90 days (M10).
    */
   async scan(): Promise<RetentionScanResultDto> {
     const now = new Date();
@@ -134,18 +136,49 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     const purged = await this.purgeExpired(now, policy);
     const affidavitsDeleted = await this.sweepAffidavits(now);
     const invitesDeleted = await this.sweepInvites(now);
+    const eventRequestsDeleted = await this.sweepEventRequests(now);
     if (
       noticed > 0 ||
       reminded > 0 ||
       purged > 0 ||
       affidavitsDeleted > 0 ||
-      invitesDeleted > 0
+      invitesDeleted > 0 ||
+      eventRequestsDeleted > 0
     ) {
       this.logger.log(
-        `Retention scan: ${noticed} notice(s) sent, ${reminded} reminder(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted, ${invitesDeleted} closed invitation(s) deleted`,
+        `Retention scan: ${noticed} notice(s) sent, ${reminded} reminder(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted, ${invitesDeleted} closed invitation(s) deleted, ${eventRequestsDeleted} closed event request(s) deleted`,
       );
     }
-    return { noticed, reminded, purged, affidavitsDeleted, invitesDeleted };
+    return {
+      noticed,
+      reminded,
+      purged,
+      affidavitsDeleted,
+      invitesDeleted,
+      eventRequestsDeleted,
+    };
+  }
+
+  /**
+   * Delete event requests that closed without ever reaching a booking, 90 days
+   * after they closed (M10 D9, the board's "keep it for 90 days"). The audit
+   * log keeps the steps by reference.
+   */
+  private async sweepEventRequests(now: Date): Promise<number> {
+    const candidates = await this.prisma.eventRequest.findMany({
+      where: {
+        status: { in: ['UNAVAILABLE', 'CANCELLED'] },
+        reservationId: null,
+        closedAt: { not: null },
+      },
+      select: { id: true, status: true, reservationId: true, closedAt: true },
+    });
+    const due = candidates.filter((request) => eventRequestPurgeDue(request, now));
+    if (due.length === 0) return 0;
+    const deleted = await this.prisma.eventRequest.deleteMany({
+      where: { id: { in: due.map((request) => request.id) } },
+    });
+    return deleted.count;
   }
 
   /**
@@ -566,6 +599,13 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       await tx.disruptionCaseBooking.updateMany({
         where: { reservationId: { in: reservationIds } },
         data: { safetyNote: null },
+      });
+
+      // M10: an event request keeps its event, seats and frozen amounts for
+      // the aggregates; the traveler's notes and the desk's reason go.
+      await tx.eventRequest.updateMany({
+        where: { userId },
+        data: { notes: null, closedReason: null },
       });
 
       // M5: a custom request is a planning record. Keep its dates, party and

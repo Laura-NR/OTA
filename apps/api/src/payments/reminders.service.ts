@@ -73,15 +73,16 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * The balance reminders. A deposit or full payment is a payment window,
-   * measured in hours, so it is left to `scanWindows`.
+   * The balance reminders, which also cover an M10 ticket instalment (due on a
+   * booking already paid into, like a balance). A deposit or full payment is a
+   * payment window, measured in hours, so it is left to `scanWindows`.
    */
   async scan(now = new Date()): Promise<ReminderScanResultDto> {
     const today = startOfUtcDay(now);
     const instalments = await this.prisma.paymentInstalment.findMany({
       where: {
         status: 'DUE',
-        kind: 'BALANCE',
+        kind: { in: ['BALANCE', 'TICKETS'] },
         dueAt: { gte: addDays(today, 1), lt: addDays(today, 8) },
       },
       include: {

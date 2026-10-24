@@ -273,6 +273,89 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
     expect(again).toEqual(accepted);
   });
 
+  it('puts the open event requests of an accepted request on its booking (M10 D5)', async () => {
+    const request = await service.createRequest(actor, {
+      startDate: new Date('2027-01-16T00:00:00Z'),
+      endDate: new Date('2027-01-26T00:00:00Z'),
+      adults: 2,
+      children: 0,
+      inventoryItemIds: [],
+      locale: 'en',
+      interests: [],
+      route: [],
+    });
+    const event = await prisma.event.create({
+      data: {
+        slug: `proposal-it-event-${stamp}`,
+        access: 'REQUEST_ONLY',
+        province: 'CU03',
+        startsOn: new Date('2027-01-18T00:00:00Z'),
+        endsOn: new Date('2027-01-24T00:00:00Z'),
+        name: 'Proposal IT Festival',
+        place: 'Vedado',
+        summary: 'Concerts.',
+        categories: { create: [{ kind: 'PASS', name: 'Pass', position: 0 }] },
+      },
+      include: { categories: true },
+    });
+    const base = {
+      userId: actor.id,
+      eventId: event.id,
+      categoryId: event.categories[0]!.id,
+      seats: 2,
+      path: 'BUILD' as const,
+      customRequestId: request.requestId,
+    };
+    const open = await prisma.eventRequest.create({
+      data: { ...base, reference: `VX-E-OPEN${String(stamp).slice(-4)}` },
+    });
+    const closed = await prisma.eventRequest.create({
+      data: {
+        ...base,
+        reference: `VX-E-SHUT${String(stamp).slice(-4)}`,
+        status: 'UNAVAILABLE',
+        closedAt: new Date(),
+      },
+    });
+
+    try {
+      const priced = await service.createVersion(actor, request.id, {
+        summary: 'Festival week.',
+        validUntil: new Date('2027-01-10T00:00:00Z'),
+        currency: 'EUR',
+        lines: [
+          {
+            kind: 'FEE',
+            unit: 'PER_BOOKING',
+            label: 'Vereda service fee',
+            quantity: 1,
+            unitAmount: 100,
+          },
+        ],
+        stops: [],
+        days: [],
+        options: [],
+      });
+      const accepted = await service.acceptForUser(
+        actor,
+        request.id,
+        priced.versions[0]!.id,
+      );
+
+      const [linked, untouched] = await Promise.all([
+        prisma.eventRequest.findUniqueOrThrow({ where: { id: open.id } }),
+        prisma.eventRequest.findUniqueOrThrow({ where: { id: closed.id } }),
+      ]);
+      expect(linked.reservationId).toBe(accepted.reservationId);
+      expect(untouched.reservationId).toBeNull();
+    } finally {
+      await prisma.eventRequest.deleteMany({
+        where: { id: { in: [open.id, closed.id] } },
+      });
+      await prisma.event.delete({ where: { id: event.id } });
+    }
+  });
+
   it("stores the designed builder's route and choices, and refuses an unknown style", async () => {
     const request = await service.createRequest(actor, {
       startDate: new Date('2027-06-01T00:00:00Z'),

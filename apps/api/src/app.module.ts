@@ -12,6 +12,7 @@ import { ContactModule } from './contact/contact.module';
 import { CustomersModule } from './customers/customers.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { DisruptionsModule } from './disruptions/disruptions.module';
+import { EventsModule } from './events/events.module';
 import { DocumentsModule } from './documents/documents.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
@@ -93,6 +94,7 @@ export const httpLoggerOptions = {
     ComplianceModule,
     AdvisoriesModule,
     DisruptionsModule,
+    EventsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })

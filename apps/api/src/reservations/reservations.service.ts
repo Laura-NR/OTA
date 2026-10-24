@@ -335,6 +335,21 @@ export class ReservationsService {
         },
       });
 
+      // M10 D3: a cancelled booking takes its event requests with it.
+      if (input.to === ReservationStatus.Cancelled) {
+        await tx.eventRequest.updateMany({
+          where: {
+            reservationId: id,
+            status: { in: ['SUBMITTED', 'REQUESTING', 'CONFIRMED'] },
+          },
+          data: {
+            status: 'CANCELLED',
+            closedAt: new Date(),
+            closedReason: 'The booking was cancelled.',
+          },
+        });
+      }
+
       await tx.auditLog.create({
         data: {
           actorUserId: actor.id,

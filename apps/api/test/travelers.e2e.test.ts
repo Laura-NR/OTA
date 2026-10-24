@@ -237,9 +237,21 @@ function createFakePrisma(state: State) {
       },
     },
     reservationPriceLine: {
-      deleteMany: async (args: { where: { reservationId: string } }) => {
+      findMany: async (args: {
+        where: { reservationId: string; kind?: { in?: string[] } };
+      }) =>
+        state.lines.filter(
+          (line) =>
+            line.reservationId === args.where.reservationId &&
+            (!args.where.kind?.in || args.where.kind.in.includes(line.kind as string)),
+        ),
+      deleteMany: async (args: {
+        where: { reservationId: string; kind?: { notIn?: string[] } };
+      }) => {
         state.lines = state.lines.filter(
-          (line) => line.reservationId !== args.where.reservationId,
+          (line) =>
+            line.reservationId !== args.where.reservationId ||
+            (args.where.kind?.notIn?.includes(line.kind as string) ?? false),
         );
       },
       createMany: async (args: { data: Row[] }) => {
@@ -517,6 +529,34 @@ describe('travelers API (M2)', () => {
     // 1 000 base + 18 cake + 25 tourist card + 100 service fee.
     const booking = state.reservations.find((row) => row.id === PACKAGE_BOOKING)!;
     expect(String(booking.totalAmount)).toBe('1143');
+  });
+
+  it('keeps confirmed event seats and their amount when the package is repriced (M10 D6)', async () => {
+    state.lines.push({
+      id: randomUUID(),
+      reservationId: PACKAGE_BOOKING,
+      kind: 'EVENT_TICKET',
+      label: 'Havana Jazz Festival · Numbered seat',
+      quantity: new Prisma.Decimal(2),
+      unitAmount: new Prisma.Decimal(50),
+      amount: new Prisma.Decimal(100),
+      currency: 'EUR',
+      position: 1000,
+    });
+
+    await request(app.getHttpServer())
+      .post(`/reservations/${PACKAGE_BOOKING}/extras`)
+      .set(as())
+      .send({ label: 'Birthday cake', unit: 'PER_BOOKING', unitAmount: 18 })
+      .expect(201);
+
+    const kept = state.lines.filter(
+      (line) => line.reservationId === PACKAGE_BOOKING && line.kind === 'EVENT_TICKET',
+    );
+    expect(kept).toHaveLength(1);
+    // The package's 1 143 plus the 100 of seats the repricing must not drop.
+    const booking = state.reservations.find((row) => row.id === PACKAGE_BOOKING)!;
+    expect(String(booking.totalAmount)).toBe('1243');
   });
 
   it('refuses a repricing change once the payment link locked the price', async () => {

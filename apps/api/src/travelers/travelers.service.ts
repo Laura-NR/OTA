@@ -58,6 +58,12 @@ type PackageRow = NonNullable<PricingRow['package']>;
 type ExtraRow = PricingRow['extras'][number];
 type Tx = Prisma.TransactionClient;
 
+/** M10 price lines that repricing the package never touches. */
+const EVENT_LINE_KINDS: ('EVENT_TICKET' | 'CONCIERGE_FEE')[] = [
+  'EVENT_TICKET',
+  'CONCIERGE_FEE',
+];
+
 interface PricedTraveler {
   kind: TravelerKind;
   dateOfBirth: Date | null;
@@ -657,10 +663,25 @@ export class TravelersService {
     travelerIds: readonly string[],
     extras: readonly Pick<ExtraRow, 'id'>[],
   ): Promise<void> {
-    await tx.reservationPriceLine.deleteMany({ where: { reservationId: row.id } });
+    // M10 D6: confirmed event seats are not the package's price; they stay,
+    // and the total the caller just wrote is raised by them again.
+    const eventLines = await tx.reservationPriceLine.findMany({
+      where: { reservationId: row.id, kind: { in: EVENT_LINE_KINDS } },
+      select: { amount: true },
+    });
+    await tx.reservationPriceLine.deleteMany({
+      where: { reservationId: row.id, kind: { notIn: EVENT_LINE_KINDS } },
+    });
     await tx.reservationPriceLine.createMany({
       data: priceLineRows(price, row.id, travelerIds, row.totalCurrency),
     });
+    if (eventLines.length > 0) {
+      const events = eventLines.reduce((sum, line) => sum + Number(line.amount), 0);
+      await tx.reservation.update({
+        where: { id: row.id },
+        data: { totalAmount: Math.round((price.total + events) * 100) / 100 },
+      });
+    }
 
     const extraLines = price.lines.filter((line) => line.kind === 'EXTRA');
     for (const [index, extra] of extras.entries()) {
