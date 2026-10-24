@@ -73,9 +73,11 @@ test.describe('storefront checkout', () => {
     await expect(page.getByRole('heading', { level: 2, name: 'Payment' })).toBeVisible();
     await expect(page.getByRole('radio', { name: /Pay in full/ })).toBeChecked();
     await expect(page.getByRole('radio', { name: /Deposit/ })).toHaveCount(0);
+    // Retried for a click before hydration; the wait covers the wire page's
+    // first dev compile, which can pass 3 s late in the suite.
     await expect(async () => {
       await page.getByRole('button', { name: 'Continue to bank transfer' }).click();
-      await expect(page).toHaveURL(/\/checkout\/wire\//, { timeout: 3_000 });
+      await expect(page).toHaveURL(/\/checkout\/wire\//, { timeout: 15_000 });
     }).toPass();
 
     await expect(page).toHaveURL(/\/checkout\/wire\//);
