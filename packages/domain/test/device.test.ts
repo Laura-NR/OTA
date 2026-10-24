@@ -144,6 +144,8 @@ describe('offline kit', () => {
       '<script>self.__next_f.push([1,"3:I[\\"static/chunks/app/%5Blocale%5D/page.js\\"]"])</script>',
       '<script src="/_next/static/chunks/webpack.js"></script>',
       '<img src="/api/ota/catalog/media/1">',
+      // The React payload split mid-path across two script tags.
+      '<script>self.__next_f.push([1,"[\\"static/chunks/app-pag"])</script>',
     ].join('');
     expect(offlineAssetPaths(html)).toEqual([
       '/_next/static/css/app.css?v=1&x=2',

@@ -67,13 +67,15 @@ export function offlineDocumentPath(documentId: string): string {
 /**
  * The build assets a saved page needs to render and hydrate offline: every
  * `/_next/static/` file its HTML names, in tags or in the inline React payload
- * (where the `/_next/` prefix is dropped). The service worker keeps its own
- * copy of this pattern for the offline page; keep the two alike.
+ * (where the `/_next/` prefix is dropped). A path must end in a file extension:
+ * the payload is split across script tags, which can cut a path in two. The
+ * service worker keeps its own copy of this pattern for the offline page; keep
+ * the two alike.
  */
 export function offlineAssetPaths(html: string): string[] {
   const found = new Set<string>();
   for (const match of html.matchAll(
-    /(?:\/_next\/)?(static\/(?:chunks|css|media)\/[^"'\s\\)<>]+)/g,
+    /(?:\/_next\/)?(static\/(?:chunks|css|media)\/[^"'\s\\)<>]+?\.(?:js|css|woff2|svg|png|jpg|webp)(?:\?[^"'\s\\)<>]*)?)(?![\w.-])/g,
   )) {
     found.add(`/_next/${match[1]!.replace(/&amp;/g, '&')}`);
   }
