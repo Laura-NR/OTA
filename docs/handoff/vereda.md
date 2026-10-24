@@ -435,4 +435,8 @@ Confirmation screen, the Custom builder, M7, M8 and M6) and ADR 0007 (worker app
   acceptance needs a fresh account or a staff member; nobody changes their own role or
   deactivates themselves; the session limit and link validity are env config; copy that states a
   threshold takes the value in force.
-
+- 2026-10-24 — the owner chose the M10 (Concierge/Events) draft plus the Phase 8 DS 07 widths,
+  then approved M10 D1a–D10a as recommended (`docs/schema-m10-events.md`): events in the
+  database with a desk editor; the three paths with a derived M5 request; confirmed seats as
+  price lines plus a TICKETS instalment once the price is locked (the invoice question goes to
+  finance/counsel); sign-in first; the 48 h answer as an M9 threshold; no dispatch for tickets.

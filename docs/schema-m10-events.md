@@ -1,7 +1,7 @@
 # M10 Events (ticket concierge): schema diff for review
 
-**Status:** **Draft 2026-10-24, for the owner's decision.** Nothing is generated or applied until
-D1–D10 are answered.
+**Status:** **Approved 2026-10-24 as recommended (D1a–D10a).** The build follows; §7 records it
+once built.
 **Date:** 2026-10-24
 **Scope:** `docs/design-v1.1-plan.md` Phase 8 item 4 (Concierge: events and requests, **M10**),
 read against the Concierge and M-Concierge boards (event access, a three-step request, trip
