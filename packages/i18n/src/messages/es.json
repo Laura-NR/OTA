@@ -3725,5 +3725,127 @@
       "openNote": "La reserva aún no tiene precio para el pago: las entradas se suman a su total y a su calendario de pagos.",
       "confirmSeats": "Confirmar entradas"
     }
+  },
+  "events": {
+    "metaTitle": "Eventos · conserjería de entradas",
+    "breadcrumb": "Ruta de navegación",
+    "eyebrow": "Acceso a eventos",
+    "title": "Eventos",
+    "datesNote": "Las fechas «por confirmar» esperan el anuncio del organizador; puedes pedir igualmente y confirmamos cuando se anuncien.",
+    "empty": "Ahora no hay eventos abiertos a solicitudes.",
+    "datesTbc": "fechas por confirmar",
+    "access": {
+      "ALLOCATIONS_OPEN": "Cupos abiertos",
+      "REQUEST_ONLY": "Solo por solicitud",
+      "PASSES": "Abonos vía conserjería",
+      "GUIDE_ONLY": "Gratis · solo guía"
+    },
+    "planTrip": "Planear un viaje en torno al evento",
+    "requestAccess": "Solicitar acceso",
+    "sampleTitle": "Contenido de ejemplo",
+    "sampleText": "Estas condiciones son provisionales hasta que {agency} las publique.",
+    "steps": {
+      "one": {
+        "title": "Dinos las noches y las entradas",
+        "text": "Qué noches del festival, cuántas personas, qué categoría. Dos minutos, aquí abajo."
+      },
+      "two": {
+        "title": "La mesa confirma la disponibilidad",
+        "text": "En {hours} horas para la solicitud; las entradas se confirman antes del {confirmBy}. Ves el estado en tu cuenta."
+      },
+      "three": {
+        "title": "Las entradas se suman a tu reserva",
+        "text": "Se añaden al precio de tu reserva una vez confirmadas, con una tarifa de conserjería de {fee} por entrada. Antes no se cobra nada."
+      }
+    },
+    "confirmByLater": "una fecha que anunciamos con el programa",
+    "programme": "Programa",
+    "requestTitle": "Solicitar acceso",
+    "guideTitle": "Entrada libre",
+    "guideText": "Los eventos de este festival son gratuitos; no hay entradas que pedir. Construye un viaje en torno a él y añadimos un guía que conoce el programa.",
+    "signInText": "Las solicitudes se guardan en tu cuenta para que puedas seguirlas. Inicia sesión con tu correo para continuar; es un minuto.",
+    "signIn": "Iniciar sesión para solicitar",
+    "honestNotes": "Notas honestas",
+    "request": {
+      "steps": {
+        "seats": "Evento y entradas",
+        "trip": "Tu viaje",
+        "send": "Contacto y envío"
+      },
+      "progress": "Paso {step} de {total} · {label}",
+      "category": "Categoría",
+      "priceLater": "precio por anunciar",
+      "pricePerSeat": "{price} por entrada",
+      "passCovers": "El abono cubre todas las noches del festival.",
+      "nights": "Noches del festival · {count} de {total} elegidas",
+      "seats": "Entradas",
+      "seatsHint": "Hasta {max} por solicitud; los grupos mayores hablan con un especialista.",
+      "seatsLess": "Una entrada menos",
+      "seatsMore": "Una entrada más",
+      "tickets": "{count, plural, one {# entrada.} other {# entradas.}}",
+      "fee": "Tarifa de conserjería de {fee} por entrada, visible antes de pagar.",
+      "pickNight": "Elige al menos una noche, o el abono.",
+      "continueTrip": "Continuar con tu viaje",
+      "where": "¿A dónde van las entradas?",
+      "paths": {
+        "BUILD": {
+          "label": "Construir un viaje en torno al festival",
+          "description": "Primero las noches del festival, luego la isla; un especialista te envía una propuesta."
+        },
+        "EXISTING": {
+          "label": "Añadirlas a un viaje que ya tengo",
+          "description": "Elige una de tus reservas o solicitudes; la mesa le añade las entradas."
+        },
+        "TICKETS_ONLY": {
+          "label": "Solo entradas, ya tengo alojamiento",
+          "description": "No se ofrece por separado: proponemos el viaje más corto que incluya los conciertos."
+        }
+      },
+      "arrival": "Llegada a Cuba",
+      "totalNights": "Noches en total",
+      "festivalNights": "{count, plural, one {# noche} other {# noches}} para el festival.",
+      "after": "Después del festival",
+      "stay": "Quedarse donde es el festival",
+      "arriveBefore": "Llega el día de la primera noche elegida o antes.",
+      "noTrips": "Aún no tienes un viaje abierto en estas fechas. Elige construir un viaje.",
+      "yourTrip": "Tu viaje",
+      "bookingOption": "Reserva {code}",
+      "requestOption": "Solicitud {reference}",
+      "ticketsOnlyNote": "Un especialista propone el viaje más corto que incluya los conciertos.",
+      "back": "Atrás",
+      "continueSend": "Continuar al contacto",
+      "signedInAs": "Confirmamos a {email}.",
+      "phone": "WhatsApp o teléfono",
+      "nationality": "Nacionalidad",
+      "nationalityNone": "Prefiero no decirlo",
+      "notes": "Algo más · opcional",
+      "nothingCharged": "{tickets, plural, one {# entrada solicitada} other {# entradas solicitadas}}. No se cobra nada hasta confirmar las entradas; la tarifa es de {fee} por entrada.",
+      "send": "Enviar solicitud",
+      "error": "La solicitud no se envió. Revisa las opciones e inténtalo de nuevo.",
+      "sent": {
+        "title": "Solicitud {reference} recibida · no se cobra nada",
+        "body": "En {hours} horas un especialista confirma si podemos pedir estas entradas.",
+        "confirmBy": "Las entradas se confirman, o no, antes del {date}.",
+        "trip": "Tu solicitud de viaje es {reference}; la propuesta llegará después.",
+        "track": "Seguirla en tu cuenta"
+      }
+    },
+    "mine": {
+      "title": "Solicitudes de eventos",
+      "withdraw": "Retirar",
+      "withdrawFailed": "No se pudo retirar.",
+      "statuses": {
+        "SUBMITTED": "Recibida",
+        "REQUESTING": "En gestión",
+        "CONFIRMED": "Confirmada",
+        "UNAVAILABLE": "No disponible",
+        "CANCELLED": "Retirada"
+      },
+      "seats": "{seats} × {category} · {tickets, plural, one {# entrada} other {# entradas}}",
+      "onBooking": "reserva {code}",
+      "onRequest": "solicitud de viaje {reference}",
+      "added": "{total} añadidos a tu reserva.",
+      "nothingCharged": "Aún no se cobra nada."
+    }
   }
 }

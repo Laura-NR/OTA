@@ -3725,5 +3725,127 @@
       "openNote": "The booking is not priced for payment yet: the seats join its total and its payment schedule.",
       "confirmSeats": "Confirm seats"
     }
+  },
+  "events": {
+    "metaTitle": "Events · ticket concierge",
+    "breadcrumb": "Breadcrumb",
+    "eyebrow": "Event access",
+    "title": "Events",
+    "datesNote": "Dates marked “tbc” await the organiser's announcement; you can still request and we confirm when they are.",
+    "empty": "No events are open for requests right now.",
+    "datesTbc": "dates tbc",
+    "access": {
+      "ALLOCATIONS_OPEN": "Allocations open",
+      "REQUEST_ONLY": "Request only",
+      "PASSES": "Passes via concierge",
+      "GUIDE_ONLY": "Free events · guide only"
+    },
+    "planTrip": "Plan a trip around it",
+    "requestAccess": "Request event access",
+    "sampleTitle": "Sample content",
+    "sampleText": "These terms are placeholders until {agency} publishes them.",
+    "steps": {
+      "one": {
+        "title": "Tell us the nights and the seats",
+        "text": "Which festival nights, how many people, which category. Two minutes, below."
+      },
+      "two": {
+        "title": "The desk confirms availability",
+        "text": "Within {hours} hours for the request; seats are confirmed by {confirmBy}. You see the status in your account."
+      },
+      "three": {
+        "title": "Tickets join your booking",
+        "text": "Added to your booking's price once confirmed, with a concierge fee of {fee} per ticket. Nothing is charged before."
+      }
+    },
+    "confirmByLater": "a date we announce with the programme",
+    "programme": "Programme",
+    "requestTitle": "Request event access",
+    "guideTitle": "Free to attend",
+    "guideText": "This festival's events are free; there are no seats to request. Build a trip around it and we add a guide who knows the programme.",
+    "signInText": "Requests are kept in your account, so you can follow them. Sign in with your email to continue; it takes a minute.",
+    "signIn": "Sign in to request",
+    "honestNotes": "Honest notes",
+    "request": {
+      "steps": {
+        "seats": "Event & seats",
+        "trip": "Your trip",
+        "send": "Contact & send"
+      },
+      "progress": "Step {step} of {total} · {label}",
+      "category": "Category",
+      "priceLater": "price announced later",
+      "pricePerSeat": "{price} per seat",
+      "passCovers": "The pass covers every night of the festival.",
+      "nights": "Festival nights · {count} of {total} selected",
+      "seats": "Seats",
+      "seatsHint": "Up to {max} per request; larger groups talk to a specialist.",
+      "seatsLess": "One seat fewer",
+      "seatsMore": "One seat more",
+      "tickets": "{count, plural, one {# ticket.} other {# tickets.}}",
+      "fee": "Concierge fee {fee} per ticket, shown before you pay.",
+      "pickNight": "Pick at least one night, or the pass.",
+      "continueTrip": "Continue to your trip",
+      "where": "Where do the tickets go?",
+      "paths": {
+        "BUILD": {
+          "label": "Build a trip around the festival",
+          "description": "The festival nights first, then the island; a specialist sends you a trip proposal."
+        },
+        "EXISTING": {
+          "label": "Attach to a trip I already have",
+          "description": "Pick one of your bookings or requests; the desk adds the tickets to it."
+        },
+        "TICKETS_ONLY": {
+          "label": "Tickets only, I have my own stay",
+          "description": "Not offered on its own: we propose the smallest trip that includes the concerts."
+        }
+      },
+      "arrival": "Arrival in Cuba",
+      "totalNights": "Nights in total",
+      "festivalNights": "{count, plural, one {# night} other {# nights}} for the festival.",
+      "after": "After the festival",
+      "stay": "Stay where the festival is",
+      "arriveBefore": "Arrive on or before the first night you chose.",
+      "noTrips": "You have no open trip for these dates yet. Choose a trip to build instead.",
+      "yourTrip": "Your trip",
+      "bookingOption": "Booking {code}",
+      "requestOption": "Request {reference}",
+      "ticketsOnlyNote": "A specialist proposes the smallest trip that includes the concerts.",
+      "back": "Back",
+      "continueSend": "Continue to contact",
+      "signedInAs": "We confirm to {email}.",
+      "phone": "WhatsApp or phone",
+      "nationality": "Nationality",
+      "nationalityNone": "Prefer not to say",
+      "notes": "Anything else · optional",
+      "nothingCharged": "{tickets, plural, one {# ticket} other {# tickets}} requested. Nothing is charged until the seats are confirmed; the fee is {fee} per ticket.",
+      "send": "Send request",
+      "error": "The request was not sent. Check the choices and try again.",
+      "sent": {
+        "title": "Request {reference} received · nothing is charged",
+        "body": "Within {hours} hours a specialist confirms whether we can request these seats.",
+        "confirmBy": "Seats are confirmed, or not, by {date}.",
+        "trip": "Your trip request is {reference}; the proposal follows.",
+        "track": "Track it in your account"
+      }
+    },
+    "mine": {
+      "title": "Event requests",
+      "withdraw": "Withdraw",
+      "withdrawFailed": "It could not be withdrawn.",
+      "statuses": {
+        "SUBMITTED": "Received",
+        "REQUESTING": "Being requested",
+        "CONFIRMED": "Confirmed",
+        "UNAVAILABLE": "Not available",
+        "CANCELLED": "Withdrawn"
+      },
+      "seats": "{seats} × {category} · {tickets, plural, one {# ticket} other {# tickets}}",
+      "onBooking": "booking {code}",
+      "onRequest": "trip request {reference}",
+      "added": "{total} added to your booking.",
+      "nothingCharged": "Nothing is charged yet."
+    }
   }
 }

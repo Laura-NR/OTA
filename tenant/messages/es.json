@@ -94,6 +94,23 @@
           }
         ]
       }
+    },
+    "event": {
+      "eventSlug": "havana-jazz-festival-2027"
+    },
+    "events": {
+      "status": "placeholder",
+      "eyebrow": "Acceso a eventos",
+      "title": "Festivales con un asiento que de verdad es tuyo",
+      "lede": "Las entradas de los grandes festivales cubanos se asignan tarde y se venden por canales a los que no se llega desde el extranjero. Nuestra conserjería las pide a vendedores autorizados, las confirma antes de una fecha que conoces de antemano y las añade a tu viaje. No se cobra nada hasta confirmar las entradas.",
+      "fallThrough": "Si las entradas no salen antes de confirmarlas, no se cobra nada y te avisamos enseguida. Si un evento se cancela después de confirmar tus entradas, la mesa te las reembolsa.",
+      "arrivalAdvice": "Llega dos noches antes de la gala inaugural; el desfase horario existe.",
+      "usNote": "Viajeros de EE. UU.: la certificación de viaje va con la reserva, no con esta solicitud.",
+      "honestNotes": [
+        "Rara vez se dan números de asiento por adelantado; las categorías, sí.",
+        "Los programas cambian; tu guía los sigue el mismo día.",
+        "Los apagones no paran las salas principales, pero pueden mover conciertos pequeños."
+      ]
     }
   }
 }

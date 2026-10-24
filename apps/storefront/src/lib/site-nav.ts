@@ -3,8 +3,8 @@ import type { IconName } from '@ota/ui';
 /**
  * The storefront's navigation (Home header, DS 07). A link whose page does not
  * exist yet has no `href` and is not rendered, so the site never links to a
- * missing page; Events appears with Concierge (M10). Paths are locale-free:
- * the i18n `Link` adds the prefix.
+ * missing page. Events is the Concierge (M10). Paths are locale-free: the
+ * i18n `Link` adds the prefix.
  */
 export interface SiteLink {
   key: string;
@@ -19,7 +19,7 @@ export interface BottomNavLink extends SiteLink {
 export const PRIMARY_NAV: readonly SiteLink[] = [
   { key: 'destinations', href: '/destinations' },
   { key: 'packages', href: '/packages' },
-  { key: 'events', href: null },
+  { key: 'events', href: '/events' },
   { key: 'travelInfo', href: '/travel-info' },
   { key: 'blog', href: '/blog' },
   { key: 'support', href: '/support' },

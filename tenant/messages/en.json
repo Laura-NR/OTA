@@ -1015,7 +1015,8 @@
       "label": "Event",
       "headline": "Havana Jazz Festival · 18–24 Jan 2027.",
       "text": "Concerts in Vedado and Old Havana; our festival weekend package opens 15 Oct with concierge tickets, or add the festival to any trip.",
-      "cta": "Request event access"
+      "cta": "Request event access",
+      "eventSlug": "havana-jazz-festival-2027"
     },
     "destinations": {
       "status": "placeholder",
@@ -1478,6 +1479,20 @@
           "text": "Send me stories and new trips by email, once a month."
         }
       }
+    },
+    "events": {
+      "status": "placeholder",
+      "eyebrow": "Event access",
+      "title": "Festivals with a seat that is actually yours",
+      "lede": "Tickets for Cuba's main festivals are allocated late and sell through channels you cannot reach from abroad. Our concierge requests them through licensed sellers, confirms by a date you know in advance, and adds them to your trip. Nothing is charged until the seats are confirmed.",
+      "fallThrough": "If seats fall through before we confirm them, nothing is charged and we tell you at once. If an event is cancelled after we confirmed your seats, the desk refunds them.",
+      "arrivalAdvice": "Arrive two nights before the opening gala; jet lag is real.",
+      "usNote": "US travelers: the travel certification comes with the booking, not with this request.",
+      "honestNotes": [
+        "Seat numbers are rarely given in advance; categories are.",
+        "Programme changes happen; your guide tracks them on the day.",
+        "Power cuts do not stop the main venues, but may move smaller gigs."
+      ]
     }
   },
   "packages": {

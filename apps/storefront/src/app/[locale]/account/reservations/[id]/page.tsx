@@ -2,6 +2,7 @@ import { OPS_TIME_ZONE, hasConfirmation } from '@ota/domain';
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type {
   MeDisruptionDto,
+  MyEventRequestDto,
   MyReservationDetailDto,
   PaymentScheduleDto,
   ReservationOfacDto,
@@ -23,6 +24,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { AccountShell } from '@/components/account/account-shell';
 import { DisruptionChoice } from '@/components/account/disruption-choice';
+import { MyEventRequests } from '@/components/events/my-event-requests';
 import { OfacCertification } from '@/components/account/ofac-certification';
 import { PaymentSchedule } from '@/components/account/payment-schedule';
 import { ProviderProgress } from '@/components/account/provider-progress';
@@ -83,13 +85,17 @@ export default async function AccountReservationPage({
     getLocale(),
   ]);
   const tenant = getTenantConfig();
-  const [ofac, schedule, disruptions] = await Promise.all([
+  const [ofac, schedule, disruptions, eventRequests] = await Promise.all([
     apiFetch<ReservationOfacDto>(`/me/reservations/${id}/ofac?locale=${locale}`).catch(
       () => null,
     ),
     apiFetch<PaymentScheduleDto>(`/me/reservations/${id}/schedule`).catch(() => null),
     apiFetch<MeDisruptionDto[]>(`/me/disruptions?reservationId=${id}`).catch(() => []),
+    apiFetch<MyEventRequestDto[]>('/me/event-requests').catch(() => []),
   ]);
+  const tripEventRequests = eventRequests.filter(
+    (request) => request.reservationId === id,
+  );
   const ofacRequired = ofac?.travelers.some((traveler) => traveler.required) ?? false;
   const ofacLocked = (ofac?.missing ?? 0) > 0;
   const confirmed = hasConfirmation(reservation.status, Number(schedule?.paid ?? 0));
@@ -255,6 +261,12 @@ export default async function AccountReservationPage({
           schedule={schedule}
           locked={ofacLocked}
         />
+      ) : null}
+
+      {tripEventRequests.length > 0 ? (
+        <div className={card}>
+          <MyEventRequests requests={tripEventRequests} />
+        </div>
       ) : null}
 
       <section aria-labelledby="itinerary-title" className={card}>

@@ -3725,5 +3725,127 @@
       "openNote": "La réservation n’est pas encore chiffrée pour le paiement : les places s’ajoutent à son total et à son échéancier.",
       "confirmSeats": "Confirmer les places"
     }
+  },
+  "events": {
+    "metaTitle": "Événements · conciergerie de billets",
+    "breadcrumb": "Fil d’Ariane",
+    "eyebrow": "Accès aux événements",
+    "title": "Événements",
+    "datesNote": "Les dates « à confirmer » attendent l’annonce de l’organisateur ; vous pouvez déjà demander et nous confirmons dès qu’elles sont connues.",
+    "empty": "Aucun événement n’est ouvert aux demandes pour l’instant.",
+    "datesTbc": "dates à confirmer",
+    "access": {
+      "ALLOCATIONS_OPEN": "Allocations ouvertes",
+      "REQUEST_ONLY": "Sur demande",
+      "PASSES": "Pass via la conciergerie",
+      "GUIDE_ONLY": "Gratuit · guide seulement"
+    },
+    "planTrip": "Préparer un voyage autour",
+    "requestAccess": "Demander l’accès",
+    "sampleTitle": "Contenu d’exemple",
+    "sampleText": "Ces conditions sont provisoires jusqu’à leur publication par {agency}.",
+    "steps": {
+      "one": {
+        "title": "Indiquez les soirées et les places",
+        "text": "Quelles soirées du festival, combien de personnes, quelle catégorie. Deux minutes, ci-dessous."
+      },
+      "two": {
+        "title": "Le bureau confirme la disponibilité",
+        "text": "Sous {hours} heures pour la demande ; les places sont confirmées avant le {confirmBy}. Vous suivez le statut dans votre compte."
+      },
+      "three": {
+        "title": "Les billets rejoignent votre réservation",
+        "text": "Ajoutés au prix de votre réservation une fois confirmés, avec des frais de conciergerie de {fee} par billet. Rien n’est débité avant."
+      }
+    },
+    "confirmByLater": "une date annoncée avec le programme",
+    "programme": "Programme",
+    "requestTitle": "Demander l’accès",
+    "guideTitle": "Accès libre",
+    "guideText": "Les événements de ce festival sont gratuits ; aucune place à demander. Construisez un voyage autour et nous ajoutons un guide qui connaît le programme.",
+    "signInText": "Les demandes sont conservées dans votre compte pour que vous puissiez les suivre. Connectez-vous avec votre e-mail pour continuer ; c’est rapide.",
+    "signIn": "Se connecter pour demander",
+    "honestNotes": "Notes honnêtes",
+    "request": {
+      "steps": {
+        "seats": "Événement et places",
+        "trip": "Votre voyage",
+        "send": "Contact et envoi"
+      },
+      "progress": "Étape {step} sur {total} · {label}",
+      "category": "Catégorie",
+      "priceLater": "prix annoncé plus tard",
+      "pricePerSeat": "{price} par place",
+      "passCovers": "Le pass couvre toutes les soirées du festival.",
+      "nights": "Soirées du festival · {count} sur {total} choisies",
+      "seats": "Places",
+      "seatsHint": "Jusqu’à {max} par demande ; les groupes plus grands parlent à un spécialiste.",
+      "seatsLess": "Une place de moins",
+      "seatsMore": "Une place de plus",
+      "tickets": "{count, plural, one {# billet.} other {# billets.}}",
+      "fee": "Frais de conciergerie de {fee} par billet, affichés avant le paiement.",
+      "pickNight": "Choisissez au moins une soirée, ou le pass.",
+      "continueTrip": "Continuer vers votre voyage",
+      "where": "Où vont les billets ?",
+      "paths": {
+        "BUILD": {
+          "label": "Construire un voyage autour du festival",
+          "description": "D’abord les soirées du festival, puis l’île ; un spécialiste vous envoie une proposition."
+        },
+        "EXISTING": {
+          "label": "Ajouter à un voyage que j’ai déjà",
+          "description": "Choisissez une de vos réservations ou demandes ; le bureau y ajoute les billets."
+        },
+        "TICKETS_ONLY": {
+          "label": "Billets seuls, j’ai mon hébergement",
+          "description": "Non proposé seul : nous proposons le plus petit voyage incluant les concerts."
+        }
+      },
+      "arrival": "Arrivée à Cuba",
+      "totalNights": "Nuits au total",
+      "festivalNights": "{count, plural, one {# nuit} other {# nuits}} pour le festival.",
+      "after": "Après le festival",
+      "stay": "Rester sur place",
+      "arriveBefore": "Arrivez le jour de la première soirée choisie ou avant.",
+      "noTrips": "Vous n’avez pas encore de voyage ouvert à ces dates. Choisissez plutôt un voyage à construire.",
+      "yourTrip": "Votre voyage",
+      "bookingOption": "Réservation {code}",
+      "requestOption": "Demande {reference}",
+      "ticketsOnlyNote": "Un spécialiste propose le plus petit voyage incluant les concerts.",
+      "back": "Retour",
+      "continueSend": "Continuer vers le contact",
+      "signedInAs": "Nous confirmons à {email}.",
+      "phone": "WhatsApp ou téléphone",
+      "nationality": "Nationalité",
+      "nationalityNone": "Je préfère ne pas le dire",
+      "notes": "Autre chose · facultatif",
+      "nothingCharged": "{tickets, plural, one {# billet demandé} other {# billets demandés}}. Rien n’est débité avant la confirmation des places ; les frais sont de {fee} par billet.",
+      "send": "Envoyer la demande",
+      "error": "La demande n’a pas été envoyée. Vérifiez vos choix et réessayez.",
+      "sent": {
+        "title": "Demande {reference} reçue · rien n’est débité",
+        "body": "Sous {hours} heures, un spécialiste confirme si nous pouvons demander ces places.",
+        "confirmBy": "Les places sont confirmées, ou non, avant le {date}.",
+        "trip": "Votre demande de voyage est {reference} ; la proposition suit.",
+        "track": "La suivre dans votre compte"
+      }
+    },
+    "mine": {
+      "title": "Demandes d’événements",
+      "withdraw": "Retirer",
+      "withdrawFailed": "Impossible de la retirer.",
+      "statuses": {
+        "SUBMITTED": "Reçue",
+        "REQUESTING": "En cours",
+        "CONFIRMED": "Confirmée",
+        "UNAVAILABLE": "Indisponible",
+        "CANCELLED": "Retirée"
+      },
+      "seats": "{seats} × {category} · {tickets, plural, one {# billet} other {# billets}}",
+      "onBooking": "réservation {code}",
+      "onRequest": "demande de voyage {reference}",
+      "added": "{total} ajoutés à votre réservation.",
+      "nothingCharged": "Rien n’est encore débité."
+    }
   }
 }

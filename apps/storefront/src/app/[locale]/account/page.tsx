@@ -2,6 +2,7 @@ import { conditionsContentSchema } from '@ota/schemas';
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type {
   MeProfileDto,
+  MyEventRequestDto,
   MyConsentDto,
   MyReservationDetailDto,
   MyReservationListItemDto,
@@ -17,6 +18,7 @@ import { AccountShell, type AccountSection } from '@/components/account/account-
 import { NotificationPreferences } from '@/components/account/notification-preferences';
 import { TripProgress } from '@/components/account/trip-progress';
 import { TONE_BADGES } from '@/components/conditions-card';
+import { MyEventRequests } from '@/components/events/my-event-requests';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -72,17 +74,27 @@ export default async function AccountPage({
   }
 
   const current = section((await searchParams).tab);
-  const [t, tp, format, locale, profile, reservations, proposals, conditions] =
-    await Promise.all([
-      getTranslations('account'),
-      getTranslations('proposal'),
-      getFormatter(),
-      getLocale(),
-      apiFetch<MeProfileDto>('/me').catch(() => null),
-      apiFetch<MyReservationListItemDto[]>('/me/reservations'),
-      apiFetch<ProposalListItemDto[]>('/me/proposals').catch(() => []),
-      getPageContent('conditions', conditionsContentSchema),
-    ]);
+  const [
+    t,
+    tp,
+    format,
+    locale,
+    profile,
+    reservations,
+    proposals,
+    conditions,
+    eventRequests,
+  ] = await Promise.all([
+    getTranslations('account'),
+    getTranslations('proposal'),
+    getFormatter(),
+    getLocale(),
+    apiFetch<MeProfileDto>('/me').catch(() => null),
+    apiFetch<MyReservationListItemDto[]>('/me/reservations'),
+    apiFetch<ProposalListItemDto[]>('/me/proposals').catch(() => []),
+    getPageContent('conditions', conditionsContentSchema),
+    apiFetch<MyEventRequestDto[]>('/me/event-requests').catch(() => []),
+  ]);
   const tenant = getTenantConfig();
   const consents =
     current === 'preferences'
@@ -396,6 +408,7 @@ export default async function AccountPage({
               </ul>
             </section>
           ) : null}
+          <MyEventRequests requests={eventRequests} />
           {reservations.length === 0 ? (
             <p className="text-body text-secondary">{t('empty')}</p>
           ) : (

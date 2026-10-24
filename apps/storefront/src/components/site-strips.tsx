@@ -51,7 +51,7 @@ async function ConditionsStrip() {
 
 /**
  * The event strip (Home board; spec §3.2's promotional banner) on neutral
- * 900. Its request goes to the Support form until Concierge exists (M10).
+ * 900. Its action opens the event the tenant copy names (M10), or Events.
  */
 async function EventBanner() {
   const content = await getPageContent('event', eventBannerContentSchema);
@@ -59,6 +59,7 @@ async function EventBanner() {
     return null;
   }
   const t = await getTranslations('pages.common');
+  const href = content.eventSlug ? `/events/${content.eventSlug}` : '/events';
 
   return (
     <div className="bg-neutral-900 text-neutral-0">
@@ -72,7 +73,7 @@ async function EventBanner() {
           <span className="hidden md:inline">{content.text}</span>
         </p>
         <Link
-          href="/support#contact"
+          href={href}
           className={cn(
             buttonClassName({ variant: 'secondary', size: 'sm' }),
             'hidden border-transparent text-neutral-900 focus-visible:outline-accent-500 md:inline-flex',
@@ -81,7 +82,7 @@ async function EventBanner() {
           {content.cta}
         </Link>
         <Link
-          href="/support#contact"
+          href={href}
           aria-label={content.cta}
           className="text-accent-500 focus-visible:outline-accent-500 md:hidden"
         >
