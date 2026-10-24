@@ -57,12 +57,17 @@ export async function SiteHeader({
             href="/support"
             className={cn(
               buttonClassName({ variant: 'secondary' }),
-              'hidden xl:inline-flex',
+              'hidden xl:inline-flex xl:[[data-text-size=large]_&]:hidden',
             )}
           >
             {t('specialist')}
           </Link>
-          <SiteMenu signedIn={signedIn} variant="header" className="lg:hidden" />
+          {/* Larger text: the menu drawer stands in for the nav until xl. */}
+          <SiteMenu
+            signedIn={signedIn}
+            variant="header"
+            className="lg:hidden lg:[[data-text-size=large]_&]:inline-flex xl:[[data-text-size=large]_&]:hidden"
+          />
         </div>
       </div>
     </header>

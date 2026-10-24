@@ -18,7 +18,7 @@ export function PrimaryNav() {
   return (
     <nav
       aria-label={t('primary')}
-      className="hidden flex-1 gap-4 whitespace-nowrap lg:flex xl:gap-5"
+      className="hidden flex-1 gap-4 whitespace-nowrap lg:flex xl:gap-5 lg:[[data-text-size=large]_&]:hidden xl:[[data-text-size=large]_&]:flex"
     >
       {PRIMARY_NAV.map((link) => {
         if (!link.href) {
