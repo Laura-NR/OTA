@@ -16,6 +16,8 @@ const TRAVELER = {
   fullName: 'Example Traveler',
   role: 'TRAVELER',
   locale: 'es',
+  phone: null,
+  nationality: 'GB',
 };
 const OTHER = {
   id: '99999999-9999-4999-8999-999999999999',
@@ -457,6 +459,8 @@ describe('me API', () => {
       role: 'TRAVELER',
       locale: 'es',
     });
+    // M10 D4: the request form reads what the account still lacks.
+    expect(response.body).toMatchObject({ phone: null, nationality: 'GB' });
   });
 
   it('lists only the caller reservations with counts', async () => {

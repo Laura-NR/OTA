@@ -220,6 +220,8 @@ export class MeService {
       fullName: user.fullName,
       role: user.role,
       locale: user.locale,
+      phone: user.phone,
+      nationality: user.nationality,
     };
   }
 
