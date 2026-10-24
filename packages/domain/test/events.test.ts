@@ -8,6 +8,7 @@ import {
   eventPublishIssues,
   eventRequestAnswerOverdue,
   eventRequestIssues,
+  eventRequestPurgeDue,
   eventTakesRequests,
   festivalWindow,
   isLinkableBooking,
@@ -328,5 +329,28 @@ describe('M10 publish checks', () => {
         now,
       ),
     ).toEqual(['NIGHT_OUTSIDE_DATES', 'CONFIRM_AFTER_START', 'ENDED']);
+  });
+});
+
+describe('M10 retention (D9)', () => {
+  const closedAt = new Date('2026-07-01T00:00:00Z');
+
+  it('deletes a request that closed without a booking, 90 days after it closed', () => {
+    const request = { status: 'UNAVAILABLE' as const, reservationId: null, closedAt };
+    expect(eventRequestPurgeDue(request, new Date('2026-09-30T00:00:01Z'))).toBe(true);
+    expect(eventRequestPurgeDue(request, new Date('2026-09-28T00:00:00Z'))).toBe(false);
+  });
+
+  it('keeps a request on a booking, and any request still open', () => {
+    const later = new Date('2027-01-01T00:00:00Z');
+    expect(
+      eventRequestPurgeDue({ status: 'CANCELLED', reservationId: 'r1', closedAt }, later),
+    ).toBe(false);
+    expect(
+      eventRequestPurgeDue(
+        { status: 'SUBMITTED', reservationId: null, closedAt: null },
+        later,
+      ),
+    ).toBe(false);
   });
 });

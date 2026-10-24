@@ -383,3 +383,27 @@ export function ticketInstalmentDueAt(
   }
   return byDays;
 }
+
+/** Days a request that ended without a booking is kept after it closed (D9). */
+export const EVENT_REQUEST_RETENTION_DAYS = 90;
+
+/**
+ * A request that closed without ever reaching a booking is deleted 90 days
+ * after it closed (D9, the board's "keep it for 90 days"); one on a booking
+ * follows the booking's own retention.
+ */
+export function eventRequestPurgeDue(
+  request: {
+    status: EventRequestStatus;
+    reservationId: string | null;
+    closedAt: Date | null;
+  },
+  now: Date,
+): boolean {
+  return (
+    (request.status === 'UNAVAILABLE' || request.status === 'CANCELLED') &&
+    request.reservationId === null &&
+    request.closedAt !== null &&
+    now.getTime() - request.closedAt.getTime() > EVENT_REQUEST_RETENTION_DAYS * DAY_MS
+  );
+}

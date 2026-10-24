@@ -437,6 +437,7 @@ export {
 export {
   EVENT_ACCESS,
   EVENT_REQUEST_PATHS,
+  EVENT_REQUEST_RETENTION_DAYS,
   EVENT_REQUEST_STATUSES,
   EVENT_STATUSES,
   MAX_EVENT_SEATS,
@@ -448,6 +449,7 @@ export {
   eventPublishIssues,
   eventRequestAnswerOverdue,
   eventRequestIssues,
+  eventRequestPurgeDue,
   eventTakesRequests,
   festivalWindow,
   isLinkableBooking,
