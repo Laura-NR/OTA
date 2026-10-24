@@ -831,7 +831,8 @@
       "kinds": {
         "DEPOSIT": "Deposit",
         "BALANCE": "Balance",
-        "FULL": "Full payment"
+        "FULL": "Full payment",
+        "TICKETS": "Event tickets"
       },
       "statuses": {
         "DUE": "Due by {date}",
@@ -1055,7 +1056,8 @@
       "instalments": {
         "DEPOSIT": "Deposit",
         "BALANCE": "Balance",
-        "FULL": "Full payment"
+        "FULL": "Full payment",
+        "TICKETS": "Tickets"
       },
       "reasons": {
         "TRAVELER_CANCELLATION": "Traveler cancellation",
@@ -1243,7 +1245,8 @@
           "suppliers": "Suppliers",
           "payments": "Payments",
           "content": "Content",
-          "customers": "Customers"
+          "customers": "Customers",
+          "bookings": "Bookings"
         },
         "levels": {
           "CAUTION": "Caution and critical",
@@ -1279,7 +1282,8 @@
           "retentionGraceDays": "Retention grace",
           "resourcesStaleDays": "Resources stale after",
           "reliabilityFloorPercent": "Reliability floor for auto-dispatch",
-          "reliabilityMinAnswered": "Answered offers before the floor applies"
+          "reliabilityMinAnswered": "Answered offers before the floor applies",
+          "conciergeAnswerHours": "Event request answered within"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Dashboard, Booking",
@@ -1295,7 +1299,8 @@
           "retentionGraceDays": "Customers, retention scan",
           "resourcesStaleDays": "Suppliers, Disruptions, storefront Packages",
           "reliabilityFloorPercent": "Dispatch, Suppliers, re-dispatch list",
-          "reliabilityMinAnswered": "Dispatch, Suppliers, re-dispatch list"
+          "reliabilityMinAnswered": "Dispatch, Suppliers, re-dispatch list",
+          "conciergeAnswerHours": "Bookings › Event requests, Dashboard, request email"
         }
       },
       "security": {
@@ -1643,7 +1648,9 @@
           "SINGLE_SUPPLEMENT": "Single supplement",
           "EXTRA": "Extra",
           "SERVICE": "Service",
-          "FEE": "Fee"
+          "FEE": "Fee",
+          "EVENT_TICKET": "Event tickets",
+          "CONCIERGE_FEE": "Concierge fee"
         },
         "quantity": "{quantity} × {unitAmount}",
         "total": "Total",
@@ -1738,7 +1745,8 @@
       "kinds": {
         "DEPOSIT": "Deposit",
         "BALANCE": "Balance",
-        "FULL": "Full payment"
+        "FULL": "Full payment",
+        "TICKETS": "Tickets"
       },
       "instalmentStatus": {
         "DUE": "Due {date}",

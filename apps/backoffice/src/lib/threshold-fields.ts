@@ -44,6 +44,10 @@ export const THRESHOLD_GROUPS: readonly {
     ],
   },
   {
+    key: 'bookings',
+    fields: [{ key: 'conciergeAnswerHours', unit: 'h', min: 1, max: 168 }],
+  },
+  {
     key: 'content',
     fields: [{ key: 'advisoryDualApprovalFrom', unit: 'level' }],
   },

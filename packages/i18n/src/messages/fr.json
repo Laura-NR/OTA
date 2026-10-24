@@ -831,7 +831,8 @@
       "kinds": {
         "DEPOSIT": "Acompte",
         "BALANCE": "Solde",
-        "FULL": "Paiement complet"
+        "FULL": "Paiement complet",
+        "TICKETS": "Billets d’événement"
       },
       "statuses": {
         "DUE": "À régler avant le {date}",
@@ -1055,7 +1056,8 @@
       "instalments": {
         "DEPOSIT": "Acompte",
         "BALANCE": "Solde",
-        "FULL": "Paiement complet"
+        "FULL": "Paiement complet",
+        "TICKETS": "Billets"
       },
       "reasons": {
         "TRAVELER_CANCELLATION": "Annulation du voyageur",
@@ -1243,7 +1245,8 @@
           "suppliers": "Fournisseurs",
           "payments": "Paiements",
           "content": "Contenu",
-          "customers": "Clients"
+          "customers": "Clients",
+          "bookings": "Réservations"
         },
         "levels": {
           "CAUTION": "Prudence et critique",
@@ -1279,7 +1282,8 @@
           "retentionGraceDays": "Délai de grâce de conservation",
           "resourcesStaleDays": "Ressources périmées après",
           "reliabilityFloorPercent": "Seuil de fiabilité de la répartition auto",
-          "reliabilityMinAnswered": "Offres répondues avant le seuil"
+          "reliabilityMinAnswered": "Offres répondues avant le seuil",
+          "conciergeAnswerHours": "Demande d’événement traitée sous"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
@@ -1295,7 +1299,8 @@
           "retentionGraceDays": "Clients, contrôle de conservation",
           "resourcesStaleDays": "Fournisseurs, Perturbations, Forfaits du site",
           "reliabilityFloorPercent": "Dispatch, Fournisseurs, liste de réaffectation",
-          "reliabilityMinAnswered": "Dispatch, Fournisseurs, liste de réaffectation"
+          "reliabilityMinAnswered": "Dispatch, Fournisseurs, liste de réaffectation",
+          "conciergeAnswerHours": "Réservations › Demandes d’événements, Tableau de bord, e-mail de demande"
         }
       },
       "security": {
@@ -1643,7 +1648,9 @@
           "SINGLE_SUPPLEMENT": "Supplément single",
           "EXTRA": "Extra",
           "SERVICE": "Service",
-          "FEE": "Frais"
+          "FEE": "Frais",
+          "EVENT_TICKET": "Billets d’événement",
+          "CONCIERGE_FEE": "Frais de conciergerie"
         },
         "quantity": "{quantity} × {unitAmount}",
         "total": "Total",
@@ -1738,7 +1745,8 @@
       "kinds": {
         "DEPOSIT": "Acompte",
         "BALANCE": "Solde",
-        "FULL": "Paiement complet"
+        "FULL": "Paiement complet",
+        "TICKETS": "Billets"
       },
       "instalmentStatus": {
         "DUE": "À régler {date}",

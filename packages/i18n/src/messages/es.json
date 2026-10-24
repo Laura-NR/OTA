@@ -831,7 +831,8 @@
       "kinds": {
         "DEPOSIT": "Depósito",
         "BALANCE": "Resto",
-        "FULL": "Pago completo"
+        "FULL": "Pago completo",
+        "TICKETS": "Entradas de eventos"
       },
       "statuses": {
         "DUE": "Vence el {date}",
@@ -1055,7 +1056,8 @@
       "instalments": {
         "DEPOSIT": "Depósito",
         "BALANCE": "Resto",
-        "FULL": "Pago completo"
+        "FULL": "Pago completo",
+        "TICKETS": "Entradas"
       },
       "reasons": {
         "TRAVELER_CANCELLATION": "Cancelación del viajero",
@@ -1243,7 +1245,8 @@
           "suppliers": "Proveedores",
           "payments": "Pagos",
           "content": "Contenido",
-          "customers": "Clientes"
+          "customers": "Clientes",
+          "bookings": "Reservas"
         },
         "levels": {
           "CAUTION": "Precaución y crítico",
@@ -1279,7 +1282,8 @@
           "retentionGraceDays": "Gracia de retención",
           "resourcesStaleDays": "Recursos desactualizados tras",
           "reliabilityFloorPercent": "Umbral de fiabilidad del auto-despacho",
-          "reliabilityMinAnswered": "Ofertas respondidas antes del umbral"
+          "reliabilityMinAnswered": "Ofertas respondidas antes del umbral",
+          "conciergeAnswerHours": "Solicitud de evento respondida en"
         },
         "used": {
           "dispatchTimeoutMinutes": "Despacho, Panel, Reserva",
@@ -1295,7 +1299,8 @@
           "retentionGraceDays": "Clientes, control de retención",
           "resourcesStaleDays": "Proveedores, Incidencias, Paquetes del sitio",
           "reliabilityFloorPercent": "Despacho, Proveedores, lista de reasignación",
-          "reliabilityMinAnswered": "Despacho, Proveedores, lista de reasignación"
+          "reliabilityMinAnswered": "Despacho, Proveedores, lista de reasignación",
+          "conciergeAnswerHours": "Reservas › Solicitudes de eventos, Panel, correo de solicitud"
         }
       },
       "security": {
@@ -1643,7 +1648,9 @@
           "SINGLE_SUPPLEMENT": "Suplemento individual",
           "EXTRA": "Extra",
           "SERVICE": "Servicio",
-          "FEE": "Tasa"
+          "FEE": "Tasa",
+          "EVENT_TICKET": "Entradas de eventos",
+          "CONCIERGE_FEE": "Tarifa de conserjería"
         },
         "quantity": "{quantity} × {unitAmount}",
         "total": "Total",
@@ -1738,7 +1745,8 @@
       "kinds": {
         "DEPOSIT": "Depósito",
         "BALANCE": "Resto",
-        "FULL": "Pago completo"
+        "FULL": "Pago completo",
+        "TICKETS": "Entradas"
       },
       "instalmentStatus": {
         "DUE": "Vence {date}",
