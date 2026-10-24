@@ -318,9 +318,142 @@ async function main(): Promise<void> {
     });
   }
 
+  const events = await seedEvents();
+
   console.log(
-    `Seeded ${superAdmin.email}, ${worker.email}, reservation ${reservation.bookingCode} (${reservation.id}), and package ${curatedPackage.slug}`,
+    `Seeded ${superAdmin.email}, ${worker.email}, reservation ${reservation.bookingCode} (${reservation.id}), package ${curatedPackage.slug} and events ${events.join(', ')}`,
   );
+}
+
+/** A UTC calendar day, the form event dates are stored in. */
+function calendarDay(iso: string): Date {
+  return new Date(`${iso}T00:00:00Z`);
+}
+
+/**
+ * M10 sample events from the Concierge board (placeholder data): the Havana
+ * Jazz Festival with its seven nights and three seat categories, and a free,
+ * guide-only festival. Upserted by slug; nights and categories are created
+ * once, so a re-seed never breaks a request that points at them.
+ */
+async function seedEvents(): Promise<string[]> {
+  const jazz = await prisma.event.upsert({
+    where: { slug: 'havana-jazz-festival-2027' },
+    create: {
+      slug: 'havana-jazz-festival-2027',
+      status: 'PUBLISHED',
+      access: 'ALLOCATIONS_OPEN',
+      province: 'CU03',
+      startsOn: calendarDay('2027-01-18'),
+      endsOn: calendarDay('2027-01-24'),
+      datesConfirmed: true,
+      confirmBy: calendarDay('2027-01-08'),
+      sourceLocale: 'en',
+      name: 'Havana Jazz Festival',
+      place: 'Havana · Vedado & Old Havana',
+      summary:
+        'Seven nights of concerts across Vedado and Old Havana. Tickets for the main venues are allocated late and sell through channels you cannot reach from abroad; our concierge requests them through licensed sellers.',
+      notes: 'Programme and venues are published by the organiser in December.',
+      publishedAt: new Date(),
+    },
+    update: {},
+  });
+  const nights = [
+    ['2027-01-18', 'Opening gala', 'Teatro Nacional'],
+    ['2027-01-19', 'Late set', 'Fábrica de Arte Cubano'],
+    ['2027-01-20', 'Jazz Café', 'Jazz Café, Vedado'],
+    ['2027-01-21', 'Casa de la Cultura', 'Casa de la Cultura de Plaza'],
+    ['2027-01-22', 'Teatro Mella', 'Teatro Mella'],
+    ['2027-01-23', 'Headline night', 'Teatro Nacional'],
+    ['2027-01-24', 'Closing', 'Old Havana open-air stage'],
+  ] as const;
+  if ((await prisma.eventNight.count({ where: { eventId: jazz.id } })) === 0) {
+    await prisma.eventNight.createMany({
+      data: nights.map(([date, label, venue], position) => ({
+        eventId: jazz.id,
+        date: calendarDay(date),
+        label,
+        venue,
+        position,
+      })),
+    });
+  }
+  if ((await prisma.eventSeatCategory.count({ where: { eventId: jazz.id } })) === 0) {
+    await prisma.eventSeatCategory.createMany({
+      data: [
+        {
+          eventId: jazz.id,
+          kind: 'GENERAL',
+          name: 'General admission',
+          description: 'Standing or unreserved; first come at the venue.',
+          pricePerSeat: 25,
+          position: 0,
+        },
+        {
+          eventId: jazz.id,
+          kind: 'NUMBERED',
+          name: 'Numbered seat',
+          description: 'Reserved seat in the main hall; best for galas.',
+          pricePerSeat: 45,
+          position: 1,
+        },
+        {
+          eventId: jazz.id,
+          kind: 'PASS',
+          name: 'All-festival pass',
+          description: 'Every night, every main venue; limited allocation.',
+          pricePerSeat: null,
+          position: 2,
+        },
+      ],
+    });
+  }
+  for (const [locale, name, summary] of [
+    [
+      'es',
+      'Festival Internacional Jazz Plaza',
+      'Siete noches de conciertos entre el Vedado y La Habana Vieja. Las entradas de las salas principales se asignan tarde y se venden por canales que no se alcanzan desde el extranjero; nuestra conserjería las pide a vendedores autorizados.',
+    ],
+    [
+      'fr',
+      'Festival de jazz de La Havane',
+      'Sept soirées de concerts entre le Vedado et la Vieille Havane. Les billets des grandes salles sont attribués tard et vendus par des canaux inaccessibles depuis l’étranger ; notre conciergerie les demande auprès de vendeurs agréés.',
+    ],
+  ] as const) {
+    await prisma.eventTranslation.upsert({
+      where: { eventId_locale: { eventId: jazz.id, locale } },
+      create: {
+        eventId: jazz.id,
+        locale,
+        name,
+        summary,
+        published: true,
+        sourceUpdatedAt: jazz.updatedAt,
+      },
+      update: {},
+    });
+  }
+
+  const romerias = await prisma.event.upsert({
+    where: { slug: 'romerias-de-mayo-2027' },
+    create: {
+      slug: 'romerias-de-mayo-2027',
+      status: 'PUBLISHED',
+      access: 'GUIDE_ONLY',
+      province: 'CU11',
+      startsOn: calendarDay('2027-05-01'),
+      endsOn: calendarDay('2027-05-31'),
+      datesConfirmed: false,
+      sourceLocale: 'en',
+      name: 'Romerías de Mayo',
+      place: 'Holguín',
+      summary:
+        'A week of street processions, drums and youth arts in Holguín. The events are free; we add a guide who knows the programme to your trip.',
+      publishedAt: new Date(),
+    },
+    update: {},
+  });
+  return [jazz.slug, romerias.slug];
 }
 
 main()
