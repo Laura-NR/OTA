@@ -256,7 +256,9 @@ export default async function HomePage() {
       ) : null}
 
       {content || conditions ? (
-        <section className={cn(wrap, 'grid items-start gap-8 py-16 xl:grid-cols-2')}>
+        <section
+          className={cn(wrap, 'grid grid-cols-1 items-start gap-8 py-16 xl:grid-cols-2')}
+        >
           {conditions ? <ConditionsCard content={conditions} /> : null}
           {content ? (
             <section aria-labelledby="why-title" className="flex flex-col gap-6">
