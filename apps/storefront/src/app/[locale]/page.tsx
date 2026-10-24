@@ -242,7 +242,7 @@ export default async function HomePage() {
             />
             <ul className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {tiles.map((destination) => (
-                <li key={destination.slug} className="flex flex-col">
+                <li key={destination.slug} className="flex min-w-0 flex-col">
                   <DestinationCard
                     destination={destination}
                     variant="tile"

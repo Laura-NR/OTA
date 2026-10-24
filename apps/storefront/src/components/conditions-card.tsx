@@ -1,9 +1,10 @@
 import type { ConditionsContent, ConditionTone, ConditionTopic } from '@ota/schemas';
-import { Badge, buttonClassName, Icon } from '@ota/ui';
+import { Badge, buttonClassName, cn, Icon } from '@ota/ui';
 import type { BadgeVariant, IconName } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
+import { WRAPPING_BUTTON } from '@/lib/button';
 
 const TOPIC_ICONS: Record<ConditionTopic, IconName> = {
   power: 'zap',
@@ -72,7 +73,11 @@ export function ConditionsCard({ content }: { content: ConditionsContent }) {
       ) : null}
       <Link
         href="/travel-info"
-        className={`${buttonClassName({ variant: 'secondary' })} self-start`}
+        className={cn(
+          buttonClassName({ variant: 'secondary' }),
+          WRAPPING_BUTTON,
+          'self-start',
+        )}
       >
         {t('home.conditionsLink')}
       </Link>

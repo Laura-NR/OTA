@@ -302,10 +302,10 @@ export function PackagesBrowser({
           {t('filters')}
           {chips.length > 0 ? ` · ${chips.length}` : ''}
         </Button>
-        <label className="ml-auto flex items-center gap-3 text-body-sm text-secondary">
+        <label className="ml-auto flex min-w-0 items-center gap-3 text-body-sm text-secondary">
           {t('sortBy')}
           <Select
-            className="w-56"
+            className="w-56 min-w-0"
             value={query.sort}
             onChange={(event) =>
               setQuery({ ...query, sort: event.target.value as PackageSort })

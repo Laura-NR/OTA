@@ -26,16 +26,17 @@ export async function SiteHeader({
 
   return (
     <header className="sticky top-0 z-30 border-b bg-page">
-      <div className="mx-auto flex h-16 max-w-container items-center gap-6 px-6 md:px-8 lg:h-[72px] lg:px-10">
+      <div className="mx-auto flex h-16 max-w-container items-center gap-6 px-6 max-sm:[[data-text-size=large]_&]:gap-3 md:px-8 lg:h-[72px] lg:px-10">
         <Link
           href="/"
           aria-label={t('homeLabel', { agency: agencyName })}
           className="shrink-0"
         >
+          {/* 28 px at every text size: a logo, not text (Phase 1). */}
           <Image
             src={brand.wordmark}
             alt=""
-            className="h-7 w-auto"
+            className="h-[28px] w-auto"
             priority
             unoptimized
           />

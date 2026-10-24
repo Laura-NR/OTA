@@ -482,7 +482,10 @@ export default async function PackageDetailPage({
       </div>
 
       <div
-        className={cn(wrap, 'grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_380px]')}
+        className={cn(
+          wrap,
+          'grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_380px]',
+        )}
       >
         <div className="min-w-0">
           <PackageTabs items={tabs} label={t('detail.tabsLabel')} />

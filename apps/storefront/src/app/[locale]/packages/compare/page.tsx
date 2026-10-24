@@ -1,7 +1,7 @@
 import { isFeatureEnabled } from '@ota/config';
 import { packageProvinces } from '@ota/domain';
 import { packagesContentSchema, type PackageDto } from '@ota/schemas';
-import { buttonClassName } from '@ota/ui';
+import { buttonClassName, cn } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 
@@ -13,6 +13,7 @@ import {
   type CompareRow,
 } from '@/components/packages/compare-view';
 import { Link } from '@/i18n/navigation';
+import { WRAPPING_BUTTON } from '@/lib/button';
 import { MAX_COMPARE } from '@/lib/compare-limits';
 import { getPageContent } from '@/lib/content';
 import { formatMoney } from '@/lib/format';
@@ -162,13 +163,16 @@ export default async function ComparePage({
             {whatsapp ? (
               <a
                 href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
-                className={buttonClassName({ variant: 'secondary' })}
+                className={cn(buttonClassName({ variant: 'secondary' }), WRAPPING_BUTTON)}
               >
                 {t('whatsapp')}
               </a>
             ) : null}
             {builder ? (
-              <Link href="/custom" className={buttonClassName({ variant: 'secondary' })}>
+              <Link
+                href="/custom"
+                className={cn(buttonClassName({ variant: 'secondary' }), WRAPPING_BUTTON)}
+              >
                 {t('mix')}
               </Link>
             ) : null}
