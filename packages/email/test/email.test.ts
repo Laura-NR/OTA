@@ -2,6 +2,7 @@ import type { Transporter } from 'nodemailer';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  eventRequestEmail,
   staffInviteEmail,
   ConsoleMailer,
   SmtpMailer,
@@ -632,5 +633,59 @@ describe('staffInviteEmail', () => {
         branding,
       }).subject,
     ).toMatch(/^Invitación a la mesa de /);
+  });
+});
+
+describe('eventRequestEmail (M10)', () => {
+  const base = {
+    to: 'margaret@example.test',
+    name: 'Margaret',
+    reference: 'VX-E-ABCD1234',
+    eventName: 'Havana Jazz Festival',
+    seatsLine: '2 seats · Numbered seat · 3 nights',
+    portalUrl: 'http://localhost:3000/en/account',
+    branding,
+  };
+
+  it('says nothing is charged and when the desk answers, from the threshold', () => {
+    const message = eventRequestEmail({
+      ...base,
+      kind: 'RECEIVED',
+      answerHours: 24,
+      confirmBy: new Date('2027-01-10T00:00:00Z'),
+    });
+    expect(message.subject).toContain('nothing is charged');
+    expect(message.text).toContain('within 24 hours');
+    expect(message.text).toContain('Nothing is charged until the seats are confirmed.');
+    expect(message.text).toContain('January 10, 2027');
+  });
+
+  it('states what confirmed seats add, and the due date once the price was locked', () => {
+    const message = eventRequestEmail({
+      ...base,
+      kind: 'CONFIRMED',
+      amounts: {
+        tickets: 240,
+        fee: 90,
+        total: 330,
+        currency: 'EUR',
+        dueAt: new Date('2026-12-17T00:00:00Z'),
+        bookingCode: 'VX7K2M9Q',
+      },
+    });
+    expect(message.text).toContain('add €330.00 to booking VX7K2M9Q');
+    expect(message.text).toContain('due by December 17, 2026');
+    expect(message.text).not.toContain('Nothing is charged');
+  });
+
+  it("gives the desk's reason when seats are unavailable, in the traveler's language", () => {
+    const message = eventRequestEmail({
+      ...base,
+      kind: 'UNAVAILABLE',
+      reason: 'The gala sold out.',
+      locale: 'es',
+    });
+    expect(message.subject).toMatch(/^No pudimos conseguir tus entradas/);
+    expect(message.text).toContain('Nota de la mesa: The gala sold out.');
   });
 });

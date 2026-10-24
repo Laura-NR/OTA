@@ -44,3 +44,8 @@ export type {
 } from './templates/travel-advisory';
 export { staffInviteEmail } from './templates/staff-invite';
 export type { StaffInviteEmailInput } from './templates/staff-invite';
+export { eventRequestEmail } from './templates/event-request';
+export type {
+  EventRequestEmailInput,
+  EventRequestEmailKind,
+} from './templates/event-request';
