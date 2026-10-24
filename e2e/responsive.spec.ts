@@ -92,6 +92,8 @@ test.describe('DS 07 responsive widths', () => {
       '/en/packages',
       ...(packageSlug ? [`/en/packages/${packageSlug}`] : []),
       '/en/packages/compare',
+      '/en/events',
+      '/en/events/havana-jazz-festival-2027',
       '/en/travel-info',
       '/en/blog',
       '/en/blog/power-outages-in-cuba',
@@ -165,6 +167,8 @@ test.describe('DS 07 responsive widths', () => {
       ...(supplier ? [`/suppliers/${supplier.id}`] : []),
       '/payments',
       '/content/advisories',
+      '/content/events',
+      '/bookings/event-requests',
       '/reports',
       '/settings',
     ];
