@@ -243,6 +243,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
       purged: 0,
       affidavitsDeleted: 1,
       invitesDeleted: 0,
+      eventRequestsDeleted: 0,
     });
     expect(
       await prisma.travelerAffidavit.findUnique({ where: { id: expiredAffidavitId } }),
@@ -278,6 +279,7 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
       purged: 1,
       affidavitsDeleted: 0,
       invitesDeleted: 0,
+      eventRequestsDeleted: 0,
     });
 
     // M3 D6: the consent log loses who; the affidavit keeps its five years.
