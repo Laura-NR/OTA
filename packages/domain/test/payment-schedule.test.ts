@@ -179,4 +179,10 @@ describe('payment alert', () => {
     expect(paymentAlert({ kind: 'BALANCE', dueAt: past }, 'CANCELLED', now)).toBeNull();
     expect(paymentAlert(null, 'PENDING_PAYMENT', now)).toBeNull();
   });
+
+  it('reads an M10 ticket instalment past its date as overdue, like a balance', () => {
+    expect(paymentAlert({ kind: 'TICKETS', dueAt: past }, 'CONFIRMED', now)).toBe(
+      'BALANCE_OVERDUE',
+    );
+  });
 });

@@ -41,6 +41,8 @@ export interface OperatingThresholds {
   reliabilityFloorPercent: number;
   /** Answered offers before the floor applies. */
   reliabilityMinAnswered: number;
+  /** Hours the desk has to answer an event request (M10 D7). */
+  conciergeAnswerHours: number;
 }
 
 export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
@@ -58,6 +60,7 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   resourcesStaleDays: 7,
   reliabilityFloorPercent: 85,
   reliabilityMinAnswered: 5,
+  conciergeAnswerHours: 48,
 };
 
 export const OPERATING_THRESHOLD_KEYS = Object.keys(

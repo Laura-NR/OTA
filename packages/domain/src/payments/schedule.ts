@@ -7,7 +7,8 @@
 
 export type PaymentPlan = 'DEPOSIT' | 'FULL';
 
-export type InstalmentKind = 'DEPOSIT' | 'BALANCE' | 'FULL';
+/** TICKETS is M10's: event seats confirmed after the price locked. */
+export type InstalmentKind = 'DEPOSIT' | 'BALANCE' | 'FULL' | 'TICKETS';
 
 /** A deposit plan from the manifest (M4 D2). */
 export interface DepositPolicy {
@@ -112,7 +113,7 @@ const SETTLED_STATUSES: readonly string[] = ['COMPLETED', 'CANCELLED'];
 /**
  * What the next instalment means for the desk once its date has passed (M4
  * D3–D4): a deposit or full payment past its window waits for the desk to
- * extend or cancel; a balance past due is overdue. Neither changes the
+ * extend or cancel; a balance or an M10 ticket instalment past due is overdue. Neither changes the
  * booking's status by itself.
  */
 export function paymentAlert(
@@ -127,5 +128,8 @@ export function paymentAlert(
   ) {
     return null;
   }
-  return next.kind === 'BALANCE' ? 'BALANCE_OVERDUE' : 'WINDOW_EXPIRED';
+  // A ticket instalment falls due on a booking already paid into, like a balance.
+  return next.kind === 'BALANCE' || next.kind === 'TICKETS'
+    ? 'BALANCE_OVERDUE'
+    : 'WINDOW_EXPIRED';
 }
