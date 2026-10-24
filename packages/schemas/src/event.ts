@@ -212,6 +212,8 @@ export const publicEventSchema = z.object({
   notes: z.string().nullable(),
   /** The locale the text is in (the source when no published overlay exists). */
   locale: z.string(),
+  /** Hours the desk takes to answer a request (the M9 threshold in force). */
+  answerHours: z.number().int(),
   nights: z.array(eventNightSchema.omit({ position: true })),
   categories: z.array(eventCategorySchema.omit({ position: true })),
 });

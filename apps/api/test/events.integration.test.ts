@@ -76,7 +76,11 @@ describe.skipIf(!runIntegration)(
         },
         tenant,
       );
-      events = new EventsService(prisma as unknown as PrismaService, tenant);
+      events = new EventsService(
+        prisma as unknown as PrismaService,
+        tenant,
+        fakeOperatingSettings({ conciergeAnswerHours: 24 }),
+      );
       requests = new EventRequestsService(
         prisma as unknown as PrismaService,
         mailer,
@@ -207,6 +211,7 @@ describe.skipIf(!runIntegration)(
       expect(mine.locale).toBe('es');
       expect(mine.nights[0]!.label).toBe('Gala inaugural');
       expect(mine.place).toBe('Vedado');
+      expect(mine.answerHours).toBe(24);
     });
 
     it('takes a trip to build and derives its M5 custom request', async () => {

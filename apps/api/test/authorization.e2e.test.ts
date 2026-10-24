@@ -479,6 +479,8 @@ const fakePrisma = {
   $queryRaw: async () => [{ '?column?': 1 }],
   advisory: { findMany: async () => [] },
   event: { findMany: async () => [], findFirst: async () => null },
+  // M9: no applied settings version, so the public events read the defaults.
+  operatingSettings: { findFirst: async () => null },
 };
 
 const fakeAuthService = {

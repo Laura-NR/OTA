@@ -200,6 +200,22 @@ export const eventBannerContentSchema = z.object({
   eventSlug: z.string().trim().min(1).optional(),
 });
 
+/**
+ * The ticket concierge's agency words (M10 D8): the event pages' opening, the
+ * fall-through rule, the arrival advice, the US note for counsel and the
+ * honest notes. Placeholder until the agency and counsel publish them.
+ */
+export const eventsPageContentSchema = z.object({
+  status: contentStatusSchema,
+  eyebrow: text,
+  title: text,
+  lede: text,
+  fallThrough: text,
+  arrivalAdvice: text,
+  usNote: text,
+  honestNotes: z.array(text).default([]),
+});
+
 /** A destination card's words; its numbers are in the tenant's destinations.json. */
 export const destinationCardSchema = z.object({
   name: text,

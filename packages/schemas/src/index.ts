@@ -292,6 +292,7 @@ export {
   destinationDetailSchema,
   destinationsContentSchema,
   eventBannerContentSchema,
+  eventsPageContentSchema,
   faqItemSchema,
   footerContentSchema,
   homeContentSchema,

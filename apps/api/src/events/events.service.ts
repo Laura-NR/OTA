@@ -26,6 +26,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { slugify } from '../common/slug';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 
 const INCLUDE = {
@@ -71,6 +72,7 @@ export class EventsService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async list(): Promise<EventListItemDto[]> {
@@ -362,7 +364,8 @@ export class EventsService {
       orderBy: [{ startsOn: 'asc' }, { name: 'asc' }],
       include: INCLUDE,
     });
-    return rows.map((row) => this.toPublic(row, locale));
+    const answerHours = await this.answerHours();
+    return rows.map((row) => this.toPublic(row, locale, answerHours));
   }
 
   async getPublic(slug: string, locale: string | undefined): Promise<PublicEventDto> {
@@ -377,7 +380,7 @@ export class EventsService {
     if (!row) {
       throw new NotFoundException(`Event ${slug} not found`);
     }
-    return this.toPublic(row, locale);
+    return this.toPublic(row, locale, await this.answerHours());
   }
 
   /**
@@ -385,7 +388,11 @@ export class EventsService {
    * source as the fallback; `locale` names the overlay's language only when
    * one was used.
    */
-  toPublic(row: EventRow, locale: string | undefined): PublicEventDto {
+  toPublic(
+    row: EventRow,
+    locale: string | undefined,
+    answerHours: number,
+  ): PublicEventDto {
     const overlay =
       locale && locale !== row.sourceLocale
         ? row.translations.find(
@@ -407,6 +414,7 @@ export class EventsService {
       summary: overlay?.summary ?? row.summary,
       notes: overlay?.notes ?? row.notes,
       locale: overlay ? overlay.locale : row.sourceLocale,
+      answerHours,
       nights: row.nights.map((night) => ({
         id: night.id,
         date: day(night.date),
@@ -423,6 +431,10 @@ export class EventsService {
         currency: category.currency,
       })),
     };
+  }
+
+  private async answerHours(): Promise<number> {
+    return (await this.settings.thresholds()).conciergeAnswerHours;
   }
 
   private async setStatus(actor: AuthUser, row: EventRow, status: EventStatus) {
