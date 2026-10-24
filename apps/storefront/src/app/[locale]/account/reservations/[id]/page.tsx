@@ -30,6 +30,7 @@ import { PaymentSchedule } from '@/components/account/payment-schedule';
 import { ProviderProgress } from '@/components/account/provider-progress';
 import { TripProgress } from '@/components/account/trip-progress';
 import { MessageThread } from '@/components/message-thread';
+import { OfflineKitCard } from '@/components/offline/offline-kit-card';
 import { ReviewForm } from '@/components/review-form';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
@@ -51,7 +52,8 @@ const CONFIRMING: readonly string[] = [
  * confirmation once the first payment has confirmed it, the US
  * travel-category certification when a traveler needs it (M3), the payment
  * step when it is due (locked until every US traveler has certified), the
- * itinerary, the documents, the review once completed, and the thread with
+ * itinerary, the documents with the offline kit that keeps them on the
+ * device, the review once completed, and the thread with
  * operations (`#messages`). A disruption's options (M8) lead the page while the
  * case is open (`#disruption-options`, the E-Options link).
  */
@@ -343,6 +345,12 @@ export default async function AccountReservationPage({
           </ul>
         )}
       </section>
+
+      <OfflineKitCard
+        reservationId={reservation.id}
+        bookingCode={reservation.bookingCode}
+        documentIds={reservation.documents.map((document) => document.id)}
+      />
 
       {reservation.status === 'COMPLETED' ? (
         <section aria-labelledby="review-title" className={card}>

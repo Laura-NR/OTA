@@ -17,6 +17,8 @@ import type { CSSProperties, ReactNode } from 'react';
 import { BottomNav } from '@/components/bottom-nav';
 import { BandwidthStrip } from '@/components/display/bandwidth-strip';
 import { DisplayProvider } from '@/components/display/display-provider';
+import { OfflinePill } from '@/components/offline/offline-pill';
+import { ServiceWorkerRegistration } from '@/components/offline/service-worker';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { SiteStrips } from '@/components/site-strips';
@@ -85,6 +87,8 @@ export default async function LocaleLayout({
             <main className="flex-1">{children}</main>
             <SiteFooter tenant={tenant} />
             <BottomNav signedIn={signedIn} />
+            <OfflinePill />
+            <ServiceWorkerRegistration />
           </DisplayProvider>
         </NextIntlClientProvider>
       </body>
