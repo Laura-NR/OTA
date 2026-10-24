@@ -6,11 +6,14 @@
  * and the dev server behave as without it. When the network fails it serves,
  * in order: the traveler's saved offline kit (a trip page, its documents and
  * the build assets they need; saved by `src/lib/offline-kit.ts`, never here),
- * then the offline page of the request's locale. Nothing personal is cached
- * unless the traveler saved it, and signing out deletes the kit.
+ * then the offline page of the request's locale, or of another locale the
+ * device has visited. Nothing personal is cached unless the traveler saved it,
+ * and signing out deletes the kit.
  *
  * Registered by `components/offline/service-worker.tsx` as
- * `/sw.js?locales=es,en,fr&default=es`.
+ * `/sw.js?locales=es,en,fr&default=es&locale=en`: the install keeps only the
+ * visitor's locale's offline page, so a first visit on a slow link downloads
+ * one page, not one per language; switching language registers it again.
  */
 
 const SHELL_CACHE = 'ota-shell-v1';
@@ -25,6 +28,7 @@ const DEFAULT_LOCALE = params.get('default') || '';
 const PREFIXED_LOCALES = (params.get('locales') || '')
   .split(',')
   .filter((locale) => locale && locale !== DEFAULT_LOCALE);
+const LOCALE = params.get('locale') || DEFAULT_LOCALE;
 
 /** The default locale is unprefixed (`localePrefix: 'as-needed'`). */
 function offlinePath(locale) {
@@ -40,7 +44,7 @@ function requestLocale(pathname) {
 function assetPaths(html) {
   const found = new Set();
   for (const match of html.matchAll(
-    /(?:\/_next\/)?(static\/(?:chunks|css|media)\/[^"'\s\\)<>]+)/g,
+    /(?:\/_next\/)?(static\/(?:chunks|css|media)\/[^"'\s\\)<>]+?\.(?:js|css|woff2|svg|png|jpg|webp)(?:\?[^"'\s\\)<>]*)?)(?![\w.-])/g,
   )) {
     found.add(`/_next/${match[1].replace(/&amp;/g, '&')}`);
   }
@@ -78,24 +82,21 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(SHELL_CACHE);
-      for (const locale of [DEFAULT_LOCALE, ...PREFIXED_LOCALES]) {
-        const path = offlinePath(locale);
-        try {
-          // Signed out and in the page's own language, so the copy kept is
-          // nobody's and the locale middleware does not redirect it.
-          const response = await fetch(path, {
-            credentials: 'omit',
-            cache: 'no-store',
-            headers: locale ? { 'Accept-Language': locale } : {},
-          });
-          if (!response.ok) {
-            continue;
-          }
+      const path = offlinePath(LOCALE);
+      try {
+        // Signed out and in the page's own language, so the copy kept is
+        // nobody's and the locale middleware does not redirect it.
+        const response = await fetch(path, {
+          credentials: 'omit',
+          cache: 'no-store',
+          headers: LOCALE ? { 'Accept-Language': LOCALE } : {},
+        });
+        if (response.ok) {
           await cacheAssets(cache, await response.clone().text());
           await cache.put(path, await replayable(response));
-        } catch {
-          // Offline at install: the next install (or update) tries again.
         }
+      } catch {
+        // Offline at install: the next install (or update) tries again.
       }
       await self.skipWaiting();
     })(),
@@ -145,6 +146,13 @@ async function refreshKitPage(pathname, response) {
   }
 }
 
+/** The offline page of any locale this device has kept. */
+async function anyOfflinePage() {
+  const cache = await caches.open(SHELL_CACHE);
+  const [first] = await cache.keys();
+  return first ? cache.match(first) : undefined;
+}
+
 async function navigate(event) {
   const { pathname } = new URL(event.request.url);
   try {
@@ -163,7 +171,8 @@ async function navigate(event) {
       (await caches.match(pathname, { cacheName: KIT_CACHE, ignoreVary: true })) ||
       (await caches.match(offlinePath(requestLocale(pathname)), {
         cacheName: SHELL_CACHE,
-      }));
+      })) ||
+      (await anyOfflinePage());
     if (saved) {
       return saved;
     }
