@@ -2,7 +2,7 @@ import { emailDate, emailLocale, emailMoney, type EmailLocale } from '../locale'
 import type { EmailMessage } from '../mailer';
 import type { EmailBranding } from './magic-link';
 
-export type ReminderInstalmentKind = 'DEPOSIT' | 'BALANCE' | 'FULL';
+export type ReminderInstalmentKind = 'DEPOSIT' | 'BALANCE' | 'FULL' | 'TICKETS';
 
 export interface InstalmentReminderEmailInput {
   to: string;
@@ -43,7 +43,12 @@ interface Copy {
 
 const COPY: Record<EmailLocale, Copy> = {
   en: {
-    kinds: { DEPOSIT: 'deposit', BALANCE: 'balance', FULL: 'payment' },
+    kinds: {
+      DEPOSIT: 'deposit',
+      BALANCE: 'balance',
+      FULL: 'payment',
+      TICKETS: 'ticket payment',
+    },
     subject: (days, kind, code) =>
       `${days} ${days === 1 ? 'day' : 'days'} left to pay your ${kind} · ${code}`,
     greeting: (name) => `Hello ${name},`,
@@ -53,7 +58,12 @@ const COPY: Record<EmailLocale, Copy> = {
     note: (code) => `Transactional reminder for booking ${code}.`,
   },
   es: {
-    kinds: { DEPOSIT: 'abono', BALANCE: 'saldo', FULL: 'pago' },
+    kinds: {
+      DEPOSIT: 'abono',
+      BALANCE: 'saldo',
+      FULL: 'pago',
+      TICKETS: 'pago de entradas',
+    },
     subject: (days, kind, code) =>
       `${days === 1 ? 'Queda 1 día' : `Quedan ${days} días`} para pagar tu ${kind} · ${code}`,
     greeting: (name) => `Hola ${name}:`,
@@ -63,7 +73,12 @@ const COPY: Record<EmailLocale, Copy> = {
     note: (code) => `Recordatorio transaccional de la reserva ${code}.`,
   },
   fr: {
-    kinds: { DEPOSIT: 'acompte', BALANCE: 'solde', FULL: 'paiement' },
+    kinds: {
+      DEPOSIT: 'acompte',
+      BALANCE: 'solde',
+      FULL: 'paiement',
+      TICKETS: 'paiement des billets',
+    },
     subject: (days, kind, code) =>
       `${days === 1 ? 'Il reste 1 jour' : `Il reste ${days} jours`} pour payer votre ${kind} · ${code}`,
     greeting: (name) => `Bonjour ${name},`,

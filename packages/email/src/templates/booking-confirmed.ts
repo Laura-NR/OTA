@@ -9,7 +9,7 @@ import type { EmailAttachment, EmailMessage } from '../mailer';
 import type { EmailBranding } from './magic-link';
 import { emailShell } from './shell';
 
-type InstalmentKind = 'DEPOSIT' | 'BALANCE' | 'FULL';
+type InstalmentKind = 'DEPOSIT' | 'BALANCE' | 'FULL' | 'TICKETS';
 
 export interface BookingConfirmedEmailInput {
   to: string;
@@ -52,7 +52,12 @@ interface Copy {
 const COPY: Record<EmailLocale, Copy> = {
   en: {
     customTrip: 'Your custom trip',
-    kinds: { DEPOSIT: 'deposit', BALANCE: 'balance', FULL: 'payment' },
+    kinds: {
+      DEPOSIT: 'deposit',
+      BALANCE: 'balance',
+      FULL: 'payment',
+      TICKETS: 'ticket payment',
+    },
     subject: (trip, dates, code) => `Confirmed: ${trip}, ${dates} · ${code}`,
     greeting: (name) => `Hello ${name},`,
     received: (kind, amount) => `We received your ${kind} of ${amount}.`,
@@ -69,7 +74,12 @@ const COPY: Record<EmailLocale, Copy> = {
   },
   es: {
     customTrip: 'Tu viaje a medida',
-    kinds: { DEPOSIT: 'abono', BALANCE: 'saldo', FULL: 'pago' },
+    kinds: {
+      DEPOSIT: 'abono',
+      BALANCE: 'saldo',
+      FULL: 'pago',
+      TICKETS: 'pago de entradas',
+    },
     subject: (trip, dates, code) => `Confirmado: ${trip}, ${dates} · ${code}`,
     greeting: (name) => `Hola ${name}:`,
     received: (kind, amount) => `Hemos recibido tu ${kind} de ${amount}.`,
@@ -86,7 +96,12 @@ const COPY: Record<EmailLocale, Copy> = {
   },
   fr: {
     customTrip: 'Votre voyage sur mesure',
-    kinds: { DEPOSIT: 'acompte', BALANCE: 'solde', FULL: 'paiement' },
+    kinds: {
+      DEPOSIT: 'acompte',
+      BALANCE: 'solde',
+      FULL: 'paiement',
+      TICKETS: 'paiement des billets',
+    },
     subject: (trip, dates, code) => `Confirmé : ${trip}, ${dates} · ${code}`,
     greeting: (name) => `Bonjour ${name},`,
     received: (kind, amount) => `Nous avons bien reçu votre ${kind} de ${amount}.`,

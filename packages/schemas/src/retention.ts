@@ -43,6 +43,8 @@ export const retentionScanResultSchema = z.object({
   affidavitsDeleted: z.number().int(),
   /** Staff invitations closed for 90 days, deleted with their work email (M9). */
   invitesDeleted: z.number().int(),
+  /** Event requests closed without a booking for 90 days, deleted (M10 D9). */
+  eventRequestsDeleted: z.number().int(),
 });
 
 export type RetentionScanResultDto = z.infer<typeof retentionScanResultSchema>;

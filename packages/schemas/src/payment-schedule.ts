@@ -9,7 +9,8 @@ import { paymentRailSchema, paymentReceiptSchema, paymentStatusSchema } from './
  */
 
 export const paymentPlanSchema = z.enum(['DEPOSIT', 'FULL']);
-export const instalmentKindSchema = z.enum(['DEPOSIT', 'BALANCE', 'FULL']);
+/** TICKETS is M10's: event seats confirmed after the price locked. */
+export const instalmentKindSchema = z.enum(['DEPOSIT', 'BALANCE', 'FULL', 'TICKETS']);
 export const instalmentStatusSchema = z.enum(['DUE', 'PAID', 'WAIVED', 'CANCELLED']);
 export const proofStatusSchema = z.enum(['SUBMITTED', 'ACCEPTED', 'REJECTED']);
 export const refundReasonSchema = z.enum([

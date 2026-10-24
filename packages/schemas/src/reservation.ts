@@ -80,7 +80,7 @@ export const reservationListItemSchema = reservationSchema.extend({
    */
   nextInstalment: z
     .object({
-      kind: z.enum(['DEPOSIT', 'BALANCE', 'FULL']),
+      kind: z.enum(['DEPOSIT', 'BALANCE', 'FULL', 'TICKETS']),
       amount: z.string(),
       dueAt: z.string(),
     })

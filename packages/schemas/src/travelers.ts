@@ -20,6 +20,9 @@ export const priceLineKindSchema = z.enum([
   'EXTRA',
   'SERVICE',
   'FEE',
+  // M10: confirmed event seats and the concierge fee.
+  'EVENT_TICKET',
+  'CONCIERGE_FEE',
 ]);
 
 export type PriceLineKindDto = z.infer<typeof priceLineKindSchema>;
