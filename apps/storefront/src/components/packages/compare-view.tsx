@@ -4,6 +4,7 @@ import { Button, buttonClassName, Checkbox, cn, Icon } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
+import { Photo } from '@/components/display/photo';
 import { Link, useRouter } from '@/i18n/navigation';
 import { MAX_COMPARE } from '@/lib/compare-limits';
 import { useCompareSelection } from '@/lib/compare-selection';
@@ -97,7 +98,7 @@ export function CompareView({
                   <div className="flex flex-col gap-2">
                     <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md bg-sunken text-muted">
                       {trip.mediaId ? (
-                        <img
+                        <Photo
                           src={`/api/ota/catalog/media/${trip.mediaId}`}
                           alt=""
                           className="absolute inset-0 h-full w-full object-cover"

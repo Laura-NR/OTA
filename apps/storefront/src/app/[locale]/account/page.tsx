@@ -18,6 +18,7 @@ import { AccountShell, type AccountSection } from '@/components/account/account-
 import { NotificationPreferences } from '@/components/account/notification-preferences';
 import { TripProgress } from '@/components/account/trip-progress';
 import { TONE_BADGES } from '@/components/conditions-card';
+import { DisplayPreferencesForm } from '@/components/display/display-preferences';
 import { MyEventRequests } from '@/components/events/my-event-requests';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
@@ -77,6 +78,7 @@ export default async function AccountPage({
   const [
     t,
     tp,
+    tdisplay,
     format,
     locale,
     profile,
@@ -87,6 +89,7 @@ export default async function AccountPage({
   ] = await Promise.all([
     getTranslations('account'),
     getTranslations('proposal'),
+    getTranslations('display'),
     getFormatter(),
     getLocale(),
     apiFetch<MeProfileDto>('/me').catch(() => null),
@@ -506,6 +509,15 @@ export default async function AccountPage({
             {t('preferences.title')}
           </h1>
           <NotificationPreferences consents={consents} />
+          <section aria-labelledby="display-title" className="flex flex-col gap-4 pt-4">
+            <div className="flex flex-col gap-1">
+              <h2 id="display-title" className="text-h4 text-default">
+                {tdisplay('title')}
+              </h2>
+              <p className="text-body-sm text-secondary">{tdisplay('lede')}</p>
+            </div>
+            <DisplayPreferencesForm />
+          </section>
         </section>
       ) : null}
     </AccountShell>

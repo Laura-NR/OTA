@@ -2,6 +2,7 @@ import type { InventoryItemDto } from '@ota/schemas';
 import { buttonClassName, Icon } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
 
+import { Photo } from '@/components/display/photo';
 import { Link } from '@/i18n/navigation';
 import { formatMoney } from '@/lib/format';
 
@@ -28,7 +29,7 @@ export function CatalogItemCard({
     <article className="flex w-full min-w-0 flex-col overflow-hidden rounded-lg border bg-surface shadow-sm">
       <div className="relative flex aspect-video items-center justify-center bg-sunken text-muted">
         {photo ? (
-          <img
+          <Photo
             src={`/api/ota/catalog/media/${photo.id}`}
             alt={photo.altText ?? ''}
             className="absolute inset-0 h-full w-full object-cover"

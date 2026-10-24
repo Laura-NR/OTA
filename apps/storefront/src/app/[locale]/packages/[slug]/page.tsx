@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 
 import { AdvisoryNotice } from '@/components/advisory-notice';
 import { Breadcrumb } from '@/components/breadcrumb';
+import { Photo } from '@/components/display/photo';
 import { PackageBookingForm } from '@/components/package-booking-form';
 import { BookingModelPill, PackageCard } from '@/components/package-card';
 import { PackageActions, PackageTabs } from '@/components/packages/package-actions';
@@ -464,7 +465,7 @@ export default async function PackageDetailPage({
               )}
             >
               {photo ? (
-                <img
+                <Photo
                   src={photo.url}
                   alt={photo.alt}
                   className="absolute inset-0 h-full w-full object-cover"

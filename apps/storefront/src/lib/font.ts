@@ -7,11 +7,17 @@ import localFont from 'next/font/local';
  * `--font-body`, `--font-mono`) on the element that carries `fontVariables`;
  * that must be `<html>`, where the type tokens (`--text-h1` …) resolve. This is
  * a build-time asset path, not a runtime import of agency configuration.
+ *
+ * None is preloaded: low-bandwidth mode swaps the families for system faces
+ * (`globals.css`), and a face no element uses is never downloaded, which a
+ * preload would defeat. `display: swap` and the metric-matched fallbacks keep
+ * the first paint steady in the default mode.
  */
 const fraunces = localFont({
   src: '../../../../tenant/assets/fonts/Fraunces-opsz-wght-latin.woff2',
   variable: '--font-display',
   display: 'swap',
+  preload: false,
   weight: '100 900',
   fallback: ['Georgia', 'serif'],
   adjustFontFallback: 'Times New Roman',
@@ -21,6 +27,7 @@ const inter = localFont({
   src: '../../../../tenant/assets/fonts/Inter-wght-latin.woff2',
   variable: '--font-body',
   display: 'swap',
+  preload: false,
   weight: '100 900',
   fallback: ['system-ui', 'sans-serif'],
 });

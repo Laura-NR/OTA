@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
+import { DisplayPreferencesForm } from '@/components/display/display-preferences';
 import { Link, usePathname } from '@/i18n/navigation';
 import { isCurrent, PRIMARY_NAV } from '@/lib/site-nav';
 
@@ -28,6 +29,7 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations('nav');
+  const display = useTranslations('display');
   const hydrated = useSyncExternalStore(
     subscribeNever,
     () => true,
@@ -91,6 +93,18 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
                   );
                 })}
               </ul>
+              <section
+                aria-labelledby="menu-display-title"
+                className="mt-6 flex flex-col"
+              >
+                <h2
+                  id="menu-display-title"
+                  className="text-overline uppercase text-muted"
+                >
+                  {display('title')}
+                </h2>
+                <DisplayPreferencesForm compact />
+              </section>
             </Drawer>,
             document.body,
           )

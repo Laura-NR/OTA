@@ -7,3 +7,23 @@
     @apply bg-page font-body text-body text-default;
   }
 }
+
+/*
+ * Larger text (Account board): the root goes from the browser's size to
+ * 112.5 % of it, so the 16 px body reads 18 px and every rem-sized type and
+ * space scales with it, on top of the reader's own browser setting.
+ */
+html[data-text-size='large'] {
+  font-size: 112.5%;
+}
+
+/*
+ * Low-bandwidth mode (DS 05): system faces in place of the brand fonts, which
+ * are then never downloaded. The attribute selector outranks the font
+ * loader's class on the same element.
+ */
+html[data-bandwidth='low'] {
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body: system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+}

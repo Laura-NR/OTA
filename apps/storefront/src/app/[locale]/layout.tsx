@@ -3,21 +3,26 @@ import '@ota/ui/styles.css';
 import '../globals.css';
 
 import { isFeatureEnabled } from '@ota/config';
+import { DISPLAY_COOKIE, parseDisplayPreferences } from '@ota/domain';
 import { isSupportedLocale } from '@ota/i18n';
 import { themeCssVariables } from '@ota/theming';
 import { IconSprite } from '@ota/ui';
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 
 import { BottomNav } from '@/components/bottom-nav';
+import { BandwidthStrip } from '@/components/display/bandwidth-strip';
+import { DisplayProvider } from '@/components/display/display-provider';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { SiteStrips } from '@/components/site-strips';
 import { getServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
+import { displayAttributes } from '@/lib/display';
 import { fontVariables } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -55,21 +60,32 @@ export default async function LocaleLayout({
   const tokens = themeCssVariables(tenant) as CSSProperties;
   const messages = await getMessages();
   const signedIn = Boolean(await getServerSession());
+  // Larger text and low-bandwidth mode are the device's (a cookie), so the
+  // page renders in them from its first byte.
+  const display = parseDisplayPreferences((await cookies()).get(DISPLAY_COOKIE)?.value);
 
   return (
-    <html lang={locale} style={tokens} className={fontVariables}>
+    <html
+      lang={locale}
+      style={tokens}
+      className={fontVariables}
+      {...displayAttributes(display)}
+    >
       {/* Below md the bottom nav is fixed; the body pads for it. */}
       <body className="flex min-h-screen flex-col pb-16 antialiased md:pb-0">
         <IconSprite />
         <NextIntlClientProvider messages={messages}>
-          <SiteStrips
-            events={isFeatureEnabled(tenant, 'culturalEventsBanner')}
-            signedIn={signedIn}
-          />
-          <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
-          <main className="flex-1">{children}</main>
-          <SiteFooter tenant={tenant} />
-          <BottomNav signedIn={signedIn} />
+          <DisplayProvider initial={display}>
+            <BandwidthStrip />
+            <SiteStrips
+              events={isFeatureEnabled(tenant, 'culturalEventsBanner')}
+              signedIn={signedIn}
+            />
+            <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
+            <main className="flex-1">{children}</main>
+            <SiteFooter tenant={tenant} />
+            <BottomNav signedIn={signedIn} />
+          </DisplayProvider>
         </NextIntlClientProvider>
       </body>
     </html>
