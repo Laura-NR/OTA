@@ -5,6 +5,7 @@ import {
   canMoveEventRequest,
   derivedTrip,
   eventIsListed,
+  eventPublishIssues,
   eventRequestAnswerOverdue,
   eventRequestIssues,
   eventTakesRequests,
@@ -279,5 +280,53 @@ describe('M10 ticket charges (D6)', () => {
     expect(ticketInstalmentDueAt(confirmed, 7, new Date('2026-12-01T00:00:00Z'))).toEqual(
       new Date('2026-12-17T10:00:00Z'),
     );
+  });
+});
+
+describe('M10 publish checks', () => {
+  const base = {
+    access: 'REQUEST_ONLY' as const,
+    startsOn: day('2027-01-18'),
+    endsOn: day('2027-01-24'),
+    confirmBy: day('2027-01-10'),
+    nights: [{ date: day('2027-01-18') }],
+    categories: [{ kind: 'GENERAL' as const }],
+  };
+
+  it('publishes an event with a category and its nights inside its dates', () => {
+    expect(eventPublishIssues(base, now)).toEqual([]);
+  });
+
+  it('needs a category, and nights for a per-night category', () => {
+    expect(eventPublishIssues({ ...base, categories: [] }, now)).toEqual([
+      'NO_CATEGORIES',
+    ]);
+    expect(eventPublishIssues({ ...base, nights: [] }, now)).toEqual(['NO_NIGHTS']);
+    expect(
+      eventPublishIssues({ ...base, nights: [], categories: [{ kind: 'PASS' }] }, now),
+    ).toEqual([]);
+  });
+
+  it('needs nothing for a guide-only event', () => {
+    expect(
+      eventPublishIssues(
+        { ...base, access: 'GUIDE_ONLY', nights: [], categories: [] },
+        now,
+      ),
+    ).toEqual([]);
+  });
+
+  it('refuses a night outside the dates, a late confirmation and a past event', () => {
+    expect(
+      eventPublishIssues(
+        {
+          ...base,
+          endsOn: day('2026-10-20'),
+          startsOn: day('2026-10-18'),
+          confirmBy: day('2026-10-19'),
+        },
+        now,
+      ),
+    ).toEqual(['NIGHT_OUTSIDE_DATES', 'CONFIRM_AFTER_START', 'ENDED']);
   });
 });

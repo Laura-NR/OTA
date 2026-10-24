@@ -84,6 +84,52 @@ export function eventTakesRequests(
   return eventIsListed(event, now) && event.access !== 'GUIDE_ONLY';
 }
 
+export type EventIssue =
+  'NO_CATEGORIES' | 'NO_NIGHTS' | 'NIGHT_OUTSIDE_DATES' | 'CONFIRM_AFTER_START' | 'ENDED';
+
+/**
+ * Why an event cannot be published, or an empty list. A guide-only event
+ * takes no seats, so it needs neither categories nor nights; any other needs
+ * a category, and nights when a category is sold per night. Nights lie inside
+ * the event's dates, and seats are confirmed before it starts.
+ */
+export function eventPublishIssues(
+  event: {
+    access: EventAccess;
+    startsOn: Date;
+    endsOn: Date;
+    confirmBy: Date | null;
+    nights: readonly { date: Date }[];
+    categories: readonly { kind: SeatCategoryKind }[];
+  },
+  now: Date,
+): EventIssue[] {
+  const issues: EventIssue[] = [];
+  if (event.access !== 'GUIDE_ONLY') {
+    if (event.categories.length === 0) issues.push('NO_CATEGORIES');
+    if (
+      event.nights.length === 0 &&
+      event.categories.some((category) => category.kind !== 'PASS')
+    ) {
+      issues.push('NO_NIGHTS');
+    }
+  }
+  if (
+    event.nights.some(
+      (night) =>
+        night.date.getTime() < event.startsOn.getTime() ||
+        night.date.getTime() > event.endsOn.getTime(),
+    )
+  ) {
+    issues.push('NIGHT_OUTSIDE_DATES');
+  }
+  if (event.confirmBy && event.confirmBy.getTime() > event.startsOn.getTime()) {
+    issues.push('CONFIRM_AFTER_START');
+  }
+  if (event.endsOn.getTime() < zonedCalendarDay(now).getTime()) issues.push('ENDED');
+  return issues;
+}
+
 export type EventRequestIssue =
   | 'EVENT_CLOSED'
   | 'CATEGORY'
