@@ -8,6 +8,9 @@
  * contract the sink enforces: an event or parameter not in it is refused.
  */
 
+import { OFAC_CATEGORIES } from '../compliance/ofac';
+import { ReservationStatus, UserRole } from '../reservation/status';
+
 /** The seven funnel stages (T-Events §01), renamed for request-to-book. */
 export const FUNNEL_STAGES = {
   VISIT: 1,
@@ -31,6 +34,8 @@ export type ParamKind =
   | 'count'
   /** An amount of money or a measure, from 0, up to two decimals. */
   | 'amount'
+  /** A difference that may be negative (a tier cheaper than the base), up to two decimals. */
+  | 'delta'
   | 'bool'
   /** A hostname (a referrer is reduced to its host by the shell). */
   | 'host'
@@ -39,6 +44,12 @@ export type ParamKind =
   /** One of the listed values. */
   | readonly string[];
 
+/**
+ * Which app may send an event: the storefront (`web`, `mobile_web`), the
+ * desk (`admin`) or either.
+ */
+export type TelemetrySurface = 'storefront' | 'desk' | 'any';
+
 export interface TelemetryEventSpec {
   /**
    * Essential events (bookings, payments, errors, the consent choice itself)
@@ -46,6 +57,7 @@ export interface TelemetryEventSpec {
    * id or the user id (T-Events §03).
    */
   essential: boolean;
+  surface: TelemetrySurface;
   params: Readonly<Record<string, ParamKind>>;
 }
 
@@ -81,11 +93,48 @@ const SCREEN_IDS = [
 export type ScreenId = (typeof SCREEN_IDS)[number];
 export const SCREENS: readonly ScreenId[] = SCREEN_IDS;
 
+/**
+ * The desk's screens, named after the admin artboards. A section's sub-pages
+ * report the section's artboard; the sign-in and invite pages are `A-Login`.
+ */
+const DESK_SCREEN_IDS = [
+  'A-Dashboard',
+  'A-Bookings',
+  'A-Booking',
+  'A-Disruption',
+  'A-Packages',
+  'A-Package-Edit',
+  'A-Customers',
+  'A-Suppliers',
+  'A-Payments',
+  'A-Reports',
+  'A-Content',
+  'A-Settings',
+  'A-Login',
+  'A-States',
+] as const;
+
+export type DeskScreenId = (typeof DESK_SCREEN_IDS)[number];
+export const DESK_SCREENS: readonly DeskScreenId[] = DESK_SCREEN_IDS;
+
 const NAVS = ['top', 'bottom', 'footer'] as const;
 const LOCALE = /^[a-z]{2}$/;
+const PAYMENT_METHODS = ['transfer', 'card'] as const;
+const PAYMENT_PLANS = ['deposit', 'full'] as const;
+const RESERVATION_STATUSES = Object.values(ReservationStatus);
 
 function event(params: Record<string, ParamKind>, essential = false): TelemetryEventSpec {
-  return { essential, params };
+  return { essential, surface: 'storefront', params };
+}
+
+/**
+ * A desk event. The desk offers no analytics choice, so its events are
+ * operational records: essential, sent without a session id, a user id or
+ * anything stored on the device, and stamped by the API with the operator's
+ * role (owner decision, 2026-10-25).
+ */
+function deskEvent(params: Record<string, ParamKind>): TelemetryEventSpec {
+  return { essential: true, surface: 'desk', params };
 }
 
 /** Every event the storefront emits, with its own parameters (T-Events §04, §05). */
@@ -124,6 +173,12 @@ export const TELEMETRY_EVENTS = {
     filter_value: 'id',
     active_filters_count: 'count',
   }),
+  /** Home's search is free text, which never enters an event, so it carries no destination. */
+  search_submitted: event({}),
+  sort_changed: event({
+    sort_field: ['recommended', 'price', 'duration'],
+    direction: ['asc', 'desc'],
+  }),
   search_results_loaded: event({ results_count: 'count', zero_results: 'bool' }),
   search_result_clicked: event({ package_id: 'id', position: 'count' }),
   compare_added: event({ package_id: 'id', count: 'count' }),
@@ -155,11 +210,24 @@ export const TELEMETRY_EVENTS = {
     provinces: 'ids',
     pace: 'id',
   }),
+  /** The Booking form's choices: a departure (step 1) and an accommodation tier (step 2). */
+  departure_selected: event({
+    package_id: 'id',
+    departure_date: 'id',
+    seats_left: 'count',
+  }),
+  tier_selected: event({ package_id: 'id', tier: 'id', delta: 'delta' }),
   booking_started: event({ package_id: 'id' }, true),
   booking_step_completed: event(
     { from_step: 'count', to_step: 'count', time_on_step_ms: 'count' },
     true,
   ),
+  // The OFAC gate (Booking step 4, and the trip page for a later certification):
+  // shown when a US traveler is added, or blocked when Continue is refused
+  // for a missing signature; signed once the typed signature is accepted.
+  ofac_gate_shown: event({ blocked: 'bool' }),
+  ofac_category_selected: event({ category: OFAC_CATEGORIES }),
+  affidavit_signed: event({ category: OFAC_CATEGORIES }),
   // Request
   booking_submitted: event(
     {
@@ -172,10 +240,32 @@ export const TELEMETRY_EVENTS = {
     true,
   ),
   // Pay
-  payment_window_viewed: event(
-    { booking_code: 'id', method: ['transfer', 'card'] },
+  payment_window_viewed: event({ booking_code: 'id', method: PAYMENT_METHODS }, true),
+  payment_plan_selected: event({ booking_code: 'id', plan: PAYMENT_PLANS }, true),
+  /**
+   * The traveler starts a payment. A transfer has no gateway result: the desk
+   * confirms the receipt by hand, which `booking_confirmed` reports, so there
+   * is no `payment_succeeded` yet.
+   */
+  payment_attempted: event(
+    { booking_code: 'id', method: PAYMENT_METHODS, plan: PAYMENT_PLANS },
     true,
   ),
+  /** `error_code` is `http_<status>`, or `network` when no answer came. */
+  payment_failed: event(
+    {
+      booking_code: 'id',
+      method: PAYMENT_METHODS,
+      error_code: 'id',
+      latency_ms: 'count',
+    },
+    true,
+  ),
+  proof_uploaded: event({
+    booking_code: 'id',
+    file_type: ['pdf', 'jpeg', 'png'],
+    size_kb: 'count',
+  }),
   // Confirmed and after
   booking_status_viewed: event({ booking_code: 'id', status: 'id' }, true),
   booking_confirmed: event({ booking_code: 'id' }, true),
@@ -189,8 +279,41 @@ export const TELEMETRY_EVENTS = {
   join_submitted: event({ category: 'id' }),
   concierge_request_submitted: event({ event_id: 'id', tickets: 'count' }),
   // Errors (always logged first-party) and the states where people leave
-  client_error: event({ stack_hash: 'id' }, true),
+  client_error: { essential: true, surface: 'any', params: { stack_hash: 'id' } },
   error_page_shown: event({ kind: ['not_found', 'server'], from_path: 'id' }),
+  // Operations · the desk (feeds spec §4.9.3). Each fires once the API has
+  // accepted the operator's action; the role rides on the context.
+  booking_state_changed: deskEvent({
+    booking_code: 'id',
+    from: RESERVATION_STATUSES,
+    to: RESERVATION_STATUSES,
+  }),
+  /** A worker picked from the eligible candidates; `position_chosen` counts from 1. */
+  redispatch_triggered: deskEvent({
+    service_item_id: 'id',
+    mode: ['manual'],
+    candidates_shown: 'count',
+    position_chosen: 'count',
+    from: ['dashboard', 'booking'],
+  }),
+  /** The desk regenerated a booking's documents. */
+  document_generated: deskEvent({ booking_code: 'id', trigger: ['manual'] }),
+  /**
+   * A bulk import commit the API answered. The commit is atomic, so a batch
+   * with `errors` above 0 imported nothing.
+   */
+  import_committed: deskEvent({ rows: 'count', errors: 'count', duration_ms: 'count' }),
+  approval_decided: deskEvent({
+    kind: ['advisory', 'refund', 'proof'],
+    decision: ['approved', 'rejected', 'changes_requested'],
+  }),
+  /** An assistant reply draft that was sent; `edited_ratio` 0 is sent as drafted. */
+  ai_draft_used: deskEvent({ context: ['reply'], edited_ratio: 'amount', locale: 'id' }),
+  /**
+   * A desk state where work stops: an empty queue, an action the role may not
+   * take, or the live feed lost.
+   */
+  admin_state_shown: deskEvent({ kind: ['empty', 'denied', 'degraded'] }),
 } as const satisfies Record<string, TelemetryEventSpec>;
 
 export type TelemetryEventName = keyof typeof TELEMETRY_EVENTS;
@@ -202,29 +325,46 @@ export function isTelemetryEvent(name: string): name is TelemetryEventName {
 // ---------------------------------------------------------------------------
 // Common parameters (T-Events §02), added by the shell, never by a component.
 
-export const TELEMETRY_APPS = ['web', 'mobile_web'] as const;
+export const TELEMETRY_APPS = ['web', 'mobile_web', 'admin'] as const;
 export const DEVICE_TYPES = ['phone', 'tablet', 'desktop'] as const;
 export const VIEWPORTS = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 export const NETWORKS = ['4g', '3g', '2g', 'offline', 'unknown'] as const;
 export const CONSENT_LEVELS = ['essential', 'analytics', 'marketing'] as const;
 
+/** The board's operator roles; the worker app's `worker` arrives with that app. */
+export const TELEMETRY_ROLES = ['super_admin', 'ops_admin', 'support'] as const;
+
 export type TelemetryApp = (typeof TELEMETRY_APPS)[number];
+export type TelemetryRole = (typeof TELEMETRY_ROLES)[number];
 export type DeviceType = (typeof DEVICE_TYPES)[number];
 export type Viewport = (typeof VIEWPORTS)[number];
 export type NetworkKind = (typeof NETWORKS)[number];
 
-/** What the client sends with every event. */
+/** What the client sends with every event; `role` is the API's to add. */
 export interface TelemetryContext {
   /** `s_` plus hex, from the tab's storage; only with analytics consent. */
   session_id?: string;
   app: TelemetryApp;
-  screen: ScreenId;
+  screen: ScreenId | DeskScreenId;
   locale: string;
   currency: string;
   device_type: DeviceType;
   viewport: Viewport;
   network: NetworkKind;
   consent: (typeof CONSENT_LEVELS)[number];
+  /** On desk events only, from the signed-in operator's account. */
+  role?: TelemetryRole;
+}
+
+const ROLE_OF: Partial<Record<UserRole, TelemetryRole>> = {
+  [UserRole.SuperAdmin]: 'super_admin',
+  [UserRole.OperationsAdmin]: 'ops_admin',
+  [UserRole.AdministrativeSupport]: 'support',
+};
+
+/** An account role as the board names it; null for anyone who is not desk staff. */
+export function telemetryRoleFor(role: string | null | undefined): TelemetryRole | null {
+  return ROLE_OF[role as UserRole] ?? null;
 }
 
 /** DS 07 breakpoints: sm 480, md 768, lg 1024, xl 1280 (mobile first). */
@@ -294,8 +434,9 @@ const SCREEN_STAGES: Readonly<Record<ScreenId, FunnelStage | null>> = {
   NotFound: null,
 };
 
-export function funnelStageOf(screen: ScreenId): FunnelStage | null {
-  return SCREEN_STAGES[screen];
+/** A storefront screen's funnel stage; the desk's screens have none. */
+export function funnelStageOf(screen: ScreenId | DeskScreenId): FunnelStage | null {
+  return SCREEN_STAGES[screen as ScreenId] ?? null;
 }
 
 /** Path patterns after the locale prefix, most specific first. */
@@ -338,6 +479,33 @@ export function screenForPath(pathname: string, locales: readonly string[]): Scr
   return SCREEN_PATHS.find(([pattern]) => pattern.test(path))?.[1] ?? 'NotFound';
 }
 
+/** Desk path patterns, most specific first (the desk has no locale prefix). */
+const DESK_SCREEN_PATHS: readonly [RegExp, DeskScreenId][] = [
+  [/^\/dashboard\/?$/, 'A-Dashboard'],
+  [
+    /^\/bookings\/(new|proposals|event-requests|messages|documents)(\/.*)?$/,
+    'A-Bookings',
+  ],
+  [/^\/bookings\/[^/]+\/?$/, 'A-Booking'],
+  [/^\/bookings\/?$/, 'A-Bookings'],
+  [/^\/disruptions(\/.*)?$/, 'A-Disruption'],
+  [/^\/packages\/(inventory|imports)(\/.*)?$/, 'A-Packages'],
+  [/^\/packages\/[^/]+\/?$/, 'A-Package-Edit'],
+  [/^\/packages\/?$/, 'A-Packages'],
+  [/^\/customers(\/.*)?$/, 'A-Customers'],
+  [/^\/suppliers(\/.*)?$/, 'A-Suppliers'],
+  [/^\/payments(\/.*)?$/, 'A-Payments'],
+  [/^\/reports(\/.*)?$/, 'A-Reports'],
+  [/^\/content(\/.*)?$/, 'A-Content'],
+  [/^\/settings(\/.*)?$/, 'A-Settings'],
+  [/^\/(login|invite)\/?$/, 'A-Login'],
+];
+
+/** The desk screen a back-office path renders; anything else is an edge state. */
+export function deskScreenForPath(pathname: string): DeskScreenId {
+  return DESK_SCREEN_PATHS.find(([pattern]) => pattern.test(pathname))?.[1] ?? 'A-States';
+}
+
 // ---------------------------------------------------------------------------
 // Admission: what the sink accepts.
 
@@ -360,7 +528,15 @@ export interface AdmittedEvent {
 }
 
 export type TelemetryRejection =
-  'unknown_event' | 'bad_time' | 'bad_context' | 'bad_param' | 'not_consented';
+  | 'unknown_event'
+  | 'bad_time'
+  | 'bad_context'
+  | 'bad_param'
+  | 'not_consented'
+  /** A desk event from the storefront, or the reverse. */
+  | 'wrong_surface'
+  /** A desk event without a signed-in operator. */
+  | 'not_staff';
 
 export type TelemetryVerdict =
   { ok: true; event: AdmittedEvent } | { ok: false; reason: TelemetryRejection };
@@ -392,10 +568,11 @@ function validParam(kind: ParamKind, value: unknown): value is ParamValue {
     case 'count':
       return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
     case 'amount':
+    case 'delta':
       return (
         typeof value === 'number' &&
         Number.isFinite(value) &&
-        value >= 0 &&
+        (kind === 'delta' || value >= 0) &&
         Math.abs(Math.round(value * 100) - value * 100) < 1e-6
       );
     case 'bool':
@@ -439,7 +616,12 @@ function readContext(raw: Record<string, unknown>): TelemetryContext | null {
   }
   if (
     !oneOf(TELEMETRY_APPS, app) ||
-    !oneOf(SCREEN_IDS, screen) ||
+    !oneOf<ScreenId | DeskScreenId>(
+      app === 'admin' ? DESK_SCREEN_IDS : SCREEN_IDS,
+      screen,
+    ) ||
+    // The desk offers no analytics choice (see deskEvent).
+    (app === 'admin' && consent !== 'essential') ||
     typeof locale !== 'string' ||
     !LOCALE.test(locale) ||
     typeof currency !== 'string' ||
@@ -470,9 +652,15 @@ function readContext(raw: Record<string, unknown>): TelemetryContext | null {
  * Check one event against the taxonomy and the visitor's consent. Unknown
  * events and parameters are refused rather than dropped, so nothing outside
  * the table reaches the sink. Without analytics consent only essential
- * events pass, and they lose the session id.
+ * events pass, and they lose the session id. A desk event passes only for a
+ * signed-in operator, whose role (`viewerRole`, from the session, never the
+ * client) is stamped on it.
  */
-export function admitTelemetryEvent(input: TelemetryInput, now: Date): TelemetryVerdict {
+export function admitTelemetryEvent(
+  input: TelemetryInput,
+  now: Date,
+  viewerRole: string | null = null,
+): TelemetryVerdict {
   if (!isTelemetryEvent(input.event)) {
     return { ok: false, reason: 'unknown_event' };
   }
@@ -489,6 +677,14 @@ export function admitTelemetryEvent(input: TelemetryInput, now: Date): Telemetry
     return { ok: false, reason: 'bad_context' };
   }
   const spec: TelemetryEventSpec = TELEMETRY_EVENTS[input.event];
+  const desk = context.app === 'admin';
+  if (spec.surface !== 'any' && (spec.surface === 'desk') !== desk) {
+    return { ok: false, reason: 'wrong_surface' };
+  }
+  const role = desk ? telemetryRoleFor(viewerRole) : null;
+  if (desk && !role) {
+    return { ok: false, reason: 'not_staff' };
+  }
   const params: Record<string, ParamValue> = {};
   for (const [key, value] of Object.entries(input.params ?? {})) {
     const kind = spec.params[key];
@@ -509,7 +705,11 @@ export function admitTelemetryEvent(input: TelemetryInput, now: Date): Telemetry
       event: input.event,
       ts: new Date(at).toISOString(),
       essential: spec.essential,
-      context: { ...context, funnel_stage: funnelStageOf(context.screen) },
+      context: {
+        ...context,
+        ...(role ? { role } : {}),
+        funnel_stage: funnelStageOf(context.screen),
+      },
       params,
     },
   };
@@ -571,4 +771,49 @@ export function filterChanges(
   }
   const activeCount = Object.values(next).reduce((sum, values) => sum + values.length, 0);
   return { applied, removed, activeCount };
+}
+
+/**
+ * A package sort (`price-asc`) as T-Events `sort_changed`: the field, and
+ * the direction when the sort has one.
+ */
+export function sortChange(sort: string): {
+  sort_field: string;
+  direction?: 'asc' | 'desc';
+} {
+  const [field = sort, direction] = sort.split('-');
+  return direction === 'asc' || direction === 'desc'
+    ? { sort_field: field, direction }
+    : { sort_field: field };
+}
+
+/** Words compared at most, so a long message cannot stall the desk. */
+const MAX_EDIT_WORDS = 400;
+
+/**
+ * How much of an assistant draft the operator changed before sending, from
+ * 0 (sent as drafted) to 1 (rewritten): the word-level edit distance over the
+ * longer text's word count, to two decimals. Only the ratio leaves the
+ * device, never the words.
+ */
+export function editedRatio(draft: string, sent: string): number {
+  const a = draft.split(/\s+/).filter(Boolean).slice(0, MAX_EDIT_WORDS);
+  const b = sent.split(/\s+/).filter(Boolean).slice(0, MAX_EDIT_WORDS);
+  const longest = Math.max(a.length, b.length);
+  if (longest === 0) {
+    return 0;
+  }
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j += 1) {
+      current[j] = Math.min(
+        previous[j]! + 1,
+        current[j - 1]! + 1,
+        previous[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    previous = current;
+  }
+  return Math.round((previous[b.length]! / longest) * 100) / 100;
 }
