@@ -9,15 +9,19 @@ import {
   deviceTypeFor,
   editedRatio,
   filterChanges,
+  hoursBetween,
+  minutesBetween,
   needsCookieChoice,
   networkFor,
   parseCookieChoice,
   screenForPath,
   serializeCookieChoice,
+  serverTelemetryEvent,
   sortChange,
   stackHash,
   telemetryId,
   telemetryRoleFor,
+  transitionActorFor,
   viewportFor,
   type CookieChoice,
   type TelemetryInput,
@@ -290,7 +294,7 @@ describe('event admission', () => {
 
   it('marks the booking, payment, error and consent events essential (T-Events §03)', () => {
     const storefront = Object.entries(TELEMETRY_EVENTS).filter(
-      ([, spec]) => spec.surface !== 'desk',
+      ([, spec]) => spec.surface === 'storefront' || spec.surface === 'any',
     );
     const essential = storefront
       .filter(([, spec]) => spec.essential)
@@ -394,10 +398,10 @@ describe('desk events', () => {
     consent: 'essential',
   };
   const transition = (overrides: Partial<TelemetryInput> = {}): TelemetryInput => ({
-    event: 'booking_state_changed',
+    event: 'document_generated',
     ts: '2026-10-25T11:59:00Z',
     context: deskContext,
-    params: { booking_code: 'DEMO0001', from: 'DRAFT', to: 'ITINERARY_SUBMITTED' },
+    params: { booking_code: 'DEMO0001', trigger: 'manual' },
     ...overrides,
   });
 
@@ -405,11 +409,11 @@ describe('desk events', () => {
     expect(admitTelemetryEvent(transition(), now, 'OPERATIONS_ADMIN')).toEqual({
       ok: true,
       event: {
-        event: 'booking_state_changed',
+        event: 'document_generated',
         ts: '2026-10-25T11:59:00.000Z',
         essential: true,
         context: { ...deskContext, role: 'ops_admin', funnel_stage: null },
-        params: { booking_code: 'DEMO0001', from: 'DRAFT', to: 'ITINERARY_SUBMITTED' },
+        params: { booking_code: 'DEMO0001', trigger: 'manual' },
       },
     });
     expect(telemetryRoleFor('SUPER_ADMIN')).toBe('super_admin');
@@ -483,7 +487,7 @@ describe('desk events', () => {
   it('checks the desk events by their kinds', () => {
     const results = (event: string, params: Record<string, unknown>) =>
       admitTelemetryEvent(transition({ event, params }), now, 'SUPER_ADMIN').ok;
-    expect(results('booking_state_changed', { from: 'DRAFT', to: 'PAID' })).toBe(false);
+    expect(results('document_generated', { trigger: 'auto' })).toBe(false);
     expect(
       results('redispatch_triggered', {
         service_item_id: 'cmh0service1',
@@ -518,6 +522,128 @@ describe('desk events', () => {
     expect(deskScreenForPath('/content/advisories/new')).toBe('A-Content');
     expect(deskScreenForPath('/invite')).toBe('A-Login');
     expect(deskScreenForPath('/nowhere')).toBe('A-States');
+  });
+});
+
+describe('server events', () => {
+  const now = new Date('2026-10-25T12:00:00Z');
+  const changed = {
+    booking_code: 'DEMO0001',
+    from: 'DRAFT',
+    to: 'ITINERARY_SUBMITTED',
+    actor: 'ops_admin',
+    reason: 'manual',
+  } as const;
+
+  it('records a transition with no screen, device or visitor, at the time given', () => {
+    expect(serverTelemetryEvent('booking_state_changed', changed, now)).toEqual({
+      ok: true,
+      event: {
+        event: 'booking_state_changed',
+        ts: '2026-10-25T12:00:00.000Z',
+        essential: true,
+        context: { app: 'server', consent: 'essential', funnel_stage: null },
+        params: changed,
+      },
+    });
+  });
+
+  it('checks a server event against the same table, leaving out what is undefined', () => {
+    expect(
+      serverTelemetryEvent('booking_state_changed', { ...changed, to: 'PAID' }, now),
+    ).toEqual({ ok: false, reason: 'bad_param' });
+    // A typed reason never enters an event, only a trigger code.
+    expect(
+      serverTelemetryEvent(
+        'booking_state_changed',
+        { ...changed, reason: 'traveler asked by phone' },
+        now,
+      ).ok,
+    ).toBe(false);
+    expect(
+      serverTelemetryEvent(
+        'offer_sent',
+        { service_item_id: 'cmh0service1', service_type: 'GUIDE', worker_id: 'w1' },
+        now,
+      ),
+    ).toEqual({ ok: false, reason: 'bad_param' });
+    const accepted = serverTelemetryEvent(
+      'offer_accepted',
+      {
+        service_item_id: 'cmh0service1',
+        service_type: 'ACCOMMODATION',
+        minutes_to_answer: undefined,
+      },
+      now,
+    );
+    expect(accepted.ok && accepted.event.params).toEqual({
+      service_item_id: 'cmh0service1',
+      service_type: 'ACCOMMODATION',
+    });
+  });
+
+  it('refuses a server event from any client app, even with a staff session', () => {
+    const client = (app: string, screen: string) =>
+      admitTelemetryEvent(
+        {
+          event: 'booking_state_changed',
+          ts: '2026-10-25T11:59:00Z',
+          context: {
+            app,
+            screen,
+            locale: 'en',
+            currency: 'EUR',
+            device_type: 'desktop',
+            viewport: 'xl',
+            network: '4g',
+            consent: 'essential',
+          },
+          params: changed,
+        },
+        now,
+        'SUPER_ADMIN',
+      );
+    expect(client('admin', 'A-Booking')).toEqual({ ok: false, reason: 'wrong_surface' });
+    expect(client('web', 'Trip')).toEqual({ ok: false, reason: 'wrong_surface' });
+    // No client may claim to be the server.
+    expect(client('server', 'Trip')).toEqual({ ok: false, reason: 'bad_context' });
+  });
+
+  it('keeps every server event essential and free of worker and user ids', () => {
+    const server = Object.entries(TELEMETRY_EVENTS).filter(
+      ([, spec]) => spec.surface === 'server',
+    );
+    expect(server.map(([name]) => name).sort()).toEqual([
+      'booking_state_changed',
+      'offer_accepted',
+      'offer_declined',
+      'offer_sent',
+      'offer_timeout',
+    ]);
+    for (const [, spec] of server) {
+      expect(spec.essential).toBe(true);
+      expect(Object.keys(spec.params)).not.toEqual(
+        expect.arrayContaining([expect.stringMatching(/worker|user|supplier/)]),
+      );
+    }
+  });
+
+  it('names the actor of a transition from the role of the request behind it', () => {
+    expect(transitionActorFor(null)).toBe('system');
+    expect(transitionActorFor('TRAVELER')).toBe('traveler');
+    expect(transitionActorFor('SERVICE_WORKER')).toBe('worker');
+    expect(transitionActorFor('ADMINISTRATIVE_SUPPORT')).toBe('support');
+    expect(transitionActorFor('OPERATIONS_ADMIN')).toBe('ops_admin');
+    expect(transitionActorFor('SUPER_ADMIN')).toBe('super_admin');
+    expect(transitionActorFor('SOMETHING_ELSE')).toBe('system');
+  });
+
+  it('measures offer timers in hours and answers in whole minutes', () => {
+    const offered = new Date('2026-10-25T10:00:00Z');
+    expect(hoursBetween(offered, new Date('2026-10-25T12:00:00Z'))).toBe(2);
+    expect(hoursBetween(offered, new Date('2026-10-25T10:20:00Z'))).toBe(0.33);
+    expect(minutesBetween(offered, new Date('2026-10-25T10:07:59Z'))).toBe(7);
+    expect(minutesBetween(offered, new Date('2026-10-25T09:59:00Z'))).toBe(0);
   });
 });
 

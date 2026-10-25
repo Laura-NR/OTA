@@ -9,7 +9,7 @@
  */
 
 import { OFAC_CATEGORIES } from '../compliance/ofac';
-import { ReservationStatus, UserRole } from '../reservation/status';
+import { ReservationStatus, ServiceType, UserRole } from '../reservation/status';
 
 /** The seven funnel stages (T-Events §01), renamed for request-to-book. */
 export const FUNNEL_STAGES = {
@@ -45,10 +45,11 @@ export type ParamKind =
   | readonly string[];
 
 /**
- * Which app may send an event: the storefront (`web`, `mobile_web`), the
- * desk (`admin`) or either.
+ * Who may send an event: the storefront (`web`, `mobile_web`), the desk
+ * (`admin`), either of those two apps (`any`), or only the API itself
+ * (`server`), which no client may claim.
  */
-export type TelemetrySurface = 'storefront' | 'desk' | 'any';
+export type TelemetrySurface = 'storefront' | 'desk' | 'server' | 'any';
 
 export interface TelemetryEventSpec {
   /**
@@ -122,6 +123,42 @@ const LOCALE = /^[a-z]{2}$/;
 const PAYMENT_METHODS = ['transfer', 'card'] as const;
 const PAYMENT_PLANS = ['deposit', 'full'] as const;
 const RESERVATION_STATUSES = Object.values(ReservationStatus);
+const SERVICE_TYPES = Object.values(ServiceType);
+
+/**
+ * Who moved a booking (T-Events `actor`): the account role of the request
+ * that caused the transition, or `system` when no request did (a dispatch
+ * timeout). The board lists no worker; a worker's accept or decline moves
+ * the booking too, so `worker` is added.
+ */
+export const TRANSITION_ACTORS = [
+  'system',
+  'traveler',
+  'worker',
+  'support',
+  'ops_admin',
+  'super_admin',
+] as const;
+
+/**
+ * Why a booking moved (T-Events `reason`), as a code: the free-text reason an
+ * operator or a worker may type never enters an event.
+ */
+export const TRANSITION_REASONS = [
+  /** The desk's transition buttons (`POST /reservations/:id/transition`). */
+  'manual',
+  'payment_requested',
+  'payment_confirmed',
+  'dispatch_started',
+  'redispatch',
+  'all_accepted',
+  'offer_declined',
+  'offer_timeout',
+  'no_supplier',
+] as const;
+
+export type TransitionActor = (typeof TRANSITION_ACTORS)[number];
+export type TransitionReason = (typeof TRANSITION_REASONS)[number];
 
 function event(params: Record<string, ParamKind>, essential = false): TelemetryEventSpec {
   return { essential, surface: 'storefront', params };
@@ -137,7 +174,23 @@ function deskEvent(params: Record<string, ParamKind>): TelemetryEventSpec {
   return { essential: true, surface: 'desk', params };
 }
 
-/** Every event the storefront emits, with its own parameters (T-Events §04, §05). */
+/**
+ * An event the API records itself, from state it holds (a transition, an
+ * offer). Essential like the desk's, with no session, user or worker id.
+ */
+function serverEvent(
+  params: Record<string, ParamKind>,
+): TelemetryEventSpec & { surface: 'server' } {
+  return { essential: true, surface: 'server', params };
+}
+
+/** The dispatch engine's offers (T-Events offer_*); `offer_viewed` needs the worker app. */
+const OFFER_PARAMS = { service_item_id: 'id', service_type: SERVICE_TYPES } as const;
+
+/**
+ * Every event the storefront, the desk and the API emit, with its own
+ * parameters (T-Events §04, §05).
+ */
 export const TELEMETRY_EVENTS = {
   // Shell · every app
   page_view: event({
@@ -285,13 +338,22 @@ export const TELEMETRY_EVENTS = {
   // Errors (always logged first-party) and the states where people leave
   client_error: { essential: true, surface: 'any', params: { stack_hash: 'id' } },
   error_page_shown: event({ kind: ['not_found', 'server'], from_path: 'id' }),
-  // Operations · the desk (feeds spec §4.9.3). Each fires once the API has
-  // accepted the operator's action; the role rides on the context.
-  booking_state_changed: deskEvent({
+  // Operations · the API (feeds spec §4.9.3), sent once the change is stored.
+  /** Every state-machine transition, whoever caused it. */
+  booking_state_changed: serverEvent({
     booking_code: 'id',
     from: RESERVATION_STATUSES,
     to: RESERVATION_STATUSES,
+    actor: TRANSITION_ACTORS,
+    reason: TRANSITION_REASONS,
   }),
+  /** An offer made to a supplier; `timer_h` is the time they have to answer. */
+  offer_sent: serverEvent({ ...OFFER_PARAMS, timer_h: 'amount' }),
+  offer_accepted: serverEvent({ ...OFFER_PARAMS, minutes_to_answer: 'count' }),
+  offer_declined: serverEvent({ ...OFFER_PARAMS, minutes_to_answer: 'count' }),
+  offer_timeout: serverEvent({ ...OFFER_PARAMS, timer_h: 'amount' }),
+  // Operations · the desk. Each fires once the API has accepted the
+  // operator's action; the role rides on the context.
   /** A worker picked from the eligible candidates; `position_chosen` counts from 1. */
   redispatch_triggered: deskEvent({
     service_item_id: 'id',
@@ -325,6 +387,13 @@ export type TelemetryEventName = keyof typeof TELEMETRY_EVENTS;
 export function isTelemetryEvent(name: string): name is TelemetryEventName {
   return Object.prototype.hasOwnProperty.call(TELEMETRY_EVENTS, name);
 }
+
+/** The events only the API sends. */
+export type ServerTelemetryEventName = {
+  [K in TelemetryEventName]: (typeof TELEMETRY_EVENTS)[K] extends { surface: 'server' }
+    ? K
+    : never;
+}[TelemetryEventName];
 
 // ---------------------------------------------------------------------------
 // Common parameters (T-Events §02), added by the shell, never by a component.
@@ -369,6 +438,21 @@ const ROLE_OF: Partial<Record<UserRole, TelemetryRole>> = {
 /** An account role as the board names it; null for anyone who is not desk staff. */
 export function telemetryRoleFor(role: string | null | undefined): TelemetryRole | null {
   return ROLE_OF[role as UserRole] ?? null;
+}
+
+/**
+ * The `actor` of a transition from the account role of the request that
+ * caused it; no request (or an unknown role) is the system.
+ */
+export function transitionActorFor(role: string | null | undefined): TransitionActor {
+  switch (role) {
+    case UserRole.Traveler:
+      return 'traveler';
+    case UserRole.ServiceWorker:
+      return 'worker';
+    default:
+      return telemetryRoleFor(role) ?? 'system';
+  }
 }
 
 /** DS 07 breakpoints: sm 480, md 768, lg 1024, xl 1280 (mobile first). */
@@ -523,11 +607,19 @@ export interface TelemetryInput {
   params?: Record<string, unknown>;
 }
 
+/** The context of an event the API recorded itself: no screen, device or visitor. */
+export interface ServerTelemetryContext {
+  app: 'server';
+  consent: 'essential';
+}
+
 export interface AdmittedEvent {
   event: TelemetryEventName;
   ts: string;
   essential: boolean;
-  context: TelemetryContext & { funnel_stage: FunnelStage | null };
+  context: (TelemetryContext | ServerTelemetryContext) & {
+    funnel_stage: FunnelStage | null;
+  };
   params: Record<string, ParamValue>;
 }
 
@@ -652,6 +744,22 @@ function readContext(raw: Record<string, unknown>): TelemetryContext | null {
   };
 }
 
+/** The parameters, when each is declared by the event and has its kind. */
+function readParams(
+  spec: TelemetryEventSpec,
+  raw: Record<string, unknown>,
+): Record<string, ParamValue> | null {
+  const params: Record<string, ParamValue> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const kind = spec.params[key];
+    if (!kind || !validParam(kind, value)) {
+      return null;
+    }
+    params[key] = value;
+  }
+  return params;
+}
+
 /**
  * Check one event against the taxonomy and the visitor's consent. Unknown
  * events and parameters are refused rather than dropped, so nothing outside
@@ -682,20 +790,16 @@ export function admitTelemetryEvent(
   }
   const spec: TelemetryEventSpec = TELEMETRY_EVENTS[input.event];
   const desk = context.app === 'admin';
-  if (spec.surface !== 'any' && (spec.surface === 'desk') !== desk) {
+  if (spec.surface !== 'any' && spec.surface !== (desk ? 'desk' : 'storefront')) {
     return { ok: false, reason: 'wrong_surface' };
   }
   const role = desk ? telemetryRoleFor(viewerRole) : null;
   if (desk && !role) {
     return { ok: false, reason: 'not_staff' };
   }
-  const params: Record<string, ParamValue> = {};
-  for (const [key, value] of Object.entries(input.params ?? {})) {
-    const kind = spec.params[key];
-    if (!kind || !validParam(kind, value)) {
-      return { ok: false, reason: 'bad_param' };
-    }
-    params[key] = value;
+  const params = readParams(spec, input.params ?? {});
+  if (!params) {
+    return { ok: false, reason: 'bad_param' };
   }
   if (context.consent === 'essential') {
     if (!spec.essential) {
@@ -717,6 +821,50 @@ export function admitTelemetryEvent(
       params,
     },
   };
+}
+
+/**
+ * An event the API records itself (a server-surface entry of the table),
+ * checked against the same table as a client's, at `now`. A parameter left
+ * `undefined` is omitted. A refusal is a programming error, never a reason to
+ * fail the change being reported.
+ */
+export function serverTelemetryEvent(
+  event: ServerTelemetryEventName,
+  params: Readonly<Record<string, ParamValue | undefined>>,
+  now: Date,
+): TelemetryVerdict {
+  const spec: TelemetryEventSpec = TELEMETRY_EVENTS[event];
+  if (spec.surface !== 'server') {
+    return { ok: false, reason: 'wrong_surface' };
+  }
+  const given = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined),
+  );
+  const admitted = readParams(spec, given);
+  if (!admitted) {
+    return { ok: false, reason: 'bad_param' };
+  }
+  return {
+    ok: true,
+    event: {
+      event,
+      ts: now.toISOString(),
+      essential: true,
+      context: { app: 'server', consent: 'essential', funnel_stage: null },
+      params: admitted,
+    },
+  };
+}
+
+/** Hours, to two decimals, as a `timer_h` amount. */
+export function hoursBetween(start: Date, end: Date): number {
+  return Math.max(0, Math.round((end.getTime() - start.getTime()) / 36_000)) / 100;
+}
+
+/** Whole minutes from `start` to `end`, from 0, as `minutes_to_answer`. */
+export function minutesBetween(start: Date, end: Date): number {
+  return Math.max(0, Math.floor((end.getTime() - start.getTime()) / 60_000));
 }
 
 /**
