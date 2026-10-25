@@ -2,7 +2,7 @@
 
 import { cn, Drawer, Icon } from '@ota/ui';
 import { useTranslations } from 'next-intl';
-import { useState, useSyncExternalStore } from 'react';
+import { useId, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DisplayPreferencesForm } from '@/components/display/display-preferences';
@@ -30,6 +30,8 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
   const display = useTranslations('display');
+  // The header and the bottom bar each render a menu, so ids are per instance.
+  const displayTitleId = useId();
   const hydrated = useSyncExternalStore(
     subscribeNever,
     () => true,
@@ -93,14 +95,8 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
                   );
                 })}
               </ul>
-              <section
-                aria-labelledby="menu-display-title"
-                className="mt-6 flex flex-col"
-              >
-                <h2
-                  id="menu-display-title"
-                  className="text-overline uppercase text-muted"
-                >
+              <section aria-labelledby={displayTitleId} className="mt-6 flex flex-col">
+                <h2 id={displayTitleId} className="text-overline uppercase text-muted">
                   {display('title')}
                 </h2>
                 <DisplayPreferencesForm compact />

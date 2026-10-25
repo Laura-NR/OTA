@@ -3,6 +3,7 @@
 import type { DisplayPreferences } from '@ota/domain';
 import { cn, Switch } from '@ota/ui';
 import { useTranslations } from 'next-intl';
+import { useId } from 'react';
 
 import { useDisplayPreferences } from './display-provider';
 
@@ -25,6 +26,8 @@ const OPTIONS = [
 export function DisplayPreferencesForm({ compact = false }: { compact?: boolean }) {
   const t = useTranslations('display');
   const { preferences, update } = useDisplayPreferences();
+  // The form renders in each menu instance and on Account, so ids are per instance.
+  const idBase = useId();
 
   return (
     <ul
@@ -34,7 +37,7 @@ export function DisplayPreferencesForm({ compact = false }: { compact?: boolean 
       )}
     >
       {OPTIONS.map((option) => {
-        const labelId = `display-${option.key}${compact ? '-menu' : ''}`;
+        const labelId = `${idBase}-${option.key}`;
         const on = preferences[option.key];
         return (
           <li
