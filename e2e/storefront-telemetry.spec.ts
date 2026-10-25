@@ -229,22 +229,21 @@ test.describe('T-Events follow-ups, with analytics allowed', () => {
     const sent = watchTelemetry(page);
     await page.goto(`${STOREFRONT_URL}/en`);
 
+    // The shell listens once this screen's view went out; a submit before
+    // hydration is a plain form post the shell never sees.
+    await expect.poll(() => sent.named('page_view').length).toBe(1);
     const search = page.getByRole('form', { name: 'Search trips' });
     await search.getByLabel('Where do you want to go?').fill('Trinidad Jane');
-    // Retried until the shell has hydrated and caught the submit.
-    await expect(async () => {
-      await search.getByLabel('Where do you want to go?').press('Enter');
-      await page.waitForURL(/\/en\/packages\?q=/, { timeout: 5_000 });
-      expect(sent.named('search_submitted').length).toBeGreaterThan(0);
-    }).toPass();
+    await search.getByLabel('Where do you want to go?').press('Enter');
+    await page.waitForURL(/\/en\/packages\?q=/);
+    await expect.poll(() => sent.named('search_submitted').length).toBe(1);
     expect(sent.named('search_submitted')[0]!.params).toEqual({});
     expect(sent.named('search_submitted')[0]!.context).toMatchObject({ screen: 'Home' });
 
-    await expect(async () => {
-      await page.getByLabel('Sort by').selectOption('price-asc');
-      await expect.poll(() => sent.named('sort_changed').length).toBeGreaterThan(0);
-    }).toPass();
-    expect(sent.named('sort_changed').at(-1)!.params).toEqual({
+    await expect.poll(() => sent.named('page_view').length).toBe(2);
+    await page.getByLabel('Sort by').selectOption('price-asc');
+    await expect.poll(() => sent.named('sort_changed').length).toBe(1);
+    expect(sent.named('sort_changed')[0]!.params).toEqual({
       sort_field: 'price',
       direction: 'asc',
     });
