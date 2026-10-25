@@ -108,8 +108,11 @@ export const TELEMETRY_EVENTS = {
   offline_mode_entered: event({}),
   offline_mode_left: event({ duration_s: 'count' }),
   // Discover
-  map_province_selected: event({ province_id: 'id', source: ['map', 'strip'] }),
-  map_province_unavailable: event({ province_id: 'id', source: ['map', 'strip'] }),
+  map_province_selected: event({ province_id: 'id', source: ['map', 'strip', 'list'] }),
+  map_province_unavailable: event({
+    province_id: 'id',
+    source: ['map', 'strip', 'list'],
+  }),
   map_route_added: event({ province_id: 'id', route_length: 'count' }),
   filter_applied: event({
     filter_name: 'id',
@@ -138,7 +141,7 @@ export const TELEMETRY_EVENTS = {
     context_id: 'id',
   }),
   // Configure
-  builder_started: event({ prefilled: 'bool' }),
+  builder_started: event({}),
   builder_step_completed: event({
     from_step: 'count',
     to_step: 'count',
@@ -366,7 +369,7 @@ export type TelemetryVerdict =
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const MAX_SKEW_MS = 5 * 60 * 1000;
 
-const ID = /^[A-Za-z0-9][A-Za-z0-9_\-:./]{0,95}$/;
+const ID = /^[A-Za-z0-9/][A-Za-z0-9_\-:./]{0,95}$/;
 const HOST = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,62}\.)*[A-Za-z0-9-]{1,63}$/;
 const TOKEN = /^[A-Za-z0-9_\-.+]{1,64}$/;
 const SESSION = /^s_[a-f0-9]{16,32}$/;

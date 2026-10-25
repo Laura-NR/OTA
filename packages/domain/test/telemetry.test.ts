@@ -199,7 +199,13 @@ describe('event admission', () => {
   });
 
   it('refuses free text where an id is expected', () => {
-    for (const package_id of ['Jane Traveler', 'jane@example.test', '', 'x'.repeat(97)]) {
+    for (const package_id of [
+      'Jane Traveler',
+      'jane@example.test',
+      '',
+      'x'.repeat(97),
+      '-x',
+    ]) {
       expect(admitTelemetryEvent(input({ params: { package_id } }), now)).toEqual({
         ok: false,
         reason: 'bad_param',
@@ -229,6 +235,12 @@ describe('event admission', () => {
     expect(results('page_view', { referrer_host: 'https://x.test/?e=a@b' })).toBe(false);
     expect(results('page_view', { utm_campaign: 'spring_2027' })).toBe(true);
     expect(results('page_view', { utm_campaign: 'jane@example.test' })).toBe(false);
+    expect(
+      results('error_page_shown', { kind: 'not_found', from_path: '/en/no-such-page' }),
+    ).toBe(true);
+    expect(
+      results('error_page_shown', { kind: 'not_found', from_path: '/en/?q=a b' }),
+    ).toBe(false);
   });
 
   it('refuses a context it does not know, or a forged session id', () => {
