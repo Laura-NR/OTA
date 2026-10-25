@@ -7,10 +7,12 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 
 export interface ReservationActionsProps {
   reservationId: string;
+  bookingCode: string;
   status: ReservationStatus;
   canManage: boolean;
 }
@@ -18,10 +20,12 @@ export interface ReservationActionsProps {
 /** The legal transitions for the current status, as one-click actions. */
 export function ReservationActions({
   reservationId,
+  bookingCode,
   status,
   canManage,
 }: ReservationActionsProps) {
   const t = useTranslations('backoffice.reservationActions');
+  const track = useDeskTelemetry();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +47,7 @@ export function ReservationActions({
         method: 'POST',
         body: JSON.stringify({ to }),
       });
+      track('booking_state_changed', { booking_code: bookingCode, from: status, to });
       router.refresh();
     } catch (transitionError) {
       setError(transitionError instanceof Error ? transitionError.message : t('failed'));

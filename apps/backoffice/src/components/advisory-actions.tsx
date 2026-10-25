@@ -6,7 +6,14 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
+
+/** The actions that decide an approval (T-Events `approval_decided`). */
+const DECISIONS: Readonly<Record<string, 'approved' | 'changes_requested'>> = {
+  approve: 'approved',
+  'request-changes': 'changes_requested',
+};
 
 /**
  * A-Content's approval panel actions (M7 D4): approve (and publish when the
@@ -23,6 +30,7 @@ export function AdvisoryActions({
 }) {
   const t = useTranslations('advisoriesDesk');
   const router = useRouter();
+  const track = useDeskTelemetry();
   const [mode, setMode] = useState<'idle' | 'changes' | 'lift'>('idle');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -36,6 +44,10 @@ export function AdvisoryActions({
         method: 'POST',
         body: JSON.stringify(body),
       });
+      const decision = DECISIONS[path];
+      if (decision) {
+        track('approval_decided', { kind: 'advisory', decision });
+      }
       setMode('idle');
       setNote('');
       if (then) {

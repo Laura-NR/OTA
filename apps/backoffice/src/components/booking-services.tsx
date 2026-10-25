@@ -230,6 +230,7 @@ export function BookingServices({
       </Table>
       <p className="px-5 text-caption text-muted">{t('rule')}</p>
       <RedispatchPanel
+        from="booking"
         clock={clock}
         target={target}
         onClose={() => setTarget(null)}

@@ -6,7 +6,14 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
+
+/** The actions that decide an approval (T-Events `approval_decided`). */
+const DECISIONS: Readonly<Record<string, 'approved' | 'rejected'>> = {
+  approve: 'approved',
+  reject: 'rejected',
+};
 
 const VARIANTS: Record<RefundDto['status'], BadgeVariant> = {
   REQUESTED: 'warning',
@@ -31,6 +38,7 @@ export function RefundActions({
 }) {
   const t = useTranslations('backoffice.payments');
   const router = useRouter();
+  const track = useDeskTelemetry();
   const [mode, setMode] = useState<'idle' | 'reject' | 'sent'>('idle');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -44,6 +52,10 @@ export function RefundActions({
         method: 'POST',
         body: JSON.stringify(body),
       });
+      const decision = DECISIONS[path];
+      if (decision) {
+        track('approval_decided', { kind: 'refund', decision });
+      }
       setMode('idle');
       setText('');
       router.refresh();

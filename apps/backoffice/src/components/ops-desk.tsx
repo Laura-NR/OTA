@@ -25,8 +25,9 @@ import {
 } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 import { timerCopy, type DeskClock } from '@/lib/desk-clock';
 import { bookingDates, countdown, hoursMinutes, opsTime } from '@/lib/ops-format';
@@ -125,6 +126,9 @@ export function OpsDesk({
   const [nowMs, setNowMs] = useState(serverNow);
   const [connected, setConnected] = useState(false);
   const [target, setTarget] = useState<RedispatchTarget | null>(null);
+  const track = useDeskTelemetry();
+  /** Whether this empty spell of the matrix was reported (T-Events). */
+  const emptyReported = useRef(false);
 
   async function refresh() {
     try {
@@ -142,9 +146,24 @@ export function OpsDesk({
   }, []);
 
   useEffect(() => {
+    if (rows.length > 0) {
+      emptyReported.current = false;
+    } else if (!emptyReported.current) {
+      emptyReported.current = true;
+      track('admin_state_shown', { kind: 'empty' });
+    }
+  }, [rows.length, track]);
+
+  useEffect(() => {
     const socket = connectEscalation();
     socket.on('connect', () => setConnected(true));
-    socket.on('disconnect', () => setConnected(false));
+    socket.on('disconnect', (reason) => {
+      setConnected(false);
+      // Closing the socket on leaving the page is not a lost feed.
+      if (reason !== 'io client disconnect') {
+        track('admin_state_shown', { kind: 'degraded' });
+      }
+    });
     socket.on('escalation', () => void refresh());
     return () => {
       socket.close();
@@ -599,6 +618,7 @@ export function OpsDesk({
       </section>
 
       <RedispatchPanel
+        from="dashboard"
         clock={clock}
         target={target}
         onClose={() => setTarget(null)}

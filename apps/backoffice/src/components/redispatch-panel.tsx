@@ -5,6 +5,7 @@ import { Alert, Badge, Button, buttonClassName, Drawer, Icon } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 import type { DeskClock } from '@/lib/desk-clock';
 
@@ -23,6 +24,8 @@ export interface RedispatchPanelProps {
   onOffered: () => void;
   /** The M9 thresholds the rule line states. */
   clock: DeskClock;
+  /** Where the drawer was opened, for T-Events. */
+  from: 'dashboard' | 'booking';
 }
 
 /**
@@ -37,8 +40,10 @@ export function RedispatchPanel({
   onClose,
   onOffered,
   clock,
+  from,
 }: RedispatchPanelProps) {
   const t = useTranslations('backoffice.dashboard.panel');
+  const track = useDeskTelemetry();
   const [candidates, setCandidates] = useState<DispatchCandidateDto[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +70,7 @@ export function RedispatchPanel({
     };
   }, [serviceItemId, t]);
 
-  async function offer(supplierId: string) {
+  async function offer(supplierId: string, position: number) {
     if (!serviceItemId) return;
     setBusyId(supplierId);
     setError(null);
@@ -73,6 +78,13 @@ export function RedispatchPanel({
       await apiRequest(`/service-items/${serviceItemId}/reassign`, {
         method: 'POST',
         body: JSON.stringify({ supplierId }),
+      });
+      track('redispatch_triggered', {
+        service_item_id: serviceItemId,
+        mode: 'manual',
+        candidates_shown: candidates?.length ?? 0,
+        position_chosen: position,
+        from,
       });
       onOffered();
       onClose();
@@ -107,7 +119,7 @@ export function RedispatchPanel({
         ) : null}
         {candidates && candidates.length > 0 ? (
           <ul className="flex flex-col gap-3">
-            {candidates.map((candidate) => (
+            {candidates.map((candidate, index) => (
               <li
                 key={candidate.supplierId}
                 className="flex flex-col gap-2 rounded-md border bg-surface p-3"
@@ -146,7 +158,7 @@ export function RedispatchPanel({
                     size="sm"
                     loading={busyId === candidate.supplierId}
                     disabled={busyId !== null}
-                    onClick={() => void offer(candidate.supplierId)}
+                    onClick={() => void offer(candidate.supplierId, index + 1)}
                   >
                     {busyId === candidate.supplierId
                       ? t('offering')

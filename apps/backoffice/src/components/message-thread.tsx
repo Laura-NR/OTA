@@ -1,11 +1,13 @@
 'use client';
 
+import { editedRatio } from '@ota/domain';
 import type { MessageDto } from '@ota/schemas';
 import { Alert, Button, Input } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 import { connectConversation, type MessageSocketEvent } from '@/lib/socket';
 
@@ -22,6 +24,9 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const track = useDeskTelemetry();
+  /** The assistant's last draft, until a message is sent. */
+  const draftBody = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   function upsert(message: MessageDto) {
@@ -74,6 +79,13 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         { method: 'POST', body: JSON.stringify({ body: trimmed }) },
       );
       upsert(message);
+      if (draftBody.current !== null) {
+        track('ai_draft_used', {
+          context: 'reply',
+          edited_ratio: editedRatio(draftBody.current, trimmed),
+        });
+        draftBody.current = null;
+      }
       setBody('');
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : t('sendFailed'));
@@ -91,6 +103,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         { method: 'POST', body: JSON.stringify({ reservationId }) },
       );
       setBody(draft.body);
+      draftBody.current = draft.body;
     } catch (draftError) {
       setError(draftError instanceof Error ? draftError.message : t('draftFailed'));
     } finally {

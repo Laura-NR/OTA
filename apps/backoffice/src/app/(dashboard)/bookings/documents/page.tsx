@@ -71,6 +71,10 @@ export default async function DocumentsPage({
           <CardContent className="space-y-4">
             <RegenerateDocumentsButton
               reservationId={reservation}
+              bookingCode={
+                reservations.find((candidate) => candidate.id === reservation)
+                  ?.bookingCode ?? null
+              }
               canManage={canManage}
             />
 

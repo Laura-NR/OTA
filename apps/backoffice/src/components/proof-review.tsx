@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest, browserApiUrl } from '@/lib/client-api';
 
 const VARIANTS: Record<ProofSummaryDto['status'], BadgeVariant> = {
@@ -29,6 +30,7 @@ export function ProofReview({
 }) {
   const t = useTranslations('backoffice.payments');
   const router = useRouter();
+  const track = useDeskTelemetry();
   const [rejecting, setRejecting] = useState(false);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -41,6 +43,10 @@ export function ProofReview({
       await apiRequest(`/payments/proofs/${proof.id}/${action}`, {
         method: 'POST',
         body: JSON.stringify(action === 'reject' ? { note } : {}),
+      });
+      track('approval_decided', {
+        kind: 'proof',
+        decision: action === 'accept' ? 'approved' : 'rejected',
       });
       router.refresh();
     } catch (actionError) {

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { AppShell } from '@/components/app-shell';
+import { DeskTelemetryProvider } from '@/components/telemetry/desk-telemetry';
 import { getServerSession } from '@/lib/api';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -27,8 +28,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const tenant = getTenantConfig();
 
   return (
-    <AppShell user={session.user} agencyName={tenant.branding.agencyName}>
-      {children}
-    </AppShell>
+    // EUR is the base currency; display currencies are M9 D7 (deferred).
+    <DeskTelemetryProvider currency="EUR">
+      <AppShell user={session.user} agencyName={tenant.branding.agencyName}>
+        {children}
+      </AppShell>
+    </DeskTelemetryProvider>
   );
 }
