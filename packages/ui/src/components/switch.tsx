@@ -14,8 +14,10 @@ export interface SwitchProps extends Omit<
 
 /**
  * DS 02 toggle: a 44 × 24 track with a 20 px knob, on in primary 600 and off in
- * neutral 300. It is a `role="switch"` button, so Space and Enter toggle it;
- * label it with visible text (`aria-labelledby`) or `aria-label`.
+ * neutral 300 (neutral 500 under high contrast, the system's or the
+ * storefront's `data-contrast="more"`, so the off track reaches 3:1). It is a
+ * `role="switch"` button, so Space and Enter toggle it; label it with visible
+ * text (`aria-labelledby`) or `aria-label`.
  */
 export function Switch({
   checked,
@@ -33,7 +35,9 @@ export function Switch({
       onClick={() => onCheckedChange(!checked)}
       className={cn(
         'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-        checked ? 'bg-primary-600' : 'bg-neutral-300',
+        checked
+          ? 'bg-primary-600'
+          : 'bg-neutral-300 contrast-more:bg-neutral-500 [[data-contrast=more]_&]:bg-neutral-500',
         className,
       )}
       {...props}
