@@ -939,3 +939,53 @@ session id is Web Crypto). The real sink (self-hosted Matomo or Plausible) stays
   remounts the layout, so the shell sends its queue as a beacon first.
 - **Privacy notice.** The tenant's draft cookies paragraph said there were no analytics cookies;
   it now says what is set (placeholder words, for counsel with the rest of the notice).
+
+## Amendment, 2026-10-25: T-Events follow-ups (desk events and the missing storefront events), resolved by the build
+
+The owner chose the T-Events follow-ups next, and for the desk chose **operational events only**:
+the tenant's analytics words are written for travelers, so the desk shows no cookie banner and
+sends no page views or nav clicks until counsel decides on staff analytics. No migration, no new
+dependency.
+
+- **Surfaces.** Each taxonomy entry now names its surface: `storefront` (`web`, `mobile_web`),
+  `desk` (the new `admin` app) or `any` (`client_error`). The sink refuses an event from the
+  wrong surface, a desk event on a storefront screen and the reverse.
+- **Desk events are essential operational records**: `booking_state_changed`,
+  `redispatch_triggered`, `document_generated`, `import_committed`, `approval_decided`,
+  `ai_draft_used` and `admin_state_shown`. They carry no session id, no user id and nothing
+  stored on the device; the desk sends `consent: essential` and the sink refuses any other
+  level from the desk. Each fires once the API has accepted the operator's action, so the
+  server's own transitions (system, traveler) are not counted yet.
+- **`role` comes from the session, never the client.** The public intake reads the session for
+  a desk event and admits it only for a live staff session (not deactivated, within the 12 h
+  staff limit, the guard's own rule, now shared as `sessionRefusal`), then stamps
+  `super_admin`, `ops_admin` or `support`. A client-sent `role` is refused. `worker` waits for
+  the worker app.
+- **Desk screens** are the admin artboard names (`A-Dashboard`, `A-Booking`, …); a section's
+  sub-pages report the section's artboard, and an unmatched path is `A-States`. They have no
+  funnel stage.
+- **Board parameters adapted to what the desk knows:** `redispatch_triggered.mode` is `manual`
+  only (the drawer is a pick from the candidates; there is no one-click fallback);
+  `document_generated.trigger` is `manual` (automatic generation on CONFIRMED is server-side);
+  `import_committed` reports `rows`, `errors` and `duration_ms` (the commit is atomic, so errors
+  above 0 imported nothing; there are no warnings or reverts); `approval_decided.kind` is
+  `advisory`, `refund` or `proof` (the desk's three approval surfaces; no discount or manifest
+  approvals exist), with no amount or hours waiting; `ai_draft_used` reports the word-level
+  `edited_ratio` of the sent reply, never the words, and no locale (the draft does not say which
+  it chose). `admin_state_shown` covers the empty dispatch matrix, a 403 from the API (`denied`)
+  and a lost live feed (`degraded`); "locked PC" has no trigger.
+- **Storefront events added:** `search_submitted` (Home; the search is free text, so no
+  destination), `sort_changed` (field and direction), `departure_selected` (with the
+  departure's `capacity`, since seats left are not known before the server's check),
+  `tier_selected` (tier id and a signed `delta`, a new parameter kind, as a tier may be cheaper
+  than the base), `ofac_gate_shown` (on adding a US traveler, and `blocked` when Continue is
+  refused for the signature), `ofac_category_selected`, `affidavit_signed` (on the booking's
+  submit or the trip page's signature, when the affidavit is recorded),
+  `payment_plan_selected`, `payment_attempted`, `payment_failed` (`error_code` `http_<status>` or
+  `network`) and `proof_uploaded`. Payment events are essential like the board says. There is
+  no `payment_succeeded`: a transfer has no gateway result and the desk's confirmation is
+  reported as `booking_confirmed`. `gallery_opened` is not built: the package gallery is a
+  fixed grid with no viewer to open.
+- **A form declares its event for its submit**, and the shell sends an event at once (a
+  keepalive fetch) when the page is about to be left: the Home search and the redirect to the
+  wire page. The leave-time beacon stays for whatever else is queued.

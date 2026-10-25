@@ -1,44 +1,44 @@
-# Handoff — vereda — updated 2026-10-25 17:00
+# Handoff — vereda — updated 2026-10-25 21:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
 Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
-reduce motion, high contrast, the axe audit and Phase 8 item 1, T-Events) and ADR 0007 (worker
-app).
+reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, and its follow-ups) and
+ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 against a mock sink). Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-25, later): Phase 8 item 1, T-Events**, owner-approved (mock sink behind
-  a public log-only route; storefront funnel first; no migration, no dependency):
-  - Domain `packages/domain/src/telemetry/` (`f5a6651`, `468bf54`): the `ota_consent` cookie
-    (versioned per purpose by the tenant's consent words; `needsCookieChoice`,
-    `cookiePermissions`), the taxonomy `TELEMETRY_EVENTS` (events, parameter kinds, essential
-    flag), `admitTelemetryEvent`, path → screen → funnel stage, DS 07 viewport/device buckets.
-  - API `apps/api/src/telemetry/` (`a6f5388`): public `POST /telemetry/events` (202, counts
-    accepted/rejected), `TELEMETRY_SINK` (mock: latest 500 in memory, one log line per batch),
-    HMAC user id keyed by `AUTH_SECRET` on analytics events of a signed-in visitor only. Schema
-    `telemetryBatchSchema` (`aa6238a`); `COOKIE_BANNER` now accepted by `POST /me/consents`
-    (`2fa1035`, it answered 400).
-  - Storefront (`33386d8`, `6c65922`, `8d9c384`): `TelemetryProvider` (queue, common params,
-    `data-analytics-*` click delegation, page_view, errors, connectivity, beacon on leave),
-    `CookieBanner`/`CookieChoices`, `/legal/cookies` with the cookie table, footer link,
-    `TrackEvent` and `ErrorPageEvent`; ~30 events wired (nav, locale, map, filters, results,
-    cards, compare, package, CTAs, builder, booking, payment pages, trip/confirmation,
-    documents, messages, reviews, Join, event request, event strip, 404/500). Copy en/es/fr
-    (`d387c8f`); tenant `COOKIES_ANALYTICS` words and privacy cookies paragraph (placeholders).
-  - e2e (`7c48826`, `763c8bf`): `storefront-telemetry.spec.ts` (Reject, Accept, Cookie settings,
-    consent log), booking events in `storefront-packages.spec.ts`, axe adds `/legal/cookies` and
-    the open banner; every spec starts with analytics refused (`playwright.config.ts`).
+- **This session (2026-10-25, evening): the T-Events follow-ups**, owner-approved, with desk
+  events **operational only** (no desk banner; no migration, no dependency):
+  - Domain (`f193204`, `377e5b3`): each `TELEMETRY_EVENTS` entry names its `surface`
+    (storefront / desk / any); the `admin` app with the desk screens (`A-Dashboard`…,
+    `deskScreenForPath`); `admitTelemetryEvent(input, now, viewerRole)` refuses a desk event
+    without a staff role (`not_staff`), on the wrong surface (`wrong_surface`), with analytics
+    consent or a client-sent `role` (`bad_context`), and stamps `role`; a signed `delta` kind;
+    `sortChange`, `editedRatio`.
+  - API (`ad5b52f`): the public intake reads the session for desk events and trusts the role
+    only through `sessionRefusal` (the guard's deactivated + 12 h staff rule, now shared).
+  - Storefront (`4b9d101`, `04e8ca1`): search_submitted (form submit delegation), sort_changed,
+    departure_selected, tier_selected, ofac_gate_shown/ofac_category_selected/affidavit_signed,
+    payment_plan_selected/payment_attempted/payment_failed, proof_uploaded; `track(…, sendNow)`.
+  - Desk (`26b36eb`): `DeskTelemetryProvider` in the `(dashboard)` layout; transitions,
+    re-dispatch, document regeneration, import commits, approvals (advisory, refund, proof), AI
+    drafts and admin_state_shown (empty matrix, 403 via `DESK_DENIED_EVENT`, lost socket).
+  - e2e (`195e0a2`): reservations (desk transition event and its receipt), checkout
+    (payment_attempted with analytics refused), storefront-telemetry (search, sort, Booking form).
+- Earlier the same day: Phase 8 item 1, T-Events (`f5a6651`…`a137ba8`): the cookie banner,
+  Cookie settings, the taxonomy, the public intake with the mock sink, the storefront funnel.
 - Earlier the same day: reduce motion, high contrast and the axe audit (`5abe936`…`f1e1131`).
 - Earlier (2026-10-24): Phase 8 item 2 (rem type, larger text, low bandwidth, the PWA and the
   offline kit), the DS 07 widths and M10 (see Decisions).
-- **Not built:** SMS/push; the real analytics sink (Q10), desk/worker events and the storefront
-  events not yet in the taxonomy (sort, tiers, departures, galleries, OFAC gate, payment
-  attempts, `search_submitted` on Home); queued offline writes; the
+- **Not built:** SMS/push; the real analytics sink (Q10); worker events (no worker app);
+  server-side events (system/traveler transitions, the dispatch engine's `offer_*`); desk page
+  views and nav clicks (counsel on staff analytics); `gallery_opened` (no gallery viewer);
+  queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's
   deferred items; M10's deferred room holds, event photos and "Keep building the trip"; manual
   keyboard/reading-order checks beyond what axe decides.
@@ -48,27 +48,26 @@ app).
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-25, T-Events batch, dev stack stopped for the build)
+## Verified (2026-10-25, T-Events follow-ups, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **892 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 340,
-  api 319/27 skipped, schemas 70, config 36, ui 35, email 28, documents 22).
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (`/[locale]/legal/cookies` built).
-- `pnpm e2e` (`apps/*/.next` deleted first): **106 passed, 1 failed, 3 skipped** in 44.3 min. The
-  failure was `ds07-1024` "customer pages … with larger text" timing out on `page.goto` after
-  memory ran out (22/23 GB, the known dev-server growth); after killing the servers by PID,
-  `npx playwright test --project=ds07-1024` passed **4/4**. Skips: the desk at 320/375/414.
+- `TURBO_FORCE=true pnpm test` **907 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 352,
+  api 322/27 skipped, schemas 70, config 36, ui 35, email 28, documents 22).
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
+- `pnpm e2e` (`apps/*/.next` deleted first): **108 passed, 1 failed, 3 skipped** in 53.7 min.
+  The failure was the new Home-search test: under the full run's memory pressure (21/23 GB) the
+  first Enter came before hydration, so the GET form posted natively with no shell listening,
+  and the `toPass` retry then waited on a Home form that was gone. Fixed in the test (wait for
+  the screen's `page_view`, then submit once); `npx playwright test
+  e2e/storefront-telemetry.spec.ts --project=default --repeat-each=2` **12/12**. Skips: the
+  desk at 320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Disproved: with the client's consent gate removed, the Reject e2e fails (two analytics events
-  sent); without `COOKIE_BANNER` in the record schema, its new test fails (and live, the banner's
-  consent POST answered 400 before the fix); a cookie without a timestamp parsed as 1970 until
-  the domain test caught it.
-- Browser (Playwright, 390/1024/1280): banner fixed 64 px up at 390 (above the bottom bar), at
-  the bottom from 1024, 720 px wide, max 60 % height with pinned actions, `shadow-lg`, before
-  the header in the DOM; Cookie settings: `scrollWidth − innerWidth` = 0 at all three, the table
-  scrolls in its focusable region at 390 (purpose column 224 px), footer link present. Events
-  reach the sink with 0 rejected across Home → Packages → filter → Package → Destinations →
-  404 (smoke scripts in the session scratchpad).
+- Disproved: with the intake trusting any session's role (no `sessionRefusal`), the API test
+  "refuses desk events without a live staff session" fails.
+- Live smoke (dev stack): the API log showed the Booking form's departure/tier/OFAC events and
+  the desk's `admin_state_shown@A-Dashboard` and `booking_state_changed@A-Booking` admitted.
+- Browser rendering at 390/1024/1280: not run — no visible UI changed (event wiring only); the
+  touched pages render in the e2e default and DS 07 projects.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -86,10 +85,27 @@ app).
   consent-log write after a signed-in banner choice is silent (the cookie still applies).
   Rotating `AUTH_SECRET` changes every hashed user id. Counsel should review the analytics words
   and whether the banner's essential/analytics split fits the agency's legal basis.
+- **Desk T-Events:** treated as essential operational records (owner decision); counsel should
+  confirm that basis for staff, and whether desk page views need staff-facing words and a
+  choice. `role` plus a timestamp can point to one person in a small agency. Desk events count
+  only actions the desk took (an API transition by the system or a traveler is not an event).
 - **For the owner:** the items under Next; the storefront's sample "Cuba right now" banner says
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **T-Events follow-ups (2026-10-25):** a desk event needs `app: 'admin'`,
+  `consent: 'essential'` and a desk screen; the API reads the session for it, and on localhost
+  the storefront's and the desk's cookies are shared across ports. An e2e asserting a desk
+  event waits for the response of the batch that carries it (`page.waitForResponse` matching
+  its post data): an earlier batch flushed during a navigation can lose its receipt body. A
+  `toPass` loop that re-selects an option sends one event per attempt (assert `.at(-1)` or
+  `toBeGreaterThan(0)`). `e2e/reservations.spec.ts` passes once per suite (E2E0001 leaves
+  DRAFT; global setup resets it), so `--repeat-each` fails it. Stopping turbo: a
+  `pgrep -f … | grep "turbo run dev"` pipeline also matches your own shell (it was killed once);
+  take the PID from `ps -eo pid,cmd | grep "[l]inux-64/bin/turbo run dev"` (every alternative
+  in the pattern needs the bracket, or it matches the calling shell). The Home search is a
+  plain GET form: a submit before hydration posts with no shell listening, so an e2e waits for
+  the screen's `page_view` before submitting.
 - **T-Events (2026-10-25):** every e2e context starts with an `ota_consent` cookie (analytics
   refused) from `playwright.config.ts` `storageState`, built by `e2e/consent.ts` from the tenant's
   words version; a spec needing the banner clears it (`context.clearCookies({ name })`). A
@@ -182,16 +198,22 @@ app).
     current `COOKIES_ANALYTICS` words; booking/payment/error events and `consent_set` are
     essential and carry no session or user id. Components declare `data-analytics-*` or call
     `useTelemetry().track()`; e2e contexts start with analytics refused."
+  - "2026-10-25: desk T-Events are the `admin` app's essential operational events (surface
+    `desk` in `TELEMETRY_EVENTS`), sent by `DeskTelemetryProvider` with no session id and no
+    banner; the public intake admits them only for a live staff session (`sessionRefusal`) and
+    stamps `role` itself, refusing a client-sent one. Components call `useDeskTelemetry()` after
+    the API accepted the action."
 
 ## Next
-1. Owner: choose the next batch — T-Events follow-ups (desk events with `role`, the missing
-   storefront events), the real analytics sink (Q10: self-hosted Matomo or Plausible, an
-   account/deployment decision), one of M9's deferred items (permission overrides, display
-   currencies, runtime feature flags, recovery codes, a passkey policy) or M10's room holds/event
-   photos (each needs a migration doc first), or a manual keyboard/screen-reader pass on the
-   A-A11y desk rules that axe cannot decide.
+1. Owner: choose the next batch — the real analytics sink (Q10: self-hosted Matomo or
+   Plausible, an account/deployment decision), server-side T-Events (system/traveler
+   transitions, the dispatch engine's offers), one of M9's deferred items (permission overrides,
+   display currencies, runtime feature flags, recovery codes, a passkey policy) or M10's room
+   holds/event photos (each needs a migration doc first), or a manual keyboard/screen-reader
+   pass on the A-A11y desk rules that axe cannot decide.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
-   texts (now including the events copy, the M10 invoice question and the cookie words), OFAC
+   texts (now including the events copy, the M10 invoice question, the cookie words and the
+   basis for desk telemetry), OFAC
    categories, card surcharge, deposit refundability and proof retention, the passport-key
    backup, the backup-power wording, the staff email domain, raster app icons from Vereda, the
    AGENTS.md §C lines above. Then SMS once a provider is chosen.
@@ -517,3 +539,11 @@ app).
   server-side, the user id is an HMAC keyed by `AUTH_SECRET`, `consent_set` is essential, no
   marketing switch for a tenant without marketing words, and the banner is a non-modal region
   (ADR 0006 amendment).
+- 2026-10-25 — the owner chose the T-Events follow-ups next, and for the desk chose operational
+  events only (essential, `role` from the session, no session/user id, no device storage, no
+  banner) over a desk cookie banner or legitimate-interest analytics. The build resolved: each
+  event names its surface; the role is never taken from the client and only from a live staff
+  session; board parameters the desk or storefront cannot know are left out (seats left, the
+  draft locale, one-click re-dispatch, approval amounts); `payment_succeeded` and
+  `gallery_opened` are not built (no gateway result, no gallery viewer); an event before the
+  page is left is sent at once (ADR 0006 amendment).

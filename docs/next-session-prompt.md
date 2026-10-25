@@ -29,16 +29,19 @@ work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
 Phase 8 items 1–4 are done (item 1 against a mock sink). Built and verified last session
-(2026-10-25): Phase 8 item 1 — the DS 04 cookie banner and Legal › Cookie settings (/legal/cookies;
-the ota_consent cookie versioned by the tenant's COOKIES_ANALYTICS words; a signed-in traveler's
-choice also lands in the M3 consent log), the T-Events taxonomy in packages/domain/src/telemetry
-enforced by a public POST /telemetry/events with a logging mock sink (TELEMETRY_SINK, HMAC user id
-keyed by AUTH_SECRET), and the storefront shell (data-analytics-* clicks, TrackEvent renders,
-page_view per screen) wired through the funnel; e2e storefront-telemetry.spec.ts (ADR 0006's
-T-Events amendment). Not built: SMS/push, the real analytics sink (Q10), the desk and worker
-events and the storefront events not yet in the taxonomy (sort, tiers, departures, galleries,
-OFAC gate, payment attempts), queued offline writes, M9's deferred items, M10's room holds and
-event photos.
+(2026-10-25): the T-Events follow-ups — every taxonomy entry names its surface (storefront, desk,
+any); the desk is the `admin` app with essential operational events only (booking_state_changed,
+redispatch_triggered, document_generated, import_committed, approval_decided, ai_draft_used,
+admin_state_shown; no banner, no session/user id, no device storage), the API stamps the
+operator's `role` from a live staff session (the guard's shared `sessionRefusal`) and refuses a
+client-sent role; the storefront adds search_submitted, sort_changed, departure_selected,
+tier_selected (signed `delta`), the OFAC gate events, payment_plan_selected/attempted/failed and
+proof_uploaded; a form declares its event for its submit, and `track(..., sendNow)` sends before
+the page is left (ADR 0006 amendment "T-Events follow-ups"). Not built: SMS/push, the real
+analytics sink (Q10), the worker events (no worker app), server-side events (system/traveler
+transitions, offer_* from the dispatch engine), desk page views (counsel on staff analytics),
+gallery_opened (no gallery viewer), queued offline writes, M9's deferred items, M10's room holds
+and event photos.
 Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
 wording, the concierge fee and events copy, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
 rotate it). Last full verify: see the handoff's Verified section. The owner decided:
@@ -53,18 +56,20 @@ are written by Operations Admin and Super Admin only); M9 and M10 as recommended
 and 2026-10-24); Phase 8 item 2 with the display preferences per device (built 2026-10-24); the
 reduce-motion/high-contrast switches and the axe audit with @axe-core/playwright 4.13.0 (built
 2026-10-25); Phase 8 item 1 against a mock sink behind a public log-only route, storefront funnel
-first (built 2026-10-25).
+first (built 2026-10-25); the T-Events follow-ups with desk events operational only, no desk
+banner (built 2026-10-25).
 
 TASK 0 — The dev stack was left running for the owner; stop it (signal turbo) before any verify
 and restart it at the end. Last session's full verify is in the handoff (nothing left to finish).
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: the T-Events follow-ups (desk events with the role parameter, and the storefront
-events still missing from the taxonomy), the real analytics sink (Q10: self-hosted Matomo or
-Plausible — an account/deployment decision), one of M9's deferred items (permission overrides,
-display currencies, runtime feature flags, recovery codes, a passkey policy), M10's deferred room
-holds and event photos, or a manual keyboard/screen-reader pass on the A-A11y desk rules that axe
-cannot decide. Build nothing that needs a migration before the owner approves its doc.
+recommendation: the real analytics sink (Q10: self-hosted Matomo or Plausible — an
+account/deployment decision), server-side T-Events behind the sink (system and traveler
+transitions, the dispatch engine's offer_* events), one of M9's deferred items (permission
+overrides, display currencies, runtime feature flags, recovery codes, a passkey policy), M10's
+deferred room holds and event photos, or a manual keyboard/screen-reader pass on the A-A11y desk
+rules that axe cannot decide. Build nothing that needs a migration before the owner approves its
+doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
 DTOs, routes in the authorization matrix, desk surfaces in en/es/fr, an e2e).
@@ -108,7 +113,14 @@ Playwright, so assert fetch-sent batches (e2e/telemetry.ts); a new event or para
 added to TELEMETRY_EVENTS or the sink refuses it (and the API must be restarted to load the
 rebuilt domain); render events use TrackEvent and a once-ref (strict mode runs effects twice);
 Next's dev indicator covers the phone bottom bar's first links in Playwright clicks; a Next hot
-reload mid-run remounts the shell and repeats a page_view. Accessibility (2026-10-25): AxeBuilder needs a
+reload mid-run remounts the shell and repeats a page_view. T-Events follow-ups: a desk event
+needs `app: 'admin'`, `consent: 'essential'` and a desk screen, and the API reads the session
+for it (a dev cookie is shared across localhost ports); an e2e that asserts a desk event waits for
+the response of the batch carrying it (`waitForResponse` on its post data), because an earlier
+batch's receipt can be lost to a navigation; a `toPass` loop that re-selects an option sends one
+event per attempt; e2e/reservations.spec.ts passes once per suite (E2E0001 leaves DRAFT); the
+Home search is a plain GET form, so an e2e waits for the screen's page_view (the shell is
+listening) before submitting. Accessibility (2026-10-25): AxeBuilder needs a
 page from browser.newContext(); computed colours read back as color(srgb …) or oklab(…) mid
 transition (normalise and poll); custom properties read back resolved; the header's and the
 bottom bar's SiteMenu both keep a closed <dialog> in the DOM (useId ids, getByText needs
