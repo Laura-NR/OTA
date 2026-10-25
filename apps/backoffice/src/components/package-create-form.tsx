@@ -135,15 +135,19 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
                   const checked = selected.includes(item.id);
                   return (
                     <li key={item.id} className="flex items-center gap-3 text-body-sm">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggle(item.id)}
-                      />
-                      <span className="flex-1">
-                        {item.name}{' '}
-                        <span className="text-muted">· {item.province ?? t('cuba')}</span>
-                      </span>
+                      <label className="flex flex-1 items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggle(item.id)}
+                        />
+                        <span className="flex-1">
+                          {item.name}{' '}
+                          <span className="text-muted">
+                            · {item.province ?? t('cuba')}
+                          </span>
+                        </span>
+                      </label>
                       <label className="flex items-center gap-1 text-caption text-muted">
                         {t('day')}
                         <Input

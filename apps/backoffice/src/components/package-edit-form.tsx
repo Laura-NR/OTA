@@ -486,8 +486,9 @@ export function PackageEditForm({
               className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto]"
             >
               <div className="space-y-1">
-                <Label>{t('tierCode')}</Label>
+                <Label htmlFor={`package-tier-code-${index}`}>{t('tierCode')}</Label>
                 <Input
+                  id={`package-tier-code-${index}`}
                   value={tier.code}
                   onChange={(event) =>
                     updateRow<TierRow>(setTiers, index, { code: event.target.value })
@@ -495,8 +496,9 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('tierName')}</Label>
+                <Label htmlFor={`package-tier-name-${index}`}>{t('tierName')}</Label>
                 <Input
+                  id={`package-tier-name-${index}`}
                   value={tier.name}
                   onChange={(event) =>
                     updateRow<TierRow>(setTiers, index, { name: event.target.value })
@@ -504,8 +506,9 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('tierDelta')}</Label>
+                <Label htmlFor={`package-tier-delta-${index}`}>{t('tierDelta')}</Label>
                 <Input
+                  id={`package-tier-delta-${index}`}
                   type="number"
                   className="w-24"
                   value={tier.priceDelta}
@@ -517,8 +520,11 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('tierSupplement')}</Label>
+                <Label htmlFor={`package-tier-supplement-${index}`}>
+                  {t('tierSupplement')}
+                </Label>
                 <Input
+                  id={`package-tier-supplement-${index}`}
                   type="number"
                   className="w-24"
                   value={tier.singleSupplement}
@@ -585,8 +591,11 @@ export function PackageEditForm({
               className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[auto_auto_auto_auto]"
             >
               <div className="space-y-1">
-                <Label>{t('departureDate')}</Label>
+                <Label htmlFor={`package-departure-date-${index}`}>
+                  {t('departureDate')}
+                </Label>
                 <Input
+                  id={`package-departure-date-${index}`}
                   type="date"
                   value={departure.startDate}
                   onChange={(event) =>
@@ -597,8 +606,11 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('departureSeats')}</Label>
+                <Label htmlFor={`package-departure-seats-${index}`}>
+                  {t('departureSeats')}
+                </Label>
                 <Input
+                  id={`package-departure-seats-${index}`}
                   type="number"
                   min="1"
                   className="w-24"
@@ -611,8 +623,11 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('departurePrice')}</Label>
+                <Label htmlFor={`package-departure-price-${index}`}>
+                  {t('departurePrice')}
+                </Label>
                 <Input
+                  id={`package-departure-price-${index}`}
                   type="number"
                   className="w-28"
                   value={departure.price}
@@ -661,8 +676,9 @@ export function PackageEditForm({
               className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto]"
             >
               <div className="space-y-1">
-                <Label>{t('extraCode')}</Label>
+                <Label htmlFor={`package-extra-code-${index}`}>{t('extraCode')}</Label>
                 <Input
+                  id={`package-extra-code-${index}`}
                   value={extra.code}
                   onChange={(event) =>
                     updateRow<ExtraRow>(setExtras, index, { code: event.target.value })
@@ -670,8 +686,9 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('extraName')}</Label>
+                <Label htmlFor={`package-extra-name-${index}`}>{t('extraName')}</Label>
                 <Input
+                  id={`package-extra-name-${index}`}
                   value={extra.name}
                   onChange={(event) =>
                     updateRow<ExtraRow>(setExtras, index, { name: event.target.value })
@@ -679,8 +696,9 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('extraPrice')}</Label>
+                <Label htmlFor={`package-extra-price-${index}`}>{t('extraPrice')}</Label>
                 <Input
+                  id={`package-extra-price-${index}`}
                   type="number"
                   className="w-24"
                   value={extra.price}
@@ -690,8 +708,9 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('extraUnit')}</Label>
+                <Label htmlFor={`package-extra-unit-${index}`}>{t('extraUnit')}</Label>
                 <Select
+                  id={`package-extra-unit-${index}`}
                   value={extra.priceUnit}
                   onChange={(event) =>
                     updateRow<ExtraRow>(setExtras, index, {
@@ -741,8 +760,9 @@ export function PackageEditForm({
               className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[auto_1fr_2fr_auto]"
             >
               <div className="space-y-1">
-                <Label>{t('dayNumber')}</Label>
+                <Label htmlFor={`package-day-number-${index}`}>{t('dayNumber')}</Label>
                 <Input
+                  id={`package-day-number-${index}`}
                   type="number"
                   min="1"
                   max="60"
@@ -756,8 +776,9 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('dayTitle')}</Label>
+                <Label htmlFor={`package-day-title-${index}`}>{t('dayTitle')}</Label>
                 <Input
+                  id={`package-day-title-${index}`}
                   value={day.title}
                   onChange={(event) =>
                     updateRow<DayRow>(setDays, index, { title: event.target.value })
@@ -765,8 +786,9 @@ export function PackageEditForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label>{t('dayBody')}</Label>
+                <Label htmlFor={`package-day-body-${index}`}>{t('dayBody')}</Label>
                 <Input
+                  id={`package-day-body-${index}`}
                   value={day.body}
                   onChange={(event) =>
                     updateRow<DayRow>(setDays, index, { body: event.target.value })
