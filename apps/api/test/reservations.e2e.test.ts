@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { MockTelemetrySink } from '../src/telemetry/telemetry-sink';
+import { TELEMETRY_SINK } from '../src/telemetry/telemetry.tokens';
 
 interface FakeUser {
   id: string;
@@ -303,7 +305,10 @@ describe('reservations API', () => {
     instalments?: FakeInstalment[];
   };
 
+  let sink: MockTelemetrySink;
+
   beforeEach(async () => {
+    sink = new MockTelemetrySink();
     state = {
       reservations: new Map([[RESERVATION_ID, makeReservation()]]),
       users: [SUPER_ADMIN, TRAVELER],
@@ -318,6 +323,8 @@ describe('reservations API', () => {
       .useValue(createFakePrisma(state))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
+      .overrideProvider(TELEMETRY_SINK)
+      .useValue(sink)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -338,6 +345,33 @@ describe('reservations API', () => {
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('ITINERARY_SUBMITTED');
       expect(state.reservations.get(RESERVATION_ID)?.status).toBe('ITINERARY_SUBMITTED');
+    });
+
+    it('reports the transition as a server T-Event, with the actor but no typed reason', async () => {
+      await request(app.getHttpServer())
+        .post(`/reservations/${RESERVATION_ID}/transition`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ to: 'ITINERARY_SUBMITTED', reason: 'Traveler confirmed by phone' })
+        .expect(200);
+
+      expect(sink.recent()).toEqual([
+        {
+          event: 'booking_state_changed',
+          ts: expect.any(String) as string,
+          essential: true,
+          context: { app: 'server', consent: 'essential', funnel_stage: null },
+          params: {
+            booking_code: state.reservations.get(RESERVATION_ID)!.bookingCode,
+            from: 'DRAFT',
+            to: 'ITINERARY_SUBMITTED',
+            actor: 'super_admin',
+            reason: 'manual',
+          },
+          userId: null,
+          receivedAt: expect.any(String) as string,
+        },
+      ]);
+      expect(JSON.stringify(sink.recent())).not.toContain('phone');
     });
 
     it("cancels the booking's event requests when the booking is cancelled (M10 D3)", async () => {
@@ -378,6 +412,7 @@ describe('reservations API', () => {
 
       expect(response.status).toBe(409);
       expect(response.body.error).toBe('InvalidReservationTransitionError');
+      expect(sink.recent()).toEqual([]);
     });
 
     it('returns 404 for an unknown reservation', async () => {

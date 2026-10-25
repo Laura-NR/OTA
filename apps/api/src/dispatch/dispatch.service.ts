@@ -24,13 +24,16 @@ import {
   canTransition,
   coversProvince,
   escalationAlert,
+  hoursBetween,
   isFreeForService,
   meetsReliabilityFloor,
+  minutesBetween,
   resolveDispatchTimeoutMs,
   serviceCalendarDays,
   type ServiceType,
   type SupplierCategory,
   type SupplierReliability,
+  type TransitionReason,
 } from '@ota/domain';
 import type {
   DispatchBoardRowDto,
@@ -47,6 +50,7 @@ import {
   type EscalationPublisher,
 } from '../escalation/escalation.publisher';
 import { PrismaService } from '../prisma/prisma.service';
+import { ServerTelemetry } from '../telemetry/server-telemetry';
 import { DISPATCH_SCHEDULER, type DispatchScheduler } from './dispatch.scheduler';
 
 const VERIFIED = 'VERIFIED';
@@ -61,6 +65,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     @Inject(DISPATCH_SCHEDULER) private readonly scheduler: DispatchScheduler,
     @Inject(ESCALATION_PUBLISHER) private readonly escalation: EscalationPublisher,
     private readonly settings: OperatingSettingsService,
+    private readonly telemetry: ServerTelemetry,
   ) {}
 
   onModuleInit(): void {
@@ -82,16 +87,19 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (reservation.status !== ReservationStatus.DispatchInProgress) {
-      assertTransition(
-        reservation.status as ReservationStatus,
-        ReservationStatus.DispatchInProgress,
-      );
+      const from = reservation.status as ReservationStatus;
+      assertTransition(from, ReservationStatus.DispatchInProgress);
       await this.prisma.reservation.update({
         where: { id: reservationId },
         data: { status: ReservationStatus.DispatchInProgress },
       });
-      await this.audit(actor, reservationId, 'reservation.dispatch_started', {
-        from: reservation.status,
+      await this.audit(actor, reservationId, 'reservation.dispatch_started', { from });
+      this.telemetry.stateChanged({
+        bookingCode: reservation.bookingCode,
+        from,
+        to: ReservationStatus.DispatchInProgress,
+        actor,
+        reason: 'dispatch_started',
       });
     }
 
@@ -214,6 +222,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
         },
       });
     });
+    this.offerAnswered('offer_accepted', item, now);
 
     await this.scheduler.cancelTimeout(item.id);
     await this.advanceIfFullyAccepted(item.reservationId, actor);
@@ -264,9 +273,10 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
         },
       });
     });
+    this.offerAnswered('offer_declined', item, now);
 
     await this.scheduler.cancelTimeout(item.id);
-    await this.flagReservation(item.reservationId, actor, reason);
+    await this.flagReservation(item.reservationId, actor, reason, 'offer_declined');
 
     this.escalation.publish({
       type: 'dispatch.decline',
@@ -311,8 +321,21 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
         },
       });
     });
+    this.telemetry.emit('offer_timeout', {
+      service_item_id: item.id,
+      service_type: item.serviceType,
+      timer_h:
+        item.offeredAt && item.dispatchDeadline
+          ? hoursBetween(item.offeredAt, item.dispatchDeadline)
+          : undefined,
+    });
 
-    await this.flagReservation(item.reservationId, null, 'dispatch timeout');
+    await this.flagReservation(
+      item.reservationId,
+      null,
+      'dispatch timeout',
+      'offer_timeout',
+    );
 
     this.escalation.publish({
       type: 'dispatch.timeout',
@@ -371,13 +394,18 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
       where: { id: item.reservationId },
     });
     if (reservation && reservation.status !== ReservationStatus.DispatchInProgress) {
-      assertTransition(
-        reservation.status as ReservationStatus,
-        ReservationStatus.DispatchInProgress,
-      );
+      const from = reservation.status as ReservationStatus;
+      assertTransition(from, ReservationStatus.DispatchInProgress);
       await this.prisma.reservation.update({
         where: { id: item.reservationId },
         data: { status: ReservationStatus.DispatchInProgress },
+      });
+      this.telemetry.stateChanged({
+        bookingCode: reservation.bookingCode,
+        from,
+        to: ReservationStatus.DispatchInProgress,
+        actor,
+        reason: 'redispatch',
       });
     }
 
@@ -409,7 +437,12 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     );
 
     if (!supplier) {
-      await this.flagReservation(item.reservationId, actor, 'no eligible supplier');
+      await this.flagReservation(
+        item.reservationId,
+        actor,
+        'no eligible supplier',
+        'no_supplier',
+      );
       return;
     }
 
@@ -450,6 +483,12 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
           metadata: { supplierId: supplier.id, deadline: deadline.toISOString() },
         },
       });
+    });
+
+    this.telemetry.emit('offer_sent', {
+      service_item_id: item.id,
+      service_type: item.serviceType,
+      timer_h: hoursBetween(now, deadline),
     });
 
     await this.scheduler.scheduleTimeout(item.id, timeoutMs);
@@ -623,21 +662,45 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    assertTransition(
-      reservation.status as ReservationStatus,
-      ReservationStatus.AssemblyAndEscalation,
-    );
+    const from = reservation.status as ReservationStatus;
+    assertTransition(from, ReservationStatus.AssemblyAndEscalation);
     await this.prisma.reservation.update({
       where: { id: reservationId },
       data: { status: ReservationStatus.AssemblyAndEscalation },
     });
     await this.audit(actor, reservationId, 'reservation.fully_accepted');
+    this.telemetry.stateChanged({
+      bookingCode: reservation.bookingCode,
+      from,
+      to: ReservationStatus.AssemblyAndEscalation,
+      actor,
+      reason: 'all_accepted',
+    });
   }
 
+  /** A supplier's answer to an offer, timed from when it was made. */
+  private offerAnswered(
+    event: 'offer_accepted' | 'offer_declined',
+    item: ServiceItem,
+    now: Date,
+  ): void {
+    this.telemetry.emit(event, {
+      service_item_id: item.id,
+      service_type: item.serviceType,
+      minutes_to_answer: item.offeredAt ? minutesBetween(item.offeredAt, now) : undefined,
+    });
+  }
+
+  /**
+   * Move a booking to ACTION_REQUIRED for the desk. `reason` is the audit
+   * log's text (a worker's decline reason included); `trigger` is the code
+   * T-Events carries instead.
+   */
   private async flagReservation(
     reservationId: string,
     actor: AuthUser | null,
     reason: string,
+    trigger: TransitionReason,
   ): Promise<void> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
@@ -661,6 +724,13 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     await this.audit(actor, reservationId, 'reservation.action_required', {
       from,
       reason,
+    });
+    this.telemetry.stateChanged({
+      bookingCode: reservation.bookingCode,
+      from,
+      to: ReservationStatus.ActionRequired,
+      actor,
+      reason: trigger,
     });
   }
 

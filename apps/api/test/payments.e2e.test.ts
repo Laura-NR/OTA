@@ -8,6 +8,8 @@ import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { DocumentsService } from '../src/documents/documents.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { MockTelemetrySink } from '../src/telemetry/telemetry-sink';
+import { TELEMETRY_SINK } from '../src/telemetry/telemetry.tokens';
 import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const SUPER_ADMIN = {
@@ -201,7 +203,15 @@ describe('payments API', () => {
     affidavits?: { travelerId: string }[];
   };
 
+  let sink: MockTelemetrySink;
+  const moves = () =>
+    sink
+      .recent()
+      .filter((event) => event.event === 'booking_state_changed')
+      .map((event) => event.params);
+
   beforeEach(async () => {
+    sink = new MockTelemetrySink();
     state = {
       reservations: new Map([[RESERVATION_ID, makeReservation()]]),
       receipts: new Map(),
@@ -217,6 +227,8 @@ describe('payments API', () => {
       // to render PDFs against the fake database.
       .overrideProvider(DocumentsService)
       .useValue({ generate: async () => undefined })
+      .overrideProvider(TELEMETRY_SINK)
+      .useValue(sink)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -248,6 +260,14 @@ describe('payments API', () => {
     expect(response.body.checkoutUrl).toContain('/checkout/mock/mock_');
     expect(state.reservations.get(RESERVATION_ID)?.status).toBe('PENDING_PAYMENT');
     expect(state.audits.map((entry) => entry.action)).toContain('payment.intent_created');
+    expect(moves()).toEqual([
+      expect.objectContaining({
+        from: 'SECURED_AND_INVOICED',
+        to: 'PENDING_PAYMENT',
+        actor: 'super_admin',
+        reason: 'payment_requested',
+      }),
+    ]);
   });
 
   it('keeps payment locked until every US traveler has certified (OFAC, M3)', async () => {
@@ -277,6 +297,13 @@ describe('payments API', () => {
     expect(state.reservations.get(RESERVATION_ID)?.status).toBe('CONFIRMED');
     expect([...state.receipts.values()][0]?.status).toBe('PAID');
     expect(state.audits.map((entry) => entry.action)).toContain('payment.confirmed');
+    expect(moves().at(-1)).toEqual(
+      expect.objectContaining({
+        from: 'PENDING_PAYMENT',
+        to: 'CONFIRMED',
+        reason: 'payment_confirmed',
+      }),
+    );
   });
 
   it('lists payment receipts for a reservation', async () => {

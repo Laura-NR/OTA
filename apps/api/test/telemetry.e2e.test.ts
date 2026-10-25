@@ -174,10 +174,10 @@ describe('T-Events intake (POST /telemetry/events)', () => {
 
   describe('desk events', () => {
     const transition = () => ({
-      event: 'booking_state_changed',
+      event: 'document_generated',
       ts: new Date().toISOString(),
       context: context('essential', { app: 'admin', screen: 'A-Booking' }),
-      params: { booking_code: 'DEMO0001', from: 'DRAFT', to: 'ITINERARY_SUBMITTED' },
+      params: { booking_code: 'DEMO0001', trigger: 'manual' },
     });
 
     it("stamps the operator's role from the session, with no user or session id", async () => {
@@ -189,7 +189,7 @@ describe('T-Events intake (POST /telemetry/events)', () => {
       expect(response.body).toEqual({ accepted: 1, rejected: 0 });
       const [stored] = last(1);
       expect(stored).toMatchObject({
-        event: 'booking_state_changed',
+        event: 'document_generated',
         essential: true,
         userId: null,
         context: {
@@ -226,6 +226,30 @@ describe('T-Events intake (POST /telemetry/events)', () => {
       forged.context = { ...forged.context, role: 'super_admin' };
 
       expect((await post([forged])).body).toEqual({ accepted: 0, rejected: 1 });
+    });
+
+    it('refuses the events only the API records, whoever sends them', async () => {
+      sessionUser = 'admin-1';
+      sessionRole = 'SUPER_ADMIN';
+      const before = sink.recent().length;
+      const forged = {
+        ...transition(),
+        event: 'booking_state_changed',
+        params: {
+          booking_code: 'DEMO0001',
+          from: 'DRAFT',
+          to: 'CONFIRMED',
+          actor: 'system',
+          reason: 'payment_confirmed',
+        },
+      };
+
+      expect((await post([forged])).body).toEqual({ accepted: 0, rejected: 1 });
+      expect(
+        (await post([{ ...forged, context: context('essential', { app: 'server' }) }]))
+          .body,
+      ).toEqual({ accepted: 0, rejected: 1 });
+      expect(sink.recent().length).toBe(before);
     });
   });
 });

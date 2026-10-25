@@ -32,6 +32,7 @@ import { loadOfacGate } from '../compliance/ofac-gate';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
+import { ServerTelemetry } from '../telemetry/server-telemetry';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { depositPolicyFor } from './payment-terms';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
@@ -86,6 +87,7 @@ export class PaymentsService {
     private readonly providers: Record<PaymentRail, PaymentProvider>,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     private readonly settings: OperatingSettingsService,
+    private readonly telemetry: ServerTelemetry,
   ) {}
 
   async list(reservationId: string): Promise<PaymentReceiptDto[]> {
@@ -294,6 +296,16 @@ export class PaymentsService {
       return created;
     });
 
+    if (status === ReservationStatus.SecuredAndInvoiced) {
+      this.telemetry.stateChanged({
+        bookingCode: reservation.bookingCode,
+        from: status,
+        to: ReservationStatus.PendingPayment,
+        actor,
+        reason: 'payment_requested',
+      });
+    }
+
     return { ...toReceiptDto(receipt), checkoutUrl: intent.checkoutUrl };
   }
 
@@ -375,6 +387,7 @@ export class PaymentsService {
       reservationId,
       { to: ReservationStatus.Confirmed },
       actor,
+      'payment_confirmed',
     );
   }
 

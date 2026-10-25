@@ -13,6 +13,8 @@ import { RefundsService } from '../src/payments/refunds.service';
 import { ScheduleService } from '../src/payments/schedule.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { ReservationsService } from '../src/reservations/reservations.service';
+import { ServerTelemetry } from '../src/telemetry/server-telemetry';
+import { MockTelemetrySink } from '../src/telemetry/telemetry-sink';
 import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so require an explicit opt-in.
@@ -71,6 +73,7 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
       OTHER: new BankTransferProvider(),
       CARD: new MockPaymentProvider(),
     };
+    const telemetry = new ServerTelemetry(new MockTelemetrySink());
     const reservations = new ReservationsService(
       db,
       { generate: async () => undefined } as unknown as DocumentsService,
@@ -78,6 +81,7 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
         bookingConfirmed: async () => undefined,
         bookingSecured: async () => undefined,
       } as unknown as NotificationsService,
+      telemetry,
     );
     payments = new PaymentsService(
       db,
@@ -85,6 +89,7 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
       providers,
       tenant,
       fakeOperatingSettings(),
+      telemetry,
     );
     schedule = new ScheduleService(db, tenant, fakeOperatingSettings());
     proofs = new ProofsService(db, new InMemoryObjectStorage());

@@ -28,6 +28,9 @@ blob-report/
 # Generated documents
 .documents/
 
+# The mock analytics sink's optional event file (TELEMETRY_SINK_FILE)
+.telemetry/
+
 # Mobile
 .expo/
 .web-build/

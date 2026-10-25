@@ -7,7 +7,12 @@ import {
 } from '@nestjs/common';
 
 import type { Prisma, Reservation } from '@ota/db';
-import { ReservationStatus, assertTransition, ofacGate } from '@ota/domain';
+import {
+  ReservationStatus,
+  assertTransition,
+  ofacGate,
+  type TransitionReason,
+} from '@ota/domain';
 import type {
   AuditLogEntryDto,
   ClassifyReservationRequest,
@@ -25,6 +30,7 @@ import { generateBookingCode } from '../common/booking-code';
 import { DocumentsService } from '../documents/documents.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ServerTelemetry } from '../telemetry/server-telemetry';
 
 const ROW_CONTEXT = {
   package: { select: { name: true } },
@@ -167,6 +173,7 @@ export class ReservationsService {
     private readonly prisma: PrismaService,
     private readonly documents: DocumentsService,
     private readonly notifications: NotificationsService,
+    private readonly telemetry: ServerTelemetry,
   ) {}
 
   /**
@@ -305,14 +312,16 @@ export class ReservationsService {
   }
 
   /**
-   * Apply a status transition to a reservation and record it in the audit log.
-   * The domain state machine owns what is legal; this only loads, checks,
-   * persists, and reports.
+   * Apply a status transition to a reservation and record it in the audit log
+   * and as a T-Event, whose `reason` says what asked for it (the desk's
+   * buttons unless a caller says otherwise). The domain state machine owns
+   * what is legal; this only loads, checks, persists, and reports.
    */
   async transition(
     id: string,
     input: TransitionReservationRequest,
     actor: AuthUser,
+    reason: TransitionReason = 'manual',
   ): Promise<ReservationDto> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },
@@ -361,6 +370,14 @@ export class ReservationsService {
       });
 
       return result;
+    });
+
+    this.telemetry.stateChanged({
+      bookingCode: updated.bookingCode,
+      from,
+      to: input.to,
+      actor,
+      reason,
     });
 
     // Entering CONFIRMED issues the legal document set (spec §4.4). Generation
