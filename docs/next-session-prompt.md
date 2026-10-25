@@ -20,19 +20,21 @@ ORIENT FIRST, in this order:
 - docs/schema-m10-events.md and docs/schema-m9-settings.md (landed, §7 as built) for the
   migration-doc pattern;
 - docs/design-v1.1-plan.md (Progress table, Phase 6, Phase 8);
-- docs/adr/0006-design-system-v1.1.md (amended through M10 and the DS 07 widths);
+- docs/adr/0006-design-system-v1.1.md (amended through Phase 8 item 2 and the 2026-10-25
+  accessibility batch);
 - tenant/README.md (placeholder data, including the M4/M5 terms, the customBuilder rates and the
   M8 crisis framework and the M10 concierge terms).
 Verify the handoff against the code; run `git log --oneline main..vereda`. If this brief repeats
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
-Phase 8 items 2–4 are done (item 3 save the axe audit). Built and verified last session
-(2026-10-24): the DS 07 widths, M10 (events and the ticket concierge) and Phase 8 item 2 (the rem
-type scale; larger text and low-bandwidth mode as a device cookie; the web manifest, the
-network-first service worker, the opt-in offline kit on the trip page, the offline page and pill;
-ADR 0006's Phase 8 item 2 amendment). Not built: SMS/push, Phase 8 item 1 (T-Events) and the axe
-audit, reduce motion/high contrast switches, queued offline writes, M9's deferred items.
+Phase 8 items 2–4 are done, the axe audit included. Built and verified last session
+(2026-10-25): reduce motion and high contrast as device-cookie switches (the system settings
+honoured too; high contrast resolved from existing tokens) and the axe audit
+(e2e/accessibility.spec.ts, @axe-core/playwright 4.13.0, WCAG 2.2 AA plus unique ids), which found
+and fixed keyboard-unreachable content tables, unlabelled package-form fields and repeated menu
+ids (ADR 0006's 2026-10-25 amendment). Not built: SMS/push, Phase 8 item 1 (T-Events), queued
+offline writes, M9's deferred items, M10's room holds and event photos.
 Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
 wording, the concierge fee and events copy, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
 rotate it). Last full verify: see the handoff's Verified section. The owner decided:
@@ -44,18 +46,18 @@ downloads for the owner and the ops roles; graceful shutdown with a timeout (bui
 M6 as recommended and the log redaction (both built 2026-10-20); the M6 follow-ups D6(b) and
 D7(b) (built 2026-10-23); support staff stay read-only (M6 resources and vehicles and the M8 board
 are written by Operations Admin and Super Admin only); M9 and M10 as recommended (built 2026-10-23
-and 2026-10-24); Phase 8 item 2 with the display preferences per device, and the axe audit not
-yet (built 2026-10-24).
+and 2026-10-24); Phase 8 item 2 with the display preferences per device (built 2026-10-24); the
+reduce-motion/high-contrast switches and the axe audit with @axe-core/playwright 4.13.0 (built
+2026-10-25).
 
 TASK 0 — The dev stack was left running for the owner; stop it (signal turbo) before any verify
 and restart it at the end. Last session's full verify is in the handoff (nothing left to finish).
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: Phase 8 item 1 (T-Events needs the analytics-sink decision, Q10), the axe audit
-(a new dependency, @axe-core/playwright pinned 4.11.x), the reduce-motion and high-contrast
-switches (no dependency), or one of M9's deferred items (permission overrides, display
-currencies, runtime feature flags, recovery codes, a passkey policy), or M10's deferred room
-holds and event photos. Build nothing that needs a migration before the owner approves its doc.
+recommendation: Phase 8 item 1 (T-Events: the consent-gated client against a mock sink; the real
+sink is Q10), one of M9's deferred items (permission overrides, display currencies, runtime
+feature flags, recovery codes, a passkey policy), M10's deferred room holds and event photos, or a
+manual keyboard/screen-reader pass on the A-A11y desk rules that axe cannot decide. Build nothing that needs a migration before the owner approves its doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
 DTOs, routes in the authorization matrix, desk surfaces in en/es/fr, an e2e).
@@ -64,7 +66,7 @@ TASK 3 — DOCS and VERIFY as before: keep docs/handoff/vereda.md a current snap
 append-only), update the Progress table and the ADR 0006 amendment for design resolutions; run
 `pnpm lint && pnpm format:check`, then `TURBO_FORCE=true pnpm typecheck && TURBO_FORCE=true
 pnpm test && TURBO_FORCE=true pnpm build` with the dev stack stopped; delete apps/*/.next; run
-`pnpm e2e` (seven projects: default + six DS 07 widths); kill what e2e leaves on 3000–3002 by PID
+`pnpm e2e` (seven projects: default, with the axe audit, + six DS 07 widths); kill what e2e leaves on 3000–3002 by PID
 (never pkill -f). Run the live tests with RUN_DB_INTEGRATION=1 (retention, packages, affidavits,
 package-booking, payment-schedule, proposals, advisories, disruptions, events) and REDIS_URL
 (dispatch and compliance BullMQ). Check
@@ -91,7 +93,13 @@ retention, the passport-key backup; the M10 concierge fee and events copy (and w
 regenerated invoice suffices when seats are added later); the AGENTS.md §C lines proposed in the
 handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. Phase 8 item 2: public/sw.js duplicates
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Accessibility (2026-10-25): AxeBuilder needs a
+page from browser.newContext(); computed colours read back as color(srgb …) or oklab(…) mid
+transition (normalise and poll); custom properties read back resolved; the header's and the
+bottom bar's SiteMenu both keep a closed <dialog> in the DOM (useId ids, getByText needs
+.filter({ visible: true })); a Table that may scroll with no controls takes scrollRegionLabel;
+every desk form field needs htmlFor/id or the axe spec fails; a new page goes in the axe spec's
+list. Phase 8 item 2: public/sw.js duplicates
 offlineAssetPaths and the kit cache name (ota-kit-v1); the worker fetches offline pages with a
 pinned Accept-Language and no cookies; a page after a normal-mode page replays fonts as zero-byte
 requests (assert font downloads from a fresh context); long nowrap button labels break 320 px at

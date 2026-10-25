@@ -1,57 +1,56 @@
-# Handoff — vereda — updated 2026-10-25 00:30
+# Handoff — vereda — updated 2026-10-25 15:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
-Confirmation screen, the Custom builder, the DS 07 widths and Phase 8 item 2) and ADR 0007
-(worker app).
+Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
+reduce motion, high contrast and the axe audit) and ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
-  2–4 are done** (item 3 save the axe audit). Commits are local on `vereda`; the owner pushes
+  2–4 are done**, the axe audit included. Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-24, second batch): Phase 8 item 2**, owner-approved with the
-  preferences per device (a cookie), no migration, no dependency:
-  - `@ota/ui` type scale in rem (`31f956f`); `@ota/domain` `src/device/` (display cookie, the
-    200 kbps rule, offline-kit guards; `131f12c`); copy en/es/fr (`1678002`, `54230e7`).
-  - Display modes (`eed491d`): cookie `ota_display` read by the layout (`<html data-text-size
-    data-bandwidth>`), `components/display/` (provider, switches in Account › Preferences and the
-    menu drawer, the bandwidth strip/offer, `Photo` with "Load photo"); fonts no longer preloaded.
-  - PWA (`7ce9a6a`): `app/manifest.ts`, `public/sw.js` (network first; offline: the kit, else
-    `/[locale]/offline`), `lib/offline-kit.ts` + the trip page's kit card, the offline pill,
-    sign-out deletes the kit.
-  - e2e `storefront-display.spec.ts`, `storefront-offline.spec.ts` (`49dacbe`) and the DS 07
-    widths with larger text, which found five 320 px breaks (fixed; see ADR 0006).
-- Earlier today: the DS 07 widths and M10 (see the 2026-10-24 Decisions).
-- **Not built:** SMS/push, Phase 8 item 1 (T-Events sink) and the axe audit; reduce motion and
-  high contrast as switches; queued offline writes; the D-OfflineKit PDFs; A-Content's
-  blog/FAQ/media/conditions tabs; guide specialities; M9's deferred items; M10's deferred room
-  holds, event photos and "Keep building the trip".
+- **This session (2026-10-25): reduce motion, high contrast and the axe audit**, owner-approved
+  (`@axe-core/playwright` 4.13.0, dev only, exact pin; no migration):
+  - `ota_display` gains `reduce-motion` and `high-contrast` (`5abe936`); copy en/es/fr
+    (`ebd4b20`); the switch's off track darkens under high contrast (`f632888`); the storefront
+    keys the modes on `<html data-motion data-contrast>` in `globals.css`, honours the system's
+    `prefers-contrast: more` too, and the message thread's smooth scroll checks reduced motion
+    (`d22c971`); e2e in `storefront-display.spec.ts` (`103c1f4`).
+  - `e2e/accessibility.spec.ts` (`f1e1131`): axe with the WCAG 2.2 AA tags, plus unique ids, over
+    every customer page (plain, and at 390 px with larger text, reduced motion and high contrast,
+    with the menu open), the traveler account/trip/booking/builder, 26 desk pages and the desk
+    sign-in. It found three problems, fixed: `Table`'s `scrollRegionLabel` (`4140c70`, used by
+    content tables `b19a165`), per-instance ids for the menus' display switches (`2751838`), and
+    labels on every package-form field (`13db4ef`).
+- Earlier (2026-10-24): Phase 8 item 2 (rem type, larger text, low bandwidth, the PWA and the
+  offline kit), the DS 07 widths and M10 (see Decisions).
+- **Not built:** SMS/push, Phase 8 item 1 (T-Events sink); queued offline writes; the
+  D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's
+  deferred items; M10's deferred room holds, event photos and "Keep building the trip"; manual
+  keyboard/reading-order checks beyond what axe decides.
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
   crisis framework, the backup-power wording, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-24/25, dev stack stopped for the build)
+## Verified (2026-10-25, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **859 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 317,
-  api 314/27 skipped, schemas 66, config 36, ui 34, email 28, documents 22).
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (`/[locale]/offline`, `/manifest.webmanifest`).
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files (run
-  before the last two storefront fixes; the API did not change after it).
-- `pnpm e2e` (`apps/*/.next` deleted first): **94 passed, 3 skipped** (20.7 min, third run): the
-  default project (adds the four display tests and the offline kit) and the DS 07 widths, now
-  with larger text; the skips are the desk at 320/375/414. Run 1 failed checkout and M6 (dev
-  servers at ~7 GB, memory exhausted); run 2 failed checkout only (the wire page's 3.3 s first
-  compile); both causes fixed (`7781028`, `de0619c`). Leftover servers stopped by PID; no
-  inventory media left.
-- Disproved: with the fonts preloaded again the "never downloads the brand fonts" test fails;
-  without the worker's kit fallback the offline-kit test fails.
-- Browser (Playwright, 390/1024/1280): Account › Display card, the trip page's kit card, the
-  offline page and fallback, the menu drawer switches, low-bandwidth + larger text on a package
-  page and the 1280 header; `scrollWidth − innerWidth` = 0 everywhere after the header fix.
+- `TURBO_FORCE=true pnpm test` **861 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 318,
+  api 314/27 skipped, schemas 66, config 36, ui 35, email 28, documents 22).
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
+- `pnpm e2e` (`apps/*/.next` deleted first): **102 passed, 3 skipped** in 25.2 min, first run
+  (adds the five axe audit tests and three display tests; the skips are the desk at
+  320/375/414). Leftover servers stopped by PID.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
+- Disproved: with the `data-motion`/`data-contrast` rules and `prefers-contrast` block broken,
+  the three new display tests fail; before the fixes the axe spec failed on `/en/legal/privacy`
+  (390 px, larger text), desk `/packages` and `/packages/[id]`.
+- Browser (Playwright, 390/1024/1280): the menu drawer's four switches, Account › Preferences'
+  Display card, high contrast on Travel info (muted `#4a433d`, border `#6e665e`), the privacy
+  table as a keyboard-scrollable region with an inset ring; `scrollWidth − innerWidth` = 0.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -68,6 +67,16 @@ Confirmation screen, the Custom builder, the DS 07 widths and Phase 8 item 2) an
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Accessibility batch (2026-10-25):** `AxeBuilder` needs a page from `browser.newContext()`
+  (a bare `browser.newPage()` throws "Please use browser.newContext()"); Playwright's `page`
+  fixture is fine. Computed colours read back as `color(srgb …)` (and as `oklab(…)` mid
+  transition), so the display e2e normalises with `rgb()` and polls past the switch's 120 ms
+  transition. Custom properties read back resolved (`#6e665e`), never `var(...)`. The header and
+  the bottom bar each mount a `SiteMenu` whose closed `<dialog>` stays in the DOM, so anything
+  inside it needs `useId()` ids and `getByText` there needs `.filter({ visible: true })`. A
+  `Table` that may scroll with no controls inside takes `scrollRegionLabel`. Every new desk form
+  field needs `htmlFor`/`id` (repeating rows: suffix the row index), or the axe spec fails.
+  `ERR_NETWORK_IO_SUSPENDED` on a desk `goto` was transient once (memory at 20/23 GB); rerun.
 - **Phase 8 item 2:** `public/sw.js` duplicates `offlineAssetPaths` (tested in @ota/domain) and
   the kit cache name `ota-kit-v1` (`lib/offline-kit.ts`); change them together and bump
   `SHELL_CACHE` when the worker's caching changes. The worker fetches the offline pages with a
@@ -129,12 +138,17 @@ Confirmation screen, the Custom builder, the DS 07 widths and Phase 8 item 2) an
     `ota_display` read by the layout, never account data. `public/sw.js` answers from a cache
     only when the network fails (the opt-in offline kit, else `/[locale]/offline`); signing out
     deletes the kit. Type sizes are rem, so a size written in px does not scale."
+  - "2026-10-25: reduce motion and high contrast are the same device cookie (`reduce-motion`,
+    `high-contrast` → `<html data-motion data-contrast>`); the system settings apply the same
+    overrides. `e2e/accessibility.spec.ts` runs axe (WCAG 2.2 AA, `@axe-core/playwright`
+    4.13.0) plus a unique-id check on customer and desk pages; a new page goes in its list."
 
 ## Next
-1. Owner: choose the next batch — Phase 8 item 1 (T-Events needs the analytics sink, Q10), the
-   axe audit (new dependency, `@axe-core/playwright` pinned 4.11.x), reduce motion/high contrast
-   switches (no dependency), or one of M9's deferred items or M10's room holds/event photos (each
-   needs a migration doc first).
+1. Owner: choose the next batch — Phase 8 item 1 (T-Events: the consent-gated client can be built
+   against a mock sink; the real sink is Q10), one of M9's deferred items (permission overrides,
+   display currencies, runtime feature flags, recovery codes, a passkey policy) or M10's room
+   holds/event photos (each needs a migration doc first), or a manual keyboard/screen-reader pass
+   on the A-A11y desk rules (shortcuts, alert announcements) that axe cannot decide.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy and the M10 invoice question), OFAC categories, card
    surcharge, deposit refundability and proof retention, the passport-key backup, the
@@ -451,3 +465,8 @@ Confirmation screen, the Custom builder, the DS 07 widths and Phase 8 item 2) an
   display preferences per device in a cookie rather than per account (no migration), and the
   axe audit not yet. Built: the rem type scale, the cookie modes, a network-first service worker
   with an opt-in offline kit deleted at sign-out, the offline page and pill (ADR 0006 amendment).
+- 2026-10-25 — the owner chose the accessibility batch (reduce motion and high contrast plus the
+  axe audit) and the `@axe-core/playwright` 4.13.0 pin (the newest release older than two weeks;
+  the handoff had proposed 4.11.x). The build resolved high contrast from existing tokens (alias
+  text and border steps darker, also under `prefers-contrast: more`) and worded Reduce motion's
+  help "No animations or transitions" (nothing cross-fades at 0 ms); ADR 0006 amendment.

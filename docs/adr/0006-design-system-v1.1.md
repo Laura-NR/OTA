@@ -872,3 +872,32 @@ Phase 1 note that low-bandwidth mode falls back to system stacks.
   a message sent offline fails as before.
 - **Manifest.** Named and coloured from the tenant manifest (primary 600, page background); the
   icon is the SVG mark until raster icons are exported (T-Signoff §03).
+
+## Amendment, 2026-10-25: reduce motion, high contrast and the axe audit, resolved by the build
+
+The owner chose this batch (the two remaining "Accessibility & data" switches with the Phase 8
+item 3 audit) and the `@axe-core/playwright` 4.13.0 pin (dev only). No migration, no token added.
+
+- **Reduce motion** and **High contrast** join the device cookie `ota_display`
+  (`reduce-motion`, `high-contrast`) and the Account › Preferences card and menu drawer, in the
+  board's order: Larger text, Reduce motion, Low-bandwidth mode, High contrast.
+- **Reduce motion** applies the override the system setting already gets (`@ota/ui/styles.css`):
+  motion tokens, animations and transitions at 0 ms, scrolling not smooth; scripted smooth
+  scrolls (the message thread) check it too. The board's help line "No animations; cross-fades
+  only" became "No animations or transitions", because nothing cross-fades once every
+  transition is 0 ms.
+- **High contrast** has no tokens on the canvas; the build resolves it with existing ones
+  ("Darker text and borders"): secondary text neutral 700 → 900, muted text 500 → 700, borders
+  neutral 200 → 500 (3:1 non-text contrast), input borders 300 → 700, and the switch's off track
+  300 → 500. They are the alias tokens, so a tenant's palette still supplies every step. The
+  system's `prefers-contrast: more` applies the same overrides, as reduced motion does.
+- **The axe audit** (`e2e/accessibility.spec.ts`, WCAG 2.2 AA tags, per A-A11y) covers every
+  customer page signed out, the same pages at 390 px with larger text, reduced motion and high
+  contrast (and the open menu), the traveler account, a trip, a package booking and the builder,
+  and 26 desk pages; each page must also have unique ids. It found three problems, all fixed:
+  content tables that scroll at 390 px with larger text could not be reached by keyboard
+  (`Table` gains `scrollRegionLabel`: a named, focusable region with an inset ring), the desk
+  package forms had unlabelled checkboxes, inputs and a select, and the menu's display switches
+  repeated their ids in the header's and the bottom bar's drawers. axe's "needs review"
+  colour-contrast items are text over photography or gradients (home and destination tiles), left
+  to the manual checks with keyboard paths and reading order.
