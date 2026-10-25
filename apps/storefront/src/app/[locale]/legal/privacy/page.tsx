@@ -13,9 +13,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * The privacy notice (Legal board, privacy section). The other legal texts
- * (terms, cancellation, cookies, data rights, sanctions) wait for counsel and
- * the legal entity, so the Legal hub is not built yet.
+ * The privacy notice (Legal board, privacy section). Cookie settings is its
+ * own page (`/legal/cookies`); the other legal texts (terms, cancellation,
+ * data rights, sanctions) wait for counsel and the legal entity, so the Legal
+ * hub is not built yet.
  */
 export default async function PrivacyPage() {
   const content = await getPageContent('privacy', contentPageSchema);

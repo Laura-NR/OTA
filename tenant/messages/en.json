@@ -865,7 +865,7 @@
           "blocks": [
             {
               "type": "paragraph",
-              "text": "We use one cookie to keep you signed in and one to remember your language. There are no analytics or advertising cookies."
+              "text": "We use cookies to keep you signed in, remember your language and display settings, and remember your cookie choice. Analytics is off until you allow it in the cookie banner or in Cookie settings; it then counts visits on our own systems with a random id for the open tab and, when you are signed in, a scrambled account id, never your name or email. There are no advertising cookies."
             }
           ]
         },
@@ -1477,6 +1477,10 @@
         "MARKETING_EMAIL": {
           "version": "marketing@2026-10-17",
           "text": "Send me stories and new trips by email, once a month."
+        },
+        "COOKIES_ANALYTICS": {
+          "version": "cookies-analytics@2026-10-25",
+          "text": "Count visits on our own systems: which pages are used and where a booking is left unfinished. No advertising networks and no tracking across other sites; your name and email never enter it."
         }
       }
     },

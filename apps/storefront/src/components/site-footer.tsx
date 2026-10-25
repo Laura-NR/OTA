@@ -37,7 +37,7 @@ function FooterAnchor({ item, className }: { item: FooterLink; className?: strin
 /**
  * The Home footer on primary 700. Columns list only pages that exist: the
  * Destinations column names the tenant's first destinations, and the legal
- * links other than Privacy join as those pages are built. Contact lines (WhatsApp, email) come from the tenant
+ * links other than Privacy and Cookie settings join as those pages are built. Contact lines (WhatsApp, email) come from the tenant
  * manifest and are left out when it has none; the tagline is tenant content.
  * Payment marks show only the rails the tenant offers live: the wire transfer
  * (SEPA); the card marks wait for the card gateway.
@@ -192,10 +192,16 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
               name: tenant.branding.agencyName,
             })}
           </span>
-          <FooterAnchor
-            item={{ key: 'privacy', label: t('privacy'), href: '/legal/privacy' }}
-            className="text-label font-normal text-primary-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500"
-          />
+          {[
+            { key: 'privacy', label: t('privacy'), href: '/legal/privacy' },
+            { key: 'cookies', label: t('cookieSettings'), href: '/legal/cookies' },
+          ].map((item) => (
+            <FooterAnchor
+              key={item.key}
+              item={item}
+              className="text-label font-normal text-primary-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500"
+            />
+          ))}
         </div>
       </div>
     </footer>

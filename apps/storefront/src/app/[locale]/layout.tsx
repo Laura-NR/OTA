@@ -3,8 +3,9 @@ import '@ota/ui/styles.css';
 import '../globals.css';
 
 import { isFeatureEnabled } from '@ota/config';
-import { DISPLAY_COOKIE, parseDisplayPreferences } from '@ota/domain';
-import { isSupportedLocale } from '@ota/i18n';
+import { CONSENT_COOKIE, DISPLAY_COOKIE, parseDisplayPreferences } from '@ota/domain';
+import { SUPPORTED_LOCALES, isSupportedLocale } from '@ota/i18n';
+import { legalContentSchema } from '@ota/schemas';
 import { themeCssVariables } from '@ota/theming';
 import { IconSprite } from '@ota/ui';
 import type { Metadata } from 'next';
@@ -22,8 +23,10 @@ import { ServiceWorkerRegistration } from '@/components/offline/service-worker';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { SiteStrips } from '@/components/site-strips';
+import { TelemetryProvider } from '@/components/telemetry/telemetry-provider';
 import { getServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
+import { getPageContent } from '@/lib/content';
 import { displayAttributes } from '@/lib/display';
 import { fontVariables } from '@/lib/font';
 import { getTenantConfig } from '@/lib/tenant';
@@ -64,7 +67,15 @@ export default async function LocaleLayout({
   const signedIn = Boolean(await getServerSession());
   // Larger text and low-bandwidth mode are the device's (a cookie), so the
   // page renders in them from its first byte.
-  const display = parseDisplayPreferences((await cookies()).get(DISPLAY_COOKIE)?.value);
+  const store = await cookies();
+  const display = parseDisplayPreferences(store.get(DISPLAY_COOKIE)?.value);
+  // The cookie choice (DS 04) is read here too, so the banner is in the
+  // first byte for a visitor who has not chosen, and never flashes otherwise.
+  const legal = await getPageContent('legal', legalContentSchema);
+  const cookieTexts = {
+    analytics: legal?.consents.COOKIES_ANALYTICS ?? null,
+    marketing: legal?.consents.COOKIES_MARKETING ?? null,
+  };
 
   return (
     <html
@@ -78,17 +89,26 @@ export default async function LocaleLayout({
         <IconSprite />
         <NextIntlClientProvider messages={messages}>
           <DisplayProvider initial={display}>
-            <BandwidthStrip />
-            <SiteStrips
-              events={isFeatureEnabled(tenant, 'culturalEventsBanner')}
+            {/* EUR is the base currency; display currencies are M9 D7 (deferred). */}
+            <TelemetryProvider
+              initialCookie={store.get(CONSENT_COOKIE)?.value ?? null}
+              texts={cookieTexts}
               signedIn={signedIn}
-            />
-            <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
-            <main className="flex-1">{children}</main>
-            <SiteFooter tenant={tenant} />
-            <BottomNav signedIn={signedIn} />
-            <OfflinePill />
-            <ServiceWorkerRegistration />
+              currency="EUR"
+              locales={SUPPORTED_LOCALES}
+            >
+              <BandwidthStrip />
+              <SiteStrips
+                events={isFeatureEnabled(tenant, 'culturalEventsBanner')}
+                signedIn={signedIn}
+              />
+              <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
+              <main className="flex-1">{children}</main>
+              <SiteFooter tenant={tenant} />
+              <BottomNav signedIn={signedIn} />
+              <OfflinePill />
+              <ServiceWorkerRegistration />
+            </TelemetryProvider>
           </DisplayProvider>
         </NextIntlClientProvider>
       </body>
