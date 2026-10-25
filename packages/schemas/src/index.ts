@@ -670,3 +670,11 @@ export {
   type PublicEventDto,
   type PublicEventQuery,
 } from './event';
+export {
+  TELEMETRY_BATCH_MAX,
+  telemetryBatchSchema,
+  telemetryEventSchema,
+  type TelemetryBatchRequest,
+  type TelemetryEventRequest,
+  type TelemetryReceiptDto,
+} from './telemetry';
