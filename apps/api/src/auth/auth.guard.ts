@@ -6,6 +6,7 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { AuthSession } from '@ota/auth';
 import { UserRole, isStaffSessionExpired } from '@ota/domain';
 import type { IncomingHttpHeaders } from 'node:http';
 
@@ -22,6 +23,33 @@ interface RequestWithAuth extends RequestWithUser {
 function staffSessionHours(): number {
   const value = Number(process.env.STAFF_SESSION_HOURS);
   return Number.isFinite(value) && value > 0 ? value : 12;
+}
+
+/**
+ * Why a session may not act, or null when it may: a deactivated account, or
+ * a staff session past its limit. The guard and the public T-Events intake
+ * (which trusts a desk role only from a live session) share this.
+ */
+export function sessionRefusal(
+  session: AuthSession,
+  now: Date = new Date(),
+): string | null {
+  if (session.user.deactivatedAt) {
+    return 'This account is deactivated';
+  }
+  const signedInAt = session.session.createdAt;
+  if (
+    signedInAt &&
+    isStaffSessionExpired(
+      session.user.role,
+      new Date(signedInAt),
+      now,
+      staffSessionHours(),
+    )
+  ) {
+    return 'The desk session ended; sign in again';
+  }
+  return null;
 }
 
 /**
@@ -52,20 +80,9 @@ export class AuthGuard implements CanActivate {
     if (!session) {
       throw new UnauthorizedException('Authentication required');
     }
-    if (session.user.deactivatedAt) {
-      throw new UnauthorizedException('This account is deactivated');
-    }
-    const signedInAt = session.session.createdAt;
-    if (
-      signedInAt &&
-      isStaffSessionExpired(
-        session.user.role,
-        new Date(signedInAt),
-        new Date(),
-        staffSessionHours(),
-      )
-    ) {
-      throw new UnauthorizedException('The desk session ended; sign in again');
+    const refusal = sessionRefusal(session);
+    if (refusal) {
+      throw new UnauthorizedException(refusal);
     }
 
     const user: AuthUser = {

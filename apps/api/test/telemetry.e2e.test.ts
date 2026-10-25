@@ -38,6 +38,8 @@ describe('T-Events intake (POST /telemetry/events)', () => {
   let app: INestApplication;
   let sink: MockTelemetrySink;
   let sessionUser: string | null;
+  let sessionRole: string;
+  let sessionExtra: { deactivatedAt?: Date; signedInAt?: Date };
   let sessionReads: number;
   const previousSecret = process.env.AUTH_SECRET;
 
@@ -51,7 +53,15 @@ describe('T-Events intake (POST /telemetry/events)', () => {
         getSession: async () => {
           sessionReads += 1;
           return sessionUser
-            ? { user: { id: sessionUser, email: 't@example.test', role: 'TRAVELER' } }
+            ? {
+                user: {
+                  id: sessionUser,
+                  email: 't@example.test',
+                  role: sessionRole,
+                  deactivatedAt: sessionExtra.deactivatedAt ?? null,
+                },
+                session: { createdAt: sessionExtra.signedInAt ?? new Date() },
+              }
             : null;
         },
       })
@@ -65,6 +75,8 @@ describe('T-Events intake (POST /telemetry/events)', () => {
 
   beforeEach(() => {
     sessionUser = null;
+    sessionRole = 'TRAVELER';
+    sessionExtra = {};
     sessionReads = 0;
   });
 
@@ -158,5 +170,62 @@ describe('T-Events intake (POST /telemetry/events)', () => {
           .send({ events: [packageViewed()], userId: 'u1' })
       ).status,
     ).toBe(400);
+  });
+
+  describe('desk events', () => {
+    const transition = () => ({
+      event: 'booking_state_changed',
+      ts: new Date().toISOString(),
+      context: context('essential', { app: 'admin', screen: 'A-Booking' }),
+      params: { booking_code: 'DEMO0001', from: 'DRAFT', to: 'ITINERARY_SUBMITTED' },
+    });
+
+    it("stamps the operator's role from the session, with no user or session id", async () => {
+      sessionUser = 'ops-1';
+      sessionRole = 'OPERATIONS_ADMIN';
+
+      const response = await post([transition()]);
+
+      expect(response.body).toEqual({ accepted: 1, rejected: 0 });
+      const [stored] = last(1);
+      expect(stored).toMatchObject({
+        event: 'booking_state_changed',
+        essential: true,
+        userId: null,
+        context: {
+          app: 'admin',
+          screen: 'A-Booking',
+          role: 'ops_admin',
+          funnel_stage: null,
+        },
+      });
+      expect(stored!.context).not.toHaveProperty('session_id');
+      expect(JSON.stringify(stored)).not.toContain('ops-1');
+      expect(sessionReads).toBe(1);
+    });
+
+    it('refuses desk events without a live staff session', async () => {
+      const before = sink.recent().length;
+
+      expect((await post([transition()])).body).toEqual({ accepted: 0, rejected: 1 });
+      sessionUser = 'traveler-1';
+      expect((await post([transition()])).body).toEqual({ accepted: 0, rejected: 1 });
+      sessionRole = 'SUPER_ADMIN';
+      sessionExtra = { deactivatedAt: new Date() };
+      expect((await post([transition()])).body).toEqual({ accepted: 0, rejected: 1 });
+      // M9 D9: a desk session ends 12 hours after sign-in.
+      sessionExtra = { signedInAt: new Date(Date.now() - 13 * 60 * 60 * 1000) };
+      expect((await post([transition()])).body).toEqual({ accepted: 0, rejected: 1 });
+      expect(sink.recent().length).toBe(before);
+    });
+
+    it('never takes the role from the client', async () => {
+      sessionUser = 'support-1';
+      sessionRole = 'ADMINISTRATIVE_SUPPORT';
+      const forged = transition();
+      forged.context = { ...forged.context, role: 'super_admin' };
+
+      expect((await post([forged])).body).toEqual({ accepted: 0, rejected: 1 });
+    });
   });
 });

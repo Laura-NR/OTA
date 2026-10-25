@@ -25,16 +25,18 @@ export class TelemetryService {
   /**
    * Admit each event against the taxonomy and the visitor's consent, attach
    * the hashed user id to the analytics events of a signed-in visitor, and
-   * hand the admitted ones to the sink. Refused events are only counted.
+   * hand the admitted ones to the sink. `role` is the live session's account
+   * role, which desk events need and carry. Refused events are only counted.
    */
   async ingest(
     batch: TelemetryBatchRequest,
     userId: string | null,
+    role: string | null = null,
     now: Date = new Date(),
   ): Promise<TelemetryReceiptDto> {
     const admitted: AdmittedEvent[] = [];
     for (const input of batch.events) {
-      const verdict = admitTelemetryEvent(input, now);
+      const verdict = admitTelemetryEvent(input, now, role);
       if (verdict.ok) {
         admitted.push(verdict.event);
       }
