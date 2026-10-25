@@ -91,7 +91,7 @@ export async function ContentBlocks({ blocks }: { blocks: readonly ContentBlock[
           case 'table':
             return (
               <div key={index} className="overflow-hidden rounded-lg border bg-surface">
-                <Table>
+                <Table scrollRegionLabel={block.caption ?? block.head.join(', ')}>
                   {block.caption ? (
                     <caption className="caption-top px-3 py-2.5 text-left text-body font-semibold text-default">
                       {block.caption}
