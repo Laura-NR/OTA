@@ -59,6 +59,20 @@ describe('consent DTOs', () => {
     ).toThrowError();
   });
 
+  it('takes the cookie banner as a source, never the desk', () => {
+    const choice = {
+      purpose: 'COOKIES_ANALYTICS',
+      granted: false,
+      textVersion: 'cookies-analytics@2026-10-25',
+    };
+    expect(recordConsentSchema.parse({ ...choice, source: 'COOKIE_BANNER' }).source).toBe(
+      'COOKIE_BANNER',
+    );
+    expect(recordConsentSchema.safeParse({ ...choice, source: 'DESK' }).success).toBe(
+      false,
+    );
+  });
+
   it('declares the legal texts per purpose and refuses an unknown purpose', () => {
     const legal = legalContentSchema.parse({
       status: 'placeholder',

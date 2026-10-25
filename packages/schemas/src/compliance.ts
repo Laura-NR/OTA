@@ -159,7 +159,10 @@ export const recordConsentSchema = z.object({
   purpose: consentPurposeSchema,
   granted: z.boolean(),
   textVersion: z.string().trim().min(1).max(100),
-  source: z.enum(['BOOKING', 'ACCOUNT', 'PAYMENT', 'CUSTOM_REQUEST']).default('ACCOUNT'),
+  // A traveler names where they chose; only the desk records DESK.
+  source: z
+    .enum(['BOOKING', 'ACCOUNT', 'PAYMENT', 'CUSTOM_REQUEST', 'COOKIE_BANNER'])
+    .default('ACCOUNT'),
   locale: z.string().trim().min(2).max(5).optional(),
   reservationId: z.string().uuid().optional(),
 });
