@@ -111,6 +111,7 @@ export default async function HomePage() {
           <form
             action={getPathname({ href: '/packages', locale })}
             aria-label={t('searchLabel')}
+            data-analytics-event="search_submitted"
             className="grid items-end gap-3 rounded-lg border bg-surface p-4 shadow-md sm:grid-cols-[1fr_auto]"
           >
             <div className="flex min-w-0 flex-col gap-1.5">

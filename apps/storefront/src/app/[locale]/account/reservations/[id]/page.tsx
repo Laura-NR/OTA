@@ -264,6 +264,7 @@ export default async function AccountReservationPage({
       {schedule ? (
         <PaymentSchedule
           reservationId={reservation.id}
+          bookingCode={reservation.bookingCode}
           status={reservation.status}
           schedule={schedule}
           locked={ofacLocked}

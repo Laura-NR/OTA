@@ -5,24 +5,72 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type ChangeEvent } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
+
 /** Up to 10 MB, as the API accepts. */
 const MAX_PROOF_BYTES = 10 * 1024 * 1024;
 
 type Plan = 'DEPOSIT' | 'FULL';
 
+/** A refused start, with the T-Events `error_code` (`http_<status>` or `network`). */
+class TransferError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+  ) {
+    super(message);
+  }
+}
+
 async function startTransfer(reservationId: string, plan?: Plan): Promise<string> {
-  const response = await fetch(`/api/ota/me/reservations/${reservationId}/payments`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ rail: 'OPEN_BANKING_SEPA', ...(plan ? { plan } : {}) }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`/api/ota/me/reservations/${reservationId}/payments`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ rail: 'OPEN_BANKING_SEPA', ...(plan ? { plan } : {}) }),
+    });
+  } catch {
+    throw new TransferError('', 'network');
+  }
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
       message?: unknown;
     } | null;
-    throw new Error(typeof body?.message === 'string' ? body.message : '');
+    throw new TransferError(
+      typeof body?.message === 'string' ? body.message : '',
+      `http_${response.status}`,
+    );
   }
   return ((await response.json()) as { checkoutUrl: string }).checkoutUrl;
+}
+
+/**
+ * Start the transfer and report it (T-Events `payment_attempted`, then
+ * `payment_failed` when refused); on success the browser leaves for the
+ * wire page, and the shell's beacon carries the attempt.
+ */
+function useStartTransfer(reservationId: string, bookingCode: string) {
+  const { track } = useTelemetry();
+  return async (plan?: Plan): Promise<string> => {
+    const started = Date.now();
+    track('payment_attempted', {
+      booking_code: bookingCode,
+      method: 'transfer',
+      ...(plan ? { plan: plan === 'DEPOSIT' ? 'deposit' : 'full' } : {}),
+    });
+    try {
+      return await startTransfer(reservationId, plan);
+    } catch (error) {
+      track('payment_failed', {
+        booking_code: bookingCode,
+        method: 'transfer',
+        error_code: error instanceof TransferError ? error.code : 'network',
+        latency_ms: Date.now() - started,
+      });
+      throw error;
+    }
+  };
 }
 
 export interface PlanOption {
@@ -39,21 +87,33 @@ export interface PlanOption {
  */
 export function PlanChooser({
   reservationId,
+  bookingCode,
   options,
 }: {
   reservationId: string;
+  bookingCode: string;
   options: PlanOption[];
 }) {
   const t = useTranslations('account.payment');
+  const { track } = useTelemetry();
+  const start = useStartTransfer(reservationId, bookingCode);
   const [plan, setPlan] = useState<Plan>(options[0]!.plan);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function choose(next: Plan) {
+    setPlan(next);
+    track('payment_plan_selected', {
+      booking_code: bookingCode,
+      plan: next === 'DEPOSIT' ? 'deposit' : 'full',
+    });
+  }
 
   async function go() {
     setBusy(true);
     setError(null);
     try {
-      window.location.href = await startTransfer(reservationId, plan);
+      window.location.href = await start(plan);
     } catch (startError) {
       setError((startError as Error).message || t('failed'));
       setBusy(false);
@@ -80,7 +140,7 @@ export function PlanChooser({
               name="plan"
               value={option.plan}
               checked={plan === option.plan}
-              onChange={() => setPlan(option.plan)}
+              onChange={() => choose(option.plan)}
               className="mt-0.5 h-5 w-5 shrink-0 accent-primary-600"
             />
             <span className="flex min-w-0 flex-col gap-0.5">
@@ -104,12 +164,15 @@ export function PlanChooser({
 /** Start the transfer for the instalment still due (the balance, after a deposit). */
 export function PayInstalmentButton({
   reservationId,
+  bookingCode,
   label,
 }: {
   reservationId: string;
+  bookingCode: string;
   label: string;
 }) {
   const t = useTranslations('account.payment');
+  const start = useStartTransfer(reservationId, bookingCode);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,7 +180,7 @@ export function PayInstalmentButton({
     setBusy(true);
     setError(null);
     try {
-      window.location.href = await startTransfer(reservationId);
+      window.location.href = await start();
     } catch (startError) {
       setError((startError as Error).message || t('failed'));
       setBusy(false);
@@ -138,14 +201,23 @@ export function PayInstalmentButton({
  * "Proof of transfer · optional, speeds things up" (Payment board): a PDF or a
  * photo of the bank receipt for a pending transfer. The desk checks it by hand.
  */
+const PROOF_TYPES: Readonly<Record<string, string>> = {
+  'application/pdf': 'pdf',
+  'image/jpeg': 'jpeg',
+  'image/png': 'png',
+};
+
 export function ProofUpload({
   reservationId,
+  bookingCode,
   paymentId,
 }: {
   reservationId: string;
+  bookingCode: string;
   paymentId: string;
 }) {
   const t = useTranslations('account.payment');
+  const { track } = useTelemetry();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -180,6 +252,12 @@ export function ProofUpload({
       if (!response.ok) {
         throw new Error(t('proofFailed'));
       }
+      const fileType = PROOF_TYPES[file.type];
+      track('proof_uploaded', {
+        booking_code: bookingCode,
+        ...(fileType ? { file_type: fileType } : {}),
+        size_kb: Math.ceil(file.size / 1024),
+      });
       router.refresh();
     } catch (uploadError) {
       setError((uploadError as Error).message || t('proofFailed'));

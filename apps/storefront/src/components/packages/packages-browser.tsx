@@ -6,6 +6,7 @@ import {
   filterChanges,
   packageProvinces,
   searchPackages,
+  sortChange,
   telemetryId,
   type DurationBucketId,
   type PackageSort,
@@ -361,9 +362,10 @@ export function PackagesBrowser({
           <Select
             className="w-56 min-w-0"
             value={query.sort}
-            onChange={(event) =>
-              setQuery({ ...query, sort: event.target.value as PackageSort })
-            }
+            onChange={(event) => {
+              setQuery({ ...query, sort: event.target.value as PackageSort });
+              track('sort_changed', sortChange(event.target.value));
+            }}
           >
             {PACKAGE_SORTS.map((sort) => (
               <option key={sort} value={sort}>

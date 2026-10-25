@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
+
 /**
  * The OFAC step on a trip (Booking board step 4, M3): each US traveler picks
  * their travel category and types their full name as a signature under the
@@ -69,6 +71,7 @@ function SignForm({
   const categories = useTranslations('ofac.categories');
   const locale = useLocale();
   const router = useRouter();
+  const { track } = useTelemetry();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const id = (field: string) => `ofac-${traveler.travelerId}-${field}`;
@@ -98,6 +101,7 @@ function SignForm({
         } | null;
         throw new Error(body?.message ?? t('failed'));
       }
+      track('affidavit_signed', { category: String(form.get('category')) });
       router.refresh();
     } catch (signError) {
       setError(signError instanceof Error ? signError.message : t('failed'));
@@ -116,6 +120,9 @@ function SignForm({
           id={id('category')}
           name="category"
           defaultValue="SUPPORT_FOR_THE_CUBAN_PEOPLE"
+          onChange={(event) =>
+            track('ofac_category_selected', { category: event.target.value })
+          }
         >
           {OFAC_CATEGORIES.map((category) => (
             <option key={category} value={category}>

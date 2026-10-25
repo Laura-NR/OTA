@@ -469,6 +469,10 @@ export function BookingFlow({
         currency: pkg.currency,
         travelers: price.partySize,
       });
+      // The affidavits are recorded with the booking.
+      for (const { slot } of usSlots) {
+        track('affidavit_signed', { category: certification(slot).category });
+      }
       setSent({ id: booking.id, bookingCode: booking.bookingCode });
       window.scrollTo({ top: 0 });
       requestAnimationFrame(() => heading.current?.focus());
@@ -603,7 +607,17 @@ export function BookingFlow({
                 {...control}
                 className="max-w-[420px]"
                 value={departureId}
-                onChange={(event) => setDepartureId(event.target.value)}
+                onChange={(event) => {
+                  setDepartureId(event.target.value);
+                  const chosen = departures.find(({ id }) => id === event.target.value);
+                  if (chosen) {
+                    track('departure_selected', {
+                      package_id: pkg.slug,
+                      departure_date: chosen.startDate.slice(0, 10),
+                      capacity: chosen.capacity,
+                    });
+                  }
+                }}
               >
                 {departures.map((option) => (
                   <option key={option.id} value={option.id}>
@@ -728,7 +742,14 @@ export function BookingFlow({
                     name="tier"
                     value={option.id}
                     checked={option.id === tierId}
-                    onChange={() => setTierId(option.id)}
+                    onChange={() => {
+                      setTierId(option.id);
+                      track('tier_selected', {
+                        package_id: pkg.slug,
+                        tier: option.id,
+                        delta: Number(option.priceDelta),
+                      });
+                    }}
                     className="mt-0.5 h-5 w-5 shrink-0 accent-primary-600"
                   />
                   <span className="text-body font-semibold text-default">
@@ -974,9 +995,17 @@ export function BookingFlow({
                     <Select
                       {...control}
                       value={slot.draft.nationality}
-                      onChange={(event) =>
-                        updateDraft(slot, { nationality: event.target.value })
-                      }
+                      onChange={(event) => {
+                        // A US traveler opens the OFAC gate (T-Events).
+                        if (
+                          event.target.value === 'US' &&
+                          slot.draft.nationality !== 'US' &&
+                          legal.statement
+                        ) {
+                          track('ofac_gate_shown', { blocked: false });
+                        }
+                        updateDraft(slot, { nationality: event.target.value });
+                      }}
                     >
                       <option value="">{t('travelers.choose')}</option>
                       {countries.map((country) => (
@@ -1082,15 +1111,18 @@ export function BookingFlow({
                       <Select
                         {...control}
                         value={certification(slot).category}
-                        onChange={(event) =>
+                        onChange={(event) => {
                           setCertifications((current) => ({
                             ...current,
                             [key]: {
                               ...certification(slot),
                               category: event.target.value as OfacCategory,
                             },
-                          }))
-                        }
+                          }));
+                          track('ofac_category_selected', {
+                            category: event.target.value,
+                          });
+                        }}
                       >
                         {OFAC_CATEGORIES.map((category) => (
                           <option key={category} value={category}>
@@ -1174,7 +1206,11 @@ export function BookingFlow({
             type="button"
             size="lg"
             onClick={() => {
-              if (Object.keys(travelerErrors()).length > 0) {
+              const refused = Object.keys(travelerErrors());
+              if (refused.length > 0) {
+                if (refused.some((field) => field.endsWith('.signature'))) {
+                  track('ofac_gate_shown', { blocked: true });
+                }
                 setShowErrors(true);
                 return;
               }

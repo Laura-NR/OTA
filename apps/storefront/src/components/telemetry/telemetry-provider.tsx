@@ -77,12 +77,12 @@ function randomSessionId(): string {
 /**
  * The T-Events shell (Phase 8 item 1): it owns the cookie choice (DS 04
  * consent) and the event queue, adds the common parameters to every event,
- * and reads `data-analytics-*` on clicks so components never hand-write a
- * tracking call for a plain click. Analytics events go out only with the
- * analytics consent; essential ones (bookings, payments, errors, the choice
- * itself) always, without the session id. A signed-in traveler's choice is
- * also written to the consent log, which keeps the evidence; the cookie is
- * what this device obeys.
+ * and reads `data-analytics-*` on clicks (on a form, on its submit) so
+ * components never hand-write a tracking call for a plain click or search.
+ * Analytics events go out only with the analytics consent; essential ones
+ * (bookings, payments, errors, the choice itself) always, without the
+ * session id. A signed-in traveler's choice is also written to the consent
+ * log, which keeps the evidence; the cookie is what this device obeys.
  */
 export function TelemetryProvider({
   initialCookie,
@@ -250,7 +250,9 @@ export function TelemetryProvider({
         event.target instanceof Element
           ? event.target.closest<HTMLElement>('[data-analytics-event]')
           : null;
-      const declared = target ? declaredEvent(target) : null;
+      // A form declares its event for the submit, not for clicks inside it.
+      const declared =
+        target && !(target instanceof HTMLFormElement) ? declaredEvent(target) : null;
       if (!target || !declared) {
         return;
       }
@@ -266,6 +268,13 @@ export function TelemetryProvider({
         declared.params.to_screen = screenForPath(url.pathname, locales);
       }
       track(declared.event, declared.params);
+    }
+    function onSubmit(event: SubmitEvent) {
+      const declared =
+        event.target instanceof HTMLFormElement ? declaredEvent(event.target) : null;
+      if (declared) {
+        track(declared.event, declared.params);
+      }
     }
     function onHidden() {
       if (document.visibilityState === 'hidden') {
@@ -305,6 +314,7 @@ export function TelemetryProvider({
     }
 
     document.addEventListener('click', onClick, true);
+    document.addEventListener('submit', onSubmit, true);
     document.addEventListener('visibilitychange', onHidden);
     window.addEventListener('pagehide', onLeave);
     window.addEventListener('error', onWindowError);
@@ -313,6 +323,7 @@ export function TelemetryProvider({
     window.addEventListener('online', onOnline);
     return () => {
       document.removeEventListener('click', onClick, true);
+      document.removeEventListener('submit', onSubmit, true);
       document.removeEventListener('visibilitychange', onHidden);
       window.removeEventListener('pagehide', onLeave);
       window.removeEventListener('error', onWindowError);

@@ -35,11 +35,13 @@ const PROOF_BADGES: Record<string, BadgeVariant> = {
  */
 export async function PaymentSchedule({
   reservationId,
+  bookingCode,
   status,
   schedule,
   locked,
 }: {
   reservationId: string;
+  bookingCode: string;
   status: string;
   schedule: PaymentScheduleDto;
   /** The OFAC gate holds payment until every US traveler has certified (M3). */
@@ -127,7 +129,11 @@ export async function PaymentSchedule({
         ) : (
           <>
             <p className="text-body-sm text-secondary">{t('choose')}</p>
-            <PlanChooser reservationId={reservationId} options={options} />
+            <PlanChooser
+              reservationId={reservationId}
+              bookingCode={bookingCode}
+              options={options}
+            />
           </>
         )
       ) : (
@@ -218,12 +224,17 @@ export async function PaymentSchedule({
                   </ul>
                 ) : null}
                 {pending.proofs.some((proof) => proof.status !== 'REJECTED') ? null : (
-                  <ProofUpload reservationId={reservationId} paymentId={pending.id} />
+                  <ProofUpload
+                    reservationId={reservationId}
+                    bookingCode={bookingCode}
+                    paymentId={pending.id}
+                  />
                 )}
               </div>
             ) : (
               <PayInstalmentButton
                 reservationId={reservationId}
+                bookingCode={bookingCode}
                 label={t('pay', { amount: money(next.amount) })}
               />
             )
