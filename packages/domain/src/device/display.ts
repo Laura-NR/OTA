@@ -10,22 +10,30 @@ export const DISPLAY_COOKIE = 'ota_display';
 export interface DisplayPreferences {
   /** Larger text: 18 px body instead of 16 px, everything set in rem with it. */
   largeText: boolean;
+  /** Reduce motion: no animations or transitions, as the system setting does. */
+  reduceMotion: boolean;
   /** Low-bandwidth mode: text first, photos on tap, system fonts, no video. */
   lowBandwidth: boolean;
+  /** High contrast: darker secondary text, borders and actions. */
+  highContrast: boolean;
   /** The traveler said "not now" to the slow-connection prompt. */
   bandwidthPromptDismissed: boolean;
 }
 
 export const DEFAULT_DISPLAY_PREFERENCES: Readonly<DisplayPreferences> = {
   largeText: false,
+  reduceMotion: false,
   lowBandwidth: false,
+  highContrast: false,
   bandwidthPromptDismissed: false,
 };
 
 /** Each preference's token in the cookie value; tokens are joined by ".". */
 const FLAGS: Readonly<Record<keyof DisplayPreferences, string>> = {
   largeText: 'large-text',
+  reduceMotion: 'reduce-motion',
   lowBandwidth: 'low-bandwidth',
+  highContrast: 'high-contrast',
   bandwidthPromptDismissed: 'no-prompt',
 };
 
@@ -36,7 +44,9 @@ export function parseDisplayPreferences(
   const tokens = new Set((value ?? '').split('.').map((token) => token.trim()));
   return {
     largeText: tokens.has(FLAGS.largeText),
+    reduceMotion: tokens.has(FLAGS.reduceMotion),
     lowBandwidth: tokens.has(FLAGS.lowBandwidth),
+    highContrast: tokens.has(FLAGS.highContrast),
     bandwidthPromptDismissed: tokens.has(FLAGS.bandwidthPromptDismissed),
   };
 }

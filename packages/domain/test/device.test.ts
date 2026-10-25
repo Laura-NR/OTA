@@ -10,6 +10,7 @@ import {
   parseDisplayPreferences,
   parseOfflineKitEntry,
   serializeDisplayPreferences,
+  type DisplayPreferences,
   type OfflineKitEntry,
 } from '../src';
 
@@ -20,15 +21,16 @@ describe('display preferences cookie', () => {
   });
 
   it('round-trips each combination', () => {
-    for (const largeText of [false, true]) {
-      for (const lowBandwidth of [false, true]) {
-        for (const bandwidthPromptDismissed of [false, true]) {
-          const preferences = { largeText, lowBandwidth, bandwidthPromptDismissed };
-          expect(
-            parseDisplayPreferences(serializeDisplayPreferences(preferences)),
-          ).toEqual(preferences);
-        }
-      }
+    const keys = Object.keys(DEFAULT_DISPLAY_PREFERENCES) as Array<
+      keyof DisplayPreferences
+    >;
+    for (let mask = 0; mask < 1 << keys.length; mask += 1) {
+      const preferences = Object.fromEntries(
+        keys.map((key, index) => [key, (mask & (1 << index)) !== 0]),
+      ) as unknown as DisplayPreferences;
+      expect(parseDisplayPreferences(serializeDisplayPreferences(preferences))).toEqual(
+        preferences,
+      );
     }
   });
 
@@ -39,18 +41,31 @@ describe('display preferences cookie', () => {
   it('uses only cookie-safe characters', () => {
     const value = serializeDisplayPreferences({
       largeText: true,
+      reduceMotion: true,
       lowBandwidth: true,
+      highContrast: true,
       bandwidthPromptDismissed: true,
     });
-    expect(value).toBe('large-text.low-bandwidth.no-prompt');
+    expect(value).toBe('large-text.reduce-motion.low-bandwidth.high-contrast.no-prompt');
     expect(value).toMatch(/^[a-z.-]+$/);
   });
 
   it('ignores unknown or tampered tokens', () => {
     expect(parseDisplayPreferences('huge-text.low-bandwidth.<script>')).toEqual({
-      largeText: false,
+      ...DEFAULT_DISPLAY_PREFERENCES,
       lowBandwidth: true,
-      bandwidthPromptDismissed: false,
+    });
+  });
+
+  it('keeps reduce motion and high contrast apart from the other modes', () => {
+    expect(parseDisplayPreferences('reduce-motion')).toEqual({
+      ...DEFAULT_DISPLAY_PREFERENCES,
+      reduceMotion: true,
+    });
+    expect(parseDisplayPreferences('high-contrast.no-prompt')).toEqual({
+      ...DEFAULT_DISPLAY_PREFERENCES,
+      highContrast: true,
+      bandwidthPromptDismissed: true,
     });
   });
 });
