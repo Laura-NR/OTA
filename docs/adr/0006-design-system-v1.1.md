@@ -901,3 +901,41 @@ item 3 audit) and the `@axe-core/playwright` 4.13.0 pin (dev only). No migration
   repeated their ids in the header's and the bottom bar's drawers. axe's "needs review"
   colour-contrast items are text over photography or gradients (home and destination tiles), left
   to the manual checks with keyboard paths and reading order.
+
+## Amendment, 2026-10-25: Phase 8 item 1 (T-Events and the cookie choice), resolved by the build
+
+The owner chose T-Events against a mock sink, behind a public API route that only logs, on the
+storefront funnel first. No migration, no new dependency (the user hash is Node's HMAC; the
+session id is Web Crypto). The real sink (self-hosted Matomo or Plausible) stays Q10.
+
+- **The taxonomy is a contract.** `packages/domain/src/telemetry/taxonomy.ts` lists every event
+  the storefront sends with its own parameters and their kinds (id, ids, count, amount, bool,
+  host, token, enumerations). `POST /telemetry/events` refuses an unknown event, an undeclared
+  parameter or free text where an id belongs, rather than dropping it, so nothing outside the
+  table reaches the sink. Events not sent yet (sort, tiers, departures, galleries, OFAC gate,
+  payment attempts, the desk and worker events) join the table with their components.
+- **Common parameters** follow T-Events §02 with three resolutions: `funnel_stage` is derived by
+  the sink from the screen, not trusted from the client; `user_id` is an HMAC of the user id
+  keyed by `AUTH_SECRET`, attached by the API only to analytics events of a signed-in visitor;
+  `market` (country of the visitor) is left out until the sink can geolocate. `currency` is EUR
+  until display currencies (M9 D7). `app` is `mobile_web` below md, else `web`.
+- **Consent (DS 04).** The banner shows until the visitor chooses for the words in force; each
+  purpose's words and version are the tenant's consent texts (`COOKIES_ANALYTICS`,
+  `COOKIES_MARKETING`), so new words ask again. Vereda offers analytics only: there are no
+  marketing cookies, so the marketing row renders only when a tenant has words for it. Reject
+  and Accept are the same secondary button (equally weighted); "Save my selection" is tertiary.
+  The banner is a labelled region, not a dialog, first in the DOM and fixed above the phone's
+  bottom bar, at most 60 % of the viewport with its actions pinned while the rows scroll. Legal ›
+  Cookie settings (`/legal/cookies`, footer) shows when the choice was saved, the same controls
+  and every cookie and storage key; the board's "CCPA variant" is not built (no geolocation).
+- **Essential events** (`booking_*`, `payment_*`, `client_error`, and `consent_set`, the choice
+  itself) go out whatever the choice, without the session id or user id. Withdrawing consent
+  also drops queued analytics events and the tab's session id.
+- **Evidence.** A signed-in traveler's choice is also written to the M3 consent log
+  (`COOKIE_BANNER` source, which the record request had refused; fixed). The cookie is what the
+  device obeys; a failed log write leaves the choice in force.
+- **Entry and identity.** The tab's session id lives in sessionStorage; the page view that starts
+  it is the entry, and only an entry carries the referrer host and `utm_*`. A locale switch
+  remounts the layout, so the shell sends its queue as a beacon first.
+- **Privacy notice.** The tenant's draft cookies paragraph said there were no analytics cookies;
+  it now says what is set (placeholder words, for counsel with the rest of the notice).

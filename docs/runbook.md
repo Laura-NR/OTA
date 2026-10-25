@@ -154,6 +154,17 @@ The API mounts a dependency-free fixed-window limiter as Express middleware
 - Behind a reverse proxy set `TRUST_PROXY=1` (hop count) or `TRUST_PROXY=true`,
   otherwise every request keys on the proxy IP and shares one bucket.
 
+## Analytics events (T-Events)
+
+The storefront sends consented analytics events, and the essential ones (bookings,
+payments, errors, the cookie choice), to the public `POST /telemetry/events`, under the
+normal rate limit. `TELEMETRY_SINK` selects the sink; `mock` (the default and only one
+until the self-hosted analytics choice) keeps the latest 500 events in memory per
+process and logs one `TelemetrySink` line per batch with event names and screens only.
+Events outside the taxonomy are refused and counted in the response. A signed-in
+visitor's id is an HMAC keyed by `AUTH_SECRET`, so rotating that secret also changes
+every hashed id.
+
 ## Graceful shutdown
 
 On `SIGTERM` or `SIGINT` the API runs Nest's shutdown hooks, then ends with the

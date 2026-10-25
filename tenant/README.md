@@ -44,7 +44,10 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   `docs/pii-at-rest-review.md` for the owner and counsel to review. `legal` holds
   the OFAC certification statement and each consent's words with a version id
   (M3), taken from the Booking and Account boards; counsel must approve them, and
-  any change to the words needs a new version so consent is asked again. The
+  any change to the words needs a new version so consent is asked again.
+  `COOKIES_ANALYTICS` is the cookie banner's analytics words (placeholder, 2026-10-25);
+  there is no `COOKIES_MARKETING`, so the banner offers no marketing switch. The privacy
+  notice's cookies paragraph describes the analytics cookie choice (draft). The
   `conditions` briefing (advisory level, power, fuel) and the `event` strip are
   design samples, not current information, and show a "Sample" badge until
   published. Join's figures (partners, payouts, review time) are the design's

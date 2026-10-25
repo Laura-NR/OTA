@@ -1,56 +1,74 @@
-# Handoff — vereda — updated 2026-10-25 15:00
+# Handoff — vereda — updated 2026-10-25 17:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
 Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
-reduce motion, high contrast and the axe audit) and ADR 0007 (worker app).
+reduce motion, high contrast, the axe audit and Phase 8 item 1, T-Events) and ADR 0007 (worker
+app).
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
-  2–4 are done**, the axe audit included. Commits are local on `vereda`; the owner pushes
+  1–4 are done** (item 1 against a mock sink). Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-25): reduce motion, high contrast and the axe audit**, owner-approved
-  (`@axe-core/playwright` 4.13.0, dev only, exact pin; no migration):
-  - `ota_display` gains `reduce-motion` and `high-contrast` (`5abe936`); copy en/es/fr
-    (`ebd4b20`); the switch's off track darkens under high contrast (`f632888`); the storefront
-    keys the modes on `<html data-motion data-contrast>` in `globals.css`, honours the system's
-    `prefers-contrast: more` too, and the message thread's smooth scroll checks reduced motion
-    (`d22c971`); e2e in `storefront-display.spec.ts` (`103c1f4`).
-  - `e2e/accessibility.spec.ts` (`f1e1131`): axe with the WCAG 2.2 AA tags, plus unique ids, over
-    every customer page (plain, and at 390 px with larger text, reduced motion and high contrast,
-    with the menu open), the traveler account/trip/booking/builder, 26 desk pages and the desk
-    sign-in. It found three problems, fixed: `Table`'s `scrollRegionLabel` (`4140c70`, used by
-    content tables `b19a165`), per-instance ids for the menus' display switches (`2751838`), and
-    labels on every package-form field (`13db4ef`).
+- **This session (2026-10-25, later): Phase 8 item 1, T-Events**, owner-approved (mock sink behind
+  a public log-only route; storefront funnel first; no migration, no dependency):
+  - Domain `packages/domain/src/telemetry/` (`f5a6651`, `468bf54`): the `ota_consent` cookie
+    (versioned per purpose by the tenant's consent words; `needsCookieChoice`,
+    `cookiePermissions`), the taxonomy `TELEMETRY_EVENTS` (events, parameter kinds, essential
+    flag), `admitTelemetryEvent`, path → screen → funnel stage, DS 07 viewport/device buckets.
+  - API `apps/api/src/telemetry/` (`a6f5388`): public `POST /telemetry/events` (202, counts
+    accepted/rejected), `TELEMETRY_SINK` (mock: latest 500 in memory, one log line per batch),
+    HMAC user id keyed by `AUTH_SECRET` on analytics events of a signed-in visitor only. Schema
+    `telemetryBatchSchema` (`aa6238a`); `COOKIE_BANNER` now accepted by `POST /me/consents`
+    (`2fa1035`, it answered 400).
+  - Storefront (`33386d8`, `6c65922`, `8d9c384`): `TelemetryProvider` (queue, common params,
+    `data-analytics-*` click delegation, page_view, errors, connectivity, beacon on leave),
+    `CookieBanner`/`CookieChoices`, `/legal/cookies` with the cookie table, footer link,
+    `TrackEvent` and `ErrorPageEvent`; ~30 events wired (nav, locale, map, filters, results,
+    cards, compare, package, CTAs, builder, booking, payment pages, trip/confirmation,
+    documents, messages, reviews, Join, event request, event strip, 404/500). Copy en/es/fr
+    (`d387c8f`); tenant `COOKIES_ANALYTICS` words and privacy cookies paragraph (placeholders).
+  - e2e (`7c48826`, `763c8bf`): `storefront-telemetry.spec.ts` (Reject, Accept, Cookie settings,
+    consent log), booking events in `storefront-packages.spec.ts`, axe adds `/legal/cookies` and
+    the open banner; every spec starts with analytics refused (`playwright.config.ts`).
+- Earlier the same day: reduce motion, high contrast and the axe audit (`5abe936`…`f1e1131`).
 - Earlier (2026-10-24): Phase 8 item 2 (rem type, larger text, low bandwidth, the PWA and the
   offline kit), the DS 07 widths and M10 (see Decisions).
-- **Not built:** SMS/push, Phase 8 item 1 (T-Events sink); queued offline writes; the
+- **Not built:** SMS/push; the real analytics sink (Q10), desk/worker events and the storefront
+  events not yet in the taxonomy (sort, tiers, departures, galleries, OFAC gate, payment
+  attempts, `search_submitted` on Home); queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's
   deferred items; M10's deferred room holds, event photos and "Keep building the trip"; manual
   keyboard/reading-order checks beyond what axe decides.
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
-  crisis framework, the backup-power wording, the concierge fee and the events copy
+  crisis framework, the backup-power wording, the cookie banner's analytics words and the
+  privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-25, dev stack stopped for the build)
+## Verified (2026-10-25, T-Events batch, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **861 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 318,
-  api 314/27 skipped, schemas 66, config 36, ui 35, email 28, documents 22).
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- `pnpm e2e` (`apps/*/.next` deleted first): **102 passed, 3 skipped** in 25.2 min, first run
-  (adds the five axe audit tests and three display tests; the skips are the desk at
-  320/375/414). Leftover servers stopped by PID.
+- `TURBO_FORCE=true pnpm test` **892 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 340,
+  api 319/27 skipped, schemas 70, config 36, ui 35, email 28, documents 22).
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (`/[locale]/legal/cookies` built).
+- `pnpm e2e` (`apps/*/.next` deleted first): **106 passed, 1 failed, 3 skipped** in 44.3 min. The
+  failure was `ds07-1024` "customer pages … with larger text" timing out on `page.goto` after
+  memory ran out (22/23 GB, the known dev-server growth); after killing the servers by PID,
+  `npx playwright test --project=ds07-1024` passed **4/4**. Skips: the desk at 320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Disproved: with the `data-motion`/`data-contrast` rules and `prefers-contrast` block broken,
-  the three new display tests fail; before the fixes the axe spec failed on `/en/legal/privacy`
-  (390 px, larger text), desk `/packages` and `/packages/[id]`.
-- Browser (Playwright, 390/1024/1280): the menu drawer's four switches, Account › Preferences'
-  Display card, high contrast on Travel info (muted `#4a433d`, border `#6e665e`), the privacy
-  table as a keyboard-scrollable region with an inset ring; `scrollWidth − innerWidth` = 0.
+- Disproved: with the client's consent gate removed, the Reject e2e fails (two analytics events
+  sent); without `COOKIE_BANNER` in the record schema, its new test fails (and live, the banner's
+  consent POST answered 400 before the fix); a cookie without a timestamp parsed as 1970 until
+  the domain test caught it.
+- Browser (Playwright, 390/1024/1280): banner fixed 64 px up at 390 (above the bottom bar), at
+  the bottom from 1024, 720 px wide, max 60 % height with pinned actions, `shadow-lg`, before
+  the header in the DOM; Cookie settings: `scrollWidth − innerWidth` = 0 at all three, the table
+  scrolls in its focusable region at 390 (purpose column 224 px), footer link present. Events
+  reach the sink with 0 rejected across Home → Packages → filter → Package → Destinations →
+  404 (smoke scripts in the session scratchpad).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -63,10 +81,26 @@ reduce motion, high contrast and the axe audit) and ADR 0007 (worker app).
   note on concerts.
 - The dev database holds several Super Admins from old smoke tests; dev data, not M9's.
 - The public `GET /catalog` still returns inventory `supplierId` (pre-existing).
+- **T-Events:** the mock sink keeps events in memory per process (lost on restart, not shared);
+  `market` is not sent (no geolocation); the board's CCPA banner variant is not built. A failed
+  consent-log write after a signed-in banner choice is silent (the cookie still applies).
+  Rotating `AUTH_SECRET` changes every hashed user id. Counsel should review the analytics words
+  and whether the banner's essential/analytics split fits the agency's legal basis.
 - **For the owner:** the items under Next; the storefront's sample "Cuba right now" banner says
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **T-Events (2026-10-25):** every e2e context starts with an `ota_consent` cookie (analytics
+  refused) from `playwright.config.ts` `storageState`, built by `e2e/consent.ts` from the tenant's
+  words version; a spec needing the banner clears it (`context.clearCookies({ name })`). A
+  beacon's body (page being left) is invisible to Playwright (`postDataBuffer()` is null for
+  `ping`), so assert fetch-sent batches (`e2e/telemetry.ts`). A new event or parameter must be in
+  `TELEMETRY_EVENTS` or the sink refuses it, and the dev API must restart to load the rebuilt
+  domain (`touch` a file under `apps/api/src`). Render events use `TrackEvent` with a once-ref
+  (strict mode runs effects twice). A Next hot reload during a browser run remounts the shell and
+  repeats a page_view (looked like a bug; it is not). Next's dev indicator sits over the phone
+  bottom bar's first links in Playwright clicks. The record-consent request lists its sources;
+  a new consent UI needs its source there.
 - **Accessibility batch (2026-10-25):** `AxeBuilder` needs a page from `browser.newContext()`
   (a bare `browser.newPage()` throws "Please use browser.newContext()"); Playwright's `page`
   fixture is fine. Computed colours read back as `color(srgb …)` (and as `oklab(…)` mid
@@ -142,18 +176,25 @@ reduce motion, high contrast and the axe audit) and ADR 0007 (worker app).
     `high-contrast` → `<html data-motion data-contrast>`); the system settings apply the same
     overrides. `e2e/accessibility.spec.ts` runs axe (WCAG 2.2 AA, `@axe-core/playwright`
     4.13.0) plus a unique-id check on customer and desk pages; a new page goes in its list."
+  - "2026-10-25: T-Events: the taxonomy lives in `packages/domain/src/telemetry` and the public
+    `POST /telemetry/events` refuses anything outside it; `TELEMETRY_SINK` (mock) is the sink
+    until Q10. Analytics events need the `ota_consent` cookie's analytics grant for the tenant's
+    current `COOKIES_ANALYTICS` words; booking/payment/error events and `consent_set` are
+    essential and carry no session or user id. Components declare `data-analytics-*` or call
+    `useTelemetry().track()`; e2e contexts start with analytics refused."
 
 ## Next
-1. Owner: choose the next batch — Phase 8 item 1 (T-Events: the consent-gated client can be built
-   against a mock sink; the real sink is Q10), one of M9's deferred items (permission overrides,
-   display currencies, runtime feature flags, recovery codes, a passkey policy) or M10's room
-   holds/event photos (each needs a migration doc first), or a manual keyboard/screen-reader pass
-   on the A-A11y desk rules (shortcuts, alert announcements) that axe cannot decide.
+1. Owner: choose the next batch — T-Events follow-ups (desk events with `role`, the missing
+   storefront events), the real analytics sink (Q10: self-hosted Matomo or Plausible, an
+   account/deployment decision), one of M9's deferred items (permission overrides, display
+   currencies, runtime feature flags, recovery codes, a passkey policy) or M10's room holds/event
+   photos (each needs a migration doc first), or a manual keyboard/screen-reader pass on the
+   A-A11y desk rules that axe cannot decide.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
-   texts (now including the events copy and the M10 invoice question), OFAC categories, card
-   surcharge, deposit refundability and proof retention, the passport-key backup, the
-   backup-power wording, the staff email domain, raster app icons from Vereda, the AGENTS.md §C
-   lines above. Then SMS once a provider is chosen.
+   texts (now including the events copy, the M10 invoice question and the cookie words), OFAC
+   categories, card surcharge, deposit refundability and proof retention, the passport-key
+   backup, the backup-power wording, the staff email domain, raster app icons from Vereda, the
+   AGENTS.md §C lines above. Then SMS once a provider is chosen.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -470,3 +511,9 @@ reduce motion, high contrast and the axe audit) and ADR 0007 (worker app).
   the handoff had proposed 4.11.x). The build resolved high contrast from existing tokens (alias
   text and border steps darker, also under `prefers-contrast: more`) and worded Reduce motion's
   help "No animations or transitions" (nothing cross-fades at 0 ms); ADR 0006 amendment.
+- 2026-10-25 — the owner chose Phase 8 item 1 (T-Events) next, against a mock sink behind a public
+  API route that only logs, on the storefront funnel first. The build resolved: the taxonomy is
+  enforced by the sink (unknown events/parameters refused), the funnel stage is derived
+  server-side, the user id is an HMAC keyed by `AUTH_SECRET`, `consent_set` is essential, no
+  marketing switch for a tenant without marketing words, and the banner is a non-modal region
+  (ADR 0006 amendment).
