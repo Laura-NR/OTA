@@ -210,11 +210,15 @@ export const TELEMETRY_EVENTS = {
     provinces: 'ids',
     pace: 'id',
   }),
-  /** The Booking form's choices: a departure (step 1) and an accommodation tier (step 2). */
+  /**
+   * The Booking form's choices: a departure (step 1) and an accommodation tier
+   * (step 2). A departure states its capacity; seats left are not known
+   * before the server's places check.
+   */
   departure_selected: event({
     package_id: 'id',
     departure_date: 'id',
-    seats_left: 'count',
+    capacity: 'count',
   }),
   tier_selected: event({ package_id: 'id', tier: 'id', delta: 'delta' }),
   booking_started: event({ package_id: 'id' }, true),
@@ -308,7 +312,7 @@ export const TELEMETRY_EVENTS = {
     decision: ['approved', 'rejected', 'changes_requested'],
   }),
   /** An assistant reply draft that was sent; `edited_ratio` 0 is sent as drafted. */
-  ai_draft_used: deskEvent({ context: ['reply'], edited_ratio: 'amount', locale: 'id' }),
+  ai_draft_used: deskEvent({ context: ['reply'], edited_ratio: 'amount' }),
   /**
    * A desk state where work stops: an empty queue, an action the role may not
    * take, or the live feed lost.

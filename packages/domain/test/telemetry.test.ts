@@ -338,7 +338,7 @@ describe('event admission', () => {
       results('departure_selected', {
         package_id: 'p',
         departure_date: '2027-05-01',
-        seats_left: 6,
+        capacity: 12,
       }),
     ).toBe(true);
     expect(results('ofac_category_selected', { category: 'FAMILY_VISITS' })).toBe(true);
@@ -502,9 +502,7 @@ describe('desk events', () => {
     expect(results('approval_decided', { kind: 'discount', decision: 'approved' })).toBe(
       false,
     );
-    expect(
-      results('ai_draft_used', { context: 'reply', edited_ratio: 0.25, locale: 'es' }),
-    ).toBe(true);
+    expect(results('ai_draft_used', { context: 'reply', edited_ratio: 0.25 })).toBe(true);
     expect(results('ai_draft_used', { body: 'Hola' })).toBe(false);
     expect(results('admin_state_shown', { kind: 'degraded' })).toBe(true);
   });
