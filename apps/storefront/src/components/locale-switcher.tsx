@@ -18,6 +18,10 @@ export function LocaleSwitcher() {
           key={candidate}
           href={pathname}
           locale={candidate}
+          data-analytics-event="locale_changed"
+          data-analytics-from={locale}
+          data-analytics-to={candidate}
+          data-analytics-kind="locale"
           className={cn(
             'rounded px-1.5 py-0.5 transition-colors',
             candidate === locale

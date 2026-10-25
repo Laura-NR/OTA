@@ -44,6 +44,9 @@ export default async function SupportPage() {
               <a
                 href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`}
                 className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+                data-analytics-event="specialist_contacted"
+                data-analytics-channel="whatsapp"
+                data-analytics-context-id="support"
               >
                 {t('openWhatsapp')}
               </a>

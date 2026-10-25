@@ -33,6 +33,8 @@ export function BottomNav({ signedIn }: { signedIn: boolean }) {
             key={link.key}
             href={link.href}
             aria-current={current ? 'page' : undefined}
+            data-analytics-event="nav_clicked"
+            data-analytics-nav="bottom"
             className={cn(
               'flex flex-1 flex-col items-center justify-center gap-1 text-caption',
               current ? 'font-bold text-primary-700' : 'text-secondary',

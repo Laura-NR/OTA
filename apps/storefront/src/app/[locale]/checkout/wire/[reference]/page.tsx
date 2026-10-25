@@ -6,6 +6,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
 import { CopyButton } from '@/components/copy-button';
+import { TrackEvent } from '@/components/telemetry/track-event';
 import { Link } from '@/i18n/navigation';
 import { apiFetch } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
@@ -90,6 +91,12 @@ export default async function WireCheckoutPage({
 
   return (
     <div className="mx-auto flex w-full max-w-container flex-col gap-6 px-6 py-8 md:px-8 lg:px-10">
+      {intent && intent.status !== 'PAID' ? (
+        <TrackEvent
+          event="payment_window_viewed"
+          params={{ booking_code: intent.reference, method: 'transfer' }}
+        />
+      ) : null}
       {intent && bank ? (
         intent.status === 'PAID' ? (
           <Alert variant="success" title={t('paidTitle')}>

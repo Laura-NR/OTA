@@ -22,13 +22,29 @@ type FooterLink =
 const link =
   'text-body-sm text-neutral-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500';
 
+/** T-Events: internal links are footer navigation; WhatsApp reaches a specialist. */
 function FooterAnchor({ item, className }: { item: FooterLink; className?: string }) {
   return item.external ? (
-    <a href={item.href} className={className ?? link}>
+    <a
+      href={item.href}
+      className={className ?? link}
+      {...(item.href.startsWith('https://wa.me/')
+        ? {
+            'data-analytics-event': 'specialist_contacted',
+            'data-analytics-channel': 'whatsapp',
+            'data-analytics-context-id': 'footer',
+          }
+        : {})}
+    >
       {item.label}
     </a>
   ) : (
-    <Link href={item.href} className={className ?? link}>
+    <Link
+      href={item.href}
+      className={className ?? link}
+      data-analytics-event="nav_clicked"
+      data-analytics-nav="footer"
+    >
       {item.label}
     </Link>
   );

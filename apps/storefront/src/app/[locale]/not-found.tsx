@@ -2,6 +2,7 @@ import { buttonClassName } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
 import { ErrorReference } from '@/components/error-reference';
+import { ErrorPageEvent } from '@/components/telemetry/error-page-event';
 import { Link } from '@/i18n/navigation';
 
 /** Errors board · 404: what happened, nothing booked is affected, three ways back. */
@@ -10,6 +11,7 @@ export default async function NotFound() {
 
   return (
     <div className="mx-auto flex max-w-container flex-col gap-6 px-6 py-16 md:px-8 lg:px-10">
+      <ErrorPageEvent kind="not_found" />
       <p aria-hidden="true" className="font-display text-display-1 text-secondary-600">
         404
       </p>

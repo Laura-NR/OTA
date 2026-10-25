@@ -16,6 +16,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
 import { ReviewForm } from '@/components/review-form';
+import { TrackEvent } from '@/components/telemetry/track-event';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -281,6 +282,10 @@ export default async function ConfirmationPage({
 
   return (
     <div className="mx-auto flex w-full max-w-container flex-col gap-7 px-6 py-8 md:px-8 md:py-10 lg:px-10">
+      <TrackEvent
+        event="booking_confirmed"
+        params={{ booking_code: reservation.bookingCode }}
+      />
       <Link
         href={tripPath}
         className="self-start text-body-sm text-primary-600 underline underline-offset-[3px]"
@@ -325,6 +330,9 @@ export default async function ConfirmationPage({
                 target="_blank"
                 rel="noreferrer"
                 className={buttonClassName()}
+                data-analytics-event="document_downloaded"
+                data-analytics-booking-code={reservation.bookingCode}
+                data-analytics-doc-type={voucher.type}
               >
                 <Icon name="download" className="h-5 w-5" />
                 {t('downloadVoucher')}
@@ -425,6 +433,9 @@ export default async function ConfirmationPage({
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center gap-3 rounded-lg border bg-surface px-4 py-3.5 text-default hover:bg-neutral-100"
+                      data-analytics-event="document_downloaded"
+                      data-analytics-booking-code={reservation.bookingCode}
+                      data-analytics-doc-type={document.type}
                     >
                       <Icon
                         name="file-text"
@@ -505,7 +516,11 @@ export default async function ConfirmationPage({
           {reservation.status === 'COMPLETED' ? (
             <section aria-labelledby="review-title" className={panel}>
               {sectionHead('review-title', trv('title'))}
-              <ReviewForm reservationId={reservation.id} review={reservation.review} />
+              <ReviewForm
+                reservationId={reservation.id}
+                bookingCode={reservation.bookingCode}
+                review={reservation.review}
+              />
             </section>
           ) : null}
 

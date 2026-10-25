@@ -4,6 +4,7 @@ import { Button, cn, Icon, Tabs, type TabItem } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { MAX_COMPARE } from '@/lib/compare-limits';
 import { useCompareSelection } from '@/lib/compare-selection';
 
@@ -11,6 +12,7 @@ import { useCompareSelection } from '@/lib/compare-selection';
 export function PackageActions({ slug, name }: { slug: string; name: string }) {
   const t = useTranslations('packages.detail');
   const compare = useCompareSelection();
+  const { track } = useTelemetry();
   const [shared, setShared] = useState<'copied' | 'failed' | null>(null);
   const on = compare.selected.includes(slug);
   const full = !on && compare.selected.length >= MAX_COMPARE;
@@ -30,7 +32,15 @@ export function PackageActions({ slug, name }: { slug: string; name: string }) {
         variant="secondary"
         aria-pressed={on}
         disabled={full}
-        onClick={() => compare.toggle(slug)}
+        onClick={() => {
+          if (!on) {
+            track('compare_added', {
+              package_id: slug,
+              count: compare.selected.length + 1,
+            });
+          }
+          compare.toggle(slug);
+        }}
         className={cn(on && 'border-primary-600 bg-primary-50')}
       >
         <Icon name="columns" />

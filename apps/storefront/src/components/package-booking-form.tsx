@@ -51,12 +51,21 @@ export function PackageBookingForm({
           <Link
             href={`/login?next=${encodeURIComponent(bookPath)}`}
             className={buttonClassName({ size: 'lg' })}
+            data-analytics-event="cta_click"
+            data-analytics-cta="sign_in_to_book"
+            data-analytics-context-id={slug}
           >
             {t('signIn')}
           </Link>
         </div>
       ) : (
-        <Link href={bookPath} className={buttonClassName({ size: 'lg' })}>
+        <Link
+          href={bookPath}
+          className={buttonClassName({ size: 'lg' })}
+          data-analytics-event="cta_click"
+          data-analytics-cta="book"
+          data-analytics-context-id={slug}
+        >
           {t('book')}
         </Link>
       )}
@@ -69,6 +78,9 @@ export function PackageBookingForm({
         <Link
           href="/support#contact"
           className={cn(buttonClassName({ variant: 'secondary' }), 'flex-1')}
+          data-analytics-event="specialist_contacted"
+          data-analytics-channel="form"
+          data-analytics-context-id={slug}
         >
           <Icon name="message-circle" />
           {t('detail.ask')}
@@ -77,6 +89,9 @@ export function PackageBookingForm({
           <a
             href={`tel:${supportPhone.replace(/[^\d+]/g, '')}`}
             className={cn(buttonClassName({ variant: 'tertiary' }), 'flex-1')}
+            data-analytics-event="specialist_contacted"
+            data-analytics-channel="phone"
+            data-analytics-context-id={slug}
           >
             {t('detail.call')}
           </a>

@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
+
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 const CATEGORIES = [
@@ -46,6 +48,7 @@ export function ApplicationForm({
   agencyName: string;
 }) {
   const t = useTranslations('join');
+  const { track } = useTelemetry();
   const [step, setStep] = useState<Step>('category');
   const [draft, setDraft] = useState<Draft>({
     category: null,
@@ -121,6 +124,7 @@ export function ApplicationForm({
       if (!response.ok) {
         throw new Error(t('error'));
       }
+      track('join_submitted', draft.category ? { category: draft.category } : {});
       setStatus('sent');
     } catch (submitError) {
       setStatus('error');

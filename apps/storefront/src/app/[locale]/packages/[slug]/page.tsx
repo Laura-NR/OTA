@@ -14,6 +14,7 @@ import { PackageBookingForm } from '@/components/package-booking-form';
 import { BookingModelPill, PackageCard } from '@/components/package-card';
 import { PackageActions, PackageTabs } from '@/components/packages/package-actions';
 import { SectionHead } from '@/components/section-head';
+import { TrackEvent } from '@/components/telemetry/track-event';
 import { Link, permanentRedirect } from '@/i18n/navigation';
 import { advisoriesForProvinces, getActiveAdvisories } from '@/lib/advisories';
 import { getServerSession } from '@/lib/api';
@@ -423,6 +424,15 @@ export default async function PackageDetailPage({
 
   return (
     <div className="flex flex-col gap-10 pb-20 pt-6">
+      <TrackEvent
+        event="package_viewed"
+        params={{
+          package_id: pkg.slug,
+          booking_model: instant ? 'instant' : 'request',
+          price_from: Number(pkg.basePrice),
+          currency: pkg.currency,
+        }}
+      />
       <div className={cn(wrap, 'flex flex-col gap-4')}>
         <Breadcrumb
           label={t('breadcrumb')}

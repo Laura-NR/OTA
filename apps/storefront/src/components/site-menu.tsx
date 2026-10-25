@@ -84,6 +84,8 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
                         href={link.href}
                         onClick={close}
                         aria-current={current ? 'page' : undefined}
+                        data-analytics-event="nav_clicked"
+                        data-analytics-nav={variant === 'header' ? 'top' : 'bottom'}
                         className={cn(
                           'flex h-12 items-center px-1 text-body',
                           current ? 'font-semibold text-primary-700' : 'text-default',

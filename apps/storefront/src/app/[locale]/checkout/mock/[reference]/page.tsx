@@ -9,6 +9,7 @@ import {
 } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
+import { TrackEvent } from '@/components/telemetry/track-event';
 import { Link } from '@/i18n/navigation';
 
 /**
@@ -26,6 +27,7 @@ export default async function MockCheckoutPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
+      <TrackEvent event="payment_window_viewed" params={{ method: 'card' }} />
       <Card>
         <CardHeader>
           <CardTitle>{t('mockTitle')}</CardTitle>

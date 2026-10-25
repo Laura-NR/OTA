@@ -3,6 +3,7 @@
 import { Button, buttonClassName } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 
+import { ErrorPageEvent } from '@/components/telemetry/error-page-event';
 import { Link } from '@/i18n/navigation';
 
 /**
@@ -21,6 +22,7 @@ export default function ErrorPage({
 
   return (
     <div className="mx-auto flex max-w-container flex-col gap-6 px-6 py-16 md:px-8 lg:px-10">
+      <ErrorPageEvent kind="server" />
       <h1 className="text-h1-compact text-default md:text-h1">{t('title')}</h1>
       <p className="max-w-prose text-body-lg text-secondary">{t('text')}</p>
       <div className="flex flex-wrap gap-3">

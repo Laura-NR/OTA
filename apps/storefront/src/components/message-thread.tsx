@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { prefersReducedMotion } from '@/lib/display';
 
 /**
@@ -22,7 +23,19 @@ import { prefersReducedMotion } from '@/lib/display';
  * HTTP and replies post through the same endpoint the email fallback hangs off;
  * the socket only feeds the back-office, so the storefront refreshes on send.
  */
-export function MessageThread({ reservationId }: { reservationId: string }) {
+/** T-Events `message_sent` carries the message's size, never its words. */
+function lengthBucket(text: string): 'short' | 'medium' | 'long' {
+  return text.length <= 80 ? 'short' : text.length <= 400 ? 'medium' : 'long';
+}
+
+export function MessageThread({
+  reservationId,
+  bookingCode,
+}: {
+  reservationId: string;
+  bookingCode: string;
+}) {
+  const { track } = useTelemetry();
   const t = useTranslations('account.messages');
   const tSender = useTranslations('account.sender');
   const [messages, setMessages] = useState<MessageDto[]>([]);
@@ -78,6 +91,10 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         throw new Error(t('sendError'));
       }
       const message = (await response.json()) as MessageDto;
+      track('message_sent', {
+        booking_code: bookingCode,
+        length_bucket: lengthBucket(trimmed),
+      });
       setMessages((current) => [...current, message]);
       setBody('');
     } catch (sendError) {

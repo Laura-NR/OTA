@@ -35,8 +35,9 @@ import {
   cn,
 } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
 import type { CountryOption } from '@/lib/countries';
 import { formatMoney, plainSpaces } from '@/lib/format';
@@ -175,6 +176,17 @@ export function BookingFlow({
   const heading = useRef<HTMLHeadingElement>(null);
 
   const [step, setStep] = useState<Step>(1);
+  const { track } = useTelemetry();
+  const stepStarted = useRef(0);
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) {
+      return;
+    }
+    started.current = true;
+    stepStarted.current = Date.now();
+    track('booking_started', { package_id: pkg.slug });
+  }, [pkg.slug, track]);
   const [departureId, setDepartureId] = useState(departures[0]?.id ?? '');
   const [drafts, setDrafts] = useState<Record<TravelerKind, TravelerDraft[]>>(() => {
     const words = leadName.trim().split(/\s+/).filter(Boolean);
@@ -295,6 +307,14 @@ export function BookingFlow({
     consentGroups.every((group) => agreed[group.key]);
 
   function go(next: Step) {
+    if (next > step) {
+      track('booking_step_completed', {
+        from_step: step,
+        to_step: next,
+        time_on_step_ms: Date.now() - stepStarted.current,
+      });
+    }
+    stepStarted.current = Date.now();
     setStep(next);
     setShowErrors(false);
     setError(null);
@@ -442,6 +462,13 @@ export function BookingFlow({
         );
       }
       const booking = (await response.json()) as { id: string; bookingCode: string };
+      track('booking_submitted', {
+        booking_code: booking.bookingCode,
+        package_id: pkg.slug,
+        total: price.total,
+        currency: pkg.currency,
+        travelers: price.partySize,
+      });
       setSent({ id: booking.id, bookingCode: booking.bookingCode });
       window.scrollTo({ top: 0 });
       requestAnimationFrame(() => heading.current?.focus());

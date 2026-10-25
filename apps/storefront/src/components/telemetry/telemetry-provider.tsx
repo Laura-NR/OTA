@@ -115,8 +115,18 @@ export function TelemetryProvider({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const memorySession = useRef<string | null>(null);
   const lastPath = useRef<string | null>(null);
-  const viewSent = useRef(false);
+  /** Whether this screen's page_view went out with analytics consent. */
+  const viewCounted = useRef(false);
   const errors = useRef(0);
+
+  /** True once this tab has an analytics session (sessionStorage outlives a remount). */
+  const hasSession = useCallback((): boolean => {
+    try {
+      return window.sessionStorage.getItem(TELEMETRY_SESSION_KEY) !== null;
+    } catch {
+      return memorySession.current !== null;
+    }
+  }, []);
 
   const sessionId = useCallback((): string => {
     try {
@@ -201,8 +211,11 @@ export function TelemetryProvider({
   );
 
   const pageView = useCallback(() => {
-    const params: Record<string, ParamValue> = { entry: !viewSent.current };
-    if (!viewSent.current) {
+    // The tab's first counted view is its entry; only an entry carries where
+    // the visitor came from.
+    const entry = !hasSession();
+    const params: Record<string, ParamValue> = { entry };
+    if (entry) {
       const referrer = document.referrer ? new URL(document.referrer) : null;
       if (referrer && referrer.host !== window.location.host) {
         params.referrer_host = referrer.hostname;
@@ -215,11 +228,12 @@ export function TelemetryProvider({
         }
       }
     }
-    if (level.current !== 'essential') {
-      viewSent.current = true;
-    }
+    viewCounted.current = level.current !== 'essential';
     track('page_view', params);
-  }, [track]);
+  }, [hasSession, track]);
+
+  // A locale switch remounts the [locale] layout: send what is queued first.
+  useEffect(() => () => flush(true), [flush]);
 
   // One page_view per screen render; filter changes in the query are not views.
   useEffect(() => {
@@ -341,14 +355,16 @@ export function TelemetryProvider({
         }
         memorySession.current = null;
       }
+      // This screen's view first: it is the tab's entry, before the choice
+      // event starts the session.
+      if (level.current !== 'essential' && !viewCounted.current) {
+        pageView();
+      }
       track('consent_set', {
         analytics: next.analytics,
         marketing: next.marketing,
         source,
       });
-      if (level.current !== 'essential' && !viewSent.current) {
-        pageView();
-      }
       flush();
 
       if (signedIn) {

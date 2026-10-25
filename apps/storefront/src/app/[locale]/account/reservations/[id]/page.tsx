@@ -32,6 +32,7 @@ import { TripProgress } from '@/components/account/trip-progress';
 import { MessageThread } from '@/components/message-thread';
 import { OfflineKitCard } from '@/components/offline/offline-kit-card';
 import { ReviewForm } from '@/components/review-form';
+import { TrackEvent } from '@/components/telemetry/track-event';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -118,6 +119,10 @@ export default async function AccountReservationPage({
       counts={{}}
       emergency={tenant.emergencyContacts[0] ?? null}
     >
+      <TrackEvent
+        event="booking_status_viewed"
+        params={{ booking_code: reservation.bookingCode, status: reservation.status }}
+      />
       <header className="flex flex-col gap-3">
         <Link
           href="/account?tab=trips"
@@ -337,6 +342,9 @@ export default async function AccountReservationPage({
                   href={`/api/ota/documents/${document.id}/download`}
                   target="_blank"
                   rel="noreferrer"
+                  data-analytics-event="document_downloaded"
+                  data-analytics-booking-code={reservation.bookingCode}
+                  data-analytics-doc-type={document.type}
                 >
                   {t('download')}
                 </a>
@@ -357,12 +365,19 @@ export default async function AccountReservationPage({
           <h2 id="review-title" className="text-h4 text-default">
             {trv('title')}
           </h2>
-          <ReviewForm reservationId={reservation.id} review={reservation.review} />
+          <ReviewForm
+            reservationId={reservation.id}
+            bookingCode={reservation.bookingCode}
+            review={reservation.review}
+          />
         </section>
       ) : null}
 
       <div id="messages" className="scroll-mt-24">
-        <MessageThread reservationId={reservation.id} />
+        <MessageThread
+          reservationId={reservation.id}
+          bookingCode={reservation.bookingCode}
+        />
       </div>
     </AccountShell>
   );

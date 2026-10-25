@@ -55,10 +55,13 @@ export function PackageCard({
   pkg,
   instant,
   compare,
+  position,
 }: {
   pkg: PackageDto;
   instant: boolean;
   compare?: ReactNode;
+  /** The card's place in a result list (1-based), for T-Events `search_result_clicked`. */
+  position?: number;
 }) {
   const t = useTranslations('packages');
   const common = useTranslations('pages.common');
@@ -70,6 +73,14 @@ export function PackageCard({
     HIGHLIGHTS,
   );
   const href = `/packages/${pkg.slug}`;
+  const analytics =
+    position === undefined
+      ? {}
+      : {
+          'data-analytics-event': 'search_result_clicked',
+          'data-analytics-package-id': pkg.slug,
+          'data-analytics-position': position,
+        };
 
   return (
     <article className="flex w-full min-w-0 flex-col overflow-hidden rounded-lg border bg-surface shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -91,7 +102,7 @@ export function PackageCard({
         <div className="flex flex-col gap-1">
           <p className="text-overline uppercase text-muted">{length}</p>
           <h3 className="font-display text-h2-compact text-default">
-            <Link href={href} className="hover:text-primary-700">
+            <Link href={href} className="hover:text-primary-700" {...analytics}>
               {pkg.name}
             </Link>
           </h3>
@@ -119,7 +130,7 @@ export function PackageCard({
           <BookingModelPill instant={instant} />
         </div>
         <div className="flex gap-2">
-          <Link href={href} className={cn(buttonClassName(), 'flex-1')}>
+          <Link href={href} className={cn(buttonClassName(), 'flex-1')} {...analytics}>
             {t('viewTrip')}
           </Link>
           {compare}

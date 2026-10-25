@@ -60,6 +60,10 @@ async function EventBanner() {
   }
   const t = await getTranslations('pages.common');
   const href = content.eventSlug ? `/events/${content.eventSlug}` : '/events';
+  const analytics = {
+    'data-analytics-event': 'event_banner_clicked',
+    'data-analytics-action': content.eventSlug ? 'request_access' : 'all_events',
+  };
 
   return (
     <div className="bg-neutral-900 text-neutral-0">
@@ -74,6 +78,7 @@ async function EventBanner() {
         </p>
         <Link
           href={href}
+          {...analytics}
           className={cn(
             buttonClassName({ variant: 'secondary', size: 'sm' }),
             'hidden border-transparent text-neutral-900 focus-visible:outline-accent-500 md:inline-flex',
@@ -83,6 +88,7 @@ async function EventBanner() {
         </Link>
         <Link
           href={href}
+          {...analytics}
           aria-label={content.cta}
           className="text-accent-500 focus-visible:outline-accent-500 md:hidden"
         >

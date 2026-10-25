@@ -12,6 +12,7 @@ import type { BadgeVariant } from '@ota/ui';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
 import { formatMoney } from '@/lib/format';
 import type { DestinationView, ProvinceView } from '@/lib/geography';
@@ -92,6 +93,7 @@ export function DestinationsExplorer({
   const [selected, setSelected] = useState<string | null>(initialProvince);
   const [theme, setTheme] = useState('all');
   const [route, setRoute] = useState<string[]>([]);
+  const { track } = useTelemetry();
 
   const byCode = new Map(provinces.map((province) => [province.code, province]));
   const updatedLabel = format.dateTime(new Date(`${updated}T12:00:00Z`), {
@@ -138,15 +140,25 @@ export function DestinationsExplorer({
           hours: format.number(roadHours(Math.abs(km)), { maximumFractionDigits: 1 }),
         });
 
-  function pick(code: string) {
+  /** `source` is where the province was tapped (T-Events `map_province_*`). */
+  function pick(code: string, source: 'map' | 'strip' | 'list' = 'map') {
     const province = byCode.get(code);
     if (!province) {
       return;
+    }
+    if (province.network === 'none' && selected !== code) {
+      // A province the network does not cover yet: the demand signal.
+      track('map_province_unavailable', { province_id: code, source });
+    } else if (province.network !== 'none' && layer !== 'route' && selected !== code) {
+      track('map_province_selected', { province_id: code, source });
     }
     if (layer === 'route') {
       if (province.network === 'none') {
         setSelected(code);
         return;
+      }
+      if (!route.includes(code)) {
+        track('map_route_added', { province_id: code, route_length: route.length + 1 });
       }
       setRoute((current) => toggleRouteStop(current, code));
       setSelected(null);
@@ -190,7 +202,7 @@ export function DestinationsExplorer({
         type="button"
         aria-pressed={on}
         aria-label={describe(province)}
-        onClick={() => pick(province.code)}
+        onClick={() => pick(province.code, stacked ? 'strip' : 'list')}
         className={cn(
           'flex min-w-0 rounded-md border bg-surface px-3 text-left transition-colors hover:border-primary-600',
           stacked

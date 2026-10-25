@@ -30,8 +30,9 @@ import {
   cn,
 } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
 import type { CountryOption } from '@/lib/countries';
 import { formatMoney, plainSpaces } from '@/lib/format';
@@ -100,6 +101,17 @@ export function CustomBuilder({
   const locale = useLocale();
   const heading = useRef<HTMLHeadingElement>(null);
   const [step, setStep] = useState(1);
+  const { track } = useTelemetry();
+  const stepStarted = useRef(0);
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) {
+      return;
+    }
+    started.current = true;
+    stepStarted.current = Date.now();
+    track('builder_started');
+  }, [track]);
   const [arrival, setArrival] = useState('');
   const [nightsTotal, setNightsTotal] = useState(10);
   const [adults, setAdults] = useState(2);
@@ -191,6 +203,16 @@ export function CustomBuilder({
   const nightsLabel = t('route.stopNights', { count: nightsTotal });
 
   function go(next: number) {
+    if (next > step) {
+      track('builder_step_completed', {
+        from_step: step,
+        to_step: next,
+        time_on_step_ms: Date.now() - stepStarted.current,
+        nights: nightsTotal,
+        provinces_count: route.length,
+      });
+    }
+    stepStarted.current = Date.now();
     setStep(next);
     setError(null);
     requestAnimationFrame(() => heading.current?.focus());
@@ -254,7 +276,14 @@ export function CustomBuilder({
       if (!response.ok) {
         throw new Error(t('summary.error'));
       }
-      setSent((await response.json()) as SentRequest);
+      const request = (await response.json()) as SentRequest;
+      track('proposal_requested', {
+        request_id: request.reference,
+        nights: nightsTotal,
+        provinces: route.map((stop) => stop.province),
+        pace,
+      });
+      setSent(request);
       window.scrollTo({ top: 0 });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : t('summary.error'));

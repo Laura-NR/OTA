@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { packageMediaId } from '@/components/package-card';
+import { TrackEvent } from '@/components/telemetry/track-event';
 import {
   CompareFromSelection,
   CompareView,
@@ -114,6 +115,12 @@ export default async function ComparePage({
 
   return (
     <div className="mx-auto flex w-full max-w-container flex-col gap-8 px-6 py-8 md:px-8 lg:px-10">
+      {trips.length > 0 ? (
+        <TrackEvent
+          event="compare_viewed"
+          params={{ package_ids: trips.map((pkg) => pkg.slug), count: trips.length }}
+        />
+      ) : null}
       <Breadcrumb
         label={tp('breadcrumb')}
         items={[
@@ -164,6 +171,9 @@ export default async function ComparePage({
               <a
                 href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                 className={cn(buttonClassName({ variant: 'secondary' }), WRAPPING_BUTTON)}
+                data-analytics-event="specialist_contacted"
+                data-analytics-channel="whatsapp"
+                data-analytics-context-id="compare"
               >
                 {t('whatsapp')}
               </a>

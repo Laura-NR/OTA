@@ -30,6 +30,8 @@ export function PrimaryNav() {
             key={link.key}
             href={link.href}
             aria-current={current ? 'page' : undefined}
+            data-analytics-event="nav_clicked"
+            data-analytics-nav="top"
             className={cn(
               'border-b-2 px-1 py-2.5 text-nav transition-colors',
               current

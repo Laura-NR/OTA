@@ -3,8 +3,10 @@
 import {
   DURATION_BUCKETS,
   PACKAGE_SORTS,
+  filterChanges,
   packageProvinces,
   searchPackages,
+  telemetryId,
   type DurationBucketId,
   type PackageSort,
 } from '@ota/domain';
@@ -20,9 +22,10 @@ import {
   Select,
 } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { PackageCard } from '@/components/package-card';
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link, usePathname } from '@/i18n/navigation';
 import { MAX_COMPARE, MIN_COMPARE } from '@/lib/compare-limits';
 import { useCompareSelection } from '@/lib/compare-selection';
@@ -35,6 +38,23 @@ const SORT_KEYS: Record<PackageSort, string> = {
   'price-desc': 'priceDesc',
   'duration-asc': 'durationAsc',
 };
+
+/**
+ * The active filters as T-Events filter values: ids, never what was typed
+ * (a text search is only "on"), province names as ids.
+ */
+function filterValues(query: PackageQuery): Record<string, string[]> {
+  return {
+    query: query.query ? ['text'] : [],
+    province: query.provinces.map(telemetryId),
+    duration: query.durations,
+    price: [
+      ...(query.minPrice !== null ? [`min-${query.minPrice}`] : []),
+      ...(query.maxPrice !== null ? [`max-${query.maxPrice}`] : []),
+    ],
+    power: query.power ? ['on'] : [],
+  };
+}
 
 const EMPTY: Omit<PackageQuery, 'sort'> = {
   query: '',
@@ -71,6 +91,8 @@ export function PackagesBrowser({
   const [query, setQuery] = useState(initial);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const compare = useCompareSelection();
+  const { track } = useTelemetry();
+  const tracked = useRef<{ key: string; values: Record<string, string[]> } | null>(null);
 
   const shown = searchPackages(packages, toCriteria(query));
   const currency = packages[0]?.currency ?? 'EUR';
@@ -84,6 +106,38 @@ export function PackagesBrowser({
       window.history.replaceState(null, '', url);
     }
   }, [query, pathname]);
+
+  // T-Events: each filter value added or removed, then the results it gave
+  // (a zero-result set is where people leave). Sorting is not a new search.
+  const resultsCount = shown.length;
+  useEffect(() => {
+    const key = packageQueryString({ ...query, sort: 'recommended' });
+    if (tracked.current?.key === key) {
+      return;
+    }
+    const values = filterValues(query);
+    const { applied, removed, activeCount } = filterChanges(
+      tracked.current?.values ?? {},
+      values,
+    );
+    tracked.current = { key, values };
+    for (const [event, changes] of [
+      ['filter_applied', applied],
+      ['filter_removed', removed],
+    ] as const) {
+      for (const change of changes) {
+        track(event, {
+          filter_name: change.name,
+          filter_value: change.value,
+          active_filters_count: activeCount,
+        });
+      }
+    }
+    track('search_results_loaded', {
+      results_count: resultsCount,
+      zero_results: resultsCount === 0,
+    });
+  }, [query, resultsCount, track]);
 
   const provinceCounts = new Map<string, number>();
   for (const pkg of packages) {
@@ -390,7 +444,7 @@ export function PackagesBrowser({
             </div>
           ) : (
             <ul className="grid gap-6 xl:grid-cols-2">
-              {shown.map((pkg) => {
+              {shown.map((pkg, index) => {
                 const on = compare.selected.includes(pkg.slug);
                 const full = !on && compare.selected.length >= MAX_COMPARE;
                 return (
@@ -398,6 +452,7 @@ export function PackagesBrowser({
                     <PackageCard
                       pkg={pkg}
                       instant={instant}
+                      position={index + 1}
                       compare={
                         <label
                           className={cn(
@@ -414,7 +469,15 @@ export function PackagesBrowser({
                             className="h-5 w-5 accent-primary-600"
                             checked={on}
                             disabled={full}
-                            onChange={() => compare.toggle(pkg.slug)}
+                            onChange={() => {
+                              if (!on) {
+                                track('compare_added', {
+                                  package_id: pkg.slug,
+                                  count: compare.selected.length + 1,
+                                });
+                              }
+                              compare.toggle(pkg.slug);
+                            }}
                           />
                           {t('compare')}
                           <span className="sr-only"> {pkg.name}</span>

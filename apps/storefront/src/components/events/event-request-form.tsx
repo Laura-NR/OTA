@@ -18,6 +18,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
 import type { CountryOption } from '@/lib/countries';
 import { nightLabel } from '@/lib/event-dates';
@@ -77,6 +78,7 @@ export function EventRequestForm({
   usNote: string | null;
 }) {
   const t = useTranslations('events.request');
+  const { track } = useTelemetry();
   const locale = useLocale();
   const [step, setStep] = useState(1);
   const [categoryId, setCategoryId] = useState(event.categories[0]?.id ?? '');
@@ -167,6 +169,7 @@ export function EventRequestForm({
         throw new Error(t('error'));
       }
       setSent((await response.json()) as Sent);
+      track('concierge_request_submitted', { event_id: event.slug, tickets: seats });
       setStep(4);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : t('error'));
