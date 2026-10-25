@@ -47,18 +47,22 @@ async function startTransfer(reservationId: string, plan?: Plan): Promise<string
 
 /**
  * Start the transfer and report it (T-Events `payment_attempted`, then
- * `payment_failed` when refused); on success the browser leaves for the
- * wire page, and the shell's beacon carries the attempt.
+ * `payment_failed` when refused).
  */
 function useStartTransfer(reservationId: string, bookingCode: string) {
   const { track } = useTelemetry();
   return async (plan?: Plan): Promise<string> => {
     const started = Date.now();
-    track('payment_attempted', {
-      booking_code: bookingCode,
-      method: 'transfer',
-      ...(plan ? { plan: plan === 'DEPOSIT' ? 'deposit' : 'full' } : {}),
-    });
+    // Sent at once: on success the browser leaves for the wire page.
+    track(
+      'payment_attempted',
+      {
+        booking_code: bookingCode,
+        method: 'transfer',
+        ...(plan ? { plan: plan === 'DEPOSIT' ? 'deposit' : 'full' } : {}),
+      },
+      true,
+    );
     try {
       return await startTransfer(reservationId, plan);
     } catch (error) {

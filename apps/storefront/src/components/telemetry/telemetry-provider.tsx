@@ -52,8 +52,16 @@ export interface CookieSelection {
 }
 
 interface TelemetryContextValue {
-  /** Queue one event; dropped unless consented or essential. */
-  track: (event: TelemetryEventName, params?: Record<string, ParamValue>) => void;
+  /**
+   * Queue one event; dropped unless consented or essential. `sendNow` sends
+   * it at once, for an event right before the page is left (a form submit,
+   * a redirect to the wire page), where a keepalive fetch outlives the page.
+   */
+  track: (
+    event: TelemetryEventName,
+    params?: Record<string, ParamValue>,
+    sendNow?: boolean,
+  ) => void;
   choice: CookieChoice | null;
   permissions: CookiePermissions;
   texts: CookieTexts;
@@ -173,7 +181,11 @@ export function TelemetryProvider({
   }, []);
 
   const track = useCallback(
-    (event: TelemetryEventName, params: Record<string, ParamValue> = {}) => {
+    (
+      event: TelemetryEventName,
+      params: Record<string, ParamValue> = {},
+      sendNow = false,
+    ) => {
       const consent = level.current;
       if (consent === 'essential' && !TELEMETRY_EVENTS[event].essential) {
         return;
@@ -201,7 +213,7 @@ export function TelemetryProvider({
         params,
       });
       queue.current = queue.current.slice(-MAX_QUEUED);
-      if (queue.current.length >= TELEMETRY_BATCH_MAX) {
+      if (sendNow || queue.current.length >= TELEMETRY_BATCH_MAX) {
         flush();
       } else if (!timer.current) {
         timer.current = setTimeout(() => flush(), FLUSH_DELAY_MS);
@@ -273,7 +285,7 @@ export function TelemetryProvider({
       const declared =
         event.target instanceof HTMLFormElement ? declaredEvent(event.target) : null;
       if (declared) {
-        track(declared.event, declared.params);
+        track(declared.event, declared.params, true);
       }
     }
     function onHidden() {
