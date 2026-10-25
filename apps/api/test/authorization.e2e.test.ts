@@ -642,5 +642,12 @@ describe('authorization matrix', () => {
     // The Support form is public; an empty body fails validation (400), not auth.
     const contact = await request(app.getHttpServer()).post('/contact').send({});
     expect(contact.status).toBe(400);
+
+    // The T-Events intake is public (signed-out visitors browse too); an empty
+    // batch fails validation (400), not auth.
+    const telemetry = await request(app.getHttpServer())
+      .post('/telemetry/events')
+      .send({ events: [] });
+    expect(telemetry.status).toBe(400);
   });
 });
