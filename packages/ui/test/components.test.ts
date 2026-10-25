@@ -14,7 +14,7 @@ import { Drawer } from '../src/components/drawer';
 import { Field } from '../src/components/field';
 import { Input } from '../src/components/input';
 import { Stepper } from '../src/components/stepper';
-import { TableRow } from '../src/components/table';
+import { Table, TableRow } from '../src/components/table';
 import { Tabs, nextTabIndex } from '../src/components/tabs';
 
 const html = (element: ReactElement) => renderToStaticMarkup(element);
@@ -128,6 +128,18 @@ describe('TableRow', () => {
     expect(row('attention')).toContain('bg-accent-50');
     expect(row('destructive')).toContain('bg-error-100');
     expect(row()).not.toMatch(/bg-(accent-50|error-100)/);
+  });
+});
+
+describe('Table', () => {
+  it('makes a named scroll box a keyboard stop only when asked', () => {
+    const named = html(createElement(Table, { scrollRegionLabel: 'Data we keep' }));
+    expect(named).toContain('role="region"');
+    expect(named).toContain('aria-label="Data we keep"');
+    expect(named).toContain('tabindex="0"');
+    const plain = html(createElement(Table));
+    expect(plain).not.toContain('role="region"');
+    expect(plain).not.toContain('tabindex');
   });
 });
 

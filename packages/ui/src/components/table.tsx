@@ -8,9 +8,27 @@ import type {
 
 import { cn } from '../cn';
 
-export const Table = forwardRef<HTMLTableElement, TableHTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
+export interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
+  /**
+   * Names the box the table scrolls in and makes it a keyboard stop, so a
+   * table with no controls can still be scrolled by keyboard (WCAG 2.1.1).
+   * Pass it where a narrow screen or larger text can make the table scroll.
+   */
+  scrollRegionLabel?: string;
+}
+
+export const Table = forwardRef<HTMLTableElement, TableProps>(
+  ({ className, scrollRegionLabel, ...props }, ref) => (
+    <div
+      className={cn(
+        'relative w-full overflow-auto',
+        // inset, so a rounded box that clips its content keeps the ring
+        scrollRegionLabel ? 'focus-visible:outline-offset-[-2px]' : null,
+      )}
+      {...(scrollRegionLabel
+        ? { role: 'region', 'aria-label': scrollRegionLabel, tabIndex: 0 }
+        : {})}
+    >
       <table
         ref={ref}
         className={cn('w-full caption-bottom text-body-sm', className)}
