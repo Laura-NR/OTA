@@ -280,7 +280,6 @@ export default async function BookingPage({
         <div className="flex flex-col gap-4 px-5">
           <ReservationActions
             reservationId={reservation.id}
-            bookingCode={reservation.bookingCode}
             status={reservation.status}
             canManage={canManage}
           />
