@@ -65,17 +65,16 @@ export default async function CookieSettingsPage() {
       ) : (
         <p className="text-body text-secondary">{t('noOptional')}</p>
       )}
-      <section aria-labelledby="cookies-stored" className="flex min-w-0 flex-col gap-3">
-        <h2 id="cookies-stored" className="text-h3 text-default">
-          {t('tableTitle')}
-        </h2>
+      <section className="flex min-w-0 flex-col gap-3">
+        <h2 className="text-h3 text-default">{t('tableTitle')}</h2>
         <Table scrollRegionLabel={t('tableTitle')}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('columns.name')}</TableHead>
               <TableHead>{t('columns.category')}</TableHead>
-              <TableHead>{t('columns.purpose')}</TableHead>
-              <TableHead>{t('columns.lifetime')}</TableHead>
+              {/* Readable purpose and lifetime columns; the table scrolls in its region on a phone. */}
+              <TableHead className="min-w-56">{t('columns.purpose')}</TableHead>
+              <TableHead className="min-w-36">{t('columns.lifetime')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
