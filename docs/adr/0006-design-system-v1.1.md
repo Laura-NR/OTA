@@ -824,3 +824,51 @@ boards on the existing tokens; no token was added. There is no admin board for e
   the live strip.
 - **Documents.** The voucher gains an "Event tickets" table (event, seats, nights); the invoice
   labels the two new price lines.
+
+## Amendment, 2026-10-24: Phase 8 item 2 (PWA, low bandwidth, larger text), resolved by the build
+
+The owner chose this batch and that the preferences live per device (a cookie), not per
+account. No migration, no dependency, no token added. Sources: the Account board's
+"Accessibility & data" and "Documents & offline kit", DS 05 (offline and text-only mode) and the
+Phase 1 note that low-bandwidth mode falls back to system stacks.
+
+- **Type in rem.** The Tailwind preset's type sizes and line heights are the tokens' pixels in
+  rem (16 px = 1 rem), in both apps: identical at the browser default, and a reader's browser text
+  size now scales them ("also respects your browser setting"). The tokens stay in px.
+- **Larger text (18 px)** sets the root to 112.5 %, so the body reads 18 px and every rem value,
+  spacing included, scales as it would with the browser setting. The header wordmark stays 28 px
+  (a logo, not text) and the header gap tightens below `sm` in this mode; from `lg` to `xl` the
+  header keeps the drawer instead of the full nav, and from `xl` it drops "Talk to a specialist"
+  (Support carries it), since the scaled nav does not fit 1024–1279 px; four long nowrap items
+  were fixed for 320 px (Home tiles and Packages sort `min-w-0`, the package page's single column
+  `grid-cols-1`, and long button labels that wrap: `WRAPPING_BUTTON`). `e2e/responsive.spec.ts`
+  checks every customer page at the six DS 07 widths with the mode on (18 px body, no sideways
+  scroll).
+- **Low-bandwidth mode** (DS 05 text-only): catalogue photos become "Load photo" buttons in the
+  photo's place until tapped; the board's size ("38 KB") is left out because no byte count is
+  stored. The brand fonts become system faces, and to make that save bytes the fonts are no
+  longer preloaded (`display: swap` and the metric-matched fallbacks keep the default mode's
+  first paint steady). There is no video to drop. A dark strip above the header says the mode is
+  on, with "Turn off". A slow connection (save-data, 2G or under 200 kbps by the Network
+  Information API) offers the mode once in the same strip; "Not now" is remembered.
+- **Where they are switched.** Account › Preferences gains a Display card under Notifications;
+  the menu drawer (below `lg`) carries the same two switches for signed-out visitors. A signed-out
+  desktop visitor has the browser's own setting and the slow-connection offer. The board's
+  "Reduce motion" (already honoured globally from the system setting) and "High contrast" are not
+  built.
+- **Offline kit.** Saved only when the traveler asks ("Save on this device" on the trip page):
+  the trip page, every document and the build assets the page needs, in Cache Storage; the size
+  is stated after saving, since it is not known before. The service worker refreshes the saved
+  page on each online visit, and the card flags documents issued since the save ("Update kit").
+  Signing out deletes every kit. The board's maps, briefing and insurance additions are not
+  drawn (the platform holds none), and the D-OfflineKit PDFs (Phase 6) are not built.
+- **Offline mode.** The service worker answers from a cache only when the network fails: a saved
+  trip or document, else the offline page of the request's locale or of one the device has
+  visited (what still works, the saved trips, the tenant's emergency numbers). It registers after
+  the page's `load` and keeps only the visitor's locale's offline page, so a first visit on a slow
+  link downloads one page, not three. The DS 05 pill is dark at the top; on a saved trip it
+  says "showing your saved trip, updated <age>" (the board's copy), elsewhere what does not work
+  offline. Offline is read-only: writes are not queued ("will send when online" is not built), so
+  a message sent offline fails as before.
+- **Manifest.** Named and coloured from the tenant manifest (primary 600, page background); the
+  icon is the SVG mark until raster icons are exported (T-Signoff §03).

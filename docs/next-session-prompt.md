@@ -27,13 +27,14 @@ Verify the handoff against the code; run `git log --oneline main..vereda`. If th
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
-Phase 8 is started. Built and verified last session (2026-10-24): the DS 07 widths as Playwright
-projects (e2e/responsive.spec.ts) and M10 (events and the ticket concierge: /events and the
-three-step request, the desk's Events editor and request queue, ticket price lines and the
-TICKETS instalment; docs/schema-m10-events.md §7). Not built: SMS/push, Phase 8 items 1–2 (T-Events,
-PWA/large text) and the axe audit, M9's deferred items. Placeholders: the M4/M5 terms, the
-builder's rates, the crisis framework, the backup-power wording, the concierge fee and events copy,
-card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
+Phase 8 items 2–4 are done (item 3 save the axe audit). Built and verified last session
+(2026-10-24): the DS 07 widths, M10 (events and the ticket concierge) and Phase 8 item 2 (the rem
+type scale; larger text and low-bandwidth mode as a device cookie; the web manifest, the
+network-first service worker, the opt-in offline kit on the trip page, the offline page and pill;
+ADR 0006's Phase 8 item 2 amendment). Not built: SMS/push, Phase 8 item 1 (T-Events) and the axe
+audit, reduce motion/high contrast switches, queued offline writes, M9's deferred items.
+Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
+wording, the concierge fee and events copy, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
 rotate it). Last full verify: see the handoff's Verified section. The owner decided:
 placeholder/mock data until real data is published; the design team is not asked; the build
 resolves design gaps itself with existing tokens, recorded in the ADRs.
@@ -43,17 +44,18 @@ downloads for the owner and the ops roles; graceful shutdown with a timeout (bui
 M6 as recommended and the log redaction (both built 2026-10-20); the M6 follow-ups D6(b) and
 D7(b) (built 2026-10-23); support staff stay read-only (M6 resources and vehicles and the M8 board
 are written by Operations Admin and Super Admin only); M9 and M10 as recommended (built 2026-10-23
-and 2026-10-24).
+and 2026-10-24); Phase 8 item 2 with the display preferences per device, and the axe audit not
+yet (built 2026-10-24).
 
 TASK 0 — The dev stack was left running for the owner; stop it (signal turbo) before any verify
 and restart it at the end. Last session's full verify is in the handoff (nothing left to finish).
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: a Phase 8 item (PWA and the large-text preference need no dependency; T-Events
-needs the analytics-sink decision; the axe audit is a new dependency), or one of M9's deferred
-items (permission overrides, display currencies, runtime feature flags, recovery codes, a passkey
-policy), or M10's deferred room holds and event photos. Build nothing that needs a migration
-before the owner approves its doc.
+recommendation: Phase 8 item 1 (T-Events needs the analytics-sink decision, Q10), the axe audit
+(a new dependency, @axe-core/playwright pinned 4.11.x), the reduce-motion and high-contrast
+switches (no dependency), or one of M9's deferred items (permission overrides, display
+currencies, runtime feature flags, recovery codes, a passkey policy), or M10's deferred room
+holds and event photos. Build nothing that needs a migration before the owner approves its doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
 DTOs, routes in the authorization matrix, desk surfaces in en/es/fr, an e2e).
@@ -89,7 +91,11 @@ retention, the passport-key backup; the M10 concierge fee and events copy (and w
 regenerated invoice suffices when seats are added later); the AGENTS.md §C lines proposed in the
 handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. M10: repricing keeps EVENT_TICKET/CONCIERGE_FEE
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Phase 8 item 2: public/sw.js duplicates
+offlineAssetPaths and the kit cache name (ota-kit-v1); the worker fetches offline pages with a
+pinned Accept-Language and no cookies; a page after a normal-mode page replays fonts as zero-byte
+requests (assert font downloads from a fresh context); long nowrap button labels break 320 px at
+larger text (WRAPPING_BUTTON); type is rem, so px sizes do not scale. M10: repricing keeps EVENT_TICKET/CONCIERGE_FEE
 lines and re-adds them to the total; a confirmed request's booking link may be null; event nights
 and categories are updated by id; the events e2e owns E2EEVT01, "E2E Concierge…" events and every
 event request of traveler@example.test; run prettier from the repo root (an app-level run ignores

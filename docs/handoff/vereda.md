@@ -1,60 +1,57 @@
-# Handoff — vereda — updated 2026-10-24 17:00
+# Handoff — vereda — updated 2026-10-25 00:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
-Confirmation screen, the Custom builder and the DS 07 widths) and ADR 0007 (worker app).
+Confirmation screen, the Custom builder, the DS 07 widths and Phase 8 item 2) and ADR 0007
+(worker app).
 
 ## State
-- **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 is
-  started (items 3 and 4).** Commits are local on `vereda`; the owner pushes
+- **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
+  2–4 are done** (item 3 save the axe audit). Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-24):**
-  - **DS 07 widths** (Phase 8 item 3, no migration): `e2e/responsive.spec.ts` runs as six
-    Playwright projects (`ds07-320` … `ds07-1440`; the behaviour specs stay on `default`),
-    asserting no sideways scroll and the 16/14 px body on customer and desk pages (`d7d8f56`). It
-    found Home's conditions/why grid overflowing at 320 (`dc63f89`). The desk is checked from 768.
-  - **M10 built as approved** (`docs/schema-m10-events.md` §7): migration
-    `20261024111639_events_concierge` (`aee8602`); rules `packages/domain/src/events/`; DTOs;
-    manifest `concierge` block (placeholder fee € 15, 8 seats, 7 days); four request emails; API
-    `apps/api/src/events/` (desk `/events`, public `/catalog/events`, `/me/event-requests`, desk
-    `/event-requests`), proposal acceptance linking requests, booking cancellation closing them,
-    repricing keeping event lines, the TICKETS instalment, retention; seed (Havana Jazz Festival,
-    Romerías de Mayo); voucher tickets; desk Content › Events and Bookings › Event requests with a
-    dashboard task; storefront `/events`, `/events/[slug]` with the three-step request, the nav
-    link, the Home strip and the account/trip lists; e2e `e2e/events.spec.ts` (`a844709`).
-  - Additive API fields: `/me` returns `phone` and `nationality`; public events carry
-    `answerHours`.
-- **Not built:** SMS/push, Phase 8 items 1–2 (T-Events sink, PWA/large text) and the axe audit;
-  A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's deferred items; M10's
-  deferred room holds, event photos and "Keep building the trip".
+- **This session (2026-10-24, second batch): Phase 8 item 2**, owner-approved with the
+  preferences per device (a cookie), no migration, no dependency:
+  - `@ota/ui` type scale in rem (`31f956f`); `@ota/domain` `src/device/` (display cookie, the
+    200 kbps rule, offline-kit guards; `131f12c`); copy en/es/fr (`1678002`, `54230e7`).
+  - Display modes (`eed491d`): cookie `ota_display` read by the layout (`<html data-text-size
+    data-bandwidth>`), `components/display/` (provider, switches in Account › Preferences and the
+    menu drawer, the bandwidth strip/offer, `Photo` with "Load photo"); fonts no longer preloaded.
+  - PWA (`7ce9a6a`): `app/manifest.ts`, `public/sw.js` (network first; offline: the kit, else
+    `/[locale]/offline`), `lib/offline-kit.ts` + the trip page's kit card, the offline pill,
+    sign-out deletes the kit.
+  - e2e `storefront-display.spec.ts`, `storefront-offline.spec.ts` (`49dacbe`) and the DS 07
+    widths with larger text, which found five 320 px breaks (fixed; see ADR 0006).
+- Earlier today: the DS 07 widths and M10 (see the 2026-10-24 Decisions).
+- **Not built:** SMS/push, Phase 8 item 1 (T-Events sink) and the axe audit; reduce motion and
+  high contrast as switches; queued offline writes; the D-OfflineKit PDFs; A-Content's
+  blog/FAQ/media/conditions tabs; guide specialities; M9's deferred items; M10's deferred room
+  holds, event photos and "Keep building the trip".
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
-  crisis framework, the backup-power wording, and now the concierge fee and the events copy
+  crisis framework, the backup-power wording, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-24, dev stack stopped for the build)
-- M10 migration applied; each of its six hand-written checks refuses its case against the dev
-  database and a valid confirmed request inserts (rolled back).
+## Verified (2026-10-24/25, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **843 passed / 28 skipped**, 29/29 tasks, 0 cached (api 314/27
-  skipped, domain 302, schemas 66, config 36, email 28, documents 22).
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached.
-- Disproved: with the old repricing (delete every line) the event-lines test fails; without the
-  acceptance hook the live link test fails.
-- Browser (Playwright, `scrollWidth − innerWidth` = 0, no console errors): the event editor at
-  1280 and 1024, the events list, request queue and dashboard at 1280; storefront `/en/events`,
-  the jazz and guide-only event pages and Home at 390 and 1280; the signed-in request form at 390
-  and 1024.
-- `pnpm e2e` (`apps/*/.next` deleted first): **83 passed, 3 skipped** (14.8 min): the 68
-  behaviour tests (66 + the two M10 tests) on `default` and the DS 07 checks at six widths; the
-  3 skips are the desk check at 320/375/414, by design. Servers left on 3000–3002 stopped by PID.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files (adds
-  `events.integration.test.ts` and the acceptance link in `proposals.integration.test.ts`; the
-  retention live test now expects `eventRequestsDeleted`). No event request, live-test event or
-  user left; the two seeded events remain.
+- `TURBO_FORCE=true pnpm test` **859 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 317,
+  api 314/27 skipped, schemas 66, config 36, ui 34, email 28, documents 22).
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (`/[locale]/offline`, `/manifest.webmanifest`).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files (run
+  before the last two storefront fixes; the API did not change after it).
+- `pnpm e2e` (`apps/*/.next` deleted first): **94 passed, 3 skipped** (20.7 min, third run): the
+  default project (adds the four display tests and the offline kit) and the DS 07 widths, now
+  with larger text; the skips are the desk at 320/375/414. Run 1 failed checkout and M6 (dev
+  servers at ~7 GB, memory exhausted); run 2 failed checkout only (the wire page's 3.3 s first
+  compile); both causes fixed (`7781028`, `de0619c`). Leftover servers stopped by PID; no
+  inventory media left.
+- Disproved: with the fonts preloaded again the "never downloads the brand fonts" test fails;
+  without the worker's kit fallback the offline-kit test fails.
+- Browser (Playwright, 390/1024/1280): Account › Display card, the trip page's kit card, the
+  offline page and fallback, the menu drawer switches, low-bandwidth + larger text on a package
+  page and the 1280 header; `scrollWidth − innerWidth` = 0 everywhere after the header fix.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -71,6 +68,19 @@ Confirmation screen, the Custom builder and the DS 07 widths) and ADR 0007 (work
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Phase 8 item 2:** `public/sw.js` duplicates `offlineAssetPaths` (tested in @ota/domain) and
+  the kit cache name `ota-kit-v1` (`lib/offline-kit.ts`); change them together and bump
+  `SHELL_CACHE` when the worker's caching changes. The worker fetches the offline pages with a
+  pinned `Accept-Language` and no cookies, or next-intl redirects `/offline` to the browser's
+  locale. A page loaded after a normal-mode page replays the brand fonts from memory cache as
+  zero-byte requests: assert "no font download" from a fresh context. A Playwright browser keeps
+  the worker for its context only; the owner's own browser keeps it on localhost:3000 (harmless:
+  it never answers while the network works). Long labels in nowrap buttons break 320 px at
+  larger text: use `WRAPPING_BUTTON` (`lib/button.ts`); grid items still need `min-w-0`.
+  The worker registers on `load` and precaches one locale's offline page on purpose: precaching
+  all three during the first page made the checkout e2e's wire page miss its 3 s window (found
+  and fixed, `7781028`). In the first full e2e of the day both Next dev servers grew to ~7 GB
+  and exhausted memory around test 48, hanging later tests; kill leftovers by PID and rerun.
 - **M10:** repricing (`TravelersService.writePrice`) keeps `EVENT_TICKET`/`CONCIERGE_FEE` lines
   and re-adds them to the total; any new code that rewrites price lines must do the same. A
   CONFIRMED request's booking link may turn null (SET NULL), so never assume it. Event nights and
@@ -115,16 +125,21 @@ Confirmation screen, the Custom builder and the DS 07 widths) and ADR 0007 (work
   - "2026-10-24: e2e runs a `default` project plus six `ds07-<width>` projects for
     `e2e/responsive.spec.ts`; run prettier from the repo root (an app-level run ignores
     `.prettierignore`)."
+  - "2026-10-24: storefront display preferences (larger text, low-bandwidth) are a device cookie
+    `ota_display` read by the layout, never account data. `public/sw.js` answers from a cache
+    only when the network fails (the opt-in offline kit, else `/[locale]/offline`); signing out
+    deletes the kit. Type sizes are rem, so a size written in px does not scale."
 
 ## Next
-1. Owner: choose the next batch — Phase 8 items 1–2 (T-Events needs the analytics sink, Q10;
-   PWA and large text need no dependency), the axe audit (new dependency), or one of M9's deferred
-   items (each its own decision).
+1. Owner: choose the next batch — Phase 8 item 1 (T-Events needs the analytics sink, Q10), the
+   axe audit (new dependency, `@axe-core/playwright` pinned 4.11.x), reduce motion/high contrast
+   switches (no dependency), or one of M9's deferred items or M10's room holds/event photos (each
+   needs a migration doc first).
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy and the M10 invoice question), OFAC categories, card
    surcharge, deposit refundability and proof retention, the passport-key backup, the
-   backup-power wording, the staff email domain, the AGENTS.md §C lines above. Then SMS once a
-   provider is chosen.
+   backup-power wording, the staff email domain, raster app icons from Vereda, the AGENTS.md §C
+   lines above. Then SMS once a provider is chosen.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -432,3 +447,7 @@ Confirmation screen, the Custom builder and the DS 07 widths) and ADR 0007 (work
   database with a desk editor; the three paths with a derived M5 request; confirmed seats as
   price lines plus a TICKETS instalment once the price is locked (the invoice question goes to
   finance/counsel); sign-in first; the 48 h answer as an M9 threshold; no dispatch for tickets.
+- 2026-10-24 — the owner chose Phase 8 item 2 next (PWA, low bandwidth, larger text), with the
+  display preferences per device in a cookie rather than per account (no migration), and the
+  axe audit not yet. Built: the rem type scale, the cookie modes, a network-first service worker
+  with an opt-in offline kit deleted at sign-out, the offline page and pill (ADR 0006 amendment).
