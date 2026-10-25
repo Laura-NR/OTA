@@ -40,7 +40,8 @@
     "health": "Health & insurance",
     "usTravelers": "US travelers & OFAC",
     "privacy": "Privacy",
-    "compare": "Compare"
+    "compare": "Compare",
+    "cookieSettings": "Cookie settings"
   },
   "pages": {
     "common": {
@@ -3893,6 +3894,58 @@
       "unsupported": "This browser cannot keep trips for offline use.",
       "missing": "{count, plural, one {# document was} other {# documents were}} issued since you saved. Update the kit to add them.",
       "privacy": "Signing out removes saved trips from this device."
+    }
+  },
+  "cookies": {
+    "bannerTitle": "Cookies, your choice",
+    "bannerBody": "Essential cookies run the site and your bookings. The rest stay off until you say otherwise.",
+    "privacyLink": "Privacy notice",
+    "essential": "Essential",
+    "essentialText": "Sign-in, language, display settings, security and your cookie choice. The site does not work without them.",
+    "alwaysOn": "Always on",
+    "analytics": "Analytics",
+    "marketing": "Marketing",
+    "rejectAll": "Reject non-essential",
+    "acceptAll": "Accept all",
+    "save": "Save my selection",
+    "settingsTitle": "Cookie settings",
+    "settingsLede": "Your choices, changeable at any time. They are kept on this device.",
+    "current": "Your current choice was saved on {date}.",
+    "currentNone": "You have not chosen yet, so only essential cookies are on.",
+    "saved": "Saved. Your choice applies from now on.",
+    "noOptional": "This site uses essential cookies only, so there is nothing to choose.",
+    "tableTitle": "Cookies and storage we use",
+    "columns": {
+      "name": "Name",
+      "category": "Category",
+      "purpose": "Purpose",
+      "lifetime": "Lifetime"
+    },
+    "items": {
+      "session": {
+        "purpose": "Keeps you signed in.",
+        "lifetime": "7 days"
+      },
+      "locale": {
+        "purpose": "Remembers your language.",
+        "lifetime": "Until you close the browser"
+      },
+      "display": {
+        "purpose": "Larger text, reduced motion, high contrast and low-bandwidth mode.",
+        "lifetime": "12 months"
+      },
+      "consent": {
+        "purpose": "Your cookie choice and the version of the words you saw.",
+        "lifetime": "12 months"
+      },
+      "advisories": {
+        "purpose": "Travel advisories you closed.",
+        "lifetime": "6 months"
+      },
+      "telemetry": {
+        "purpose": "A random id for the open tab, so visits can be counted. Browser storage, not a cookie.",
+        "lifetime": "Until you close the tab"
+      }
     }
   }
 }

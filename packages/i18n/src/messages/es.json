@@ -40,7 +40,8 @@
     "health": "Salud y seguro",
     "usTravelers": "Viajeros de EE. UU. y OFAC",
     "privacy": "Privacidad",
-    "compare": "Comparar"
+    "compare": "Comparar",
+    "cookieSettings": "Configuración de cookies"
   },
   "pages": {
     "common": {
@@ -3893,6 +3894,58 @@
       "unsupported": "Este navegador no puede guardar viajes para usarlos sin conexión.",
       "missing": "{count, plural, one {Se emitió # documento} other {Se emitieron # documentos}} desde que guardaste. Actualiza el kit para añadirlos.",
       "privacy": "Al cerrar sesión se borran los viajes guardados en este dispositivo."
+    }
+  },
+  "cookies": {
+    "bannerTitle": "Cookies, tú decides",
+    "bannerBody": "Las cookies esenciales hacen funcionar el sitio y tus reservas. Las demás siguen desactivadas hasta que digas lo contrario.",
+    "privacyLink": "Aviso de privacidad",
+    "essential": "Esenciales",
+    "essentialText": "Inicio de sesión, idioma, preferencias de visualización, seguridad y tu elección de cookies. El sitio no funciona sin ellas.",
+    "alwaysOn": "Siempre activas",
+    "analytics": "Analítica",
+    "marketing": "Marketing",
+    "rejectAll": "Rechazar las no esenciales",
+    "acceptAll": "Aceptar todas",
+    "save": "Guardar mi selección",
+    "settingsTitle": "Configuración de cookies",
+    "settingsLede": "Tus elecciones, modificables en cualquier momento. Se guardan en este dispositivo.",
+    "current": "Tu elección actual se guardó el {date}.",
+    "currentNone": "Aún no has elegido, así que solo están activas las cookies esenciales.",
+    "saved": "Guardado. Tu elección se aplica desde ahora.",
+    "noOptional": "Este sitio solo usa cookies esenciales, así que no hay nada que elegir.",
+    "tableTitle": "Cookies y almacenamiento que usamos",
+    "columns": {
+      "name": "Nombre",
+      "category": "Categoría",
+      "purpose": "Finalidad",
+      "lifetime": "Duración"
+    },
+    "items": {
+      "session": {
+        "purpose": "Mantiene tu sesión iniciada.",
+        "lifetime": "7 días"
+      },
+      "locale": {
+        "purpose": "Recuerda tu idioma.",
+        "lifetime": "Hasta que cierres el navegador"
+      },
+      "display": {
+        "purpose": "Texto más grande, movimiento reducido, alto contraste y modo de bajo consumo de datos.",
+        "lifetime": "12 meses"
+      },
+      "consent": {
+        "purpose": "Tu elección de cookies y la versión del texto que viste.",
+        "lifetime": "12 meses"
+      },
+      "advisories": {
+        "purpose": "Los avisos de viaje que cerraste.",
+        "lifetime": "6 meses"
+      },
+      "telemetry": {
+        "purpose": "Un identificador aleatorio de la pestaña abierta, para contar visitas. Almacenamiento del navegador, no una cookie.",
+        "lifetime": "Hasta que cierres la pestaña"
+      }
     }
   }
 }
