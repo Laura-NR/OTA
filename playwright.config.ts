@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
+import { consentCookieValue } from './e2e/consent';
+
 const BACKOFFICE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3002';
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:3001';
 
@@ -26,6 +28,24 @@ export default defineConfig({
     baseURL: BACKOFFICE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    // Every spec starts with the cookie choice made (analytics refused), so
+    // the storefront's DS 04 banner does not cover the pages under test;
+    // storefront-telemetry.spec.ts clears it to drive the banner.
+    storageState: {
+      cookies: [
+        {
+          name: 'ota_consent',
+          value: consentCookieValue(false),
+          domain: 'localhost',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+      ],
+      origins: [],
+    },
   },
   // The behaviour specs run once at Playwright's default viewport; the DS 07
   // layout spec runs once per test width.

@@ -87,6 +87,7 @@ async function customerPaths(): Promise<string[]> {
     '/en/about',
     '/en/support',
     '/en/legal/privacy',
+    '/en/legal/cookies',
     '/en/login',
     '/en/offline',
     '/join',
@@ -119,6 +120,34 @@ test.describe('accessibility audit (WCAG 2.2 AA, axe)', () => {
     await page.getByRole('button', { name: 'Open menu' }).click();
     await expect(page.getByRole('switch', { name: 'High contrast' })).toBeVisible();
     expect.soft(await audit(page), 'the open menu has axe violations').toEqual([]);
+  });
+
+  test('the cookie banner, at desktop and at phone width with larger text', async ({
+    page,
+  }) => {
+    await page.context().clearCookies({ name: 'ota_consent' });
+    for (const [width, height, display] of [
+      [1280, 900, null],
+      [390, 844, 'large-text.high-contrast'],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      if (display) {
+        await page
+          .context()
+          .addCookies([{ name: 'ota_display', value: display, url: STOREFRONT_URL }]);
+      }
+      await page.goto(`${STOREFRONT_URL}/en`);
+      await expect(
+        page.getByRole('region', { name: 'Cookies, your choice' }),
+      ).toBeVisible();
+      await page.waitForLoadState('networkidle');
+      expect
+        .soft(await audit(page), `the banner at ${width} px has axe violations`)
+        .toEqual([]);
+      expect
+        .soft(await duplicateIds(page), `the banner at ${width} px repeats ids`)
+        .toEqual([]);
+    }
   });
 
   test('the traveler account, a trip, a booking and the builder', async ({ page }) => {
