@@ -21,7 +21,7 @@ ORIENT FIRST, in this order:
   migration-doc pattern;
 - docs/design-v1.1-plan.md (Progress table, Phase 6, Phase 8);
 - docs/adr/0006-design-system-v1.1.md (amended through Phase 8 item 2, the 2026-10-25
-  accessibility batch and Phase 8 item 1, T-Events);
+  accessibility batch, Phase 8 item 1, T-Events, its follow-ups and the server-side T-Events);
 - tenant/README.md (placeholder data, including the M4/M5 terms, the customBuilder rates and the
   M8 crisis framework, the M10 concierge terms and the cookie banner's analytics words).
 Verify the handoff against the code; run `git log --oneline main..vereda`. If this brief repeats
@@ -29,19 +29,17 @@ work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
 Phase 8 items 1–4 are done (item 1 against a mock sink). Built and verified last session
-(2026-10-25): the T-Events follow-ups — every taxonomy entry names its surface (storefront, desk,
-any); the desk is the `admin` app with essential operational events only (booking_state_changed,
-redispatch_triggered, document_generated, import_committed, approval_decided, ai_draft_used,
-admin_state_shown; no banner, no session/user id, no device storage), the API stamps the
-operator's `role` from a live staff session (the guard's shared `sessionRefusal`) and refuses a
-client-sent role; the storefront adds search_submitted, sort_changed, departure_selected,
-tier_selected (signed `delta`), the OFAC gate events, payment_plan_selected/attempted/failed and
-proof_uploaded; a form declares its event for its submit, and `track(..., sendNow)` sends before
-the page is left (ADR 0006 amendment "T-Events follow-ups"). Not built: SMS/push, the real
-analytics sink (Q10), the worker events (no worker app), server-side events (system/traveler
-transitions, offer_* from the dispatch engine), desk page views (counsel on staff analytics),
-gallery_opened (no gallery viewer), queued offline writes, M9's deferred items, M10's room holds
-and event photos.
+(2026-10-25): server-side T-Events — a `server` surface no client may send; booking_state_changed
+moved from the desk to the API for every transition (actor = the request's role, `worker` added,
+or `system`; reason = a trigger code: manual, payment_requested, payment_confirmed,
+dispatch_started, redispatch, all_accepted, offer_declined, offer_timeout, no_supplier), and
+offer_sent/offer_accepted/offer_declined/offer_timeout from the dispatch engine (timer_h,
+minutes_to_answer; no worker id, no typed reason), sent by the global ServerTelemetry after each
+write and never awaited; the desk no longer sends its own copy; the mock sink appends to
+TELEMETRY_SINK_FILE for e2e (ADR 0006 amendment "server-side T-Events"). Not built: SMS/push, the
+real analytics sink (Q10), the worker events (offer_viewed etc.; no worker app), desk page views
+(counsel on staff analytics), gallery_opened (no gallery viewer), queued offline writes, M9's
+deferred items, M10's room holds and event photos.
 Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
 wording, the concierge fee and events copy, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
 rotate it). Last full verify: see the handoff's Verified section. The owner decided:
@@ -57,19 +55,21 @@ and 2026-10-24); Phase 8 item 2 with the display preferences per device (built 2
 reduce-motion/high-contrast switches and the axe audit with @axe-core/playwright 4.13.0 (built
 2026-10-25); Phase 8 item 1 against a mock sink behind a public log-only route, storefront funnel
 first (built 2026-10-25); the T-Events follow-ups with desk events operational only, no desk
-banner (built 2026-10-25).
+banner (built 2026-10-25); server-side T-Events (built 2026-10-25); for later, Plausible CE as the
+preferred real sink and the staff passkey policy as the preferred M9 deferred item.
 
 TASK 0 — The dev stack was left running for the owner; stop it (signal turbo) before any verify
 and restart it at the end. Last session's full verify is in the handoff (nothing left to finish).
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: the real analytics sink (Q10: self-hosted Matomo or Plausible — an
-account/deployment decision), server-side T-Events behind the sink (system and traveler
-transitions, the dispatch engine's offer_* events), one of M9's deferred items (permission
-overrides, display currencies, runtime feature flags, recovery codes, a passkey policy), M10's
-deferred room holds and event photos, or a manual keyboard/screen-reader pass on the A-A11y desk
-rules that axe cannot decide. Build nothing that needs a migration before the owner approves its
-doc.
+recommendation: the real analytics sink (Q10; the owner prefers Plausible CE — a TelemetrySink
+adapter with plain fetch behind TELEMETRY_SINK, tested against a fake, plus a hosting decision;
+a local Plausible in Docker means new images, ask), the staff passkey policy doc (the owner's
+preferred M9 item: desk enrollment plus a required-for-staff rule, perhaps in the M9 settings
+JSON with no migration — a change to how auth decides, so the doc goes to the owner first),
+another M9 deferred item, M10's deferred room holds and event photos, or a manual
+keyboard/screen-reader pass on the A-A11y desk rules that axe cannot decide. Build nothing that
+needs a migration before the owner approves its doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
 DTOs, routes in the authorization matrix, desk surfaces in en/es/fr, an e2e).
@@ -81,7 +81,8 @@ pnpm test && TURBO_FORCE=true pnpm build` with the dev stack stopped; delete app
 `pnpm e2e` (seven projects: default, with the axe audit, + six DS 07 widths); kill what e2e leaves on 3000–3002 by PID
 (never pkill -f). Run the live tests with RUN_DB_INTEGRATION=1 (retention, packages, affidavits,
 package-booking, payment-schedule, proposals, advisories, disruptions, events) and REDIS_URL
-(dispatch and compliance BullMQ). Check
+(dispatch and compliance BullMQ). Restart the owner's dev stack with TELEMETRY_SINK_FILE (see
+the handoff) so a later `pnpm e2e` that reuses it can read server events. Check
 rendering in a browser (screenshots + computed styles) at 390, 1024 and 1280 for anything built.
 
 WORKING RULES (AGENTS.md): converge on evidence (Article 4: report Converged / Not converged);
@@ -93,7 +94,8 @@ never edit AGENTS.md.
 ENVIRONMENT: `nvm use` (Node 22), `pnpm install`; `docker compose up -d` (prefix
 `sg docker -c '...'` on a permission error); `pnpm dev` → API :3001, back-office :3002,
 storefront :3000, Mailpit :8025. Start the dev stack with RATE_LIMIT_MAX=100000
-RATE_LIMIT_AUTH_MAX=100000 if the owner wants to browse, and leave it running at the end.
+RATE_LIMIT_AUTH_MAX=100000 TELEMETRY_SINK_FILE=$PWD/.telemetry/e2e-events.jsonl if the owner
+wants to browse, and leave it running at the end.
 
 DECISION GATES (ask; do not assume): schema migrations (M1–M10), new dependencies, the SMS
 provider and anything needing the agency's legal entity, a real LLM vendor, PII purge Tiers 2–3,
@@ -105,7 +107,15 @@ retention, the passport-key backup; the M10 concierge fee and events copy (and w
 regenerated invoice suffices when seats are added later); the AGENTS.md §C lines proposed in the
 handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. T-Events (2026-10-25): every e2e context starts
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Server T-Events (2026-10-25): they never pass
+through a browser, so e2e reads the mock sink's file (e2e/telemetry.ts serverEvents, filtered by
+receivedAt; the file only grows and .telemetry/ may be deleted); a dev stack started without
+TELEMETRY_SINK_FILE fails those polls with SERVER_EVENTS_HINT; a new reservation-status write
+must call ServerTelemetry.stateChanged (or go through ReservationsService.transition with its
+reason code); ReservationsService, PaymentsService and DispatchService take ServerTelemetry last
+(hand-built: new ServerTelemetry(new MockTelemetrySink())); the dispatch test's fake Prisma
+mutates the row it returned, so read `from` before an update; a desk component must not send
+booking_state_changed (wrong_surface). T-Events (2026-10-25): every e2e context starts
 with an ota_consent cookie (analytics refused) from playwright.config.ts storageState, built by
 e2e/consent.ts from the tenant's words version — change the words and the cookie follows; a spec
 that needs the banner clears it; a beacon's body (sent while a page is left) is invisible to

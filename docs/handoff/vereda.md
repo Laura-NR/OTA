@@ -1,43 +1,45 @@
-# Handoff — vereda — updated 2026-10-25 21:00
+# Handoff — vereda — updated 2026-10-25 23:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
 `design/vereda-v1.1/` is kept for the record. Plan and phases: `docs/design-v1.1-plan.md`.
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
 Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
-reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, and its follow-ups) and
+reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follow-ups and the
+server-side T-Events) and
 ADR 0007 (worker app).
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 against a mock sink). Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-25, evening): the T-Events follow-ups**, owner-approved, with desk
-  events **operational only** (no desk banner; no migration, no dependency):
-  - Domain (`f193204`, `377e5b3`): each `TELEMETRY_EVENTS` entry names its `surface`
-    (storefront / desk / any); the `admin` app with the desk screens (`A-Dashboard`…,
-    `deskScreenForPath`); `admitTelemetryEvent(input, now, viewerRole)` refuses a desk event
-    without a staff role (`not_staff`), on the wrong surface (`wrong_surface`), with analytics
-    consent or a client-sent `role` (`bad_context`), and stamps `role`; a signed `delta` kind;
-    `sortChange`, `editedRatio`.
-  - API (`ad5b52f`): the public intake reads the session for desk events and trusts the role
-    only through `sessionRefusal` (the guard's deactivated + 12 h staff rule, now shared).
-  - Storefront (`4b9d101`, `04e8ca1`): search_submitted (form submit delegation), sort_changed,
-    departure_selected, tier_selected, ofac_gate_shown/ofac_category_selected/affidavit_signed,
-    payment_plan_selected/payment_attempted/payment_failed, proof_uploaded; `track(…, sendNow)`.
-  - Desk (`26b36eb`): `DeskTelemetryProvider` in the `(dashboard)` layout; transitions,
-    re-dispatch, document regeneration, import commits, approvals (advisory, refund, proof), AI
-    drafts and admin_state_shown (empty matrix, 403 via `DESK_DENIED_EVENT`, lost socket).
-  - e2e (`195e0a2`): reservations (desk transition event and its receipt), checkout
-    (payment_attempted with analytics refused), storefront-telemetry (search, sort, Booking form).
+- **This session (2026-10-25, late): server-side T-Events**, owner-approved, against the mock
+  sink (no migration, no dependency, no new route):
+  - Domain (`a2017bd`): a `server` surface no client may send (`wrong_surface`; `server` is not
+    a client app); `booking_state_changed` moved there for **every** transition, with `actor`
+    (`transitionActorFor`: the request's role, `worker` added, else `system`) and `reason` as a
+    trigger code (`TRANSITION_REASONS`); `offer_sent`/`offer_timeout` (`timer_h`) and
+    `offer_accepted`/`offer_declined` (`minutes_to_answer`), with `service_item_id` and
+    `service_type` only; `serverTelemetryEvent()` checks them against the same table.
+  - API (`7b344f2`): global `ServerTelemetry` (`apps/api/src/telemetry/server-telemetry.ts`),
+    fire-and-forget after each write, at six transition sites (`ReservationsService.transition`
+    with an optional reason, default `manual`; the payment link; the payment confirmation; four
+    in `DispatchService`) and the four offer points. The mock sink appends to
+    `TELEMETRY_SINK_FILE` when set (a failed append is logged only).
+  - Desk (`4155429`): no longer sends `booking_state_changed` (it would count twice).
+  - e2e (`c60335e`): reservations (the desk transition reported by the API, none from the
+    page) and dispatch (the move and the `offer_sent`), read from `.telemetry/e2e-events.jsonl`.
+- Earlier the same day: the T-Events follow-ups (`f193204`…`8cac6fb`): surfaces, the desk's
+  operational events with the role from the session, the storefront's search/sort/departure/
+  tier/OFAC/payment events.
 - Earlier the same day: Phase 8 item 1, T-Events (`f5a6651`…`a137ba8`): the cookie banner,
   Cookie settings, the taxonomy, the public intake with the mock sink, the storefront funnel.
 - Earlier the same day: reduce motion, high contrast and the axe audit (`5abe936`…`f1e1131`).
 - Earlier (2026-10-24): Phase 8 item 2 (rem type, larger text, low bandwidth, the PWA and the
   offline kit), the DS 07 widths and M10 (see Decisions).
-- **Not built:** SMS/push; the real analytics sink (Q10); worker events (no worker app);
-  server-side events (system/traveler transitions, the dispatch engine's `offer_*`); desk page
-  views and nav clicks (counsel on staff analytics); `gallery_opened` (no gallery viewer);
+- **Not built:** SMS/push; the real analytics sink (Q10; owner prefers Plausible CE); worker
+  events (`offer_viewed` and the rest wait for the worker app); desk page views and nav clicks
+  (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's
   deferred items; M10's deferred room holds, event photos and "Keep building the trip"; manual
@@ -48,26 +50,29 @@ ADR 0007 (worker app).
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-25, T-Events follow-ups, dev stack stopped for the build)
+## Verified (2026-10-25, server-side T-Events, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **907 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 352,
-  api 322/27 skipped, schemas 70, config 36, ui 35, email 28, documents 22).
+- `TURBO_FORCE=true pnpm test` **925 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 358,
+  api 334/27 skipped, schemas 70, config 36, ui 35, email 28, documents 22).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`apps/*/.next` deleted first): **108 passed, 1 failed, 3 skipped** in 53.7 min.
-  The failure was the new Home-search test: under the full run's memory pressure (21/23 GB) the
-  first Enter came before hydration, so the GET form posted natively with no shell listening,
-  and the `toPass` retry then waited on a Home form that was gone. Fixed in the test (wait for
-  the screen's `page_view`, then submit once); `npx playwright test
-  e2e/storefront-telemetry.spec.ts --project=default --repeat-each=2` **12/12**. Skips: the
-  desk at 320/375/414.
+- `pnpm e2e` (`apps/*/.next` deleted first): **108 passed, 1 failed, 3 skipped** in 42.7 min,
+  including the new reservations and dispatch server-event checks. The failure was
+  `[ds07-1024]` "customer pages … with larger text": `page.goto` on a blog page never reached
+  `load` within 240 s because the storefront's dev server restarted mid-run (its PID changed;
+  memory 16/23 GB); the same test passed at the other five widths. Rerun with the leftovers
+  killed by PID and `.next` deleted: `npx playwright test e2e/responsive.spec.ts
+  --project=ds07-1024` **4/4**. Skips: the desk at 320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Disproved: with the intake trusting any session's role (no `sessionRefusal`), the API test
-  "refuses desk events without a live staff session" fails.
-- Live smoke (dev stack): the API log showed the Booking form's departure/tier/OFAC events and
-  the desk's `admin_state_shown@A-Dashboard` and `booking_state_changed@A-Booking` admitted.
-- Browser rendering at 390/1024/1280: not run — no visible UI changed (event wiring only); the
-  touched pages render in the e2e default and DS 07 projects.
+- Live, from the e2e run's sink file (`.telemetry/e2e-events.jsonl`): 16 `booking_state_changed`
+  (manual, payment_requested by `super_admin` and by a `traveler`, payment_confirmed,
+  dispatch_started, redispatch, no_supplier) and 3 `offer_sent`, none with a user id.
+- Disproved: with `from` read after the status update (the first draft), the dispatch test
+  "reports a booking with no eligible supplier, and a re-dispatch" failed (the fake Prisma
+  mutates the row it returned); with the old surface check, the domain test "refuses a server
+  event from any client app" fails for `web`.
+- Browser rendering at 390/1024/1280: not run — no visible UI changed (the desk's transition
+  buttons lost only their event call); those pages render in the e2e default and DS 07 projects.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -87,12 +92,26 @@ ADR 0007 (worker app).
   and whether the banner's essential/analytics split fits the agency's legal basis.
 - **Desk T-Events:** treated as essential operational records (owner decision); counsel should
   confirm that basis for staff, and whether desk page views need staff-facing words and a
-  choice. `role` plus a timestamp can point to one person in a small agency. Desk events count
-  only actions the desk took (an API transition by the system or a traveler is not an event).
+  choice. `role` plus a timestamp can point to one person in a small agency.
+- **Server T-Events:** essential, with no worker or user id; `actor: worker` plus a
+  `service_item_id` and a time can still point to one supplier (the same counsel question). A
+  transition written outside the six reporting sites would go unreported: there are none today
+  (`grep` for `status: ReservationStatus` writes in `apps/api/src`).
 - **For the owner:** the items under Next; the storefront's sample "Cuba right now" banner says
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Server T-Events (2026-10-25):** they never pass through a browser, so e2e reads the mock
+  sink's file: `playwright.config.ts` sets `TELEMETRY_SINK_FILE` (`e2e/telemetry.ts`
+  `TELEMETRY_SINK_FILE`, `.telemetry/e2e-events.jsonl`, gitignored) and turbo passes it
+  through. A dev stack started without it (Playwright reuses a running one) makes the specs'
+  poll fail with `SERVER_EVENTS_HINT`; the owner's stack is now started with it. The file only
+  grows; specs filter by `receivedAt`, and `.telemetry/` may be deleted. A new code path that
+  writes a reservation status must call `ServerTelemetry.stateChanged` itself (or go through
+  `ReservationsService.transition`, passing its reason code). `ReservationsService`,
+  `PaymentsService` and `DispatchService` take `ServerTelemetry` last: a hand-built one in a
+  test passes `new ServerTelemetry(new MockTelemetrySink())`. The dispatch test's fake Prisma
+  returns the store's row and `update` mutates it, so read `from` before the update.
 - **T-Events follow-ups (2026-10-25):** a desk event needs `app: 'admin'`,
   `consent: 'essential'` and a desk screen; the API reads the session for it, and on localhost
   the storefront's and the desk's cookies are shared across ports. An e2e asserting a desk
@@ -203,17 +222,22 @@ ADR 0007 (worker app).
     banner; the public intake admits them only for a live staff session (`sessionRefusal`) and
     stamps `role` itself, refusing a client-sent one. Components call `useDeskTelemetry()` after
     the API accepted the action."
+  - "2026-10-25: server T-Events (surface `server`: `booking_state_changed` for every
+    transition, `offer_*`) are sent by the API's global `ServerTelemetry` after each write,
+    never awaited; no client may send them. A new reservation-status write reports itself (or
+    goes through `ReservationsService.transition` with its reason code). `TELEMETRY_SINK_FILE`
+    makes the mock sink append events as JSON lines; the e2e stack sets it."
 
 ## Next
-1. Owner: choose the next batch — the real analytics sink (Q10: self-hosted Matomo or
-   Plausible, an account/deployment decision), server-side T-Events (system/traveler
-   transitions, the dispatch engine's offers), one of M9's deferred items (permission overrides,
-   display currencies, runtime feature flags, recovery codes, a passkey policy) or M10's room
-   holds/event photos (each needs a migration doc first), or a manual keyboard/screen-reader
-   pass on the A-A11y desk rules that axe cannot decide.
+1. Owner: choose the next batch — the real analytics sink (Q10; the owner prefers Plausible CE
+   when it is chosen: a `TelemetrySink` adapter with plain fetch, tested against a fake, plus a
+   hosting decision), the staff passkey policy doc (the owner's pick among M9's deferred items:
+   desk enrollment and a required-for-staff rule, perhaps in the M9 settings JSON with no
+   migration), M10's room holds/event photos (migration doc first), or a manual
+   keyboard/screen-reader pass on the A-A11y desk rules that axe cannot decide.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy, the M10 invoice question, the cookie words and the
-   basis for desk telemetry), OFAC
+   basis for desk and server telemetry), OFAC
    categories, card surcharge, deposit refundability and proof retention, the passport-key
    backup, the backup-power wording, the staff email domain, raster app icons from Vereda, the
    AGENTS.md §C lines above. Then SMS once a provider is chosen.
@@ -547,3 +571,11 @@ ADR 0007 (worker app).
   draft locale, one-click re-dispatch, approval amounts); `payment_succeeded` and
   `gallery_opened` are not built (no gateway result, no gallery viewer); an event before the
   page is left is sent at once (ADR 0006 amendment).
+- 2026-10-25 — the owner chose the server-side T-Events next (over the real sink, an M9/M10
+  migration doc or the manual accessibility pass), and recorded Plausible CE as the preferred
+  sink and the staff passkey policy as the preferred M9 item for later. The build resolved:
+  `booking_state_changed` moves to the API for every transition and the desk stops sending it
+  (one count per move); `actor` adds `worker`; `reason` is a trigger code; the board's hashed
+  `worker_id` and `decline_reason` are left out (no worker id was promised to the owner, and the
+  reason is free text); events are fire-and-forget after the write; e2e reads a mock-sink file
+  rather than a new read route (ADR 0006 amendment "server-side T-Events").

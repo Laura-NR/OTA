@@ -158,12 +158,16 @@ The API mounts a dependency-free fixed-window limiter as Express middleware
 
 The storefront sends consented analytics events, and the essential ones (bookings,
 payments, errors, the cookie choice), to the public `POST /telemetry/events`, under the
-normal rate limit. `TELEMETRY_SINK` selects the sink; `mock` (the default and only one
-until the self-hosted analytics choice) keeps the latest 500 events in memory per
-process and logs one `TelemetrySink` line per batch with event names and screens only.
-Events outside the taxonomy are refused and counted in the response. A signed-in
-visitor's id is an HMAC keyed by `AUTH_SECRET`, so rotating that secret also changes
-every hashed id.
+normal rate limit; the desk sends its operational events there too (admitted only for a
+live staff session). The API records the booking transitions and the dispatch offers
+itself, straight to the sink, never awaited and never failing the change. `TELEMETRY_SINK`
+selects the sink; `mock` (the default and only one until the self-hosted analytics
+choice) keeps the latest 500 events in memory per process and logs one `TelemetrySink`
+line per batch with event names and screens (`server` for the API's own) only; with
+`TELEMETRY_SINK_FILE` set it also appends every event to that file as a JSON line (the
+e2e stack sets it; leave it unset in production). Events outside the taxonomy are
+refused and counted in the response. A signed-in visitor's id is an HMAC keyed by
+`AUTH_SECRET`, so rotating that secret also changes every hashed id.
 
 ## Graceful shutdown
 

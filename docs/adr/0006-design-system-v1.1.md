@@ -989,3 +989,33 @@ dependency.
 - **A form declares its event for its submit**, and the shell sends an event at once (a
   keepalive fetch) when the page is about to be left: the Home search and the redirect to the
   wire page. The leave-time beacon stays for whatever else is queued.
+
+## Amendment, 2026-10-25: server-side T-Events (transitions and offers), resolved by the build
+
+The owner chose the server-side events next, still against the mock sink (the real sink stays Q10;
+the owner prefers Plausible CE when it is built). No migration, no new dependency.
+
+- **A `server` surface.** The API records these events itself, from state it holds, after the
+  change is stored. Their context is `{ app: 'server', consent: 'essential' }`: no screen,
+  device, session, user or worker id. No client may send them: the intake refuses a server
+  event from any app (`wrong_surface`), and `server` is not a client app.
+- **`booking_state_changed` is now the API's, for every transition**, as the board defines it
+  ("any state-machine transition"): the desk's transition buttons, the payment link
+  (SECURED_AND_INVOICED → PENDING_PAYMENT), the payment confirmation, starting dispatch, a
+  re-dispatch, every item accepted, a decline, a timeout and no eligible supplier. The desk no
+  longer sends its own copy, so each move is counted once.
+- **`actor`** is the account role of the request that caused the move (`traveler`, `support`,
+  `ops_admin`, `super_admin`), or `system` when no request did (a timeout). The board lists no
+  worker, but a worker's accept or decline moves the booking, so `worker` is added.
+- **`reason` is a trigger code** (`manual`, `payment_requested`, `payment_confirmed`,
+  `dispatch_started`, `redispatch`, `all_accepted`, `offer_declined`, `offer_timeout`,
+  `no_supplier`), never the free-text reason an operator or worker may type.
+- **Offers:** `offer_sent` and `offer_timeout` carry `timer_h` (the time the supplier had, in
+  hours to two decimals); `offer_accepted` and `offer_declined` carry `minutes_to_answer`. All
+  four carry `service_item_id` and `service_type`. The board's hashed `worker_id` is left out
+  (reliability already comes from the dispatch ledger), and so is `decline_reason` (free text).
+  `offer_viewed` waits for the worker app.
+- **Never in the way of the change:** the events are sent after the write and not awaited; a
+  refused or lost event is logged, never an error for the request.
+- **Inspection:** with `TELEMETRY_SINK_FILE` set, the mock sink also appends each event as a
+  JSON line; the e2e stack sets it so specs can read the events the API recorded itself.
