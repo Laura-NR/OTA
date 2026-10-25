@@ -8,7 +8,9 @@ import { useDisplayPreferences } from './display-provider';
 
 const OPTIONS = [
   { key: 'largeText', label: 'largeText', help: 'largeTextHelp' },
+  { key: 'reduceMotion', label: 'reduceMotion', help: 'reduceMotionHelp' },
   { key: 'lowBandwidth', label: 'lowBandwidth', help: 'lowBandwidthHelp' },
+  { key: 'highContrast', label: 'highContrast', help: 'highContrastHelp' },
 ] as const satisfies ReadonlyArray<{
   key: keyof DisplayPreferences;
   label: string;
@@ -16,8 +18,8 @@ const OPTIONS = [
 }>;
 
 /**
- * Larger text and low-bandwidth mode (Account board, "Accessibility & data"),
- * kept on this device. Account › Preferences shows them in a card; the menu
+ * Larger text, reduce motion, low-bandwidth mode and high contrast (Account
+ * board, "Accessibility & data"), kept on this device. Account › Preferences shows them in a card; the menu
  * drawer shows them `compact`, so signed-out visitors can choose too.
  */
 export function DisplayPreferencesForm({ compact = false }: { compact?: boolean }) {

@@ -15,6 +15,8 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { prefersReducedMotion } from '@/lib/display';
+
 /**
  * Traveler ↔ operations thread (spec §3.5) for one booking. History loads over
  * HTTP and replies post through the same endpoint the email fallback hangs off;
@@ -53,7 +55,9 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
   }, [reservationId, t]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    });
   }, [messages]);
 
   async function send(event: FormEvent<HTMLFormElement>) {
