@@ -17,7 +17,8 @@
       "passThroughEnv": [
         "PASSPORT_ENCRYPTION_KEY",
         "RATE_LIMIT_MAX",
-        "RATE_LIMIT_AUTH_MAX"
+        "RATE_LIMIT_AUTH_MAX",
+        "TELEMETRY_SINK_FILE"
       ]
     }
   }

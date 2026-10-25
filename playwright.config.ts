@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 import { consentCookieValue } from './e2e/consent';
+import { TELEMETRY_SINK_FILE } from './e2e/telemetry';
 
 const BACKOFFICE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3002';
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:3001';
@@ -62,10 +63,12 @@ export default defineConfig({
     url: `${API_URL}/health`,
     timeout: 180_000,
     reuseExistingServer: !process.env.CI,
-    // Raise the rate limits so the suite's many session checks never throttle.
+    // Raise the rate limits so the suite's many session checks never throttle;
+    // the mock analytics sink also writes its events where specs can read them.
     env: {
       RATE_LIMIT_MAX: '100000',
       RATE_LIMIT_AUTH_MAX: '100000',
+      TELEMETRY_SINK_FILE,
     },
   },
 });

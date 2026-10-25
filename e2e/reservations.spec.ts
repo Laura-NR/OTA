@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { signIn } from './helpers';
-import { watchTelemetry } from './telemetry';
+import { SERVER_EVENTS_HINT, serverEvents, watchTelemetry } from './telemetry';
 
 test.describe('bookings', () => {
   test.beforeEach(async ({ page }) => {
@@ -23,11 +23,7 @@ test.describe('bookings', () => {
     await expect(page.getByRole('heading', { name: 'E2E0001' })).toBeVisible();
     await expect(page.getByText('DRAFT', { exact: true })).toBeVisible();
 
-    const receipt = page.waitForResponse(
-      (response) =>
-        response.url().includes('/telemetry/events') &&
-        (response.request().postData() ?? '').includes('booking_state_changed'),
-    );
+    const since = new Date();
     await page.getByRole('button', { name: 'ITINERARY SUBMITTED' }).click();
 
     await expect(
@@ -35,19 +31,30 @@ test.describe('bookings', () => {
     ).toBeVisible();
     await expect(page.getByText('reservation.transition').first()).toBeVisible();
 
-    // T-Events: an operational desk event, with no session id; the API
-    // admits it only for a live staff session and adds the role itself.
-    await expect.poll(() => sent.named('booking_state_changed').length).toBe(1);
-    const [changed] = sent.named('booking_state_changed');
+    // T-Events: the API reports the transition itself, with the operator's
+    // role as the actor and the trigger as the reason; the desk sends no
+    // copy of it, so each move is counted once.
+    const transitionOf = async () =>
+      (await serverEvents(since)).filter(
+        (event) =>
+          event.event === 'booking_state_changed' &&
+          event.params.booking_code === 'E2E0001',
+      );
+    await expect
+      .poll(async () => (await transitionOf()).length, { message: SERVER_EVENTS_HINT })
+      .toBe(1);
+    const [changed] = await transitionOf();
     expect(changed).toMatchObject({
-      context: { app: 'admin', screen: 'A-Booking', consent: 'essential' },
-      params: { booking_code: 'E2E0001', from: 'DRAFT', to: 'ITINERARY_SUBMITTED' },
+      context: { app: 'server', consent: 'essential' },
+      params: {
+        from: 'DRAFT',
+        to: 'ITINERARY_SUBMITTED',
+        actor: 'super_admin',
+        reason: 'manual',
+      },
     });
-    expect(changed!.context).not.toHaveProperty('session_id');
-    expect(changed!.context).not.toHaveProperty('role');
-    const response = await receipt;
-    const batch = (response.request().postDataJSON() as { events: unknown[] }).events;
-    expect(await response.json()).toEqual({ accepted: batch.length, rejected: 0 });
+    expect(changed).toMatchObject({ userId: null });
+    expect(sent.named('booking_state_changed')).toEqual([]);
   });
 
   test('signs out back to the login page', async ({ page }) => {

@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { createDispatchableReservation, deleteReservationFixture } from './fixtures';
 import { signIn } from './helpers';
+import { SERVER_EVENTS_HINT, serverEvents } from './telemetry';
 
 process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
@@ -34,6 +35,7 @@ test.describe('dispatch from the dashboard', () => {
       .filter({ hasText: `Ready to dispatch · ${BOOKING_CODE}` });
     const matrix = page.getByRole('region', { name: 'Dispatch matrix' });
     const row = matrix.getByRole('row').filter({ hasText: BOOKING_CODE });
+    const since = new Date();
 
     // Client components: retry until hydration attaches the handlers.
     await expect(async () => {
@@ -45,6 +47,35 @@ test.describe('dispatch from the dashboard', () => {
 
     await expect(row.getByText(/^Offered · /)).toBeVisible();
     await expect(row.getByText(/^Example Guide/)).toBeVisible();
+
+    // T-Events: the dispatch engine reports the move and the offer itself,
+    // with the offer's timer and no supplier id.
+    const dispatched = async () =>
+      (await serverEvents(since)).filter(
+        (event) =>
+          (event.event === 'booking_state_changed' &&
+            event.params.booking_code === BOOKING_CODE) ||
+          (event.event === 'offer_sent' &&
+            event.params.service_item_id === serviceItemId),
+      );
+    await expect
+      .poll(async () => (await dispatched()).map((event) => event.event), {
+        message: SERVER_EVENTS_HINT,
+      })
+      .toEqual(['booking_state_changed', 'offer_sent']);
+    const [moved, offered] = await dispatched();
+    expect(moved!.params).toEqual({
+      booking_code: BOOKING_CODE,
+      from: 'ITINERARY_SUBMITTED',
+      to: 'DISPATCH_IN_PROGRESS',
+      actor: 'super_admin',
+      reason: 'dispatch_started',
+    });
+    expect(offered!.params).toEqual({
+      service_item_id: serviceItemId,
+      service_type: 'GUIDE',
+      timer_h: expect.any(Number) as number,
+    });
 
     // The worker declines (written directly, as the worker app would): red.
     await prisma.serviceItem.update({

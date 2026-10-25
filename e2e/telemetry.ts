@@ -1,4 +1,6 @@
 import type { Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 
 export interface SentEvent {
   event: string;
@@ -35,4 +37,42 @@ export function watchTelemetry(page: Page) {
   });
   const named = (name: string) => events.filter((event) => event.event === name);
   return { events, receipts, named };
+}
+
+/**
+ * Where the e2e stack's mock sink also writes every event it keeps
+ * (`TELEMETRY_SINK_FILE`, set by playwright.config.ts on its webServer), so a
+ * spec can read the events the API records itself.
+ */
+export const TELEMETRY_SINK_FILE = path.resolve(
+  __dirname,
+  '..',
+  '.telemetry',
+  'e2e-events.jsonl',
+);
+
+/** Why a poll on `serverEvents` found nothing, when the file is the cause. */
+export const SERVER_EVENTS_HINT =
+  'server T-Events in the mock sink file: a dev stack started outside Playwright ' +
+  `needs TELEMETRY_SINK_FILE=${TELEMETRY_SINK_FILE}`;
+
+/** The events the API recorded itself (app `server`) since `since`, oldest first. */
+export async function serverEvents(since: Date): Promise<SentEvent[]> {
+  let text: string;
+  try {
+    text = await readFile(TELEMETRY_SINK_FILE, 'utf8');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+  return text
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as SentEvent & { receivedAt: string })
+    .filter(
+      (event) =>
+        event.context.app === 'server' && Date.parse(event.receivedAt) >= since.getTime(),
+    );
 }
