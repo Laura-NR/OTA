@@ -5,8 +5,9 @@ import { signIn } from './helpers';
 
 /**
  * Display preferences kept on the device (Account board "Accessibility &
- * data"; DS 05 text-only mode): larger text, low-bandwidth mode with photos on
- * tap and system fonts, and the slow-connection offer. The spec owns one
+ * data"; DS 05 text-only mode): larger text, reduce motion, high contrast,
+ * low-bandwidth mode with photos on tap and system fonts, and the
+ * slow-connection offer. The spec owns one
  * photo, alt text "E2E display photo", on an active Havana catalogue item.
  */
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
@@ -15,6 +16,13 @@ const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
 const prisma = new PrismaClient();
+
+/** A computed colour as `r, g, b` (0–255), whether the browser wrote `rgb()` or `color(srgb …)`. */
+const rgb = (value: string) => {
+  const channels = (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+  const scale = value.startsWith('color(') ? 255 : 1;
+  return channels.map((channel) => Math.round(channel * scale)).join(', ');
+};
 
 const bodyFontSize = (page: Page) =>
   page.evaluate(() => getComputedStyle(document.body).fontSize);
@@ -42,6 +50,76 @@ test.describe('storefront display preferences', () => {
     await page.goto(`${STOREFRONT_URL}/en/travel-info`);
     await expect(page.locator('html')).toHaveAttribute('data-text-size', 'large');
     expect(await bodyFontSize(page)).toBe('18px');
+  });
+
+  test('reduce motion from the menu drawer stops transitions on every page', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${STOREFRONT_URL}/en`);
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    const reduceMotion = page.getByRole('switch', { name: 'Reduce motion' });
+    const transition = () =>
+      reduceMotion.evaluate((element) => getComputedStyle(element).transitionDuration);
+    expect(await transition()).not.toBe('0s');
+
+    await reduceMotion.click();
+    await expect(reduceMotion).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce');
+    expect(await transition()).toBe('0s');
+
+    await page.goto(`${STOREFRONT_URL}/en/travel-info`);
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce');
+  });
+
+  test('high contrast darkens secondary text, borders and the off switch', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${STOREFRONT_URL}/en`);
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    const help = page
+      .getByText('Darker text and borders', { exact: true })
+      .filter({ visible: true });
+    const offSwitch = page.getByRole('switch', { name: 'Larger text (18 px)' });
+    const colour = async () =>
+      rgb(await help.evaluate((element) => getComputedStyle(element).color));
+    const track = async () =>
+      rgb(
+        await offSwitch.evaluate((element) => getComputedStyle(element).backgroundColor),
+      );
+    // neutral 700 text and a neutral 300 track by default
+    await expect.poll(colour).toBe('74, 67, 61');
+    await expect.poll(track).toBe('214, 206, 195');
+
+    await page.getByRole('switch', { name: 'High contrast' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-contrast', 'more');
+    // neutral 900 text and a neutral 500 track
+    await expect.poll(colour).toBe('31, 27, 23');
+    await expect.poll(track).toBe('110, 102, 94');
+
+    await page.goto(`${STOREFRONT_URL}/en/travel-info`);
+    await expect(page.locator('html')).toHaveAttribute('data-contrast', 'more');
+    expect(
+      await page.evaluate(() =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--color-border')
+          .trim(),
+      ),
+    ).toBe('#6e665e');
+  });
+
+  test('high contrast also follows the system setting', async ({ page }) => {
+    await page.emulateMedia({ contrast: 'more' });
+    await page.goto(`${STOREFRONT_URL}/en/travel-info`);
+    await expect(page.locator('html')).not.toHaveAttribute('data-contrast', 'more');
+    expect(
+      await page.evaluate(() =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--color-text-muted')
+          .trim(),
+      ),
+    ).toBe('#4a433d');
   });
 
   test.describe('low-bandwidth mode', () => {
