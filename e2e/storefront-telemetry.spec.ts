@@ -1,7 +1,7 @@
 import { PrismaClient } from '@ota/db';
 import { expect, test } from '@playwright/test';
 
-import { ANALYTICS_WORDS_VERSION } from './consent';
+import { ANALYTICS_WORDS_VERSION, consentCookieValue } from './consent';
 import { signIn } from './helpers';
 import { watchTelemetry } from './telemetry';
 
@@ -206,5 +206,116 @@ test.describe('cookie choice and T-Events', () => {
         textVersion: ANALYTICS_WORDS_VERSION,
         locale: 'en',
       });
+  });
+});
+
+test.describe('T-Events follow-ups, with analytics allowed', () => {
+  test.beforeEach(async ({ context }) => {
+    await context.addCookies([
+      {
+        name: 'ota_consent',
+        value: consentCookieValue(true),
+        domain: 'localhost',
+        path: '/',
+        sameSite: 'Lax',
+      },
+    ]);
+  });
+
+  test('the Home search and the Packages sort are reported, with no typed text', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const sent = watchTelemetry(page);
+    await page.goto(`${STOREFRONT_URL}/en`);
+
+    const search = page.getByRole('form', { name: 'Search trips' });
+    await search.getByLabel('Where do you want to go?').fill('Trinidad Jane');
+    // Retried until the shell has hydrated and caught the submit.
+    await expect(async () => {
+      await search.getByLabel('Where do you want to go?').press('Enter');
+      await page.waitForURL(/\/en\/packages\?q=/, { timeout: 5_000 });
+      expect(sent.named('search_submitted').length).toBeGreaterThan(0);
+    }).toPass();
+    expect(sent.named('search_submitted')[0]!.params).toEqual({});
+    expect(sent.named('search_submitted')[0]!.context).toMatchObject({ screen: 'Home' });
+
+    await expect(async () => {
+      await page.getByLabel('Sort by').selectOption('price-asc');
+      await expect.poll(() => sent.named('sort_changed').length).toBeGreaterThan(0);
+    }).toPass();
+    expect(sent.named('sort_changed').at(-1)!.params).toEqual({
+      sort_field: 'price',
+      direction: 'asc',
+    });
+
+    await expect
+      .poll(() =>
+        sent.receipts.reduce((sum, receipt) => sum + (receipt.rejected ?? 0), 0),
+      )
+      .toBe(0);
+    expect(JSON.stringify(sent.events)).not.toContain('Jane');
+  });
+
+  test('the Booking form reports the departure, the tier and the OFAC gate', async ({
+    page,
+  }) => {
+    await signIn(page, TRAVELER, {
+      origin: STOREFRONT_URL,
+      callbackPath: '/en/packages/trinidad-heritage-trail/book',
+    });
+    const sent = watchTelemetry(page);
+    await page.goto(`${STOREFRONT_URL}/en/packages/trinidad-heritage-trail/book`);
+    await expect(
+      page.getByRole('heading', { level: 1, name: "When, and who's coming?" }),
+    ).toBeVisible();
+
+    // Step 1: the second open departure (retried until the form hydrates).
+    const departure = page.getByLabel('Departure');
+    const second = await departure.locator('option').nth(1).getAttribute('value');
+    await expect(async () => {
+      await departure.selectOption(second!);
+      expect(sent.named('departure_selected').length).toBeGreaterThan(0);
+    }).toPass();
+    expect(sent.named('departure_selected')[0]!.params).toMatchObject({
+      package_id: 'trinidad-heritage-trail',
+      departure_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as unknown,
+    });
+    await page.getByRole('button', { name: 'Continue to stay' }).click();
+
+    // Step 2: a tier, by its id with its price difference.
+    await page.getByRole('radio', { name: 'Comfort' }).check();
+    await expect.poll(() => sent.named('tier_selected').length).toBe(1);
+    expect(sent.named('tier_selected')[0]!.params).toMatchObject({
+      package_id: 'trinidad-heritage-trail',
+      tier: expect.stringMatching(/^[0-9a-z-]+$/) as unknown,
+      delta: expect.any(Number) as unknown,
+    });
+    await page.getByRole('button', { name: 'Continue to extras' }).click();
+    await page.getByRole('button', { name: 'Continue to traveler details' }).click();
+
+    // Step 4: a US lead opens the gate; a missing signature holds it.
+    const lead = page.getByRole('region', {
+      name: 'Traveler 1 · lead traveler',
+      exact: true,
+    });
+    await lead.getByLabel('Nationality (passport)').selectOption('US');
+    await lead.getByLabel('Travel category').selectOption('FAMILY_VISITS');
+    await page.getByRole('button', { name: 'Review your request' }).click();
+    await expect.poll(() => sent.named('ofac_gate_shown').length).toBe(2);
+    expect(sent.named('ofac_gate_shown').map((event) => event.params)).toEqual([
+      { blocked: false },
+      { blocked: true },
+    ]);
+    expect(sent.named('ofac_category_selected')[0]!.params).toEqual({
+      category: 'FAMILY_VISITS',
+    });
+    // Nothing was submitted, so no affidavit was signed.
+    expect(sent.named('affidavit_signed')).toEqual([]);
+    await expect
+      .poll(() =>
+        sent.receipts.reduce((sum, receipt) => sum + (receipt.rejected ?? 0), 0),
+      )
+      .toBe(0);
   });
 });

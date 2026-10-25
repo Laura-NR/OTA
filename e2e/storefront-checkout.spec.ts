@@ -2,6 +2,7 @@ import { PrismaClient } from '@ota/db';
 import { expect, test } from '@playwright/test';
 
 import { signIn } from './helpers';
+import { watchTelemetry } from './telemetry';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
 const BOOKING_CODE = 'E2ECHK01';
@@ -67,6 +68,7 @@ test.describe('storefront checkout', () => {
       callbackPath: '/en/account',
     });
     const trip = `${STOREFRONT_URL}/en/account/reservations/${reservationId}`;
+    const sent = watchTelemetry(page);
     await page.goto(trip);
 
     // M4: a custom trip has no deposit plan, so the full amount is the only choice.
@@ -81,6 +83,12 @@ test.describe('storefront checkout', () => {
     }).toPass();
 
     await expect(page).toHaveURL(/\/checkout\/wire\//);
+    // T-Events: the attempt is essential, so it counts with analytics refused.
+    await expect.poll(() => sent.named('payment_attempted').length).toBe(1);
+    expect(sent.named('payment_attempted')[0]).toMatchObject({
+      context: { screen: 'Trip', consent: 'essential' },
+      params: { booking_code: BOOKING_CODE, method: 'transfer', plan: 'full' },
+    });
     // The primary rail is a manual wire transfer: bank details, the booking
     // reference, and no self-confirm control (ADR 0003). The amount/reference
     // come from the receipt via the public lookup, not the URL.
