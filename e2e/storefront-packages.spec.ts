@@ -2,6 +2,7 @@ import { PrismaClient } from '@ota/db';
 import { expect, test, type Page } from '@playwright/test';
 
 import { signIn } from './helpers';
+import { watchTelemetry } from './telemetry';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
 const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? 'http://localhost:8025';
@@ -67,6 +68,7 @@ test.describe('storefront curated packages', () => {
   });
 
   test('lists packages and books one through the five steps', async ({ page }) => {
+    const sent = watchTelemetry(page);
     await signIn(page, TRAVELER_EMAIL, {
       origin: STOREFRONT_URL,
       callbackPath: '/en/packages',
@@ -166,6 +168,29 @@ test.describe('storefront curated packages', () => {
     const confirmation = await page.getByText(/Booking code:/).textContent();
     bookingCode = confirmation?.match(/Booking code:\s*([A-Z0-9]{8})/)?.[1] ?? '';
     expect(bookingCode).toMatch(/^[A-Z0-9]{8}$/);
+
+    // T-Events: booking events are essential, so they go out with analytics
+    // refused (every spec's starting choice), without the session id.
+    await expect.poll(() => sent.named('booking_submitted').length).toBe(1);
+    expect(sent.named('booking_started').map((event) => event.params)).toEqual([
+      { package_id: 'trinidad-heritage-trail' },
+    ]);
+    expect(
+      sent.named('booking_step_completed').map((event) => event.params.to_step),
+    ).toEqual([2, 3, 4, 5]);
+    expect(sent.named('booking_submitted')[0]).toMatchObject({
+      context: { screen: 'Booking', consent: 'essential' },
+      params: {
+        booking_code: bookingCode,
+        package_id: 'trinidad-heritage-trail',
+        currency: 'EUR',
+        travelers: 3,
+      },
+    });
+    expect(sent.events.filter((event) => 'session_id' in event.context)).toEqual([]);
+    expect(sent.events.filter((event) => !event.event.startsWith('booking_'))).toEqual(
+      [],
+    );
 
     await expect(async () => {
       const response = await fetch(`${MAILPIT_URL}/api/v1/messages`);
