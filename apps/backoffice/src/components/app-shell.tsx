@@ -80,7 +80,15 @@ export async function AppShell({ user, agencyName, children }: AppShellProps) {
               ) : null}
             </div>
           </div>
-          <SignOutButton />
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link
+              href="/passkeys"
+              className="text-caption font-normal text-primary-200 underline underline-offset-[3px] hover:text-neutral-0 focus-visible:outline-accent-500"
+            >
+              {t('passkeys')}
+            </Link>
+            <SignOutButton />
+          </div>
         </div>
       </aside>
       <div className="flex min-w-0 flex-col">

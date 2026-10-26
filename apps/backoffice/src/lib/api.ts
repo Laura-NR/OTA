@@ -53,8 +53,11 @@ export interface ServerSession {
     role?: string | null;
     name?: string | null;
   };
-  /** `createdAt` is the sign-in time (the staff session limit, M9 D9). */
-  session?: { createdAt?: string };
+  /**
+   * `createdAt` is the sign-in time (the staff session limit, M9 D9);
+   * `signInMethod` is how the session was created (`docs/schema-m9-passkeys.md` P2).
+   */
+  session?: { createdAt?: string; signInMethod?: string | null };
 }
 
 /** Resolve the Better Auth session on the server, or null when signed out. */

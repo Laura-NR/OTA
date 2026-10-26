@@ -33,13 +33,26 @@ function useStaffAction() {
 
 /**
  * A staff row's actions (M9 D5): move between Operations Admin and
- * Administrative Support, sign out everywhere, deactivate or reactivate.
+ * Administrative Support, sign out everywhere, reset a lost device's passkeys
+ * with a reason (`docs/schema-m9-passkeys.md` P5), deactivate or reactivate.
  * Promotion to Super Admin is an invitation; nobody acts on themselves.
  */
 export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boolean }) {
   const t = useTranslations('backoffice.settings.users');
+  const id = useId();
   const { run, busy, error } = useStaffAction();
+  const [resetting, setResetting] = useState(false);
+  const [reason, setReason] = useState('');
   if (isSelf) return <span className="text-caption text-muted">{t('you')}</span>;
+  const name = user.fullName ?? user.email;
+
+  async function reset(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (await run(`/staff/${user.id}/reset-passkeys`, 'POST', { reason })) {
+      setResetting(false);
+      setReason('');
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -70,6 +83,16 @@ export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boo
             {t('revokeSessions')}
           </Button>
         ) : null}
+        {!user.deactivatedAt && user.passkeys > 0 && !resetting ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={busy}
+            onClick={() => setResetting(true)}
+          >
+            {t('resetPasskeys')}
+          </Button>
+        ) : null}
         {user.deactivatedAt ? (
           <Button
             size="sm"
@@ -90,6 +113,43 @@ export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boo
           </Button>
         )}
       </div>
+      {resetting ? (
+        <form className="flex flex-col gap-2" onSubmit={reset}>
+          <Field
+            id={`${id}-reset`}
+            label={t('resetReason')}
+            hint={t('resetHint', { name })}
+            required
+          >
+            {(control) => (
+              <Input
+                {...control}
+                maxLength={500}
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+              />
+            )}
+          </Field>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="submit"
+              size="sm"
+              variant="destructive"
+              disabled={busy || reason.trim().length < 3}
+            >
+              {t('resetConfirm')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setResetting(false)}
+            >
+              {t('resetCancel')}
+            </Button>
+          </div>
+        </form>
+      ) : null}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
     </div>
   );

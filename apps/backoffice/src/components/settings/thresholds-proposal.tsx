@@ -23,13 +23,16 @@ export interface ThresholdsProposalProps {
   defaults: OperatingThresholds;
   pending: SettingsVersionDto | null;
   actorId: string;
+  /** Active staff with no passkey yet, shown before the passkey rule is switched on. */
+  staffWithoutPasskey: number | null;
 }
 
 /**
  * A-Settings' "Approvals & thresholds" changes (M9 D1–D3), for Super Admins.
  * With a proposal waiting, it shows what changes and lets the other Super
  * Admins apply or reject it and its author withdraw it; otherwise it is the
- * proposal form, with "Reset to spec defaults". The page keys it by the
+ * proposal form, with "Reset to spec defaults". Switching the staff passkey
+ * rule on says how many staff have no passkey yet. The page keys it by the
  * version in force and the pending proposal, so a refresh resets it.
  */
 export function ThresholdsProposal({
@@ -37,6 +40,7 @@ export function ThresholdsProposal({
   defaults,
   pending,
   actorId,
+  staffWithoutPasskey,
 }: ThresholdsProposalProps) {
   const t = useTranslations('backoffice.settings.thresholds');
   const units = useTranslations('backoffice.settings.thresholds.units');
@@ -49,7 +53,7 @@ export function ThresholdsProposal({
   const [pendingAction, setPendingAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const text = (key: keyof OperatingThresholds, value: number | string) =>
+  const text = (key: keyof OperatingThresholds, value: number | string | boolean) =>
     thresholdText(
       THRESHOLD_FIELDS.find((field) => field.key === key)!,
       value,
@@ -73,6 +77,14 @@ export function ThresholdsProposal({
       setPendingAction(false);
     }
   }
+
+  // Turning the rule on sends every staff member without a passkey to set one up.
+  const passkeyWarning = (next: OperatingThresholds) =>
+    next.staffPasskeysRequired &&
+    !current.staffPasskeysRequired &&
+    staffWithoutPasskey !== null ? (
+      <Alert>{t('passkeyWarning', { count: staffWithoutPasskey })}</Alert>
+    ) : null;
 
   if (pending) {
     const mine = pending.proposedById === actorId;
@@ -103,6 +115,7 @@ export function ThresholdsProposal({
             );
           })}
         </ul>
+        {passkeyWarning(pending.values)}
         {error ? <Alert variant="destructive">{error}</Alert> : null}
         <div className="flex flex-wrap gap-2">
           {mine ? (
@@ -165,13 +178,24 @@ export function ThresholdsProposal({
                 id={`${id}-${field.key}`}
                 label={t(`labels.${field.key}`)}
                 hint={
-                  field.unit === 'level'
+                  field.unit === 'level' || field.unit === 'switch'
                     ? undefined
                     : t('bounds', { min: field.min ?? 0, max: field.max ?? 0 })
                 }
               >
                 {(control) =>
-                  field.unit === 'level' ? (
+                  field.unit === 'switch' ? (
+                    <Select
+                      {...control}
+                      value={values[field.key] ? 'on' : 'off'}
+                      onChange={(event) =>
+                        setValues({ ...values, [field.key]: event.target.value === 'on' })
+                      }
+                    >
+                      <option value="off">{units('off')}</option>
+                      <option value="on">{units('on')}</option>
+                    </Select>
+                  ) : field.unit === 'level' ? (
                     <Select
                       {...control}
                       value={String(values[field.key])}
@@ -226,6 +250,7 @@ export function ThresholdsProposal({
           ? t('noChanges')
           : t('changes', { list: changes.map((key) => t(`labels.${key}`)).join(', ') })}
       </p>
+      {passkeyWarning(values)}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       <div className="flex flex-wrap gap-2">
         <Button

@@ -3,7 +3,7 @@ import type { OperatingThresholds } from '@ota/domain';
 // Client-safe: the thresholds form and the server table share it.
 
 export type ThresholdUnit =
-  'min' | 'h' | 'pct' | 'eur' | 'days' | 'months' | 'count' | 'level';
+  'min' | 'h' | 'pct' | 'eur' | 'days' | 'months' | 'count' | 'level' | 'switch';
 
 export interface ThresholdField {
   key: keyof OperatingThresholds;
@@ -58,22 +58,27 @@ export const THRESHOLD_GROUPS: readonly {
       { key: 'retentionGraceDays', unit: 'days', min: 14, max: 90 },
     ],
   },
+  {
+    key: 'security',
+    fields: [{ key: 'staffPasskeysRequired', unit: 'switch' }],
+  },
 ];
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /**
- * A threshold as the desk reads it ("120 min", "€ 500", "CRITICAL"). `units`
- * reads `backoffice.settings.thresholds.units`; `level` names a severity.
+ * A threshold as the desk reads it ("120 min", "€ 500", "CRITICAL", "On").
+ * `units` reads `backoffice.settings.thresholds.units`; `level` names a severity.
  */
 export function thresholdText(
   field: ThresholdField,
-  value: number | string,
+  value: number | string | boolean,
   locale: string,
   units: Translate,
   level: Translate,
 ): string {
   if (field.unit === 'level') return level(String(value));
+  if (field.unit === 'switch') return units(value ? 'on' : 'off');
   if (field.unit === 'eur') {
     // Plain spaces: server and browser ICU differ on the space before "€".
     return new Intl.NumberFormat(locale, {

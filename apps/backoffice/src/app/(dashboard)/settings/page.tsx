@@ -2,6 +2,7 @@ import { SUPPORTED_LOCALES, loadMessages } from '@ota/i18n';
 import { UserRole } from '@ota/domain';
 import type {
   OperatingSettingsDto,
+  PasskeyStatusDto,
   SecurityStatusDto,
   SettingsVersionDto,
   StaffInviteDto,
@@ -516,11 +517,14 @@ async function ThresholdsTab({
     getTranslations('backoffice.settings.thresholds.units'),
     getTranslations('advisoriesDesk.severities'),
   ]);
-  const [settings, versions] = await Promise.all([
+  const [settings, versions, staff] = await Promise.all([
     apiFetch<OperatingSettingsDto>('/settings/operating').catch(() => null),
     isSuper
       ? apiFetch<SettingsVersionDto[]>('/settings/operating/versions').catch(() => [])
       : Promise.resolve([] as SettingsVersionDto[]),
+    isSuper
+      ? apiFetch<StaffUserDto[]>('/staff').catch(() => null)
+      : Promise.resolve(null),
   ]);
   if (!settings) {
     return <Alert variant="destructive">{t('loadError')}</Alert>;
@@ -598,6 +602,12 @@ async function ThresholdsTab({
               defaults={settings.defaults}
               pending={settings.pending}
               actorId={actorId}
+              staffWithoutPasskey={
+                staff
+                  ? staff.filter((user) => !user.deactivatedAt && user.passkeys === 0)
+                      .length
+                  : null
+              }
             />
           </CardContent>
         </Card>
@@ -643,9 +653,10 @@ async function ThresholdsTab({
 
 async function SecurityTab({ locale }: { locale: string }) {
   const t = await getTranslations('backoffice.settings.security');
-  const [security, audit] = await Promise.all([
+  const [security, audit, passkeys] = await Promise.all([
     apiFetch<SecurityStatusDto>('/settings/security').catch(() => null),
     apiFetch<SystemAuditEntryDto[]>('/audit-log?limit=50').catch(() => null),
+    apiFetch<PasskeyStatusDto>('/me/passkeys').catch(() => null),
   ]);
   const when = (value: string) => `${opsDate(value, locale)} ${opsTime(value, locale)}`;
 
@@ -664,6 +675,16 @@ async function SecurityTab({ locale }: { locale: string }) {
                   [t('travelerSession'), t('travelerSessionValue')],
                   [t('signInLink'), t('minutes', { count: security.signInLinkMinutes })],
                   [t('deactivation'), t('deactivationValue')],
+                  ...(passkeys
+                    ? [
+                        [
+                          t('staffPasskeys'),
+                          passkeys.required
+                            ? t('passkeysRequired')
+                            : t('passkeysOptional'),
+                        ] as [string, string],
+                      ]
+                    : []),
                 ]}
               />
             ) : (

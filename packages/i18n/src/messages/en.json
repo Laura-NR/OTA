@@ -1024,7 +1024,8 @@
         "administrativeSupport": "Administrative Support",
         "serviceWorker": "Worker",
         "traveler": "Traveler"
-      }
+      },
+      "passkeys": "Passkeys"
     },
     "paymentsLedger": {
       "title": "Payments",
@@ -1114,7 +1115,12 @@
         "revokeSessions": "Sign out everywhere",
         "deactivate": "Deactivate",
         "reactivate": "Reactivate",
-        "failed": "The change was not saved."
+        "failed": "The change was not saved.",
+        "resetPasskeys": "Reset passkeys",
+        "resetHint": "Deletes {name}'s passkeys and signs them out everywhere; they set up a new one at the next sign-in.",
+        "resetReason": "Reason (for the audit log)",
+        "resetConfirm": "Reset and sign out",
+        "resetCancel": "Cancel"
       },
       "invites": {
         "title": "Invite a user",
@@ -1242,7 +1248,9 @@
           "pct": "{value} %",
           "days": "{value, plural, one {# day} other {# days}}",
           "months": "{value, plural, one {# month} other {# months}}",
-          "count": "{value}"
+          "count": "{value}",
+          "on": "On",
+          "off": "Off"
         },
         "groups": {
           "dispatch": "Dispatch",
@@ -1250,7 +1258,8 @@
           "payments": "Payments",
           "content": "Content",
           "customers": "Customers",
-          "bookings": "Bookings"
+          "bookings": "Bookings",
+          "security": "Security"
         },
         "levels": {
           "CAUTION": "Caution and critical",
@@ -1287,7 +1296,8 @@
           "resourcesStaleDays": "Resources stale after",
           "reliabilityFloorPercent": "Reliability floor for auto-dispatch",
           "reliabilityMinAnswered": "Answered offers before the floor applies",
-          "conciergeAnswerHours": "Event request answered within"
+          "conciergeAnswerHours": "Event request answered within",
+          "staffPasskeysRequired": "Staff sign in with a passkey"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Dashboard, Booking",
@@ -1304,8 +1314,10 @@
           "resourcesStaleDays": "Suppliers, Disruptions, storefront Packages",
           "reliabilityFloorPercent": "Dispatch, Suppliers, re-dispatch list",
           "reliabilityMinAnswered": "Dispatch, Suppliers, re-dispatch list",
-          "conciergeAnswerHours": "Bookings › Event requests, Dashboard, request email"
-        }
+          "conciergeAnswerHours": "Bookings › Event requests, Dashboard, request email",
+          "staffPasskeysRequired": "Desk sign-in, the escalation and messaging feeds"
+        },
+        "passkeyWarning": "{count, plural, =0 {Every active staff member has a passkey.} one {# active staff member has no passkey yet and will be asked to set one up at the next sign-in.} other {# active staff members have no passkey yet and will be asked to set one up at the next sign-in.}}"
       },
       "security": {
         "sessionsTitle": "Sessions and sign-in",
@@ -1317,7 +1329,7 @@
         "deactivationValue": "Signed out and refused",
         "hours": "{count, plural, one {# hour} other {# hours}} after sign-in",
         "minutes": "{count} minutes, single use",
-        "deferred": "Idle lock on a shared PC, mandatory passkeys, an IP allowlist and new-device emails are not built yet.",
+        "deferred": "Idle lock on a shared PC, an IP allowlist and new-device emails are not built yet.",
         "integrationsTitle": "Integrations & keys",
         "configured": "Configured",
         "notConfigured": "Not set",
@@ -1325,7 +1337,10 @@
         "auditTitle": "Audit log",
         "auditDescription": "The latest 50 events across the platform.",
         "system": "System",
-        "loadError": "Could not load this section."
+        "loadError": "Could not load this section.",
+        "staffPasskeys": "Staff passkeys",
+        "passkeysRequired": "Required at sign-in",
+        "passkeysOptional": "Optional"
       },
       "agency": "Agency",
       "agencyName": "Name",
@@ -1369,7 +1384,11 @@
       "emailPlaceholder": "you@agency.test",
       "sending": "Sending…",
       "send": "Send magic link",
-      "error": "Could not send the sign-in link."
+      "error": "Could not send the sign-in link.",
+      "passkey": "Sign in with a passkey",
+      "or": "or get a link by email",
+      "passkeyRequired": "Staff sign in to the desk with a passkey. Use yours below; if you lost it, ask a Super Admin to reset it.",
+      "passkeyFailed": "The passkey sign-in did not complete. Try again."
     },
     "common": {
       "save": "Save",
@@ -2759,6 +2778,36 @@
       "openDesk": "Open the desk",
       "wrongAddress": "Signed in with another address? Sign out and use the invited one.",
       "failed": "The invitation could not be accepted."
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "A passkey signs you in to the desk with your device's PIN, fingerprint or face, instead of a link by email.",
+      "required": "Staff must sign in to the desk with a passkey.",
+      "setupTitle": "Set up your passkey",
+      "setupDescription": "Before you use the desk, set up a passkey on this device. Then sign in with it.",
+      "useTitle": "Sign in with your passkey",
+      "useDescription": "You signed in with a link, but your account has a passkey. Sign in with it to use the desk.",
+      "name": "Name (optional)",
+      "nameHint": "For example: Office laptop",
+      "add": "Set up a passkey",
+      "addAnother": "Add another passkey",
+      "added": "Passkey added. Now sign in with it.",
+      "signIn": "Sign in with your passkey",
+      "listTitle": "Your passkeys",
+      "empty": "No passkeys yet.",
+      "unnamed": "Unnamed passkey",
+      "addedOn": "Added {date}",
+      "synced": "Synced across devices",
+      "thisDevice": "This device only",
+      "rename": "Rename",
+      "renameLabel": "New name for {name}",
+      "save": "Save",
+      "cancel": "Cancel",
+      "remove": "Remove",
+      "twoAdvice": "Set up two passkeys, for example on your phone and your laptop, so a lost device does not lock you out.",
+      "changeNote": "Adding, renaming or removing a passkey needs a passkey sign-in, and each change is emailed to you.",
+      "back": "Back to the desk",
+      "failed": "That did not work. Try again."
     }
   },
   "conditions": {

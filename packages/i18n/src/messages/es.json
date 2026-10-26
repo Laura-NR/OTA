@@ -1024,7 +1024,8 @@
         "administrativeSupport": "Soporte administrativo",
         "serviceWorker": "Colaborador",
         "traveler": "Viajero"
-      }
+      },
+      "passkeys": "Llaves de acceso"
     },
     "paymentsLedger": {
       "title": "Pagos",
@@ -1114,7 +1115,12 @@
         "revokeSessions": "Cerrar todas las sesiones",
         "deactivate": "Desactivar",
         "reactivate": "Reactivar",
-        "failed": "No se guardó el cambio."
+        "failed": "No se guardó el cambio.",
+        "resetPasskeys": "Restablecer llaves",
+        "resetHint": "Borra las llaves de acceso de {name} y cierra todas sus sesiones; configurará una nueva en su próximo acceso.",
+        "resetReason": "Motivo (para el registro de auditoría)",
+        "resetConfirm": "Restablecer y cerrar sesiones",
+        "resetCancel": "Cancelar"
       },
       "invites": {
         "title": "Invitar a un usuario",
@@ -1242,7 +1248,9 @@
           "pct": "{value} %",
           "days": "{value, plural, one {# día} other {# días}}",
           "months": "{value, plural, one {# mes} other {# meses}}",
-          "count": "{value}"
+          "count": "{value}",
+          "on": "Sí",
+          "off": "No"
         },
         "groups": {
           "dispatch": "Despacho",
@@ -1250,7 +1258,8 @@
           "payments": "Pagos",
           "content": "Contenido",
           "customers": "Clientes",
-          "bookings": "Reservas"
+          "bookings": "Reservas",
+          "security": "Seguridad"
         },
         "levels": {
           "CAUTION": "Precaución y crítico",
@@ -1287,7 +1296,8 @@
           "resourcesStaleDays": "Recursos desactualizados tras",
           "reliabilityFloorPercent": "Umbral de fiabilidad del auto-despacho",
           "reliabilityMinAnswered": "Ofertas respondidas antes del umbral",
-          "conciergeAnswerHours": "Solicitud de evento respondida en"
+          "conciergeAnswerHours": "Solicitud de evento respondida en",
+          "staffPasskeysRequired": "El personal entra con llave de acceso"
         },
         "used": {
           "dispatchTimeoutMinutes": "Despacho, Panel, Reserva",
@@ -1304,8 +1314,10 @@
           "resourcesStaleDays": "Proveedores, Incidencias, Paquetes del sitio",
           "reliabilityFloorPercent": "Despacho, Proveedores, lista de reasignación",
           "reliabilityMinAnswered": "Despacho, Proveedores, lista de reasignación",
-          "conciergeAnswerHours": "Reservas › Solicitudes de eventos, Panel, correo de solicitud"
-        }
+          "conciergeAnswerHours": "Reservas › Solicitudes de eventos, Panel, correo de solicitud",
+          "staffPasskeysRequired": "Acceso a la mesa, avisos de escalado y mensajería"
+        },
+        "passkeyWarning": "{count, plural, =0 {Todo el personal activo tiene una llave de acceso.} one {# persona del personal activo aún no tiene llave de acceso y deberá configurarla en su próximo acceso.} other {# personas del personal activo aún no tienen llave de acceso y deberán configurarla en su próximo acceso.}}"
       },
       "security": {
         "sessionsTitle": "Sesiones y acceso",
@@ -1317,7 +1329,7 @@
         "deactivationValue": "Sesiones cerradas y acceso bloqueado",
         "hours": "{count, plural, one {# hora} other {# horas}} tras el acceso",
         "minutes": "{count} minutos, un solo uso",
-        "deferred": "El bloqueo por inactividad en un PC compartido, las llaves de acceso obligatorias, la lista de IP permitidas y los avisos de nuevo dispositivo aún no existen.",
+        "deferred": "El bloqueo por inactividad en un PC compartido, la lista de IP permitidas y los avisos de nuevo dispositivo aún no existen.",
         "integrationsTitle": "Integraciones y claves",
         "configured": "Configurada",
         "notConfigured": "Sin configurar",
@@ -1325,7 +1337,10 @@
         "auditTitle": "Registro de auditoría",
         "auditDescription": "Los últimos 50 eventos de la plataforma.",
         "system": "Sistema",
-        "loadError": "No se pudo cargar esta sección."
+        "loadError": "No se pudo cargar esta sección.",
+        "staffPasskeys": "Llaves de acceso del personal",
+        "passkeysRequired": "Obligatorias al entrar",
+        "passkeysOptional": "Opcionales"
       },
       "agency": "Agencia",
       "agencyName": "Nombre",
@@ -1369,7 +1384,11 @@
       "emailPlaceholder": "tu@agencia.test",
       "sending": "Enviando…",
       "send": "Enviar enlace de acceso",
-      "error": "No se pudo enviar el enlace de acceso."
+      "error": "No se pudo enviar el enlace de acceso.",
+      "passkey": "Entrar con una llave de acceso",
+      "or": "o recibir un enlace por correo",
+      "passkeyRequired": "El personal entra en la mesa con una llave de acceso. Use la suya abajo; si la perdió, pida a un Super Admin que la restablezca.",
+      "passkeyFailed": "El acceso con la llave no se completó. Inténtelo de nuevo."
     },
     "common": {
       "save": "Guardar",
@@ -2759,6 +2778,36 @@
       "openDesk": "Abrir la mesa",
       "wrongAddress": "¿Inició sesión con otra dirección? Cierre sesión y use la invitada.",
       "failed": "No se pudo aceptar la invitación."
+    },
+    "passkeys": {
+      "title": "Llaves de acceso",
+      "description": "Una llave de acceso le permite entrar en la mesa con el PIN, la huella o la cara de su dispositivo, en lugar de un enlace por correo.",
+      "required": "El personal debe entrar en la mesa con una llave de acceso.",
+      "setupTitle": "Configure su llave de acceso",
+      "setupDescription": "Antes de usar la mesa, configure una llave de acceso en este dispositivo. Después, entre con ella.",
+      "useTitle": "Entre con su llave de acceso",
+      "useDescription": "Entró con un enlace, pero su cuenta tiene una llave de acceso. Entre con ella para usar la mesa.",
+      "name": "Nombre (opcional)",
+      "nameHint": "Por ejemplo: Portátil de la oficina",
+      "add": "Configurar una llave de acceso",
+      "addAnother": "Añadir otra llave de acceso",
+      "added": "Llave añadida. Ahora entre con ella.",
+      "signIn": "Entrar con su llave de acceso",
+      "listTitle": "Sus llaves de acceso",
+      "empty": "Aún no hay llaves de acceso.",
+      "unnamed": "Llave sin nombre",
+      "addedOn": "Añadida el {date}",
+      "synced": "Sincronizada entre dispositivos",
+      "thisDevice": "Solo este dispositivo",
+      "rename": "Renombrar",
+      "renameLabel": "Nuevo nombre para {name}",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "remove": "Quitar",
+      "twoAdvice": "Configure dos llaves, por ejemplo en su teléfono y en su portátil, para que perder un dispositivo no le deje fuera.",
+      "changeNote": "Añadir, renombrar o quitar una llave exige entrar con una llave de acceso, y cada cambio se le notifica por correo.",
+      "back": "Volver a la mesa",
+      "failed": "No funcionó. Inténtelo de nuevo."
     }
   },
   "conditions": {

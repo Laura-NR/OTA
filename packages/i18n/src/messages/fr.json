@@ -1024,7 +1024,8 @@
         "administrativeSupport": "Support administratif",
         "serviceWorker": "Prestataire",
         "traveler": "Voyageur"
-      }
+      },
+      "passkeys": "Clés d'accès"
     },
     "paymentsLedger": {
       "title": "Paiements",
@@ -1114,7 +1115,12 @@
         "revokeSessions": "Déconnecter partout",
         "deactivate": "Désactiver",
         "reactivate": "Réactiver",
-        "failed": "La modification n'a pas été enregistrée."
+        "failed": "La modification n'a pas été enregistrée.",
+        "resetPasskeys": "Réinitialiser les clés",
+        "resetHint": "Supprime les clés d'accès de {name} et ferme toutes ses sessions ; une nouvelle clé sera configurée à la prochaine connexion.",
+        "resetReason": "Motif (pour le journal d'audit)",
+        "resetConfirm": "Réinitialiser et déconnecter",
+        "resetCancel": "Annuler"
       },
       "invites": {
         "title": "Inviter un utilisateur",
@@ -1242,7 +1248,9 @@
           "pct": "{value} %",
           "days": "{value, plural, one {# jour} other {# jours}}",
           "months": "{value, plural, one {# mois} other {# mois}}",
-          "count": "{value}"
+          "count": "{value}",
+          "on": "Oui",
+          "off": "Non"
         },
         "groups": {
           "dispatch": "Dispatch",
@@ -1250,7 +1258,8 @@
           "payments": "Paiements",
           "content": "Contenu",
           "customers": "Clients",
-          "bookings": "Réservations"
+          "bookings": "Réservations",
+          "security": "Sécurité"
         },
         "levels": {
           "CAUTION": "Prudence et critique",
@@ -1287,7 +1296,8 @@
           "resourcesStaleDays": "Ressources périmées après",
           "reliabilityFloorPercent": "Seuil de fiabilité de la répartition auto",
           "reliabilityMinAnswered": "Offres répondues avant le seuil",
-          "conciergeAnswerHours": "Demande d’événement traitée sous"
+          "conciergeAnswerHours": "Demande d’événement traitée sous",
+          "staffPasskeysRequired": "Le personnel se connecte avec une clé d'accès"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
@@ -1304,8 +1314,10 @@
           "resourcesStaleDays": "Fournisseurs, Perturbations, Forfaits du site",
           "reliabilityFloorPercent": "Dispatch, Fournisseurs, liste de réaffectation",
           "reliabilityMinAnswered": "Dispatch, Fournisseurs, liste de réaffectation",
-          "conciergeAnswerHours": "Réservations › Demandes d’événements, Tableau de bord, e-mail de demande"
-        }
+          "conciergeAnswerHours": "Réservations › Demandes d’événements, Tableau de bord, e-mail de demande",
+          "staffPasskeysRequired": "Connexion au bureau, flux d'escalade et messagerie"
+        },
+        "passkeyWarning": "{count, plural, =0 {Tout le personnel actif a une clé d'accès.} one {# membre actif du personnel n'a pas encore de clé d'accès et devra en configurer une à la prochaine connexion.} other {# membres actifs du personnel n'ont pas encore de clé d'accès et devront en configurer une à la prochaine connexion.}}"
       },
       "security": {
         "sessionsTitle": "Sessions et connexion",
@@ -1317,7 +1329,7 @@
         "deactivationValue": "Déconnectés et refusés",
         "hours": "{count, plural, one {# heure} other {# heures}} après la connexion",
         "minutes": "{count} minutes, usage unique",
-        "deferred": "Le verrouillage d'inactivité sur un PC partagé, les clés d'accès obligatoires, la liste d'IP autorisées et les e-mails de nouvel appareil n'existent pas encore.",
+        "deferred": "Le verrouillage d'inactivité sur un PC partagé, la liste d'IP autorisées et les e-mails de nouvel appareil n'existent pas encore.",
         "integrationsTitle": "Intégrations et clés",
         "configured": "Configurée",
         "notConfigured": "Non définie",
@@ -1325,7 +1337,10 @@
         "auditTitle": "Journal d'audit",
         "auditDescription": "Les 50 derniers événements de la plateforme.",
         "system": "Système",
-        "loadError": "Impossible de charger cette section."
+        "loadError": "Impossible de charger cette section.",
+        "staffPasskeys": "Clés d'accès du personnel",
+        "passkeysRequired": "Obligatoires à la connexion",
+        "passkeysOptional": "Facultatives"
       },
       "agency": "Agence",
       "agencyName": "Nom",
@@ -1369,7 +1384,11 @@
       "emailPlaceholder": "vous@agence.test",
       "sending": "Envoi…",
       "send": "Envoyer le lien de connexion",
-      "error": "Impossible d'envoyer le lien de connexion."
+      "error": "Impossible d'envoyer le lien de connexion.",
+      "passkey": "Se connecter avec une clé d'accès",
+      "or": "ou recevoir un lien par e-mail",
+      "passkeyRequired": "Le personnel se connecte au bureau avec une clé d'accès. Utilisez la vôtre ci-dessous ; si vous l'avez perdue, demandez à un Super Admin de la réinitialiser.",
+      "passkeyFailed": "La connexion avec la clé d'accès n'a pas abouti. Réessayez."
     },
     "common": {
       "save": "Enregistrer",
@@ -2759,6 +2778,36 @@
       "openDesk": "Ouvrir le bureau",
       "wrongAddress": "Connecté avec une autre adresse ? Déconnectez-vous et utilisez l'adresse invitée.",
       "failed": "L'invitation n'a pas pu être acceptée."
+    },
+    "passkeys": {
+      "title": "Clés d'accès",
+      "description": "Une clé d'accès vous connecte au bureau avec le code, l'empreinte ou le visage de votre appareil, au lieu d'un lien par e-mail.",
+      "required": "Le personnel doit se connecter au bureau avec une clé d'accès.",
+      "setupTitle": "Configurez votre clé d'accès",
+      "setupDescription": "Avant d'utiliser le bureau, configurez une clé d'accès sur cet appareil. Connectez-vous ensuite avec elle.",
+      "useTitle": "Connectez-vous avec votre clé d'accès",
+      "useDescription": "Vous vous êtes connecté avec un lien, mais votre compte a une clé d'accès. Connectez-vous avec elle pour utiliser le bureau.",
+      "name": "Nom (facultatif)",
+      "nameHint": "Par exemple : Portable du bureau",
+      "add": "Configurer une clé d'accès",
+      "addAnother": "Ajouter une autre clé d'accès",
+      "added": "Clé ajoutée. Connectez-vous maintenant avec elle.",
+      "signIn": "Se connecter avec votre clé d'accès",
+      "listTitle": "Vos clés d'accès",
+      "empty": "Aucune clé d'accès pour l'instant.",
+      "unnamed": "Clé sans nom",
+      "addedOn": "Ajoutée le {date}",
+      "synced": "Synchronisée entre appareils",
+      "thisDevice": "Cet appareil uniquement",
+      "rename": "Renommer",
+      "renameLabel": "Nouveau nom pour {name}",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "remove": "Retirer",
+      "twoAdvice": "Configurez deux clés, par exemple sur votre téléphone et votre portable, pour qu'un appareil perdu ne vous bloque pas.",
+      "changeNote": "Ajouter, renommer ou retirer une clé demande une connexion par clé d'accès, et chaque changement vous est envoyé par e-mail.",
+      "back": "Retour au bureau",
+      "failed": "Cela n'a pas fonctionné. Réessayez."
     }
   },
   "conditions": {
