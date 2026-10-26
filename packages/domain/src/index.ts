@@ -435,6 +435,15 @@ export {
   type InviteState,
 } from './settings/staff';
 export {
+  PASSKEY_SIGN_IN_METHOD,
+  passkeyChangeRefusal,
+  passkeyRefusal,
+  staffPasskeysEnforced,
+  type PasskeyChange,
+  type PasskeyChangeRefusal,
+  type PasskeyRefusal,
+} from './settings/passkeys';
+export {
   EVENT_ACCESS,
   EVENT_REQUEST_PATHS,
   EVENT_REQUEST_RETENTION_DAYS,

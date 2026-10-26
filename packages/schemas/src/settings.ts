@@ -37,6 +37,7 @@ export const operatingThresholdsSchema = z.object({
   reliabilityFloorPercent: whole(0, 100),
   reliabilityMinAnswered: whole(1, 100),
   conciergeAnswerHours: whole(1, 168),
+  staffPasskeysRequired: z.boolean(),
 });
 
 export type OperatingThresholdsDto = z.infer<typeof operatingThresholdsSchema>;
@@ -180,3 +181,37 @@ export const securityStatusSchema = z.object({
 });
 
 export type SecurityStatusDto = z.infer<typeof securityStatusSchema>;
+
+/** One of the signed-in person's passkeys (`docs/schema-m9-passkeys.md` P4). */
+export const passkeySchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  createdAt: z.string().nullable(),
+  /** `singleDevice` or `multiDevice` (synced), as WebAuthn reports it. */
+  deviceType: z.string(),
+  backedUp: z.boolean(),
+});
+
+export type PasskeyDto = z.infer<typeof passkeySchema>;
+
+/**
+ * The signed-in person's passkeys and where the staff rule leaves this
+ * session: `ok`, `enroll` (set one up first) or `use_passkey` (P1–P3).
+ */
+export const passkeyStatusSchema = z.object({
+  /** The rule is in force (the applied switch, unless the deploy's break-glass). */
+  required: z.boolean(),
+  /** This session came from a passkey sign-in. */
+  passkeySession: z.boolean(),
+  state: z.enum(['ok', 'enroll', 'use_passkey']),
+  passkeys: z.array(passkeySchema),
+});
+
+export type PasskeyStatusDto = z.infer<typeof passkeyStatusSchema>;
+
+/** A Super Admin resets another staff member's passkeys, with a reason (P5). */
+export const resetPasskeysSchema = z.object({
+  reason: z.string().trim().min(3).max(500),
+});
+
+export type ResetPasskeysRequest = z.infer<typeof resetPasskeysSchema>;

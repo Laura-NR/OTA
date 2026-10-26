@@ -5,6 +5,7 @@ import {
   changeStaffRoleSchema,
   createInviteSchema,
   operatingThresholdsSchema,
+  resetPasskeysSchema,
 } from '../src';
 
 describe('M9 settings DTOs', () => {
@@ -22,6 +23,15 @@ describe('M9 settings DTOs', () => {
     expect(bad({ retentionGraceDays: 7 })).toBe(false);
     expect(bad({ dispatchTimeoutMinutes: 1.5 })).toBe(false);
     expect(bad({ advisoryDualApprovalFrom: 'INFO' })).toBe(false);
+    expect(bad({ staffPasskeysRequired: 'yes' })).toBe(false);
+    expect(bad({ staffPasskeysRequired: true })).toBe(true);
+  });
+
+  it('asks a reason for a passkey reset (docs/schema-m9-passkeys.md P5)', () => {
+    expect(resetPasskeysSchema.safeParse({ reason: '  ' }).success).toBe(false);
+    expect(resetPasskeysSchema.parse({ reason: ' Phone stolen ' })).toEqual({
+      reason: 'Phone stolen',
+    });
   });
 
   it('invites staff roles only, and never promotes to Super Admin by a role change', () => {

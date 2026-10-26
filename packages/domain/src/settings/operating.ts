@@ -43,6 +43,8 @@ export interface OperatingThresholds {
   reliabilityMinAnswered: number;
   /** Hours the desk has to answer an event request (M10 D7). */
   conciergeAnswerHours: number;
+  /** Staff must sign in with a passkey (`docs/schema-m9-passkeys.md` P1). */
+  staffPasskeysRequired: boolean;
 }
 
 export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
@@ -61,6 +63,7 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   reliabilityFloorPercent: 85,
   reliabilityMinAnswered: 5,
   conciergeAnswerHours: 48,
+  staffPasskeysRequired: false,
 };
 
 export const OPERATING_THRESHOLD_KEYS = Object.keys(
