@@ -233,6 +233,25 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   deactivate the last one. If it is lost anyway, set a user's `role` to
   `SUPER_ADMIN` in the database and audit the change by hand.
 
+## Staff passkeys
+
+- Staff add passkeys at `/passkeys` (the "Passkeys" link under their name). The
+  rule "Staff sign in with a passkey" is a threshold (Settings › Approvals &
+  thresholds, two Super Admins, off by default); with it on, a staff session that
+  did not come from a passkey reaches only the setup page
+  (`docs/schema-m9-passkeys.md`). Travelers and suppliers are not affected.
+- Before switching it on, check Users & roles: the proposal says how many active
+  staff have no passkey yet; they set one up at their next sign-in.
+- Lost device: another Super Admin uses "Reset passkeys" on the user's row (a
+  reason is required). It deletes the passkeys, signs the user out and emails
+  them; they sign in by link and set up a new one. Nobody resets their own.
+- Last Super Admin with no passkey left: set `STAFF_PASSKEYS_OVERRIDE=off` on the
+  API and restart. The rule is suspended (the API warns at every start), the
+  Super Admin signs in by link and enrolls, then remove the variable and restart.
+- `PASSKEY_RP_ID` binds every passkey. Decide it with the deploy topology (the
+  desk's origin must be that domain or a subdomain of it, and listed in
+  `TRUSTED_ORIGINS`); changing it later means everyone enrolls again.
+
 ## Verify a deploy
 
 ```sh

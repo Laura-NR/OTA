@@ -1,6 +1,7 @@
 # M9 staff passkeys: policy and schema diff for review
 
-**Status:** **Proposed 2026-10-26, waiting for the owner.** Nothing is built.
+**Status:** **Approved 2026-10-26 as recommended (P1a–P6a), with `@better-auth/passkey` as a
+back-office dependency, and built the same day** (§7).
 **Date:** 2026-10-26
 **Scope:** the M9 item deferred under D9 in `docs/schema-m9-settings.md` ("passkeys required"),
 which the owner picked first among M9's deferred items: desk enrollment, and a rule that staff
@@ -182,3 +183,48 @@ model Session {
 
 The column keeps the `session` table's own naming (camelCase, no `@map`), as Better Auth's
 columns do. Migration SQL: `ALTER TABLE "session" ADD COLUMN "signInMethod" TEXT;`
+
+## 7. As built (2026-10-26)
+
+- **Migration** `20261026135144_session_sign_in_method` (`61b0231`): `session.signInMethod`,
+  nullable, no backfill.
+- **Domain** (`70ea528`): `packages/domain/src/settings/passkeys.ts` (`passkeyRefusal`,
+  `passkeyChangeRefusal`, `staffPasskeysEnforced`, `PASSKEY_SIGN_IN_METHOD`) and
+  `staffPasskeysRequired` (default false) in the thresholds document; the schemas add
+  `passkeyStatusSchema` and `resetPasskeysSchema`.
+- **Auth** (`442b6b9`): `packages/auth/src/sign-in-method.ts` maps the creating route to the
+  method (only `/passkey/verify-authentication` is `passkey`; a session created while adding a
+  passkey is `other`); `createAuth` takes `passkey: { rpID, rpName, origins, policy }`, sets
+  `residentKey` and `userVerification` to required, refuses a registration or sign-in that did
+  not verify the user, and asks `policy.changeRefusal` before the four passkey-changing routes
+  (403 `PASSKEY_CHANGE_REFUSED`) and `policy.changed` after an add or a delete.
+- **API** (`f66db2b`, `79c1980`): `SessionPolicy` (`apps/api/src/auth/session-policy.ts`,
+  global) holds `sessionRefusal` plus the passkey rule and is shared by the guard, both
+  gateways (which now also refuse a deactivated user and an ended staff session) and the
+  T-Events intake. The guard answers 403 `PASSKEY_SETUP_REQUIRED` or 401
+  `PASSKEY_SIGN_IN_REQUIRED`, except on `@AllowWithoutPasskey()` routes (`GET /me`,
+  `GET /me/passkeys`). `POST /staff/:id/reset-passkeys` (Super Admin, never oneself, a reason)
+  deletes the passkeys and sessions, audits `staff.passkeys_reset` and emails the user. Adds
+  and removals are audited as `auth.passkey_added` / `auth.passkey_removed` and emailed, for
+  staff only. `PASSKEY_RP_ID` and `STAFF_PASSKEYS_OVERRIDE` are read by `main.ts` (and passed
+  through by turbo's dev task); the relying party name is the tenant's agency name.
+- **Desk** (`ab0fcba`): "Sign in with a passkey" on `/login`; `/passkeys` (setup, sign in,
+  list with rename and remove) outside the shell, linked as "Passkeys" under the person's name;
+  the dashboard layout sends a held-back session to `/passkeys` or `/login?passkey=required`;
+  the switch in a "Security" thresholds group with the count of staff without a passkey; "Reset
+  passkeys" on Users & roles; the "Staff passkeys" fact on Security. en/es/fr.
+- **e2e** (`2c58ff3`): `e2e/passkeys.spec.ts`, serial, with Chromium's virtual authenticator
+  over CDP. Two Super Admins enroll and sign in by passkey; the switch is proposed and applied;
+  a link session gets 403 and is sent to setup, enrolls and signs in; its last passkey cannot
+  be removed; a reset signs it out and emails it; the rule is switched off again and a removal
+  is audited. `/passkeys` joined the axe spec.
+
+**Differences from §5:**
+- "Your passkeys" is the `/passkeys` page, linked from the shell, not a Security-tab section:
+  the Security tab is Super Admin only and every staff role needs the page.
+- The reset rule is the existing staff checks (`@Roles(SuperAdmin)` and `loadStaff`, which
+  refuses oneself and non-staff), not a new domain function.
+- The e2e does not open an `/ops` socket; the gateways' refusal is proven by
+  `apps/api/test/escalation.gateway.test.ts` and `messaging.gateway.test.ts`.
+- The passkey emails use the tenant's primary language, as the invitation does.
+

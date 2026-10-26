@@ -1019,3 +1019,31 @@ the owner prefers Plausible CE when it is built). No migration, no new dependenc
   refused or lost event is logged, never an error for the request.
 - **Inspection:** with `TELEMETRY_SINK_FILE` set, the mock sink also appends each event as a
   JSON line; the e2e stack sets it so specs can read the events the API recorded itself.
+
+## Amendment, 2026-10-26: staff passkeys (M9 deferred item), resolved by the build
+
+The owner approved `docs/schema-m9-passkeys.md` as recommended (P1a–P6a). The board shows
+"passkeys required" as a Sessions & sign-in row and a passkeys column on Users & roles, with no
+enrollment or sign-in screens, so the build drew them from existing components and tokens.
+
+- **Login:** "Sign in with a passkey" is a full-width secondary button above the email form,
+  separated by a caption ("or get a link by email"). The magic-link button stays primary, so
+  the page reads as before while the rule is off. `?passkey=required` adds a neutral alert.
+- **`/passkeys`** is a card page outside the desk shell, like `/invite`, because a staff
+  member the rule holds back must reach it before the desk opens. It has three states: setup
+  (heading, explanation, optional name, primary "Set up a passkey", then "Sign in with your
+  passkey"), sign in with an existing passkey, and the list. List rows show the name, the date
+  added and "Synced across devices" or "This device only", with Rename (inline field) and
+  Remove (destructive), followed by the add form and two caption notes.
+- **The shell:** a "Passkeys" link beside "Sign out" under the person's name, in the same
+  caption-link style, so every staff role reaches it (the Security tab is Super Admin only).
+- **The switch** is the thresholds document's first boolean. It is a Select with Off/On
+  (es Sí/No, fr Oui/Non) in a new "Security" group, matching the existing level Select rather
+  than adding a toggle component. The in-force table reads it as On/Off. Proposing or
+  reviewing a switch to On shows a neutral alert with the number of active staff without a
+  passkey.
+- **Reset passkeys** opens an inline reason field (required, 3–500 characters) under the row's
+  actions, with a destructive "Reset and sign out" and a secondary Cancel. It is offered only
+  when the user has passkeys and is active.
+- **Security tab:** a "Staff passkeys" fact (Required at sign-in / Optional), read from the
+  rule in force (it reflects the break-glass). "Mandatory passkeys" left the not-built line.
