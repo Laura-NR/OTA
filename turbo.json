@@ -15,9 +15,11 @@
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
+        "PASSKEY_RP_ID",
         "PASSPORT_ENCRYPTION_KEY",
         "RATE_LIMIT_MAX",
         "RATE_LIMIT_AUTH_MAX",
+        "STAFF_PASSKEYS_OVERRIDE",
         "TELEMETRY_SINK_FILE"
       ]
     }
