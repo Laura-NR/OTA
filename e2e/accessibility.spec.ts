@@ -219,6 +219,7 @@ test.describe('accessibility audit (WCAG 2.2 AA, axe)', () => {
       '/content/events',
       '/reports',
       '/settings',
+      '/passkeys',
     ]);
   });
 
