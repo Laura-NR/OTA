@@ -35,6 +35,7 @@ import {
 } from '@ota/schemas';
 import type { Request } from 'express';
 
+import { AllowWithoutPasskey } from '../auth/allow-without-passkey.decorator';
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -55,6 +56,7 @@ export class MeController {
   ) {}
 
   @Get()
+  @AllowWithoutPasskey()
   profile(@CurrentUser() actor: AuthUser): Promise<MeProfileDto> {
     return this.me.getProfile(actor.id);
   }

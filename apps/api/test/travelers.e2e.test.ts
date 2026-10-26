@@ -12,6 +12,7 @@ import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { TENANT_CONFIG } from '../src/tenant/tenant.tokens';
 import { PASSPORT_KEY } from '../src/travelers/travelers.tokens';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const OPS = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -310,7 +311,7 @@ const party = {
 async function buildApp(state: State, key: Buffer | null): Promise<INestApplication> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(PrismaService)
-    .useValue(createFakePrisma(state))
+    .useValue(withNoSettingsVersion(createFakePrisma(state)))
     .overrideProvider(AuthService)
     .useValue(fakeAuthService)
     .overrideProvider(TENANT_CONFIG)

@@ -8,6 +8,8 @@ export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
+  /** How the session was created (`session.signInMethod`); `passkey` for a passkey sign-in. */
+  signInMethod?: string | null;
 }
 
 export interface RequestWithUser {

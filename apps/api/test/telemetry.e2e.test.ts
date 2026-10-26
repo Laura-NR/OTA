@@ -9,6 +9,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { MockTelemetrySink, type SinkEvent } from '../src/telemetry/telemetry-sink';
 import { hashUserId } from '../src/telemetry/telemetry.service';
 import { TELEMETRY_SINK } from '../src/telemetry/telemetry.tokens';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const SECRET = 'test-secret-for-telemetry';
 
@@ -47,7 +48,7 @@ describe('T-Events intake (POST /telemetry/events)', () => {
     process.env.AUTH_SECRET = SECRET;
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue({})
+      .useValue(withNoSettingsVersion({}))
       .overrideProvider(AuthService)
       .useValue({
         getSession: async () => {

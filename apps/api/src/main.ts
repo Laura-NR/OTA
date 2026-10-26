@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { Logger as NestLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { loadTenantConfig } from '@ota/config';
 import { prisma } from '@ota/db';
@@ -9,6 +10,7 @@ import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 import { setAuthRuntime } from './auth/auth.runtime';
+import { SessionPolicy } from './auth/session-policy';
 import {
   DEFAULT_SHUTDOWN_TIMEOUT_MS,
   enableGracefulShutdown,
@@ -43,6 +45,14 @@ async function bootstrap(): Promise<void> {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  // Better Auth's passkey routes ask the Nest session policy (P4); requests
+  // arrive only after `listen`, by which time it is resolved below.
+  const resolved: { sessionPolicy?: SessionPolicy } = {};
+  const policy = (): SessionPolicy => {
+    if (!resolved.sessionPolicy) throw new Error('The session policy is not ready');
+    return resolved.sessionPolicy;
+  };
+
   const { createAuth, createAuthMiddleware, toWebHeaders } = await import('@ota/auth');
   const auth = createAuth({
     prisma,
@@ -55,6 +65,15 @@ async function bootstrap(): Promise<void> {
     sendMagicLink: async ({ email, url }) => {
       await mailer.send(magicLinkEmail({ to: email, url, branding: tenant.branding }));
     },
+    passkey: {
+      rpID: process.env.PASSKEY_RP_ID?.trim() || undefined,
+      rpName: tenant.branding.agencyName,
+      origins: trustedOrigins,
+      policy: {
+        changeRefusal: (input) => policy().changeRefusal(input),
+        changed: (input) => policy().passkeyChanged(input),
+      },
+    },
   });
   setAuthRuntime({ auth, toWebHeaders });
   const authHandler = createAuthMiddleware(auth);
@@ -63,6 +82,12 @@ async function bootstrap(): Promise<void> {
     bodyParser: false,
     bufferLogs: true,
   });
+  resolved.sessionPolicy = app.get(SessionPolicy);
+  if (process.env.STAFF_PASSKEYS_OVERRIDE?.trim().toLowerCase() === 'off') {
+    new NestLogger('Bootstrap').warn(
+      'STAFF_PASSKEYS_OVERRIDE=off: the staff passkey rule is suspended (break-glass)',
+    );
+  }
   enableGracefulShutdown(
     app,
     positiveInt(process.env.SHUTDOWN_TIMEOUT_MS, DEFAULT_SHUTDOWN_TIMEOUT_MS),

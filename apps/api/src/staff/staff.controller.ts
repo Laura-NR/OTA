@@ -14,9 +14,11 @@ import {
   acceptInviteSchema,
   changeStaffRoleSchema,
   createInviteSchema,
+  resetPasskeysSchema,
   type AcceptInviteRequest,
   type ChangeStaffRoleRequest,
   type CreateInviteRequest,
+  type ResetPasskeysRequest,
   type StaffInviteDto,
   type StaffUserDto,
 } from '@ota/schemas';
@@ -28,7 +30,8 @@ import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { StaffService } from './staff.service';
 
 /**
- * Users & roles (A-Settings, M9 D4–D5): Super Admin only, except accepting an
+ * Users & roles (A-Settings, M9 D4–D5, and the passkey reset of
+ * `docs/schema-m9-passkeys.md` P5): Super Admin only, except accepting an
  * invitation, which the invited person does once signed in.
  */
 @Controller('staff')
@@ -114,6 +117,17 @@ export class StaffController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<StaffUserDto> {
     return this.staff.revokeSessions(actor, id);
+  }
+
+  @Post(':id/reset-passkeys')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.SuperAdmin)
+  resetPasskeys(
+    @CurrentUser() actor: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(resetPasskeysSchema)) body: ResetPasskeysRequest,
+  ): Promise<StaffUserDto> {
+    return this.staff.resetPasskeys(actor, id, body);
   }
 
   @Post(':id/deactivate')

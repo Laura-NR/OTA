@@ -164,6 +164,8 @@ const ROUTES: Route[] = [
     path: `/me/reservations/${RESERVATION}/travelers/${TRAVELER_ROW}/affidavit`,
     allowed: 'authenticated',
   },
+  // docs/schema-m9-passkeys.md P3: the setup page's status, for any signed-in person.
+  { method: 'get', path: '/me/passkeys', allowed: 'authenticated' },
   { method: 'get', path: '/me/consents', allowed: 'authenticated' },
   { method: 'post', path: '/me/consents', allowed: 'authenticated' },
   // M5: the traveler's own custom requests and proposals.
@@ -456,6 +458,7 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/staff/invites/${INVITE}/revoke`, allowed: 'superAdmin' },
   { method: 'patch', path: `/staff/${STAFF_USER}`, allowed: 'superAdmin' },
   { method: 'post', path: `/staff/${STAFF_USER}/revoke-sessions`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/reset-passkeys`, allowed: 'superAdmin' },
   { method: 'post', path: `/staff/${STAFF_USER}/deactivate`, allowed: 'superAdmin' },
   { method: 'post', path: `/staff/${STAFF_USER}/reactivate`, allowed: 'superAdmin' },
   { method: 'get', path: '/customers', allowed: 'opsRead' },

@@ -24,12 +24,15 @@ import { staffInviteEmail, type Mailer } from '@ota/email';
 import type {
   ChangeStaffRoleRequest,
   CreateInviteRequest,
+  ResetPasskeysRequest,
   StaffInviteDto,
   StaffUserDto,
 } from '@ota/schemas';
 import { createHash, randomBytes } from 'node:crypto';
 
+import { SessionPolicy } from '../auth/session-policy';
 import type { AuthUser } from '../common/auth/auth-user';
+import { backofficeBaseUrl } from '../common/backoffice-url';
 import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
@@ -76,19 +79,12 @@ function newToken(): { token: string; tokenHash: string } {
   return { token, tokenHash: hashToken(token) };
 }
 
-/** The back-office origin the invitation links to. */
-export function backofficeBaseUrl(): string {
-  return (process.env.BACKOFFICE_PUBLIC_URL ?? 'http://localhost:3002').replace(
-    /\/$/,
-    '',
-  );
-}
-
 /**
  * M9 staff users (`docs/schema-m9-settings.md` D4, D5): the desk's users,
  * invitations (a Super Admin invite, also the way to promote an existing
  * staff member, is sent only once a second Super Admin confirms it), role
- * changes, session revocation and deactivation. Every change is audited.
+ * changes, session revocation, deactivation and a passkey reset
+ * (`docs/schema-m9-passkeys.md` P5). Every change is audited.
  */
 @Injectable()
 export class StaffService {
@@ -98,6 +94,7 @@ export class StaffService {
     private readonly prisma: PrismaService,
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly policy: SessionPolicy,
   ) {}
 
   async list(): Promise<StaffUserDto[]> {
@@ -369,6 +366,38 @@ export class StaffService {
         sessions: removed.count,
       });
     });
+    return this.one(id);
+  }
+
+  /**
+   * A lost device (P5): another Super Admin deletes the user's passkeys and
+   * sessions, with a reason; the user signs in by link and sets one up again.
+   */
+  async resetPasskeys(
+    actor: AuthUser,
+    id: string,
+    input: ResetPasskeysRequest,
+  ): Promise<StaffUserDto> {
+    await this.loadStaff(actor, id);
+    const email = await this.prisma.$transaction(async (tx) => {
+      const passkeys = await tx.passkey.deleteMany({ where: { userId: id } });
+      const sessions = await tx.session.deleteMany({ where: { userId: id } });
+      await this.audit(tx, actor, 'staff.passkeys_reset', ENTITY_USER, id, {
+        reason: input.reason,
+        passkeys: passkeys.count,
+        sessions: sessions.count,
+      });
+      const target = await tx.user.findUniqueOrThrow({
+        where: { id },
+        select: { email: true },
+      });
+      return target.email;
+    });
+    const actorRow = await this.prisma.user.findUnique({
+      where: { id: actor.id },
+      ...PERSON,
+    });
+    await this.policy.notify(email, 'reset', { actorName: personName(actorRow) });
     return this.one(id);
   }
 

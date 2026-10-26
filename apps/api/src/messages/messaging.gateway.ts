@@ -9,6 +9,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import type { Server, Socket } from 'socket.io';
 
 import { AuthService } from '../auth/auth.service';
+import { SessionPolicy, sessionMayConnect } from '../auth/session-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import type { MessageEvent, MessagePublisher } from './message.publisher';
 
@@ -25,7 +26,8 @@ function reservationRoom(reservationId: string): string {
 /**
  * Real-time channel for traveler↔operations messaging. Clients connect to the
  * `conversations` namespace with `?reservationId=...`; only the reservation's
- * owner or an operations role may join. If nobody is connected, the message is
+ * owner or an operations role may join, with a session the guard would accept
+ * (`SessionPolicy`, passkey rule included). If nobody is connected, the message is
  * still delivered by email (see MessagesService).
  */
 @WebSocketGateway({
@@ -41,13 +43,14 @@ export class MessagingGateway implements MessagePublisher, OnGatewayConnection {
   constructor(
     private readonly auth: AuthService,
     private readonly prisma: PrismaService,
+    private readonly policy: SessionPolicy,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
     const session = await this.auth
       .getSession(client.handshake.headers as IncomingHttpHeaders)
       .catch(() => null);
-    if (!session) {
+    if (!session || !(await sessionMayConnect(this.policy, session, this.logger))) {
       client.disconnect(true);
       return;
     }

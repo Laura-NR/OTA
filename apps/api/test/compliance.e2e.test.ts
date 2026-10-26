@@ -11,6 +11,7 @@ import { AuthService } from '../src/auth/auth.service';
 import { LEGAL_CONTENT } from '../src/compliance/compliance.tokens';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OBJECT_STORAGE } from '../src/storage/storage.module';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const USERS = {
   superAdmin: {
@@ -236,7 +237,7 @@ describe('compliance API (M3)', () => {
     state = seed();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       .overrideProvider(LEGAL_CONTENT)

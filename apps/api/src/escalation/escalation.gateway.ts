@@ -10,6 +10,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import type { Server, Socket } from 'socket.io';
 
 import { AuthService } from '../auth/auth.service';
+import { SessionPolicy, sessionMayConnect } from '../auth/session-policy';
 import type { EscalationEvent, EscalationPublisher } from './escalation.publisher';
 
 const OPS_ROOM = 'ops';
@@ -22,7 +23,8 @@ const OPS_ROLES: readonly string[] = [
 /**
  * Real-time escalation channel for the operations desk. Clients connect to the
  * `ops` namespace; the handshake is authenticated with the Better Auth session
- * cookie and only operations roles may join. Events mirror dispatch activity so
+ * cookie, and only operations roles whose session the guard would accept
+ * (`SessionPolicy`, passkey rule included) may join. Events mirror dispatch activity so
  * the dashboard can raise amber/red cues and offer click-to-call.
  */
 @WebSocketGateway({ namespace: 'ops', cors: { origin: true, credentials: true } })
@@ -34,7 +36,10 @@ export class EscalationGateway
 
   private readonly logger = new Logger(EscalationGateway.name);
 
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly policy: SessionPolicy,
+  ) {}
 
   afterInit(): void {
     this.logger.log('Escalation gateway ready on namespace /ops');
@@ -46,7 +51,12 @@ export class EscalationGateway
       .catch(() => null);
 
     const role = session?.user.role ?? null;
-    if (!session || !role || !OPS_ROLES.includes(role)) {
+    if (
+      !session ||
+      !role ||
+      !OPS_ROLES.includes(role) ||
+      !(await sessionMayConnect(this.policy, session, this.logger))
+    ) {
       client.disconnect(true);
       return;
     }

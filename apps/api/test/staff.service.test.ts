@@ -1,6 +1,7 @@
 import {
   ConflictException,
   ForbiddenException,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { parseTenantConfig } from '@ota/config';
@@ -8,8 +9,10 @@ import type { EmailMessage, Mailer } from '@ota/email';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
+import { SessionPolicy } from '../src/auth/session-policy';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { StaffService } from '../src/staff/staff.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 const DAYANA: AuthUser = {
   id: 'u-dayana',
@@ -71,6 +74,7 @@ function fakePrisma() {
     ['u-ana', 2],
     [FOUNDER.id, 1],
   ]);
+  const passkeys = new Map<string, number>([['u-ana', 2]]);
   const audits: Record<string, unknown>[] = [];
   let sequence = 0;
   const person = (id: unknown) => {
@@ -84,7 +88,7 @@ function fakePrisma() {
   });
   const userView = (user: User) => ({
     ...user,
-    _count: { passkeys: 0, reservations: user.reservations },
+    _count: { passkeys: passkeys.get(user.id) ?? 0, reservations: user.reservations },
     sessions: sessions.get(user.id)
       ? [{ createdAt: new Date('2026-10-23T08:00:00Z') }]
       : [],
@@ -94,6 +98,7 @@ function fakePrisma() {
     users,
     invites,
     sessions,
+    passkeys,
     audits,
     user: {
       findUnique: async ({ where }: { where: { id?: string; email?: string } }) => {
@@ -192,6 +197,13 @@ function fakePrisma() {
         return { count };
       },
     },
+    passkey: {
+      deleteMany: async ({ where }: { where: { userId: string } }) => {
+        const count = passkeys.get(where.userId) ?? 0;
+        passkeys.delete(where.userId);
+        return { count };
+      },
+    },
     auditLog: {
       create: async ({ data }: { data: Record<string, unknown> }) => {
         audits.push(data);
@@ -222,7 +234,17 @@ describe('StaffService (M9 D4, D5)', () => {
   beforeEach(() => {
     prisma = fakePrisma();
     mailer = new FakeMailer();
-    service = new StaffService(prisma as unknown as PrismaService, mailer, tenant);
+    service = new StaffService(
+      prisma as unknown as PrismaService,
+      mailer,
+      tenant,
+      new SessionPolicy(
+        prisma as unknown as PrismaService,
+        fakeOperatingSettings(),
+        mailer,
+        tenant,
+      ),
+    );
   });
 
   it('invites a work address, emails a single-use link, and the new account accepts it', async () => {
@@ -351,6 +373,35 @@ describe('StaffService (M9 D4, D5)', () => {
       service.changeRole(DAYANA, FOUNDER.id, { role: 'OPERATIONS_ADMIN' }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.audits.map((entry) => entry.action)).toContain('staff.deactivated');
+  });
+
+  it('resets a lost device: passkeys and sessions go, audited with the reason, and the user is told', async () => {
+    const ana = await service.resetPasskeys(DAYANA, 'u-ana', { reason: 'Phone stolen' });
+    expect(ana.passkeys).toBe(0);
+    expect(prisma.passkeys.has('u-ana')).toBe(false);
+    expect(prisma.sessions.has('u-ana')).toBe(false);
+    expect(prisma.audits.at(-1)).toMatchObject({
+      action: 'staff.passkeys_reset',
+      entityId: 'u-ana',
+      metadata: { reason: 'Phone stolen', passkeys: 2, sessions: 2 },
+    });
+    const email = mailer.sent.at(-1)!;
+    expect(email.to).toBe('ana@vereda.travel');
+    expect(email.subject).toBe('Your Vereda desk passkeys were reset');
+    expect(email.text).toContain('Dayana removed every passkey');
+    expect(email.html).toContain('http://localhost:3002/passkeys');
+  });
+
+  it('never resets one’s own passkeys, nor a non-staff account’s', async () => {
+    await expect(
+      service.resetPasskeys(DAYANA, DAYANA.id, { reason: 'Lost my phone' }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(
+      service.resetPasskeys(DAYANA, 'u-traveler', { reason: 'Lost phone' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.audits.map((entry) => entry.action)).not.toContain(
+      'staff.passkeys_reset',
+    );
   });
 
   it('moves a staff member between Operations Admin and Administrative Support, audited', async () => {

@@ -9,6 +9,7 @@ import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { MockTelemetrySink } from '../src/telemetry/telemetry-sink';
 import { TELEMETRY_SINK } from '../src/telemetry/telemetry.tokens';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 interface FakeUser {
   id: string;
@@ -320,7 +321,7 @@ describe('reservations API', () => {
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       .overrideProvider(TELEMETRY_SINK)
