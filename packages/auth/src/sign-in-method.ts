@@ -1,0 +1,34 @@
+/**
+ * How a session was created, recorded on `session.signInMethod`
+ * (`docs/schema-m9-passkeys.md` P2). Only `passkey` satisfies the staff
+ * passkey rule, so any route not listed here records `other` and fails closed.
+ */
+export type SignInMethod = 'passkey' | 'magic_link' | 'password' | 'oauth' | 'other';
+
+export function signInMethodForPath(path: string | null | undefined): SignInMethod {
+  // Registration can also create a session (`createSession`), but adding a
+  // passkey proves only the session it was added from, so it stays `other`.
+  if (path === '/passkey/verify-authentication') return 'passkey';
+  if (path === '/magic-link/verify') return 'magic_link';
+  if (path === '/sign-in/email' || path === '/sign-up/email') return 'password';
+  if (path?.startsWith('/callback/') || path?.startsWith('/oauth2/callback/')) {
+    return 'oauth';
+  }
+  return 'other';
+}
+
+export type PasskeyChange = 'register' | 'rename' | 'delete';
+
+/** Better Auth's routes that change a user's passkeys (P4). */
+const PASSKEY_CHANGE_PATHS: Readonly<Record<string, PasskeyChange>> = {
+  '/passkey/generate-register-options': 'register',
+  '/passkey/verify-registration': 'register',
+  '/passkey/update-passkey': 'rename',
+  '/passkey/delete-passkey': 'delete',
+};
+
+export function passkeyChangeForPath(
+  path: string | null | undefined,
+): PasskeyChange | null {
+  return (path && PASSKEY_CHANGE_PATHS[path]) || null;
+}

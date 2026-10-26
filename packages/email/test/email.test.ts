@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   eventRequestEmail,
   staffInviteEmail,
+  passkeyChangeEmail,
   ConsoleMailer,
   SmtpMailer,
   bookingReceivedEmail,
@@ -633,6 +634,44 @@ describe('staffInviteEmail', () => {
         branding,
       }).subject,
     ).toMatch(/^Invitación a la mesa de /);
+  });
+});
+
+describe('passkeyChangeEmail (docs/schema-m9-passkeys.md P4, P5)', () => {
+  const base = {
+    to: 'yanet@vereda.travel',
+    when: '26 October 2026, 14:05 UTC',
+    url: 'http://localhost:3002/passkeys',
+    branding,
+  };
+
+  it('names an added passkey and says what to do if it was not you', () => {
+    const message = passkeyChangeEmail({
+      ...base,
+      change: 'added',
+      passkeyName: 'Office laptop',
+    });
+    expect(message.subject).toBe(
+      'A passkey was added to your Authentic Cuba Expeditions desk account',
+    );
+    expect(message.text).toContain('named “Office laptop” was added');
+    expect(message.text).toContain('26 October 2026, 14:05 UTC');
+    expect(message.text).toContain('tell a Super Admin at once');
+    expect(message.html).toContain('http://localhost:3002/passkeys');
+  });
+
+  it('reports a removal, and a reset by a named Super Admin, in the given language', () => {
+    expect(passkeyChangeEmail({ ...base, change: 'removed' }).text).toContain(
+      'A passkey was removed',
+    );
+    const reset = passkeyChangeEmail({
+      ...base,
+      change: 'reset',
+      actorName: 'Dayana Rodríguez',
+      locale: 'es',
+    });
+    expect(reset.subject).toMatch(/^Se restablecieron sus llaves de acceso/);
+    expect(reset.text).toContain('Dayana Rodríguez quitó todas las llaves');
   });
 });
 

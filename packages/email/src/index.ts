@@ -43,6 +43,11 @@ export type {
   TravelAdvisoryEmailInput,
 } from './templates/travel-advisory';
 export { staffInviteEmail } from './templates/staff-invite';
+export {
+  passkeyChangeEmail,
+  type PasskeyChangeEmailInput,
+  type PasskeyChangeKind,
+} from './templates/passkey-change';
 export type { StaffInviteEmailInput } from './templates/staff-invite';
 export { eventRequestEmail } from './templates/event-request';
 export type {
