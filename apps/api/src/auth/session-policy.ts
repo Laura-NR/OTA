@@ -205,7 +205,7 @@ export class SessionPolicy {
       if (!user || !isStaffRole(user.role)) return;
       await this.prisma.auditLog.create({
         data: {
-          actorId: input.userId,
+          actorUserId: input.userId,
           action:
             input.change === 'added' ? 'auth.passkey_added' : 'auth.passkey_removed',
           entityType: 'User',

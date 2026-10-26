@@ -99,7 +99,7 @@ describe('SessionPolicy: a changed passkey is recorded (P4)', () => {
     });
     expect(audits).toEqual([
       {
-        actorId: 'u-ana',
+        actorUserId: 'u-ana',
         action: 'auth.passkey_added',
         entityType: 'User',
         entityId: 'u-ana',
