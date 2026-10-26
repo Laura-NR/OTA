@@ -487,6 +487,10 @@ model Session {
   updatedAt DateTime
   ipAddress String?
   userAgent String?
+  /// How the session was created (passkey, magic_link, password, oauth, other), set by the
+  /// auth package's session hook and never by a client. Null for sessions from before it
+  /// existed; only "passkey" satisfies the staff passkey rule.
+  signInMethod String?
   userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
