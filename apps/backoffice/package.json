@@ -10,6 +10,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@better-auth/passkey": "^1.7.5",
     "@ota/config": "workspace:*",
     "@ota/domain": "workspace:*",
     "@ota/i18n": "workspace:*",
