@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-25 23:30
+# Handoff — vereda — updated 2026-10-27 14:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -6,29 +6,34 @@ Build the design team's handoff into the platform. The current handoff is `desig
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
 Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
 reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follow-ups and the
-server-side T-Events) and
-ADR 0007 (worker app).
+server-side T-Events, and on 2026-10-26 the staff passkeys) and ADR 0007 (worker app). Staff
+passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 against a mock sink). Commits are local on `vereda`; the owner pushes
   (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-25, late): server-side T-Events**, owner-approved, against the mock
-  sink (no migration, no dependency, no new route):
-  - Domain (`a2017bd`): a `server` surface no client may send (`wrong_surface`; `server` is not
-    a client app); `booking_state_changed` moved there for **every** transition, with `actor`
-    (`transitionActorFor`: the request's role, `worker` added, else `system`) and `reason` as a
-    trigger code (`TRANSITION_REASONS`); `offer_sent`/`offer_timeout` (`timer_h`) and
-    `offer_accepted`/`offer_declined` (`minutes_to_answer`), with `service_item_id` and
-    `service_type` only; `serverTelemetryEvent()` checks them against the same table.
-  - API (`7b344f2`): global `ServerTelemetry` (`apps/api/src/telemetry/server-telemetry.ts`),
-    fire-and-forget after each write, at six transition sites (`ReservationsService.transition`
-    with an optional reason, default `manual`; the payment link; the payment confirmation; four
-    in `DispatchService`) and the four offer points. The mock sink appends to
-    `TELEMETRY_SINK_FILE` when set (a failed append is logged only).
-  - Desk (`4155429`): no longer sends `booking_state_changed` (it would count twice).
-  - e2e (`c60335e`): reservations (the desk transition reported by the API, none from the
-    page) and dispatch (the move and the `offer_sent`), read from `.telemetry/e2e-events.jsonl`.
+- **This session (2026-10-26): staff passkeys**, the owner's first M9 deferred item, approved
+  as recommended (P1a–P6a) with `@better-auth/passkey` as a back-office dependency (already in
+  the lockfile), on migration `20261026135144_session_sign_in_method` (`c720d5a`…`8c04327`):
+  - Every session records `signInMethod` (`packages/auth/src/sign-in-method.ts`; only a
+    passkey sign-in is `passkey`). The switch `staffPasskeysRequired` (off) is a threshold,
+    applied by two Super Admins. With it on, the global `SessionPolicy`
+    (`apps/api/src/auth/session-policy.ts`) refuses a staff session that is not a passkey one:
+    403 `PASSKEY_SETUP_REQUIRED` (none yet) or 401 `PASSKEY_SIGN_IN_REQUIRED`, except on
+    `@AllowWithoutPasskey()` (`GET /me`, `GET /me/passkeys`).
+  - The guard, the `/ops` and `/conversations` gateways (which before checked only the role, so
+    a deactivated user or an ended staff session could still join: fixed) and the T-Events
+    intake share it. Better Auth's passkey-changing routes ask it (P4); adds and removals are
+    audited and emailed; `POST /staff/:id/reset-passkeys` (Super Admin, a reason).
+  - Passkeys need user verification; origins are `TRUSTED_ORIGINS`, the relying party is
+    `PASSKEY_RP_ID` (default: the API URL's hostname); `STAFF_PASSKEYS_OVERRIDE=off` is the
+    break-glass (`docs/runbook.md` "Staff passkeys").
+  - Desk: passkey sign-in on `/login`, `/passkeys` (outside the shell, "Passkeys" link under the
+    person's name), the switch, Reset passkeys, the Security fact; e2e `e2e/passkeys.spec.ts`.
+- Earlier (2026-10-25, late): server-side T-Events (`a2017bd`…`7c9bc82`): the `server`
+  surface, `booking_state_changed` from the API for every transition, `offer_*` from dispatch,
+  the mock sink's `TELEMETRY_SINK_FILE`.
 - Earlier the same day: the T-Events follow-ups (`f193204`…`8cac6fb`): surfaces, the desk's
   operational events with the role from the session, the storefront's search/sort/departure/
   tier/OFAC/payment events.
@@ -41,8 +46,9 @@ ADR 0007 (worker app).
   events (`offer_viewed` and the rest wait for the worker app); desk page views and nav clicks
   (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
-  D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's
-  deferred items; M10's deferred room holds, event photos and "Keep building the trip"; manual
+  D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
+  deferred items (recovery codes, permission overrides, display currencies, runtime flags, the
+  idle lock, IP allowlist, new-device email); passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; manual
   keyboard/reading-order checks beyond what axe decides.
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
@@ -50,34 +56,38 @@ ADR 0007 (worker app).
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-25, server-side T-Events, dev stack stopped for the build)
+## Verified (2026-10-26/27, staff passkeys, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **925 passed / 28 skipped**, 29/29 tasks, 0 cached (domain 358,
-  api 334/27 skipped, schemas 70, config 36, ui 35, email 28, documents 22).
+- `TURBO_FORCE=true pnpm test` **966 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 370,
+  api 354/27 skipped, schemas 71, email 30, auth 6 (new), config 36, ui 35, documents 22).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`apps/*/.next` deleted first): **108 passed, 1 failed, 3 skipped** in 42.7 min,
-  including the new reservations and dispatch server-event checks. The failure was
-  `[ds07-1024]` "customer pages … with larger text": `page.goto` on a blog page never reached
-  `load` within 240 s because the storefront's dev server restarted mid-run (its PID changed;
-  memory 16/23 GB); the same test passed at the other five widths. Rerun with the leftovers
-  killed by PID and `.next` deleted: `npx playwright test e2e/responsive.spec.ts
-  --project=ds07-1024` **4/4**. Skips: the desk at 320/375/414.
+- `pnpm e2e` (`.next` deleted first): **109 passed, 4 failed, 3 skipped** in 54.4 min, including
+  `e2e/passkeys.spec.ts` 4/4 and the axe spec with `/passkeys`. The machine suspended during
+  the run: `[ds07-768]` customer pages failed with `net::ERR_NETWORK_IO_SUSPENDED`; `[ds07-1024]`
+  customer pages timed out on a blog `page.goto` (the same failure as on 2026-10-25);
+  `[default]` dispatch (re-dispatch dialog) and supplier-resources (storefront package heading)
+  timed out. Rerun in isolation, with leftovers killed by PID and `.next` deleted: dispatch +
+  supplier-resources **4/4**, `responsive.spec.ts` customer pages at ds07-768 and ds07-1024
+  **2/2**. Skips: the desk at 320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Live, from the e2e run's sink file (`.telemetry/e2e-events.jsonl`): 16 `booking_state_changed`
-  (manual, payment_requested by `super_admin` and by a `traveler`, payment_confirmed,
-  dispatch_started, redispatch, no_supplier) and 3 `offer_sent`, none with a user id.
-- Disproved: with `from` read after the status update (the first draft), the dispatch test
-  "reports a booking with no eligible supplier, and a re-dispatch" failed (the fake Prisma
-  mutates the row it returned); with the old surface check, the domain test "refuses a server
-  event from any client app" fails for `web`.
-- Browser rendering at 390/1024/1280: not run — no visible UI changed (the desk's transition
-  buttons lost only their event call); those pages render in the e2e default and DS 07 projects.
+- Disproved: with the guard and gateways unchanged, `apps/api/test/passkeys.e2e.test.ts`
+  (403/401 under the rule) and the gateways' deactivated/expired cases fail; a session created by
+  `/passkey/verify-registration` is `other` (unit test).
+- Browser at 390/1024/1280 (Chromium, screenshots + computed styles): `/login`, `/passkeys`
+  (empty, list, setup), the thresholds switch and warning, the reset form, the shell link, the
+  Security fact; no sideways scroll at any width, buttons on the primary/secondary tokens.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
 - **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. Env from M9:
-  `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`.
+  `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`;
+  `PASSKEY_RP_ID` binds every passkey, so it belongs to the deploy-topology decision (still
+  open): the desk's origin must be that domain or under it, and in `TRUSTED_ORIGINS`.
+- **Staff passkeys:** the switch is off in dev (the e2e switches it on and off and deletes its
+  versions). A one-Super-Admin agency cannot apply it (dual approval). The passkey emails use
+  the tenant's primary language, as the invitation does. Synced passkeys (iCloud/Google) count
+  as passkeys; nothing restricts authenticator types (no attestation).
 - The settings cache is per process (60 s); a multi-instance deploy sees an applied change within
   a minute.
 - **M10, for finance/counsel:** whether a regenerated invoice is enough when seats are added after
@@ -101,6 +111,28 @@ ADR 0007 (worker app).
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **The machine can suspend during the 54-min `pnpm e2e`** (2026-10-26/27): tests then fail with
+  `ERR_NETWORK_IO_SUSPENDED` or long timeouts, `timeout N` does not count suspended time (a
+  rerun hung for hours), and next-servers left behind ignore SIGTERM, so Playwright reuses them
+  and fails with `ERR_ABORTED`: `kill -9` the PIDs on 3000–3002, check `ss -ltnp`, delete
+  `apps/*/.next`, rerun the failed specs alone.
+- **Staff passkeys (2026-10-26):** Prisma `create` data with an unknown field passes `tsc` in
+  `apps/api` (TS 6 + Prisma 6: no excess-property error), so a misspelt column (`actorId` for
+  `actorUserId`) fails only at runtime, and a fake-Prisma unit test copies the mistake; read the
+  model (`79c1980`). The guard now reads the settings for a staff session that is not a passkey
+  one, so an app-level test's fake Prisma needs `withNoSettingsVersion()` (or an
+  `OperatingSettingsService` override); hand-built gateways and `StaffService` take a
+  `SessionPolicy` (`apps/api/test/fixtures/session-policy.ts` `fakeSessionPolicy()`). With the
+  rule on, every staff link session is held back, including the e2e's `signIn()` users:
+  `e2e/passkeys.spec.ts` is `serial` (a failure in a plain describe restarts the worker, whose
+  `beforeAll` recreates the Super Admins without sessions, so the rule could not be switched
+  off) and switches it off in `afterAll`. `signIn()` waits for the exact callback URL, so a
+  held-back user signs in with `callbackPath: '/passkeys'`. The virtual authenticator is per
+  page (CDP `WebAuthn.addVirtualAuthenticator` on that page); a second passkey on the same one
+  is refused (excludeCredentials). A `selectOption` before hydration is lost and re-selecting
+  the same value fires no change: toggle in the `toPass`. After a passkey sign-in, wait with
+  `waitUntil: 'commit'` (the dev dashboard's `load` can exceed 5 s) and click only while still
+  on `/login`. The reset email's subject is Spanish (tenant primary language).
 - **Server T-Events (2026-10-25):** they never pass through a browser, so e2e reads the mock
   sink's file: `playwright.config.ts` sets `TELEMETRY_SINK_FILE` (`e2e/telemetry.ts`
   `TELEMETRY_SINK_FILE`, `.telemetry/e2e-events.jsonl`, gitignored) and turbo passes it
@@ -227,19 +259,28 @@ ADR 0007 (worker app).
     never awaited; no client may send them. A new reservation-status write reports itself (or
     goes through `ReservationsService.transition` with its reason code). `TELEMETRY_SINK_FILE`
     makes the mock sink append events as JSON lines; the e2e stack sets it."
+  - "2026-10-26: every session records `signInMethod` (migration
+    20261026135144_session_sign_in_method; only `/passkey/verify-authentication` makes
+    `passkey`). The staff passkey rule (`staffPasskeysRequired`, a threshold) is enforced by the
+    global `SessionPolicy`, shared by the guard, both Socket.IO gateways and the T-Events intake;
+    a route a held-back staff session may reach is `@AllowWithoutPasskey()`. Better Auth's
+    passkey-changing routes ask `SessionPolicy.changeRefusal` through `createAuth`'s
+    `passkey.policy`. `PASSKEY_RP_ID` binds every passkey; `STAFF_PASSKEYS_OVERRIDE=off` is the
+    break-glass."
 
 ## Next
-1. Owner: choose the next batch — the real analytics sink (Q10; the owner prefers Plausible CE
-   when it is chosen: a `TelemetrySink` adapter with plain fetch, tested against a fake, plus a
-   hosting decision), the staff passkey policy doc (the owner's pick among M9's deferred items:
-   desk enrollment and a required-for-staff rule, perhaps in the M9 settings JSON with no
-   migration), M10's room holds/event photos (migration doc first), or a manual
-   keyboard/screen-reader pass on the A-A11y desk rules that axe cannot decide.
+1. Owner: choose the next batch — the real analytics sink (Q10; Plausible CE preferred: a
+   `TelemetrySink` adapter with plain fetch, tested against a fake, no new images, plus a
+   hosting decision for live use), another M9 deferred item (recovery codes, permission
+   overrides, display currencies, runtime flags, the idle lock, the IP allowlist or new-device
+   emails; doc first where it changes how auth decides), M10's room holds/event photos
+   (migration doc first), or a manual keyboard/screen-reader pass on the A-A11y desk rules that
+   axe cannot decide.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy, the M10 invoice question, the cookie words and the
-   basis for desk and server telemetry), OFAC
-   categories, card surcharge, deposit refundability and proof retention, the passport-key
-   backup, the backup-power wording, the staff email domain, raster app icons from Vereda, the
+   basis for desk and server telemetry), OFAC categories, card surcharge, deposit refundability
+   and proof retention, the passport-key backup, the backup-power wording, the staff email
+   domain, `PASSKEY_RP_ID` with the deploy topology, raster app icons from Vereda, the
    AGENTS.md §C lines above. Then SMS once a provider is chosen.
 
 ## Decisions (append-only)
@@ -579,3 +620,15 @@ ADR 0007 (worker app).
   `worker_id` and `decline_reason` are left out (no worker id was promised to the owner, and the
   reason is free text); events are fire-and-forget after the write; e2e reads a mock-sink file
   rather than a new read route (ADR 0006 amendment "server-side T-Events").
+- 2026-10-26 — the owner chose the staff passkey policy next (over the Plausible sink, M10's
+  migration doc and the manual accessibility pass), and approved `docs/schema-m9-passkeys.md` as
+  recommended: P1a (a two-Super-Admin switch in the thresholds, off by default), P2a (a
+  migration: `session.signInMethod`, so the rule fails closed, over hooks that block link
+  sign-in or a marker in Better Auth's verification table), P3a (a setup-only session, no grace
+  period), P4a (passkey changes need a passkey session except the first; audited and emailed),
+  P5a (a Super Admin reset; `STAFF_PASSKEYS_OVERRIDE=off` break-glass; recovery codes stay
+  deferred), P6a (`PASSKEY_RP_ID`, the agency name, pinned origins, user verification
+  required), and `@better-auth/passkey` as a back-office dependency. The build added the
+  gateways' missing session checks, put "Your passkeys" on `/passkeys` (every staff role, not
+  the Super-Admin-only Security tab), and resolved the screens with existing components (ADR
+  0006 amendment of 2026-10-26).
