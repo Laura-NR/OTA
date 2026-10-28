@@ -824,6 +824,28 @@ export function admitTelemetryEvent(
 }
 
 /**
+ * Parameters that point to one booking or request, and through it to a
+ * person (`from_path` can be `/account/reservations/<id>`). They stay on the
+ * platform: an analytics store outside it never receives them (plan Q10 H6).
+ */
+export const LINKABLE_TELEMETRY_PARAMS = [
+  'booking_code',
+  'request_id',
+  'from_path',
+] as const;
+
+/**
+ * Whether an admitted event may go to an analytics store outside the
+ * platform: only a visitor who allowed analytics, their essential booking
+ * steps included (plan Q10 H4). Desk and server events are always
+ * `essential`, as are the events of a visitor who refused analytics; those
+ * stay first-party.
+ */
+export function mayReachAnalyticsStore(event: AdmittedEvent): boolean {
+  return event.context.consent !== 'essential';
+}
+
+/**
  * An event the API records itself (a server-surface entry of the table),
  * checked against the same table as a client's, at `now`. A parameter left
  * `undefined` is omitted. A refusal is a programming error, never a reason to

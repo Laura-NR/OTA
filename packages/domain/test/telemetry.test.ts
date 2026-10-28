@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  LINKABLE_TELEMETRY_PARAMS,
   TELEMETRY_EVENTS,
   admitTelemetryEvent,
   consentLevel,
@@ -10,6 +11,7 @@ import {
   editedRatio,
   filterChanges,
   hoursBetween,
+  mayReachAnalyticsStore,
   minutesBetween,
   needsCookieChoice,
   networkFor,
@@ -697,5 +699,85 @@ describe('desk and sort helpers', () => {
     expect(editedRatio('one two', 'completely different words here')).toBe(1);
     expect(editedRatio('', '')).toBe(0);
     expect(editedRatio('draft', '')).toBe(1);
+  });
+});
+
+describe('analytics store', () => {
+  const now = new Date('2026-10-28T12:00:00Z');
+  const visitor = (consent: string) => ({
+    app: 'web',
+    screen: 'Package',
+    locale: 'en',
+    currency: 'EUR',
+    device_type: 'phone',
+    viewport: 'xs',
+    network: '4g',
+    consent,
+  });
+  const admitted = (input: TelemetryInput, role: string | null = null) => {
+    const verdict = admitTelemetryEvent(input, now, role);
+    if (!verdict.ok) {
+      throw new Error(verdict.reason);
+    }
+    return verdict.event;
+  };
+  const confirmed = (consent: string): TelemetryInput => ({
+    event: 'booking_confirmed',
+    ts: '2026-10-28T11:59:00Z',
+    context: visitor(consent),
+    params: { booking_code: 'DEMO0001' },
+  });
+
+  it("lets only a consenting visitor's events, essential steps included, leave the platform", () => {
+    expect(mayReachAnalyticsStore(admitted(confirmed('analytics')))).toBe(true);
+    expect(mayReachAnalyticsStore(admitted(confirmed('marketing')))).toBe(true);
+    expect(
+      mayReachAnalyticsStore(
+        admitted({
+          event: 'package_viewed',
+          ts: '2026-10-28T11:59:00Z',
+          context: visitor('analytics'),
+          params: { package_id: 'trinidad-heritage-trail' },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps a refusing visitor, the desk and the API first-party', () => {
+    expect(mayReachAnalyticsStore(admitted(confirmed('essential')))).toBe(false);
+    expect(
+      mayReachAnalyticsStore(
+        admitted(
+          {
+            event: 'document_generated',
+            ts: '2026-10-28T11:59:00Z',
+            context: { ...visitor('essential'), app: 'admin', screen: 'A-Booking' },
+            params: { booking_code: 'DEMO0001', trigger: 'manual' },
+          },
+          'OPERATIONS_ADMIN',
+        ),
+      ),
+    ).toBe(false);
+    const server = serverTelemetryEvent(
+      'booking_state_changed',
+      {
+        booking_code: 'DEMO0001',
+        from: 'DRAFT',
+        to: 'ITINERARY_SUBMITTED',
+        actor: 'ops_admin',
+        reason: 'manual',
+      },
+      now,
+    );
+    expect(server.ok && mayReachAnalyticsStore(server.event)).toBe(false);
+  });
+
+  it('names only parameters the taxonomy uses, so a rename cannot leak one', () => {
+    const used = new Set(
+      Object.values(TELEMETRY_EVENTS).flatMap((spec) => Object.keys(spec.params)),
+    );
+    for (const param of LINKABLE_TELEMETRY_PARAMS) {
+      expect(used.has(param)).toBe(true);
+    }
   });
 });
