@@ -6,12 +6,29 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { MockTelemetrySink, type SinkEvent } from '../src/telemetry/telemetry-sink';
+import {
+  MockTelemetrySink,
+  type SinkEvent,
+  type TelemetryRecordOptions,
+} from '../src/telemetry/telemetry-sink';
 import { hashUserId } from '../src/telemetry/telemetry.service';
 import { TELEMETRY_SINK } from '../src/telemetry/telemetry.tokens';
 import { withNoSettingsVersion } from './fixtures/operating-settings';
+import { isIP } from 'node:net';
 
 const SECRET = 'test-secret-for-telemetry';
+
+class CapturingSink extends MockTelemetrySink {
+  lastOptions: TelemetryRecordOptions | undefined;
+
+  override async record(
+    events: readonly SinkEvent[],
+    options?: TelemetryRecordOptions,
+  ): Promise<void> {
+    this.lastOptions = options;
+    return super.record(events, options);
+  }
+}
 
 const context = (consent: string, extra: Record<string, string> = {}) => ({
   app: 'web',
@@ -37,7 +54,7 @@ const packageViewed = (consent = 'analytics') => ({
 
 describe('T-Events intake (POST /telemetry/events)', () => {
   let app: INestApplication;
-  let sink: MockTelemetrySink;
+  let sink: CapturingSink;
   let sessionUser: string | null;
   let sessionRole: string;
   let sessionExtra: { deactivatedAt?: Date; signedInAt?: Date };
@@ -67,7 +84,7 @@ describe('T-Events intake (POST /telemetry/events)', () => {
         },
       })
       .overrideProvider(TELEMETRY_SINK)
-      .useFactory({ factory: () => new MockTelemetrySink() })
+      .useFactory({ factory: () => new CapturingSink() })
       .compile();
     app = moduleRef.createNestApplication();
     await app.init();
@@ -105,6 +122,13 @@ describe('T-Events intake (POST /telemetry/events)', () => {
       userId: null,
       context: { screen: 'Package', funnel_stage: 3, session_id: 's_0123456789abcdef' },
     });
+  });
+
+  it('forwards the request IP to the sink for visitor counting', async () => {
+    await post([packageViewed()]);
+
+    expect(sink.lastOptions?.clientIp).toBeTypeOf('string');
+    expect(isIP(sink.lastOptions?.clientIp ?? '')).toBeGreaterThan(0);
   });
 
   it('hashes a signed-in traveler’s id onto analytics events, never the raw id', async () => {

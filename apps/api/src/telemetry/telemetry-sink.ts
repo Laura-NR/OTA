@@ -13,15 +13,21 @@ export interface SinkEvent extends AdmittedEvent {
   receivedAt: string;
 }
 
+/** What a sink may need from the request; never stored with the event. */
+export interface TelemetryRecordOptions {
+  /** The visitor's IP, for a sink that counts visitors; server events have none. */
+  clientIp?: string | null;
+}
+
 /**
- * Where T-Events go. The real sink (self-hosted Matomo or Plausible) is an
- * open third-party decision (plan Q10); until then the mock keeps the latest
- * events in memory and logs one line per batch, and with a file path also
- * appends each event to that file as a JSON line (so an e2e run can read the
- * events the API recorded itself).
+ * Where T-Events go. `mock` is the default (the e2e's file sink); `plausible`
+ * is the self-hosted Plausible CE adapter. The mock keeps the latest events in
+ * memory and logs one line per batch, and with a file path also appends each
+ * event to that file as a JSON line (so an e2e run can read the events the API
+ * recorded itself).
  */
 export interface TelemetrySink {
-  record(events: readonly SinkEvent[]): Promise<void>;
+  record(events: readonly SinkEvent[], options?: TelemetryRecordOptions): Promise<void>;
 }
 
 /** How many events the mock keeps; older ones fall off. */
@@ -35,7 +41,10 @@ export class MockTelemetrySink implements TelemetrySink {
 
   constructor(private readonly file: string | null = null) {}
 
-  async record(events: readonly SinkEvent[]): Promise<void> {
+  async record(
+    events: readonly SinkEvent[],
+    _options?: TelemetryRecordOptions,
+  ): Promise<void> {
     this.buffer.push(...events);
     this.buffer.splice(0, Math.max(0, this.buffer.length - MOCK_SINK_CAPACITY));
     this.logger.log(
@@ -68,17 +77,5 @@ export class MockTelemetrySink implements TelemetrySink {
   /** The kept events, oldest first (tests and local inspection). */
   recent(): readonly SinkEvent[] {
     return [...this.buffer];
-  }
-}
-
-export type TelemetrySinkKind = 'mock';
-
-export function createTelemetrySink(
-  kind: TelemetrySinkKind = 'mock',
-  file: string | null = null,
-): TelemetrySink {
-  switch (kind) {
-    case 'mock':
-      return new MockTelemetrySink(file);
   }
 }

@@ -32,6 +32,7 @@ export class TelemetryService {
     batch: TelemetryBatchRequest,
     userId: string | null,
     role: string | null = null,
+    clientIp: string | null = null,
     now: Date = new Date(),
   ): Promise<TelemetryReceiptDto> {
     const admitted: AdmittedEvent[] = [];
@@ -53,6 +54,7 @@ export class TelemetryService {
               : null,
           receivedAt,
         })),
+        { clientIp },
       );
     }
     return { accepted: admitted.length, rejected: batch.events.length - admitted.length };
