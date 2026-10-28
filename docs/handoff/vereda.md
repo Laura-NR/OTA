@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-28 18:30
+# Handoff — vereda — updated 2026-10-28 20:52
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -15,7 +15,13 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-27/28): the real analytics sink (Plausible CE)**, the owner's pick from
+- **2026-10-28 (late): the live Plausible hosting plan**, the owner's pick from the Next list:
+  `docs/plausible-hosting-plan.md` (H1–H7, proposed, awaiting the owner). Nothing deployed,
+  bought or built. It records four findings: F1, the storefront path loses the visitor's IP
+  (also the rate limiter's key); F2, a fixed User-Agent; F3, server events have no visitor;
+  F4, `booking_code`/`request_id`/`from_path` props. §5 lists the small code changes once
+  approved (no migration, dependency or UI).
+- **2026-10-27/28: the real analytics sink (Plausible CE)**, the owner's pick from
   the Next list. `TELEMETRY_SINK=plausible` selects `PlausibleTelemetrySink`
   (`apps/api/src/telemetry/plausible-sink.ts`): plain `fetch`, one `POST /api/event` per admitted
   event, a three-second timeout and no SDK; the taxonomy's `page_view` becomes Plausible's
@@ -27,7 +33,7 @@ events (T-Events)".
   mock stays the default and the e2e's file sink; a missing/invalid setting logs an error and
   falls back to the mock. Settings: `TELEMETRY_SINK`, `TELEMETRY_PLAUSIBLE_ENDPOINT`,
   `_DOMAIN`, `_SITE_URL`, `_USER_AGENT`, `_TIMEOUT_MS`, all passed through by turbo's dev task.
-  Tests: `apps/api/test/plausible-sink.test.ts` (9) and `telemetry.service.test.ts` (1). No new
+  Tests: `apps/api/test/plausible-sink.test.ts` (10) and `telemetry.service.test.ts` (1). No new
   dependency, no migration, no image; live hosting stays open (Q10).
 - **Earlier (2026-10-26): staff passkeys**, the owner's first M9 deferred item, approved
   as recommended (P1a–P6a) with `@better-auth/passkey` as a back-office dependency (already in
@@ -135,6 +141,12 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Next's external rewrite neither adds nor appends `X-Forwarded-For`** (2026-10-28,
+  `router-server.js:349` → `proxy-request.js`, http-proxy without `xfwd`; checked with Next's
+  compiled http-proxy). The `??=` in `base-server.js` only runs for pages Next renders, not
+  for `/api/ota/*`. Behind no edge proxy the API's `request.ip` on the storefront path is the
+  Next server, for the rate limiter and the Plausible sink alike; see
+  `docs/plausible-hosting-plan.md` F1/H3.
 - **The machine can suspend during the 54-min `pnpm e2e`** (2026-10-26/27): tests then fail with
   `ERR_NETWORK_IO_SUSPENDED` or long timeouts, `timeout N` does not count suspended time (a
   rerun hung for hours), and next-servers left behind ignore SIGTERM, so Playwright reuses them
@@ -309,13 +321,14 @@ events (T-Events)".
     send is logged, never thrown."
 
 ## Next
-1. Owner: choose the next batch — the Plausible live hosting decision (where CE runs, the site,
-   the IP-forwarding proxy, whether `server` events go there; the adapter is built), another M9
-   deferred item (recovery codes, permission overrides, display currencies, runtime flags, the
-   idle lock, the IP allowlist or new-device emails; doc first where it changes how auth
-   decides), M10's room holds/event photos (migration doc first), or a manual
-   keyboard/screen-reader pass on the A-A11y desk rules that axe cannot decide.
-2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
+1. Owner: answer `docs/plausible-hosting-plan.md` H1 (where CE runs, and its cost), H4
+   (which events reach Plausible), H6 (identifiers and retention) and H7 (the analytics
+   words). Then build its §5 items 1–5 and run the full verify. H3 goes into the
+   deploy-topology decision.
+2. After that, the other batches still open: another M9 deferred item (doc first where it
+   changes how auth decides), M10's room holds/event photos (migration doc first), or the
+   manual keyboard/screen-reader pass on the A-A11y desk rules.
+3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy, the M10 invoice question, the cookie words and the
    basis for desk and server telemetry), OFAC categories, card surcharge, deposit refundability
    and proof retention, the passport-key backup, the backup-power wording, the staff email
@@ -681,3 +694,10 @@ events (T-Events)".
   itself); the visitor's IP forwarded as `X-Forwarded-For`; a failed or bot-dropped event logged
   and swallowed; the mock remains the default and the e2e's file sink; a bad setting falls back
   to the mock.
+
+- 2026-10-28 — the owner chose the live Plausible hosting decision next (over an M9 deferred
+  item, M10's room holds/photos and the manual accessibility pass). The session wrote
+  `docs/plausible-hosting-plan.md` first, as the brief asks, and asks before any spend or
+  topology choice. It recommends H1a (its own EU VPS), H4a (only analytics-consented events),
+  H5 (forward the User-Agent), H6a (strip identifiers, no TTL) and H7 (a new placeholder
+  words version).
