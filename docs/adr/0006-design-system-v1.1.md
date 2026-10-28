@@ -1,7 +1,7 @@
 # ADR 0006 — Design system v1.1: the Vereda canvas replaces docs/design.md
 
 - **Date:** 2026-10-13
-- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phases 3 and 5, and through 2026-10-27 for Phase 4, M4, M5, Phase 6, the Confirmation screen, M6–M10, Phase 8 and the staff passkeys (see the end)
+- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phases 3 and 5, and through 2026-10-28 for Phase 4, M4, M5, Phase 6, the Confirmation screen, M6–M10, Phase 8, the staff passkeys and the Plausible hosting plan (see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `design/vereda-v1.1/` (design handoff v1.1), `docs/design-v1.1-plan.md`,
   `docs/design-change-request-01.md`, `packages/theming`, `packages/ui`, `packages/config`
@@ -1086,3 +1086,32 @@ decision, so the stack adds no image and the mock stays the default.
 - **Still open:** hosting and retention (Q10), the reverse proxy that forwards the client
   IP, whether server events go to Plausible, and counsel's review of the analytics words
   for this processor. No new dependency, no migration, no image.
+
+## Amendment, 2026-10-28: the Plausible CE hosting plan, approved by the owner
+
+The owner chose the live hosting decision next and approved `docs/plausible-hosting-plan.md`
+as recommended (H1a, H4a, H5, H6a, H7). The build changes the adapter, but nothing visible:
+
+- **Hosting (H1–H3).** CE runs on its own small EU VPS, outside the platform, from the
+  upstream compose repository at a pinned tag; buying it is the owner's step, and no image
+  enters this repository. The live setup needs an edge proxy that sets `X-Forwarded-For`
+  plus `TRUST_PROXY=1` on the API, because Next's `/api/ota/*` rewrite neither adds nor
+  appends the header (`docs/runbook.md` "Going live"). The same fix gives the rate limiter
+  each storefront visitor's real IP.
+- **Routing (H4a).** `TELEMETRY_SINK=plausible` builds a `ConsentRoutedTelemetrySink`: an
+  event reaches Plausible only when its `consent` is not `essential`
+  (`mayReachAnalyticsStore`, `packages/domain`). Desk events, the API's own events and a
+  refusing visitor's essential events stay on the mock, which keeps its file. So the
+  earlier caveat (with `plausible`, the e2e loses its server events) no longer holds, and
+  server events can never be dropped as datacenter traffic.
+- **User-Agent (H5).** The intake passes the visitor's User-Agent to the sink next to the
+  IP, and `TELEMETRY_PLAUSIBLE_USER_AGENT` becomes the fallback for a request without one.
+  Plausible's visitor id and its browser, OS and device reports need it.
+- **Identifiers (H6a).** `LINKABLE_TELEMETRY_PARAMS` (`booking_code`, `request_id`,
+  `from_path`) never reach Plausible, so it holds no identifier and its data is kept
+  without a retention limit (counsel confirms).
+- **Words (H7).** `COOKIES_ANALYTICS` is a new placeholder version,
+  `cookies-analytics@2026-10-28`, which mentions the approximate location derived from the
+  connection; the privacy notice's cookies paragraph says the same. English only, like the
+  other legal words. The new version asks every visitor for consent again.
+

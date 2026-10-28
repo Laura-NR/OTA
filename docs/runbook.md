@@ -170,31 +170,54 @@ keyed by `AUTH_SECRET`, so rotating that secret also changes every hashed id.
   `TelemetrySink` line per batch with event names and screens (`server` for the API's
   own) only. With `TELEMETRY_SINK_FILE` set it also appends every event to that file as
   a JSON line; the e2e stack sets it. Leave the file unset in production.
-- `plausible` sends each event to a self-hosted Plausible CE instance with plain
-  `fetch` (one `POST` per event, no SDK, a three-second timeout), then logs a warning
-  for a failed or bot-filtered send; it never fails the intake or a booking change.
+- `plausible` sends the events of visitors who allowed analytics to a self-hosted
+  Plausible CE instance with plain `fetch` (one `POST` per event, no SDK, a three-second
+  timeout), then logs a warning for a failed or bot-filtered send; it never fails the
+  intake or a booking change. Everything else (desk events, the API's own events and the
+  essential events of a visitor who refused analytics) stays on the mock, which keeps
+  writing to `TELEMETRY_SINK_FILE` when it is set (`docs/plausible-hosting-plan.md` H4).
   Set `TELEMETRY_PLAUSIBLE_ENDPOINT` to the full `/api/event` URL,
   `TELEMETRY_PLAUSIBLE_DOMAIN` to the domain registered in Plausible (or
   `TELEMETRY_PLAUSIBLE_SITE_URL`, from which the domain is derived), and optionally
-  `TELEMETRY_PLAUSIBLE_SITE_URL`, `TELEMETRY_PLAUSIBLE_USER_AGENT` and
-  `TELEMETRY_PLAUSIBLE_TIMEOUT_MS`. A missing or invalid setting falls back to the mock
-  with an error log, so analytics can never take the API down. The mock and Plausible
-  are alternatives: with `plausible` selected, `TELEMETRY_SINK_FILE` is ignored and the
-  e2e's server-event read would fail, so keep the e2e stack on `mock`.
+  `TELEMETRY_PLAUSIBLE_SITE_URL`, `TELEMETRY_PLAUSIBLE_USER_AGENT` (sent only when a
+  request carries none) and `TELEMETRY_PLAUSIBLE_TIMEOUT_MS`. A missing or invalid
+  setting falls back to the mock with an error log, so analytics can never take the API
+  down. Keep the e2e and dev stacks on `mock` (there is no Plausible there): with
+  `plausible` the file still receives the server events the e2e reads, but a consenting
+  visitor's events go only to Plausible.
 
-The adapter reports synthetic event paths (`/en/<Screen>`, `/admin/<A-Screen>`, and
-`/server` for the API's own events) because the taxonomy carries a screen id, not the
-page path, and maps the taxonomy's `page_view` to Plausible's built-in `pageview`. The visitor's `X-Forwarded-For` is forwarded when the API sees it. Plausible
-counts a visitor by user agent and IP and its bot filter silently drops a backend or
-datacenter IP (the API answers 202 even then; the adapter checks `x-plausible-dropped`);
-the live hosting decision must therefore forward the real client IP or accept that
-server events, which have no visitor IP, may be dropped. It does not receive the session
-id or the HMAC user id: Plausible counts visitors itself.
+The adapter reports synthetic event paths (`/en/<Screen>`, `/admin/<A-Screen>`) because
+the taxonomy carries a screen id, not the page path, and maps the taxonomy's `page_view`
+to Plausible's built-in `pageview`. It forwards the visitor's IP (as `X-Forwarded-For`)
+and User-Agent, which Plausible hashes with a daily salt into its visitor id and does not
+store. It does not send the session id, the HMAC user id, or the parameters that point to
+one booking or request (`booking_code`, `request_id`, `from_path`; plan H6).
 
-**Live hosting is still open (Q10, 2026-10-27):** where Plausible CE runs, its site
-registration and retention, the reverse proxy that forwards the client IP, and whether
-the API's own (`server`) events go to Plausible or stay on the file/mock sink. The
-adapter is built and tested against a fake; no Plausible image is added to the stack.
+**Going live (plan H1–H3, approved 2026-10-28).** Plausible CE runs on its own small VPS
+in an EU region (2 vCPU / 4 GB), from the upstream `plausible/community-edition` compose
+repository at a pinned release tag, with its built-in TLS on `analytics.<agency domain>`.
+No Plausible image lives in this repository.
+
+1. On the analytics host: set `BASE_URL` and a 64-byte `SECRET_KEY_BASE`, start it, create
+   the first account, then turn registration off (`DISABLE_REGISTRATION`; check the pinned
+   release's default) and turn on two-factor sign-in for every account. Back up its
+   PostgreSQL daily; the ClickHouse event data is best-effort.
+2. Add one site whose domain is the storefront's public domain, and set
+   `TELEMETRY_PLAUSIBLE_SITE_URL` to match it.
+3. Put one edge proxy in front of both the storefront and the API, which sets
+   `X-Forwarded-For` to the client's address, and run the API with `TRUST_PROXY=1`. Next's
+   `/api/ota/*` rewrite neither adds nor appends the header, so without the edge proxy
+   every storefront visitor reaches the API (and its rate limiter) as the Next server's
+   address. If the analytics host sits behind a proxy, it must keep the incoming
+   `X-Forwarded-For`, not replace it.
+4. From the API host, check that Plausible sees the forwarded IP and not the API's:
+   `curl -s -X POST https://analytics.<agency domain>/api/event -H 'X-Debug-Request: true'
+   -H 'Content-Type: application/json' -H 'User-Agent: Mozilla/5.0'
+   -H 'X-Forwarded-For: 203.0.113.7' -d '{"name":"pageview","url":"https://<site>/en/Home","domain":"<site>"}'`
+   returns 200 with that IP and records nothing.
+5. Set `TELEMETRY_SINK=plausible` and the settings above, restart the API, accept
+   analytics on a phone over mobile data, and check Plausible's realtime view (the right
+   country) and the API log (no "dropped by bot filtering" warnings).
 
 ## Graceful shutdown
 

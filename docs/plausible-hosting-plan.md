@@ -1,7 +1,8 @@
 # Plausible CE live hosting: plan for review (Q10)
 
-**Status:** **Proposed 2026-10-28, awaiting the owner.** Nothing here is deployed, bought or
-built yet. No migration, no new dependency, and no Plausible image in this repo.
+**Status:** **Approved 2026-10-28 as recommended (H1a, H4a, H5, H6a, H7) and built the same
+day** (§6). The VPS is the owner's to buy and nothing is deployed. No migration, no new
+dependency, and no Plausible image in this repo.
 **Date:** 2026-10-28
 **Scope:** the last open piece of plan Q10. The adapter, `PlausibleTelemetrySink`
 (`apps/api/src/telemetry/plausible-sink.ts`), was built on 2026-10-27 and tested against a
@@ -169,8 +170,8 @@ until counsel rules.
    in `telemetry.e2e.test.ts`.
 3. **Identifiers (H6 a):** `plausibleProps` drops `booking_code`, `request_id` and
    `from_path`, with a unit test.
-4. **Words (H7):** the new placeholder version in the en/es/fr tenant messages, with
-   `tenant/README.md`.
+4. **Words (H7):** the new placeholder version in the tenant messages (English only, like
+   the other legal words), with `tenant/README.md`.
 5. **Runbook:** a go-live checklist covering the CE install at a pinned tag, H2's account
    steps, H3's proxy settings and `TRUST_PROXY=1`, an `X-Debug-Request` check from the API host
    (Plausible must report the forwarded IP, not the API's), a test visit over mobile data
@@ -181,3 +182,22 @@ until counsel rules.
 **What you do, outside the repo:** approve H1 (and its cost), pick the provider and region,
 register the analytics subdomain once the agency's domain exists, and put H3 into the
 deploy-topology decision.
+
+## 6. As built (2026-10-28)
+
+- **Domain:** `mayReachAnalyticsStore` and `LINKABLE_TELEMETRY_PARAMS` in
+  `packages/domain/src/telemetry/taxonomy.ts`, with tests in `packages/domain/test/telemetry.test.ts`
+  ("analytics store": the consent cases, the desk, the server, and a guard that every listed
+  parameter exists in the taxonomy).
+- **API:** `apps/api/src/telemetry/consent-routed-sink.ts`; the factory wraps the Plausible
+  sink in it, with the mock (and its file) as the first-party side. `TelemetryService.ingest`
+  takes `{ clientIp, userAgent }`, the controller fills it, and `plausibleProps` drops the
+  linkable parameters. Tests: `apps/api/test/plausible-sink.test.ts` (User-Agent, identifiers,
+  routing, the factory end to end), `telemetry.service.test.ts` and the intake case in
+  `telemetry.e2e.test.ts`.
+- **Words:** `cookies-analytics@2026-10-28` and the privacy notice's cookies paragraph in
+  `tenant/messages/en.json`; `e2e/consent.ts` picks the version up from there.
+- **Docs:** `docs/runbook.md` "Going live", `.env.example`, ADR 0006 amendment of 2026-10-28.
+- **Not done (owner):** buying the VPS, installing CE, the analytics subdomain, and H3 in the
+  deploy topology. Counsel: the words, and that no retention limit is needed.
+
