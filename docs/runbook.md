@@ -160,14 +160,41 @@ The storefront sends consented analytics events, and the essential ones (booking
 payments, errors, the cookie choice), to the public `POST /telemetry/events`, under the
 normal rate limit; the desk sends its operational events there too (admitted only for a
 live staff session). The API records the booking transitions and the dispatch offers
-itself, straight to the sink, never awaited and never failing the change. `TELEMETRY_SINK`
-selects the sink; `mock` (the default and only one until the self-hosted analytics
-choice) keeps the latest 500 events in memory per process and logs one `TelemetrySink`
-line per batch with event names and screens (`server` for the API's own) only; with
-`TELEMETRY_SINK_FILE` set it also appends every event to that file as a JSON line (the
-e2e stack sets it; leave it unset in production). Events outside the taxonomy are
-refused and counted in the response. A signed-in visitor's id is an HMAC keyed by
-`AUTH_SECRET`, so rotating that secret also changes every hashed id.
+itself, straight to the sink, never awaited and never failing the change. Events outside
+the taxonomy are refused and counted in the response. A signed-in visitor's id is an HMAC
+keyed by `AUTH_SECRET`, so rotating that secret also changes every hashed id.
+
+`TELEMETRY_SINK` selects the sink:
+
+- `mock` (the default) keeps the latest 500 events in memory per process and logs one
+  `TelemetrySink` line per batch with event names and screens (`server` for the API's
+  own) only. With `TELEMETRY_SINK_FILE` set it also appends every event to that file as
+  a JSON line; the e2e stack sets it. Leave the file unset in production.
+- `plausible` sends each event to a self-hosted Plausible CE instance with plain
+  `fetch` (one `POST` per event, no SDK, a three-second timeout), then logs a warning
+  for a failed or bot-filtered send; it never fails the intake or a booking change.
+  Set `TELEMETRY_PLAUSIBLE_ENDPOINT` to the full `/api/event` URL,
+  `TELEMETRY_PLAUSIBLE_DOMAIN` to the domain registered in Plausible (or
+  `TELEMETRY_PLAUSIBLE_SITE_URL`, from which the domain is derived), and optionally
+  `TELEMETRY_PLAUSIBLE_SITE_URL`, `TELEMETRY_PLAUSIBLE_USER_AGENT` and
+  `TELEMETRY_PLAUSIBLE_TIMEOUT_MS`. A missing or invalid setting falls back to the mock
+  with an error log, so analytics can never take the API down. The mock and Plausible
+  are alternatives: with `plausible` selected, `TELEMETRY_SINK_FILE` is ignored and the
+  e2e's server-event read would fail, so keep the e2e stack on `mock`.
+
+The adapter reports synthetic event paths (`/en/<Screen>`, `/admin/<A-Screen>`, and
+`/server` for the API's own events) because the taxonomy carries a screen id, not the
+page path, and maps the taxonomy's `page_view` to Plausible's built-in `pageview`. The visitor's `X-Forwarded-For` is forwarded when the API sees it. Plausible
+counts a visitor by user agent and IP and its bot filter silently drops a backend or
+datacenter IP (the API answers 202 even then; the adapter checks `x-plausible-dropped`);
+the live hosting decision must therefore forward the real client IP or accept that
+server events, which have no visitor IP, may be dropped. It does not receive the session
+id or the HMAC user id: Plausible counts visitors itself.
+
+**Live hosting is still open (Q10, 2026-10-27):** where Plausible CE runs, its site
+registration and retention, the reverse proxy that forwards the client IP, and whether
+the API's own (`server`) events go to Plausible or stay on the file/mock sink. The
+adapter is built and tested against a fake; no Plausible image is added to the stack.
 
 ## Graceful shutdown
 

@@ -1,7 +1,7 @@
 # ADR 0006 — Design system v1.1: the Vereda canvas replaces docs/design.md
 
 - **Date:** 2026-10-13
-- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phases 3 and 5, and through 2026-10-18 for Phase 4, M4, M5, Phase 6 and the Confirmation screen (see the end)
+- **Status:** Accepted; amended 2026-10-14 for handoff v1.2, for change request 02 and for Phases 3 and 5, and through 2026-10-27 for Phase 4, M4, M5, Phase 6, the Confirmation screen, M6–M10, Phase 8 and the staff passkeys (see the end)
 - **Deciders:** Project owner, lead engineer
 - **Context:** `design/vereda-v1.1/` (design handoff v1.1), `docs/design-v1.1-plan.md`,
   `docs/design-change-request-01.md`, `packages/theming`, `packages/ui`, `packages/config`
@@ -1047,3 +1047,42 @@ enrollment or sign-in screens, so the build drew them from existing components a
   when the user has passkeys and is active.
 - **Security tab:** a "Staff passkeys" fact (Required at sign-in / Optional), read from the
   rule in force (it reflects the break-glass). "Mandatory passkeys" left the not-built line.
+
+## Amendment, 2026-10-27: the real analytics sink (Plausible CE), resolved by the build
+
+The owner chose the real analytics sink next (Q10), with Plausible CE as the preferred
+one. This increment builds the adapter only; where Plausible CE runs is still the hosting
+decision, so the stack adds no image and the mock stays the default.
+
+- **Selection.** `TELEMETRY_SINK=plausible` builds `PlausibleTelemetrySink`; `mock`
+  (the default) is unchanged and remains the e2e's file sink. A missing or invalid
+  Plausible setting logs an error and falls back to the mock, so analytics can never
+  stop the API from starting or a booking from moving.
+- **Transport.** Plain `fetch` to the deployment's `POST /api/event`, one request per
+  admitted event (Plausible has no batch endpoint), a three-second per-request timeout,
+  and no SDK. A non-2xx answer, a network error or `x-plausible-dropped: 1` is logged as
+  a warning and swallowed: the public intake still answers 202 and a transition is never
+  delayed or undone.
+- **Mapping.** The Plausible event name is the taxonomy name, except `page_view`, which becomes
+  Plausible's built-in `pageview` so the page reports fill. Because the taxonomy
+  carries a screen id rather than a path, the reported URL is a stable synthetic path:
+  `/en/<Screen>` on the storefront, `/admin/<A-Screen>` on the desk, and `/server` for
+  the API's own events. `domain` and the site URL come from the environment. The custom
+  properties are the event's context (without `session_id`), its `essential` flag and
+  its parameters; a list parameter is comma-joined because Plausible values are
+  scalar. The HMAC `userId` is not sent either: Plausible derives its own visitor id, so
+  the sink stores no second identifier.
+- **Visitor counting and the bot filter.** The intake forwards the visitor's IP as
+  `X-Forwarded-For` (only when `isIP` accepts it), because Plausible counts a visitor by
+  user agent and IP and silently drops a backend or datacenter IP. The API's own
+  (`server`) events have no visitor IP. The live hosting decision therefore has to
+  forward the real client IP at the proxy, or accept that server events stay on the
+  mock/file sink; the adapter checks `x-plausible-dropped` so a silent drop is visible in
+  the API log.
+- **Settings:** `TELEMETRY_SINK`, `TELEMETRY_PLAUSIBLE_ENDPOINT` (the full `/api/event`
+  URL), `TELEMETRY_PLAUSIBLE_DOMAIN` (or `TELEMETRY_PLAUSIBLE_SITE_URL`), and the
+  optional `TELEMETRY_PLAUSIBLE_SITE_URL`, `TELEMETRY_PLAUSIBLE_USER_AGENT` and
+  `TELEMETRY_PLAUSIBLE_TIMEOUT_MS`. Turbo passes them through to `pnpm dev`.
+- **Still open:** hosting and retention (Q10), the reverse proxy that forwards the client
+  IP, whether server events go to Plausible, and counsel's review of the analytics words
+  for this processor. No new dependency, no migration, no image.

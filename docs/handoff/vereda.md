@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-27 14:30
+# Handoff — vereda — updated 2026-10-28 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -6,14 +6,30 @@ Build the design team's handoff into the platform. The current handoff is `desig
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
 Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
 reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follow-ups and the
-server-side T-Events, and on 2026-10-26 the staff passkeys) and ADR 0007 (worker app). Staff
-passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
+server-side T-Events, on 2026-10-26 the staff passkeys and on 2026-10-27 the Plausible CE sink)
+and ADR 0007 (worker app). Staff passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as
+built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
+events (T-Events)".
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
-  1–4 are done** (item 1 against a mock sink). Commits are local on `vereda`; the owner pushes
-  (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-26): staff passkeys**, the owner's first M9 deferred item, approved
+  1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
+  owner pushes (`git log --oneline origin/vereda..vereda`).
+- **This session (2026-10-27/28): the real analytics sink (Plausible CE)**, the owner's pick from
+  the Next list. `TELEMETRY_SINK=plausible` selects `PlausibleTelemetrySink`
+  (`apps/api/src/telemetry/plausible-sink.ts`): plain `fetch`, one `POST /api/event` per admitted
+  event, a three-second timeout and no SDK; the taxonomy's `page_view` becomes Plausible's
+  built-in `pageview`. The reported URL is synthetic (`/en/<Screen>`,
+  `/admin/<A-Screen>`, `/server`); the event's context (without `session_id`), its `essential`
+  flag and its parameters become custom properties (lists comma-joined). The HMAC user id and
+  the session id are not sent. The intake forwards the visitor's IP as `X-Forwarded-For` (only
+  when `isIP` accepts it); a failed or `x-plausible-dropped` send is logged, never thrown. The
+  mock stays the default and the e2e's file sink; a missing/invalid setting logs an error and
+  falls back to the mock. Settings: `TELEMETRY_SINK`, `TELEMETRY_PLAUSIBLE_ENDPOINT`,
+  `_DOMAIN`, `_SITE_URL`, `_USER_AGENT`, `_TIMEOUT_MS`, all passed through by turbo's dev task.
+  Tests: `apps/api/test/plausible-sink.test.ts` (9) and `telemetry.service.test.ts` (1). No new
+  dependency, no migration, no image; live hosting stays open (Q10).
+- **Earlier (2026-10-26): staff passkeys**, the owner's first M9 deferred item, approved
   as recommended (P1a–P6a) with `@better-auth/passkey` as a back-office dependency (already in
   the lockfile), on migration `20261026135144_session_sign_in_method` (`c720d5a`…`8c04327`):
   - Every session records `signInMethod` (`packages/auth/src/sign-in-method.ts`; only a
@@ -42,8 +58,8 @@ passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
 - Earlier the same day: reduce motion, high contrast and the axe audit (`5abe936`…`f1e1131`).
 - Earlier (2026-10-24): Phase 8 item 2 (rem type, larger text, low bandwidth, the PWA and the
   offline kit), the DS 07 widths and M10 (see Decisions).
-- **Not built:** SMS/push; the real analytics sink (Q10; owner prefers Plausible CE); worker
-  events (`offer_viewed` and the rest wait for the worker app); desk page views and nav clicks
+- **Not built:** SMS/push; the live Plausible hosting decision (the adapter is built);
+  worker events (`offer_viewed` and the rest wait for the worker app); desk page views and nav clicks
   (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
@@ -56,27 +72,29 @@ passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-26/27, staff passkeys, dev stack stopped for the build)
+## Verified (2026-10-27/28, Plausible sink, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **966 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 370,
-  api 354/27 skipped, schemas 71, email 30, auth 6 (new), config 36, ui 35, documents 22).
+- `TURBO_FORCE=true pnpm test` **978 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 370,
+  api 366/27 skipped, schemas 71, email 30, config 36, ui 35, documents 22, auth 6, theming 14,
+  payments 8, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). The new
+  `plausible-sink.test.ts` is 10 tests; `telemetry.service.test.ts` is 1; `telemetry.e2e.test.ts`
+  gained the request-IP pass-through case (10).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **109 passed, 4 failed, 3 skipped** in 54.4 min, including
-  `e2e/passkeys.spec.ts` 4/4 and the axe spec with `/passkeys`. The machine suspended during
-  the run: `[ds07-768]` customer pages failed with `net::ERR_NETWORK_IO_SUSPENDED`; `[ds07-1024]`
-  customer pages timed out on a blog `page.goto` (the same failure as on 2026-10-25);
-  `[default]` dispatch (re-dispatch dialog) and supplier-resources (storefront package heading)
-  timed out. Rerun in isolation, with leftovers killed by PID and `.next` deleted: dispatch +
-  supplier-resources **4/4**, `responsive.spec.ts` customer pages at ds07-768 and ds07-1024
-  **2/2**. Skips: the desk at 320/375/414.
+- `pnpm e2e` (`.next` deleted first): **110 passed, 3 failed, 3 skipped** in 1.2 h. The three
+  were the known machine/compile timeouts: `[default]` accessibility "customer pages"
+  (`waitForLoadState('networkidle')` timed out), `[default]` supplier-resources (the
+  "E2E M6 Power Trail" heading, the same as 2026-10-26/27) and `[ds07-768]` responsive customer
+  pages with larger text (`page.goto` timeout). Rerun in isolation with the leftovers killed by
+  PID and `.next` deleted: the two `[default]` tests **2/2** and `[ds07-768]` **1/1**. Skips: the
+  desk at 320/375/414. The final `page_view` mapping landed after this run; it is in the
+  `plausible` branch the e2e does not select, and its unit test passes.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Disproved: with the guard and gateways unchanged, `apps/api/test/passkeys.e2e.test.ts`
-  (403/401 under the rule) and the gateways' deactivated/expired cases fail; a session created by
-  `/passkey/verify-registration` is `other` (unit test).
-- Browser at 390/1024/1280 (Chromium, screenshots + computed styles): `/login`, `/passkeys`
-  (empty, list, setup), the thresholds switch and warning, the reset form, the shell link, the
-  Security fact; no sideways scroll at any width, buttons on the primary/secondary tokens.
+- Live adapter proof: the built `PlausibleTelemetrySink` posted two events to a local HTTP
+  server — `https://vereda.travel/en/Package` with `X-Forwarded-For: 203.0.113.7`, and
+  `https://vereda.travel/server` with no forwarded IP; the session id and the HMAC user id were
+  absent. The `page_view` -> `pageview` mapping is covered by the unit test.
+- No browser/screenshot check: this increment has no UI change.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -88,6 +106,12 @@ passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
   versions). A one-Super-Admin agency cannot apply it (dual approval). The passkey emails use
   the tenant's primary language, as the invitation does. Synced passkeys (iCloud/Google) count
   as passkeys; nothing restricts authenticator types (no attestation).
+- **Plausible (2026-10-27/28):** the adapter is tested against a fake and a local HTTP server;
+  no Plausible CE instance is running. The live hosting decision still needs: where CE runs and
+  its retention, the registered site domain, a proxy that forwards the real client IP (or bot
+  filtering will silently drop events), whether the API's `server` events go to Plausible or
+  stay on the mock/file sink, and counsel's review of the analytics words for this processor.
+  `TELEMETRY_PLAUSIBLE_DOMAIN`/`_SITE_URL` must match the registered site.
 - The settings cache is per process (60 s); a multi-instance deploy sees an applied change within
   a minute.
 - **M10, for finance/counsel:** whether a regenerated invoice is enough when seats are added after
@@ -133,6 +157,14 @@ passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
   the same value fires no change: toggle in the `toPass`. After a passkey sign-in, wait with
   `waitUntil: 'commit'` (the dev dashboard's `load` can exceed 5 s) and click only while still
   on `/login`. The reset email's subject is Spanish (tenant primary language).
+- **Plausible sink (2026-10-27/28):** `TELEMETRY_SINK=plausible` ignores
+  `TELEMETRY_SINK_FILE`, so a stack switched to Plausible fails the e2e's server-event read;
+  keep the e2e/owner dev stack on `mock`. The endpoint is the full `/api/event` URL, not the
+  Plausible site root. Plausible answers 202 even when its bot filter drops an event
+  (`x-plausible-dropped: 1`), and it drops a backend/datacenter IP, so the proxy must forward
+  the real client IP; server events have no visitor IP and may drop. A missing or invalid
+  setting falls back to the mock with an error log. The event URL is synthetic
+  (`/en/<Screen>`, `/admin/<A-Screen>`, `/server`), not the page path.
 - **Server T-Events (2026-10-25):** they never pass through a browser, so e2e reads the mock
   sink's file: `playwright.config.ts` sets `TELEMETRY_SINK_FILE` (`e2e/telemetry.ts`
   `TELEMETRY_SINK_FILE`, `.telemetry/e2e-events.jsonl`, gitignored) and turbo passes it
@@ -267,15 +299,22 @@ passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
     passkey-changing routes ask `SessionPolicy.changeRefusal` through `createAuth`'s
     `passkey.policy`. `PASSKEY_RP_ID` binds every passkey; `STAFF_PASSKEYS_OVERRIDE=off` is the
     break-glass."
+  - "2026-10-27: `TELEMETRY_SINK=plausible` selects the Plausible CE sink (plain `fetch`,
+    `POST /api/event`; `TELEMETRY_PLAUSIBLE_ENDPOINT`/`_DOMAIN`/`_SITE_URL`/`_USER_AGENT`/
+    `_TIMEOUT_MS`); `mock` stays the default and the e2e's file sink. The adapter maps
+    `page_view` to Plausible's `pageview`, sends synthetic event paths, the context and params
+    as props, and the visitor's `X-Forwarded-For`; it never
+    sends the session id or the HMAC user id. Plausible's bot filter drops a backend IP silently,
+    so live hosting must forward the client IP or accept that `server` events may drop. A failed
+    send is logged, never thrown."
 
 ## Next
-1. Owner: choose the next batch — the real analytics sink (Q10; Plausible CE preferred: a
-   `TelemetrySink` adapter with plain fetch, tested against a fake, no new images, plus a
-   hosting decision for live use), another M9 deferred item (recovery codes, permission
-   overrides, display currencies, runtime flags, the idle lock, the IP allowlist or new-device
-   emails; doc first where it changes how auth decides), M10's room holds/event photos
-   (migration doc first), or a manual keyboard/screen-reader pass on the A-A11y desk rules that
-   axe cannot decide.
+1. Owner: choose the next batch — the Plausible live hosting decision (where CE runs, the site,
+   the IP-forwarding proxy, whether `server` events go there; the adapter is built), another M9
+   deferred item (recovery codes, permission overrides, display currencies, runtime flags, the
+   idle lock, the IP allowlist or new-device emails; doc first where it changes how auth
+   decides), M10's room holds/event photos (migration doc first), or a manual
+   keyboard/screen-reader pass on the A-A11y desk rules that axe cannot decide.
 2. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy, the M10 invoice question, the cookie words and the
    basis for desk and server telemetry), OFAC categories, card surcharge, deposit refundability
@@ -632,3 +671,13 @@ passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built).
   gateways' missing session checks, put "Your passkeys" on `/passkeys` (every staff role, not
   the Super-Admin-only Security tab), and resolved the screens with existing components (ADR
   0006 amendment of 2026-10-26).
+
+- 2026-10-27 — the owner chose the real analytics sink next: a Plausible CE `TelemetrySink`
+  adapter with plain `fetch`, tested against a fake, no new dependency and no new image; live
+  hosting stays open (Q10). The build resolved: one `POST /api/event` per event to
+  `TELEMETRY_PLAUSIBLE_ENDPOINT` with the site domain; `page_view` mapped to Plausible's
+  `pageview`; synthetic event paths; context and params
+  as custom props, lists comma-joined; no session id or HMAC user id (Plausible counts visitors
+  itself); the visitor's IP forwarded as `X-Forwarded-For`; a failed or bot-dropped event logged
+  and swallowed; the mock remains the default and the e2e's file sink; a bad setting falls back
+  to the mock.
