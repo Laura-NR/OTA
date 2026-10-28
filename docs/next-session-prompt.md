@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste the block below to start the next session.
+Prepared 2026-10-28, after the Plausible CE sink adapter. Paste the block below to start the next session.
 
 ```text
 Project: OTA — a Cuban inbound-tourism travel-agency platform for Vereda Expeditions. Repo
@@ -21,31 +21,41 @@ ORIENT FIRST, in this order:
   §7 as built) for the migration-doc pattern;
 - docs/design-v1.1-plan.md (Progress table, Phase 6, Phase 8);
 - docs/adr/0006-design-system-v1.1.md (amended through Phase 8 item 2, the 2026-10-25
-  accessibility batch, Phase 8 item 1, T-Events, its follow-ups, the server-side T-Events and, on
-  2026-10-26, the staff passkeys);
+  accessibility batch, Phase 8 item 1, T-Events, its follow-ups, the server-side T-Events, the
+  2026-10-26 staff passkeys and the 2026-10-27 Plausible CE sink);
+- docs/runbook.md "Analytics events (T-Events)" (the sink settings, the bot-filter note and the
+  live-hosting gap);
 - tenant/README.md (placeholder data, including the M4/M5 terms, the customBuilder rates and the
   M8 crisis framework, the M10 concierge terms and the cookie banner's analytics words).
 Verify the handoff against the code; run `git log --oneline main..vereda`. If this brief repeats
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
-Phase 8 items 1–4 are done (item 1 against a mock sink). Built and verified last session
-(2026-10-26): staff passkeys (docs/schema-m9-passkeys.md, approved P1a–P6a) — migration
-20261026135144_session_sign_in_method (every session records signInMethod; only a passkey sign-in
-is `passkey`); the threshold staffPasskeysRequired (off; two Super Admins); the global
-SessionPolicy shared by the guard, both Socket.IO gateways (which now also refuse deactivated
-users and ended staff sessions) and the T-Events intake, answering 403 PASSKEY_SETUP_REQUIRED or
-401 PASSKEY_SIGN_IN_REQUIRED except on @AllowWithoutPasskey() routes; Better Auth's
-passkey-changing routes asking it (a passkey session, except the first passkey; the last one
-stays while the rule is on), audited and emailed; POST /staff/:id/reset-passkeys; user
-verification required, origins pinned to TRUSTED_ORIGINS, PASSKEY_RP_ID, the
-STAFF_PASSKEYS_OVERRIDE=off break-glass; the desk's passkey sign-in, /passkeys, the switch, Reset
-passkeys and the Security fact; e2e/passkeys.spec.ts with a virtual authenticator. Earlier
-(2026-10-25): server-side T-Events. Not built: SMS/push, the real analytics sink (Q10), the worker
-events (offer_viewed etc.; no worker app), desk page views (counsel on staff analytics),
-gallery_opened (no gallery viewer), queued offline writes, M9's other deferred items (recovery
-codes, permission overrides, display currencies, runtime flags, idle lock, IP allowlist,
-new-device email), passkeys for travelers and suppliers, M10's room holds and event photos.
+Phase 8 items 1–4 are done. Built and verified last session (2026-10-27/28): the real analytics
+sink as a Plausible CE adapter — `TELEMETRY_SINK=plausible` selects `PlausibleTelemetrySink`
+(plain fetch, one POST /api/event per event, a 3 s timeout, synthetic URLs `/en/<Screen>`,
+`/admin/<A-Screen>`, `/server`, `page_view` → Plausible `pageview`, context/params as props, no
+session id or HMAC user id, the visitor IP as X-Forwarded-For, a failed or bot-dropped send
+logged and swallowed; the mock stays the default and the e2e's file sink; a missing/invalid
+setting falls back to the mock with an error). Tests: plausible-sink.test.ts (10),
+telemetry.service.test.ts (1), the request-IP case in telemetry.e2e.test.ts. No new dependency,
+no migration, no image; live hosting is still open. Earlier (2026-10-26): staff passkeys
+(docs/schema-m9-passkeys.md, approved P1a–P6a) — migration 20261026135144_session_sign_in_method
+(every session records signInMethod; only a passkey sign-in is `passkey`); the threshold
+staffPasskeysRequired (off; two Super Admins); the global SessionPolicy shared by the guard, both
+Socket.IO gateways (which now also refuse deactivated users and ended staff sessions) and the
+T-Events intake, answering 403 PASSKEY_SETUP_REQUIRED or 401 PASSKEY_SIGN_IN_REQUIRED except on
+@AllowWithoutPasskey() routes; Better Auth's passkey-changing routes asking it (a passkey session,
+except the first passkey; the last one stays while the rule is on), audited and emailed; POST
+/staff/:id/reset-passkeys; user verification required, origins pinned to TRUSTED_ORIGINS,
+PASSKEY_RP_ID, the STAFF_PASSKEYS_OVERRIDE=off break-glass; the desk's passkey sign-in, /passkeys,
+the switch, Reset passkeys and the Security fact; e2e/passkeys.spec.ts with a virtual
+authenticator. Earlier (2026-10-25): server-side T-Events. Not built: SMS/push, the live Plausible
+hosting (Q10; the adapter is built), the worker events (offer_viewed etc.; no worker app), desk
+page views (counsel on staff analytics), gallery_opened (no gallery viewer), queued offline
+writes, M9's other deferred items (recovery codes, permission overrides, display currencies,
+runtime flags, idle lock, IP allowlist, new-device email), passkeys for travelers and suppliers,
+M10's room holds and event photos.
 Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
 wording, the concierge fee and events copy, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
 rotate it). Last full verify: see the handoff's Verified section. The owner decided:
@@ -62,31 +72,39 @@ reduce-motion/high-contrast switches and the axe audit with @axe-core/playwright
 2026-10-25); Phase 8 item 1 against a mock sink behind a public log-only route, storefront funnel
 first (built 2026-10-25); the T-Events follow-ups with desk events operational only, no desk
 banner (built 2026-10-25); server-side T-Events (built 2026-10-25); the staff passkey policy
-P1a–P6a with @better-auth/passkey in the back-office (built 2026-10-26); for later, Plausible CE
-as the preferred real sink (adapter tested against a fake, no new images, until a hosting
-decision).
+P1a–P6a with @better-auth/passkey in the back-office (built 2026-10-26); the real analytics sink
+as a Plausible CE adapter behind `TELEMETRY_SINK` (built 2026-10-27/28; tested against a fake, no
+new dependency or image); the live Plausible hosting decision remains open.
 
-TASK 0 — The dev stack was left running for the owner; stop it (signal turbo) before any verify
-and restart it at the end. Last session's full verify is in the handoff (nothing left to finish).
+TASK 0 — The dev stack was left running for the owner (with TELEMETRY_SINK_FILE and raised rate
+limits); stop it (signal turbo) before any verify and restart it at the end. Last session's full
+verify (the Plausible sink) is in the handoff (nothing left to finish).
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: the real analytics sink (Q10; the owner prefers Plausible CE — a TelemetrySink
-adapter with plain fetch behind TELEMETRY_SINK, tested against a fake, no new images, plus a
-hosting decision for live use), another M9 deferred item (recovery codes, permission overrides,
+recommendation: the live Plausible hosting decision (Q10; the adapter is built — where CE runs,
+the registered site, the reverse proxy that forwards the client IP, whether `server` events go to
+Plausible or stay on the mock/file sink, retention, and counsel's analytics words; a hosting
+decision, not a migration), another M9 deferred item (recovery codes, permission overrides,
 display currencies, runtime flags, the idle lock, the IP allowlist, new-device emails — a doc to
-the owner first where it changes how auth decides), M10's deferred room holds and event photos,
-or a manual keyboard/screen-reader pass on the A-A11y desk rules that axe cannot decide. Build
-nothing that needs a migration before the owner approves its doc.
+the owner first where it changes how auth decides), M10's deferred room holds and event photos
+(migration doc first), or a manual keyboard/screen-reader pass on the A-A11y desk rules that axe
+cannot decide. Recommend the live Plausible hosting decision (it completes Q10); if that is
+blocked on infrastructure, the manual pass is the next buildable batch (no migration, dependency
+or spend). Build nothing that needs a migration before the owner approves its doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
-DTOs, routes in the authorization matrix, desk surfaces in en/es/fr, an e2e).
+DTOs, routes in the authorization matrix, desk surfaces in en/es/fr, an e2e). If the live
+Plausible hosting is chosen, write the hosting/config plan first and ask before spending money or
+fixing the deployment topology; do not add a Plausible image to the repo.
 
 TASK 3 — DOCS and VERIFY as before: keep docs/handoff/vereda.md a current snapshot (Decisions
 append-only), update the Progress table and the ADR 0006 amendment for design resolutions; run
 `pnpm lint && pnpm format:check`, then `TURBO_FORCE=true pnpm typecheck && TURBO_FORCE=true
 pnpm test && TURBO_FORCE=true pnpm build` with the dev stack stopped; delete apps/*/.next; run
-`pnpm e2e` (seven projects: default, with the axe audit, + six DS 07 widths); kill what e2e leaves on 3000–3002 by PID
-(never pkill -f). Run the live tests with RUN_DB_INTEGRATION=1 (retention, packages, affidavits,
+`pnpm e2e` (seven projects: default, with the axe audit, + six DS 07 widths); kill what e2e
+leaves on 3000–3002 by PID (never pkill -f). Keep the e2e/owner dev stack on the mock sink:
+`TELEMETRY_SINK=plausible` ignores TELEMETRY_SINK_FILE and would fail the server-event reads.
+Run the live tests with RUN_DB_INTEGRATION=1 (retention, packages, affidavits,
 package-booking, payment-schedule, proposals, advisories, disruptions, events) and REDIS_URL
 (dispatch and compliance BullMQ). Restart the owner's dev stack with TELEMETRY_SINK_FILE (see
 the handoff) so a later `pnpm e2e` that reuses it can read server events. Check
@@ -106,15 +124,26 @@ wants to browse, and leave it running at the end.
 
 DECISION GATES (ask; do not assume): schema migrations (M1–M10), new dependencies, the SMS
 provider and anything needing the agency's legal entity, a real LLM vendor, PII purge Tiers 2–3,
-load tests, deployment topology. Still open with the owner: the M4 placeholder terms (and whether
-the cancellation scale keeps a share of what was paid or of the total), the M5 sample terms
-(planning fee, validity, response hours), the pricing samples (child bands, fees), counsel's review
-of the legal texts, the OFAC categories, the card surcharge, the deposit's refundability and proof
-retention, the passport-key backup; the M10 concierge fee and events copy (and whether a
-regenerated invoice suffices when seats are added later); the AGENTS.md §C lines proposed in the
+load tests, deployment topology. Still open with the owner: the Plausible live hosting (where
+CE runs, the site, the IP-forwarding proxy and whether `server` events go there); the M4
+placeholder terms (and whether the cancellation scale keeps a share of what was paid or of the
+total), the M5 sample terms (planning fee, validity, response hours), the pricing samples
+(child bands, fees), counsel's review of the legal texts, the OFAC categories, the card
+surcharge, the deposit's refundability and proof retention, the passport-key backup; the M10
+concierge fee and events copy (and whether a regenerated invoice suffices when seats are added
+later); the AGENTS.md §C lines proposed in the
 handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. Staff passkeys (2026-10-26): Prisma create data
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Plausible sink (2026-10-27/28):
+`TELEMETRY_SINK=plausible` ignores TELEMETRY_SINK_FILE, so a stack switched to it fails the
+e2e's server-event read; keep the e2e/owner stack on mock. The endpoint is the full `/api/event`
+URL, not the site root. The adapter sends synthetic URLs (`/en/<Screen>`, `/admin/<A-Screen>`,
+`/server`), maps `page_view` to Plausible's `pageview`, and forwards the visitor's
+`X-Forwarded-For`; Plausible's bot filter silently drops a backend/datacenter IP
+(`x-plausible-dropped: 1`), and server events have no visitor IP, so live hosting must forward
+the client IP or accept drops. A missing/invalid setting falls back to the mock with an error
+log. A new taxonomy event needs no adapter change; the name is sent as-is (`page_view` excepted).
+Staff passkeys (2026-10-26): Prisma create data
 with an unknown field passes tsc in apps/api, so check column names against the model; app-level
 API tests need withNoSettingsVersion() (the guard reads the settings for a staff link session)
 and hand-built gateways/StaffService take fakeSessionPolicy(); with the rule on, every staff link
@@ -124,7 +153,8 @@ a selectOption before hydration is lost (toggle in the toPass); the passkey emai
 tenant's primary language (es). Server T-Events (2026-10-25): they never pass
 through a browser, so e2e reads the mock sink's file (e2e/telemetry.ts serverEvents, filtered by
 receivedAt; the file only grows and .telemetry/ may be deleted); a dev stack started without
-TELEMETRY_SINK_FILE fails those polls with SERVER_EVENTS_HINT; a new reservation-status write
+TELEMETRY_SINK_FILE fails those polls with SERVER_EVENTS_HINT (the owner's stack is started with
+it and must stay on the mock sink); a new reservation-status write
 must call ServerTelemetry.stateChanged (or go through ReservationsService.transition with its
 reason code); ReservationsService, PaymentsService and DispatchService take ServerTelemetry last
 (hand-built: new ServerTelemetry(new MockTelemetrySink())); the dispatch test's fake Prisma
