@@ -15,12 +15,19 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
-- **2026-10-28 (late): the live Plausible hosting plan**, the owner's pick from the Next list:
-  `docs/plausible-hosting-plan.md` (H1–H7, proposed, awaiting the owner). Nothing deployed,
-  bought or built. It records four findings: F1, the storefront path loses the visitor's IP
-  (also the rate limiter's key); F2, a fixed User-Agent; F3, server events have no visitor;
-  F4, `booking_code`/`request_id`/`from_path` props. §5 lists the small code changes once
-  approved (no migration, dependency or UI).
+- **This session (2026-10-28): the live Plausible hosting plan**, the owner's pick from the
+  Next list. `docs/plausible-hosting-plan.md` was approved as recommended (H1a, H4a, H5, H6a,
+  H7) and built (`9f9e562`…`89ed6fe`, §6 as built). Nothing is deployed or bought: CE goes on
+  its own EU VPS, which the owner buys (H1), and H3 (an edge proxy that sets
+  `X-Forwarded-For`, plus `TRUST_PROXY=1`) belongs to the deploy topology. Code:
+  `TELEMETRY_SINK=plausible` builds a `ConsentRoutedTelemetrySink`
+  (`apps/api/src/telemetry/consent-routed-sink.ts`), so only events whose consent is not
+  `essential` reach Plausible (`mayReachAnalyticsStore`, `packages/domain`). Desk, server and
+  refusing visitors' events stay on the mock and its file. The intake forwards the visitor's
+  User-Agent with the IP; `LINKABLE_TELEMETRY_PARAMS` (`booking_code`, `request_id`,
+  `from_path`) never reach Plausible. The words are `cookies-analytics@2026-10-28` (approximate
+  location), with the privacy paragraph to match (en). The runbook has a "Going live"
+  checklist. No migration, dependency, image or UI change.
 - **2026-10-27/28: the real analytics sink (Plausible CE)**, the owner's pick from
   the Next list. `TELEMETRY_SINK=plausible` selects `PlausibleTelemetrySink`
   (`apps/api/src/telemetry/plausible-sink.ts`): plain `fetch`, one `POST /api/event` per admitted
@@ -78,29 +85,25 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-27/28, Plausible sink, dev stack stopped for the build)
+## Verified (2026-10-28, Plausible hosting plan built, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **978 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 370,
-  api 366/27 skipped, schemas 71, email 30, config 36, ui 35, documents 22, auth 6, theming 14,
-  payments 8, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). The new
-  `plausible-sink.test.ts` is 10 tests; `telemetry.service.test.ts` is 1; `telemetry.e2e.test.ts`
-  gained the request-IP pass-through case (10).
+- `TURBO_FORCE=true pnpm test` **985 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 373,
+  api 370/27 skipped, schemas 71, email 30, config 36, ui 35, documents 22, auth 6, theming 14,
+  payments 8, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New: the domain's
+  "analytics store" block (3), and in api the User-Agent, identifier, two routing and factory
+  cases in `plausible-sink.test.ts` (now 14), with the service and intake cases extended.
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **110 passed, 3 failed, 3 skipped** in 1.2 h. The three
-  were the known machine/compile timeouts: `[default]` accessibility "customer pages"
-  (`waitForLoadState('networkidle')` timed out), `[default]` supplier-resources (the
-  "E2E M6 Power Trail" heading, the same as 2026-10-26/27) and `[ds07-768]` responsive customer
-  pages with larger text (`page.goto` timeout). Rerun in isolation with the leftovers killed by
-  PID and `.next` deleted: the two `[default]` tests **2/2** and `[ds07-768]` **1/1**. Skips: the
-  desk at 320/375/414. The final `page_view` mapping landed after this run; it is in the
-  `plausible` branch the e2e does not select, and its unit test passes.
+- `pnpm e2e` (`.next` deleted first): **111 passed, 2 failed, 3 skipped** in 58.7 min. The two
+  were `[ds07-768]` responsive timeouts (larger text: `page.evaluate`; traveler/builder:
+  `page.goto`), the known machine/compile class. Rerun in isolation with the leftovers killed by
+  PID and `.next` deleted: **2/2** (`pnpm e2e --project=ds07-768 -g "…" e2e/responsive.spec.ts`).
+  The consent cookie followed the new words version without changes. Skips: the desk at
+  320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Live adapter proof: the built `PlausibleTelemetrySink` posted two events to a local HTTP
-  server — `https://vereda.travel/en/Package` with `X-Forwarded-For: 203.0.113.7`, and
-  `https://vereda.travel/server` with no forwarded IP; the session id and the HMAC user id were
-  absent. The `page_view` -> `pageview` mapping is covered by the unit test.
-- No browser/screenshot check: this increment has no UI change.
+- Next's rewrite proxy: its compiled http-proxy with `proxyRequest`'s options passed an incoming
+  `X-Forwarded-For: 203.0.113.7` unchanged and added none when absent (plan F1).
+- No browser/screenshot check: no UI change (the words change only the banner and privacy text).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -112,12 +115,13 @@ events (T-Events)".
   versions). A one-Super-Admin agency cannot apply it (dual approval). The passkey emails use
   the tenant's primary language, as the invitation does. Synced passkeys (iCloud/Google) count
   as passkeys; nothing restricts authenticator types (no attestation).
-- **Plausible (2026-10-27/28):** the adapter is tested against a fake and a local HTTP server;
-  no Plausible CE instance is running. The live hosting decision still needs: where CE runs and
-  its retention, the registered site domain, a proxy that forwards the real client IP (or bot
-  filtering will silently drop events), whether the API's `server` events go to Plausible or
-  stay on the mock/file sink, and counsel's review of the analytics words for this processor.
-  `TELEMETRY_PLAUSIBLE_DOMAIN`/`_SITE_URL` must match the registered site.
+- **Plausible (2026-10-27/28; plan approved 2026-10-28):** the adapter and its routing are
+  tested against a fake; no Plausible CE instance is running and nothing is bought. Owner
+  steps: the EU VPS (2 vCPU / 4 GB), CE at a pinned tag, the site (the storefront's public
+  domain, still unchosen), and H3 in the deploy topology. `TELEMETRY_PLAUSIBLE_DOMAIN`/
+  `_SITE_URL` must match the registered site. Counsel: the new analytics words and
+  whether Plausible's data needs a retention limit. Facts relied on (CE v3.2.1 README,
+  Events API docs, data policy, read 2026-10-28) are listed in the plan §2.
 - The settings cache is per process (60 s); a multi-instance deploy sees an applied change within
   a minute.
 - **M10, for finance/counsel:** whether a regenerated invoice is enough when seats are added after
@@ -169,9 +173,10 @@ events (T-Events)".
   the same value fires no change: toggle in the `toPass`. After a passkey sign-in, wait with
   `waitUntil: 'commit'` (the dev dashboard's `load` can exceed 5 s) and click only while still
   on `/login`. The reset email's subject is Spanish (tenant primary language).
-- **Plausible sink (2026-10-27/28):** `TELEMETRY_SINK=plausible` ignores
-  `TELEMETRY_SINK_FILE`, so a stack switched to Plausible fails the e2e's server-event read;
-  keep the e2e/owner dev stack on `mock`. The endpoint is the full `/api/event` URL, not the
+- **Plausible sink (2026-10-27/28, routed 2026-10-28):** with `TELEMETRY_SINK=plausible` the
+  mock still gets (and files) everything that stays first-party, server events included, but
+  a consenting visitor's events go only to Plausible; keep the e2e/owner dev stack on `mock`
+  anyway (there is no Plausible in dev). The endpoint is the full `/api/event` URL, not the
   Plausible site root. Plausible answers 202 even when its bot filter drops an event
   (`x-plausible-dropped: 1`), and it drops a backend/datacenter IP, so the proxy must forward
   the real client IP; server events have no visitor IP and may drop. A missing or invalid
@@ -311,6 +316,12 @@ events (T-Events)".
     passkey-changing routes ask `SessionPolicy.changeRefusal` through `createAuth`'s
     `passkey.policy`. `PASSKEY_RP_ID` binds every passkey; `STAFF_PASSKEYS_OVERRIDE=off` is the
     break-glass."
+  - "2026-10-28: with `TELEMETRY_SINK=plausible`, only events whose consent is not
+    `essential` reach Plausible (`mayReachAnalyticsStore`); desk, server and refusing
+    visitors' events stay on the mock and its file. `booking_code`, `request_id` and
+    `from_path` never reach it (`LINKABLE_TELEMETRY_PARAMS`). Next's `/api/ota/*` rewrite
+    does not add `X-Forwarded-For`, so a deploy needs an edge proxy that sets it and
+    `TRUST_PROXY=1` (for the rate limiter too)."
   - "2026-10-27: `TELEMETRY_SINK=plausible` selects the Plausible CE sink (plain `fetch`,
     `POST /api/event`; `TELEMETRY_PLAUSIBLE_ENDPOINT`/`_DOMAIN`/`_SITE_URL`/`_USER_AGENT`/
     `_TIMEOUT_MS`); `mock` stays the default and the e2e's file sink. The adapter maps
@@ -321,13 +332,14 @@ events (T-Events)".
     send is logged, never thrown."
 
 ## Next
-1. Owner: answer `docs/plausible-hosting-plan.md` H1 (where CE runs, and its cost), H4
-   (which events reach Plausible), H6 (identifiers and retention) and H7 (the analytics
-   words). Then build its §5 items 1–5 and run the full verify. H3 goes into the
-   deploy-topology decision.
-2. After that, the other batches still open: another M9 deferred item (doc first where it
-   changes how auth decides), M10's room holds/event photos (migration doc first), or the
-   manual keyboard/screen-reader pass on the A-A11y desk rules.
+1. Owner: choose the next batch: the manual keyboard/screen-reader pass on the A-A11y desk
+   rules (buildable now, no migration, dependency or spend), another M9 deferred item (doc
+   first where it changes how auth decides), or M10's room holds/event photos (migration doc
+   first).
+2. Owner, outside the repo: buy the EU VPS and install CE per `docs/runbook.md` "Going live";
+   put H3 (edge proxy setting `X-Forwarded-For`, `TRUST_PROXY=1`) into the deploy topology.
+   Counsel: `cookies-analytics@2026-10-28` and whether Plausible's data needs a retention
+   limit.
 3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy, the M10 invoice question, the cookie words and the
    basis for desk and server telemetry), OFAC categories, card surcharge, deposit refundability
@@ -701,3 +713,11 @@ events (T-Events)".
   topology choice. It recommends H1a (its own EU VPS), H4a (only analytics-consented events),
   H5 (forward the User-Agent), H6a (strip identifiers, no TTL) and H7 (a new placeholder
   words version).
+- 2026-10-28 — the owner approved the hosting plan as recommended: H1a (CE on its own EU VPS,
+  which the owner buys; no image in the repo), H4a (only events whose consent is not
+  `essential` reach Plausible, over sending everything or every storefront event), H5
+  (forward the User-Agent), H6a (strip `booking_code`/`request_id`/`from_path` and keep the
+  data with no retention limit, over a ClickHouse TTL) and H7 (a new placeholder words
+  version now, over waiting for counsel). The build routes in a sink wrapper rather than in
+  the adapter, so `PlausibleTelemetrySink` stays a plain transport and the mock keeps its file.
+
