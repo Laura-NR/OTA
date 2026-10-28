@@ -27,7 +27,7 @@ const event = {
 };
 
 describe('TelemetryService', () => {
-  it('passes the visitor IP to the sink without putting it on the event', async () => {
+  it('passes the visitor IP and User-Agent to the sink without putting them on the event', async () => {
     let seen: {
       events: readonly SinkEvent[];
       options?: TelemetryRecordOptions;
@@ -43,13 +43,17 @@ describe('TelemetryService', () => {
       { events: [event] },
       null,
       null,
-      '203.0.113.7',
+      { clientIp: '203.0.113.7', userAgent: 'Mozilla/5.0 (Test)' },
       now,
     );
 
     expect(receipt).toEqual({ accepted: 1, rejected: 0 });
     expect(seen).not.toBeNull();
-    expect(seen!.options).toEqual({ clientIp: '203.0.113.7' });
+    expect(seen!.options).toEqual({
+      clientIp: '203.0.113.7',
+      userAgent: 'Mozilla/5.0 (Test)',
+    });
     expect(JSON.stringify(seen!.events)).not.toContain('203.0.113.7');
+    expect(JSON.stringify(seen!.events)).not.toContain('Mozilla');
   });
 });

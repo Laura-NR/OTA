@@ -3,7 +3,7 @@ import { admitTelemetryEvent, type AdmittedEvent } from '@ota/domain';
 import type { TelemetryBatchRequest, TelemetryReceiptDto } from '@ota/schemas';
 import { createHmac } from 'node:crypto';
 
-import type { TelemetrySink } from './telemetry-sink';
+import type { TelemetryRecordOptions, TelemetrySink } from './telemetry-sink';
 import { TELEMETRY_SINK } from './telemetry.tokens';
 
 /**
@@ -26,13 +26,15 @@ export class TelemetryService {
    * Admit each event against the taxonomy and the visitor's consent, attach
    * the hashed user id to the analytics events of a signed-in visitor, and
    * hand the admitted ones to the sink. `role` is the live session's account
-   * role, which desk events need and carry. Refused events are only counted.
+   * role, which desk events need and carry. `client` is the request's IP and
+   * User-Agent, passed to the sink but never put on an event. Refused events
+   * are only counted.
    */
   async ingest(
     batch: TelemetryBatchRequest,
     userId: string | null,
     role: string | null = null,
-    clientIp: string | null = null,
+    client: TelemetryRecordOptions = {},
     now: Date = new Date(),
   ): Promise<TelemetryReceiptDto> {
     const admitted: AdmittedEvent[] = [];
@@ -54,7 +56,7 @@ export class TelemetryService {
               : null,
           receivedAt,
         })),
-        { clientIp },
+        client,
       );
     }
     return { accepted: admitted.length, rejected: batch.events.length - admitted.length };

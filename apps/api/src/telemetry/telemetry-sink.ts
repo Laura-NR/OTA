@@ -17,6 +17,8 @@ export interface SinkEvent extends AdmittedEvent {
 export interface TelemetryRecordOptions {
   /** The visitor's IP, for a sink that counts visitors; server events have none. */
   clientIp?: string | null;
+  /** The visitor's User-Agent, which such a sink counts visitors by alongside the IP. */
+  userAgent?: string | null;
 }
 
 /**

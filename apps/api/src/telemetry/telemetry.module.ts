@@ -33,8 +33,9 @@ function plausibleOptions(): PlausibleSinkOptions | null {
 
 /**
  * T-Events (Phase 8 item 1). The sink is injected behind `TELEMETRY_SINK`:
- * `mock` by default, or the self-hosted Plausible CE adapter (plan Q10).
- * `TELEMETRY_SINK_FILE` makes the mock also write the events to a file, which
+ * `mock` by default, or the self-hosted Plausible CE adapter for consenting
+ * visitors' events with the mock keeping the rest (plan Q10).
+ * `TELEMETRY_SINK_FILE` makes the mock also write its events to a file, which
  * the e2e stack reads. Global so the services that change bookings and offers
  * can inject `ServerTelemetry` without importing this module.
  */

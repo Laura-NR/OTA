@@ -124,11 +124,15 @@ describe('T-Events intake (POST /telemetry/events)', () => {
     });
   });
 
-  it('forwards the request IP to the sink for visitor counting', async () => {
-    await post([packageViewed()]);
+  it('forwards the request IP and User-Agent to the sink for visitor counting', async () => {
+    await request(app.getHttpServer())
+      .post('/telemetry/events')
+      .set('User-Agent', 'Mozilla/5.0 (Test)')
+      .send({ events: [packageViewed()] });
 
     expect(sink.lastOptions?.clientIp).toBeTypeOf('string');
     expect(isIP(sink.lastOptions?.clientIp ?? '')).toBeGreaterThan(0);
+    expect(sink.lastOptions?.userAgent).toBe('Mozilla/5.0 (Test)');
   });
 
   it('hashes a signed-in traveler’s id onto analytics events, never the raw id', async () => {

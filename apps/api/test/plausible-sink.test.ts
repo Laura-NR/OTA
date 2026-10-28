@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ConsentRoutedTelemetrySink } from '../src/telemetry/consent-routed-sink';
 import {
   PlausibleTelemetrySink,
   type FetchLike,
@@ -187,6 +188,51 @@ describe('PlausibleTelemetrySink', () => {
     expect(serverProps).not.toHaveProperty('screen');
   });
 
+  it("forwards the visitor's User-Agent, falling back to the configured one", async () => {
+    const sink = new PlausibleTelemetrySink(options({ userAgent: 'VeredaTest/2' }));
+    const browser = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)';
+
+    await sink.record([storefrontEvent()], {
+      clientIp: '203.0.113.7',
+      userAgent: browser,
+    });
+    await sink.record([storefrontEvent()], { clientIp: '203.0.113.7', userAgent: null });
+
+    expect(headersOf(calls[0]!).get('user-agent')).toBe(browser);
+    expect(headersOf(calls[1]!).get('user-agent')).toBe('VeredaTest/2');
+  });
+
+  it('never sends a parameter that points to one booking or request', async () => {
+    const sink = new PlausibleTelemetrySink(options());
+
+    await sink.record([
+      storefrontEvent({
+        event: 'payment_attempted',
+        params: { booking_code: 'DEMO0001', method: 'wire', plan: 'full' },
+      }),
+      storefrontEvent({
+        event: 'error_page_shown',
+        params: { kind: 'not_found', from_path: '/account/reservations/r-123' },
+      }),
+      storefrontEvent({
+        event: 'proposal_requested',
+        params: { request_id: 'req-123' },
+      }),
+    ]);
+
+    const sent = calls.map((call) => bodyOf(call).props as Record<string, unknown>);
+    expect(sent[0]).toMatchObject({ method: 'wire', plan: 'full' });
+    expect(sent[1]).toMatchObject({ kind: 'not_found' });
+    for (const props of sent) {
+      expect(props).not.toHaveProperty('booking_code');
+      expect(props).not.toHaveProperty('from_path');
+      expect(props).not.toHaveProperty('request_id');
+    }
+    expect(JSON.stringify(calls.map((call) => call.init.body))).not.toMatch(
+      /DEMO0001|r-123|req-123/,
+    );
+  });
+
   it('forwards an IP only when it is a valid address', async () => {
     const sink = new PlausibleTelemetrySink(options());
 
@@ -243,11 +289,73 @@ describe('PlausibleTelemetrySink', () => {
   });
 });
 
-describe('createTelemetrySink', () => {
-  it('builds the Plausible sink when configured', () => {
-    expect(createTelemetrySink('plausible', null, options())).toBeInstanceOf(
-      PlausibleTelemetrySink,
+function refusedVisitorEvent(): SinkEvent {
+  const base = storefrontEvent();
+  return storefrontEvent({
+    event: 'booking_confirmed',
+    essential: true,
+    context: { ...base.context, consent: 'essential', session_id: undefined },
+    params: { booking_code: 'DEMO0001' },
+    userId: null,
+  });
+}
+
+describe('ConsentRoutedTelemetrySink', () => {
+  it("sends only a consenting visitor's events to Plausible and keeps the rest first-party", async () => {
+    vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    const firstParty = new MockTelemetrySink();
+    const sink = new ConsentRoutedTelemetrySink(
+      new PlausibleTelemetrySink(options()),
+      firstParty,
     );
+    const consented = storefrontEvent({
+      event: 'booking_confirmed',
+      essential: true,
+      params: { booking_code: 'DEMO0001' },
+    });
+
+    await sink.record(
+      [storefrontEvent(), consented, refusedVisitorEvent(), deskEvent(), serverEvent()],
+      { clientIp: '203.0.113.7', userAgent: 'Mozilla/5.0' },
+    );
+
+    expect(calls.map((call) => bodyOf(call).name)).toEqual([
+      'compare_viewed',
+      'booking_confirmed',
+    ]);
+    expect(headersOf(calls[0]!).get('x-forwarded-for')).toBe('203.0.113.7');
+    expect(headersOf(calls[0]!).get('user-agent')).toBe('Mozilla/5.0');
+    expect(firstParty.recent().map((event) => event.event)).toEqual([
+      'booking_confirmed',
+      'document_generated',
+      'booking_state_changed',
+    ]);
+  });
+
+  it('calls neither side for an empty share', async () => {
+    const firstParty = { record: vi.fn(async () => undefined) };
+    const sink = new ConsentRoutedTelemetrySink(
+      new PlausibleTelemetrySink(options()),
+      firstParty,
+    );
+
+    await sink.record([storefrontEvent()]);
+
+    expect(calls).toHaveLength(1);
+    expect(firstParty.record).not.toHaveBeenCalled();
+  });
+});
+
+describe('createTelemetrySink', () => {
+  it('routes by consent when Plausible is configured, keeping the rest on the mock', async () => {
+    vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    const sink = createTelemetrySink('plausible', null, options());
+
+    expect(sink).toBeInstanceOf(ConsentRoutedTelemetrySink);
+    await sink.record([storefrontEvent(), serverEvent()]);
+    expect(calls.map((call) => bodyOf(call).url)).toEqual([
+      'https://vereda.travel/en/Compare',
+    ]);
   });
 
   it('falls back to the mock when Plausible has no settings or a bad site URL', () => {

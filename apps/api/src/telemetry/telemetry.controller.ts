@@ -44,11 +44,9 @@ export class TelemetryController {
       wantsIdentity || fromDesk ? await this.auth.getSession(request.headers) : null;
     const live = session !== null && (await this.policy.refusal(session)) === null;
     const role = live ? (session.user.role ?? null) : null;
-    return this.telemetry.ingest(
-      body,
-      session?.user.id ?? null,
-      role,
-      request.ip ?? null,
-    );
+    return this.telemetry.ingest(body, session?.user.id ?? null, role, {
+      clientIp: request.ip ?? null,
+      userAgent: request.headers['user-agent'] ?? null,
+    });
   }
 }

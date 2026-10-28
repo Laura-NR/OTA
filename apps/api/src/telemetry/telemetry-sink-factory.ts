@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 
+import { ConsentRoutedTelemetrySink } from './consent-routed-sink';
 import { MockTelemetrySink, type TelemetrySink } from './telemetry-sink';
 import { PlausibleTelemetrySink, type PlausibleSinkOptions } from './plausible-sink';
 
@@ -7,9 +8,10 @@ const logger = new Logger('TelemetrySink');
 
 /**
  * The sink named by `TELEMETRY_SINK`: `mock` (the default, and the e2e's file
- * sink) or `plausible` (a self-hosted Plausible CE instance). A misconfigured
- * or unknown setting falls back to the mock rather than taking the API down;
- * analytics is never on the path of a booking.
+ * sink) or `plausible`, where a self-hosted Plausible CE instance receives
+ * the consenting visitors' events and the mock (with its file) keeps the rest.
+ * A misconfigured or unknown setting falls back to the mock rather than
+ * taking the API down; analytics is never on the path of a booking.
  */
 export function createTelemetrySink(
   kind: string | undefined,
@@ -25,7 +27,8 @@ export function createTelemetrySink(
         return new MockTelemetrySink(file);
       }
       try {
-        return new PlausibleTelemetrySink(plausible);
+        const analytics = new PlausibleTelemetrySink(plausible);
+        return new ConsentRoutedTelemetrySink(analytics, new MockTelemetrySink(file));
       } catch (error) {
         logger.error(
           `Plausible sink not configured: ${

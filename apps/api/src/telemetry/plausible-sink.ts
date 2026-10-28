@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { LINKABLE_TELEMETRY_PARAMS } from '@ota/domain';
 import { isIP } from 'node:net';
 
 import type { SinkEvent, TelemetryRecordOptions, TelemetrySink } from './telemetry-sink';
@@ -14,7 +15,7 @@ export interface PlausibleSinkOptions {
   domain?: string;
   /** The public site URL used to build each event's `url`; defaults to `https://<domain>`. */
   siteUrl?: string;
-  /** The User-Agent Plausible sees; a stable value, since the sink is server-side. */
+  /** The User-Agent Plausible sees when the request did not carry the visitor's own. */
   userAgent?: string;
   /** Per-request timeout in milliseconds; defaults to three seconds. */
   timeoutMs?: number;
@@ -55,7 +56,9 @@ export function plausibleEventName(event: SinkEvent): string {
  * The event's context and parameters as Plausible custom properties. The
  * session id stays out (it is the tab's, and Plausible counts visitors
  * itself); the HMAC user id is not sent either, so Plausible stores no second
- * identifier. A list parameter is comma-joined, Plausible's limit for a value.
+ * identifier, and neither are the parameters that point to one booking or
+ * request (`LINKABLE_TELEMETRY_PARAMS`). A list parameter is comma-joined,
+ * Plausible's limit for a value.
  */
 export function plausibleProps(
   event: SinkEvent,
@@ -66,6 +69,9 @@ export function plausibleProps(
     ...event.params,
   };
   delete raw.session_id;
+  for (const param of LINKABLE_TELEMETRY_PARAMS) {
+    delete raw[param];
+  }
 
   const props: Record<string, string | number | boolean> = {};
   for (const [key, value] of Object.entries(raw)) {
@@ -90,7 +96,8 @@ export function plausibleProps(
  * with plain `fetch` and no SDK. Plausible has no batch endpoint and answers
  * 202 even when its bot filter drops an event (`x-plausible-dropped: 1`), so
  * both are checked and logged. A failed send is never thrown: the T-Events
- * intake and a booking transition must not fail because analytics is down.
+ * intake must not fail because analytics is down. The factory puts it behind
+ * `ConsentRoutedTelemetrySink`, so it receives only consenting visitors' events.
  */
 export class PlausibleTelemetrySink implements TelemetrySink {
   private readonly logger = new Logger('TelemetrySink');
@@ -130,8 +137,9 @@ export class PlausibleTelemetrySink implements TelemetrySink {
       return;
     }
     const clientIp = options.clientIp ?? null;
+    const userAgent = options.userAgent || this.userAgent;
     const results = await Promise.allSettled(
-      events.map((event) => this.send(event, clientIp)),
+      events.map((event) => this.send(event, clientIp, userAgent)),
     );
     const failed = results.filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
@@ -157,14 +165,15 @@ export class PlausibleTelemetrySink implements TelemetrySink {
   private async send(
     event: SinkEvent,
     clientIp: string | null,
+    userAgent: string,
   ): Promise<'sent' | 'dropped'> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': this.userAgent,
+      'User-Agent': userAgent,
     };
     // Plausible counts a visitor by user agent and IP; a server-side sink must
     // forward the visitor's own IP or its bot filter drops the event. Server
-    // events have none (the hosting decision covers that case).
+    // events have none, which is why they never reach this sink (plan Q10 H4).
     if (clientIp && isIP(clientIp)) {
       headers['X-Forwarded-For'] = clientIp;
     }
