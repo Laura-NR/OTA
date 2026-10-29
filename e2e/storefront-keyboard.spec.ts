@@ -8,7 +8,9 @@ const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000'
  * The storefront's manual pass on DS 02–05 (2026-10-29), the checks axe cannot
  * decide: the skip link, focus never hidden under the sticky header or the
  * phone's bottom bar (WCAG 2.4.11), 44 px targets on a touch screen, locale
- * links named in their own language, page titles and a named scroll box.
+ * links named in their own language, page titles and a named scroll box; and
+ * the pass's design changes: room for the cookie banner and data tables that
+ * stack as cards on a phone.
  */
 
 /** What covers the focused element's centre, or null when it is visible. */
@@ -131,5 +133,89 @@ test.describe('storefront on a touch phone (DS 05)', () => {
       [box!.x + box!.width / 2, box!.y - 10],
     );
     expect(tapped).toBe('en');
+  });
+});
+
+test.describe('the cookie banner leaves room, and tables keep their columns (DS 04–05)', () => {
+  test('at desktop width focus never goes behind the banner', async ({ page }) => {
+    await page.context().clearCookies({ name: 'ota_consent' });
+    await page.goto(`${STOREFRONT_URL}/en/support`);
+    const banner = page.getByRole('region', { name: 'Cookies, your choice' });
+    await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'Choose by purpose' })).toBeHidden();
+    await page.waitForLoadState('networkidle');
+    expect(await walk(page, 'Tab', 45)).toEqual([]);
+  });
+
+  test('from sm up a data table shows its header row, not the phone labels', async ({
+    page,
+  }) => {
+    await page.goto(`${STOREFRONT_URL}/en/legal/cookies`);
+    const table = page.getByRole('region', { name: 'Cookies and storage we use' });
+    await expect(table.getByRole('columnheader', { name: 'Lifetime' })).toBeVisible();
+    const row = table.getByRole('row').filter({ hasText: 'NEXT_LOCALE' });
+    await expect(row.getByText('Lifetime')).toBeHidden();
+  });
+});
+
+test.describe('the cookie banner and data tables on a touch phone (DS 04–05)', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test('the banner is short, its two choices equal, and focus never goes behind it', async ({
+    page,
+  }) => {
+    await page.context().clearCookies({ name: 'ota_consent' });
+    await page.goto(`${STOREFRONT_URL}/en`);
+    const banner = page.getByRole('region', { name: 'Cookies, your choice' });
+    await expect(banner).toBeVisible();
+    await page.waitForLoadState('networkidle');
+
+    // The purposes wait behind a disclosure; Reject and Accept sit side by side, equal.
+    await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeHidden();
+    const reject = await banner
+      .getByRole('button', { name: 'Reject non-essential' })
+      .boundingBox();
+    const accept = await banner.getByRole('button', { name: 'Accept all' }).boundingBox();
+    expect(reject?.y).toBe(accept?.y);
+    expect(Math.abs(reject!.width - accept!.width)).toBeLessThan(1);
+    expect((await banner.boundingBox())!.height).toBeLessThan(844 * 0.4);
+    expect(await walk(page, 'Tab', 45)).toEqual([]);
+
+    const choose = banner.getByRole('button', { name: 'Choose by purpose' });
+    await choose.click();
+    await expect(choose).toHaveAttribute('aria-expanded', 'true');
+    await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'Save my selection' })).toBeVisible();
+    // The taller banner still leaves the end of the page reachable.
+    await page.locator('footer a').last().focus();
+    expect(await walk(page, 'Shift+Tab', 45)).toEqual([]);
+  });
+
+  test('a data table becomes labelled cards that keep their table roles', async ({
+    page,
+  }) => {
+    await page.goto(`${STOREFRONT_URL}/en/legal/cookies`);
+    const table = page.getByRole('region', { name: 'Cookies and storage we use' });
+    expect(await table.evaluate((box) => box.scrollWidth <= box.clientWidth)).toBe(true);
+    const row = table.getByRole('row').filter({ hasText: 'NEXT_LOCALE' });
+    await expect(row.getByText('Lifetime')).toBeVisible();
+    await expect(row.getByRole('cell')).toHaveCount(4);
+    await expect(
+      row.getByRole('cell', { name: 'Until you close the browser', exact: true }),
+    ).toBeVisible();
+    await expect(table.getByRole('columnheader')).toHaveCount(4);
+  });
+
+  test("a trip's itinerary stacks instead of scrolling sideways", async ({ page }) => {
+    await signIn(page, 'traveler@example.test', {
+      origin: STOREFRONT_URL,
+      callbackPath: '/en/account?tab=trips',
+    });
+    await page.getByRole('link', { name: 'DEMO0001' }).click();
+    const itinerary = page.getByRole('region', { name: 'Itinerary · table' });
+    await expect(itinerary.getByText('Status').first()).toBeVisible();
+    expect(await itinerary.evaluate((box) => box.scrollWidth <= box.clientWidth)).toBe(
+      true,
+    );
   });
 });
