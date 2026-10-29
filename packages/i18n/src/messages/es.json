@@ -4050,6 +4050,7 @@
     "rejectAll": "Rechazar las no esenciales",
     "acceptAll": "Aceptar todas",
     "save": "Guardar mi selección",
+    "choose": "Elegir por finalidad",
     "settingsTitle": "Configuración de cookies",
     "settingsLede": "Tus elecciones, modificables en cualquier momento. Se guardan en este dispositivo.",
     "current": "Tu elección actual se guardó el {date}.",

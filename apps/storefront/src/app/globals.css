@@ -76,11 +76,14 @@ html[data-contrast='more'] {
  * their heights clear. A section's own `scroll-mt-*` adds to this. A sticky
  * row under the header (a destination's "On this page") marks itself with
  * `data-sticky-subnav` and is kept clear too (48 px plus its borders); the
- * Packages compare tray sets its measured height as `--fixed-tray`.
+ * Packages compare tray sets its measured height as `--fixed-tray`, and the
+ * cookie banner as `--cookie-banner`, which also pads the page's end so its
+ * last content can scroll clear of the banner.
  */
 html {
   scroll-padding-top: 4rem;
-  scroll-padding-bottom: var(--fixed-tray, 0px);
+  scroll-padding-bottom: calc(var(--fixed-tray, 0px) + var(--cookie-banner, 0px));
+  padding-bottom: var(--cookie-banner, 0px);
 }
 
 html:has([data-sticky-subnav]) {
@@ -99,6 +102,8 @@ html:has([data-sticky-subnav]) {
 
 @media (max-width: 767.98px) {
   html {
-    scroll-padding-bottom: calc(4rem + var(--fixed-tray, 0px));
+    scroll-padding-bottom: calc(
+      4rem + var(--fixed-tray, 0px) + var(--cookie-banner, 0px)
+    );
   }
 }

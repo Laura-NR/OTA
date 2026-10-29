@@ -4050,6 +4050,7 @@
     "rejectAll": "Reject non-essential",
     "acceptAll": "Accept all",
     "save": "Save my selection",
+    "choose": "Choose by purpose",
     "settingsTitle": "Cookie settings",
     "settingsLede": "Your choices, changeable at any time. They are kept on this device.",
     "current": "Your current choice was saved on {date}.",

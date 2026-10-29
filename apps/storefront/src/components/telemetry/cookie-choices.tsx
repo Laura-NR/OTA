@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, cn, Switch } from '@ota/ui';
+import { Button, cn, Icon, Switch } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 
@@ -19,17 +19,27 @@ export function CookieChoices({
   source,
   onSaved,
   stickyActions = false,
+  compactOnPhone = false,
 }: {
   source: ConsentSource;
   onSaved?: () => void;
   /** Keep the actions in view at the foot of a scrolling container (the banner). */
   stickyActions?: boolean;
+  /**
+   * Below md, keep the rows and "Save my selection" behind a disclosure, so
+   * the banner leaves most of a phone's screen to the page (the two equal
+   * choices stay in view).
+   */
+  compactOnPhone?: boolean;
 }) {
   const t = useTranslations('cookies');
   const { texts, permissions, save } = useTelemetry();
   const [selection, setSelection] = useState(permissions);
+  const [open, setOpen] = useState(false);
   // The banner and the settings page can both be in the DOM; ids are per instance.
   const idBase = useId();
+  const rowsId = `${idBase}-rows`;
+  const collapsed = compactOnPhone && !open && 'max-md:hidden';
 
   const offered = (['analytics', 'marketing'] as const).filter(
     (purpose) => texts[purpose],
@@ -43,7 +53,23 @@ export function CookieChoices({
 
   return (
     <div className="flex flex-col gap-4">
-      <ul className="flex flex-col divide-y rounded-lg border bg-surface">
+      {compactOnPhone ? (
+        <Button
+          type="button"
+          variant="tertiary"
+          aria-expanded={open}
+          aria-controls={rowsId}
+          className={cn(WRAPPING_BUTTON, 'self-start md:hidden')}
+          onClick={() => setOpen((current) => !current)}
+        >
+          {t('choose')}
+          <Icon name={open ? 'chevron-up' : 'chevron-down'} />
+        </Button>
+      ) : null}
+      <ul
+        id={rowsId}
+        className={cn('flex flex-col divide-y rounded-lg border bg-surface', collapsed)}
+      >
         <li className="flex items-start gap-4 p-4">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="text-body font-semibold text-default">{t('essential')}</span>
@@ -81,13 +107,13 @@ export function CookieChoices({
       <div
         className={cn(
           'flex flex-wrap gap-3',
-          stickyActions && 'sticky bottom-0 -mb-5 border-t bg-surface pb-5 pt-3',
+          stickyActions && 'sticky -bottom-5 -mb-5 border-t bg-surface pb-5 pt-3',
         )}
       >
         <Button
           type="button"
           variant="secondary"
-          className={cn(WRAPPING_BUTTON, 'flex-1 basis-40')}
+          className={cn(WRAPPING_BUTTON, 'flex-1 basis-32')}
           onClick={() => choose({ analytics: false, marketing: false })}
         >
           {t('rejectAll')}
@@ -95,7 +121,7 @@ export function CookieChoices({
         <Button
           type="button"
           variant="secondary"
-          className={cn(WRAPPING_BUTTON, 'flex-1 basis-40')}
+          className={cn(WRAPPING_BUTTON, 'flex-1 basis-32')}
           onClick={() => choose({ analytics: true, marketing: true })}
         >
           {t('acceptAll')}
@@ -103,7 +129,7 @@ export function CookieChoices({
         <Button
           type="button"
           variant="tertiary"
-          className={cn(WRAPPING_BUTTON, 'basis-full')}
+          className={cn(WRAPPING_BUTTON, 'basis-full', collapsed)}
           onClick={() => choose(selection)}
         >
           {t('save')}
