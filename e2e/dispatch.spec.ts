@@ -40,7 +40,9 @@ test.describe('dispatch from the dashboard', () => {
     // Client components: retry until hydration attaches the handlers.
     await expect(async () => {
       await task.getByRole('button', { name: 'Start dispatch' }).click();
-      await expect(row.getByRole('link', { name: BOOKING_CODE })).toBeVisible({
+      await expect(
+        row.getByRole('link', { name: BOOKING_CODE, exact: true }),
+      ).toBeVisible({
         timeout: 3_000,
       });
     }).toPass({ timeout: 30_000 });

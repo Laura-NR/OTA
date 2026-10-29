@@ -45,7 +45,9 @@ test.describe('operations dashboard (live desk)', () => {
       // No reload: the live matrix gains the booking and its offered worker.
       const matrix = page.getByRole('region', { name: 'Dispatch matrix' });
       const row = matrix.getByRole('row').filter({ hasText: BOOKING_CODE });
-      await expect(row.getByRole('link', { name: BOOKING_CODE })).toBeVisible();
+      await expect(
+        row.getByRole('link', { name: BOOKING_CODE, exact: true }),
+      ).toBeVisible();
       await expect(row.getByText(/^Example Guide/)).toBeVisible();
     } finally {
       await deleteReservationFixture(prisma, BOOKING_CODE);

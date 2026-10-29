@@ -203,6 +203,7 @@ test.describe('accessibility audit (WCAG 2.2 AA, axe)', () => {
       '/bookings/documents',
       '/bookings/event-requests',
       '/disruptions',
+      '/disruptions/new',
       '/packages',
       ...(pkg ? [`/packages/${pkg.id}`] : []),
       '/packages/inventory',
@@ -221,6 +222,19 @@ test.describe('accessibility audit (WCAG 2.2 AA, axe)', () => {
       '/settings',
       '/passkeys',
     ]);
+  });
+
+  test('the desk with the keyboard shortcut list open', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/dashboard');
+    await page.waitForLoadState('networkidle');
+    const help = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Keyboard shortcuts' }).click();
+      await expect(help).toBeVisible({ timeout: 1_000 });
+    }).toPass();
+    expect.soft(await audit(page), 'the shortcut list has axe violations').toEqual([]);
+    expect.soft(await duplicateIds(page), 'the shortcut list repeats ids').toEqual([]);
   });
 
   test('the desk sign-in page', async ({ page, baseURL }) => {
