@@ -1162,3 +1162,46 @@ silent or could not be built yet, the build decided:
   customer whose name is an empty string.
 - **Not verified:** a run with a real screen reader. The pass read Chromium's
   accessibility tree.
+
+## Amendment, 2026-10-29: the storefront's manual accessibility pass (DS 02–05), resolved by the build
+
+The owner chose the same manual pass for the storefront next. The rule-by-rule record is
+`docs/a11y-storefront-manual-pass.md`; no migration, dependency or spend. Where the boards
+were silent or could not be built yet, the build decided:
+
+- **"On touch screens" means `(pointer: coarse)`.** The preset gains a `pointer-coarse:`
+  variant (Tailwind 4's name for it). On a touch screen md buttons grow to 44 px as DS 02
+  says, and so do text fields and selects (DS 05's minimum), so a field and its button stay
+  level. A mouse keeps 40 px. The link variant keeps its line height.
+- **Stand-alone text links are not controls.** On a touch screen the footer's links and the
+  header's logo, language and strip links become 44 px rows. Other text links (a back link,
+  "Download PDF", a phone number) keep their line height: every page passes WCAG 2.5.8 by
+  size or spacing, as the desk's table links do. Tall rows everywhere would double the
+  phone footer's length.
+- **The language links stay in the phone header.** DS 05 moves language and currency into
+  the drawer. Currency waits for M9 D7, and three short links fit the header. On touch each
+  takes taps 44 px tall around an unchanged pill. Each is named in its own language
+  ("Español", which contains the visible "es"), with `lang`, `hreflang` and `aria-current`.
+- **Sticky and fixed bars keep focus clear.** The root's scroll padding is the sticky
+  header (4 rem, 72 px from lg), plus a destination's "On this page" row when it is present
+  (`data-sticky-subnav`). Below md it also clears the bottom bar (4 rem). The compare tray
+  adds its measured height (`--fixed-tray`). Sections' `scroll-mt-*` were reduced by the
+  same amount, so in-page anchors land where they did.
+- **Scrolling tables are named "<section> · table"** (`pages.common.table`), not by the
+  section's own name, so a screen reader's landmark list never shows two "Itinerary"
+  regions.
+- **Destructive storefront actions confirm** (DS 02) with the DS 06 dialog at 480 px: a
+  title that asks, the consequence (final; nothing charged; how to start again), "Keep the
+  …" and the destructive confirm. The ✕ is "Close". The copy is placeholder wording, like
+  the other M5/M10 texts.
+- **Unavailable, not disabled** (DS 05's disabled state), as on the desk: actions waiting on
+  input keep their focus and give their reason. A full compare selection points to a note
+  in the tray ("You can compare up to 4 trips"). A full route points to the builder's
+  existing "A route holds up to 6 stops". A counter's bound stays natively disabled.
+- **The 404 titles itself twice.** `generateMetadata` gives the server's HTML "Page not
+  found". Hydrating a 404 restores the layout's title, so the page also renders a React
+  `<title>`, which React keeps first in `<head>`.
+- **Deferred:** the date-range picker (native date fields stand in), stacked table cards on
+  a phone, and room for the cookie banner on a phone (focus can go behind it until a
+  choice is made). These are design changes, not fixes.
+- **Not verified:** a run with a real screen reader.

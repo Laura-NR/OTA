@@ -1,6 +1,6 @@
 # Next session prompt
 
-Prepared 2026-10-29, after the deployment plan (a proposal awaiting the owner's decisions). Paste the block below to start the next session.
+Prepared 2026-10-29, after the storefront's manual accessibility pass. Paste the block below to start the next session.
 
 ```text
 Project: OTA — a Cuban inbound-tourism travel-agency platform for Vereda Expeditions. Repo
@@ -22,7 +22,9 @@ ORIENT FIRST, in this order:
 - docs/design-v1.1-plan.md (Progress table, Phase 6, Phase 8);
 - docs/adr/0006-design-system-v1.1.md (amended through Phase 8 item 2, the 2026-10-25
   accessibility batch, Phase 8 item 1, T-Events, its follow-ups, the server-side T-Events, the
-  2026-10-26 staff passkeys, the 2026-10-27 Plausible CE sink and the 2026-10-28 hosting plan);
+  2026-10-26 staff passkeys, the 2026-10-27 Plausible CE sink, the 2026-10-28 hosting plan and
+  the 2026-10-29 desk and storefront accessibility passes);
+- docs/a11y-desk-manual-pass.md and docs/a11y-storefront-manual-pass.md (verdicts per rule);
 - docs/plausible-hosting-plan.md (approved H1a, H4a, H5, H6a, H7; §6 as built) and
   docs/runbook.md "Analytics events (T-Events)" (the routed sink and the "Going live" checklist);
 - docs/deployment-plan.md (2026-10-29, a PROPOSAL: decisions D1–D24, findings F1–F15, build
@@ -33,9 +35,19 @@ Verify the handoff against the code; run `git log --oneline main..vereda`. If th
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
-Phase 8 items 1–4 are done. Built last session (2026-10-29, the owner's pick): the manual
-keyboard/screen-reader pass on the desk (docs/a11y-desk-manual-pass.md, ADR 0006 amendment of that
-day). No migration or dependency. A skip link; desk shortcuts (`?` or the header button for the list,
+Phase 8 items 1–4 are done. Built last session (2026-10-29, the owner's pick): the same manual
+pass on the storefront's DS 02–05 rules (docs/a11y-storefront-manual-pass.md, ADR 0006 amendment
+of that day). No migration or dependency. A skip link to <main id="main">; root scroll padding so
+focus never hides under the sticky header, a destination's "On this page" row, the phone's bottom
+bar or the compare tray (WCAG 2.4.11); a `pointer-coarse:` variant in the preset (md buttons,
+Input, Select 44 px on touch, 40 px with a mouse) and TOUCH_ROW for the footer/logo/strip links;
+language links named in their own language with a 44 px tap area; titles for the trip, proposal,
+builder, mock checkout and 404; table scroll boxes named "<section> · table"; confirmations
+before Decline (proposal) and Withdraw (event request); unavailable actions that keep focus and
+say why. Deferred: stacked table cards on a phone, room for the cookie banner on a phone, the
+custom date picker, a real screen-reader run. The owner also decided what acknowledging a desk
+alert means: per desk, audited (not built yet). Earlier that day: the manual
+keyboard/screen-reader pass on the desk (docs/a11y-desk-manual-pass.md). A skip link; desk shortcuts (`?` or the header button for the list,
 G then D/B/P, R on a focused matrix or booking-service row, a per-device off switch); the matrix's
 sticky row headers, names with the service/booking/worker, the drawer opening on its title;
 threshold crossings announced once (alertCrossings in packages/domain); `Button unavailableReason`
@@ -73,8 +85,8 @@ install (the owner's VPS; plan approved), the worker events (offer_viewed etc.; 
 page views (counsel on staff analytics), gallery_opened (no gallery viewer), queued offline
 writes, M9's other deferred items (recovery codes, permission overrides, display currencies,
 runtime flags, idle lock, IP allowlist, new-device email), the desk's audio cue, acknowledge (`A`)
-and mute, `/` (no desk search), a real screen-reader run, the storefront's manual pass (no skip
-link there), passkeys for travelers and suppliers,
+and mute (decided: per desk, audited), `/` (no desk search), a real screen-reader run, the
+storefront pass's deferred design changes, passkeys for travelers and suppliers,
 M10's room holds and event photos.
 Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
 wording, the concierge fee and events copy, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
@@ -96,25 +108,26 @@ P1a–P6a with @better-auth/passkey in the back-office (built 2026-10-26); the r
 as a Plausible CE adapter behind `TELEMETRY_SINK` (built 2026-10-27/28; tested against a fake, no
 new dependency or image); the Plausible hosting plan H1a, H4a, H5, H6a, H7 (built 2026-10-28); the
 manual accessibility pass on the desk, with the audio cue/acknowledge/mute deferred (built
-2026-10-29).
+2026-10-29); the same pass on the storefront (built 2026-10-29); acknowledging a desk alert is per
+desk and audited (decided 2026-10-29, not built).
 
 TASK 0 — The dev stack was left running for the owner (with TELEMETRY_SINK_FILE and raised rate
 limits); stop it (signal turbo) before any verify and restart it at the end. Last session's full
-verify (the desk accessibility pass) is in the handoff.
+verify (the storefront accessibility pass) is in the handoff.
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: the same manual pass on the storefront's DS 02–05 annotations (buildable now: no
-migration, dependency or spend; the storefront has no skip link), the desk's alert acknowledgement
-with the audio cue and "Mute 15 min" (ask first what acknowledging means: for one person or the
-whole desk, and whether the mute is an audit entry), another M9 deferred item (recovery codes,
+recommendation: the desk's alert acknowledgement with the audio cue and "Mute 15 min" (decided:
+per desk, audited; buildable now: no migration, dependency or spend — the audit log records
+acknowledgements and mutes), the storefront pass's deferred design changes (stacked table cards
+on a phone, room for the cookie banner on a phone), another M9 deferred item (recovery codes,
 permission overrides, display currencies, runtime flags, the idle lock, the IP allowlist,
 new-device emails — a doc to the owner first where it changes how auth decides), M10's deferred
 room holds and event photos (migration doc first), or the deployment build
 (docs/deployment-plan.md §6 B1–B13, rehearsed locally with no spend) — offer that one only for
 the decisions the owner has answered, and B1, B2, B6, B9 and B11 only once their (approval) is
 given. Recommend the deployment build if the owner has answered the plan (F2 blocks any deploy,
-so B6 goes first), otherwise the storefront pass. If the owner has installed Plausible CE, offer
-the runbook's "Going live" checks (steps 4–5) first.
+so B6 goes first), otherwise the desk acknowledgement. If the owner has installed Plausible CE,
+offer the runbook's "Going live" checks (steps 4–5) first.
 Build nothing that needs a migration before the owner approves its doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
@@ -159,7 +172,13 @@ concierge fee and events copy (and whether a regenerated invoice suffices when s
 later); what acknowledging a desk alert means (one person or the whole desk; is the mute an audit
 entry?); the AGENTS.md §C lines proposed in the handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. Desk keyboard pass (2026-10-29): Playwright's
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Storefront keyboard pass (2026-10-29): a 404
+needs both generateMetadata and a React <title> in not-found.tsx (hydration restores the layout's
+title); touch sizes apply only under (pointer: coarse) — emulate with hasTouch + isMobile (the
+DS 07 width projects do not); scroll padding and scroll-mt-* add up (new anchored sections take
+scroll-mt-8, or scroll-mt-12 under a destination's row); a Dialog's ✕ is named "Close"; language
+links are named "English"/"Español"/"Français"; rebuilding @ota/i18n during an e2e run makes the
+dev server recompile and can lose a click. Desk keyboard pass (2026-10-29): Playwright's
 press('Shift+/') sends '/', use press('?'); the matrix row has "Open <code>" beside the code link,
 so code-link locators need exact: true; unavailable buttons are aria-disabled, not disabled (Playwright
 treats both as disabled, toHaveAttribute('disabled') does not); what the matrix shows at load is the

@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-29 12:04
+# Handoff — vereda — updated 2026-10-29 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -15,6 +15,27 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-10-29 (evening): the storefront's manual accessibility pass (DS 02–05)**, the
+  owner's pick (`0058180`…`fee079b`; record `docs/a11y-storefront-manual-pass.md`, ADR 0006
+  amendment of that day). No migration, dependency or spend. Keyboard walk of 20 public and 5
+  traveler pages at 1280 and 390 px (touch emulated), Shift+Tab walks, a WCAG 2.5.8 spacing
+  check on every page, the drawer/filters/FAQ/tabs/cookie banner by keyboard. Built:
+  - a skip link to `<main id="main">`; root `scroll-padding` for the sticky header (4 rem /
+    72 px from lg), a destination's "On this page" row (`data-sticky-subnav`), the phone's
+    bottom bar (4 rem below md) and the compare tray (`--fixed-tray`, measured); sections'
+    `scroll-mt-*` reduced to match, so anchors land as before;
+  - a `pointer-coarse:` variant in the preset: md buttons, `Input`, `Select` and
+    `WRAPPING_BUTTON` are 44 px on touch, 40 px with a mouse; `TOUCH_ROW` (`lib/button.ts`)
+    for the footer, logo and strip links; language links take taps 44 px tall around the
+    unchanged pill and are named in their own language (`lang`, `hreflang`, `aria-current`);
+  - titles for the trip ("Your trip"), proposal, builder, mock checkout and 404 (metadata plus
+    a React `<title>`, see Traps); table scroll boxes named "<section> · table";
+  - confirmations before Decline (proposal) and Withdraw (event request), DS 06 dialog;
+  - `unavailableReason` on the booking flow's first and last steps and the event request's
+    two steps; a full compare selection and a full custom route stay focusable with
+    `aria-describedby` to the shown limit.
+  Deferred: stacked table cards on a phone, room for the cookie banner on a phone (focus can
+  go behind it until a choice), the custom date-range picker, a real screen-reader run.
 - **2026-10-29 (later): the desk's manual accessibility pass (A-A11y)**, the owner's pick
   from the Next list (`e9fb087`…`d09cca8`; record `docs/a11y-desk-manual-pass.md`, ADR 0006
   amendment of that day). No migration, dependency or spend. Keyboard walk of 23 desk pages,
@@ -112,28 +133,29 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-29, desk accessibility pass, dev stack stopped for the build)
+## Verified (2026-10-29, storefront accessibility pass, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **996 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 377,
-  api 370/27 skipped, schemas 71, ui 42, config 36, email 30, documents 22, theming 14,
-  payments 8, auth 6, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New:
-  `alertCrossings` (4, `dashboard.test.ts`); in ui the resolver, typing targets, the
-  unavailable button and the Drawer title (7).
+- `TURBO_FORCE=true pnpm test` **998 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 377,
+  api 370/27 skipped, schemas 71, ui 44, config 36, email 30, documents 22, theming 14,
+  payments 8, auth 6, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New in ui: md
+  buttons and the link variant on touch, the fields on touch (2).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **115 passed, 3 failed, 3 skipped** in 59.6 min. New and
-  green: `e2e/desk-keyboard.spec.ts` (4) and the axe pass with the shortcut list open; the axe
-  desk list now includes `/disruptions/new`. The three failures were customer-page specs this
-  batch does not touch. Two were timeouts (the axe pass at 390 px with larger text, and
-  `[ds07-768]` larger text: `page.goto`). The third was `[ds07-1024]` larger text, where
-  `/en/no-such-page` read a 16 px body. Rerun in isolation with the leftovers killed by PID and
-  `.next` deleted: **3/3**. Skips: the desk at 320/375/414.
+- `pnpm e2e` (`.next` deleted first): **124 passed, 1 failed, 3 skipped** in 56.2 min. New and
+  green: `e2e/storefront-keyboard.spec.ts` (7: skip link, Shift+Tab under the header, language
+  links, 40 px with a mouse, titles and the named itinerary, Tab under the bottom bar, 44 px on
+  touch); the booking submit's reason (`storefront-packages`), Decline/Withdraw confirmations
+  kept (`storefront-builder`, `events`), the renamed language links (`storefront-i18n`). The
+  failure was `[ds07-768]` larger text (`page.goto` timeout on a blog page, as last session);
+  rerun alone with the leftovers killed by PID and `.next` deleted: **1/1**. Skips: the desk at
+  320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Browser (dev stack, Chromium; a temporary dev-DB fixture `A11YAUD1`, deleted after): the
-  keyboard walk of 23 desk pages; the matrix's accessibility tree; R → drawer on its title →
-  Esc back to the row link; an amber→red crossing announced once in the assertive region;
-  screenshots at 1280, 1024 and 390 (the header button, the shortcut list, the reason beside
-  "Open case", the sticky column with a focused cell clear of it at 390).
+- Browser (dev stack, Chromium): keyboard walks of 20 public and 5 traveler pages at 1280 and
+  390 px (touch emulated), before and after; Shift+Tab walks; WCAG 2.5.8 spacing on every page
+  at both widths (0 failures besides links lying under the bottom bar at load); the menu drawer,
+  filter sheet, FAQ, tabs and cookie banner by keyboard; 404 titles in en/es/fr in the server
+  HTML and after hydration; screenshots at 390 (touch), 1024 and 1280 (skip link, header,
+  form, footer rows), no sideways scroll at any of them.
 - Not run: a real screen reader (NVDA/JAWS/VoiceOver are not on this machine).
 
 ## Assumptions & unknowns
@@ -177,6 +199,18 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Storefront keyboard pass (2026-10-29):** a Next 404 keeps `generateMetadata`'s title only
+  in the server HTML; after hydration the layout's title returns, so `not-found.tsx` also
+  renders a React `<title>` (both are needed; `generateMetadata` in the catch-all route does
+  nothing). Touch sizes only apply under `(pointer: coarse)`: emulate it with
+  `hasTouch: true, isMobile: true` (the DS 07 width projects do not, so they still see 40 px);
+  a full-page screenshot in that mode re-lays the page out (measure, do not trust it).
+  Scroll padding and `scroll-mt-*` add up, so a new anchored section takes the reduced offset
+  (`scroll-mt-8`, `scroll-mt-12` under the destination row). A Dialog's ✕ needs its own name
+  ("Close"), or `getByRole('button', { name: 'Keep …' })` matches two buttons. Rebuilding
+  `@ota/i18n` while an e2e runs makes the dev server recompile, and a click can be lost (the
+  proposal accept once): rebuild, wait, then run. Language links are now named "English",
+  "Español", "Français", not "en"/"es"/"fr".
 - **Desk keyboard pass (2026-10-29):** Playwright's `press('Shift+/')` sends `key: '/'`, not
   `'?'` (a real keyboard sends `'?'`): use `press('?')`. The matrix row now has "Open <code>"
   next to the code link, so a booking-code link locator needs `exact: true` (dispatch and
@@ -332,6 +366,11 @@ events (T-Events)".
   filter Mailpit by booking code; to stop `pnpm dev`, signal `@turbo/linux-64/bin/turbo run dev`).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-10-29: storefront touch sizes use the preset's `pointer-coarse:` variant
+    (`@media (pointer: coarse)`): md buttons, Input and Select are 44 px on touch and 40 px with
+    a mouse; stand-alone link lists take `TOUCH_ROW` (`apps/storefront/src/lib/button.ts`).
+    The root scroll padding keeps focus clear of the sticky header, the phone's bottom bar and
+    the compare tray (`globals.css`); a fixed or sticky bar added later must join it."
   - "2026-10-24: M10 rides on migration 20261024111639_events_concierge (events, nights, seat
     categories, translations, event_requests; CHECKs on seats 1–8, dates and frozen prices).
     Confirmed seats become EVENT_TICKET/CONCIERGE_FEE price lines; once the price is locked they
@@ -393,24 +432,25 @@ events (T-Events)".
     silent `disabled`; `disabled` is for busy states. `e2e/desk-keyboard.spec.ts` owns E2EKBD01."
 
 ## Next
-1. Owner: choose the next batch: the same manual pass on the storefront's DS 02–05
-   annotations (buildable now; it has no skip link), the desk's alert acknowledgement with the
-   audio cue and mute (decide first: does acknowledging silence the alert for one person or
-   the whole desk, and is the mute an audit entry? recommended: per desk, audited, no
-   migration), another M9 deferred item (doc first where it changes how auth decides), or
-   M10's room holds/event photos (migration doc first). A real screen-reader run needs a
-   machine with NVDA or VoiceOver.
+1. Owner: choose the next batch. The desk's alert acknowledgement with the audio cue and
+   "Mute 15 min" is now decided (2026-10-29: per desk, audited) and buildable without a
+   migration (the audit log records it). Other options: the storefront's deferred design
+   changes (stacked table cards on a phone, room for the cookie banner), another M9 deferred
+   item (doc first where it changes how auth decides), or M10's room holds/event photos
+   (migration doc first). A real screen-reader run (desk and storefront) needs a machine with
+   NVDA or VoiceOver.
 2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
    answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
    plan recommends renting the server only when the agency's legal entity exists (D1).
    Counsel: the plan's §13 (sanctions first), `cookies-analytics@2026-10-28` and whether
    Plausible's data needs a retention limit.
 3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
-   texts (now including the events copy, the M10 invoice question, the cookie words and the
-   basis for desk and server telemetry), OFAC categories, card surcharge, deposit refundability
-   and proof retention, the passport-key backup, the backup-power wording, the staff email
-   domain, `PASSKEY_RP_ID` with the deploy topology, raster app icons from Vereda, the
-   AGENTS.md §C lines above. Then SMS once a provider is chosen.
+   texts (now including the events copy, the M10 invoice question, the cookie words, the basis
+   for desk and server telemetry and the new decline/withdraw confirmations), OFAC categories,
+   card surcharge, deposit refundability and proof retention, the passport-key backup, the
+   backup-power wording, the staff email domain, `PASSKEY_RP_ID` with the deploy topology,
+   raster app icons from Vereda, the AGENTS.md §C lines above. Then SMS once a provider is
+   chosen.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -791,3 +831,14 @@ events (T-Events)".
   (an off switch for single-key shortcuts, the sticky column at every width, state filters
   kept as links, announcements from crossings only); it deferred the audio cue, `A` and the
   mute (acknowledgement semantics are the owner's call) and `/` (no desk search).
+- 2026-10-29 — the owner chose the same manual pass on the storefront's DS 02–05 rules next
+  (over the desk acknowledgement, another M9 item, M10's deferred items and the unanswered
+  deployment build); Plausible CE is still not installed. The owner also decided what
+  acknowledging a desk alert means, for when that batch is built: **per desk, audited** (one
+  operator's acknowledgement silences it for everyone; acknowledgements and mutes go to the
+  audit log; no migration). The build met DS 02's "on touch screens" with a
+  `(pointer: coarse)` variant rather than a breakpoint (a tablet with a mouse keeps 40 px), kept
+  stand-alone text links at their line height where WCAG 2.5.8 passes (tall rows only for
+  footer/header/strip lists), kept the language links in the phone header (currency is M9 D7),
+  and deferred the design changes (stacked table cards, room for the cookie banner, the
+  custom date picker).
