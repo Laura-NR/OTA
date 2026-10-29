@@ -18,6 +18,7 @@ import {
   ReservationStatus,
   SERVICE_TYPE_TO_SUPPLIER_CATEGORIES,
   ServiceItemStatus,
+  alertKey,
   assertTransition,
   calculateSupplierReliability,
   canAutoDispatch,
@@ -51,6 +52,11 @@ import {
 } from '../escalation/escalation.publisher';
 import { PrismaService } from '../prisma/prisma.service';
 import { ServerTelemetry } from '../telemetry/server-telemetry';
+import {
+  ACKNOWLEDGEMENT_SELECT,
+  ALERT_ACKNOWLEDGED,
+  acknowledgementsByAlert,
+} from './alert-acknowledgements';
 import { DISPATCH_SCHEDULER, type DispatchScheduler } from './dispatch.scheduler';
 
 const VERIFIED = 'VERIFIED';
@@ -142,7 +148,8 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
   /**
    * Every reservation currently in the dispatch/escalation flow, for the live
    * operations dashboard (spec §4.3). A booking waits from its first offer in
-   * the ledger, so a re-dispatch never makes it look younger.
+   * the ledger, so a re-dispatch never makes it look younger. Each item carries
+   * the desk's acknowledgement of its current red alert, if any (A-A11y 01).
    */
   async listActive(): Promise<DispatchBoardRowDto[]> {
     const reservations = await this.prisma.reservation.findMany({
@@ -173,6 +180,20 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
 
     const now = new Date();
     const amber = await this.amberThreshold();
+    const acknowledgements = acknowledgementsByAlert(
+      await this.prisma.auditLog.findMany({
+        where: {
+          action: ALERT_ACKNOWLEDGED,
+          entityType: 'ServiceItem',
+          entityId: {
+            in: reservations.flatMap((reservation) =>
+              reservation.serviceItems.map((item) => item.id),
+            ),
+          },
+        },
+        select: ACKNOWLEDGEMENT_SELECT,
+      }),
+    );
     return reservations.map((reservation) => {
       const firstOffers = reservation.serviceItems.flatMap((item) =>
         item.dispatchOffers.map((offer) => offer.offeredAt.getTime()),
@@ -191,10 +212,16 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
         startDate: reservation.startDate.toISOString(),
         endDate: reservation.endDate.toISOString(),
         waitingSince: waitingSince.toISOString(),
-        serviceItems: reservation.serviceItems.map((item) => ({
-          ...this.toItemDto(item, now, amber),
-          supplierName: item.supplier?.user.fullName ?? null,
-        })),
+        serviceItems: reservation.serviceItems.map((item) => {
+          const dto = this.toItemDto(item, now, amber);
+          return {
+            ...dto,
+            supplierName: item.supplier?.user.fullName ?? null,
+            respondedAt: item.respondedAt ? item.respondedAt.toISOString() : null,
+            acknowledgement:
+              acknowledgements.get(alertKey(item.id, dto.offeredAt)) ?? null,
+          };
+        }),
       };
     });
   }

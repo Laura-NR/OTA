@@ -131,6 +131,13 @@ interface Store {
   audits: { action: string }[];
   /** Blocked calendar days (spec §5.2), as `supplierId` + `YYYY-MM-DD`. */
   blocked?: { supplierId: string; day: string }[];
+  /** The desk's red-alert acknowledgements, as the board reads them. */
+  acknowledgements?: {
+    entityId: string;
+    metadata: { offeredAt: string | null };
+    createdAt: Date;
+    actor: { fullName: string | null; email: string } | null;
+  }[];
 }
 
 // Minimal in-memory stand-in for the Prisma models the dispatch engine touches.
@@ -314,6 +321,10 @@ function createFakePrisma(store: Store) {
         store.audits.push({ action: args.data.action });
         return args.data;
       },
+      findMany: async (args: { where: { entityId: { in: string[] } } }) =>
+        (store.acknowledgements ?? []).filter((row) =>
+          args.where.entityId.in.includes(row.entityId),
+        ),
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
@@ -392,6 +403,46 @@ describe('DispatchService', () => {
     expect(row?.serviceItems[0]?.supplierId).toBe(GUIDE_TWO);
     expect(row?.serviceItems[0]?.supplierName).toBe(`Worker ${GUIDE_TWO}`);
     expect(row?.waitingSince).toBe(store.offers[0]!.offeredAt.toISOString());
+  });
+
+  it('marks the board item whose current red alert the desk acknowledged', async () => {
+    const offeredAt = new Date('2026-10-29T14:00:00Z');
+    store.reservations = [makeReservation({ status: ReservationStatus.ActionRequired })];
+    store.serviceItems = [
+      makeServiceItem({
+        status: ServiceItemStatus.Declined,
+        supplierId: GUIDE_ONE,
+        offeredAt,
+        dispatchDeadline: new Date('2026-10-29T16:00:00Z'),
+        respondedAt: new Date('2026-10-29T14:20:00Z'),
+      }),
+    ];
+    const actor = { fullName: 'Ana Rodríguez', email: 'ana@example.test' };
+    store.acknowledgements = [
+      // An earlier offer's acknowledgement does not cover the current one.
+      {
+        entityId: ITEM_ID,
+        metadata: { offeredAt: '2026-10-29T10:00:00.000Z' },
+        createdAt: new Date('2026-10-29T12:00:00Z'),
+        actor,
+      },
+    ];
+
+    let [row] = await service.listActive();
+    expect(row?.serviceItems[0]?.acknowledgement).toBeNull();
+    expect(row?.serviceItems[0]?.respondedAt).toBe('2026-10-29T14:20:00.000Z');
+
+    store.acknowledgements.push({
+      entityId: ITEM_ID,
+      metadata: { offeredAt: offeredAt.toISOString() },
+      createdAt: new Date('2026-10-29T14:25:00Z'),
+      actor,
+    });
+    [row] = await service.listActive();
+    expect(row?.serviceItems[0]?.acknowledgement).toEqual({
+      at: '2026-10-29T14:25:00.000Z',
+      by: 'Ana Rodríguez',
+    });
   });
 
   it('flags the reservation when no supplier is eligible', async () => {

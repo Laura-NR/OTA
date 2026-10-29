@@ -11,7 +11,11 @@ import type { Server, Socket } from 'socket.io';
 
 import { AuthService } from '../auth/auth.service';
 import { SessionPolicy, sessionMayConnect } from '../auth/session-policy';
-import type { EscalationEvent, EscalationPublisher } from './escalation.publisher';
+import type {
+  DeskAlertEvent,
+  EscalationEvent,
+  EscalationPublisher,
+} from './escalation.publisher';
 
 const OPS_ROOM = 'ops';
 const OPS_ROLES: readonly string[] = [
@@ -25,7 +29,8 @@ const OPS_ROLES: readonly string[] = [
  * `ops` namespace; the handshake is authenticated with the Better Auth session
  * cookie, and only operations roles whose session the guard would accept
  * (`SessionPolicy`, passkey rule included) may join. Events mirror dispatch activity so
- * the dashboard can raise amber/red cues and offer click-to-call.
+ * the dashboard can raise amber/red cues and offer click-to-call, and the desk's
+ * acknowledgements and mutes so every open desk stops or resumes its cue.
  */
 @WebSocketGateway({ namespace: 'ops', cors: { origin: true, credentials: true } })
 export class EscalationGateway
@@ -64,7 +69,7 @@ export class EscalationGateway
     await client.join(OPS_ROOM);
   }
 
-  publish(event: EscalationEvent): void {
+  publish(event: EscalationEvent | DeskAlertEvent): void {
     this.server?.to(OPS_ROOM).emit('escalation', event);
   }
 }

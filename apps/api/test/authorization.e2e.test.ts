@@ -248,6 +248,15 @@ const ROUTES: Route[] = [
   },
   { method: 'post', path: `/service-items/${SERVICE_ITEM}/accept`, allowed: 'worker' },
   { method: 'post', path: `/service-items/${SERVICE_ITEM}/decline`, allowed: 'worker' },
+  // The desk's alert handling: support sees the mute, ops acknowledge and mute.
+  {
+    method: 'post',
+    path: `/service-items/${SERVICE_ITEM}/acknowledge-alert`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: '/dispatch/alert-mute', allowed: 'opsRead' },
+  { method: 'post', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
+  { method: 'delete', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
 
   // Inventory / CMS / pricing.
   { method: 'get', path: '/inventory', allowed: 'opsRead' },

@@ -81,8 +81,24 @@ export type DispatchViewDto = z.infer<typeof dispatchViewSchema>;
  * `GET /dispatch/active`): the dispatch view plus who and when. Ops-only; a
  * worker's own view stays `DispatchViewDto`, which names nobody.
  */
+/**
+ * Who on the desk acknowledged an item's red alert (A-A11y 01), for the offer
+ * that raised it. One acknowledgement stops the cue for the whole desk.
+ */
+export const alertAcknowledgementSchema = z.object({
+  at: z.string(),
+  /** The operator's name, else their email; null once the account is gone. */
+  by: z.string().nullable(),
+});
+
+export type AlertAcknowledgementDto = z.infer<typeof alertAcknowledgementSchema>;
+
 export const dispatchBoardItemSchema = dispatchServiceItemSchema.extend({
   supplierName: z.string().nullable(),
+  /** When the worker answered: a decline's time dates its red alert. */
+  respondedAt: z.string().nullable(),
+  /** The current red alert's acknowledgement; null when it has none. */
+  acknowledgement: alertAcknowledgementSchema.nullable(),
 });
 
 export type DispatchBoardItemDto = z.infer<typeof dispatchBoardItemSchema>;
@@ -101,3 +117,30 @@ export const dispatchBoardRowSchema = dispatchViewSchema.extend({
 });
 
 export type DispatchBoardRowDto = z.infer<typeof dispatchBoardRowSchema>;
+
+/**
+ * `POST /service-items/:id/acknowledge-alert`: the offer whose red alert the
+ * desk acknowledged, so an item offered again since is not acknowledged by
+ * mistake.
+ */
+export const acknowledgeAlertSchema = z.object({
+  offeredAt: z.string().datetime().nullable(),
+});
+
+export type AcknowledgeAlertRequest = z.infer<typeof acknowledgeAlertSchema>;
+
+/** The desk's "Mute 15 min" in force: who muted the cue, and until when. */
+export const deskAlertMuteSchema = z.object({
+  startedAt: z.string(),
+  until: z.string(),
+  by: z.string().nullable(),
+});
+
+export type DeskAlertMuteDto = z.infer<typeof deskAlertMuteSchema>;
+
+/** `GET|POST|DELETE /dispatch/alert-mute`. */
+export const deskAlertMuteStateSchema = z.object({
+  mute: deskAlertMuteSchema.nullable(),
+});
+
+export type DeskAlertMuteStateDto = z.infer<typeof deskAlertMuteStateSchema>;

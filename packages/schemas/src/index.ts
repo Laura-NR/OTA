@@ -174,7 +174,11 @@ export {
   type VehicleDetailsRequest,
 } from './supplier';
 export {
+  acknowledgeAlertSchema,
+  alertAcknowledgementSchema,
   declineServiceItemSchema,
+  deskAlertMuteSchema,
+  deskAlertMuteStateSchema,
   dispatchBoardItemSchema,
   dispatchBoardRowSchema,
   dispatchCandidateSchema,
@@ -184,7 +188,11 @@ export {
   reassignServiceItemSchema,
   serviceItemStatusSchema,
   serviceTypeSchema,
+  type AcknowledgeAlertRequest,
+  type AlertAcknowledgementDto,
   type DeclineServiceItemRequest,
+  type DeskAlertMuteDto,
+  type DeskAlertMuteStateDto,
   type DispatchBoardItemDto,
   type DispatchBoardRowDto,
   type DispatchCandidateDto,
