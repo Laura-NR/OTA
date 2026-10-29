@@ -7,18 +7,7 @@ import type {
   PaymentScheduleDto,
   ReservationOfacDto,
 } from '@ota/schemas';
-import {
-  Alert,
-  Badge,
-  buttonClassName,
-  Icon,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@ota/ui';
+import { Alert, Badge, buttonClassName, Icon, ResponsiveTable } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
@@ -297,34 +286,28 @@ export default async function AccountReservationPage({
           <Alert>{t('itineraryAssembling')}</Alert>
         ) : (
           <div className="overflow-x-auto">
-            <Table scrollRegionLabel={tc('table', { name: t('itinerary') })}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('columns.type')}</TableHead>
-                  <TableHead>{t('columns.status')}</TableHead>
-                  <TableHead>{t('columns.province')}</TableHead>
-                  <TableHead>{t('columns.starts')}</TableHead>
-                  <TableHead>{t('columns.ends')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reservation.serviceItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{tst(item.serviceType)}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{tsi(item.status)}</Badge>
-                    </TableCell>
-                    <TableCell>{item.province ?? '—'}</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {when(item.serviceDateStart)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {when(item.serviceDateEnd)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ResponsiveTable
+              scrollRegionLabel={tc('table', { name: t('itinerary') })}
+              columns={[
+                { label: t('columns.type') },
+                { label: t('columns.status') },
+                { label: t('columns.province') },
+                { label: t('columns.starts'), cellClassName: 'whitespace-nowrap' },
+                { label: t('columns.ends'), cellClassName: 'whitespace-nowrap' },
+              ]}
+              rows={reservation.serviceItems.map((item) => ({
+                key: item.id,
+                cells: [
+                  tst(item.serviceType),
+                  <Badge key="status" variant="secondary">
+                    {tsi(item.status)}
+                  </Badge>,
+                  item.province ?? '—',
+                  when(item.serviceDateStart),
+                  when(item.serviceDateEnd),
+                ],
+              }))}
+            />
           </div>
         )}
       </section>

@@ -1,14 +1,5 @@
 import type { ContentBlock } from '@ota/schemas';
-import {
-  cn,
-  Icon,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@ota/ui';
+import { cn, Icon, ResponsiveTable } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
 function BlockTitle({ children }: { children: string }) {
@@ -91,29 +82,15 @@ export async function ContentBlocks({ blocks }: { blocks: readonly ContentBlock[
           case 'table':
             return (
               <div key={index} className="overflow-hidden rounded-lg border bg-surface">
-                <Table scrollRegionLabel={block.caption ?? block.head.join(', ')}>
-                  {block.caption ? (
-                    <caption className="caption-top px-3 py-2.5 text-left text-body font-semibold text-default">
-                      {block.caption}
-                    </caption>
-                  ) : null}
-                  <TableHeader>
-                    <TableRow>
-                      {block.head.map((cell) => (
-                        <TableHead key={cell}>{cell}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {block.rows.map((row, rowIndex) => (
-                      <TableRow key={rowIndex}>
-                        {row.map((cell, cellIndex) => (
-                          <TableCell key={cellIndex}>{cell}</TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <ResponsiveTable
+                  scrollRegionLabel={block.caption ?? block.head.join(', ')}
+                  caption={block.caption}
+                  columns={block.head.map((cell) => ({ label: cell }))}
+                  rows={block.rows.map((row, rowIndex) => ({
+                    key: String(rowIndex),
+                    cells: row,
+                  }))}
+                />
               </div>
             );
           case 'quote':

@@ -1,6 +1,6 @@
 import { CONSENT_COOKIE, parseCookieChoice } from '@ota/domain';
 import { legalContentSchema } from '@ota/schemas';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ota/ui';
+import { ResponsiveTable } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { cookies } from 'next/headers';
@@ -67,27 +67,25 @@ export default async function CookieSettingsPage() {
       )}
       <section className="flex min-w-0 flex-col gap-3">
         <h2 className="text-h3 text-default">{t('tableTitle')}</h2>
-        <Table scrollRegionLabel={t('tableTitle')}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('columns.name')}</TableHead>
-              <TableHead>{t('columns.category')}</TableHead>
-              {/* Readable purpose and lifetime columns; the table scrolls in its region on a phone. */}
-              <TableHead className="min-w-56">{t('columns.purpose')}</TableHead>
-              <TableHead className="min-w-36">{t('columns.lifetime')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.key}>
-                <TableCell className="font-mono text-body-sm">{row.name}</TableCell>
-                <TableCell>{t(row.category)}</TableCell>
-                <TableCell>{t(`items.${row.key}.purpose`)}</TableCell>
-                <TableCell>{t(`items.${row.key}.lifetime`)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ResponsiveTable
+          scrollRegionLabel={t('tableTitle')}
+          columns={[
+            { label: t('columns.name'), cellClassName: 'font-mono text-body-sm' },
+            { label: t('columns.category') },
+            // Readable purpose and lifetime columns where the table scrolls (sm to md).
+            { label: t('columns.purpose'), className: 'sm:min-w-56' },
+            { label: t('columns.lifetime'), className: 'sm:min-w-36' },
+          ]}
+          rows={rows.map((row) => ({
+            key: row.key,
+            cells: [
+              row.name,
+              t(row.category),
+              t(`items.${row.key}.purpose`),
+              t(`items.${row.key}.lifetime`),
+            ],
+          }))}
+        />
       </section>
     </div>
   );

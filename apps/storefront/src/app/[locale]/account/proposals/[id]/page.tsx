@@ -1,17 +1,6 @@
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type { ProposalDto } from '@ota/schemas';
-import {
-  Alert,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  buttonClassName,
-  Icon,
-} from '@ota/ui';
+import { Alert, Badge, ResponsiveTable, buttonClassName, Icon } from '@ota/ui';
 import type { BadgeVariant } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
@@ -227,37 +216,37 @@ export default async function ProposalPage({
           <section className={card}>
             <h2 className="text-h4 text-default">{t('lines')}</h2>
             <div className="overflow-x-auto">
-              <Table scrollRegionLabel={tc('table', { name: t('lines') })}>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('line')}</TableHead>
-                    <TableHead className="text-right">{t('quantity')}</TableHead>
-                    <TableHead className="text-right">{t('amount')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {version.lines.map((line) => (
-                    <TableRow key={line.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{line.label}</span>
-                          {line.description ? (
-                            <span className="text-caption text-muted">
-                              {line.description}
-                            </span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {Number(line.quantity)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatMoney(line.amount, line.currency, locale)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <ResponsiveTable
+                scrollRegionLabel={tc('table', { name: t('lines') })}
+                columns={[
+                  { label: t('line') },
+                  {
+                    label: t('quantity'),
+                    className: 'text-right',
+                    cellClassName: 'font-mono',
+                  },
+                  {
+                    label: t('amount'),
+                    className: 'text-right',
+                    cellClassName: 'font-mono',
+                  },
+                ]}
+                rows={version.lines.map((line) => ({
+                  key: line.id,
+                  cells: [
+                    <div key="line" className="flex flex-col">
+                      <span>{line.label}</span>
+                      {line.description ? (
+                        <span className="text-caption font-normal text-muted">
+                          {line.description}
+                        </span>
+                      ) : null}
+                    </div>,
+                    Number(line.quantity),
+                    formatMoney(line.amount, line.currency, locale),
+                  ],
+                }))}
+              />
             </div>
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-t pt-4">
               <span className="text-body font-semibold">{t('total')}</span>

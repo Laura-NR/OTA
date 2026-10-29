@@ -7,12 +7,7 @@ import {
   buttonClassName,
   cn,
   Icon,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  ResponsiveTable,
 } from '@ota/ui';
 import type { BadgeVariant, IconName } from '@ota/ui';
 import type { Metadata } from 'next';
@@ -475,39 +470,22 @@ export default async function DestinationPage({
               title={detail.gettingThere.title}
             />
             <div className="overflow-x-auto rounded-lg border bg-surface">
-              <Table
+              <ResponsiveTable
                 scrollRegionLabel={common('table', { name: detail.gettingThere.title })}
-              >
-                <TableHeader>
-                  <TableRow>
-                    {detail.gettingThere.head.map((cell, index, head) => (
-                      <TableHead
-                        key={cell}
-                        className={cn(index === head.length - 1 && 'text-right')}
-                      >
-                        {cell}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detail.gettingThere.rows.map((row) => (
-                    <TableRow key={row.join('|')}>
-                      {row.map((cell, index) => (
-                        <TableCell
-                          key={index}
-                          className={cn(
-                            index === row.length - 1 &&
-                              'whitespace-nowrap text-right font-mono',
-                          )}
-                        >
-                          {cell}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                columns={detail.gettingThere.head.map((cell, index, head) =>
+                  index === head.length - 1
+                    ? {
+                        label: cell,
+                        className: 'text-right',
+                        cellClassName: 'whitespace-nowrap font-mono',
+                      }
+                    : { label: cell },
+                )}
+                rows={detail.gettingThere.rows.map((row) => ({
+                  key: row.join('|'),
+                  cells: row,
+                }))}
+              />
             </div>
             {detail.gettingThere.note ? (
               <p className="text-body-sm text-secondary">{detail.gettingThere.note}</p>
