@@ -57,3 +57,5 @@ export { nextTabIndex, Tabs } from './components/tabs';
 export type { TabItem, TabsProps } from './components/tabs';
 export { Textarea } from './components/textarea';
 export type { TextareaProps } from './components/textarea';
+export { isTypingTarget, resolveShortcut } from './shortcuts';
+export type { ShortcutKeyPress, ShortcutMap, ShortcutResult } from './shortcuts';

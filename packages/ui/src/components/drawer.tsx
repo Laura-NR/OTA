@@ -13,17 +13,31 @@ export interface DrawerProps {
   title: ReactNode;
   /** Accessible name of the close button, in the page's language. */
   closeLabel: string;
+  /**
+   * Move focus to the title on open instead of the first control, so a screen
+   * reader starts at what the panel is about (A-A11y 02).
+   */
+  focusTitle?: boolean;
   children?: ReactNode;
 }
 
 /**
  * DS 05 / DS 07 drawer: the right-hand panel on the native `<dialog>`, modal,
  * so focus stays inside and the page behind is inert; Esc closes it and the
- * browser returns focus on close. Full width on a phone, 384 px from `sm`, with
+ * browser returns focus on close. Focus moves to the first control on open, or
+ * to the title with `focusTitle`. Full width on a phone, 384 px from `sm`, with
  * the close button top right.
  */
-export function Drawer({ open, onClose, title, closeLabel, children }: DrawerProps) {
+export function Drawer({
+  open,
+  onClose,
+  title,
+  closeLabel,
+  focusTitle = false,
+  children,
+}: DrawerProps) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const id = useId();
 
   useEffect(() => {
@@ -33,10 +47,13 @@ export function Drawer({ open, onClose, title, closeLabel, children }: DrawerPro
     }
     if (open && !dialog.open) {
       dialog.showModal();
+      if (focusTitle) {
+        titleRef.current?.focus();
+      }
     } else if (!open && dialog.open) {
       dialog.close();
     }
-  }, [open]);
+  }, [open, focusTitle]);
 
   return (
     <dialog
@@ -49,7 +66,12 @@ export function Drawer({ open, onClose, title, closeLabel, children }: DrawerPro
       className="m-0 ml-auto h-dvh max-h-dvh w-full max-w-none overflow-y-auto bg-surface p-0 text-default shadow-lg backdrop:bg-neutral-900/50 sm:max-w-sm"
     >
       <div className="flex items-center justify-between gap-4 px-4 pt-3">
-        <h2 id={`${id}-title`} className="text-body font-semibold text-default">
+        <h2
+          ref={titleRef}
+          id={`${id}-title`}
+          tabIndex={focusTitle ? -1 : undefined}
+          className="text-body font-semibold text-default"
+        >
           {title}
         </h2>
         <button

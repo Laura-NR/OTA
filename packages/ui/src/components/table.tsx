@@ -15,15 +15,21 @@ export interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
    * Pass it where a narrow screen or larger text can make the table scroll.
    */
   scrollRegionLabel?: string;
+  /**
+   * Classes for the box the table scrolls in, e.g. a scroll padding as wide as
+   * a sticky first column, so a focused cell never scrolls under it (WCAG 2.4.11).
+   */
+  scrollClassName?: string;
 }
 
 export const Table = forwardRef<HTMLTableElement, TableProps>(
-  ({ className, scrollRegionLabel, ...props }, ref) => (
+  ({ className, scrollRegionLabel, scrollClassName, ...props }, ref) => (
     <div
       className={cn(
         'relative w-full overflow-auto',
         // inset, so a rounded box that clips its content keeps the ring
         scrollRegionLabel ? 'focus-visible:outline-offset-[-2px]' : null,
+        scrollClassName,
       )}
       {...(scrollRegionLabel
         ? { role: 'region', 'aria-label': scrollRegionLabel, tabIndex: 0 }

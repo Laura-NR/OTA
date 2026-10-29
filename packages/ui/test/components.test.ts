@@ -16,6 +16,7 @@ import { Input } from '../src/components/input';
 import { Stepper } from '../src/components/stepper';
 import { Table, TableRow } from '../src/components/table';
 import { Tabs, nextTabIndex } from '../src/components/tabs';
+import { isTypingTarget, resolveShortcut } from '../src/shortcuts';
 
 const html = (element: ReactElement) => renderToStaticMarkup(element);
 const noop = () => undefined;
@@ -61,6 +62,35 @@ describe('Button', () => {
     expect(markup).toContain('disabled=""');
     expect(markup).toContain('Sending request…');
     expect(markup).toContain('href="#icon-loader"');
+  });
+
+  it('stays focusable when unavailable, saying why beside it (A-A11y 04)', () => {
+    const markup = html(
+      createElement(
+        Button,
+        { type: 'submit', unavailableReason: 'Choose a scenario first.' },
+        'Open case',
+      ),
+    );
+    expect(markup).toContain('aria-disabled="true"');
+    expect(markup).not.toContain('disabled=""');
+    const describedBy = markup.match(/aria-describedby="([^"]+)"/)?.[1];
+    expect(describedBy).toBeTruthy();
+    expect(markup).toContain(`id="${describedBy}"`);
+    expect(markup).toContain('Choose a scenario first.');
+    expect(markup).toContain('Open case');
+  });
+
+  it('shows no reason while busy or once available', () => {
+    const busy = html(
+      createElement(Button, { loading: true, unavailableReason: 'Not yet.' }, 'Save'),
+    );
+    expect(busy).toContain('disabled=""');
+    expect(busy).not.toContain('aria-disabled="');
+    expect(busy).not.toContain('Not yet.');
+    const ready = html(createElement(Button, { unavailableReason: '' }, 'Save'));
+    expect(ready).not.toContain('aria-disabled="');
+    expect(ready).not.toContain('aria-describedby');
   });
 });
 
@@ -323,5 +353,80 @@ describe('Drawer', () => {
     const labelledBy = markup.match(/aria-labelledby="([^"]+)"/)![1];
     expect(markup).toContain(`<h2 id="${labelledBy}"`);
     expect(markup).toContain('aria-label="Close"');
+  });
+
+  it('makes the title focusable when it takes focus on open (A-A11y 02)', () => {
+    const props = {
+      open: false,
+      onClose: noop,
+      title: 'Re-dispatch',
+      closeLabel: 'Close',
+    };
+    expect(html(createElement(Drawer, { ...props, focusTitle: true }))).toMatch(
+      /<h2 id="[^"]+" tabindex="-1"/,
+    );
+    expect(html(createElement(Drawer, props))).not.toContain('tabindex');
+  });
+});
+
+describe('resolveShortcut (A-A11y 01 desk shortcuts)', () => {
+  const map = {
+    keys: { '?': 'help', r: 'redispatch' },
+    sequences: { g: { d: 'dashboard', b: 'bookings', p: 'payments' } },
+  } as const;
+
+  it('acts on a single key in either case, and on "?" typed with Shift', () => {
+    expect(resolveShortcut({ key: 'r' }, null, map, false)).toEqual({
+      action: 'redispatch',
+      pending: null,
+    });
+    expect(resolveShortcut({ key: 'R' }, null, map, false).action).toBe('redispatch');
+    expect(resolveShortcut({ key: '?' }, null, map, false).action).toBe('help');
+  });
+
+  it('runs a two-key sequence: G waits, D completes it; any other key cancels it', () => {
+    expect(resolveShortcut({ key: 'g' }, null, map, false)).toEqual({
+      action: null,
+      pending: 'g',
+    });
+    expect(resolveShortcut({ key: 'D' }, 'g', map, false)).toEqual({
+      action: 'dashboard',
+      pending: null,
+    });
+    expect(resolveShortcut({ key: 'x' }, 'g', map, false)).toEqual({
+      action: null,
+      pending: null,
+    });
+    expect(resolveShortcut({ key: 'r' }, 'g', map, false).action).toBeNull();
+  });
+
+  it('never fires while typing or with Ctrl, Cmd or Alt held', () => {
+    expect(resolveShortcut({ key: 'r' }, null, map, true).action).toBeNull();
+    expect(resolveShortcut({ key: 'd' }, 'g', map, true)).toEqual({
+      action: null,
+      pending: null,
+    });
+    expect(
+      resolveShortcut({ key: 'r', ctrlKey: true }, null, map, false).action,
+    ).toBeNull();
+    expect(
+      resolveShortcut({ key: 'r', metaKey: true }, null, map, false).action,
+    ).toBeNull();
+    expect(
+      resolveShortcut({ key: 'g', altKey: true }, null, map, false).pending,
+    ).toBeNull();
+  });
+
+  it('treats text fields, selects and editable content as typing, not buttons or boxes', () => {
+    expect(isTypingTarget({ tagName: 'INPUT', type: 'text' })).toBe(true);
+    expect(isTypingTarget({ tagName: 'INPUT', type: 'email' })).toBe(true);
+    expect(isTypingTarget({ tagName: 'INPUT' })).toBe(true);
+    expect(isTypingTarget({ tagName: 'TEXTAREA' })).toBe(true);
+    expect(isTypingTarget({ tagName: 'SELECT' })).toBe(true);
+    expect(isTypingTarget({ tagName: 'DIV', isContentEditable: true })).toBe(true);
+    expect(isTypingTarget({ tagName: 'INPUT', type: 'checkbox' })).toBe(false);
+    expect(isTypingTarget({ tagName: 'BUTTON' })).toBe(false);
+    expect(isTypingTarget({ tagName: 'A' })).toBe(false);
+    expect(isTypingTarget(null)).toBe(false);
   });
 });
