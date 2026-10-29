@@ -67,6 +67,21 @@ export {
   type PendingConfirmations,
   type ServiceItemClock,
 } from './dispatch/aging';
+export {
+  ALERT_ACK_UNDO_MS,
+  ALERT_CUE_REPEAT_MS,
+  ALERT_MUTE_MS,
+  activeMute,
+  alertCue,
+  alertKey,
+  muteSilences,
+  redSince,
+  type AlertCueInput,
+  type CueRedAlert,
+  type DeskAlertMute,
+  type DeskAlertMuteEntry,
+  type RedAlertClock,
+} from './dispatch/alert-cue';
 export { SERVICE_TYPE_TO_SUPPLIER_CATEGORIES } from './dispatch/assignment';
 export {
   providerProgress,

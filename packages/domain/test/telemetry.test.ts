@@ -511,6 +511,15 @@ describe('desk events', () => {
     expect(results('ai_draft_used', { context: 'reply', edited_ratio: 0.25 })).toBe(true);
     expect(results('ai_draft_used', { body: 'Hola' })).toBe(false);
     expect(results('admin_state_shown', { kind: 'degraded' })).toBe(true);
+    expect(
+      results('alert_acknowledged', {
+        service_item_id: 'cmh0service1',
+        seconds_to_ack: 95,
+        channel: 'desk',
+      }),
+    ).toBe(true);
+    expect(results('alert_muted', { muted_for_s: 900, channel: 'desk' })).toBe(true);
+    expect(results('alert_muted', { muted_for_s: 900, channel: 'ops_lite' })).toBe(false);
   });
 
   it('maps desk paths to the admin artboards', () => {

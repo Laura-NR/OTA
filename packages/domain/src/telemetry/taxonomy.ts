@@ -362,6 +362,17 @@ export const TELEMETRY_EVENTS = {
     position_chosen: 'count',
     from: ['dashboard', 'booking'],
   }),
+  /**
+   * A red alert acknowledged for the desk once its undo ran out;
+   * `seconds_to_ack` counts from when the item turned red.
+   */
+  alert_acknowledged: deskEvent({
+    service_item_id: 'id',
+    seconds_to_ack: 'count',
+    channel: ['desk'],
+  }),
+  /** The desk's audio cue muted ("Mute 15 min"). */
+  alert_muted: deskEvent({ muted_for_s: 'count', channel: ['desk'] }),
   /** The desk regenerated a booking's documents. */
   document_generated: deskEvent({ booking_code: 'id', trigger: ['manual'] }),
   /**
