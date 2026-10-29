@@ -7,7 +7,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
   Input,
   Label,
 } from '@ota/ui';
@@ -76,7 +75,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
+          <h1 className="text-h4 text-default">{t('title')}</h1>
           <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent>

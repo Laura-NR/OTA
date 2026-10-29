@@ -1,11 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  buttonClassName,
-} from '@ota/ui';
+import { Card, CardContent, CardDescription, CardHeader, buttonClassName } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
@@ -33,7 +26,7 @@ export default async function InvitePage({
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
+          <h1 className="text-h4 text-default">{t('title')}</h1>
           <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 text-body-sm">

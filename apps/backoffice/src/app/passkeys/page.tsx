@@ -1,5 +1,5 @@
 import type { PasskeyStatusDto } from '@ota/schemas';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ota/ui';
+import { Card, CardContent, CardDescription, CardHeader } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
@@ -37,7 +37,7 @@ export default async function PasskeysPage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
+          <h1 className="text-h4 text-default">{t('title')}</h1>
           <CardDescription>
             {t('description')}
             {status.required ? ` ${t('required')}` : ''}

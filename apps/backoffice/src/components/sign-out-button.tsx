@@ -13,7 +13,7 @@ export function SignOutButton() {
   return (
     <button
       type="button"
-      className="self-start text-caption font-normal text-primary-200 underline underline-offset-[3px] hover:text-neutral-0 focus-visible:outline-accent-500"
+      className="inline-flex min-h-touch items-center self-start text-caption font-normal text-primary-200 underline underline-offset-[3px] hover:text-neutral-0 focus-visible:outline-accent-500"
       onClick={async () => {
         await authClient.signOut();
         router.push('/login');

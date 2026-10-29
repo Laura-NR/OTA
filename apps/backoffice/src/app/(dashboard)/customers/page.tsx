@@ -94,11 +94,11 @@ export default async function CustomersPage() {
                         <Link
                           href={`/customers/${customer.id}`}
                           aria-label={t('table.openLabel', {
-                            name: customer.fullName ?? customer.email,
+                            name: customer.fullName || customer.email,
                           })}
                           className="font-medium text-primary-600 underline-offset-4 hover:underline"
                         >
-                          {customer.fullName ?? customer.email}
+                          {customer.fullName || customer.email}
                         </Link>
                         <div className="text-caption text-muted">
                           {customer.email}

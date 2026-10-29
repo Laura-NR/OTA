@@ -99,7 +99,12 @@ export function InventoryEditForm({ item }: { item: InventoryItemDto }) {
       </div>
 
       <label className="flex items-center gap-2 text-body-sm">
-        <input type="checkbox" name="active" defaultChecked={item.active} />
+        <input
+          type="checkbox"
+          name="active"
+          defaultChecked={item.active}
+          className="h-5 w-5 shrink-0 accent-primary-600"
+        />
         {t('visible')}
       </label>
 
