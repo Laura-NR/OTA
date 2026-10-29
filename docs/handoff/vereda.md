@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-29 18:30
+# Handoff — vereda — updated 2026-10-29 20:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -15,6 +15,26 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-10-29 (late): the desk's alert acknowledgement, audio cue and mute**, the owner's
+  pick, with acknowledging decided as per desk, audited (`9310b23`…`ad31180`; ADR 0006
+  amendment of that day; `docs/a11y-desk-manual-pass.md` 01 now fixed). No migration,
+  dependency or spend: the audit log is the state.
+  - Domain `packages/domain/src/dispatch/alert-cue.ts`: `alertKey` (item + offer, so a
+    re-dispatch is a new alert), `redSince`, `activeMute`, `muteSilences` (only alerts raised
+    before the mute), `alertCue` (red at once, then every 60 s until acknowledged; amber once).
+    Desk events `alert_acknowledged` and `alert_muted` (channel `desk`).
+  - API (`apps/api/src/dispatch/desk-alerts.*`, `alert-acknowledgements.ts`):
+    `POST /service-items/:id/acknowledge-alert` `{offeredAt}` (ops write; 409 when offered
+    again or no longer red; a second ack returns the first) → `dispatch.alert_acknowledged`;
+    `GET|POST|DELETE /dispatch/alert-mute` (read: ops roles; write: ops write) →
+    `dispatch.alerts_muted`/`_unmuted` on entity `DispatchDesk`. The board's items carry
+    `acknowledgement` and `respondedAt`. Each change goes out on `/ops` (`DeskAlertEvent`).
+  - Desk (`ops-desk.tsx`, `lib/alert-sound.ts`, `undo-toast.tsx`): a two-note Web Audio cue
+    after the first click or key press ("Turn on sound" until then), only on the dashboard;
+    `A` on a focused row or its Acknowledge button stops the cue here at once, a 6 s undo
+    toast (paused on hover/focus), then the API records it for the desk ("Acknowledged ·
+    <name> · <time>"); Mute 15 min / Unmute with "Audio muted until … by … (logged)". Red
+    alerts only. en/es/fr. e2e `e2e/desk-alerts.spec.ts`.
 - **2026-10-29 (evening): the storefront's manual accessibility pass (DS 02–05)**, the
   owner's pick (`0058180`…`fee079b`; record `docs/a11y-storefront-manual-pass.md`, ADR 0006
   amendment of that day). No migration, dependency or spend. Keyboard walk of 20 public and 5
@@ -125,38 +145,42 @@ events (T-Events)".
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
   deferred items (recovery codes, permission overrides, display currencies, runtime flags, the
   idle lock, IP allowlist, new-device email); passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
-  desk's audio cue, acknowledge (`A`) and mute, and `/`; a real screen-reader run; the same
-  manual pass on the storefront (it has no skip link either).
+  desk's `/` (no desk search) and the cue on desk pages other than the dashboard; Ops Lite;
+  a real screen-reader run; the storefront pass's deferred design changes (stacked table
+  cards on a phone, room for the cookie banner, the date-range picker).
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
   crisis framework, the backup-power wording, the cookie banner's analytics words and the
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-29, storefront accessibility pass, dev stack stopped for the build)
+## Verified (2026-10-29, desk alert acknowledgement, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **998 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 377,
-  api 370/27 skipped, schemas 71, ui 44, config 36, email 30, documents 22, theming 14,
-  payments 8, auth 6, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New in ui: md
-  buttons and the link variant on touch, the fields on touch (2).
+- `TURBO_FORCE=true pnpm test` **1019 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 387,
+  api 379/27 skipped, schemas 73, ui 44, config 36, email 30, documents 22, theming 14,
+  payments 8, auth 6, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New: domain
+  `alert-cue.test.ts` (10) and the two desk events; schemas `dispatch.test.ts` (2); api
+  `desk-alerts.service.test.ts` (8), the board's acknowledgement (1) and four RBAC routes.
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **124 passed, 1 failed, 3 skipped** in 56.2 min. New and
-  green: `e2e/storefront-keyboard.spec.ts` (7: skip link, Shift+Tab under the header, language
-  links, 40 px with a mouse, titles and the named itinerary, Tab under the bottom bar, 44 px on
-  touch); the booking submit's reason (`storefront-packages`), Decline/Withdraw confirmations
-  kept (`storefront-builder`, `events`), the renamed language links (`storefront-i18n`). The
-  failure was `[ds07-768]` larger text (`page.goto` timeout on a blog page, as last session);
-  rerun alone with the leftovers killed by PID and `.next` deleted: **1/1**. Skips: the desk at
-  320/375/414.
+- `pnpm e2e` (`.next` deleted first): **125 passed, 2 failed, 3 skipped** in 57.1 min. New and
+  green: `e2e/desk-alerts.spec.ts` (2: cue after the first interaction, `A` with undo then the
+  audit row, the desk's acknowledgement after a reload; Mute 15 min logged with the actor,
+  silent for the older alert, a newer red alert still sounding, Unmute logged). The axe audit
+  (dashboard included) green. Both failures were storefront "larger text" checks
+  (`[ds07-320]` the 404's body read 16 px, `[ds07-768]` a `page.goto` timeout on an event
+  page, as in earlier sessions); no storefront code changed. Rerun alone with the leftovers
+  killed by PID and `.next` deleted: **2/2**. Skips: the desk at 320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Browser (dev stack, Chromium): keyboard walks of 20 public and 5 traveler pages at 1280 and
-  390 px (touch emulated), before and after; Shift+Tab walks; WCAG 2.5.8 spacing on every page
-  at both widths (0 failures besides links lying under the bottom bar at load); the menu drawer,
-  filter sheet, FAQ, tabs and cookie banner by keyboard; 404 titles in en/es/fr in the server
-  HTML and after hydration; screenshots at 390 (touch), 1024 and 1280 (skip link, header,
-  form, footer rows), no sideways scroll at any of them.
-- Not run: a real screen reader (NVDA/JAWS/VoiceOver are not on this machine).
+- Browser (dev stack, Chromium): the dashboard with a red alert at 390, 1024 and 1280:
+  screenshots of the strip (counts, audio line, Turn on sound, Mute 15 min), the muted strip
+  with Unmute, the row's Acknowledge and "Acknowledged · <name> · <time>", the toast; computed
+  styles: toast `#1F1B17` with white text and Undo `#F2B134` (the board's values), strip
+  buttons white with error-700 text; no sideways scroll at any width. The first pass put
+  "starts after your first click" on its own line without an icon; it now joins the audio
+  line.
+- Not run: a real screen reader; hearing the cue (headless Chromium; the e2e observes the
+  `ota:alert-cue` event that each played cue dispatches).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -199,6 +223,17 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Desk alerts (2026-10-29, late):** the cue needs a user gesture, so an e2e records cues
+  through `ota:alert-cue` (`addInitScript`) and clicks "Turn on sound" first. Any click (Mute,
+  say) also unlocks audio, so the strip's "starts after your first click" sentence vanishes
+  asynchronously: never anchor a strip regex with `$`. An acknowledgement is written only
+  after the 6 s toast closes: wait for the toast to hide before asserting the audit row.
+  The mute is desk-wide state in `audit_logs` (entity `DispatchDesk`): a spec that mutes
+  deletes its rows (`desk-alerts.spec.ts` clears those created since it started) or every
+  later desk run starts muted. `e2e/desk-alerts.spec.ts` owns E2EACK01/E2EACK02.
+  `EscalationPublisher.publish` takes `EscalationEvent | DeskAlertEvent`. The client must send
+  the board's `offeredAt` verbatim (the API compares ISO strings). Closing the tab within the
+  6 s drops the acknowledgement (moving to another desk page sends it with `keepalive`).
 - **Storefront keyboard pass (2026-10-29):** a Next 404 keeps `generateMetadata`'s title only
   in the server HTML; after hydration the layout's title returns, so `not-found.tsx` also
   renders a React `<title>` (both are needed; `generateMetadata` in the catch-all route does
@@ -430,15 +465,20 @@ events (T-Events)".
     re-dispatch button `data-shortcut-redispatch="<alert>"`. An action that waits on input or
     a second approver uses `Button unavailableReason` (aria-disabled plus the reason), never a
     silent `disabled`; `disabled` is for busy states. `e2e/desk-keyboard.spec.ts` owns E2EKBD01."
+  - "2026-10-29: desk alert acknowledgements and the 15-minute mute live only in `audit_logs`
+    (`dispatch.alert_acknowledged` on the ServiceItem with `metadata.offeredAt`;
+    `dispatch.alerts_muted`/`_unmuted` on entity `DispatchDesk`), per desk; the rules are
+    `packages/domain/src/dispatch/alert-cue.ts`. A spec that mutes must delete its
+    `DispatchDesk` rows. The cue is Web Audio in `apps/backoffice/src/lib/alert-sound.ts` and
+    starts only after a user gesture."
 
 ## Next
-1. Owner: choose the next batch. The desk's alert acknowledgement with the audio cue and
-   "Mute 15 min" is now decided (2026-10-29: per desk, audited) and buildable without a
-   migration (the audit log records it). Other options: the storefront's deferred design
-   changes (stacked table cards on a phone, room for the cookie banner), another M9 deferred
-   item (doc first where it changes how auth decides), or M10's room holds/event photos
-   (migration doc first). A real screen-reader run (desk and storefront) needs a machine with
-   NVDA or VoiceOver.
+1. Owner: choose the next batch. Buildable without a migration: the storefront's deferred
+   design changes (stacked table cards on a phone, room for the cookie banner), or an M9
+   deferred item (recovery codes, permission overrides, display currencies, runtime flags,
+   the idle lock, IP allowlist, new-device email; a doc first where it changes how auth
+   decides). M10's room holds/event photos need a migration doc first. A real screen-reader
+   run (desk and storefront) needs a machine with NVDA or VoiceOver.
 2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
    answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
    plan recommends renting the server only when the agency's legal entity exists (D1).
@@ -842,3 +882,11 @@ events (T-Events)".
   footer/header/strip lists), kept the language links in the phone header (currency is M9 D7),
   and deferred the design changes (stacked table cards, room for the cookie banner, the
   custom date picker).
+- 2026-10-29 — the owner chose the desk's alert acknowledgement with the audio cue and
+  "Mute 15 min" next (over the storefront's deferred design changes, another M9 item and
+  M10's deferred items; the deployment plan is unanswered and Plausible CE is not
+  installed). The build kept the state in the audit log (no migration), acknowledged red
+  alerts only (amber has no repeat), keyed an alert by item and offer, made the undo local
+  with the record written after the toast, offered no per-device sound switch (only the
+  logged mute or an acknowledgement silences the cue), left support read-only, and sounded
+  the cue on the dashboard only.

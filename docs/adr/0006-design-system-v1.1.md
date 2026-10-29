@@ -1205,3 +1205,47 @@ were silent or could not be built yet, the build decided:
   a phone, and room for the cookie banner on a phone (focus can go behind it until a
   choice is made). These are design changes, not fixes.
 - **Not verified:** a run with a real screen reader.
+
+
+## Amendment, 2026-10-29: the desk's alert acknowledgement, audio cue and mute
+
+The owner chose the items the desk pass had deferred, with acknowledging decided as **per
+desk, audited**: one operator's acknowledgement stops the cue for everyone, and
+acknowledgements and mutes go to the audit log. No migration, dependency or spend. Where
+the boards (A-A11y 01, A-Dashboard, A-States, AL-Alerts, T-Events) were silent, the build
+decided:
+
+- **What an alert is.** A red alert is one service item's offer gone red (declined, timed
+  out, or past its deadline before the timeout job fires). It is keyed by the item and the
+  offer (`alertKey`), so a re-dispatch raises a new alert that an earlier acknowledgement
+  does not cover. It dates from the decline, else the deadline (`redSince`).
+- **Only red alerts are acknowledged.** Amber has one cue and nothing repeats, so there is
+  nothing to stop; AL-Alerts gives amber "Watch", not "Acknowledge". `A` and the row's
+  Acknowledge act on the row's (the booking's) unacknowledged red alerts at once, as the
+  toast names the booking ("Alert acknowledged · audio off for VX-3PA8ZT").
+- **The undo is local, the record is the desk's.** For 6 s the cue stops on this desk
+  only; the toast pauses while hovered or focused (DS-Feedback). When it closes, or the
+  operator moves to another desk page, `POST /service-items/:id/acknowledge-alert` writes
+  `dispatch.alert_acknowledged` with the offer it covers; a second operator's later
+  acknowledgement returns the first. The item then shows "Acknowledged · <name> · <time>"
+  on every desk. Closing the tab inside the 6 s drops the acknowledgement, as an undo
+  would.
+- **The cue** is a two-note Web Audio tone (no sound file): red higher, amber softer and
+  lower. A red alert sounds at once when this desk has not cued it, then every 60 s while
+  any red alert is unacknowledged. It starts after the operator's first click or key press
+  on the page; until then the strip says so beside "Turn on sound". It plays on the
+  dashboard, where the live board is; other desk pages do not sound.
+- **No per-device sound switch.** "The cue is a desk setting" is read as the desk's mute:
+  the only ways to silence it are acknowledging and the logged mute, so nobody turns alerts
+  off unseen.
+- **"Mute 15 min"** silences the alerts raised before it began (and amber cues) and never a
+  newer red alert (`muteSilences`). Muting again starts a new 15-minute window. Unmute is
+  logged too (`dispatch.alerts_unmuted`). The strip says "Audio muted until 14:47 by Ana
+  Rodríguez (logged)…", with Unmute. The muted line keeps the bell icon: the sprite has no
+  `bell-off`, and adding one means rebuilding it from Lucide.
+- **Who may act.** Operations Admin and Super Admin acknowledge and mute, as they
+  re-dispatch; support sees the state and hears the cue but stays read-only.
+- **Events.** `alert_acknowledged` (`service_item_id`, `seconds_to_ack` from `redSince`,
+  `channel: desk`) and `alert_muted` (`muted_for_s`, `channel: desk`) are desk events, sent
+  once the API accepted them; `ops_lite` waits for Ops Lite.
+- **Not built:** Ops Lite's channel and push; `/` (no desk search).

@@ -1,6 +1,6 @@
 # Next session prompt
 
-Prepared 2026-10-29, after the storefront's manual accessibility pass. Paste the block below to start the next session.
+Prepared 2026-10-29, after the desk's alert acknowledgement, audio cue and mute. Paste the block below to start the next session.
 
 ```text
 Project: OTA — a Cuban inbound-tourism travel-agency platform for Vereda Expeditions. Repo
@@ -23,7 +23,8 @@ ORIENT FIRST, in this order:
 - docs/adr/0006-design-system-v1.1.md (amended through Phase 8 item 2, the 2026-10-25
   accessibility batch, Phase 8 item 1, T-Events, its follow-ups, the server-side T-Events, the
   2026-10-26 staff passkeys, the 2026-10-27 Plausible CE sink, the 2026-10-28 hosting plan and
-  the 2026-10-29 desk and storefront accessibility passes);
+  the 2026-10-29 desk and storefront accessibility passes and the desk's alert
+  acknowledgement, audio cue and mute);
 - docs/a11y-desk-manual-pass.md and docs/a11y-storefront-manual-pass.md (verdicts per rule);
 - docs/plausible-hosting-plan.md (approved H1a, H4a, H5, H6a, H7; §6 as built) and
   docs/runbook.md "Analytics events (T-Events)" (the routed sink and the "Going live" checklist);
@@ -35,7 +36,18 @@ Verify the handoff against the code; run `git log --oneline main..vereda`. If th
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
-Phase 8 items 1–4 are done. Built last session (2026-10-29, the owner's pick): the same manual
+Phase 8 items 1–4 are done. Built last session (2026-10-29, the owner's pick): the desk's alert
+acknowledgement, audio cue and "Mute 15 min", per desk and audited (ADR 0006 amendment of that
+day; docs/a11y-desk-manual-pass.md 01). No migration or dependency: the audit log is the state.
+Rules in packages/domain/src/dispatch/alert-cue.ts (alertKey = item + offer, redSince, activeMute,
+muteSilences, alertCue: red at once then every 60 s until acknowledged, amber once). API: POST
+/service-items/:id/acknowledge-alert {offeredAt} → dispatch.alert_acknowledged; GET|POST|DELETE
+/dispatch/alert-mute → dispatch.alerts_muted/_unmuted on entity DispatchDesk; the board's items
+carry acknowledgement and respondedAt; changes go out on /ops. Desk: a two-note Web Audio cue
+after the first click or key ("Turn on sound" until then), dashboard only; A on a focused row or
+its Acknowledge button, a 6 s undo toast, then the record; Mute 15 min / Unmute with who and
+until when; red alerts only; support read-only; desk events alert_acknowledged/alert_muted; e2e
+e2e/desk-alerts.spec.ts. Earlier that day: the same manual
 pass on the storefront's DS 02–05 rules (docs/a11y-storefront-manual-pass.md, ADR 0006 amendment
 of that day). No migration or dependency. A skip link to <main id="main">; root scroll padding so
 focus never hides under the sticky header, a destination's "On this page" row, the phone's bottom
@@ -45,15 +57,13 @@ language links named in their own language with a 44 px tap area; titles for the
 builder, mock checkout and 404; table scroll boxes named "<section> · table"; confirmations
 before Decline (proposal) and Withdraw (event request); unavailable actions that keep focus and
 say why. Deferred: stacked table cards on a phone, room for the cookie banner on a phone, the
-custom date picker, a real screen-reader run. The owner also decided what acknowledging a desk
-alert means: per desk, audited (not built yet). Earlier that day: the manual
+custom date picker, a real screen-reader run. Earlier that day: the manual
 keyboard/screen-reader pass on the desk (docs/a11y-desk-manual-pass.md). A skip link; desk shortcuts (`?` or the header button for the list,
 G then D/B/P, R on a focused matrix or booking-service row, a per-device off switch); the matrix's
 sticky row headers, names with the service/booking/worker, the drawer opening on its title;
 threshold crossings announced once (alertCrossings in packages/domain); `Button unavailableReason`
-(aria-disabled with the reason beside it) on 25 actions; page titles. Deferred: the audio cue, `A`
-(acknowledge) and the mute (the owner decides what acknowledging means), `/` (no desk search), a
-real screen-reader run. Written earlier that day, at the owner's request:
+(aria-disabled with the reason beside it) on 25 actions; page titles. Deferred then: the audio
+cue, `A` and the mute (built since), `/` (no desk search), a real screen-reader run. Written earlier that day, at the owner's request:
 docs/deployment-plan.md, a deployment proposal (recommended: one EU VM, Docker Compose behind
 Caddy, Plausible on the same VM; the server rented only when the agency's legal entity exists).
 It found that production sign-in breaks once the storefront and desk have their own hostnames
@@ -84,8 +94,8 @@ authenticator. Earlier (2026-10-25): server-side T-Events. Not built: SMS/push, 
 install (the owner's VPS; plan approved), the worker events (offer_viewed etc.; no worker app), desk
 page views (counsel on staff analytics), gallery_opened (no gallery viewer), queued offline
 writes, M9's other deferred items (recovery codes, permission overrides, display currencies,
-runtime flags, idle lock, IP allowlist, new-device email), the desk's audio cue, acknowledge (`A`)
-and mute (decided: per desk, audited), `/` (no desk search), a real screen-reader run, the
+runtime flags, idle lock, IP allowlist, new-device email), `/` (no desk search), the cue on desk
+pages other than the dashboard, Ops Lite, a real screen-reader run, the
 storefront pass's deferred design changes, passkeys for travelers and suppliers,
 M10's room holds and event photos.
 Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
@@ -109,24 +119,24 @@ as a Plausible CE adapter behind `TELEMETRY_SINK` (built 2026-10-27/28; tested a
 new dependency or image); the Plausible hosting plan H1a, H4a, H5, H6a, H7 (built 2026-10-28); the
 manual accessibility pass on the desk, with the audio cue/acknowledge/mute deferred (built
 2026-10-29); the same pass on the storefront (built 2026-10-29); acknowledging a desk alert is per
-desk and audited (decided 2026-10-29, not built).
+desk and audited, with the audio cue and the logged mute (built 2026-10-29).
 
 TASK 0 — The dev stack was left running for the owner (with TELEMETRY_SINK_FILE and raised rate
 limits); stop it (signal turbo) before any verify and restart it at the end. Last session's full
-verify (the storefront accessibility pass) is in the handoff.
+verify (the desk's alert acknowledgement) is in the handoff.
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: the desk's alert acknowledgement with the audio cue and "Mute 15 min" (decided:
-per desk, audited; buildable now: no migration, dependency or spend — the audit log records
-acknowledgements and mutes), the storefront pass's deferred design changes (stacked table cards
-on a phone, room for the cookie banner on a phone), another M9 deferred item (recovery codes,
+recommendation: the storefront pass's deferred design changes (stacked table cards on a phone,
+room for the cookie banner on a phone; buildable now: no migration, dependency or spend),
+another M9 deferred item (recovery codes,
 permission overrides, display currencies, runtime flags, the idle lock, the IP allowlist,
 new-device emails — a doc to the owner first where it changes how auth decides), M10's deferred
 room holds and event photos (migration doc first), or the deployment build
 (docs/deployment-plan.md §6 B1–B13, rehearsed locally with no spend) — offer that one only for
 the decisions the owner has answered, and B1, B2, B6, B9 and B11 only once their (approval) is
 given. Recommend the deployment build if the owner has answered the plan (F2 blocks any deploy,
-so B6 goes first), otherwise the desk acknowledgement. If the owner has installed Plausible CE,
+so B6 goes first), otherwise the storefront's deferred design changes. If the owner has installed
+Plausible CE,
 offer the runbook's "Going live" checks (steps 4–5) first.
 Build nothing that needs a migration before the owner approves its doc.
 
@@ -169,10 +179,15 @@ total), the M5 sample terms (planning fee, validity, response hours), the pricin
 (child bands, fees), counsel's review of the legal texts, the OFAC categories, the card
 surcharge, the deposit's refundability and proof retention, the passport-key backup; the M10
 concierge fee and events copy (and whether a regenerated invoice suffices when seats are added
-later); what acknowledging a desk alert means (one person or the whole desk; is the mute an audit
-entry?); the AGENTS.md §C lines proposed in the handoff (owner edit).
+later); the AGENTS.md §C lines proposed in the handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. Storefront keyboard pass (2026-10-29): a 404
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Desk alerts (2026-10-29): the cue needs a user
+gesture, so e2e records cues via the `ota:alert-cue` window event (addInitScript) and clicks "Turn
+on sound" first; any click unlocks audio and removes the strip's "starts after your first click"
+sentence asynchronously (no `$` in strip regexes); an acknowledgement is written after the 6 s
+toast closes (wait for it to hide); the mute is desk-wide audit state (entity DispatchDesk), so a
+spec that mutes deletes its rows; desk-alerts.spec.ts owns E2EACK01/E2EACK02;
+EscalationPublisher.publish takes EscalationEvent | DeskAlertEvent. Storefront keyboard pass (2026-10-29): a 404
 needs both generateMetadata and a React <title> in not-found.tsx (hydration restores the layout's
 title); touch sizes apply only under (pointer: coarse) — emulate with hasTouch + isMobile (the
 DS 07 width projects do not); scroll padding and scroll-mt-* add up (new anchored sections take

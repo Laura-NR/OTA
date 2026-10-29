@@ -23,10 +23,10 @@ reason).
 |---|---|---|
 | Strip says red/amber in words and colour; nothing blinks | pass | `ops-desk.tsx` strip and row tints; no animation |
 | A new red alert is announced once (`role="alert"`), amber politely; timer ticks never | **fixed** | Before: the strip itself was the live region, appeared with its content (often not announced) and read counts. Now two always-mounted regions announce each crossing from `alertCrossings` (`packages/domain`, 4 unit tests): "Red alert. Booking E2EKBD01: Guide, …, timed out at 13:40. Press R to re-dispatch." e2e `desk-keyboard.spec.ts` |
-| Audio cue, repeat every 60 s, "Mute 15 min" logged with the actor | deferred | Needs a decision: what acknowledging means (per person or for the desk) and where the mute is logged. Asked in the handoff |
+| Audio cue, repeat every 60 s, "Mute 15 min" logged with the actor | **fixed** (2026-10-29, later) | Owner: per desk, audited. Two-note Web Audio cue after the first interaction (`alertCue`, `packages/domain`, unit tests); `dispatch.alerts_muted`/`_unmuted` audit rows; a newer red alert still sounds. e2e `desk-alerts.spec.ts` |
 | Shortcuts in a "?" overlay; never inside a text field | **fixed** | `desk-shortcuts.tsx`; `resolveShortcut`/`isTypingTarget` (`packages/ui`, unit tests); e2e |
 | `R` re-dispatch for the focused red/amber row | **fixed** | Matrix and a booking's services; red first, else amber; e2e |
-| `A` acknowledge (undo 6 s) | deferred | Depends on the acknowledgement above |
+| `A` acknowledge (undo 6 s) | **fixed** (2026-10-29, later) | `A` on a focused matrix row or its Acknowledge button; a 6 s undo toast, then `dispatch.alert_acknowledged` for the desk. Red alerts only (amber has no repeat). e2e `desk-alerts.spec.ts` |
 | `/` jump to search | deferred | The desk has no search field yet |
 | `G` then `D` / `B` / `P` | **fixed** | e2e |
 | `Esc` closes the panel; focus returns to its trigger | pass | Native `<dialog>`; checked on the re-dispatch drawer and the shortcut list |
@@ -77,6 +77,7 @@ Not applicable: neither exists yet (ADR 0007).
 
 - **A real screen-reader pass** (NVDA + Firefox/Chrome, VoiceOver + Safari) on the dashboard,
   a booking, and the forms with unavailable actions. This needs a machine with those tools.
-- **The audio cue, acknowledging and muting**, plus `A` (see 01).
+- ~~The audio cue, acknowledging and muting, plus `A` (see 01).~~ Built 2026-10-29 (later):
+  ADR 0006 amendment "the desk's alert acknowledgement, audio cue and mute".
 - **`/` jump to search**, once the desk has a search.
 - **The storefront has no skip link** either (outside this desk pass).
