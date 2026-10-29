@@ -27,6 +27,7 @@ export function EventRequestActions({
   locale: string;
 }) {
   const t = useTranslations('eventRequestsDesk');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('idle');
   const [reason, setReason] = useState('');
@@ -120,7 +121,12 @@ export function EventRequestActions({
           <Button
             type="submit"
             variant={mode === 'cancel' ? 'destructive' : 'primary'}
-            disabled={busy || reason.trim().length < 3}
+            disabled={busy}
+            unavailableReason={
+              reason.trim().length < 3
+                ? why('minLength', { min: 3, field: t('actions.reason') })
+                : undefined
+            }
           >
             {mode === 'cancel'
               ? t('actions.confirmCancel')
@@ -193,7 +199,14 @@ export function EventRequestActions({
           <div className="flex flex-wrap gap-2">
             <Button
               type="submit"
-              disabled={busy || !priceValid || (needsBooking && !bookingId)}
+              disabled={busy}
+              unavailableReason={
+                !priceValid
+                  ? why('seatsPrice')
+                  : needsBooking && !bookingId
+                    ? why('seatsBooking')
+                    : undefined
+              }
             >
               {t('actions.confirmSeats')}
             </Button>

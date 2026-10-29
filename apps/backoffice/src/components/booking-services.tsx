@@ -150,6 +150,7 @@ export function BookingServices({
             return (
               <TableRow
                 key={item.id}
+                data-shortcut-row=""
                 tone={
                   alert === 'RED'
                     ? 'destructive'
@@ -158,7 +159,10 @@ export function BookingServices({
                       : undefined
                 }
               >
-                <TableCell className="align-top">
+                <TableHead
+                  scope="row"
+                  className="bg-transparent p-3 align-top font-normal text-default"
+                >
                   <div className="flex min-w-32 flex-col">
                     <span className="font-medium">{service}</span>
                     <span className="text-caption text-muted">
@@ -170,7 +174,7 @@ export function BookingServices({
                         .join(' · ')}
                     </span>
                   </div>
-                </TableCell>
+                </TableHead>
                 <TableCell className="align-top">
                   {item.supplierName ?? (
                     <span className="text-muted">{dashboard('noWorker')}</span>
@@ -203,6 +207,11 @@ export function BookingServices({
                       <Button
                         size="sm"
                         variant={alert === 'RED' ? 'destructive' : 'secondary'}
+                        aria-label={dashboard('redispatchFor', {
+                          service,
+                          code: bookingCode,
+                        })}
+                        data-shortcut-redispatch={alert === 'NONE' ? undefined : alert}
                         onClick={() =>
                           setTarget({
                             serviceItemId: item.id,

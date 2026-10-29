@@ -29,6 +29,7 @@ export function AdvisoryActions({
   actorId: string;
 }) {
   const t = useTranslations('advisoriesDesk');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
   const track = useDeskTelemetry();
   const [mode, setMode] = useState<'idle' | 'changes' | 'lift'>('idle');
@@ -84,10 +85,15 @@ export function AdvisoryActions({
       {open && mode === 'idle' ? (
         <div className="flex flex-wrap gap-2">
           <Button
-            disabled={
-              busy ||
-              approvedByMe ||
-              (publishes && advisory.missingTranslations.length > 0)
+            disabled={busy}
+            unavailableReason={
+              approvedByMe
+                ? why('secondApprover')
+                : publishes && advisory.missingTranslations.length > 0
+                  ? why('missingTranslations', {
+                      list: advisory.missingTranslations.join(', '),
+                    })
+                  : undefined
             }
             onClick={() => post('approve', {})}
           >
@@ -148,7 +154,12 @@ export function AdvisoryActions({
           <Button
             type="submit"
             variant={mode === 'lift' ? 'destructive' : 'primary'}
-            disabled={busy || (mode === 'changes' && !note.trim())}
+            disabled={busy}
+            unavailableReason={
+              mode === 'changes' && !note.trim()
+                ? why('fillIn', { field: t('approval.changesNote') })
+                : undefined
+            }
           >
             {mode === 'changes' ? t('approval.sendBack') : t('live.confirmLift')}
           </Button>

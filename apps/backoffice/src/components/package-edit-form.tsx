@@ -74,6 +74,7 @@ export function PackageEditForm({
   policyKeys: string[];
 }) {
   const t = useTranslations('backoffice.packageEdit');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
 
   const [name, setName] = useState(pkg.name);
@@ -467,7 +468,7 @@ export function PackageEditForm({
                   { inventoryItemId: newItemId, dayOffset: 0 },
                 ])
               }
-              disabled={!newItemId}
+              unavailableReason={newItemId ? undefined : why('chooseItem')}
             >
               {t('add')}
             </Button>
@@ -538,6 +539,7 @@ export function PackageEditForm({
               <label className="flex items-center gap-1 pb-2 text-caption text-muted">
                 <input
                   type="checkbox"
+                  className="h-5 w-5 shrink-0 accent-primary-600"
                   checked={tier.isDefault}
                   onChange={(event) =>
                     updateRow<TierRow>(setTiers, index, {
@@ -825,9 +827,15 @@ export function PackageEditForm({
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       {saved ? <Alert>{t('saved')}</Alert> : null}
 
-      <Button type="submit" disabled={busy || rows.length === 0}>
-        {busy ? t('saving') : t('save')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          disabled={busy}
+          unavailableReason={rows.length === 0 ? why('packageRows') : undefined}
+        >
+          {busy ? t('saving') : t('save')}
+        </Button>
+      </div>
     </form>
   );
 }

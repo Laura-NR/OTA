@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import type { ServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
 
+import { DeskShortcuts } from './desk-shortcuts';
 import { LocaleSwitcher } from './locale-switcher';
 import { MainNav } from './main-nav';
 import { SectionNav } from './section-nav';
@@ -38,7 +39,8 @@ function initials(name: string): string {
  * The A-Dashboard desk shell. From `lg` the 240 px primary 700 sidebar stays
  * open: the wordmark with the "Ops" caption, the section links, and the
  * signed-in person at the foot. Below `lg` the sidebar stacks above the
- * content as a wrapping row of links (DS 07 §03).
+ * content as a wrapping row of links (DS 07 §03). A skip link, the first stop,
+ * jumps past the sidebar to the page (WCAG 2.4.1).
  */
 export async function AppShell({ user, agencyName, children }: AppShellProps) {
   const t = await getTranslations('backoffice.shell');
@@ -47,6 +49,12 @@ export async function AppShell({ user, agencyName, children }: AppShellProps) {
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[15rem_1fr]">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-3 focus:text-body-sm focus:font-semibold focus:text-primary-700 focus:shadow-md"
+      >
+        {t('skip')}
+      </a>
       <aside className="flex flex-col gap-4 bg-primary-700 px-4 pb-6 pt-5 text-neutral-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
         <Link
           href="/dashboard"
@@ -80,10 +88,10 @@ export async function AppShell({ user, agencyName, children }: AppShellProps) {
               ) : null}
             </div>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <div className="flex flex-wrap gap-x-4">
             <Link
               href="/passkeys"
-              className="text-caption font-normal text-primary-200 underline underline-offset-[3px] hover:text-neutral-0 focus-visible:outline-accent-500"
+              className="inline-flex min-h-touch items-center text-caption font-normal text-primary-200 underline underline-offset-[3px] hover:text-neutral-0 focus-visible:outline-accent-500"
             >
               {t('passkeys')}
             </Link>
@@ -93,10 +101,13 @@ export async function AppShell({ user, agencyName, children }: AppShellProps) {
       </aside>
       <div className="flex min-w-0 flex-col">
         <header className="flex h-14 items-center justify-end gap-2 border-b bg-surface px-6">
+          <DeskShortcuts />
           <LocaleSwitcher />
         </header>
         <SectionNav />
-        <main className="flex-1 bg-page p-6">{children}</main>
+        <main id="main" tabIndex={-1} className="flex-1 bg-page p-6 focus:outline-none">
+          {children}
+        </main>
       </div>
     </div>
   );

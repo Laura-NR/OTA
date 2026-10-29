@@ -183,6 +183,7 @@ export function OptionsEditor({
   options: DisruptionOptionDto[];
 }) {
   const t = useTranslations('disruptionsDesk');
+  const why = useTranslations('backoffice.unavailable');
   const { run, busy, failure } = useCaseAction(caseId);
   const [rows, setRows] = useState(
     options.map((option) => ({ title: option.title, detail: option.detail })),
@@ -260,7 +261,12 @@ export function OptionsEditor({
             {t('options.remove', { key: KEYS[rows.length - 1] ?? '' })}
           </Button>
         ) : null}
-        <Button type="submit" variant="secondary" disabled={busy || rows.length === 0}>
+        <Button
+          type="submit"
+          variant="secondary"
+          disabled={busy}
+          unavailableReason={rows.length === 0 ? why('disruptionOptions') : undefined}
+        >
           {t('options.save')}
         </Button>
       </div>
@@ -290,6 +296,7 @@ export function SendOptionsForm({
   defaultKey: string;
 }) {
   const t = useTranslations('disruptionsDesk');
+  const why = useTranslations('backoffice.unavailable');
   const { run, busy, failure } = useCaseAction(caseId);
   const [deadline, setDeadline] = useState(defaultDeadline);
   const [key, setKey] = useState(defaultKey);
@@ -361,8 +368,12 @@ export function SendOptionsForm({
           />
         ))}
       </RadioGroup>
-      <div>
-        <Button type="submit" disabled={busy || chosen.length === 0}>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          disabled={busy}
+          unavailableReason={chosen.length === 0 ? why('chooseBookings') : undefined}
+        >
           {t('send.submit', { count: chosen.length })}
         </Button>
       </div>
@@ -506,6 +517,7 @@ export function AttachForm({
   suggestions: { reservationId: string; label: string }[];
 }) {
   const t = useTranslations('disruptionsDesk');
+  const why = useTranslations('backoffice.unavailable');
   const { run, busy, failure } = useCaseAction(caseId);
   const [chosen, setChosen] = useState<string[]>(
     suggestions.map((suggestion) => suggestion.reservationId),
@@ -538,11 +550,12 @@ export function AttachForm({
               />
             ))}
           </div>
-          <div>
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               type="submit"
               variant="secondary"
-              disabled={busy || chosen.length === 0}
+              disabled={busy}
+              unavailableReason={chosen.length === 0 ? why('chooseBookings') : undefined}
             >
               {t('attach.selected')}
             </Button>
@@ -577,7 +590,12 @@ export function AttachForm({
         <Button
           type="submit"
           variant="secondary"
-          disabled={busy || code.trim().length < 4}
+          disabled={busy}
+          unavailableReason={
+            code.trim().length < 4
+              ? why('minLength', { min: 4, field: t('attach.code') })
+              : undefined
+          }
         >
           {t('attach.byCode')}
         </Button>

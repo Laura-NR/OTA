@@ -37,6 +37,7 @@ export function RefundActions({
   canManage: boolean;
 }) {
   const t = useTranslations('backoffice.payments');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
   const track = useDeskTelemetry();
   const [mode, setMode] = useState<'idle' | 'reject' | 'sent'>('idle');
@@ -138,7 +139,14 @@ export function RefundActions({
             type="submit"
             size="sm"
             variant={mode === 'reject' ? 'destructive' : 'primary'}
-            disabled={busy || !text.trim()}
+            disabled={busy}
+            unavailableReason={
+              text.trim()
+                ? undefined
+                : why('fillIn', {
+                    field: mode === 'reject' ? t('rejectReason') : t('bankReference'),
+                  })
+            }
           >
             {mode === 'reject' ? t('reject') : t('markSent')}
           </Button>

@@ -133,6 +133,7 @@ export function ProposalComposer({
 }) {
   const t = useTranslations('proposalsDesk');
   const tb = useTranslations('build');
+  const why = useTranslations('backoffice.unavailable');
   const locale = useLocale();
   const router = useRouter();
   const [summary, setSummary] = useState(
@@ -360,7 +361,9 @@ export function ProposalComposer({
           size="sm"
           variant="secondary"
           className="self-start"
-          disabled={stops.length >= MAX_STOPS}
+          unavailableReason={
+            stops.length >= MAX_STOPS ? why('limit', { max: MAX_STOPS }) : undefined
+          }
           onClick={() =>
             setStops((list) => [
               ...list,
@@ -435,7 +438,9 @@ export function ProposalComposer({
           size="sm"
           variant="secondary"
           className="self-start"
-          disabled={days.length >= MAX_DAYS}
+          unavailableReason={
+            days.length >= MAX_DAYS ? why('limit', { max: MAX_DAYS }) : undefined
+          }
           onClick={() =>
             setDays((list) => [...list, { location: '', plan: '', with: '' }])
           }
@@ -508,7 +513,9 @@ export function ProposalComposer({
           size="sm"
           variant="secondary"
           className="self-start"
-          disabled={options.length >= MAX_OPTIONS}
+          unavailableReason={
+            options.length >= MAX_OPTIONS ? why('limit', { max: MAX_OPTIONS }) : undefined
+          }
           onClick={() =>
             setOptions((list) => [...list, { label: '', description: '', price: '' }])
           }
@@ -639,7 +646,12 @@ export function ProposalComposer({
         >
           {t('addLine')}
         </Button>
-        <Button type="button" disabled={!valid || busy} onClick={publish}>
+        <Button
+          type="button"
+          disabled={busy}
+          unavailableReason={valid ? undefined : why('proposalIncomplete')}
+          onClick={publish}
+        >
           {busy ? t('publishing') : t('publish')}
         </Button>
       </div>

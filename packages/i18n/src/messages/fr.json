@@ -1025,7 +1025,8 @@
         "serviceWorker": "Prestataire",
         "traveler": "Voyageur"
       },
-      "passkeys": "Clés d'accès"
+      "passkeys": "Clés d'accès",
+      "skip": "Aller au contenu"
     },
     "paymentsLedger": {
       "title": "Paiements",
@@ -2006,7 +2007,8 @@
         "timer": "Délai",
         "open": "Ouvrir",
         "started": "{timer} · démarré à {time}",
-        "rule": "Délai : {standard} en standard, {short} si l'arrivée a lieu dans moins de {window} h. Orange à {amber} %, rouge à 100 % ou en cas de refus. Un nouveau dispatch relance le délai pour le nouveau prestataire seulement ; la réservation garde son horloge d'origine."
+        "rule": "Délai : {standard} en standard, {short} si l'arrivée a lieu dans moins de {window} h. Orange à {amber} %, rouge à 100 % ou en cas de refus. Un nouveau dispatch relance le délai pour le nouveau prestataire seulement ; la réservation garde son horloge d'origine.",
+        "openBooking": "Ouvrir {code}"
       },
       "status": {
         "offered": "Proposé · {elapsed}",
@@ -2046,7 +2048,9 @@
         "offerFailed": "L'offre n'a pas pu être envoyée.",
         "acceptance": "{rate} % d'acceptation",
         "noAnswers": "Aucune offre répondue pour l'instant",
-        "belowFloor": "Sous {floor} % · manuel uniquement"
+        "belowFloor": "Sous {floor} % · manuel uniquement",
+        "offerTo": "{offer} à {name}",
+        "callWorker": "Appeler {name}"
       },
       "tasks": {
         "title": "Tâches du bureau",
@@ -2071,6 +2075,13 @@
           "body": "Sans réponse depuis plus de {hours} h. Indiquez si les places peuvent être demandées, ou marquez-les indisponibles.",
           "action": "Répondre"
         }
+      },
+      "redispatchFor": "Relancer le dispatch {service} · {code}",
+      "announce": {
+        "timedOut": "Alerte rouge. Réservation {code} : {service}, {worker}, délai dépassé à {time}.",
+        "declined": "Alerte rouge. Réservation {code} : {service}, {worker}, a refusé.",
+        "amber": "Orange. Réservation {code} : {service}, {worker}, à {percent} % du délai.",
+        "pressR": "Appuyez sur R pour relancer le dispatch."
       }
     },
     "messages": {
@@ -2808,6 +2819,52 @@
       "changeNote": "Ajouter, renommer ou retirer une clé demande une connexion par clé d'accès, et chaque changement vous est envoyé par e-mail.",
       "back": "Retour au bureau",
       "failed": "Cela n'a pas fonctionné. Réessayez."
+    },
+    "shortcuts": {
+      "open": "Raccourcis clavier",
+      "title": "Raccourcis clavier",
+      "description": "Naviguez dans le bureau sans la souris.",
+      "close": "Fermer",
+      "switch": "Raccourcis à une touche",
+      "switchHint": "Activés sur cet appareil. Désactivez-les si vous utilisez la saisie vocale ou appuyez sur des touches par erreur.",
+      "columns": {
+        "keys": "Touches",
+        "does": "Action",
+        "where": "Où"
+      },
+      "then": "puis",
+      "rows": {
+        "redispatch": "Ouvrir la relance du dispatch pour la ligne rouge ou orange qui a le focus",
+        "dashboard": "Aller au tableau de bord",
+        "bookings": "Aller aux réservations",
+        "payments": "Aller aux paiements",
+        "close": "Fermer le panneau ou la boîte de dialogue ouverte ; le focus revient à ce qui l'a ouvert",
+        "help": "Afficher cette liste"
+      },
+      "where": {
+        "redispatch": "Matrice du tableau de bord, services d'une réservation",
+        "everywhere": "Partout"
+      },
+      "typing": "Les raccourcis ne se déclenchent jamais pendant la saisie dans un champ ou avec Ctrl, Cmd ou Alt enfoncé."
+    },
+    "unavailable": {
+      "fillIn": "Renseignez d'abord « {field} ».",
+      "minLength": "Saisissez d'abord au moins {min} caractères dans « {field} ».",
+      "disruptionCase": "Choisissez d'abord un scénario et renseignez le titre et le résumé.",
+      "packageItems": "Choisissez d'abord au moins un élément du catalogue.",
+      "packageRows": "Gardez au moins un service dans l'itinéraire.",
+      "chooseItem": "Choisissez d'abord un élément à ajouter.",
+      "importMapping": "Associez d'abord toutes les colonnes obligatoires.",
+      "eventIssues": "Réglez d'abord les problèmes indiqués sur cette page.",
+      "proposalIncomplete": "Renseignez d'abord le résumé et chaque ligne de prix, étape, jour et option.",
+      "thresholdsChange": "Modifiez d'abord au moins une valeur.",
+      "secondApprover": "Vous l'avez approuvé ; une deuxième personne doit l'approuver.",
+      "missingTranslations": "Ajoutez d'abord les traductions manquantes : {list}.",
+      "seatsPrice": "Saisissez d'abord un prix valide.",
+      "seatsBooking": "Choisissez d'abord la réservation.",
+      "chooseBookings": "Choisissez d'abord au moins une réservation.",
+      "disruptionOptions": "Ajoutez d'abord au moins une option.",
+      "limit": "Vous pouvez en ajouter jusqu'à {max}."
     }
   },
   "conditions": {

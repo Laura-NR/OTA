@@ -32,6 +32,7 @@ export function RefundForm({
   receipts: ScheduleReceiptDto[];
 }) {
   const t = useTranslations('backoffice.payments');
+  const why = useTranslations('backoffice.unavailable');
   const locale = useLocale();
   const router = useRouter();
   const [receiptId, setReceiptId] = useState(receipts[0]?.id ?? '');
@@ -188,13 +189,19 @@ export function RefundForm({
         )}
       </Field>
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      <Button
-        type="submit"
-        className="self-start"
-        disabled={busy || note.trim().length < 3}
-      >
-        {t('requestRefund')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          disabled={busy}
+          unavailableReason={
+            note.trim().length < 3
+              ? why('minLength', { min: 3, field: t('note') })
+              : undefined
+          }
+        >
+          {t('requestRefund')}
+        </Button>
+      </div>
     </form>
   );
 }

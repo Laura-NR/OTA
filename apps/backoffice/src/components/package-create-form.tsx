@@ -21,6 +21,7 @@ import { apiRequest } from '@/lib/client-api';
 /** Build a curated package from catalog items (spec §3.3). */
 export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
   const t = useTranslations('backoffice.packageCreate');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +139,7 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
                       <label className="flex flex-1 items-center gap-3">
                         <input
                           type="checkbox"
+                          className="h-5 w-5 shrink-0 accent-primary-600"
                           checked={checked}
                           onChange={() => toggle(item.id)}
                         />
@@ -174,9 +176,15 @@ export function PackageCreateForm({ items }: { items: InventoryItemDto[] }) {
 
           {error ? <Alert variant="destructive">{error}</Alert> : null}
 
-          <Button type="submit" disabled={busy || selected.length === 0}>
-            {busy ? t('creating') : t('create')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="submit"
+              disabled={busy}
+              unavailableReason={selected.length === 0 ? why('packageItems') : undefined}
+            >
+              {busy ? t('creating') : t('create')}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

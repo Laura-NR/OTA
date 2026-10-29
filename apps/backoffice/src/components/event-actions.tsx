@@ -14,6 +14,7 @@ import { apiRequest } from '@/lib/client-api';
  */
 export function EventActions({ event }: { event: EventDto }) {
   const t = useTranslations('eventsDesk');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,10 @@ export function EventActions({ event }: { event: EventDto }) {
       <div className="flex flex-wrap gap-2">
         {event.status !== 'PUBLISHED' ? (
           <Button
-            disabled={busy || event.publishIssues.length > 0}
+            disabled={busy}
+            unavailableReason={
+              event.publishIssues.length > 0 ? why('eventIssues') : undefined
+            }
             onClick={() => void run('publish')}
           >
             {t('actions.publish')}

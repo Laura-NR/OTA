@@ -18,6 +18,7 @@ import { connectConversation, type MessageSocketEvent } from '@/lib/socket';
  */
 export function MessageThread({ reservationId }: { reservationId: string }) {
   const t = useTranslations('backoffice.messageThread');
+  const why = useTranslations('backoffice.unavailable');
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [body, setBody] = useState('');
   const [connected, setConnected] = useState(false);
@@ -167,7 +168,13 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         >
           {drafting ? t('drafting') : t('draftWithAi')}
         </Button>
-        <Button type="submit" disabled={busy || !body.trim()}>
+        <Button
+          type="submit"
+          disabled={busy}
+          unavailableReason={
+            body.trim() ? undefined : why('fillIn', { field: t('message') })
+          }
+        >
           {busy ? t('sending') : t('send')}
         </Button>
       </form>

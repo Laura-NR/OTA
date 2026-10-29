@@ -2,8 +2,10 @@
 
 import {
   AGING_BUCKETS,
+  alertCrossings,
   pendingConfirmations,
   resolveDispatchTimeoutMs,
+  timerElapsed,
   type AgingBucketId,
   type EscalationAlert,
   type ServiceType,
@@ -27,6 +29,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { shortcutsEnabled } from '@/components/desk-shortcuts';
 import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 import { timerCopy, type DeskClock } from '@/lib/desk-clock';
@@ -53,6 +56,17 @@ const COLUMNS: ReadonlyArray<{ key: string; type: ServiceType }> = [
   { key: 'guide', type: 'GUIDE' },
   { key: 'activities', type: 'EXPERIENCE' },
 ];
+
+/**
+ * The sticky row header's own fill, so it hides what scrolls beneath it; the
+ * column is 11.5 rem wide and the scroll box keeps that much padding, so a
+ * focused cell never scrolls under it (A-A11y 02, WCAG 2.4.11).
+ */
+const ROW_HEADER_FILL: Record<EscalationAlert, string> = {
+  NONE: 'bg-surface',
+  AMBER: 'bg-accent-50',
+  RED: 'bg-error-100',
+};
 
 const BUCKET_BARS: Record<AgingBucketId, string> = {
   upTo2h: 'bg-primary-600',
@@ -108,6 +122,8 @@ export interface OpsDeskProps {
  * strip, the pending and alert figures and the dispatch matrix. It seeds from
  * the API, then follows the `/ops` socket; amber and red are recomputed every
  * second from each offer's deadline, so the clocks keep moving between events.
+ * A screen reader hears each threshold crossing once (A-A11y 01): red in an
+ * assertive region, amber in a polite one; the ticking timers stay silent.
  */
 export function OpsDesk({
   initialRows,
@@ -129,6 +145,15 @@ export function OpsDesk({
   const track = useDeskTelemetry();
   /** Whether this empty spell of the matrix was reported (T-Events). */
   const emptyReported = useRef(false);
+  /** Each item's alert at the last tick; null until the first look. */
+  const lastAlerts = useRef<Map<string, EscalationAlert> | null>(null);
+  const [announced, setAnnounced] = useState<{
+    red: string;
+    amber: string;
+    seq: number;
+  }>({ red: '', amber: '', seq: 0 });
+  /** The booking whose re-dispatch went out, to take focus back if its button goes. */
+  const restoreFocusTo = useRef<string | null>(null);
 
   async function refresh() {
     try {
@@ -139,6 +164,17 @@ export function OpsDesk({
   }
 
   useEffect(() => setRows(initialRows), [initialRows]);
+
+  useEffect(() => {
+    const reservationId = restoreFocusTo.current;
+    restoreFocusTo.current = null;
+    if (!reservationId || document.activeElement !== document.body) {
+      return;
+    }
+    // The offer went out and its button left the matrix with focus on it.
+    const link = document.getElementById(`matrix-row-${reservationId}`);
+    (link ?? document.getElementById('matrix-title'))?.focus();
+  }, [rows]);
 
   useEffect(() => {
     const timer = setInterval(() => setNowMs(Date.now()), 1000);
@@ -174,6 +210,7 @@ export function OpsDesk({
   const flagged = rows.flatMap((row) =>
     row.serviceItems.map((item) => ({
       row,
+      item,
       alert: itemAlert(item, now, clock.amberThreshold),
     })),
   );
@@ -189,6 +226,77 @@ export function OpsDesk({
     now,
   );
   const tallest = Math.max(1, ...Object.values(pending.buckets));
+
+  const alertKey = flagged.map((entry) => `${entry.item.id}:${entry.alert}`).join('|');
+
+  useEffect(() => {
+    const previous = lastAlerts.current;
+    lastAlerts.current = new Map(flagged.map((entry) => [entry.item.id, entry.alert]));
+    if (!previous) {
+      return;
+    }
+    const crossings = alertCrossings(
+      previous,
+      flagged.map((entry) => ({ id: entry.item.id, alert: entry.alert })),
+    );
+    if (crossings.length === 0) {
+      return;
+    }
+    const sentences = (level: 'RED' | 'AMBER') =>
+      crossings
+        .filter((crossing) => crossing.alert === level)
+        .map((crossing) => {
+          const entry = flagged.find((candidate) => candidate.item.id === crossing.id)!;
+          return announcement(entry.row, entry.item, level);
+        })
+        .join(' ');
+    setAnnounced((last) => ({
+      red: sentences('RED'),
+      amber: sentences('AMBER'),
+      seq: last.seq + 1,
+    }));
+    // `alertKey` changes exactly when an item's alert does; the clock ticks do not.
+  }, [alertKey]);
+
+  function serviceName(type: string): string {
+    const column = COLUMNS.find((candidate) => candidate.type === type);
+    return column ? t(`matrix.columns.${column.key}`) : type;
+  }
+
+  /** "Red alert. Booking VX-3PA8ZT, guide Osvaldo Ruiz timed out at 13:40. Press R…" */
+  function announcement(
+    row: DispatchBoardRowDto,
+    item: DispatchBoardItemDto,
+    level: 'RED' | 'AMBER',
+  ): string {
+    const values = {
+      code: row.bookingCode,
+      service: serviceName(item.serviceType),
+      worker: item.supplierName ?? t('noWorker'),
+    };
+    let sentence: string;
+    if (level === 'AMBER') {
+      const elapsed =
+        item.offeredAt && item.deadline
+          ? timerElapsed(new Date(item.offeredAt), new Date(item.deadline), now)
+          : 1;
+      sentence = t('announce.amber', {
+        ...values,
+        percent: Math.min(100, Math.round(elapsed * 100)),
+      });
+    } else if (item.status === 'DECLINED') {
+      sentence = t('announce.declined', values);
+    } else {
+      sentence = t('announce.timedOut', {
+        ...values,
+        time: item.deadline ? opsTime(item.deadline, locale) : '—',
+      });
+    }
+    const reroutable = canManage && OPEN_ITEM_STATUSES.includes(item.status);
+    return reroutable && shortcutsEnabled()
+      ? `${sentence} ${t('announce.pressR')}`
+      : sentence;
+  }
 
   function timerLabel(row: DispatchBoardRowDto): string {
     const window = resolveDispatchTimeoutMs({
@@ -207,6 +315,7 @@ export function OpsDesk({
   ) {
     setTarget({
       serviceItemId: item.id,
+      reservationId: row.reservationId,
       title: [
         service,
         row.bookingCode,
@@ -257,6 +366,8 @@ export function OpsDesk({
             size="sm"
             variant={alert === 'RED' ? 'destructive' : 'secondary'}
             className="self-start"
+            aria-label={t('redispatchFor', { service, code: row.bookingCode })}
+            data-shortcut-redispatch={alert === 'NONE' ? undefined : alert}
             onClick={() => openPanel(row, item, service)}
           >
             {t('redispatch')}
@@ -298,6 +409,7 @@ export function OpsDesk({
         </span>
         <Link
           href={`/bookings/${row.reservationId}`}
+          aria-label={t('matrix.openBooking', { code: row.bookingCode })}
           className={cn(buttonClassName({ variant: 'secondary', size: 'sm' }), 'mt-1')}
         >
           {t('matrix.open')}
@@ -308,9 +420,14 @@ export function OpsDesk({
 
   return (
     <div className="flex flex-col gap-6">
+      <div role="alert" className="sr-only">
+        {announced.red ? <p key={announced.seq}>{announced.red}</p> : null}
+      </div>
+      <div role="status" className="sr-only">
+        {announced.amber ? <p key={announced.seq}>{announced.amber}</p> : null}
+      </div>
       {red.length + amber.length > 0 ? (
         <div
-          role={red.length > 0 ? 'alert' : 'status'}
           className={cn(
             'flex flex-wrap items-center gap-3 rounded-md px-4 py-3 text-body-sm',
             red.length > 0
@@ -505,7 +622,7 @@ export function OpsDesk({
       >
         <div className="flex flex-wrap items-center gap-3 px-5 pb-3 pt-4">
           <div className="mr-auto flex flex-col gap-0.5">
-            <h2 id="matrix-title" className="font-display text-h2-compact">
+            <h2 id="matrix-title" tabIndex={-1} className="font-display text-h2-compact">
               {t('matrix.title')}
             </h2>
             <p className="text-caption text-muted">{t('matrix.description')}</p>
@@ -542,10 +659,12 @@ export function OpsDesk({
         {rows.length === 0 ? (
           <p className="px-5 pb-5 text-body-sm text-muted">{t('matrix.empty')}</p>
         ) : (
-          <Table>
+          <Table scrollClassName="scroll-ps-[11.5rem]">
             <TableHeader>
               <TableRow>
-                <TableHead scope="col">{t('matrix.booking')}</TableHead>
+                <TableHead scope="col" className="sticky left-0 z-10">
+                  {t('matrix.booking')}
+                </TableHead>
                 <TableHead scope="col">{t('matrix.timer')}</TableHead>
                 {COLUMNS.map((column) => (
                   <TableHead key={column.key} scope="col">
@@ -560,6 +679,7 @@ export function OpsDesk({
                 return (
                   <TableRow
                     key={row.reservationId}
+                    data-shortcut-row=""
                     tone={
                       alert === 'RED'
                         ? 'destructive'
@@ -568,9 +688,16 @@ export function OpsDesk({
                           : undefined
                     }
                   >
-                    <TableCell className="align-top">
-                      <div className="flex min-w-40 flex-col gap-1">
+                    <TableHead
+                      scope="row"
+                      className={cn(
+                        'sticky left-0 z-10 w-[11.5rem] min-w-[11.5rem] p-3 align-top font-normal text-default',
+                        ROW_HEADER_FILL[alert],
+                      )}
+                    >
+                      <div className="flex flex-col gap-1">
                         <Link
+                          id={`matrix-row-${row.reservationId}`}
                           href={`/bookings/${row.reservationId}`}
                           className="font-mono font-medium text-primary-600 underline-offset-4 hover:underline"
                         >
@@ -587,7 +714,7 @@ export function OpsDesk({
                           })}
                         </Tag>
                       </div>
-                    </TableCell>
+                    </TableHead>
                     <TableCell className="align-top">{timerCell(row)}</TableCell>
                     {COLUMNS.map((column) => {
                       const items = row.serviceItems.filter(
@@ -622,7 +749,10 @@ export function OpsDesk({
         clock={clock}
         target={target}
         onClose={() => setTarget(null)}
-        onOffered={() => void refresh()}
+        onOffered={() => {
+          restoreFocusTo.current = target?.reservationId ?? null;
+          void refresh();
+        }}
       />
     </div>
   );

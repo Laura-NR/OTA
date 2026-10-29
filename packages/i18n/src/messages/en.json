@@ -1025,7 +1025,8 @@
         "serviceWorker": "Worker",
         "traveler": "Traveler"
       },
-      "passkeys": "Passkeys"
+      "passkeys": "Passkeys",
+      "skip": "Skip to content"
     },
     "paymentsLedger": {
       "title": "Payments",
@@ -2006,7 +2007,8 @@
         "timer": "Timer",
         "open": "Open",
         "started": "{timer} · started {time}",
-        "rule": "Timer: {standard} standard, {short} when arrival is under {window} h. Amber at {amber} %, red at 100 % or on decline. A re-dispatch restarts the timer for the new worker only; the booking keeps its original clock."
+        "rule": "Timer: {standard} standard, {short} when arrival is under {window} h. Amber at {amber} %, red at 100 % or on decline. A re-dispatch restarts the timer for the new worker only; the booking keeps its original clock.",
+        "openBooking": "Open {code}"
       },
       "status": {
         "offered": "Offered · {elapsed}",
@@ -2046,7 +2048,9 @@
         "offerFailed": "The offer could not be sent.",
         "acceptance": "{rate} % acceptance",
         "noAnswers": "No answered offers yet",
-        "belowFloor": "Below {floor} % · manual only"
+        "belowFloor": "Below {floor} % · manual only",
+        "offerTo": "{offer} to {name}",
+        "callWorker": "Call {name}"
       },
       "tasks": {
         "title": "Tasks for the desk",
@@ -2071,6 +2075,13 @@
           "body": "Unanswered for over {hours} h. Say whether the seats can be requested, or mark them unavailable.",
           "action": "Answer"
         }
+      },
+      "redispatchFor": "Re-dispatch {service} · {code}",
+      "announce": {
+        "timedOut": "Red alert. Booking {code}: {service}, {worker}, timed out at {time}.",
+        "declined": "Red alert. Booking {code}: {service}, {worker}, declined.",
+        "amber": "Amber. Booking {code}: {service}, {worker}, at {percent} % of the timer.",
+        "pressR": "Press R to re-dispatch."
       }
     },
     "messages": {
@@ -2808,6 +2819,52 @@
       "changeNote": "Adding, renaming or removing a passkey needs a passkey sign-in, and each change is emailed to you.",
       "back": "Back to the desk",
       "failed": "That did not work. Try again."
+    },
+    "shortcuts": {
+      "open": "Keyboard shortcuts",
+      "title": "Keyboard shortcuts",
+      "description": "Move around the desk without the mouse.",
+      "close": "Close",
+      "switch": "Single-key shortcuts",
+      "switchHint": "On for this device. Turn them off if you use speech input or press keys by accident.",
+      "columns": {
+        "keys": "Keys",
+        "does": "Does",
+        "where": "Where"
+      },
+      "then": "then",
+      "rows": {
+        "redispatch": "Open re-dispatch for the red or amber row that has focus",
+        "dashboard": "Go to the Dashboard",
+        "bookings": "Go to Bookings",
+        "payments": "Go to Payments",
+        "close": "Close the open panel or dialog; focus goes back to what opened it",
+        "help": "Show this list"
+      },
+      "where": {
+        "redispatch": "Dashboard matrix, a booking's services",
+        "everywhere": "Everywhere"
+      },
+      "typing": "Shortcuts never fire while you type in a field or hold Ctrl, Cmd or Alt."
+    },
+    "unavailable": {
+      "fillIn": "Fill in “{field}” first.",
+      "minLength": "Write at least {min} characters in “{field}” first.",
+      "disruptionCase": "Choose a scenario and fill in the title and summary first.",
+      "packageItems": "Choose at least one catalog item first.",
+      "packageRows": "Keep at least one service in the itinerary.",
+      "chooseItem": "Choose an item to add first.",
+      "importMapping": "Map every required column first.",
+      "eventIssues": "Resolve the issues listed on this page first.",
+      "proposalIncomplete": "Fill in the summary and every price line, stop, day and option first.",
+      "thresholdsChange": "Change at least one value first.",
+      "secondApprover": "You approved this; it needs a second approver.",
+      "missingTranslations": "Add the missing translations first: {list}.",
+      "seatsPrice": "Enter a valid price first.",
+      "seatsBooking": "Choose the booking first.",
+      "chooseBookings": "Choose at least one booking first.",
+      "disruptionOptions": "Add at least one option first.",
+      "limit": "You can add up to {max}."
     }
   },
   "conditions": {

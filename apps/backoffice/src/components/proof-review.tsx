@@ -29,6 +29,7 @@ export function ProofReview({
   canManage: boolean;
 }) {
   const t = useTranslations('backoffice.payments');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
   const track = useDeskTelemetry();
   const [rejecting, setRejecting] = useState(false);
@@ -96,7 +97,10 @@ export function ProofReview({
               type="submit"
               size="sm"
               variant="destructive"
-              disabled={busy || !note.trim()}
+              disabled={busy}
+              unavailableReason={
+                note.trim() ? undefined : why('fillIn', { field: t('rejectNote') })
+              }
             >
               {t('rejectSend')}
             </Button>

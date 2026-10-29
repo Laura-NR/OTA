@@ -72,6 +72,7 @@ function guessMapping(columns: string[]): Record<string, string> {
 
 export function ImportWizard() {
   const t = useTranslations('backoffice.importWizard');
+  const why = useTranslations('backoffice.unavailable');
   const track = useDeskTelemetry();
   const [preview, setPreview] = useState<ImportPreviewDto | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -225,9 +226,15 @@ export function ImportWizard() {
             </TableBody>
           </Table>
 
-          <Button onClick={onCommit} disabled={busy === 'commit' || missingRequired}>
-            {busy === 'commit' ? t('committing') : t('commit')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              onClick={onCommit}
+              disabled={busy === 'commit'}
+              unavailableReason={missingRequired ? why('importMapping') : undefined}
+            >
+              {busy === 'commit' ? t('committing') : t('commit')}
+            </Button>
+          </div>
         </div>
       ) : null}
 

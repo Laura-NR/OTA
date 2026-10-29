@@ -39,6 +39,7 @@ function useStaffAction() {
  */
 export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boolean }) {
   const t = useTranslations('backoffice.settings.users');
+  const why = useTranslations('backoffice.unavailable');
   const id = useId();
   const { run, busy, error } = useStaffAction();
   const [resetting, setResetting] = useState(false);
@@ -130,12 +131,17 @@ export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boo
               />
             )}
           </Field>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="submit"
               size="sm"
               variant="destructive"
-              disabled={busy || reason.trim().length < 3}
+              disabled={busy}
+              unavailableReason={
+                reason.trim().length < 3
+                  ? why('minLength', { min: 3, field: t('resetReason') })
+                  : undefined
+              }
             >
               {t('resetConfirm')}
             </Button>
@@ -211,6 +217,7 @@ export function InviteActions({
 export function InviteForm({ allowedDomains }: { allowedDomains: readonly string[] }) {
   const t = useTranslations('backoffice.settings.invites');
   const roles = useTranslations('backoffice.settings.users.roles');
+  const why = useTranslations('backoffice.unavailable');
   const id = useId();
   const { run, busy, error } = useStaffAction();
   const [email, setEmail] = useState('');
@@ -265,8 +272,14 @@ export function InviteForm({ allowedDomains }: { allowedDomains: readonly string
         </Field>
       </div>
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      <div>
-        <Button type="submit" disabled={busy || email.trim() === ''}>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          disabled={busy}
+          unavailableReason={
+            email.trim() === '' ? why('fillIn', { field: t('email') }) : undefined
+          }
+        >
           {t('send')}
         </Button>
       </div>

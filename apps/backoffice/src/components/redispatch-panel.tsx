@@ -11,6 +11,8 @@ import type { DeskClock } from '@/lib/desk-clock';
 
 export interface RedispatchTarget {
   serviceItemId: string;
+  /** The booking the item belongs to, where the caller needs it back. */
+  reservationId?: string;
   /** "Guide · E2E0001 · 1–5 May 2027 · La Habana": what is being re-dispatched. */
   title: string;
   /** "2 h timer" or "30 min timer": the window a new offer gets. */
@@ -34,6 +36,8 @@ export interface RedispatchPanelProps {
  * leaves out licences within 30 days of expiry), each with their acceptance
  * rate, an offer and a call button. A worker below the reliability floor is
  * flagged: auto-dispatch skips them, but the desk may still offer the job.
+ * It opens with focus on its title and gives it back to the button that
+ * opened it (A-A11y 02); offer buttons carry the worker's name.
  */
 export function RedispatchPanel({
   target,
@@ -99,6 +103,7 @@ export function RedispatchPanel({
     <Drawer
       open={target !== null}
       onClose={onClose}
+      focusTitle
       title={target ? t('title', { what: target.title }) : ''}
       closeLabel={t('close')}
     >
@@ -158,6 +163,14 @@ export function RedispatchPanel({
                     size="sm"
                     loading={busyId === candidate.supplierId}
                     disabled={busyId !== null}
+                    aria-label={
+                      busyId === candidate.supplierId
+                        ? undefined
+                        : t('offerTo', {
+                            offer: t('offer', { timer: target?.timerLabel ?? '' }),
+                            name: candidate.fullName ?? '—',
+                          })
+                    }
                     onClick={() => void offer(candidate.supplierId, index + 1)}
                   >
                     {busyId === candidate.supplierId
@@ -166,6 +179,7 @@ export function RedispatchPanel({
                   </Button>
                   <a
                     href={`tel:${candidate.primaryPhone}`}
+                    aria-label={t('callWorker', { name: candidate.fullName ?? '—' })}
                     className={buttonClassName({ variant: 'secondary', size: 'sm' })}
                   >
                     <Icon name="phone" />

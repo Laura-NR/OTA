@@ -37,6 +37,7 @@ export function DisruptionCreateForm({
   provinces: { code: string; name: string }[];
 }) {
   const t = useTranslations('disruptionsDesk');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
   const [scenario, setScenario] = useState(scenarios[0]?.key ?? '');
   const [severity, setSeverity] = useState<DisruptionSeverity>('MINOR');
@@ -148,10 +149,15 @@ export function DisruptionCreateForm({
       </Field>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
         <Button
           type="submit"
-          disabled={busy || !scenario || !title.trim() || !summary.trim()}
+          disabled={busy}
+          unavailableReason={
+            !scenario || !title.trim() || !summary.trim()
+              ? why('disruptionCase')
+              : undefined
+          }
         >
           {t('form.open')}
         </Button>

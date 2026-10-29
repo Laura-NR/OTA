@@ -43,6 +43,7 @@ export function ThresholdsProposal({
   staffWithoutPasskey,
 }: ThresholdsProposalProps) {
   const t = useTranslations('backoffice.settings.thresholds');
+  const why = useTranslations('backoffice.unavailable');
   const units = useTranslations('backoffice.settings.thresholds.units');
   const levels = useTranslations('advisoriesDesk.severities');
   const locale = useLocale();
@@ -252,10 +253,17 @@ export function ThresholdsProposal({
       </p>
       {passkeyWarning(values)}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           type="submit"
-          disabled={pendingAction || changes.length === 0 || reason.trim().length < 3}
+          disabled={pendingAction}
+          unavailableReason={
+            changes.length === 0
+              ? why('thresholdsChange')
+              : reason.trim().length < 3
+                ? why('minLength', { min: 3, field: t('reason') })
+                : undefined
+          }
         >
           {t('propose')}
         </Button>

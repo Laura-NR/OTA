@@ -1025,7 +1025,8 @@
         "serviceWorker": "Colaborador",
         "traveler": "Viajero"
       },
-      "passkeys": "Llaves de acceso"
+      "passkeys": "Llaves de acceso",
+      "skip": "Saltar al contenido"
     },
     "paymentsLedger": {
       "title": "Pagos",
@@ -2006,7 +2007,8 @@
         "timer": "Plazo",
         "open": "Abrir",
         "started": "{timer} · iniciado {time}",
-        "rule": "Plazo: {standard} normal, {short} si la llegada es en menos de {window} h. Ámbar al {amber} %, rojo al 100 % o al rechazar. Un redespacho reinicia el plazo solo para el nuevo trabajador; la reserva conserva su reloj original."
+        "rule": "Plazo: {standard} normal, {short} si la llegada es en menos de {window} h. Ámbar al {amber} %, rojo al 100 % o al rechazar. Un redespacho reinicia el plazo solo para el nuevo trabajador; la reserva conserva su reloj original.",
+        "openBooking": "Abrir {code}"
       },
       "status": {
         "offered": "Ofrecido · {elapsed}",
@@ -2046,7 +2048,9 @@
         "offerFailed": "No se pudo enviar la oferta.",
         "acceptance": "{rate} % de aceptación",
         "noAnswers": "Aún sin ofertas respondidas",
-        "belowFloor": "Bajo el {floor} % · solo manual"
+        "belowFloor": "Bajo el {floor} % · solo manual",
+        "offerTo": "{offer} a {name}",
+        "callWorker": "Llamar a {name}"
       },
       "tasks": {
         "title": "Tareas del mostrador",
@@ -2071,6 +2075,13 @@
           "body": "Sin respuesta desde hace más de {hours} h. Indique si las entradas se pueden pedir o márquelas como no disponibles.",
           "action": "Responder"
         }
+      },
+      "redispatchFor": "Redespachar {service} · {code}",
+      "announce": {
+        "timedOut": "Alerta roja. Reserva {code}: {service}, {worker}, agotó el tiempo a las {time}.",
+        "declined": "Alerta roja. Reserva {code}: {service}, {worker}, rechazó.",
+        "amber": "Ámbar. Reserva {code}: {service}, {worker}, al {percent} % del temporizador.",
+        "pressR": "Pulsa R para redespachar."
       }
     },
     "messages": {
@@ -2808,6 +2819,52 @@
       "changeNote": "Añadir, renombrar o quitar una llave exige entrar con una llave de acceso, y cada cambio se le notifica por correo.",
       "back": "Volver a la mesa",
       "failed": "No funcionó. Inténtelo de nuevo."
+    },
+    "shortcuts": {
+      "open": "Atajos de teclado",
+      "title": "Atajos de teclado",
+      "description": "Muévete por la mesa sin el ratón.",
+      "close": "Cerrar",
+      "switch": "Atajos de una sola tecla",
+      "switchHint": "Activados en este dispositivo. Desactívalos si usas entrada por voz o pulsas teclas sin querer.",
+      "columns": {
+        "keys": "Teclas",
+        "does": "Hace",
+        "where": "Dónde"
+      },
+      "then": "luego",
+      "rows": {
+        "redispatch": "Abrir el redespacho de la fila roja o ámbar que tiene el foco",
+        "dashboard": "Ir al panel",
+        "bookings": "Ir a Reservas",
+        "payments": "Ir a Pagos",
+        "close": "Cerrar el panel o diálogo abierto; el foco vuelve a lo que lo abrió",
+        "help": "Mostrar esta lista"
+      },
+      "where": {
+        "redispatch": "Matriz del panel, servicios de una reserva",
+        "everywhere": "En todas partes"
+      },
+      "typing": "Los atajos nunca se activan mientras escribes en un campo o mantienes Ctrl, Cmd o Alt."
+    },
+    "unavailable": {
+      "fillIn": "Rellena «{field}» primero.",
+      "minLength": "Escribe al menos {min} caracteres en «{field}» primero.",
+      "disruptionCase": "Elige un escenario y rellena el título y el resumen primero.",
+      "packageItems": "Elige al menos un elemento del catálogo primero.",
+      "packageRows": "Deja al menos un servicio en el itinerario.",
+      "chooseItem": "Elige primero un elemento para añadir.",
+      "importMapping": "Asigna primero todas las columnas obligatorias.",
+      "eventIssues": "Resuelve primero los problemas indicados en esta página.",
+      "proposalIncomplete": "Rellena primero el resumen y cada línea de precio, parada, día y opción.",
+      "thresholdsChange": "Cambia al menos un valor primero.",
+      "secondApprover": "Ya lo aprobaste; necesita la aprobación de otra persona.",
+      "missingTranslations": "Añade primero las traducciones que faltan: {list}.",
+      "seatsPrice": "Introduce primero un precio válido.",
+      "seatsBooking": "Elige primero la reserva.",
+      "chooseBookings": "Elige al menos una reserva primero.",
+      "disruptionOptions": "Añade al menos una opción primero.",
+      "limit": "Puedes añadir hasta {max}."
     }
   },
   "conditions": {
