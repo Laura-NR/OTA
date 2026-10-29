@@ -56,11 +56,13 @@ export {
 export {
   AGING_BUCKETS,
   agingBucket,
+  alertCrossings,
   isAwaitingWorker,
   pendingConfirmations,
   serviceItemAlert,
   timerElapsed,
   type AgingBucketId,
+  type AlertCrossing,
   type PendingBooking,
   type PendingConfirmations,
   type ServiceItemClock,

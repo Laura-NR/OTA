@@ -105,3 +105,33 @@ export function serviceItemAlert({
   }
   return 'NONE';
 }
+
+const ALERT_RANK: Readonly<Record<EscalationAlert, number>> = {
+  NONE: 0,
+  AMBER: 1,
+  RED: 2,
+};
+
+/** An item whose alert rose to `alert` since the desk last looked. */
+export interface AlertCrossing {
+  id: string;
+  alert: Exclude<EscalationAlert, 'NONE'>;
+}
+
+/**
+ * The threshold crossings between two looks at the board (A-A11y 01): an item
+ * entering amber or red, or going from amber to red. An item the previous look
+ * did not have counts as having had no alert, so a booking that joins the board
+ * already red is a crossing. Staying at a level, falling back (a new offer
+ * restarts the clock) or leaving the board is not, so timer ticks never are.
+ */
+export function alertCrossings(
+  previous: ReadonlyMap<string, EscalationAlert>,
+  current: ReadonlyArray<{ id: string; alert: EscalationAlert }>,
+): AlertCrossing[] {
+  return current.flatMap(({ id, alert }) =>
+    alert !== 'NONE' && ALERT_RANK[alert] > ALERT_RANK[previous.get(id) ?? 'NONE']
+      ? [{ id, alert }]
+      : [],
+  );
+}

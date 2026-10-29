@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ServiceItemStatus,
   agingBucket,
+  alertCrossings,
   bookingMix,
   isAwaitingWorker,
   monthRange,
@@ -108,6 +109,52 @@ describe('serviceItemAlert', () => {
     for (const status of ['ACCEPTED', 'FULFILLED', 'UNASSIGNED'] as const) {
       expect(serviceItemAlert({ status, offeredAt, deadline, now: NOW })).toBe('NONE');
     }
+  });
+});
+
+describe('alertCrossings (A-A11y 01: announce threshold crossings only)', () => {
+  const look = (entries: Record<string, 'NONE' | 'AMBER' | 'RED'>) =>
+    new Map(Object.entries(entries));
+
+  it('reports an item entering amber or red, and amber turning red', () => {
+    expect(
+      alertCrossings(look({ a: 'NONE', b: 'NONE', c: 'AMBER' }), [
+        { id: 'a', alert: 'AMBER' },
+        { id: 'b', alert: 'RED' },
+        { id: 'c', alert: 'RED' },
+      ]),
+    ).toEqual([
+      { id: 'a', alert: 'AMBER' },
+      { id: 'b', alert: 'RED' },
+      { id: 'c', alert: 'RED' },
+    ]);
+  });
+
+  it('stays quiet while an item holds its level, so timer ticks are never announced', () => {
+    expect(
+      alertCrossings(look({ a: 'AMBER', b: 'RED', c: 'NONE' }), [
+        { id: 'a', alert: 'AMBER' },
+        { id: 'b', alert: 'RED' },
+        { id: 'c', alert: 'NONE' },
+      ]),
+    ).toEqual([]);
+  });
+
+  it('does not report falling back; rising again after a new offer is a new crossing', () => {
+    expect(alertCrossings(look({ a: 'RED' }), [{ id: 'a', alert: 'NONE' }])).toEqual([]);
+    expect(alertCrossings(look({ a: 'RED' }), [{ id: 'a', alert: 'AMBER' }])).toEqual([]);
+    expect(alertCrossings(look({ a: 'NONE' }), [{ id: 'a', alert: 'AMBER' }])).toEqual([
+      { id: 'a', alert: 'AMBER' },
+    ]);
+  });
+
+  it('treats an item new to the board as having had no alert', () => {
+    expect(
+      alertCrossings(look({}), [
+        { id: 'new-red', alert: 'RED' },
+        { id: 'new-quiet', alert: 'NONE' },
+      ]),
+    ).toEqual([{ id: 'new-red', alert: 'RED' }]);
   });
 });
 
