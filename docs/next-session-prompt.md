@@ -72,7 +72,9 @@ authenticator. Earlier (2026-10-25): server-side T-Events. Not built: SMS/push, 
 install (the owner's VPS; plan approved), the worker events (offer_viewed etc.; no worker app), desk
 page views (counsel on staff analytics), gallery_opened (no gallery viewer), queued offline
 writes, M9's other deferred items (recovery codes, permission overrides, display currencies,
-runtime flags, idle lock, IP allowlist, new-device email), passkeys for travelers and suppliers,
+runtime flags, idle lock, IP allowlist, new-device email), the desk's audio cue, acknowledge (`A`)
+and mute, `/` (no desk search), a real screen-reader run, the storefront's manual pass (no skip
+link there), passkeys for travelers and suppliers,
 M10's room holds and event photos.
 Placeholders: the M4/M5 terms, the builder's rates, the crisis framework, the backup-power
 wording, the concierge fee and events copy, card fee 0 % until counsel rules. PASSPORT_ENCRYPTION_KEY is set in apps/api/.env and verified (never print, read or
@@ -98,7 +100,7 @@ manual accessibility pass on the desk, with the audio cue/acknowledge/mute defer
 
 TASK 0 — The dev stack was left running for the owner (with TELEMETRY_SINK_FILE and raised rate
 limits); stop it (signal turbo) before any verify and restart it at the end. Last session's full
-verify (the Plausible hosting plan) is in the handoff.
+verify (the desk accessibility pass) is in the handoff.
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
 recommendation: the same manual pass on the storefront's DS 02–05 annotations (buildable now: no
@@ -154,8 +156,8 @@ total), the M5 sample terms (planning fee, validity, response hours), the pricin
 (child bands, fees), counsel's review of the legal texts, the OFAC categories, the card
 surcharge, the deposit's refundability and proof retention, the passport-key backup; the M10
 concierge fee and events copy (and whether a regenerated invoice suffices when seats are added
-later); the AGENTS.md §C lines proposed in the
-handoff (owner edit).
+later); what acknowledging a desk alert means (one person or the whole desk; is the mute an audit
+entry?); the AGENTS.md §C lines proposed in the handoff (owner edit).
 
 KNOWN TRAPS: see docs/handoff/vereda.md Traps. Desk keyboard pass (2026-10-29): Playwright's
 press('Shift+/') sends '/', use press('?'); the matrix row has "Open <code>" beside the code link,
