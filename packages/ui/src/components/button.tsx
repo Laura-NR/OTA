@@ -7,7 +7,10 @@ import { Icon } from './icon';
 /** DS 02: one primary per view; destructive actions sit behind a confirm step. */
 export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'link';
 
-/** 32 / 40 / 48 px, plus a 44 px square for icon-only buttons (aria-label required). */
+/**
+ * 32 / 40 / 48 px, plus a 44 px square for icon-only buttons (aria-label
+ * required). On a touch screen md grows to 44 px (DS 02).
+ */
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -37,12 +40,12 @@ const variants: Record<ButtonVariant, string> = {
     'border-input bg-surface text-primary-700 hover:bg-neutral-100 active:bg-neutral-200',
   tertiary: 'bg-transparent text-primary-600 hover:bg-primary-100',
   destructive: 'bg-error-600 text-neutral-0 hover:bg-error-700',
-  link: 'h-auto bg-transparent px-0 text-primary-600 underline underline-offset-[3px] hover:text-primary-700 disabled:bg-transparent aria-disabled:bg-transparent',
+  link: 'h-auto bg-transparent px-0 pointer-coarse:min-h-0 text-primary-600 underline underline-offset-[3px] hover:text-primary-700 disabled:bg-transparent aria-disabled:bg-transparent',
 };
 
 const sizes: Record<ButtonSize, string> = {
   sm: 'h-8 px-3 text-body-sm font-semibold',
-  md: 'h-10 px-4',
+  md: 'h-10 px-4 pointer-coarse:min-h-touch',
   lg: 'h-12 px-5',
   icon: 'h-touch w-touch px-0',
 };

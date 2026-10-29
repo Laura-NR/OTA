@@ -68,6 +68,11 @@ export const TYPE_SCALE = {
 
 const preset = {
   darkMode: ['class'],
+  plugins: [
+    // A touch screen (DS 02, DS 05): md controls grow to the 44 px target.
+    // Named as Tailwind 4 names its built-in variant.
+    ({ addVariant }) => addVariant('pointer-coarse', '@media (pointer: coarse)'),
+  ],
   theme: {
     // DS 07 breakpoints (`--bp-*`); mobile first, no 2xl.
     screens: { sm: '480px', md: '768px', lg: '1024px', xl: '1280px' },

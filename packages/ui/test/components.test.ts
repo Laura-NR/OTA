@@ -6,13 +6,14 @@ import { describe, expect, it } from 'vitest';
 import { AccordionItem } from '../src/components/accordion';
 import { Alert } from '../src/components/alert';
 import { Badge } from '../src/components/badge';
-import { Button } from '../src/components/button';
+import { Button, buttonClassName } from '../src/components/button';
 import { Counter, clampCount } from '../src/components/counter';
 import { CrisisBanner } from '../src/components/crisis-banner';
 import { Dialog } from '../src/components/dialog';
 import { Drawer } from '../src/components/drawer';
 import { Field } from '../src/components/field';
 import { Input } from '../src/components/input';
+import { Select } from '../src/components/select';
 import { Stepper } from '../src/components/stepper';
 import { Table, TableRow } from '../src/components/table';
 import { Tabs, nextTabIndex } from '../src/components/tabs';
@@ -91,6 +92,22 @@ describe('Button', () => {
     const ready = html(createElement(Button, { unavailableReason: '' }, 'Save'));
     expect(ready).not.toContain('aria-disabled="');
     expect(ready).not.toContain('aria-describedby');
+  });
+  it('grows md to the 44 px target on a touch screen, but not a text link (DS 02)', () => {
+    expect(buttonClassName().split(' ')).toContain('pointer-coarse:min-h-touch');
+    expect(buttonClassName({ size: 'lg' })).not.toContain('pointer-coarse:');
+    const link = buttonClassName({ variant: 'link' }).split(' ');
+    expect(link).toContain('pointer-coarse:min-h-0');
+    expect(link).not.toContain('pointer-coarse:min-h-touch');
+  });
+});
+
+describe('Text fields', () => {
+  it('reach the 44 px target on a touch screen (DS 05)', () => {
+    expect(html(createElement(Input))).toContain('pointer-coarse:min-h-touch');
+    expect(html(createElement(Select, null, createElement('option')))).toContain(
+      'pointer-coarse:min-h-touch',
+    );
   });
 });
 
