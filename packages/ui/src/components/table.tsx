@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import type {
   HTMLAttributes,
+  ReactNode,
   TableHTMLAttributes,
   TdHTMLAttributes,
   ThHTMLAttributes,
@@ -115,3 +116,113 @@ export const TableCell = forwardRef<
   <td ref={ref} className={cn('p-3 align-middle', className)} {...props} />
 ));
 TableCell.displayName = 'TableCell';
+
+export interface ResponsiveTableColumn {
+  /** The header, and the label beside each of this column's values on a phone. */
+  label: ReactNode;
+  /** Classes for this column's header and cells from sm up, e.g. `text-right`. */
+  className?: string;
+  /** Classes for this column's cells only, e.g. `font-mono`. */
+  cellClassName?: string;
+}
+
+export interface ResponsiveTableRow {
+  key: string;
+  /** One per column; the first is the row's key field. */
+  cells: ReactNode[];
+}
+
+export interface ResponsiveTableProps {
+  columns: ResponsiveTableColumn[];
+  rows: ResponsiveTableRow[];
+  caption?: ReactNode;
+  scrollRegionLabel?: string;
+  className?: string;
+}
+
+/**
+ * A data table whose rows become stacked cards under sm (DS 05 "Data tables",
+ * DS-Responsive "Tables"): the first cell leads each card as its key field and
+ * the others follow as label : value pairs, so a phone never scrolls the table
+ * sideways. From sm up it is the plain table. The roles are explicit because
+ * some browsers drop a table's semantics once its display changes, and the
+ * phone labels are hidden from assistive technology, which keeps the headers.
+ */
+export function ResponsiveTable({
+  columns,
+  rows,
+  caption,
+  scrollRegionLabel,
+  className,
+}: ResponsiveTableProps) {
+  return (
+    <Table
+      role="table"
+      scrollRegionLabel={scrollRegionLabel}
+      className={cn('max-sm:block', className)}
+    >
+      {caption ? (
+        <caption className="caption-top px-3 py-2.5 text-left text-body font-semibold text-default max-sm:block">
+          {caption}
+        </caption>
+      ) : null}
+      <TableHeader role="rowgroup" className="max-sm:sr-only">
+        <TableRow role="row">
+          {columns.map((column, index) => (
+            <TableHead
+              key={index}
+              role="columnheader"
+              scope="col"
+              className={column.className}
+            >
+              {column.label}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody role="rowgroup" className="max-sm:block">
+        {rows.map((row) => (
+          <TableRow
+            key={row.key}
+            role="row"
+            className="max-sm:flex max-sm:flex-col max-sm:gap-2 max-sm:p-3"
+          >
+            {row.cells.map((cell, index) =>
+              index === 0 ? (
+                <TableCell
+                  key={index}
+                  role="cell"
+                  className={cn(
+                    columns[index]?.className,
+                    columns[index]?.cellClassName,
+                    'max-sm:p-0 max-sm:text-left max-sm:text-body max-sm:font-semibold',
+                  )}
+                >
+                  {cell}
+                </TableCell>
+              ) : (
+                <TableCell
+                  key={index}
+                  role="cell"
+                  className={cn(
+                    columns[index]?.className,
+                    columns[index]?.cellClassName,
+                    'max-sm:grid max-sm:grid-cols-[minmax(6rem,2fr)_3fr] max-sm:gap-x-4 max-sm:p-0 max-sm:text-left',
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="whitespace-normal font-sans text-secondary sm:hidden"
+                  >
+                    {columns[index]?.label}
+                  </span>
+                  <span className="min-w-0">{cell}</span>
+                </TableCell>
+              ),
+            )}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}

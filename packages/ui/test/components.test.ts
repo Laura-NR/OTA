@@ -15,7 +15,7 @@ import { Field } from '../src/components/field';
 import { Input } from '../src/components/input';
 import { Select } from '../src/components/select';
 import { Stepper } from '../src/components/stepper';
-import { Table, TableRow } from '../src/components/table';
+import { ResponsiveTable, Table, TableRow } from '../src/components/table';
 import { Tabs, nextTabIndex } from '../src/components/tabs';
 import { isTypingTarget, resolveShortcut } from '../src/shortcuts';
 
@@ -187,6 +187,32 @@ describe('Table', () => {
     const plain = html(createElement(Table));
     expect(plain).not.toContain('role="region"');
     expect(plain).not.toContain('tabindex');
+  });
+});
+
+describe('ResponsiveTable (DS 05 data tables)', () => {
+  const markup = html(
+    createElement(ResponsiveTable, {
+      scrollRegionLabel: 'Itinerary · table',
+      columns: [{ label: 'Service' }, { label: 'Ends', className: 'text-right' }],
+      rows: [{ key: 'a', cells: ['Stay', '12 Oct'] }],
+    }),
+  );
+
+  it('keeps table semantics explicit, since a stacked layout changes display', () => {
+    for (const role of ['table', 'rowgroup', 'row', 'columnheader', 'cell']) {
+      expect(markup).toContain(`role="${role}"`);
+    }
+    expect(markup).toContain('max-sm:sr-only');
+  });
+
+  it('labels each value but the key field on a phone, hidden from assistive technology', () => {
+    expect(markup.match(/aria-hidden="true"[^>]*>Ends</g)).toHaveLength(1);
+    expect(markup).not.toMatch(/aria-hidden="true"[^>]*>Service</);
+  });
+
+  it('keeps a column alignment from sm up only', () => {
+    expect(markup).toMatch(/<td[^>]*class="[^"]*text-right[^"]*max-sm:text-left/);
   });
 });
 

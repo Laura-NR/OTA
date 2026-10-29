@@ -45,6 +45,7 @@ export type { StepperProps, StepperStep, StepState } from './components/stepper'
 export { Switch } from './components/switch';
 export type { SwitchProps } from './components/switch';
 export {
+  ResponsiveTable,
   Table,
   TableBody,
   TableCell,
@@ -52,7 +53,14 @@ export {
   TableHeader,
   TableRow,
 } from './components/table';
-export type { TableProps, TableRowProps, TableRowTone } from './components/table';
+export type {
+  ResponsiveTableColumn,
+  ResponsiveTableProps,
+  ResponsiveTableRow,
+  TableProps,
+  TableRowProps,
+  TableRowTone,
+} from './components/table';
 export { nextTabIndex, Tabs } from './components/tabs';
 export type { TabItem, TabsProps } from './components/tabs';
 export { Textarea } from './components/textarea';
