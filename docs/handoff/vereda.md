@@ -171,7 +171,10 @@ events (T-Events)".
   (`[ds07-320]` the 404's body read 16 px, `[ds07-768]` a `page.goto` timeout on an event
   page, as in earlier sessions); no storefront code changed. Rerun alone with the leftovers
   killed by PID and `.next` deleted: **2/2**. Skips: the desk at 320/375/414.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
+  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
+  advisories,disruptions,events}.integration.test.ts` and
+  `{dispatch,compliance}.bullmq.integration.test.ts`.
 - Browser (dev stack, Chromium): the dashboard with a red alert at 390, 1024 and 1280:
   screenshots of the strip (counts, audio line, Turn on sound, Mute 15 min), the muted strip
   with Unmute, the row's Acknowledge and "Acknowledged · <name> · <time>", the toast; computed
@@ -394,11 +397,48 @@ events (T-Events)".
   `process.on('SIGTERM')` listener attached.
 - The shell defaults to Node 20: run `nvm use` before every pnpm call (Nest is 12.0.3).
 - The dev API runs under `node --watch`, so editing `apps/api/src` restarts it mid-session.
-- The M8, M7 and earlier traps still apply (keyed forms after `router.refresh()`; two table rows
-  per status-board booking; `/disruptions/alerts` before `/:id`; rebuild a workspace package
-  before the dev servers see it; `.next` after a build; `getByLabel` needs `exact`; no
-  `prisma format`; append-only affidavits; ICU spaces; `pgrep -f` matches the calling shell;
-  filter Mailpit by booking code; to stop `pnpm dev`, signal `@turbo/linux-64/bin/turbo run dev`).
+- **Deployment:** never run the demo seed outside dev (it creates Super Admins); generated
+  PDFs are on local disk (`DOCUMENTS_DIR`), not S3. A desk component must not send
+  `booking_state_changed` (`wrong_surface`).
+- **M8:** the disruption e2e owns booking E2EDIS01 and every case titled "E2E outage…" (it
+  deletes their audit rows first); a desk form that seeds its state from props is keyed by
+  the data it lists (`router.refresh()` keeps client state); each status-board booking renders
+  two table rows (data, then actions), so e2e takes `.first()`; `/disruptions/alerts` is
+  declared before `/:id`.
+- **M7:** public advisory routes stay declared before `/:id`; the advisory e2e owns
+  `advisory-ops-e2e@example.test`, booking E2EADV01 and every advisory headed "E2E storm
+  watch"; a leftover published critical advisory adds a second "Travel advisory" region to
+  every storefront page; the desk editor's two-column layout needs xl.
+- **M6 extras:** its cases are in Matanzas, away from the seeded Pinar del Río suppliers; the
+  Packages filter label renders twice (aside and hidden drawer).
+- **M5:** `Proposal.acceptedVersionId` is unique (one-to-one); `ProposalsService` imports
+  `Prisma` as a value for `PrismaClientKnownRequestError`; the retention fake needs
+  `customRequest`/`proposalVersion` stubs; the M5 e2e owns a CustomRequest/Proposal/
+  Reservation and deletes their audit rows first; the storefront-builder spec drives the
+  whole M5 flow (no booking directly from `/custom`); proposal documents are validated by
+  `proposalDocumentSchema`, so never write arbitrary JSON.
+- **General:** ICU spaces break hydration (ops-format helpers and a `serverNow` prop);
+  next-server processes survive `pkill -f 'next dev'` (kill by PID); tenant tokens sit on
+  `<html>`; `cn()` from `@ota/ui`, with new type sizes registered in `cn.ts`; e2e `signIn()`
+  lands on `/dashboard`; `getByLabel`/`getByText` match case-insensitive substrings (use
+  `{ exact: true }` on shared words); Tailwind emits only literal class names; never import
+  values from a `'use client'` module into a server component; rebuild a changed workspace
+  package before the dev server sees it, and delete `apps/*/.next` after a build or a route
+  move; API tests that depend on tenant values override `TENANT_CONFIG`; a live single test
+  needs the workspace packages built first; an env variable set on `pnpm dev` reaches the
+  apps only if turbo.json's dev task passes it through; an unset passport key → 503; never
+  run `prisma format`; `traveler_affidavits` rows can be deleted but never updated;
+  storefront client components take Intl-formatted text from the server or
+  `plainSpaces(formatMoney())`; booking stamps the lead's nationality and phone, so e2e
+  fixtures on traveler@example.test restore them; a `git rm` stays staged for the next
+  commit; `json.dump` reformats the tenant manifest, so insert its keys as text; a balance
+  due date is a UTC calendar day (`calendarDate`); Playwright's signal handlers are off in
+  `@ota/documents` (the SIGTERM hang fix); to stop `pnpm dev`, signal
+  `@turbo/linux-64/bin/turbo run dev`, not the top pnpm, and `pgrep -f "turbo run dev"`
+  matches the calling shell; the `en` locale formats US dates in e2e expectations;
+  `page.request` resolves relative URLs against the back-office (prefix storefront links);
+  the notification scans mail every matching dev booking (filter Mailpit by booking code);
+  a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
   - "2026-10-29: storefront touch sizes use the preset's `pointer-coarse:` variant
@@ -490,7 +530,14 @@ events (T-Events)".
    card surcharge, deposit refundability and proof retention, the passport-key backup, the
    backup-power wording, the staff email domain, `PASSKEY_RP_ID` with the deploy topology,
    raster app icons from Vereda, the AGENTS.md §C lines above. Then SMS once a provider is
-   chosen.
+   chosen. Also open: whether the M4 cancellation scale keeps a share of what was paid or of
+   the total; the M5 sample terms (planning fee, validity, response hours); the pricing
+   samples (child bands, fees); the M10 concierge fee and events copy.
+4. Decision gates that stay with the owner (ask, never assume): schema migrations, new
+   dependencies, the SMS provider and anything needing the agency's legal entity, a real LLM
+   vendor, PII purge Tiers 2–3, load tests (plan D24), the deployment topology (plan D1–D24,
+   which also settle the site domain, the analytics host, H3 and `PASSKEY_RP_ID`; D7 changes
+   how auth decides, D20 revisits the approved Plausible H1a).
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -890,3 +937,7 @@ events (T-Events)".
   with the record written after the toast, offered no per-device sound switch (only the
   logged mute or an acknowledgement silences the cue), left support read-only, and sounded
   the cue on the dashboard only.
+- 2026-10-29 — the owner asked that `docs/next-session-prompt.md` hold only what starts a
+  session (orient, tasks, standing rules, environment) and never repeat handoff content. The
+  prompt went from about 300 lines to 54; the traps and open questions that lived only in it
+  moved to this handoff (Traps, Next items 3–4, the live-test list under Verified).
