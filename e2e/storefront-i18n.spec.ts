@@ -13,11 +13,12 @@ test.describe('storefront locales', () => {
     await page.goto(`${STOREFRONT_URL}/destinations`);
     await expect(page.getByRole('button', { name: 'Dónde operamos' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'en', exact: true }).click();
+    // Each locale link is named in its own language (the visible code is in the name).
+    await page.getByRole('link', { name: 'English', exact: true }).click();
     await expect(page).toHaveURL(/\/en\/destinations$/);
     await expect(page.getByRole('button', { name: 'Where we operate' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'fr', exact: true }).click();
+    await page.getByRole('link', { name: 'Français', exact: true }).click();
     await expect(page).toHaveURL(/\/fr\/destinations$/);
     await expect(page.getByRole('button', { name: 'Où nous opérons' })).toBeVisible();
   });

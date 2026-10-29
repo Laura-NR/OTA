@@ -157,6 +157,11 @@ test.describe('storefront curated packages', () => {
     await expect(page.getByText('US certification signed')).toBeVisible();
     const send = page.getByRole('button', { name: 'Send request · nothing charged now' });
     await expect(send).toBeDisabled();
+    // Unavailable, not disabled: it keeps its focus and says why (DS 05).
+    await expect(send).toHaveAttribute('aria-disabled', 'true');
+    await expect(send).toHaveAccessibleDescription('Tick the boxes to continue.');
+    await send.focus();
+    await expect(send).toBeFocused();
     await page.getByRole('checkbox', { name: /read the terms/ }).check();
     await page.getByRole('checkbox', { name: /travel insurance/ }).check();
     await send.click();

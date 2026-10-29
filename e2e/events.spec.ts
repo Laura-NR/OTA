@@ -219,5 +219,16 @@ test.describe('M10 events and the ticket concierge', () => {
     const mine = page.getByRole('region', { name: 'Event requests' });
     await expect(mine.getByText('€120 added to your booking.')).toBeVisible();
     await expect(mine.getByText('Received')).toBeVisible();
+
+    // Withdrawing asks first (DS 02); keeping the request leaves it as it was.
+    const confirm = page.getByRole('dialog', { name: 'Withdraw this request?' });
+    await expect(async () => {
+      await mine.getByRole('button', { name: 'Withdraw' }).click();
+      await expect(confirm).toBeVisible({ timeout: 1_000 });
+    }).toPass();
+    await expect(confirm).toContainText('cannot be reopened');
+    await confirm.getByRole('button', { name: 'Keep the request' }).click();
+    await expect(confirm).toBeHidden();
+    await expect(mine.getByText('Received')).toBeVisible();
   });
 });

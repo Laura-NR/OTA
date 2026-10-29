@@ -214,6 +214,16 @@ test.describe('custom-trip proposals', () => {
     );
     expect(travelerPdf.headers()['content-type']).toBe('application/pdf');
     expect((await travelerPdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
+    // Declining asks first (DS 02); keeping it changes nothing and focus returns.
+    const decline = page.getByRole('button', { name: 'Decline', exact: true });
+    const confirm = page.getByRole('dialog', { name: 'Decline this proposal?' });
+    await expect(async () => {
+      await decline.click();
+      await expect(confirm).toBeVisible({ timeout: 1_000 });
+    }).toPass();
+    await confirm.getByRole('button', { name: 'Keep the proposal' }).click();
+    await expect(confirm).toBeHidden();
+    await expect(decline).toBeFocused();
     await page.getByRole('button', { name: 'Accept this proposal' }).click();
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
     // The desk has not dispatched yet: the provider requests have not started.
