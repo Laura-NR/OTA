@@ -7,6 +7,7 @@ import {
 } from '@ota/domain';
 import type {
   AnalyticsOverviewDto,
+  DeskAlertMuteStateDto,
   DisruptionAlertDto,
   EventRequestListItemDto,
   DispatchBoardRowDto,
@@ -70,6 +71,7 @@ export default async function DashboardPage() {
     recent,
     disruptions,
     eventRequests,
+    muteState,
   ] = await Promise.all([
     apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
     apiFetch<AnalyticsOverviewDto>(`/analytics/overview${rangeQuery(month)}`).catch(
@@ -90,6 +92,7 @@ export default async function DashboardPage() {
     apiFetch<EventRequestListItemDto[]>(
       '/event-requests?status=SUBMITTED&limit=200',
     ).catch(() => []),
+    apiFetch<DeskAlertMuteStateDto>('/dispatch/alert-mute').catch(() => null),
   ]);
   // M10 D7: event requests the desk has not answered within the threshold.
   const unansweredRequests = eventRequests.filter((request) => request.overdue).length;
@@ -233,6 +236,7 @@ export default async function DashboardPage() {
         initialRows={rows ?? []}
         serverNow={now.getTime()}
         clock={deskClock(thresholds)}
+        initialMute={muteState?.mute ?? null}
         figures={figures}
         ofacMissing={ofacMissing}
         payments={payments}

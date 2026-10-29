@@ -13,10 +13,11 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 
-type ShortcutAction = 'help' | 'redispatch' | 'dashboard' | 'bookings' | 'payments';
+type ShortcutAction =
+  'help' | 'redispatch' | 'acknowledge' | 'dashboard' | 'bookings' | 'payments';
 
 const SHORTCUTS: ShortcutMap<ShortcutAction> = {
-  keys: { '?': 'help', r: 'redispatch' },
+  keys: { '?': 'help', r: 'redispatch', a: 'acknowledge' },
   sequences: { g: { d: 'dashboard', b: 'bookings', p: 'payments' } },
 };
 
@@ -45,8 +46,9 @@ export function shortcutsEnabled(): boolean {
  * A-A11y 01's desk shortcuts. The header's "Keyboard shortcuts" button and `?`
  * open the list. `G` then `D`, `B` or `P` goes to the Dashboard, Bookings or
  * Payments; `R` opens re-dispatch for the red (else amber) item of the row
- * that holds focus (rows and their buttons are marked `data-shortcut-row` and
- * `data-shortcut-redispatch`). Esc closing a panel is the native dialog's.
+ * that holds focus and `A` acknowledges the row's red alerts (rows and their
+ * buttons are marked `data-shortcut-row`, `data-shortcut-redispatch` and
+ * `data-shortcut-acknowledge`). Esc closing a panel is the native dialog's.
  * Nothing fires while the person types in a field, holds a modifier or has a
  * dialog open, and the list has a switch that turns the keys off on this
  * device (WCAG 2.1.4), for speech input users above all.
@@ -106,6 +108,14 @@ export function DeskShortcuts() {
           event.preventDefault();
           button.click();
         }
+      } else if (result.action === 'acknowledge') {
+        const button = document.activeElement
+          ?.closest('[data-shortcut-row]')
+          ?.querySelector<HTMLButtonElement>('[data-shortcut-acknowledge]');
+        if (button) {
+          event.preventDefault();
+          button.click();
+        }
       }
     }
     document.addEventListener('keydown', onKeyDown);
@@ -128,6 +138,7 @@ export function DeskShortcuts() {
 
   const rows: ReadonlyArray<{ keys: string[]; does: string; where: string }> = [
     { keys: ['R'], does: t('rows.redispatch'), where: t('where.redispatch') },
+    { keys: ['A'], does: t('rows.acknowledge'), where: t('where.acknowledge') },
     { keys: ['G', 'D'], does: t('rows.dashboard'), where: t('where.everywhere') },
     { keys: ['G', 'B'], does: t('rows.bookings'), where: t('where.everywhere') },
     { keys: ['G', 'P'], does: t('rows.payments'), where: t('where.everywhere') },

@@ -2088,6 +2088,25 @@
         "declined": "Alerte rouge. Réservation {code} : {service}, {worker}, a refusé.",
         "amber": "Orange. Réservation {code} : {service}, {worker}, à {percent} % du délai.",
         "pressR": "Appuyez sur R pour relancer le dispatch."
+      },
+      "audio": {
+        "repeats": "Le signal sonore se répète toutes les 60 s jusqu’à ce que chaque alerte rouge soit prise en compte.",
+        "mute": "Couper 15 min",
+        "muted": "Son coupé jusqu’à {time} par {name} (journalisé). Les alertes visuelles restent affichées ; la coupure ne s’applique jamais à une nouvelle alerte rouge.",
+        "someone": "un ancien collègue",
+        "unmute": "Rétablir le son",
+        "locked": "Le signal sonore démarre après votre premier clic ou appui de touche sur cette page.",
+        "unlock": "Activer le son",
+        "failed": "La coupure n’a pas été modifiée : {message}"
+      },
+      "acknowledge": {
+        "button": "Prendre en compte",
+        "label": "Prendre en compte l’alerte rouge · {code}",
+        "done": "Prise en compte · {name} · {time}",
+        "pending": "Prise en compte · annulation encore possible",
+        "toast": "Alerte prise en compte · son coupé pour {code}",
+        "undo": "Annuler",
+        "failed": "La prise en compte de {code} n’a pas été enregistrée : {message}"
       }
     },
     "messages": {
@@ -2845,11 +2864,13 @@
         "bookings": "Aller aux réservations",
         "payments": "Aller aux paiements",
         "close": "Fermer le panneau ou la boîte de dialogue ouverte ; le focus revient à ce qui l'a ouvert",
-        "help": "Afficher cette liste"
+        "help": "Afficher cette liste",
+        "acknowledge": "Prendre en compte les alertes rouges de la ligne qui a le focus (6 s pour annuler)"
       },
       "where": {
         "redispatch": "Matrice du tableau de bord, services d'une réservation",
-        "everywhere": "Partout"
+        "everywhere": "Partout",
+        "acknowledge": "Matrice du tableau de bord"
       },
       "typing": "Les raccourcis ne se déclenchent jamais pendant la saisie dans un champ ou avec Ctrl, Cmd ou Alt enfoncé."
     },

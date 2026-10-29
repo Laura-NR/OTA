@@ -2,15 +2,28 @@
 
 import {
   AGING_BUCKETS,
+  ALERT_ACK_UNDO_MS,
+  ALERT_MUTE_MS,
   alertCrossings,
+  alertCue,
+  alertKey,
+  muteSilences,
   pendingConfirmations,
+  redSince,
   resolveDispatchTimeoutMs,
   timerElapsed,
   type AgingBucketId,
+  type DeskAlertMute,
   type EscalationAlert,
   type ServiceType,
 } from '@ota/domain';
-import type { DispatchBoardItemDto, DispatchBoardRowDto } from '@ota/schemas';
+import type {
+  AlertAcknowledgementDto,
+  DeskAlertMuteDto,
+  DeskAlertMuteStateDto,
+  DispatchBoardItemDto,
+  DispatchBoardRowDto,
+} from '@ota/schemas';
 import {
   Badge,
   Button,
@@ -31,13 +44,16 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { shortcutsEnabled } from '@/components/desk-shortcuts';
 import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
+import { useAlertSound } from '@/lib/alert-sound';
 import { apiRequest } from '@/lib/client-api';
 import { timerCopy, type DeskClock } from '@/lib/desk-clock';
+import { ApiError } from '@/lib/errors';
 import { bookingDates, countdown, hoursMinutes, opsTime } from '@/lib/ops-format';
 import { connectEscalation } from '@/lib/socket';
 
 import { KpiCard } from './kpi-card';
 import { RedispatchPanel, type RedispatchTarget } from './redispatch-panel';
+import { UndoToast } from './undo-toast';
 import {
   itemAlert,
   OPEN_ITEM_STATUSES,
@@ -82,6 +98,30 @@ const BUCKET_TEXT: Record<AgingBucketId, string> = {
   over24h: 'text-error-700',
 };
 
+/** A red alert this desk acknowledged and may still undo (A-States). */
+interface PendingAcknowledgement {
+  seq: number;
+  bookingCode: string;
+  items: Array<{ id: string; offeredAt: string | null; raisedAt: Date | null }>;
+}
+
+const toDate = (value: string | null): Date | null => (value ? new Date(value) : null);
+
+/** When a red item turned red, from the board's fields. */
+function itemRedSince(item: DispatchBoardItemDto): Date | null {
+  return redSince({
+    status: item.status,
+    deadline: toDate(item.deadline),
+    respondedAt: toDate(item.respondedAt),
+  });
+}
+
+function muteWindow(mute: DeskAlertMuteDto | null): DeskAlertMute | null {
+  return mute
+    ? { startedAt: new Date(mute.startedAt), until: new Date(mute.until) }
+    : null;
+}
+
 function rowAlert(
   row: DispatchBoardRowDto,
   now: Date,
@@ -114,6 +154,8 @@ export interface OpsDeskProps {
   disruptions: { overdueUnknown: number; callNow: number; needsHelp: number };
   /** The M9 timers and amber share in force. */
   clock: DeskClock;
+  /** The desk's "Mute 15 min" in force at the request's time. */
+  initialMute: DeskAlertMuteDto | null;
   canManage: boolean;
 }
 
@@ -124,6 +166,10 @@ export interface OpsDeskProps {
  * second from each offer's deadline, so the clocks keep moving between events.
  * A screen reader hears each threshold crossing once (A-A11y 01): red in an
  * assertive region, amber in a polite one; the ticking timers stay silent.
+ * The third channel is the audio cue (`alertCue`): a red alert sounds until
+ * someone on the desk acknowledges it, amber once; "Mute 15 min" silences the
+ * alerts already raised. Acknowledgements wait out a 6 s undo here before
+ * they are recorded; both they and the mute are the desk's, from the audit log.
  */
 export function OpsDesk({
   initialRows,
@@ -134,6 +180,7 @@ export function OpsDesk({
   payments,
   disruptions,
   clock,
+  initialMute,
   canManage,
 }: OpsDeskProps) {
   const t = useTranslations('backoffice.dashboard');
@@ -154,16 +201,38 @@ export function OpsDesk({
   }>({ red: '', amber: '', seq: 0 });
   /** The booking whose re-dispatch went out, to take focus back if its button goes. */
   const restoreFocusTo = useRef<string | null>(null);
+  const [mute, setMute] = useState(initialMute);
+  const [muteBusy, setMuteBusy] = useState(false);
+  const [alertError, setAlertError] = useState<string | null>(null);
+  /** The acknowledgement whose undo toast is open. */
+  const [pendingAck, setPendingAck] = useState<PendingAcknowledgement | null>(null);
+  const pendingAckRef = useRef<PendingAcknowledgement | null>(null);
+  pendingAckRef.current = pendingAck;
+  const ackSeq = useRef(0);
+  /** Alerts acknowledged here and not yet back from the API, by `alertKey`. */
+  const [localAcks, setLocalAcks] = useState<ReadonlySet<string>>(new Set());
+  const sound = useAlertSound();
+  /** The red alerts this desk has played a cue for, by `alertKey`. */
+  const cued = useRef(new Set<string>());
+  const lastRedCueAt = useRef<Date | null>(null);
+  /** Amber crossings waiting for their one cue. */
+  const amberToCue = useRef(0);
 
   async function refresh() {
     try {
-      setRows(await apiRequest<DispatchBoardRowDto[]>('/dispatch/active'));
+      const [board, muteState] = await Promise.all([
+        apiRequest<DispatchBoardRowDto[]>('/dispatch/active'),
+        apiRequest<DeskAlertMuteStateDto>('/dispatch/alert-mute'),
+      ]);
+      setRows(board);
+      setMute(muteState.mute);
     } catch {
       // Keep the last known board rather than blanking it on a transient error.
     }
   }
 
   useEffect(() => setRows(initialRows), [initialRows]);
+  useEffect(() => setMute(initialMute), [initialMute]);
 
   useEffect(() => {
     const reservationId = restoreFocusTo.current;
@@ -227,7 +296,9 @@ export function OpsDesk({
   );
   const tallest = Math.max(1, ...Object.values(pending.buckets));
 
-  const alertKey = flagged.map((entry) => `${entry.item.id}:${entry.alert}`).join('|');
+  const alertSignature = flagged
+    .map((entry) => `${entry.item.id}:${entry.alert}`)
+    .join('|');
 
   useEffect(() => {
     const previous = lastAlerts.current;
@@ -242,6 +313,9 @@ export function OpsDesk({
     if (crossings.length === 0) {
       return;
     }
+    amberToCue.current += crossings.filter(
+      (crossing) => crossing.alert === 'AMBER',
+    ).length;
     const sentences = (level: 'RED' | 'AMBER') =>
       crossings
         .filter((crossing) => crossing.alert === level)
@@ -255,8 +329,175 @@ export function OpsDesk({
       amber: sentences('AMBER'),
       seq: last.seq + 1,
     }));
-    // `alertKey` changes exactly when an item's alert does; the clock ticks do not.
-  }, [alertKey]);
+    // `alertSignature` changes exactly when an item's alert does; the clock ticks do not.
+  }, [alertSignature]);
+
+  const isAcknowledged = (item: DispatchBoardItemDto): boolean =>
+    item.acknowledgement !== null || localAcks.has(alertKey(item.id, item.offeredAt));
+  const muteNow = muteWindow(mute);
+  const muteActive = muteNow !== null && muteNow.until.getTime() > nowMs;
+  const redAlerts = red.map(({ item }) => {
+    const key = alertKey(item.id, item.offeredAt);
+    return {
+      key,
+      raisedAt: itemRedSince(item),
+      acknowledged: isAcknowledged(item),
+      cued: cued.current.has(key),
+    };
+  });
+  const cueSignature = redAlerts
+    .map((alert) => `${alert.key}:${alert.acknowledged}`)
+    .join('|');
+
+  useEffect(() => {
+    const cue = alertCue({
+      red: redAlerts,
+      amberCrossings: amberToCue.current,
+      mute: muteNow,
+      lastRedCueAt: lastRedCueAt.current,
+      now,
+    });
+    amberToCue.current = 0;
+    if (!cue || !sound.play(cue) || cue !== 'RED') {
+      return;
+    }
+    lastRedCueAt.current = now;
+    for (const alert of redAlerts) {
+      if (!alert.acknowledged && !muteSilences(muteNow, alert.raisedAt, now)) {
+        cued.current.add(alert.key);
+      }
+    }
+    // The clock ticks every second, so a due repeat is never late by more.
+  }, [nowMs, cueSignature, mute, sound.ready]);
+
+  useEffect(
+    () => () => {
+      // Leaving the page closes the undo window: the acknowledgement goes ahead.
+      const pending = pendingAckRef.current;
+      if (pending) {
+        void recordAcknowledgement(pending, true);
+      }
+    },
+    [],
+  );
+
+  /**
+   * Acknowledge the row's unacknowledged red alerts (`A`, or the row's
+   * button): the cue stops here at once, and the API records it for the whole
+   * desk only once the 6 s undo has passed (A-States).
+   */
+  function acknowledge(row: DispatchBoardRowDto) {
+    const items = row.serviceItems.filter(
+      (item) =>
+        itemAlert(item, now, clock.amberThreshold) === 'RED' && !isAcknowledged(item),
+    );
+    if (items.length === 0) {
+      return;
+    }
+    if (document.activeElement?.hasAttribute('data-shortcut-acknowledge')) {
+      // The button leaves the row once its alerts are acknowledged.
+      document.getElementById(`matrix-row-${row.reservationId}`)?.focus();
+    }
+    const earlier = pendingAckRef.current;
+    if (earlier) {
+      void recordAcknowledgement(earlier);
+    }
+    ackSeq.current += 1;
+    const pending: PendingAcknowledgement = {
+      seq: ackSeq.current,
+      bookingCode: row.bookingCode,
+      items: items.map((item) => ({
+        id: item.id,
+        offeredAt: item.offeredAt,
+        raisedAt: itemRedSince(item),
+      })),
+    };
+    setAlertError(null);
+    setPendingAck(pending);
+    setLocalAcks((keys) => {
+      const next = new Set(keys);
+      for (const item of pending.items) next.add(alertKey(item.id, item.offeredAt));
+      return next;
+    });
+  }
+
+  function forget(pending: PendingAcknowledgement) {
+    setLocalAcks((keys) => {
+      const next = new Set(keys);
+      for (const item of pending.items) next.delete(alertKey(item.id, item.offeredAt));
+      return next;
+    });
+  }
+
+  function undoAcknowledgement(pending: PendingAcknowledgement) {
+    setPendingAck((current) => (current?.seq === pending.seq ? null : current));
+    forget(pending);
+  }
+
+  async function recordAcknowledgement(pending: PendingAcknowledgement, leaving = false) {
+    if (!leaving) {
+      setPendingAck((current) => (current?.seq === pending.seq ? null : current));
+    }
+    let failure: string | null = null;
+    await Promise.all(
+      pending.items.map(async (item) => {
+        try {
+          await apiRequest<AlertAcknowledgementDto>(
+            `/service-items/${item.id}/acknowledge-alert`,
+            {
+              method: 'POST',
+              body: JSON.stringify({ offeredAt: item.offeredAt }),
+              keepalive: leaving,
+            },
+          );
+          track('alert_acknowledged', {
+            service_item_id: item.id,
+            seconds_to_ack: item.raisedAt
+              ? Math.max(0, Math.round((Date.now() - item.raisedAt.getTime()) / 1000))
+              : 0,
+            channel: 'desk',
+          });
+        } catch (error) {
+          // 409: the alert changed meanwhile (offered again, or no longer red).
+          if (!(error instanceof ApiError && error.status === 409)) {
+            failure = error instanceof Error ? error.message : String(error);
+          }
+        }
+      }),
+    );
+    if (leaving) {
+      return;
+    }
+    await refresh();
+    forget(pending);
+    if (failure) {
+      setAlertError(
+        t('acknowledge.failed', { code: pending.bookingCode, message: failure }),
+      );
+    }
+  }
+
+  async function changeMute(on: boolean) {
+    setMuteBusy(true);
+    setAlertError(null);
+    try {
+      const state = await apiRequest<DeskAlertMuteStateDto>('/dispatch/alert-mute', {
+        method: on ? 'POST' : 'DELETE',
+      });
+      setMute(state.mute);
+      if (on && state.mute) {
+        track('alert_muted', { muted_for_s: ALERT_MUTE_MS / 1000, channel: 'desk' });
+      }
+    } catch (error) {
+      setAlertError(
+        t('audio.failed', {
+          message: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    } finally {
+      setMuteBusy(false);
+    }
+  }
 
   function serviceName(type: string): string {
     const column = COLUMNS.find((candidate) => candidate.type === type);
@@ -352,6 +593,17 @@ export function OpsDesk({
             .filter(Boolean)
             .join(' · ')}
         </span>
+        {alert === 'RED' && isAcknowledged(item) ? (
+          <span className="inline-flex items-center gap-1 text-caption text-secondary">
+            <Icon name="check" className="h-3.5 w-3.5" />
+            {item.acknowledgement
+              ? t('acknowledge.done', {
+                  name: item.acknowledgement.by ?? t('audio.someone'),
+                  time: opsTime(item.acknowledgement.at, locale),
+                })
+              : t('acknowledge.pending')}
+          </span>
+        ) : null}
         {item.status === 'OFFERED' && item.workerPhone ? (
           <a
             href={`tel:${item.workerPhone}`}
@@ -407,16 +659,39 @@ export function OpsDesk({
             ? t('acceptedOfAction', { accepted, total })
             : t('acceptedOf', { accepted, total })}
         </span>
-        <Link
-          href={`/bookings/${row.reservationId}`}
-          aria-label={t('matrix.openBooking', { code: row.bookingCode })}
-          className={cn(buttonClassName({ variant: 'secondary', size: 'sm' }), 'mt-1')}
-        >
-          {t('matrix.open')}
-        </Link>
+        <div className="mt-1 flex flex-wrap gap-2">
+          <Link
+            href={`/bookings/${row.reservationId}`}
+            aria-label={t('matrix.openBooking', { code: row.bookingCode })}
+            className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+          >
+            {t('matrix.open')}
+          </Link>
+          {canManage &&
+          row.serviceItems.some(
+            (item) =>
+              itemAlert(item, now, clock.amberThreshold) === 'RED' &&
+              !isAcknowledged(item),
+          ) ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-label={t('acknowledge.label', { code: row.bookingCode })}
+              data-shortcut-acknowledge=""
+              onClick={() => acknowledge(row)}
+            >
+              {t('acknowledge.button')}
+            </Button>
+          ) : null}
+        </div>
       </div>
     );
   }
+
+  const stripButton = cn(
+    buttonClassName({ variant: 'secondary', size: 'sm' }),
+    red.length > 0 && 'border-transparent bg-neutral-0 text-error-700',
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -426,40 +701,91 @@ export function OpsDesk({
       <div role="status" className="sr-only">
         {announced.amber ? <p key={announced.seq}>{announced.amber}</p> : null}
       </div>
-      {red.length + amber.length > 0 ? (
+      {red.length + amber.length > 0 || muteActive ? (
         <div
           className={cn(
-            'flex flex-wrap items-center gap-3 rounded-md px-4 py-3 text-body-sm',
+            'flex flex-col gap-2 rounded-md px-4 py-3 text-body-sm',
             red.length > 0
               ? 'bg-error-600 text-neutral-0'
-              : 'border border-warning-500 bg-warning-100 text-warning-700',
+              : amber.length > 0
+                ? 'border border-warning-500 bg-warning-100 text-warning-700'
+                : 'border bg-surface text-secondary',
           )}
         >
-          <Icon name="alert-circle" />
-          <p className="min-w-60 flex-1">
-            {red.length > 0 ? (
-              <>
-                <strong>{t('banner.red', { count: red.length })}</strong> · {codes(red)}
-                .{' '}
-              </>
-            ) : null}
-            {amber.length > 0 ? (
-              <>
-                <strong>{t('banner.amber', { count: amber.length })}</strong> ·{' '}
-                {codes(amber)}.
-              </>
-            ) : null}
-          </p>
-          <a
-            href="#matrix"
-            className={cn(
-              buttonClassName({ variant: 'secondary', size: 'sm' }),
-              red.length > 0 && 'border-transparent bg-neutral-0 text-error-700',
-            )}
-          >
-            {t('banner.goToMatrix')}
-          </a>
+          {red.length + amber.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Icon name="alert-circle" />
+              <p className="min-w-60 flex-1">
+                {red.length > 0 ? (
+                  <>
+                    <strong>{t('banner.red', { count: red.length })}</strong> ·{' '}
+                    {codes(red)}.{' '}
+                  </>
+                ) : null}
+                {amber.length > 0 ? (
+                  <>
+                    <strong>{t('banner.amber', { count: amber.length })}</strong> ·{' '}
+                    {codes(amber)}.
+                  </>
+                ) : null}
+              </p>
+              <a href="#matrix" className={stripButton}>
+                {t('banner.goToMatrix')}
+              </a>
+              {canManage && !muteActive ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className={stripButton}
+                  loading={muteBusy}
+                  onClick={() => void changeMute(true)}
+                >
+                  {t('audio.mute')}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+          {muteActive || red.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Icon name="bell" />
+              <p className="min-w-60 flex-1">
+                {muteActive && mute
+                  ? t('audio.muted', {
+                      time: opsTime(mute.until, locale),
+                      name: mute.by ?? t('audio.someone'),
+                    })
+                  : t('audio.repeats')}
+                {red.length > 0 && !sound.ready ? ` ${t('audio.locked')}` : null}
+              </p>
+              {red.length > 0 && !sound.ready ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className={stripButton}
+                  onClick={sound.unlock}
+                >
+                  {t('audio.unlock')}
+                </Button>
+              ) : null}
+              {muteActive && canManage ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className={stripButton}
+                  loading={muteBusy}
+                  onClick={() => void changeMute(false)}
+                >
+                  {t('audio.unmute')}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
+      ) : null}
+      {alertError ? (
+        <p role="alert" className="text-body-sm text-error-700">
+          {alertError}
+        </p>
       ) : null}
 
       <section
@@ -754,6 +1080,17 @@ export function OpsDesk({
           void refresh();
         }}
       />
+
+      {pendingAck ? (
+        <UndoToast
+          key={pendingAck.seq}
+          message={t('acknowledge.toast', { code: pendingAck.bookingCode })}
+          undoLabel={t('acknowledge.undo')}
+          durationMs={ALERT_ACK_UNDO_MS}
+          onUndo={() => undoAcknowledgement(pendingAck)}
+          onExpire={() => void recordAcknowledgement(pendingAck)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -2088,6 +2088,25 @@
         "declined": "Red alert. Booking {code}: {service}, {worker}, declined.",
         "amber": "Amber. Booking {code}: {service}, {worker}, at {percent} % of the timer.",
         "pressR": "Press R to re-dispatch."
+      },
+      "audio": {
+        "repeats": "The audio cue repeats every 60 s until each red alert is acknowledged.",
+        "mute": "Mute 15 min",
+        "muted": "Audio muted until {time} by {name} (logged). Visual alerts stay on; the mute never applies to a new red alert.",
+        "someone": "a former colleague",
+        "unmute": "Unmute",
+        "locked": "The audio cue starts after your first click or key press on this page.",
+        "unlock": "Turn on sound",
+        "failed": "The mute was not changed: {message}"
+      },
+      "acknowledge": {
+        "button": "Acknowledge",
+        "label": "Acknowledge red alert · {code}",
+        "done": "Acknowledged · {name} · {time}",
+        "pending": "Acknowledged · undo still possible",
+        "toast": "Alert acknowledged · audio off for {code}",
+        "undo": "Undo",
+        "failed": "The acknowledgement for {code} was not recorded: {message}"
       }
     },
     "messages": {
@@ -2845,11 +2864,13 @@
         "bookings": "Go to Bookings",
         "payments": "Go to Payments",
         "close": "Close the open panel or dialog; focus goes back to what opened it",
-        "help": "Show this list"
+        "help": "Show this list",
+        "acknowledge": "Acknowledge the red alerts of the row that has focus (6 s to undo)"
       },
       "where": {
         "redispatch": "Dashboard matrix, a booking's services",
-        "everywhere": "Everywhere"
+        "everywhere": "Everywhere",
+        "acknowledge": "Dashboard matrix"
       },
       "typing": "Shortcuts never fire while you type in a field or hold Ctrl, Cmd or Alt."
     },

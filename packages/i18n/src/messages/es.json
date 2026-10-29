@@ -2088,6 +2088,25 @@
         "declined": "Alerta roja. Reserva {code}: {service}, {worker}, rechazó.",
         "amber": "Ámbar. Reserva {code}: {service}, {worker}, al {percent} % del temporizador.",
         "pressR": "Pulsa R para redespachar."
+      },
+      "audio": {
+        "repeats": "El aviso sonoro se repite cada 60 s hasta que se acuse recibo de cada alerta roja.",
+        "mute": "Silenciar 15 min",
+        "muted": "Sonido silenciado hasta las {time} por {name} (registrado). Las alertas visuales siguen activas; el silencio nunca se aplica a una alerta roja nueva.",
+        "someone": "un antiguo compañero",
+        "unmute": "Reactivar sonido",
+        "locked": "El aviso sonoro empieza tras tu primer clic o tecla en esta página.",
+        "unlock": "Activar sonido",
+        "failed": "No se cambió el silencio: {message}"
+      },
+      "acknowledge": {
+        "button": "Acusar recibo",
+        "label": "Acusar recibo de la alerta roja · {code}",
+        "done": "Recibo acusado · {name} · {time}",
+        "pending": "Recibo acusado · aún se puede deshacer",
+        "toast": "Recibo acusado · sonido apagado para {code}",
+        "undo": "Deshacer",
+        "failed": "No se registró el acuse de recibo de {code}: {message}"
       }
     },
     "messages": {
@@ -2845,11 +2864,13 @@
         "bookings": "Ir a Reservas",
         "payments": "Ir a Pagos",
         "close": "Cerrar el panel o diálogo abierto; el foco vuelve a lo que lo abrió",
-        "help": "Mostrar esta lista"
+        "help": "Mostrar esta lista",
+        "acknowledge": "Acusar recibo de las alertas rojas de la fila con el foco (6 s para deshacer)"
       },
       "where": {
         "redispatch": "Matriz del panel, servicios de una reserva",
-        "everywhere": "En todas partes"
+        "everywhere": "En todas partes",
+        "acknowledge": "Matriz del panel"
       },
       "typing": "Los atajos nunca se activan mientras escribes en un campo o mantienes Ctrl, Cmd o Alt."
     },
