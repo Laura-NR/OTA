@@ -1,6 +1,6 @@
 # Next session prompt
 
-Prepared 2026-10-28, after the approved Plausible hosting plan. Paste the block below to start the next session.
+Prepared 2026-10-29, after the deployment plan (a proposal awaiting the owner's decisions). Paste the block below to start the next session.
 
 ```text
 Project: OTA — a Cuban inbound-tourism travel-agency platform for Vereda Expeditions. Repo
@@ -25,13 +25,21 @@ ORIENT FIRST, in this order:
   2026-10-26 staff passkeys, the 2026-10-27 Plausible CE sink and the 2026-10-28 hosting plan);
 - docs/plausible-hosting-plan.md (approved H1a, H4a, H5, H6a, H7; §6 as built) and
   docs/runbook.md "Analytics events (T-Events)" (the routed sink and the "Going live" checklist);
+- docs/deployment-plan.md (2026-10-29, a PROPOSAL: decisions D1–D24, findings F1–F15, build
+  items B1–B13; nothing in it is decided or built unless the owner says so in this session);
 - tenant/README.md (placeholder data, including the M4/M5 terms, the customBuilder rates and the
   M8 crisis framework, the M10 concierge terms and the cookie banner's analytics words).
 Verify the handoff against the code; run `git log --oneline main..vereda`. If this brief repeats
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
-Phase 8 items 1–4 are done. Built and verified last session (2026-10-28): the live Plausible
+Phase 8 items 1–4 are done. Written last session (2026-10-29), at the owner's request:
+docs/deployment-plan.md, a deployment proposal (recommended: one EU VM, Docker Compose behind
+Caddy, Plausible on the same VM; the server rented only when the agency's legal entity exists).
+It found that production sign-in breaks once the storefront and desk have their own hostnames
+(F2: magic links are built on the one BETTER_AUTH_URL origin and the cookie is host-only; D7
+recommends Better Auth's dynamic base URL) and that the BullMQ cron jobs run on the container's
+UTC clock (F8). No code changed. Built and verified on 2026-10-28: the live Plausible
 hosting plan (docs/plausible-hosting-plan.md, approved as recommended). CE goes on its own EU VPS,
 which the owner buys; nothing is deployed. `TELEMETRY_SINK=plausible` now builds a
 ConsentRoutedTelemetrySink: only events whose consent is not `essential` reach Plausible
@@ -86,9 +94,13 @@ TASK 1 — Ask the owner which batch comes next (the handoff's Next), with optio
 recommendation: a manual keyboard/screen-reader pass on the A-A11y desk rules that axe cannot
 decide (buildable now: no migration, dependency or spend), another M9 deferred item (recovery
 codes, permission overrides, display currencies, runtime flags, the idle lock, the IP allowlist,
-new-device emails — a doc to the owner first where it changes how auth decides), or M10's
-deferred room holds and event photos (migration doc first). Recommend the manual pass. If the
-owner has installed Plausible CE, offer the runbook's "Going live" checks (steps 4–5) first.
+new-device emails — a doc to the owner first where it changes how auth decides), M10's
+deferred room holds and event photos (migration doc first), or the deployment build
+(docs/deployment-plan.md §6 B1–B13, rehearsed locally with no spend) — offer that one only for
+the decisions the owner has answered, and B1, B2, B6, B9 and B11 only once their (approval) is
+given. Recommend the deployment build if the owner has answered the plan (F2 blocks any deploy,
+so B6 goes first), otherwise the manual pass. If the owner has installed Plausible CE, offer the
+runbook's "Going live" checks (steps 4–5) first.
 Build nothing that needs a migration before the owner approves its doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
@@ -121,8 +133,10 @@ wants to browse, and leave it running at the end.
 
 DECISION GATES (ask; do not assume): schema migrations (M1–M10), new dependencies, the SMS
 provider and anything needing the agency's legal entity, a real LLM vendor, PII purge Tiers 2–3,
-load tests, deployment topology. Still open with the owner: buying the analytics VPS and installing
-CE, the site domain, and H3 (edge proxy + TRUST_PROXY=1) in the deploy topology; the M4
+load tests, deployment topology. Still open with the owner: docs/deployment-plan.md D1–D24 and
+its (approval) items (D7 changes how auth decides; D20 revisits the approved Plausible H1 a;
+D24 is the load-test gate), which also settle the site domain, the analytics host, H3 (edge
+proxy + TRUST_PROXY=1) and PASSKEY_RP_ID; the M4
 placeholder terms (and whether the cancellation scale keeps a share of what was paid or of the
 total), the M5 sample terms (planning fee, validity, response hours), the pricing samples
 (child bands, fees), counsel's review of the legal texts, the OFAC categories, the card
@@ -131,7 +145,11 @@ concierge fee and events copy (and whether a regenerated invoice suffices when s
 later); the AGENTS.md §C lines proposed in the
 handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. Plausible (2026-10-27/28): the endpoint is the
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Deployment (2026-10-29): sign-in works in dev
+only because localhost cookies are shared across ports — with separate hostnames the magic link
+lands on BETTER_AUTH_URL's host (plan F2/D7); the desk's Socket.IO origin
+(NEXT_PUBLIC_API_ORIGIN) is fixed at desk build time; never run the demo seed outside dev (it
+creates Super Admins); generated PDFs are on local disk (DOCUMENTS_DIR), not S3. Plausible (2026-10-27/28): the endpoint is the
 full `/api/event` URL, not the site root. With `TELEMETRY_SINK=plausible` only non-essential-consent
 events reach Plausible; the mock keeps (and files) the rest, server events included. Plausible's
 bot filter silently drops a backend/datacenter IP (`x-plausible-dropped: 1`); Next's external

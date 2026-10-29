@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-28 20:52
+# Handoff — vereda — updated 2026-10-29 09:32
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -15,7 +15,12 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
-- **This session (2026-10-28): the live Plausible hosting plan**, the owner's pick from the
+- **2026-10-29: `docs/deployment-plan.md`**, a proposal at the owner's request: decisions
+  D1–D24 with options and recommendations, findings F1–F15 from the code, the build items
+  B1–B13, a phased step-by-step, a launch checklist, costs and counsel questions. Nothing is
+  decided, built, bought or deployed. It recommends one EU VM with Docker Compose behind
+  Caddy, and Plausible on the same VM (D20 revisits the approved H1 a). No code changed.
+- **2026-10-28: the live Plausible hosting plan**, the owner's pick from the
   Next list. `docs/plausible-hosting-plan.md` was approved as recommended (H1a, H4a, H5, H6a,
   H7) and built (`9f9e562`…`89ed6fe`, §6 as built). Nothing is deployed or bought: CE goes on
   its own EU VPS, which the owner buys (H1), and H3 (an edge proxy that sets
@@ -110,7 +115,8 @@ events (T-Events)".
 - **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. Env from M9:
   `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`;
   `PASSKEY_RP_ID` binds every passkey, so it belongs to the deploy-topology decision (still
-  open): the desk's origin must be that domain or under it, and in `TRUSTED_ORIGINS`.
+  open; `docs/deployment-plan.md` D6 recommends the apex domain): the desk's origin must be
+  that domain or under it, and in `TRUSTED_ORIGINS`.
 - **Staff passkeys:** the switch is off in dev (the e2e switches it on and off and deletes its
   versions). A one-Super-Admin agency cannot apply it (dual approval). The passkey emails use
   the tenant's primary language, as the invitation does. Synced passkeys (iCloud/Google) count
@@ -145,6 +151,18 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Production sign-in breaks once the storefront and desk have their own hostnames**
+  (2026-10-29, deployment plan F2). Better Auth builds every magic link on the one
+  `BETTER_AUTH_URL` origin (`better-auth/dist/plugins/magic-link/index.mjs`, `realBaseURL.origin`),
+  and the session cookie is host-only (no `crossSubDomainCookies` in `packages/auth`). Dev
+  works only because `localhost` cookies are shared across ports. Fix before any deploy: the
+  plan's D7 (recommended: Better Auth's dynamic base URL; Next's rewrite sets
+  `X-Forwarded-Host` to the incoming host, `proxy-request.js`). The desk's Socket.IO then
+  has to go through the desk's own host (D8), and `NEXT_PUBLIC_API_ORIGIN` is fixed at desk
+  build time.
+- **Scheduled jobs run on the process clock zone** (2026-10-29, plan F8): the BullMQ cron
+  patterns carry no `tz`, so in a UTC container "daily 07:00" is 02:00–03:00 in Havana
+  (plan D19: `TZ=America/Havana`).
 - **Next's external rewrite neither adds nor appends `X-Forwarded-For`** (2026-10-28,
   `router-server.js:349` → `proxy-request.js`, http-proxy without `xfwd`; checked with Next's
   compiled http-proxy). The `??=` in `base-server.js` only runs for pages Next renders, not
@@ -336,10 +354,11 @@ events (T-Events)".
    rules (buildable now, no migration, dependency or spend), another M9 deferred item (doc
    first where it changes how auth decides), or M10's room holds/event photos (migration doc
    first).
-2. Owner, outside the repo: buy the EU VPS and install CE per `docs/runbook.md` "Going live";
-   put H3 (edge proxy setting `X-Forwarded-For`, `TRUST_PROXY=1`) into the deploy topology.
-   Counsel: `cookies-analytics@2026-10-28` and whether Plausible's data needs a retention
-   limit.
+2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
+   answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
+   plan recommends renting the server only when the agency's legal entity exists (D1).
+   Counsel: the plan's §13 (sanctions first), `cookies-analytics@2026-10-28` and whether
+   Plausible's data needs a retention limit.
 3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
    texts (now including the events copy, the M10 invoice question, the cookie words and the
    basis for desk and server telemetry), OFAC categories, card surcharge, deposit refundability
