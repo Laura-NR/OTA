@@ -17,7 +17,7 @@ export async function AdvisoryList() {
   const current = active.filter((advisory) => advisory.showOnSite);
 
   return (
-    <section id="advisories" aria-labelledby="advisories-title" className="scroll-mt-24">
+    <section id="advisories" aria-labelledby="advisories-title" className="scroll-mt-8">
       <h2
         id="advisories-title"
         className="font-display text-h2-compact text-default md:text-h2"

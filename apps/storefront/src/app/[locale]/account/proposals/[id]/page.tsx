@@ -13,6 +13,7 @@ import {
   Icon,
 } from '@ota/ui';
 import type { BadgeVariant } from '@ota/ui';
+import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
@@ -31,6 +32,11 @@ const VARIANTS: Record<ProposalDto['status'], BadgeVariant> = {
   DECLINED: 'secondary',
   EXPIRED: 'warning',
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('proposal');
+  return { title: t('title') };
+}
 
 /**
  * The traveler's priced custom proposal (M5, D-Proposal): the request, the
@@ -55,8 +61,9 @@ export default async function ProposalPage({
     notFound();
   }
 
-  const [t, format, locale] = await Promise.all([
+  const [t, tc, format, locale] = await Promise.all([
     getTranslations('proposal'),
+    getTranslations('pages.common'),
     getFormatter(),
     getLocale(),
   ]);
@@ -220,7 +227,7 @@ export default async function ProposalPage({
           <section className={card}>
             <h2 className="text-h4 text-default">{t('lines')}</h2>
             <div className="overflow-x-auto">
-              <Table>
+              <Table scrollRegionLabel={tc('table', { name: t('lines') })}>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('line')}</TableHead>

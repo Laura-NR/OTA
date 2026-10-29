@@ -15,7 +15,7 @@ export function ContentSection({
     <section
       id={section.id}
       aria-labelledby={`${section.id}-title`}
-      className="flex scroll-mt-24 flex-col gap-4"
+      className="flex scroll-mt-8 flex-col gap-4"
     >
       {section.eyebrow ? (
         <p className="text-overline uppercase text-secondary-600">{section.eyebrow}</p>

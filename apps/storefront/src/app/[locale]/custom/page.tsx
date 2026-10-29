@@ -1,5 +1,6 @@
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import { destinationsContentSchema } from '@ota/schemas';
+import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
@@ -14,6 +15,11 @@ import { getPageContent } from '@/lib/content';
 import { countryOptions } from '@/lib/countries';
 import { getGeography, provinceCode, provinceName } from '@/lib/geography';
 import { getTenantConfig } from '@/lib/tenant';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('build');
+  return { title: t('title') };
+}
 
 /**
  * The designed custom builder (Custom / M-Custom boards), behind sign-in like

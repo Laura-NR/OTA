@@ -7,6 +7,7 @@ import { PrimaryNav } from '@/components/primary-nav';
 import { SiteMenu } from '@/components/site-menu';
 import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
+import { TOUCH_ROW } from '@/lib/button';
 
 /**
  * The Home header (DS 07): sticky on the cream page. From `lg` the link row
@@ -30,7 +31,7 @@ export async function SiteHeader({
         <Link
           href="/"
           aria-label={t('homeLabel', { agency: agencyName })}
-          className="shrink-0"
+          className={cn('shrink-0', TOUCH_ROW)}
         >
           {/* 28 px at every text size: a logo, not text (Phase 1). */}
           <Image

@@ -206,6 +206,25 @@ export function PackagesBrowser({
   ];
   const clearAll = () => setQuery({ ...EMPTY, sort: query.sort });
   const picked = packages.filter((pkg) => compare.selected.includes(pkg.slug));
+  // The fixed tray's height joins the root's scroll padding (globals.css), so a
+  // focused card is never scrolled under it (WCAG 2.4.11).
+  const tray = useRef<HTMLElement>(null);
+  const trayShown = picked.length > 0;
+  useEffect(() => {
+    const element = tray.current;
+    if (!trayShown || !element) {
+      return;
+    }
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => {
+      root.style.setProperty('--fixed-tray', `${element.offsetHeight}px`);
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--fixed-tray');
+    };
+  }, [trayShown]);
 
   // Rendered twice (the aside from `lg`, the drawer below it), so ids take a prefix.
   const filters = (prefix: string) => (
@@ -459,7 +478,7 @@ export function PackagesBrowser({
                         <label
                           className={cn(
                             buttonClassName({ variant: 'secondary' }),
-                            'cursor-pointer gap-2 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60',
+                            'cursor-pointer gap-2 has-[[aria-disabled=true]]:cursor-not-allowed has-[[aria-disabled=true]]:opacity-60',
                             on && 'border-primary-600 bg-primary-50',
                           )}
                           title={
@@ -470,8 +489,13 @@ export function PackagesBrowser({
                             type="checkbox"
                             className="h-5 w-5 accent-primary-600"
                             checked={on}
-                            disabled={full}
+                            // Focusable when full, with the tray's reason (DS 05 disabled state).
+                            aria-disabled={full || undefined}
+                            aria-describedby={full ? 'compare-full' : undefined}
                             onChange={() => {
+                              if (full) {
+                                return;
+                              }
                               if (!on) {
                                 track('compare_added', {
                                   package_id: pkg.slug,
@@ -514,6 +538,7 @@ export function PackagesBrowser({
       ) : null}
       {picked.length > 0 ? (
         <section
+          ref={tray}
           aria-label={t('trayLabel')}
           className="fixed inset-x-0 bottom-16 z-20 bg-neutral-900 text-neutral-0 md:bottom-0"
         >
@@ -521,6 +546,11 @@ export function PackagesBrowser({
             <p className="text-body font-semibold">
               {t('trayTitle', { count: picked.length })}
             </p>
+            {compare.selected.length >= MAX_COMPARE ? (
+              <p id="compare-full" className="text-body-sm text-neutral-200">
+                {t('compareFull', { max: MAX_COMPARE })}
+              </p>
+            ) : null}
             <p className="hidden min-w-0 flex-1 truncate text-body-sm text-neutral-200 md:block">
               {picked.map((pkg) => pkg.name).join(' · ')}
             </p>

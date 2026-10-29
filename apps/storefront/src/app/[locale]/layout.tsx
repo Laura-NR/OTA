@@ -64,6 +64,7 @@ export default async function LocaleLayout({
   // resolve (see themeCssVariables).
   const tokens = themeCssVariables(tenant) as CSSProperties;
   const messages = await getMessages();
+  const nav = await getTranslations({ locale, namespace: 'nav' });
   const signedIn = Boolean(await getServerSession());
   // Larger text and low-bandwidth mode are the device's (a cookie), so the
   // page renders in them from its first byte.
@@ -86,6 +87,13 @@ export default async function LocaleLayout({
     >
       {/* Below md the bottom nav is fixed; the body pads for it. */}
       <body className="flex min-h-screen flex-col pb-16 antialiased md:pb-0">
+        {/* The first stop: past the strips and the header to the page (WCAG 2.4.1). */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-3 focus:text-body-sm focus:font-semibold focus:text-primary-700 focus:shadow-md"
+        >
+          {nav('skip')}
+        </a>
         <IconSprite />
         <NextIntlClientProvider messages={messages}>
           <DisplayProvider initial={display}>
@@ -103,7 +111,9 @@ export default async function LocaleLayout({
                 signedIn={signedIn}
               />
               <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
-              <main className="flex-1">{children}</main>
+              <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+                {children}
+              </main>
               <SiteFooter tenant={tenant} />
               <BottomNav signedIn={signedIn} />
               <OfflinePill />

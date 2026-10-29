@@ -21,7 +21,8 @@
     "homeLabel": "{agency} : accueil",
     "account": "Mon compte",
     "signIn": "Se connecter",
-    "specialist": "Parler à un spécialiste"
+    "specialist": "Parler à un spécialiste",
+    "skip": "Aller au contenu"
   },
   "footer": {
     "license": "Agence de voyages agréée · Licence MINTUR {license}",
@@ -45,6 +46,8 @@
   },
   "pages": {
     "common": {
+      "close": "Fermer",
+      "table": "{name} · tableau",
       "placeholderTitle": "Contenu d'exemple",
       "placeholderText": "Cette page affiche un texte provisoire jusqu'à ce que {agency} publie la version finale.",
       "onThisPage": "Sur cette page",
@@ -120,6 +123,7 @@
   "errors": {
     "notFound": {
       "title": "Cette page a pris le mauvais chemin.",
+      "metaTitle": "Page introuvable",
       "text": "Le lien est peut-être ancien, mal saisi, ou la page a changé de place lors d'une réorganisation. Rien de ce que vous avez réservé n'est concerné. Repartez de l'un de ces chemins.",
       "home": "Aller à l'accueil",
       "browse": "Voir les voyages",
@@ -293,7 +297,8 @@
       "option": "{date} · {price} par personne",
       "none": "Aucun départ n'est ouvert à la réservation pour le moment. Demandez-nous d'autres dates.",
       "capacity": "Ce départ accueille jusqu'à {count, plural, one {# voyageur} other {# voyageurs}}.",
-      "continue": "Continuer vers l'hébergement"
+      "continue": "Continuer vers l'hébergement",
+      "pick": "Choisissez d'abord un départ."
     },
     "party": {
       "legend": "Voyageurs",
@@ -712,6 +717,7 @@
   },
   "account": {
     "title": "Mes voyages",
+    "tripTitle": "Votre voyage",
     "signOut": "Se déconnecter",
     "empty": "Pas encore de voyage. Parcourez les forfaits ou demandez un itinéraire sur mesure.",
     "serviceCount": "{count, plural, =1 {1 service} other {# services}}",
@@ -3173,6 +3179,10 @@
     "accept": "Accepter cette proposition",
     "accepting": "Acceptation…",
     "decline": "Refuser",
+    "declineTitle": "Refuser cette proposition ?",
+    "declineText": "Une fois refusée, cette version ne peut plus être acceptée. Rien n'a été débité, et vous pouvez demander une nouvelle proposition à tout moment.",
+    "declineKeep": "Garder la proposition",
+    "declineConfirm": "Refuser la proposition",
     "declining": "Refus…",
     "failed": "L'action n'a pas pu être effectuée.",
     "accepted": "Acceptée. Nous confirmons chaque prestataire ; votre réservation est {code}.",
@@ -3892,6 +3902,7 @@
       "tickets": "{count, plural, one {# billet.} other {# billets.}}",
       "fee": "Frais de conciergerie de {fee} par billet, affichés avant le paiement.",
       "pickNight": "Choisissez au moins une soirée, ou le pass.",
+      "completeTrip": "Complétez d'abord les détails du voyage ci-dessus.",
       "continueTrip": "Continuer vers votre voyage",
       "where": "Où vont les billets ?",
       "paths": {
@@ -3940,6 +3951,10 @@
     "mine": {
       "title": "Demandes d’événements",
       "withdraw": "Retirer",
+      "withdrawTitle": "Retirer cette demande ?",
+      "withdrawText": "L'équipe cesse de demander ces places, et la demande ne peut pas être rouverte. Rien n'a été débité ; vous pouvez envoyer une nouvelle demande.",
+      "withdrawKeep": "Garder la demande",
+      "withdrawConfirm": "Retirer la demande",
       "withdrawFailed": "Impossible de la retirer.",
       "statuses": {
         "SUBMITTED": "Reçue",

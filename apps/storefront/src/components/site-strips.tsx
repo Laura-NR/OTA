@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { Link } from '@/i18n/navigation';
 import { getActiveAdvisories, getAcknowledgedAdvisories } from '@/lib/advisories';
 import { DISMISSED_ADVISORIES_COOKIE, parseDismissed } from '@/lib/advisory-cookie';
+import { TOUCH_ROW } from '@/lib/button';
 import { getPageContent } from '@/lib/content';
 
 import { AdvisoryBanner } from './advisory-banner';
@@ -36,9 +37,13 @@ async function ConditionsStrip() {
         {content.status === 'placeholder' ? (
           <Badge variant="outline">{t('pages.common.sample')}</Badge>
         ) : null}
+        {/* On a touch screen 44 px tall, its margin keeping the strip's height. */}
         <Link
           href="/travel-info"
-          className="whitespace-nowrap font-semibold underline underline-offset-[3px]"
+          className={cn(
+            'whitespace-nowrap font-semibold underline underline-offset-[3px] pointer-coarse:-my-3',
+            TOUCH_ROW,
+          )}
         >
           {/* A phone shows the board's "More"; the full name stays for screen readers. */}
           <span className="md:hidden">{t('conditions.more')} </span>
@@ -90,7 +95,7 @@ async function EventBanner() {
           href={href}
           {...analytics}
           aria-label={content.cta}
-          className="text-accent-500 focus-visible:outline-accent-500 md:hidden"
+          className="-my-3 -mr-3 inline-flex size-touch items-center justify-center text-accent-500 focus-visible:outline-accent-500 md:hidden"
         >
           <Icon name="chevron-right" />
         </Link>

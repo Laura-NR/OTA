@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ota/ui';
+import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
@@ -38,6 +39,11 @@ import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { formatMoney, plainSpaces } from '@/lib/format';
 import { getTenantConfig } from '@/lib/tenant';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('account');
+  return { title: t('tripTitle') };
+}
 
 /** While the desk confirms the trip with its providers. */
 const CONFIRMING: readonly string[] = [
@@ -77,8 +83,9 @@ export default async function AccountReservationPage({
     notFound();
   }
 
-  const [t, trv, tsi, tst, td, tdo, format, locale] = await Promise.all([
+  const [t, tc, trv, tsi, tst, td, tdo, format, locale] = await Promise.all([
     getTranslations('account'),
+    getTranslations('pages.common'),
     getTranslations('review'),
     getTranslations('status.serviceItem'),
     getTranslations('status.serviceType'),
@@ -171,7 +178,7 @@ export default async function AccountReservationPage({
             key={offer.id}
             id="disruption-options"
             aria-labelledby={`disruption-${offer.id}`}
-            className="flex scroll-mt-24 flex-col gap-4 rounded-lg border border-warning-500 bg-surface p-6"
+            className="flex scroll-mt-8 flex-col gap-4 rounded-lg border border-warning-500 bg-surface p-6"
           >
             <div className="flex flex-col gap-1">
               <p className="text-overline uppercase text-warning-700">
@@ -290,7 +297,7 @@ export default async function AccountReservationPage({
           <Alert>{t('itineraryAssembling')}</Alert>
         ) : (
           <div className="overflow-x-auto">
-            <Table>
+            <Table scrollRegionLabel={tc('table', { name: t('itinerary') })}>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('columns.type')}</TableHead>
@@ -374,7 +381,7 @@ export default async function AccountReservationPage({
         </section>
       ) : null}
 
-      <div id="messages" className="scroll-mt-24">
+      <div id="messages" className="scroll-mt-8">
         <MessageThread
           reservationId={reservation.id}
           bookingCode={reservation.bookingCode}

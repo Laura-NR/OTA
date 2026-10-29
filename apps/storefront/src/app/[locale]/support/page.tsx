@@ -114,7 +114,7 @@ export default async function SupportPage() {
       <section
         id="emergency"
         aria-labelledby="emergency-title"
-        className="flex scroll-mt-24 flex-col gap-3 rounded-lg border border-error-200 bg-error-100 p-6 text-error-700"
+        className="flex scroll-mt-8 flex-col gap-3 rounded-lg border border-error-200 bg-error-100 p-6 text-error-700"
       >
         <h2 id="emergency-title" className="text-h3">
           {content.emergency.title}
@@ -159,7 +159,7 @@ export default async function SupportPage() {
       <section
         id="faq"
         aria-labelledby="faq-title"
-        className="flex scroll-mt-24 flex-col gap-4"
+        className="flex scroll-mt-8 flex-col gap-4"
       >
         <p className="text-overline uppercase text-secondary-600">{t('faq')}</p>
         <h2 id="faq-title" className="font-display text-h2-compact md:text-h2">
@@ -187,7 +187,7 @@ export default async function SupportPage() {
       <section
         id="contact"
         aria-labelledby="contact-title"
-        className="flex scroll-mt-24 flex-col gap-4"
+        className="flex scroll-mt-8 flex-col gap-4"
       >
         <h2 id="contact-title" className="font-display text-h2-compact md:text-h2">
           {t('contactTitle')}

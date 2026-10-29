@@ -69,3 +69,36 @@ html[data-contrast='more'] {
     --color-border-input: var(--color-neutral-700);
   }
 }
+
+/*
+ * A focused element (or an anchor) is never scrolled under the sticky header
+ * or, below md, the fixed bottom bar (WCAG 2.4.11): the root scroller keeps
+ * their heights clear. A section's own `scroll-mt-*` adds to this. A sticky
+ * row under the header (a destination's "On this page") marks itself with
+ * `data-sticky-subnav` and is kept clear too (48 px plus its borders); the
+ * Packages compare tray sets its measured height as `--fixed-tray`.
+ */
+html {
+  scroll-padding-top: 4rem;
+  scroll-padding-bottom: var(--fixed-tray, 0px);
+}
+
+html:has([data-sticky-subnav]) {
+  scroll-padding-top: calc(7rem + 2px);
+}
+
+@media (min-width: 1024px) {
+  html {
+    scroll-padding-top: 72px;
+  }
+
+  html:has([data-sticky-subnav]) {
+    scroll-padding-top: calc(72px + 3rem + 2px);
+  }
+}
+
+@media (max-width: 767.98px) {
+  html {
+    scroll-padding-bottom: calc(4rem + var(--fixed-tray, 0px));
+  }
+}

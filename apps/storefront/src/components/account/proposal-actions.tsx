@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Button } from '@ota/ui';
+import { Alert, Button, Dialog } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
@@ -8,7 +8,8 @@ import { useRouter } from '@/i18n/navigation';
 
 /**
  * M5: accept or decline the current proposal version. Accepting creates the
- * booking request and is the only write; nothing is charged.
+ * booking request; nothing is charged. Declining is final for this version, so
+ * it asks first, saying so (DS 02: destructive actions confirm).
  */
 export function ProposalActions({
   proposalId,
@@ -18,9 +19,11 @@ export function ProposalActions({
   versionId: string;
 }) {
   const t = useTranslations('proposal');
+  const common = useTranslations('pages.common');
   const router = useRouter();
   const [busy, setBusy] = useState<'accept' | 'decline' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   async function send(action: 'accept' | 'decline') {
     setBusy(action);
@@ -57,11 +60,35 @@ export function ProposalActions({
           size="lg"
           variant="secondary"
           disabled={busy !== null}
-          onClick={() => send('decline')}
+          onClick={() => setConfirming(true)}
         >
           {busy === 'decline' ? t('declining') : t('decline')}
         </Button>
       </div>
+      <Dialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        title={t('declineTitle')}
+        description={t('declineText')}
+        closeLabel={common('close')}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirming(false)}>
+              {t('declineKeep')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setConfirming(false);
+                void send('decline');
+              }}
+            >
+              {t('declineConfirm')}
+            </Button>
+          </>
+        }
+      />
       {error ? <Alert variant="destructive">{error}</Alert> : null}
     </div>
   );

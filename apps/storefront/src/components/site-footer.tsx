@@ -1,12 +1,14 @@
 import type { TenantConfig } from '@ota/config';
 import { isFeatureEnabled } from '@ota/config';
 import { destinationsContentSchema } from '@ota/schemas';
+import { cn } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import type { ComponentProps } from 'react';
 
 import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
+import { TOUCH_ROW } from '@/lib/button';
 import { getPageContent } from '@/lib/content';
 import { getGeography } from '@/lib/geography';
 
@@ -19,8 +21,10 @@ type FooterLink =
   | { key: string; label: string; href: Href; external?: false }
   | { key: string; label: string; href: string; external: true };
 
-const link =
-  'text-body-sm text-neutral-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500';
+const link = cn(
+  'text-body-sm text-neutral-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500',
+  TOUCH_ROW,
+);
 
 /** T-Events: internal links are footer navigation; WhatsApp reaches a specialist. */
 function FooterAnchor({ item, className }: { item: FooterLink; className?: string }) {
@@ -183,7 +187,7 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
           {columns
             .filter((column) => column.links.length > 0)
             .map((column) => (
-              <div key={column.key} className="flex flex-col gap-2">
+              <div key={column.key} className="flex flex-col gap-2 pointer-coarse:gap-0">
                 <p className="text-overline uppercase text-accent-500">{column.title}</p>
                 {column.links.map((item) => (
                   <FooterAnchor key={item.key} item={item} />
@@ -215,7 +219,10 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
             <FooterAnchor
               key={item.key}
               item={item}
-              className="text-label font-normal text-primary-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500"
+              className={cn(
+                'text-label font-normal text-primary-200 underline-offset-[3px] hover:text-neutral-0 hover:underline focus-visible:outline-accent-500',
+                TOUCH_ROW,
+              )}
             />
           ))}
         </div>

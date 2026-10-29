@@ -285,10 +285,11 @@ export function EventRequestForm({
           <p className="text-body-sm text-secondary">
             {t('tickets', { count: tickets })} {t('fee', { fee: money(feePerSeat) })}
           </p>
-          {!stepOneValid ? (
-            <p className="text-body-sm text-muted">{t('pickNight')}</p>
-          ) : null}
-          <Button className="self-start" disabled={!stepOneValid} onClick={goToTrip}>
+          <Button
+            className="self-start"
+            unavailableReason={stepOneValid ? undefined : t('pickNight')}
+            onClick={goToTrip}
+          >
             {t('continueTrip')}
           </Button>
         </div>
@@ -398,7 +399,10 @@ export function EventRequestForm({
             <Button variant="secondary" onClick={() => setStep(1)}>
               {t('back')}
             </Button>
-            <Button disabled={!stepTwoValid} onClick={() => setStep(3)}>
+            <Button
+              unavailableReason={stepTwoValid ? undefined : t('completeTrip')}
+              onClick={() => setStep(3)}
+            >
               {t('continueSend')}
             </Button>
           </div>

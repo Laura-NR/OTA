@@ -21,7 +21,8 @@
     "homeLabel": "{agency}: inicio",
     "account": "Mi cuenta",
     "signIn": "Iniciar sesión",
-    "specialist": "Habla con un especialista"
+    "specialist": "Habla con un especialista",
+    "skip": "Saltar al contenido"
   },
   "footer": {
     "license": "Agencia de viajes con licencia · Licencia MINTUR {license}",
@@ -45,6 +46,8 @@
   },
   "pages": {
     "common": {
+      "close": "Cerrar",
+      "table": "{name} · tabla",
       "placeholderTitle": "Contenido de muestra",
       "placeholderText": "Esta página muestra un texto provisional hasta que {agency} publique la versión final.",
       "onThisPage": "En esta página",
@@ -120,6 +123,7 @@
   "errors": {
     "notFound": {
       "title": "Esta página tomó un camino equivocado.",
+      "metaTitle": "Página no encontrada",
       "text": "Puede que el enlace sea antiguo, esté mal escrito o que la página se haya movido al reorganizar el sitio. Nada de lo que reservaste se ve afectado. Empieza por uno de estos caminos.",
       "home": "Ir a la página de inicio",
       "browse": "Ver viajes",
@@ -293,7 +297,8 @@
       "option": "{date} · {price} por persona",
       "none": "Ahora mismo no hay salidas abiertas. Pregúntanos por otras fechas.",
       "capacity": "Esta salida admite hasta {count, plural, one {# viajero} other {# viajeros}}.",
-      "continue": "Continuar al alojamiento"
+      "continue": "Continuar al alojamiento",
+      "pick": "Elige primero una salida."
     },
     "party": {
       "legend": "Viajeros",
@@ -712,6 +717,7 @@
   },
   "account": {
     "title": "Mis viajes",
+    "tripTitle": "Tu viaje",
     "signOut": "Cerrar sesión",
     "empty": "Aún no tienes viajes. Mira los paquetes o pide un itinerario a medida.",
     "serviceCount": "{count, plural, =1 {1 servicio} other {# servicios}}",
@@ -3173,6 +3179,10 @@
     "accept": "Aceptar esta propuesta",
     "accepting": "Aceptando…",
     "decline": "Rechazar",
+    "declineTitle": "¿Rechazar esta propuesta?",
+    "declineText": "Una vez rechazada, esta versión ya no se puede aceptar. No se ha cobrado nada y puedes pedir una nueva propuesta cuando quieras.",
+    "declineKeep": "Conservar la propuesta",
+    "declineConfirm": "Rechazar la propuesta",
     "declining": "Rechazando…",
     "failed": "No se pudo completar la acción.",
     "accepted": "Aceptada. Estamos confirmando a cada proveedor; tu reserva es {code}.",
@@ -3892,6 +3902,7 @@
       "tickets": "{count, plural, one {# entrada.} other {# entradas.}}",
       "fee": "Tarifa de conserjería de {fee} por entrada, visible antes de pagar.",
       "pickNight": "Elige al menos una noche, o el abono.",
+      "completeTrip": "Completa primero los datos del viaje de arriba.",
       "continueTrip": "Continuar con tu viaje",
       "where": "¿A dónde van las entradas?",
       "paths": {
@@ -3940,6 +3951,10 @@
     "mine": {
       "title": "Solicitudes de eventos",
       "withdraw": "Retirar",
+      "withdrawTitle": "¿Retirar esta solicitud?",
+      "withdrawText": "El equipo deja de pedir estas plazas y la solicitud no se puede reabrir. No se ha cobrado nada; puedes enviar una nueva solicitud.",
+      "withdrawKeep": "Conservar la solicitud",
+      "withdrawConfirm": "Retirar la solicitud",
       "withdrawFailed": "No se pudo retirar.",
       "statuses": {
         "SUBMITTED": "Recibida",

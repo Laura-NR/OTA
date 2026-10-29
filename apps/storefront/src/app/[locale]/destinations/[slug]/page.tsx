@@ -247,6 +247,7 @@ export default async function DestinationPage({
 
       <nav
         aria-label={t('detail.onThisPage')}
+        data-sticky-subnav
         className="sticky top-16 z-20 border-y bg-page lg:top-[72px]"
       >
         <ul className={cn(wrap, 'flex gap-6 overflow-x-auto')}>
@@ -268,7 +269,7 @@ export default async function DestinationPage({
           <section
             id="overview"
             aria-labelledby="overview-title"
-            className="grid scroll-mt-40 gap-10 xl:grid-cols-2"
+            className="grid scroll-mt-12 gap-10 xl:grid-cols-2"
           >
             <div className="flex flex-col gap-4">
               <h2 id="overview-title" className="font-display text-h1-compact md:text-h2">
@@ -313,7 +314,7 @@ export default async function DestinationPage({
         <section
           id="conditions"
           aria-labelledby="conditions-title"
-          className="flex scroll-mt-40 flex-col gap-6"
+          className="flex scroll-mt-12 flex-col gap-6"
         >
           <SectionHead
             id="conditions-title"
@@ -362,7 +363,7 @@ export default async function DestinationPage({
           <section
             id="experiences"
             aria-labelledby="experiences-title"
-            className="flex scroll-mt-40 flex-col gap-6"
+            className="flex scroll-mt-12 flex-col gap-6"
           >
             <SectionHead
               id="experiences-title"
@@ -386,7 +387,7 @@ export default async function DestinationPage({
           <section
             id="packages"
             aria-labelledby="packages-title"
-            className="flex scroll-mt-40 flex-col gap-6"
+            className="flex scroll-mt-12 flex-col gap-6"
           >
             <SectionHead
               id="packages-title"
@@ -437,7 +438,7 @@ export default async function DestinationPage({
           <section
             id="stays"
             aria-labelledby="stays-title"
-            className="flex scroll-mt-40 flex-col gap-6"
+            className="flex scroll-mt-12 flex-col gap-6"
           >
             <div className="flex flex-col gap-2">
               <SectionHead
@@ -466,7 +467,7 @@ export default async function DestinationPage({
           <section
             id="gettingThere"
             aria-labelledby="getting-there-title"
-            className="flex max-w-3xl scroll-mt-40 flex-col gap-5"
+            className="flex max-w-3xl scroll-mt-12 flex-col gap-5"
           >
             <SectionHead
               id="getting-there-title"
@@ -474,7 +475,9 @@ export default async function DestinationPage({
               title={detail.gettingThere.title}
             />
             <div className="overflow-x-auto rounded-lg border bg-surface">
-              <Table>
+              <Table
+                scrollRegionLabel={common('table', { name: detail.gettingThere.title })}
+              >
                 <TableHeader>
                   <TableRow>
                     {detail.gettingThere.head.map((cell, index, head) => (
@@ -516,7 +519,7 @@ export default async function DestinationPage({
           <section
             id="faq"
             aria-labelledby="faq-title"
-            className="flex max-w-3xl scroll-mt-40 flex-col gap-4"
+            className="flex max-w-3xl scroll-mt-12 flex-col gap-4"
           >
             <SectionHead
               id="faq-title"

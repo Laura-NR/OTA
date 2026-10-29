@@ -7,10 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@ota/ui';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
 import { TrackEvent } from '@/components/telemetry/track-event';
 import { Link } from '@/i18n/navigation';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('checkout');
+  return { title: t('mockTitle') };
+}
 
 /**
  * Mock gateway landing page (ADR 0003 open item). It deliberately has no

@@ -1,9 +1,16 @@
 import { buttonClassName } from '@ota/ui';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
 import { ErrorReference } from '@/components/error-reference';
 import { ErrorPageEvent } from '@/components/telemetry/error-page-event';
 import { Link } from '@/i18n/navigation';
+
+/** The title in the server's HTML; the `<title>` below keeps it once hydrated. */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('errors.notFound');
+  return { title: t('metaTitle') };
+}
 
 /** Errors board · 404: what happened, nothing booked is affected, three ways back. */
 export default async function NotFound() {
@@ -11,6 +18,8 @@ export default async function NotFound() {
 
   return (
     <div className="mx-auto flex max-w-container flex-col gap-6 px-6 py-16 md:px-8 lg:px-10">
+      {/* Hydrating a 404 restores the layout's title; React keeps this one first in <head>. */}
+      <title>{t('metaTitle')}</title>
       <ErrorPageEvent kind="not_found" />
       <p aria-hidden="true" className="font-display text-display-1 text-secondary-600">
         404

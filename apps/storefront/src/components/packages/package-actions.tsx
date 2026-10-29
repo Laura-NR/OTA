@@ -11,6 +11,7 @@ import { useCompareSelection } from '@/lib/compare-selection';
 /** The Package hero's Compare and Share (the board's Save waits for accounts' saved trips). */
 export function PackageActions({ slug, name }: { slug: string; name: string }) {
   const t = useTranslations('packages.detail');
+  const browser = useTranslations('packages.browser');
   const compare = useCompareSelection();
   const { track } = useTelemetry();
   const [shared, setShared] = useState<'copied' | 'failed' | null>(null);
@@ -31,7 +32,9 @@ export function PackageActions({ slug, name }: { slug: string; name: string }) {
       <Button
         variant="secondary"
         aria-pressed={on}
-        disabled={full}
+        unavailableReason={
+          full ? browser('compareFull', { max: MAX_COMPARE }) : undefined
+        }
         onClick={() => {
           if (!on) {
             track('compare_added', {

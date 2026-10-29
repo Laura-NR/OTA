@@ -109,7 +109,7 @@ export default async function JoinPage() {
       <section
         id="how"
         aria-labelledby="how-title"
-        className={cn(wrap, 'flex scroll-mt-24 flex-col gap-6 py-14')}
+        className={cn(wrap, 'flex scroll-mt-8 flex-col gap-6 py-14')}
       >
         <div className="flex flex-col gap-1.5">
           {content.steps.eyebrow ? (
@@ -145,7 +145,7 @@ export default async function JoinPage() {
         aria-labelledby="apply-title"
         className={cn(
           wrap,
-          'grid scroll-mt-24 items-start gap-6 pb-20 lg:grid-cols-[minmax(0,1fr)_400px]',
+          'grid scroll-mt-8 items-start gap-6 pb-20 lg:grid-cols-[minmax(0,1fr)_400px]',
         )}
       >
         <div className="flex flex-col gap-5 rounded-lg border bg-surface p-6 md:p-8">

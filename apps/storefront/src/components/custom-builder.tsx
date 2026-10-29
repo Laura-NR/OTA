@@ -399,15 +399,18 @@ export function CustomBuilder({
         <ul className="grid gap-2 sm:grid-cols-2">
           {provinces.map((province) => {
             const on = onRoute.has(province.code);
+            // A full route keeps the others focusable, pointing to the reason (DS 05).
+            const blocked = !on && route.length >= MAX_ROUTE_STOPS;
             return (
               <li key={province.code} className="min-w-0">
                 <button
                   type="button"
                   aria-pressed={on}
-                  disabled={!on && route.length >= MAX_ROUTE_STOPS}
-                  onClick={() => toggleProvince(province.code)}
+                  aria-disabled={blocked || undefined}
+                  aria-describedby={blocked ? 'route-full' : undefined}
+                  onClick={blocked ? undefined : () => toggleProvince(province.code)}
                   className={cn(
-                    'flex w-full flex-col items-start gap-0.5 rounded-md border p-3 text-left disabled:opacity-50',
+                    'flex w-full flex-col items-start gap-0.5 rounded-md border p-3 text-left aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
                     on
                       ? 'border-primary-600 bg-primary-50'
                       : 'border-input bg-surface hover:bg-neutral-100',
@@ -431,7 +434,7 @@ export function CustomBuilder({
         </ul>
         <p className="text-caption text-muted">{t('route.limitedNote')}</p>
         {route.length >= MAX_ROUTE_STOPS ? (
-          <p className="text-caption text-muted">
+          <p id="route-full" className="text-caption text-muted">
             {t('route.full', { max: MAX_ROUTE_STOPS })}
           </p>
         ) : null}

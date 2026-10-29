@@ -712,7 +712,12 @@ export function BookingFlow({
             <Icon name="arrow-left" />
             {t('backToTrip')}
           </Link>
-          <Button type="button" size="lg" disabled={!departure} onClick={() => go(2)}>
+          <Button
+            type="button"
+            size="lg"
+            unavailableReason={departure ? undefined : t('departure.pick')}
+            onClick={() => go(2)}
+          >
             {t('departure.continue')}
           </Button>
         </div>
@@ -1346,16 +1351,14 @@ export function BookingFlow({
               size="lg"
               // On a phone the label wraps rather than push the page sideways.
               className="h-auto min-h-12 whitespace-normal py-2 text-center sm:h-12 sm:whitespace-nowrap sm:py-0"
-              disabled={!consentsReady || !price}
+              disabled={!price}
+              unavailableReason={consentsReady ? undefined : t('review.tickAll')}
               loading={busy}
               onClick={submit}
             >
               <Icon name="lock" />
               {busy ? t('review.submitting') : t('review.submit')}
             </Button>
-            {!consentsReady ? (
-              <span className="text-caption text-muted">{t('review.tickAll')}</span>
-            ) : null}
           </div>
         </div>
       </div>

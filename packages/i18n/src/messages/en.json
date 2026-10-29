@@ -21,7 +21,8 @@
     "homeLabel": "{agency} home",
     "account": "My account",
     "signIn": "Sign in",
-    "specialist": "Talk to a specialist"
+    "specialist": "Talk to a specialist",
+    "skip": "Skip to content"
   },
   "footer": {
     "license": "Licensed travel agency · MINTUR licence {license}",
@@ -45,6 +46,8 @@
   },
   "pages": {
     "common": {
+      "close": "Close",
+      "table": "{name} · table",
       "placeholderTitle": "Sample content",
       "placeholderText": "This page shows placeholder text until {agency} publishes the final version.",
       "onThisPage": "On this page",
@@ -120,6 +123,7 @@
   "errors": {
     "notFound": {
       "title": "This page took a wrong turn.",
+      "metaTitle": "Page not found",
       "text": "The link may be old, mistyped, or the page moved when we reorganised. Nothing you booked is affected. Start from one of the paths below.",
       "home": "Go to the homepage",
       "browse": "Browse trips",
@@ -293,7 +297,8 @@
       "option": "{date} · {price} per person",
       "none": "No departure is open for booking right now. Ask us about other dates.",
       "capacity": "This departure takes up to {count, plural, one {# traveler} other {# travelers}}.",
-      "continue": "Continue to stay"
+      "continue": "Continue to stay",
+      "pick": "Choose a departure first."
     },
     "party": {
       "legend": "Travelers",
@@ -712,6 +717,7 @@
   },
   "account": {
     "title": "My trips",
+    "tripTitle": "Your trip",
     "signOut": "Sign out",
     "empty": "No trips yet. Browse the packages or ask for a custom itinerary.",
     "serviceCount": "{count, plural, =1 {1 service} other {# services}}",
@@ -3173,6 +3179,10 @@
     "accept": "Accept this proposal",
     "accepting": "Accepting…",
     "decline": "Decline",
+    "declineTitle": "Decline this proposal?",
+    "declineText": "Once declined, this version can no longer be accepted. Nothing has been charged, and you can ask for a new proposal at any time.",
+    "declineKeep": "Keep the proposal",
+    "declineConfirm": "Decline the proposal",
     "declining": "Declining…",
     "failed": "The action could not be completed.",
     "accepted": "Accepted. We are confirming each provider; your booking is {code}.",
@@ -3892,6 +3902,7 @@
       "tickets": "{count, plural, one {# ticket.} other {# tickets.}}",
       "fee": "Concierge fee {fee} per ticket, shown before you pay.",
       "pickNight": "Pick at least one night, or the pass.",
+      "completeTrip": "Fill in the trip details above first.",
       "continueTrip": "Continue to your trip",
       "where": "Where do the tickets go?",
       "paths": {
@@ -3940,6 +3951,10 @@
     "mine": {
       "title": "Event requests",
       "withdraw": "Withdraw",
+      "withdrawTitle": "Withdraw this request?",
+      "withdrawText": "The desk stops asking for these seats, and the request cannot be reopened. Nothing has been charged; you can send a new request.",
+      "withdrawKeep": "Keep the request",
+      "withdrawConfirm": "Withdraw the request",
       "withdrawFailed": "It could not be withdrawn.",
       "statuses": {
         "SUBMITTED": "Received",

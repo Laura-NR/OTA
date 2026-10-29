@@ -176,7 +176,7 @@ export default async function EventPage({
       <section
         id="request"
         aria-labelledby="request-title"
-        className="flex scroll-mt-24 flex-col gap-5 rounded-lg border bg-surface p-5 md:p-8"
+        className="flex scroll-mt-8 flex-col gap-5 rounded-lg border bg-surface p-5 md:p-8"
       >
         <h2 id="request-title" className="font-display text-h2-compact text-default">
           {takesRequests ? t('requestTitle') : t('guideTitle')}
