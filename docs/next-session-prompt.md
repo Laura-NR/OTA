@@ -33,7 +33,15 @@ Verify the handoff against the code; run `git log --oneline main..vereda`. If th
 work the log already holds, say so and ask before redoing anything.
 
 WHERE WE ARE: Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces;
-Phase 8 items 1–4 are done. Written last session (2026-10-29), at the owner's request:
+Phase 8 items 1–4 are done. Built last session (2026-10-29, the owner's pick): the manual
+keyboard/screen-reader pass on the desk (docs/a11y-desk-manual-pass.md, ADR 0006 amendment of that
+day). No migration or dependency. A skip link; desk shortcuts (`?` or the header button for the list,
+G then D/B/P, R on a focused matrix or booking-service row, a per-device off switch); the matrix's
+sticky row headers, names with the service/booking/worker, the drawer opening on its title;
+threshold crossings announced once (alertCrossings in packages/domain); `Button unavailableReason`
+(aria-disabled with the reason beside it) on 25 actions; page titles. Deferred: the audio cue, `A`
+(acknowledge) and the mute (the owner decides what acknowledging means), `/` (no desk search), a
+real screen-reader run. Written earlier that day, at the owner's request:
 docs/deployment-plan.md, a deployment proposal (recommended: one EU VM, Docker Compose behind
 Caddy, Plausible on the same VM; the server rented only when the agency's legal entity exists).
 It found that production sign-in breaks once the storefront and desk have their own hostnames
@@ -84,23 +92,27 @@ first (built 2026-10-25); the T-Events follow-ups with desk events operational o
 banner (built 2026-10-25); server-side T-Events (built 2026-10-25); the staff passkey policy
 P1a–P6a with @better-auth/passkey in the back-office (built 2026-10-26); the real analytics sink
 as a Plausible CE adapter behind `TELEMETRY_SINK` (built 2026-10-27/28; tested against a fake, no
-new dependency or image); the Plausible hosting plan H1a, H4a, H5, H6a, H7 (built 2026-10-28).
+new dependency or image); the Plausible hosting plan H1a, H4a, H5, H6a, H7 (built 2026-10-28); the
+manual accessibility pass on the desk, with the audio cue/acknowledge/mute deferred (built
+2026-10-29).
 
 TASK 0 — The dev stack was left running for the owner (with TELEMETRY_SINK_FILE and raised rate
 limits); stop it (signal turbo) before any verify and restart it at the end. Last session's full
 verify (the Plausible hosting plan) is in the handoff.
 
 TASK 1 — Ask the owner which batch comes next (the handoff's Next), with options and a
-recommendation: a manual keyboard/screen-reader pass on the A-A11y desk rules that axe cannot
-decide (buildable now: no migration, dependency or spend), another M9 deferred item (recovery
-codes, permission overrides, display currencies, runtime flags, the idle lock, the IP allowlist,
-new-device emails — a doc to the owner first where it changes how auth decides), M10's
-deferred room holds and event photos (migration doc first), or the deployment build
+recommendation: the same manual pass on the storefront's DS 02–05 annotations (buildable now: no
+migration, dependency or spend; the storefront has no skip link), the desk's alert acknowledgement
+with the audio cue and "Mute 15 min" (ask first what acknowledging means: for one person or the
+whole desk, and whether the mute is an audit entry), another M9 deferred item (recovery codes,
+permission overrides, display currencies, runtime flags, the idle lock, the IP allowlist,
+new-device emails — a doc to the owner first where it changes how auth decides), M10's deferred
+room holds and event photos (migration doc first), or the deployment build
 (docs/deployment-plan.md §6 B1–B13, rehearsed locally with no spend) — offer that one only for
 the decisions the owner has answered, and B1, B2, B6, B9 and B11 only once their (approval) is
 given. Recommend the deployment build if the owner has answered the plan (F2 blocks any deploy,
-so B6 goes first), otherwise the manual pass. If the owner has installed Plausible CE, offer the
-runbook's "Going live" checks (steps 4–5) first.
+so B6 goes first), otherwise the storefront pass. If the owner has installed Plausible CE, offer
+the runbook's "Going live" checks (steps 4–5) first.
 Build nothing that needs a migration before the owner approves its doc.
 
 TASK 2 — Whatever the owner approves, built to the same standard (domain rules with unit tests,
@@ -145,7 +157,12 @@ concierge fee and events copy (and whether a regenerated invoice suffices when s
 later); the AGENTS.md §C lines proposed in the
 handoff (owner edit).
 
-KNOWN TRAPS: see docs/handoff/vereda.md Traps. Deployment (2026-10-29): sign-in works in dev
+KNOWN TRAPS: see docs/handoff/vereda.md Traps. Desk keyboard pass (2026-10-29): Playwright's
+press('Shift+/') sends '/', use press('?'); the matrix row has "Open <code>" beside the code link,
+so code-link locators need exact: true; unavailable buttons are aria-disabled, not disabled (Playwright
+treats both as disabled, toHaveAttribute('disabled') does not); what the matrix shows at load is the
+announcement baseline (the e2e crosses after load, E2EKBD01); no react-hooks ESLint plugin, so an
+eslint-disable comment for it fails lint. Deployment (2026-10-29): sign-in works in dev
 only because localhost cookies are shared across ports — with separate hostnames the magic link
 lands on BETTER_AUTH_URL's host (plan F2/D7); the desk's Socket.IO origin
 (NEXT_PUBLIC_API_ORIGIN) is fixed at desk build time; never run the demo seed outside dev (it

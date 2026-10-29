@@ -1115,3 +1115,50 @@ as recommended (H1a, H4a, H5, H6a, H7). The build changes the adapter, but nothi
   connection; the privacy notice's cookies paragraph says the same. English only, like the
   other legal words. The new version asks every visitor for consent again.
 
+
+## Amendment, 2026-10-29: the desk's manual accessibility pass (A-A11y), resolved by the build
+
+The owner chose the manual keyboard and screen-reader pass next. The rule-by-rule record is
+`docs/a11y-desk-manual-pass.md`; no migration, dependency or spend. Where the board was
+silent or could not be built yet, the build decided:
+
+- **Shortcuts can be turned off.** A-A11y lists single-key shortcuts (R, G then D/B/P, ?)
+  but no off switch; WCAG 2.1.4 needs one. The shortcut list (`?`, or the header's
+  "Keyboard shortcuts" button, which also makes the keys discoverable without a keyboard)
+  has a "Single-key shortcuts" switch, kept per device like the storefront's display
+  preferences. Keys never fire in a text field or select, with Ctrl, Cmd or Alt held, or
+  while a dialog is open. `R` acts on the red item of the focused row, else its amber one.
+- **Deferred from the board:** `A` (acknowledge, undo 6 s), the audio cue with its 60 s
+  repeat and the logged "Mute 15 min". They depend on what acknowledging means (one person
+  or the whole desk) and where it is recorded, which is a product question for the owner.
+  `/` (jump to search) waits for a desk search field.
+- **Announcements.** The visible strip is no longer a live region. Two always-mounted,
+  visually hidden regions announce each threshold crossing once (`alertCrossings`): red as
+  `role="alert"`, amber as `role="status"`. The words follow the board's example, with the
+  service and worker as the matrix shows them ("Red alert. Booking VX-3PA8ZT: Guide, Osvaldo
+  Ruiz, timed out at 13:40. Press R to re-dispatch."). "Press R" is added only when the item
+  can be re-routed and the keys are on. What the page shows on load is the starting point,
+  not news, so it is not announced.
+- **The matrix's first column is sticky at every width**, not only under 1024 px: the
+  matrix already scrolls at 1024 beside the sidebar, and sticky changes nothing where the
+  table fits. The column is 11.5 rem and the scroll box keeps that padding, so a focused
+  cell never scrolls under it (2.4.11).
+- **Names.** Repeated actions carry what they act on, starting with the visible label
+  (2.5.3): "Re-dispatch Guide · <code>", "Open <code>", "Offer · 2 h timer to <worker>",
+  "Call <worker>". The re-dispatch drawer opens on its title (`Drawer focusTitle`); when the
+  offer removes the button that opened it, focus goes to the row's booking link.
+- **State filters stay links** with `aria-current`, not buttons with `aria-pressed`: they
+  change the URL, which keeps a filtered view bookmarkable and shareable.
+- **Unavailable actions.** `Button unavailableReason` replaces a silent native `disabled`
+  wherever an action waits on input or on a second approver: `aria-disabled`, still
+  focusable, refuses to act (implicit form submission included), with the reason as a
+  caption beside it and as its description. A busy action stays natively disabled. The
+  reasons live in `backoffice.unavailable` (en/es/fr).
+- **Targets.** Standalone controls meet the desk's 44 px (the sidebar's Passkeys and Sign
+  out were 16 px). Text links inside table cells keep their line height under 2.5.8's
+  inline exception rather than 44 px rows.
+- **Also fixed, not on the board:** a skip link as the first stop of every shell page
+  (2.4.1); an `<h1>` on the sign-in, invitation and passkeys pages; an empty link for a
+  customer whose name is an empty string.
+- **Not verified:** a run with a real screen reader. The pass read Chromium's
+  accessibility tree.

@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-29 09:32
+# Handoff — vereda — updated 2026-10-29 12:04
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -15,6 +15,27 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-10-29 (later): the desk's manual accessibility pass (A-A11y)**, the owner's pick
+  from the Next list (`e9fb087`…`d09cca8`; record `docs/a11y-desk-manual-pass.md`, ADR 0006
+  amendment of that day). No migration, dependency or spend. Keyboard walk of 23 desk pages,
+  the matrix's accessibility tree, focus in and out of panels, live regions during an
+  amber→red crossing. Built:
+  - a skip link on every shell page; `<h1>` on sign-in, invitation and passkeys;
+  - desk shortcuts (`desk-shortcuts.tsx`; `resolveShortcut`/`isTypingTarget` in `@ota/ui`):
+    `?` and the header's "Keyboard shortcuts" open the list, G then D/B/P, `R` on a row marked
+    `data-shortcut-row` (matrix, a booking's services), a per-device off switch
+    (`localStorage` `ota-desk-shortcuts`, WCAG 2.1.4);
+  - the matrix: booking as sticky row header with a matching scroll padding, names with the
+    service/booking/worker, the drawer opens on its title (`Drawer focusTitle`), focus back to
+    the row when an offer removes its button;
+  - threshold crossings announced once (`alertCrossings` in `packages/domain`; red assertive,
+    amber polite); the visible strip is no longer live;
+  - `Button unavailableReason` (aria-disabled, focusable, reason beside it) on 25 actions that
+    waited on input or a second approver; copy in `backoffice.unavailable` (en/es/fr);
+  - 44 px sidebar links, 20 px checkboxes, an empty customer link fixed.
+  Deferred: the audio cue, `A` (acknowledge) and "Mute 15 min" (what acknowledging means is
+  the owner's call), `/` (no desk search), `lang="es"` spans (messages carry no language), a
+  real screen-reader run (none on this machine).
 - **2026-10-29: `docs/deployment-plan.md`**, a proposal at the owner's request: decisions
   D1–D24 with options and recommendations, findings F1–F15 from the code, the build items
   B1–B13, a phased step-by-step, a launch checklist, costs and counsel questions. Nothing is
@@ -82,33 +103,38 @@ events (T-Events)".
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
   deferred items (recovery codes, permission overrides, display currencies, runtime flags, the
-  idle lock, IP allowlist, new-device email); passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; manual
-  keyboard/reading-order checks beyond what axe decides.
+  idle lock, IP allowlist, new-device email); passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
+  desk's audio cue, acknowledge (`A`) and mute, and `/`; a real screen-reader run; the same
+  manual pass on the storefront (it has no skip link either).
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
   crisis framework, the backup-power wording, the cookie banner's analytics words and the
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-28, Plausible hosting plan built, dev stack stopped for the build)
+## Verified (2026-10-29, desk accessibility pass, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **985 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 373,
-  api 370/27 skipped, schemas 71, email 30, config 36, ui 35, documents 22, auth 6, theming 14,
-  payments 8, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New: the domain's
-  "analytics store" block (3), and in api the User-Agent, identifier, two routing and factory
-  cases in `plausible-sink.test.ts` (now 14), with the service and intake cases extended.
+- `TURBO_FORCE=true pnpm test` **996 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 377,
+  api 370/27 skipped, schemas 71, ui 42, config 36, email 30, documents 22, theming 14,
+  payments 8, auth 6, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New:
+  `alertCrossings` (4, `dashboard.test.ts`); in ui the resolver, typing targets, the
+  unavailable button and the Drawer title (7).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **111 passed, 2 failed, 3 skipped** in 58.7 min. The two
-  were `[ds07-768]` responsive timeouts (larger text: `page.evaluate`; traveler/builder:
-  `page.goto`), the known machine/compile class. Rerun in isolation with the leftovers killed by
-  PID and `.next` deleted: **2/2** (`pnpm e2e --project=ds07-768 -g "…" e2e/responsive.spec.ts`).
-  The consent cookie followed the new words version without changes. Skips: the desk at
-  320/375/414.
+- `pnpm e2e` (`.next` deleted first): **115 passed, 3 failed, 3 skipped** in 59.6 min. New and
+  green: `e2e/desk-keyboard.spec.ts` (4) and the axe pass with the shortcut list open; the axe
+  desk list now includes `/disruptions/new`. The three failures were customer-page specs this
+  batch does not touch. Two were timeouts (the axe pass at 390 px with larger text, and
+  `[ds07-768]` larger text: `page.goto`). The third was `[ds07-1024]` larger text, where
+  `/en/no-such-page` read a 16 px body. Rerun in isolation with the leftovers killed by PID and
+  `.next` deleted: **3/3**. Skips: the desk at 320/375/414.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files.
-- Next's rewrite proxy: its compiled http-proxy with `proxyRequest`'s options passed an incoming
-  `X-Forwarded-For: 203.0.113.7` unchanged and added none when absent (plan F1).
-- No browser/screenshot check: no UI change (the words change only the banner and privacy text).
+- Browser (dev stack, Chromium; a temporary dev-DB fixture `A11YAUD1`, deleted after): the
+  keyboard walk of 23 desk pages; the matrix's accessibility tree; R → drawer on its title →
+  Esc back to the row link; an amber→red crossing announced once in the assertive region;
+  screenshots at 1280, 1024 and 390 (the header button, the shortcut list, the reason beside
+  "Open case", the sticky column with a focused cell clear of it at 390).
+- Not run: a real screen reader (NVDA/JAWS/VoiceOver are not on this machine).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -151,6 +177,18 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Desk keyboard pass (2026-10-29):** Playwright's `press('Shift+/')` sends `key: '/'`, not
+  `'?'` (a real keyboard sends `'?'`): use `press('?')`. The matrix row now has "Open <code>"
+  next to the code link, so a booking-code link locator needs `exact: true` (dispatch and
+  escalation specs fixed). An unavailable button is `aria-disabled`, not `disabled`:
+  Playwright's `toBeDisabled()` and click actionability treat both alike, but
+  `toHaveAttribute('disabled')` does not. Button attaches its refusing click handler only when
+  unavailable, so a server component can still render a Button (no function prop). What the
+  matrix shows at load is the announcement baseline, so an e2e must start amber and cross
+  after load (`e2e/desk-keyboard.spec.ts` owns E2EKBD01, red 30 s after its update). The
+  shortcut listener ignores keys while any `dialog[open]`. There is no react-hooks ESLint
+  plugin: an `eslint-disable-next-line react-hooks/...` comment fails lint. The keyboard
+  audit script and probes are not in the repo (scratchpad only); the record is the doc.
 - **Production sign-in breaks once the storefront and desk have their own hostnames**
   (2026-10-29, deployment plan F2). Better Auth builds every magic link on the one
   `BETTER_AUTH_URL` origin (`better-auth/dist/plugins/magic-link/index.mjs`, `realBaseURL.origin`),
@@ -348,12 +386,20 @@ events (T-Events)".
     sends the session id or the HMAC user id. Plausible's bot filter drops a backend IP silently,
     so live hosting must forward the client IP or accept that `server` events may drop. A failed
     send is logged, never thrown."
+  - "2026-10-29: desk shortcuts live in `apps/backoffice/src/components/desk-shortcuts.tsx`
+    (`resolveShortcut` in `@ota/ui`); a row that `R` acts on is `data-shortcut-row` and its
+    re-dispatch button `data-shortcut-redispatch="<alert>"`. An action that waits on input or
+    a second approver uses `Button unavailableReason` (aria-disabled plus the reason), never a
+    silent `disabled`; `disabled` is for busy states. `e2e/desk-keyboard.spec.ts` owns E2EKBD01."
 
 ## Next
-1. Owner: choose the next batch: the manual keyboard/screen-reader pass on the A-A11y desk
-   rules (buildable now, no migration, dependency or spend), another M9 deferred item (doc
-   first where it changes how auth decides), or M10's room holds/event photos (migration doc
-   first).
+1. Owner: choose the next batch: the same manual pass on the storefront's DS 02–05
+   annotations (buildable now; it has no skip link), the desk's alert acknowledgement with the
+   audio cue and mute (decide first: does acknowledging silence the alert for one person or
+   the whole desk, and is the mute an audit entry? recommended: per desk, audited, no
+   migration), another M9 deferred item (doc first where it changes how auth decides), or
+   M10's room holds/event photos (migration doc first). A real screen-reader run needs a
+   machine with NVDA or VoiceOver.
 2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
    answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
    plan recommends renting the server only when the agency's legal entity exists (D1).
@@ -739,4 +785,9 @@ events (T-Events)".
   data with no retention limit, over a ClickHouse TTL) and H7 (a new placeholder words
   version now, over waiting for counsel). The build routes in a sink wrapper rather than in
   the adapter, so `PlausibleTelemetrySink` stays a plain transport and the mock keeps its file.
-
+- 2026-10-29 — the owner chose the manual keyboard/screen-reader pass on the desk next (over
+  the deployment build, unanswered, another M9 item and M10's deferred items); Plausible CE
+  is not installed. The build fixed what the pass found and resolved the board's gaps
+  (an off switch for single-key shortcuts, the sticky column at every width, state filters
+  kept as links, announcements from crossings only); it deferred the audio cue, `A` and the
+  mute (acknowledgement semantics are the owner's call) and `/` (no desk search).
