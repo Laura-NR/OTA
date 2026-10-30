@@ -16,9 +16,8 @@ ORIENT: read AGENTS.md, then docs/handoff/vereda.md (State, Verified, Assumption
 Decisions). Check the handoff against `git log --oneline main..vereda` and the code; the code
 wins. If this brief asks for work the log already holds, say so and ask before redoing it.
 Last session (2026-10-29/30) built the storefront's stacked table cards and room for the cookie
-banner; the handoff's State has the details. If the handoff's Verified still marks the full
-e2e and the live tests as pending, finish them first (Task 3's commands; rerun
-e2e/ofac.spec.ts:61 alone), record the result, then go on to Task 1.
+banner; the handoff's State has the details. Finish anything its Verified marks as pending
+before Task 1.
 
 TASK 0 — The owner's dev stack is running (started with RATE_LIMIT_MAX=100000
 RATE_LIMIT_AUTH_MAX=100000 TELEMETRY_SINK_FILE=$PWD/.telemetry/e2e-events.jsonl). Stop it by
@@ -26,9 +25,8 @@ signalling turbo (`@turbo/linux-64/bin/turbo run dev`) before any verify.
 
 TASK 1 — Ask the owner which batch comes next, from the handoff's Next, with options and a
 recommendation. Recommend the deployment build (docs/deployment-plan.md; B6 first) only if the
-owner has answered that plan, else an M9 deferred item (the owner names which; a doc first where
-it changes how auth decides). If the owner has installed Plausible CE, offer the runbook's
-"Going live" checks first.
+owner has answered that plan, else an M9 deferred item. If the owner has installed Plausible
+CE, offer the runbook's "Going live" checks first.
 
 TASK 2 — Build what the owner approves: domain rules with unit tests, DTOs, routes in the
 authorization matrix, desk surfaces in en/es/fr, an e2e. Write a migration doc and get it
