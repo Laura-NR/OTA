@@ -16,8 +16,7 @@ ORIENT: read AGENTS.md, then docs/handoff/vereda.md (State, Verified, Assumption
 Decisions). Check the handoff against `git log --oneline main..vereda` and the code; the code
 wins. If this brief asks for work the log already holds, say so and ask before redoing it.
 Last session (2026-10-29/30) built the storefront's stacked table cards and room for the cookie
-banner; the handoff's State has the details. Finish anything its Verified marks as pending
-before Task 1.
+banner; the handoff's State has the details.
 
 TASK 0 — The owner's dev stack is running (started with RATE_LIMIT_MAX=100000
 RATE_LIMIT_AUTH_MAX=100000 TELEMETRY_SINK_FILE=$PWD/.telemetry/e2e-events.jsonl). Stop it by

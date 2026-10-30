@@ -170,7 +170,7 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-29/30, storefront design changes, dev stack stopped for the build)
+## Verified (2026-10-30, storefront design changes, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
 - `TURBO_FORCE=true pnpm test` **1022 passed / 28 skipped**, 30/30 tasks, 0 cached (ui 47, up
@@ -187,13 +187,16 @@ events (T-Events)".
   522 px open, with `--cookie-banner` in the scroll padding (+4 rem bar) and the root's
   bottom padding. At 1024/1280 it is 514 px (61 % of 844). The first pass showed rows
   through the 20 px under the sticky actions; fixed with `-bottom-5`.
-- **Pending (the run was paused by a system suspend overnight):** the full `pnpm e2e`. It
-  was 53 passed, 1 failed at test 54, and the failure is `e2e/ofac.spec.ts:61` (desk OFAC,
-  untouched by this batch; to rerun alone). The live tests (`RUN_DB_INTEGRATION=1`,
-  `REDIS_URL=redis://localhost:6379`) also wait for it: `apps/api/test/{retention,packages,
-  affidavits,package-booking,payment-schedule,proposals,advisories,disruptions,events}
-  .integration.test.ts` and `{dispatch,compliance}.bullmq.integration.test.ts` (27/27 on
-  2026-10-29).
+- `pnpm e2e` (`.next` deleted first): **130 passed, 2 failed, 3 skipped** in 41.0 min of
+  running time. A system suspend paused the run overnight. The new
+  `storefront-keyboard.spec.ts` tests and the axe audit (banner at 1280 and 390) are green.
+  Both failures are desk specs this batch did not touch: `e2e/ofac.spec.ts:61` ("Not
+  certified" not shown) and `e2e/supplier-resources.spec.ts:156`. Rerun alone, with the
+  leftovers killed by PID and `.next` deleted: **2/2**. Skips: the desk at 320/375/414.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
+  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
+  advisories,disruptions,events}.integration.test.ts` and
+  `{dispatch,compliance}.bullmq.integration.test.ts`.
 - Not run: a real screen reader; no sent proposal in dev data, so the proposal's lines were
   not checked in a browser (the full e2e's builder spec drives that page).
 
