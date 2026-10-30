@@ -1249,3 +1249,51 @@ decided:
   `channel: desk`) and `alert_muted` (`muted_for_s`, `channel: desk`) are desk events, sent
   once the API accepted them; `ops_lite` waits for Ops Lite.
 - **Not built:** Ops Lite's channel and push; `/` (no desk search).
+
+## Amendment, 2026-10-29: the storefront pass's deferred design changes
+
+The owner chose the two design changes the storefront pass had deferred, and kept the
+native date fields (no custom date-range picker). No migration, dependency or spend. Where
+the boards (DS-Mobile-Patterns 02 "Data tables", DS-Responsive "Tables", DS 04 consent)
+were silent, the build decided:
+
+- **Stacked cards are below sm (480 px), as DS-Responsive says** ("md → scroll · sm →
+  cards"). From sm to md the table still scrolls in its named box, and from md it is the
+  full table. The compare table keeps its own rule (two packages side by side, scrolling
+  for three or four).
+- **One component, data-driven.** `ResponsiveTable` (`@ota/ui`) takes columns and rows.
+  The pages are server components, so a context cannot tell the table primitives to stack.
+  The desk's `Table` primitives are unchanged (the desk at phone width is Ops Lite's).
+  Converted: the trip's itinerary, a proposal's lines, Legal › Cookie settings' list, a
+  destination's "Getting there" and content-block tables (Travel info, Privacy).
+- **The card.** The first cell is the key field (16 px semibold), and the others follow as
+  label : value pairs in two columns (`minmax(6rem, 2fr) 3fr`), labels in the secondary
+  text colour and the body font even when the values are mono. Values are left-aligned on
+  a phone, even in a column right-aligned from sm up. "Primary action last" has nothing to
+  apply to, because no storefront table has a row action. The cards are divided by the
+  table's existing row rule rather than boxed: four of the five tables already sit in a
+  card or bordered box, and a box inside a box is not a DS pattern.
+- **Semantics.** The roles (`table`, `rowgroup`, `row`, `columnheader`, `cell`) are
+  explicit, because some browsers drop a table's semantics once its display changes. The
+  header row is visually hidden on a phone but stays for assistive technology. The phone
+  labels are `aria-hidden`, so a screen reader hears each header once. The scroll box
+  stays a named keyboard stop on a phone, where it has nothing to scroll; this is
+  harmless, and the attribute cannot change by width.
+- **Room for the cookie banner (WCAG 2.4.11).** The banner reports its measured height as
+  `--cookie-banner`, as the compare tray reports `--fixed-tray`. The height joins the
+  root's `scroll-padding-bottom`, so the browser scrolls a focused element clear of it,
+  and it pads the root's foot, so the end of every page can scroll above it. On Packages
+  with both the tray and the banner showing, the two heights add up even though the
+  banner covers the tray. That reserves too much rather than too little.
+- **The banner on a phone (below md).** The purposes and "Save my selection" wait behind
+  "Choose by purpose" (a disclosure: `aria-expanded`, chevron), placed before the rows it
+  opens. "Reject non-essential" and "Accept all" stay side by side and equal (a basis of
+  8 rem instead of 10 rem, so two fit in a 390 px banner), and the banner takes 36 % of a
+  390 × 844 screen instead of about 60 %. Choosing by purpose is one tap away, and nothing
+  is pre-ticked. From md the banner is unchanged and shows the rows, as on the board.
+- **Sticky actions at the edge.** When the open banner scrolls, the action bar now sticks
+  at the scroll box's very edge (`-bottom-5`, matching the box's padding). Before, rows
+  showed through the 20 px below it.
+- Copy: `cookies.choose` (en "Choose by purpose", es "Elegir por finalidad", fr "Choisir
+  par finalité").
+- **Not built:** the custom date-range picker (owner: native fields).

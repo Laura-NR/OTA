@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-29 20:30
+# Handoff — vereda — updated 2026-10-29 23:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -6,7 +6,8 @@ Build the design team's handoff into the platform. The current handoff is `desig
 Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4–M10, Phase 6, the
 Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
 reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follow-ups and the
-server-side T-Events, on 2026-10-26 the staff passkeys and on 2026-10-27 the Plausible CE sink)
+server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
+and on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes)
 and ADR 0007 (worker app). Staff passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as
 built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
@@ -15,6 +16,22 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-10-29 (night): the storefront pass's deferred design changes**, the owner's pick,
+  native date fields kept (`9e10753`…`c740740`; ADR 0006 amendment of that day;
+  `docs/a11y-storefront-manual-pass.md` rows now fixed). No migration, dependency or spend.
+  - `ResponsiveTable` (`packages/ui/src/components/table.tsx`): columns + rows; under sm
+    (480 px) each row is a card, key field first, then `aria-hidden` label : value pairs;
+    explicit table roles; `className` (header and cells) and `cellClassName` (cells). Used
+    by the itinerary, proposal lines, the cookie list, "Getting there" and content-block
+    tables. The desk keeps the `Table` primitives.
+  - Cookie banner (`cookie-banner.tsx`, `cookie-choices.tsx`, `globals.css`): its measured
+    height is `--cookie-banner`, added to the root's scroll padding and bottom padding. Below
+    md the rows and Save sit behind "Choose by purpose" (`cookies.choose`, en/es/fr); Reject
+    and Accept side by side (36 % of a 390 × 844 screen). The sticky action bar now sits at
+    the scroll box's edge (`-bottom-5`).
+  - e2e: four tests added to `e2e/storefront-keyboard.spec.ts` (desktop Tab walk with the
+    banner; header row from sm up; phone banner + walks; phone cards keep roles; the trip's
+    itinerary stacks).
 - **2026-10-29 (late): the desk's alert acknowledgement, audio cue and mute**, the owner's
   pick, with acknowledging decided as per desk, audited (`9310b23`…`ad31180`; ADR 0006
   amendment of that day; `docs/a11y-desk-manual-pass.md` 01 now fixed). No migration,
@@ -146,44 +163,39 @@ events (T-Events)".
   deferred items (recovery codes, permission overrides, display currencies, runtime flags, the
   idle lock, IP allowlist, new-device email); passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
   desk's `/` (no desk search) and the cue on desk pages other than the dashboard; Ops Lite;
-  a real screen-reader run; the storefront pass's deferred design changes (stacked table
-  cards on a phone, room for the cookie banner, the date-range picker).
+  a real screen-reader run; the custom date-range picker (owner: native fields).
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
   crisis framework, the backup-power wording, the cookie banner's analytics words and the
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-29, desk alert acknowledgement, dev stack stopped for the build)
+## Verified (2026-10-29/30, storefront design changes, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1019 passed / 28 skipped**, 30/30 tasks, 0 cached (domain 387,
-  api 379/27 skipped, schemas 73, ui 44, config 36, email 30, documents 22, theming 14,
-  payments 8, auth 6, imports 5, i18n 4, ai 4, reports 4, storage 3/1 skipped). New: domain
-  `alert-cue.test.ts` (10) and the two desk events; schemas `dispatch.test.ts` (2); api
-  `desk-alerts.service.test.ts` (8), the board's acknowledgement (1) and four RBAC routes.
+- `TURBO_FORCE=true pnpm test` **1022 passed / 28 skipped**, 30/30 tasks, 0 cached (ui 47, up
+  from 44: three `ResponsiveTable` tests; i18n key parity green with `cookies.choose`; the
+  rest as on 2026-10-29).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **125 passed, 2 failed, 3 skipped** in 57.1 min. New and
-  green: `e2e/desk-alerts.spec.ts` (2: cue after the first interaction, `A` with undo then the
-  audit row, the desk's acknowledgement after a reload; Mute 15 min logged with the actor,
-  silent for the older alert, a newer red alert still sounding, Unmute logged). The axe audit
-  (dashboard included) green. Both failures were storefront "larger text" checks
-  (`[ds07-320]` the 404's body read 16 px, `[ds07-768]` a `page.goto` timeout on an event
-  page, as in earlier sessions); no storefront code changed. Rerun alone with the leftovers
-  killed by PID and `.next` deleted: **2/2**. Skips: the desk at 320/375/414.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
-  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
-  advisories,disruptions,events}.integration.test.ts` and
-  `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Browser (dev stack, Chromium): the dashboard with a red alert at 390, 1024 and 1280:
-  screenshots of the strip (counts, audio line, Turn on sound, Mute 15 min), the muted strip
-  with Unmute, the row's Acknowledge and "Acknowledged · <name> · <time>", the toast; computed
-  styles: toast `#1F1B17` with white text and Undo `#F2B134` (the board's values), strip
-  buttons white with error-700 text; no sideways scroll at any width. The first pass put
-  "starts after your first click" on its own line without an icon; it now joins the audio
-  line.
-- Not run: a real screen reader; hearing the cue (headless Chromium; the e2e observes the
-  `ota:alert-cue` event that each played cue dispatches).
+- `e2e/storefront-keyboard.spec.ts` against the dev stack: **12/12**, including the four new
+  tests. With the banner's `globals.css` lines reverted, both banner walks fail; restored,
+  they pass.
+- Browser (dev stack, Chromium) at 390, 1024 and 1280, plus 320 for the cookie list:
+  screenshots and computed styles of the five tables. Under sm: `display:block`/flex/grid,
+  key field 16 px/600, labels in the secondary colour, no sideways scroll at any width; from
+  sm up: table layout, labels `display:none`. The banner at 390 is 303 px (36 %) closed and
+  522 px open, with `--cookie-banner` in the scroll padding (+4 rem bar) and the root's
+  bottom padding. At 1024/1280 it is 514 px (61 % of 844). The first pass showed rows
+  through the 20 px under the sticky actions; fixed with `-bottom-5`.
+- **Pending (the run was paused by a system suspend overnight):** the full `pnpm e2e`. It
+  was 53 passed, 1 failed at test 54, and the failure is `e2e/ofac.spec.ts:61` (desk OFAC,
+  untouched by this batch; to rerun alone). The live tests (`RUN_DB_INTEGRATION=1`,
+  `REDIS_URL=redis://localhost:6379`) also wait for it: `apps/api/test/{retention,packages,
+  affidavits,package-booking,payment-schedule,proposals,advisories,disruptions,events}
+  .integration.test.ts` and `{dispatch,compliance}.bullmq.integration.test.ts` (27/27 on
+  2026-10-29).
+- Not run: a real screen reader; no sent proposal in dev data, so the proposal's lines were
+  not checked in a browser (the full e2e's builder spec drives that page).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -226,6 +238,16 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Storefront design changes (2026-10-29, night):** a new message key shows as its raw key
+  (`cookies.choose`) in a running dev server until `pnpm --filter @ota/i18n build`. Test
+  a `ResponsiveTable` cell by its role and name (`getByRole('cell', { name, exact: true })`):
+  the phone label is `aria-hidden` but `getByText` still finds it, and it is `display:none`
+  from sm up. Playwright's element screenshot of a tall region paints the fixed header over
+  it (an artefact, not a bug). Any new fixed bar must report its height into the root's
+  scroll padding as the tray and banner do, or the keyboard walks in
+  `storefront-keyboard.spec.ts` fail. Proof the walks guard this: with the banner's
+  `globals.css` lines reverted, both banner walks fail on the support page's contacts and
+  FAQ.
 - **Desk alerts (2026-10-29, late):** the cue needs a user gesture, so an e2e records cues
   through `ota:alert-cue` (`addInitScript`) and clicks "Turn on sound" first. Any click (Mute,
   say) also unlocks audio, so the strip's "starts after your first click" sentence vanishes
@@ -513,12 +535,13 @@ events (T-Events)".
     starts only after a user gesture."
 
 ## Next
-1. Owner: choose the next batch. Buildable without a migration: the storefront's deferred
-   design changes (stacked table cards on a phone, room for the cookie banner), or an M9
-   deferred item (recovery codes, permission overrides, display currencies, runtime flags,
-   the idle lock, IP allowlist, new-device email; a doc first where it changes how auth
-   decides). M10's room holds/event photos need a migration doc first. A real screen-reader
-   run (desk and storefront) needs a machine with NVDA or VoiceOver.
+1. Owner: choose the next batch. Buildable without a migration: an M9 deferred item
+   (recovery codes, permission overrides, display currencies, runtime flags, the idle lock,
+   IP allowlist, new-device email; a doc first where it changes how auth decides), or the
+   desk's cue on pages other than the dashboard. M10's room holds/event photos need a
+   migration doc first. A real screen-reader run (desk and storefront) needs a machine with
+   NVDA or VoiceOver. Optional: the desktop cookie banner still covers about 61 % of a
+   1280 × 844 window (the board's layout; focus is now kept clear of it).
 2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
    answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
    plan recommends renting the server only when the agency's legal entity exists (D1).
@@ -941,3 +964,10 @@ events (T-Events)".
   session (orient, tasks, standing rules, environment) and never repeat handoff content. The
   prompt went from about 300 lines to 54; the traps and open questions that lived only in it
   moved to this handoff (Traps, Next items 3–4, the live-test list under Verified).
+- 2026-10-29 — the owner chose the storefront pass's deferred design changes next (over an
+  M9 item, M10's deferred items and the deployment build; the deployment plan is
+  unanswered and Plausible CE is not installed), without the custom date-range picker (the
+  native fields stay). The build stacked tables below sm per DS-Responsive with one
+  data-driven `ResponsiveTable` (pages are server components, so no context), divided the
+  cards by the row rule rather than boxing them, kept the board's full banner from md, and
+  on a phone put the purposes behind a disclosure instead of shrinking the copy.

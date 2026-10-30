@@ -54,7 +54,7 @@ reason).
 | Cards: one link per action; total and model before the click | pass | Title link and "View trip" |
 | Reviews: rating in text | pass | Sample copy |
 | Cookies: Accept and Reject equal; no pre-ticked boxes | pass | Both secondary, the same size. 44 px on touch now |
-| Focus behind the cookie banner | deferred | Until a choice is made, the banner covers about 60 % of a 390 px screen, so focus can move behind it (2.4.11). It comes right after the skip link and the strips, so a keyboard user meets it first. Reserving room for it, or making it smaller on a phone, is a design decision |
+| Focus behind the cookie banner | **fixed** (design change, 2026-10-29) | The banner's measured height joins the root's scroll padding and pads the page's end, so focus is scrolled clear of it and the last content can scroll above it. On a phone its purposes and "Save my selection" wait behind "Choose by purpose": 36 % of a 390 × 844 screen instead of about 60 %, Reject and Accept side by side and equal (`storefront-keyboard.spec.ts`) |
 | Support channel picker, 15-minute reply | pass | Support page |
 
 ## DS 04 · Status, feedback & navigation
@@ -77,12 +77,11 @@ reason).
 | Drawer: focus trapped, close top right, 48 px rows | pass | Rows measured 48 px |
 | Drawer holds language and currency, so the header stays clean | resolved | The phone header keeps the three language links: on a touch screen each is 44 px tall (the hit area grows around the pill) at the width the header has room for. Currency waits for M9 D7 |
 | Targets 48 px, 8 px apart; 44 px minimum | resolved | Controls meet 44 px on touch (see DS 02). Every page passes WCAG 2.5.8 (24 px or spacing) at 390 and 1280 px. Stand-alone text links that are not controls (a back link, "Download PDF", a phone number) keep their line height, as the desk's table links do |
-| Data tables become stacked cards on a phone | deferred | The trip's itinerary table scrolls sideways in a named region instead. Stacked cards are a layout change for a later batch |
+| Data tables become stacked cards on a phone | **fixed** (design change, 2026-10-29) | Under sm (480 px) `ResponsiveTable` turns each row into a card: the key field first, then label : value pairs. From sm up the table scrolls in its named box as before (`storefront-keyboard.spec.ts`) |
 | Offline, text-only mode, stale-data chip | pass | Phase 8 item 2 (`storefront-offline.spec.ts`, `storefront-display.spec.ts`) |
 
 ## Still open
 
 - **A real screen-reader pass** (NVDA + Firefox/Chrome, VoiceOver + Safari/iOS) on the
   home page, the package booking flow and a trip, as for the desk.
-- **The cookie banner on a phone** (focus can go behind it) and **stacked table cards**
-  (DS 05) are design changes, recorded above.
+- **The custom date-range picker**: the owner kept the native date fields (2026-10-29).
