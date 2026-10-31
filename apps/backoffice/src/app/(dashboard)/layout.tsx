@@ -1,15 +1,34 @@
-import { PASSKEY_SIGN_IN_METHOD, isStaffRole, isStaffSessionExpired } from '@ota/domain';
-import type { DeskSessionDto, PasskeyStatusDto } from '@ota/schemas';
+import {
+  PASSKEY_SIGN_IN_METHOD,
+  UserRole,
+  isStaffRole,
+  isStaffSessionExpired,
+} from '@ota/domain';
+import type {
+  DeskAlertMuteStateDto,
+  DeskSessionDto,
+  DispatchBoardRowDto,
+  PasskeyStatusDto,
+} from '@ota/schemas';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { AppShell } from '@/components/app-shell';
+import { DeskAlerts } from '@/components/desk-alerts';
 import { DeskIdleLock } from '@/components/desk-idle-lock';
 import { DeskTelemetryProvider } from '@/components/telemetry/desk-telemetry';
 import { apiFetch, getServerSession } from '@/lib/api';
+import { deskClock } from '@/lib/desk-clock';
 import { ApiError } from '@/lib/errors';
 import { lockedRefusal } from '@/lib/idle-lock';
+import { getThresholds } from '@/lib/operating';
 import { getTenantConfig } from '@/lib/tenant';
+
+/** Those who acknowledge, mute and unmute the desk's alerts; support reads them. */
+const ALERT_MANAGE_ROLES: readonly string[] = [
+  UserRole.OperationsAdmin,
+  UserRole.SuperAdmin,
+];
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession();
@@ -80,14 +99,38 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   const tenant = getTenantConfig();
+  const shell = (
+    <AppShell user={session.user} agencyName={tenant.branding.agencyName}>
+      {children}
+    </AppShell>
+  );
+
+  // The dispatch alerts follow staff around the desk, not only the dashboard.
+  let desk = shell;
+  if (isStaffRole(session.user.role)) {
+    const [rows, muteState, thresholds] = await Promise.all([
+      apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
+      apiFetch<DeskAlertMuteStateDto>('/dispatch/alert-mute').catch(() => null),
+      getThresholds(),
+    ]);
+    desk = (
+      <DeskAlerts
+        initialRows={rows}
+        initialMute={muteState}
+        serverNow={Date.now()}
+        amberThreshold={deskClock(thresholds).amberThreshold}
+        canManage={ALERT_MANAGE_ROLES.includes(session.user.role ?? '')}
+      >
+        {shell}
+      </DeskAlerts>
+    );
+  }
 
   return (
     // EUR is the base currency; display currencies are M9 D7 (deferred).
     <DeskTelemetryProvider currency="EUR">
       <DeskIdleLock user={session.user} session={deskSession} hasPasskey={hasPasskey}>
-        <AppShell user={session.user} agencyName={tenant.branding.agencyName}>
-          {children}
-        </AppShell>
+        {desk}
       </DeskIdleLock>
     </DeskTelemetryProvider>
   );

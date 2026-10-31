@@ -233,10 +233,9 @@ export default async function DashboardPage() {
       {rows === null ? <Alert variant="destructive">{t('loadError')}</Alert> : null}
 
       <OpsDesk
-        initialRows={rows ?? []}
-        serverNow={now.getTime()}
+        initialRows={rows}
         clock={deskClock(thresholds)}
-        initialMute={muteState?.mute ?? null}
+        initialMute={muteState}
         figures={figures}
         ofacMissing={ofacMissing}
         payments={payments}

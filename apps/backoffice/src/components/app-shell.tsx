@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import type { ServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
 
+import { ShellAlertStrip } from './alert-strip';
 import { DeskShortcuts } from './desk-shortcuts';
 import { LocaleSwitcher } from './locale-switcher';
 import { MainNav } from './main-nav';
@@ -40,7 +41,8 @@ function initials(name: string): string {
  * open: the wordmark with the "Ops" caption, the section links, and the
  * signed-in person at the foot. Below `lg` the sidebar stacks above the
  * content as a wrapping row of links (DS 07 §03). A skip link, the first stop,
- * jumps past the sidebar to the page (WCAG 2.4.1).
+ * jumps past the sidebar to the page (WCAG 2.4.1). The page starts with the
+ * desk's dispatch alert strip on every page but the dashboard.
  */
 export async function AppShell({ user, agencyName, children }: AppShellProps) {
   const t = await getTranslations('backoffice.shell');
@@ -106,6 +108,7 @@ export async function AppShell({ user, agencyName, children }: AppShellProps) {
         </header>
         <SectionNav />
         <main id="main" tabIndex={-1} className="flex-1 bg-page p-6 focus:outline-none">
+          <ShellAlertStrip />
           {children}
         </main>
       </div>
