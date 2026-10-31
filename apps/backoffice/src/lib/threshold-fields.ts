@@ -1,4 +1,4 @@
-import type { OperatingThresholds } from '@ota/domain';
+import { FEATURE_FLAGS, type OperatingThresholds } from '@ota/domain';
 
 // Client-safe: the thresholds form and the server table share it.
 
@@ -12,7 +12,7 @@ export interface ThresholdField {
   max?: number;
 }
 
-/** The thresholds in the board's groups; bounds match the API's schema. */
+/** The thresholds in the board's groups, then the flags; bounds match the API's schema. */
 export const THRESHOLD_GROUPS: readonly {
   key: string;
   fields: readonly ThresholdField[];
@@ -64,6 +64,11 @@ export const THRESHOLD_GROUPS: readonly {
       { key: 'staffPasskeysRequired', unit: 'switch' },
       { key: 'staffIdleLockMinutes', unit: 'min', min: 5, max: 240 },
     ],
+  },
+  {
+    // Runtime feature flags (M9 D8b); the default column is the manifest's.
+    key: 'features',
+    fields: FEATURE_FLAGS.map((key) => ({ key, unit: 'switch' as const })),
   },
 ];
 

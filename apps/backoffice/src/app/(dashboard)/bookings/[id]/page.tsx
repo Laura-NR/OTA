@@ -1,6 +1,7 @@
 import {
   BOOKING_PIPELINE,
   UserRole,
+  featureFlagsOf,
   pipelinePosition,
   travelerStatus,
 } from '@ota/domain';
@@ -107,6 +108,7 @@ export default async function BookingPage({
     pkg,
     ofac,
     eventRequests,
+    thresholds,
   ] = await Promise.all([
     apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
     apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
@@ -124,6 +126,7 @@ export default async function BookingPage({
     apiFetch<EventRequestListItemDto[]>(`/event-requests?reservationId=${id}`).catch(
       () => [],
     ),
+    getThresholds(),
   ]);
 
   const now = new Date();
@@ -312,7 +315,7 @@ export default async function BookingPage({
           items={reservation.serviceItems}
           offers={offers}
           serverNow={now.getTime()}
-          clock={deskClock(await getThresholds())}
+          clock={deskClock(thresholds)}
           canManage={canManage}
         />
       </Section>
@@ -376,6 +379,7 @@ export default async function BookingPage({
               status={reservation.status}
               canManage={canManage}
               schedule={schedule}
+              features={featureFlagsOf(thresholds)}
               now={new Date().toISOString()}
             />
           ) : null}

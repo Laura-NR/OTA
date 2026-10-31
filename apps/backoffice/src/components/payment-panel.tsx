@@ -1,5 +1,6 @@
 'use client';
 
+import { railEnabled, type FeatureFlagValues } from '@ota/domain';
 import type { PaymentIntentDto, PaymentScheduleDto } from '@ota/schemas';
 import { Alert, Badge, Button, Label, Select, type BadgeVariant } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
@@ -36,25 +37,30 @@ const RECEIPT_VARIANTS: Record<string, BadgeVariant> = {
  * one, the receipts with their proofs of transfer, more time on a window, and
  * the refunds with their approvals. Confirming still simulates the gateway
  * callback until a real provider with signed webhooks is wired (ADR 0003).
+ * Only the rails switched on in the settings are offered (M9 D8b).
  */
 export function PaymentPanel({
   reservationId,
   status,
   canManage,
   schedule,
+  features,
   now,
 }: {
   reservationId: string;
   status: string;
   canManage: boolean;
   schedule: PaymentScheduleDto;
+  /** The flags in force, which open or close each rail. */
+  features: FeatureFlagValues;
   /** The server's clock (ISO), so overdue marks render the same on both sides. */
   now: string;
 }) {
   const t = useTranslations('backoffice.payments');
   const locale = useLocale();
   const router = useRouter();
-  const [rail, setRail] = useState<Rail>('CARD');
+  const rails = RAILS.filter((option) => railEnabled(features, option));
+  const [rail, setRail] = useState<Rail>(rails[0] ?? 'CARD');
   const [plan, setPlan] = useState<Plan>('FULL');
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -267,23 +273,29 @@ export function PaymentPanel({
               ) : null}
             </div>
           ) : null}
-          <div className="space-y-1">
-            <Label htmlFor="payment-rail">{t('rail')}</Label>
-            <Select
-              id="payment-rail"
-              value={rail}
-              onChange={(event) => setRail(event.target.value as Rail)}
-            >
-              {RAILS.map((option) => (
-                <option key={option} value={option}>
-                  {option === 'CARD' ? t('railCard') : t('railSepa')}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <Button disabled={busy} onClick={createLink}>
-            {busy ? t('working') : t('createLink')}
-          </Button>
+          {rails.length > 0 ? (
+            <>
+              <div className="space-y-1">
+                <Label htmlFor="payment-rail">{t('rail')}</Label>
+                <Select
+                  id="payment-rail"
+                  value={rail}
+                  onChange={(event) => setRail(event.target.value as Rail)}
+                >
+                  {rails.map((option) => (
+                    <option key={option} value={option}>
+                      {option === 'CARD' ? t('railCard') : t('railSepa')}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button disabled={busy} onClick={createLink}>
+                {busy ? t('working') : t('createLink')}
+              </Button>
+            </>
+          ) : (
+            <p className="basis-full text-body-sm text-secondary">{t('noRail')}</p>
+          )}
         </div>
       ) : null}
 
