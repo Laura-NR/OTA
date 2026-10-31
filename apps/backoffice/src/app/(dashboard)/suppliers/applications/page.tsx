@@ -18,8 +18,10 @@ import {
 import { getTranslations } from 'next-intl/server';
 
 import { ApplicationActions } from '@/components/application-actions';
+import { FeatureOffNotice } from '@/components/feature-off-notice';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch, getServerSession } from '@/lib/api';
+import { getThresholds } from '@/lib/operating';
 
 const WRITE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
@@ -30,8 +32,11 @@ function statusVariant(status: string) {
 }
 
 export default async function ApplicationsPage() {
-  const t = await getTranslations('backoffice.applications');
-  const session = await getServerSession();
+  const [t, session, thresholds] = await Promise.all([
+    getTranslations('backoffice.applications'),
+    getServerSession(),
+    getThresholds(),
+  ]);
   const canReview = session?.user.role ? WRITE_ROLES.includes(session.user.role) : false;
 
   let applications: SupplierApplicationDto[] = [];
@@ -45,6 +50,9 @@ export default async function ApplicationsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')} />
+      {thresholds.recruitmentPortal ? null : (
+        <FeatureOffNotice feature="recruitmentPortal" />
+      )}
 
       <Card>
         <CardHeader>

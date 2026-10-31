@@ -17,8 +17,10 @@ import type { BadgeVariant } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { FeatureOffNotice } from '@/components/feature-off-notice';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch } from '@/lib/api';
+import { getThresholds } from '@/lib/operating';
 import { bookingDates, money, opsDate } from '@/lib/ops-format';
 
 const VARIANTS: Record<ProposalListItemDto['status'], BadgeVariant> = {
@@ -31,14 +33,19 @@ const VARIANTS: Record<ProposalListItemDto['status'], BadgeVariant> = {
 
 /** M5: the custom-request queue and the proposals the desk has sent. */
 export default async function ProposalsPage() {
-  const [t, locale] = await Promise.all([getTranslations('proposalsDesk'), getLocale()]);
-  const proposals = await apiFetch<ProposalListItemDto[]>('/proposals?limit=100').catch(
-    () => [],
-  );
+  const [t, locale, thresholds, proposals] = await Promise.all([
+    getTranslations('proposalsDesk'),
+    getLocale(),
+    getThresholds(),
+    apiFetch<ProposalListItemDto[]>('/proposals?limit=100').catch(() => []),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t('title')} description={t('description')} />
+      {thresholds.customItineraryBuilder ? null : (
+        <FeatureOffNotice feature="customItineraryBuilder" />
+      )}
 
       <Card>
         <CardHeader>
