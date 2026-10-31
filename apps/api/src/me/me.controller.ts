@@ -41,6 +41,7 @@ import { CurrentUser } from '../common/auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { ProofsService } from '../payments/proofs.service';
 import { ScheduleService } from '../payments/schedule.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { MeService } from './me.service';
 
 /**
@@ -53,6 +54,7 @@ export class MeController {
     private readonly me: MeService,
     private readonly schedule: ScheduleService,
     private readonly proofs: ProofsService,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   @Get()
@@ -66,13 +68,15 @@ export class MeController {
     return this.me.listReservations(actor.id);
   }
 
+  /** A custom itinerary: refused while the custom builder is switched off (M9 D8b). */
   @Post('reservations')
   @HttpCode(HttpStatus.CREATED)
-  createReservation(
+  async createReservation(
     @Body(new ZodValidationPipe(createMyReservationSchema))
     body: CreateMyReservationRequest,
     @CurrentUser() actor: AuthUser,
   ): Promise<MyReservationDetailDto> {
+    await this.settings.requireFeature('customItineraryBuilder');
     return this.me.createReservation(actor.id, body);
   }
 

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { parseTenantConfig } from '@ota/config';
 import { Prisma } from '@ota/db';
-import { DEFAULT_OPERATING_THRESHOLDS } from '@ota/domain';
+import { DEFAULT_OPERATING_THRESHOLDS, FEATURE_FLAGS } from '@ota/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
@@ -192,5 +192,94 @@ describe('OperatingSettingsService (M9 D1–D3)', () => {
     await expect(
       service.propose(DAYANA, { values: current, reason: 'Nothing' }),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+});
+
+describe('runtime feature flags on the settings (M9 D8b)', () => {
+  const portalOff = parseTenantConfig({
+    tenantId: 'vereda',
+    branding: { agencyName: 'Vereda', licenseNumber: 'MINTUR-TEST' },
+    features: { recruitmentPortal: false },
+  });
+  let prisma: ReturnType<typeof fakePrisma>;
+  let service: OperatingSettingsService;
+
+  beforeEach(() => {
+    prisma = fakePrisma();
+    service = new OperatingSettingsService(prisma as unknown as PrismaService, portalOff);
+  });
+
+  async function refusal(
+    flag: Parameters<OperatingSettingsService['requireFeature']>[0],
+  ) {
+    try {
+      await service.requireFeature(flag);
+      return null;
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConflictException);
+      return (error as ConflictException).getResponse();
+    }
+  }
+
+  it("runs on the manifest's flags until a version applies", async () => {
+    const features = await service.features();
+    expect(features.recruitmentPortal).toBe(false);
+    expect(features.customItineraryBuilder).toBe(true);
+    expect((await service.overview()).defaults.recruitmentPortal).toBe(false);
+    expect(await refusal('recruitmentPortal')).toMatchObject({
+      statusCode: 409,
+      code: 'FEATURE_OFF',
+      feature: 'recruitmentPortal',
+    });
+    expect(await refusal('customItineraryBuilder')).toBeNull();
+  });
+
+  it('switches a flag once a second Super Admin applies it, and refuses at once', async () => {
+    const values = {
+      ...(await service.thresholds()),
+      recruitmentPortal: true,
+      creditCardGatewayRail: false,
+    };
+    const proposal = await service.propose(DAYANA, {
+      values,
+      reason: 'Card gateway down',
+    });
+    expect(proposal.changes).toEqual(['recruitmentPortal', 'creditCardGatewayRail']);
+    // Proposed is not applied.
+    expect(await refusal('creditCardGatewayRail')).toBeNull();
+
+    await service.decide(FOUNDER, proposal.id, 'APPLY');
+    expect(await refusal('creditCardGatewayRail')).toMatchObject({
+      code: 'FEATURE_OFF',
+      feature: 'creditCardGatewayRail',
+    });
+    expect(await refusal('recruitmentPortal')).toBeNull();
+    expect(prisma.audits.at(-1)).toMatchObject({
+      action: 'settings.applied',
+      metadata: { changes: ['recruitmentPortal', 'creditCardGatewayRail'] },
+    });
+  });
+
+  it("keeps the manifest's flags under a version written before the flags existed", async () => {
+    prisma.rows.push({
+      id: '00000000-0000-4000-8000-000000000099',
+      version: 1,
+      status: 'APPLIED',
+      values: {
+        ...Object.fromEntries(
+          Object.entries(DEFAULT_OPERATING_THRESHOLDS).filter(
+            ([key]) => !(FEATURE_FLAGS as readonly string[]).includes(key),
+          ),
+        ),
+        amberPercent: 80,
+      },
+      reason: 'Before D8b',
+      proposedById: 'u-dayana',
+      decidedById: 'u-founder',
+      decidedAt: new Date(),
+      createdAt: new Date(),
+    });
+    expect((await service.thresholds()).amberPercent).toBe(80);
+    expect((await service.features()).recruitmentPortal).toBe(false);
   });
 });

@@ -25,6 +25,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { SupplierApplicationsService } from './supplier-applications.service';
 
 const READ_ROLES = [
@@ -36,14 +37,19 @@ const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
 @Controller('supplier-applications')
 export class SupplierApplicationsController {
-  constructor(private readonly applications: SupplierApplicationsService) {}
+  constructor(
+    private readonly applications: SupplierApplicationsService,
+    private readonly settings: OperatingSettingsService,
+  ) {}
 
+  /** Refused with 409 `FEATURE_OFF` while the recruitment portal is switched off (M9 D8b). */
   @Post()
   @Public()
-  submit(
+  async submit(
     @Body(new ZodValidationPipe(createSupplierApplicationSchema))
     body: CreateSupplierApplicationRequest,
   ): Promise<SupplierApplicationDto> {
+    await this.settings.requireFeature('recruitmentPortal');
     return this.applications.submit(body);
   }
 

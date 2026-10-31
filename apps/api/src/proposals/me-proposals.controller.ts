@@ -28,6 +28,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { sendPdf } from './proposal-pdf';
 import { ProposalsService } from './proposals.service';
 
@@ -39,15 +40,20 @@ import { ProposalsService } from './proposals.service';
 @Controller('me')
 @UseFilters(DomainExceptionFilter)
 export class MeProposalsController {
-  constructor(private readonly proposals: ProposalsService) {}
+  constructor(
+    private readonly proposals: ProposalsService,
+    private readonly settings: OperatingSettingsService,
+  ) {}
 
+  /** Refused with 409 `FEATURE_OFF` while the custom builder is switched off (M9 D8b). */
   @Post('custom-requests')
   @HttpCode(HttpStatus.CREATED)
-  createRequest(
+  async createRequest(
     @Body(new ZodValidationPipe(createCustomRequestSchema))
     body: CreateCustomRequestRequest,
     @CurrentUser() actor: AuthUser,
   ): Promise<CreateCustomRequestResultDto> {
+    await this.settings.requireFeature('customItineraryBuilder');
     return this.proposals.createRequest(actor, body);
   }
 

@@ -14,6 +14,7 @@ import {
   ReservationStatus,
   buildSchedule,
   cardFee,
+  railFeature,
   type ScheduledInstalment,
 } from '@ota/domain';
 import type { PaymentProvider, PaymentRail } from '@ota/payments';
@@ -143,13 +144,15 @@ export class PaymentsService {
    * package's deposit plan allows it (M4 D1–D2); creating it moves
    * SECURED_AND_INVOICED -> PENDING_PAYMENT. Later links pay the instalment
    * still due, the balance included once the booking is confirmed. A card
-   * payment carries the manifest's card fee on top (M4 D6).
+   * payment carries the manifest's card fee on top (M4 D6). A rail switched
+   * off in the settings is refused (M9 D8b).
    */
   async createIntent(
     reservationId: string,
     input: CreatePaymentIntentRequest,
     actor: AuthUser,
   ): Promise<PaymentIntentDto> {
+    await this.settings.requireFeature(railFeature(input.rail));
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
       include: {

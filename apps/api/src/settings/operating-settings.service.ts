@@ -12,9 +12,12 @@ import {
   DEFAULT_OPERATING_THRESHOLDS,
   changedThresholds,
   dispatchTimerPolicy,
+  featureFlagsOf,
   settingsDecisionRefusal,
   thresholdsIssues,
   type DispatchTimers,
+  type FeatureFlag,
+  type FeatureFlagValues,
   type OperatingThresholds,
   type RetentionPolicy,
   type SettingsDecision,
@@ -37,6 +40,9 @@ import { TENANT_CONFIG } from '../tenant/tenant.tokens';
  */
 const CACHE_MS = 60_000;
 const ENTITY = 'OperatingSettings';
+
+/** The 409 code of a request refused because its feature is switched off (D8b). */
+export const FEATURE_OFF_CODE = 'FEATURE_OFF';
 
 const PERSON = { select: { fullName: true, email: true } } as const;
 
@@ -74,8 +80,8 @@ function isUniqueClash(error: unknown): boolean {
 /**
  * M9 operating thresholds (`docs/schema-m9-settings.md` D1–D3): the applied
  * version is what the platform runs on; without one, the code's defaults
- * with the manifest's payment window and refund limits. A Super Admin
- * proposes, a second Super Admin applies or rejects.
+ * with the manifest's payment window, refund limits and feature flags (D8b).
+ * A Super Admin proposes, a second Super Admin applies or rejects.
  */
 @Injectable()
 export class OperatingSettingsService {
@@ -86,19 +92,36 @@ export class OperatingSettingsService {
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
   ) {}
 
-  /** The defaults: today's constants, with the tenant's payment terms. */
+  /** The defaults: today's constants, with the tenant's payment terms and flags. */
   defaults(): OperatingThresholds {
     return {
       ...DEFAULT_OPERATING_THRESHOLDS,
       paymentWindowHours: this.tenant.payments.windowHours,
       refundSingleUpTo: this.tenant.payments.refundApproval.singleUpTo,
       refundDualUpTo: this.tenant.payments.refundApproval.dualUpTo,
+      ...featureFlagsOf(this.tenant.features),
     };
   }
 
   /** The thresholds in force now. */
   async thresholds(): Promise<OperatingThresholds> {
     return (await this.current()).values;
+  }
+
+  /** The feature flags in force now (D8b). */
+  async features(): Promise<FeatureFlagValues> {
+    return featureFlagsOf(await this.thresholds());
+  }
+
+  /** Refuse with 409 `FEATURE_OFF` while `flag` is switched off (D8b). */
+  async requireFeature(flag: FeatureFlag): Promise<void> {
+    if ((await this.features())[flag]) return;
+    throw new ConflictException({
+      statusCode: 409,
+      code: FEATURE_OFF_CODE,
+      feature: flag,
+      message: `This is switched off for now (${flag})`,
+    });
   }
 
   async dispatchTimers(): Promise<DispatchTimers> {
