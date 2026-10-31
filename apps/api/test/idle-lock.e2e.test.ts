@@ -131,7 +131,10 @@ describe('the desk idle lock (guard, /me/session, /me/activity)', () => {
     row.lastActiveAt = ago(31);
     for (const path of ['/me/session', '/reservations', '/me/passkeys']) {
       const response = await request(app.getHttpServer()).get(path).expect(401);
-      expect(response.body.code).toBe('SESSION_LOCKED');
+      expect(response.body).toMatchObject({
+        code: 'SESSION_LOCKED',
+        idleLockMinutes: 30,
+      });
     }
   });
 

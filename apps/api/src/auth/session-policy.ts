@@ -81,6 +81,8 @@ export async function sessionMayConnect(
 export type SessionRefusal = {
   kind: 'session' | 'locked' | PasskeyRefusal;
   message: string;
+  /** For `locked`: the applied limit, which the lock screen names. */
+  idleLockMinutes?: number;
 };
 
 /** The error code of a refusal for an idle-locked desk session (L5). */
@@ -132,8 +134,9 @@ export class SessionPolicy {
   ): Promise<SessionRefusal | null> {
     const message = sessionRefusal(session, now);
     if (message) return { kind: 'session', message };
-    if (await this.idleLocked(session, now)) {
-      return { kind: 'locked', message: LOCKED_MESSAGE };
+    const lockedAfter = await this.idleLockedAfter(session, now);
+    if (lockedAfter !== null) {
+      return { kind: 'locked', message: LOCKED_MESSAGE, idleLockMinutes: lockedAfter };
     }
     const passkey = await this.passkeyRefusal(
       session.user.id,
@@ -144,16 +147,20 @@ export class SessionPolicy {
   }
 
   /**
-   * The idle lock (L1, L2): a staff session with no input reported for the
-   * applied limit. Travelers and own-device sessions never read the setting,
-   * and a session with no sign-in time is left to the other rules.
+   * The idle lock (L1, L2): the applied limit in minutes when a staff session
+   * has reported no input for that long, else null. Travelers and own-device
+   * sessions never read the setting, and a session with no sign-in time is
+   * left to the other rules.
    */
-  async idleLocked(session: AuthSession, now: Date = new Date()): Promise<boolean> {
+  async idleLockedAfter(
+    session: AuthSession,
+    now: Date = new Date(),
+  ): Promise<number | null> {
     const { role } = session.user;
     const { createdAt, lastActiveAt, ownDevice } = session.session;
-    if (!isStaffRole(role) || ownDevice === true || !createdAt) return false;
+    if (!isStaffRole(role) || ownDevice === true || !createdAt) return null;
     const { staffIdleLockMinutes } = await this.settings.thresholds();
-    return isStaffSessionLocked({
+    const locked = isStaffSessionLocked({
       role,
       ownDevice,
       lastActiveAt: lastActiveAt ? new Date(lastActiveAt) : null,
@@ -161,6 +168,7 @@ export class SessionPolicy {
       now,
       minutes: staffIdleLockMinutes,
     });
+    return locked ? staffIdleLockMinutes : null;
   }
 
   /**
@@ -174,7 +182,7 @@ export class SessionPolicy {
   ): Promise<{ code: string; message: string } | null> {
     const message = sessionRefusal(session, now);
     if (message) return { code: 'SESSION_REFUSED', message };
-    if (await this.idleLocked(session, now)) {
+    if ((await this.idleLockedAfter(session, now)) !== null) {
       return { code: SESSION_LOCKED_CODE, message: LOCKED_MESSAGE };
     }
     return null;

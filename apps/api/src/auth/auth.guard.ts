@@ -81,6 +81,7 @@ export class AuthGuard implements CanActivate {
             statusCode: 401,
             code: SESSION_LOCKED_CODE,
             message: refusal.message,
+            idleLockMinutes: refusal.idleLockMinutes,
           });
         }
         throw new UnauthorizedException(refusal.message);
