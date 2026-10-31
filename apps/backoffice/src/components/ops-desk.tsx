@@ -51,6 +51,7 @@ import { ApiError } from '@/lib/errors';
 import { bookingDates, countdown, hoursMinutes, opsTime } from '@/lib/ops-format';
 import { connectEscalation } from '@/lib/socket';
 
+import { useDeskLocked } from './desk-idle-lock';
 import { KpiCard } from './kpi-card';
 import { RedispatchPanel, type RedispatchTarget } from './redispatch-panel';
 import { UndoToast } from './undo-toast';
@@ -212,6 +213,8 @@ export function OpsDesk({
   /** Alerts acknowledged here and not yet back from the API, by `alertKey`. */
   const [localAcks, setLocalAcks] = useState<ReadonlySet<string>>(new Set());
   const sound = useAlertSound();
+  /** The idle lock: no feed and no cue until the desk is unlocked. */
+  const locked = useDeskLocked();
   /** The red alerts this desk has played a cue for, by `alertKey`. */
   const cued = useRef(new Set<string>());
   const lastRedCueAt = useRef<Date | null>(null);
@@ -260,6 +263,7 @@ export function OpsDesk({
   }, [rows.length, track]);
 
   useEffect(() => {
+    if (locked) return;
     const socket = connectEscalation();
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', (reason) => {
@@ -273,7 +277,7 @@ export function OpsDesk({
     return () => {
       socket.close();
     };
-  }, []);
+  }, [locked]);
 
   const now = new Date(nowMs);
   const flagged = rows.flatMap((row) =>
@@ -350,6 +354,7 @@ export function OpsDesk({
     .join('|');
 
   useEffect(() => {
+    if (locked) return;
     const cue = alertCue({
       red: redAlerts,
       amberCrossings: amberToCue.current,
@@ -368,7 +373,7 @@ export function OpsDesk({
       }
     }
     // The clock ticks every second, so a due repeat is never late by more.
-  }, [nowMs, cueSignature, mute, sound.ready]);
+  }, [nowMs, cueSignature, mute, sound.ready, locked]);
 
   useEffect(
     () => () => {

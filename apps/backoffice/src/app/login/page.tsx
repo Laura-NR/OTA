@@ -7,6 +7,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
+  Checkbox,
   Input,
   Label,
 } from '@ota/ui';
@@ -15,6 +16,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { authClient } from '@/lib/auth-client';
+import { IDLE_KEYS, ownDeviceChosen, writeStored } from '@/lib/idle-lock';
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
@@ -25,6 +27,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [passkeyRequired, setPasskeyRequired] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [ownDevice, setOwnDevice] = useState(false);
 
   // `?passkey=required`: the desk sent back someone who used a link but has a
   // passkey (docs/schema-m9-passkeys.md P3). Read after hydration.
@@ -33,6 +36,16 @@ export default function LoginPage() {
       new URLSearchParams(window.location.search).get('passkey') === 'required',
     );
   }, []);
+
+  // "This is my own device" is remembered on this browser only, so the shared
+  // desk PC keeps it unticked (docs/schema-m9-idle-lock.md L1); the desk sends
+  // it to the new session once signed in.
+  useEffect(() => setOwnDevice(ownDeviceChosen()), []);
+
+  function chooseOwnDevice(value: boolean) {
+    setOwnDevice(value);
+    writeStored(IDLE_KEYS.ownDevice, value ? 'yes' : 'no');
+  }
 
   // `?next=/path` returns the person there after sign-in (an invitation, M9).
   function nextPath(): string {
@@ -84,6 +97,12 @@ export default function LoginPage() {
           ) : (
             <div className="space-y-4">
               {passkeyRequired ? <Alert>{t('passkeyRequired')}</Alert> : null}
+              <Checkbox
+                label={t('ownDevice')}
+                description={t('ownDeviceHint')}
+                checked={ownDevice}
+                onChange={(event) => chooseOwnDevice(event.target.checked)}
+              />
               <Button
                 type="button"
                 variant="secondary"

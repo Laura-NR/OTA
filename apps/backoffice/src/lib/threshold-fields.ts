@@ -60,7 +60,10 @@ export const THRESHOLD_GROUPS: readonly {
   },
   {
     key: 'security',
-    fields: [{ key: 'staffPasskeysRequired', unit: 'switch' }],
+    fields: [
+      { key: 'staffPasskeysRequired', unit: 'switch' },
+      { key: 'staffIdleLockMinutes', unit: 'min', min: 5, max: 240 },
+    ],
   },
 ];
 

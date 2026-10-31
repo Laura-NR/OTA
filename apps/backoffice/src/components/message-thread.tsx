@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useDeskLocked } from '@/components/desk-idle-lock';
 import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 import { connectConversation, type MessageSocketEvent } from '@/lib/socket';
@@ -22,6 +23,8 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [body, setBody] = useState('');
   const [connected, setConnected] = useState(false);
+  /** The idle lock: the feed closes until the desk is unlocked. */
+  const locked = useDeskLocked();
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +52,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
   }, [reservationId]);
 
   useEffect(() => {
+    if (locked) return;
     const socket = connectConversation(reservationId);
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
@@ -60,7 +64,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
     return () => {
       socket.close();
     };
-  }, [reservationId]);
+  }, [reservationId, locked]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

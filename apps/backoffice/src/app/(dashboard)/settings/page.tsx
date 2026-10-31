@@ -38,6 +38,7 @@ import {
 import { ThresholdsProposal } from '@/components/settings/thresholds-proposal';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { opsDate, opsTime } from '@/lib/ops-format';
+import { getThresholds } from '@/lib/operating';
 import { CAPABILITIES, type Access } from '@/lib/permissions';
 import { THRESHOLD_GROUPS, thresholdText } from '@/lib/threshold-fields';
 import { getTenantConfig } from '@/lib/tenant';
@@ -653,10 +654,11 @@ async function ThresholdsTab({
 
 async function SecurityTab({ locale }: { locale: string }) {
   const t = await getTranslations('backoffice.settings.security');
-  const [security, audit, passkeys] = await Promise.all([
+  const [security, audit, passkeys, thresholds] = await Promise.all([
     apiFetch<SecurityStatusDto>('/settings/security').catch(() => null),
     apiFetch<SystemAuditEntryDto[]>('/audit-log?limit=50').catch(() => null),
     apiFetch<PasskeyStatusDto>('/me/passkeys').catch(() => null),
+    getThresholds(),
   ]);
   const when = (value: string) => `${opsDate(value, locale)} ${opsTime(value, locale)}`;
 
@@ -672,6 +674,10 @@ async function SecurityTab({ locale }: { locale: string }) {
               <Facts
                 rows={[
                   [t('staffSession'), t('hours', { count: security.staffSessionHours })],
+                  [
+                    t('idleLock'),
+                    t('idleLockValue', { count: thresholds.staffIdleLockMinutes }),
+                  ],
                   [t('travelerSession'), t('travelerSessionValue')],
                   [t('signInLink'), t('minutes', { count: security.signInLinkMinutes })],
                   [t('deactivation'), t('deactivationValue')],
