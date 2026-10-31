@@ -461,6 +461,15 @@ export {
   type PasskeyRefusal,
 } from './settings/passkeys';
 export {
+  ACTIVITY_REPORT_INTERVAL_MS,
+  OWN_DEVICE_WINDOW_MINUTES,
+  STAFF_IDLE_LOCK_MINUTES,
+  activityReportDue,
+  idleLockAt,
+  isStaffSessionLocked,
+  ownDeviceMayBeMarked,
+} from './settings/idle-lock';
+export {
   EVENT_ACCESS,
   EVENT_REQUEST_PATHS,
   EVENT_REQUEST_RETENTION_DAYS,

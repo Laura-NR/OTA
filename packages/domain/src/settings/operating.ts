@@ -1,5 +1,6 @@
 import type { DispatchTimers } from '../dispatch/policy';
 import { UserRole } from '../reservation/status';
+import { STAFF_IDLE_LOCK_MINUTES } from './idle-lock';
 
 /**
  * M9 operating thresholds (`docs/schema-m9-settings.md` D1–D3, Q13). The
@@ -45,6 +46,8 @@ export interface OperatingThresholds {
   conciergeAnswerHours: number;
   /** Staff must sign in with a passkey (`docs/schema-m9-passkeys.md` P1). */
   staffPasskeysRequired: boolean;
+  /** Minutes with no input before a staff desk session locks (`docs/schema-m9-idle-lock.md` L6). */
+  staffIdleLockMinutes: number;
 }
 
 export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
@@ -64,6 +67,7 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   reliabilityMinAnswered: 5,
   conciergeAnswerHours: 48,
   staffPasskeysRequired: false,
+  staffIdleLockMinutes: STAFF_IDLE_LOCK_MINUTES,
 };
 
 export const OPERATING_THRESHOLD_KEYS = Object.keys(

@@ -38,6 +38,7 @@ export const operatingThresholdsSchema = z.object({
   reliabilityMinAnswered: whole(1, 100),
   conciergeAnswerHours: whole(1, 168),
   staffPasskeysRequired: z.boolean(),
+  staffIdleLockMinutes: whole(5, 240),
 });
 
 export type OperatingThresholdsDto = z.infer<typeof operatingThresholdsSchema>;
@@ -208,6 +209,21 @@ export const passkeyStatusSchema = z.object({
 });
 
 export type PasskeyStatusDto = z.infer<typeof passkeyStatusSchema>;
+
+/**
+ * The signed-in staff session as the desk's idle lock reads it
+ * (`docs/schema-m9-idle-lock.md`). `idleLockMinutes` is null for an
+ * own-device session, which never locks.
+ */
+export const deskSessionSchema = z.object({
+  userId: z.string().uuid(),
+  ownDevice: z.boolean(),
+  idleLockMinutes: z.number().int().nullable(),
+  signedInAt: z.string(),
+  lastActiveAt: z.string().nullable(),
+});
+
+export type DeskSessionDto = z.infer<typeof deskSessionSchema>;
 
 /** A Super Admin resets another staff member's passkeys, with a reason (P5). */
 export const resetPasskeysSchema = z.object({
