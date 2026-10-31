@@ -39,6 +39,14 @@ export const operatingThresholdsSchema = z.object({
   conciergeAnswerHours: whole(1, 168),
   staffPasskeysRequired: z.boolean(),
   staffIdleLockMinutes: whole(5, 240),
+  // Runtime feature flags (M9 D8b); the manifest's values are the defaults.
+  interactiveSvgMap: z.boolean(),
+  culturalEventsBanner: z.boolean(),
+  recruitmentPortal: z.boolean(),
+  customItineraryBuilder: z.boolean(),
+  instantBooking: z.boolean(),
+  directBankTransferRail: z.boolean(),
+  creditCardGatewayRail: z.boolean(),
 });
 
 export type OperatingThresholdsDto = z.infer<typeof operatingThresholdsSchema>;
