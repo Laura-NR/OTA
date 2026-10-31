@@ -134,6 +134,12 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
 - The card rail still runs on the mock: TropiPay is deferred until the agency's
   legal documents exist and a business account can be created (ADR 0005). The
   rail -> provider map is `createPaymentProviders` in `packages/payments`.
+- **Switching a rail off** (the bank account is frozen, the card mock must not be
+  offered): Settings › Approvals & thresholds › Features, "Bank transfer rail" or
+  "Card rail" Off, two Super Admins. New links on that rail are refused with 409
+  `FEATURE_OFF`, desk and traveler; a transfer already started keeps its details and
+  proof. The other flags there (recruitment portal, builder, map, events strip,
+  instant label) work the same way; the manifest's values are only the defaults.
 
 ## Rate limiting
 
@@ -284,7 +290,9 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   change in Settings › Approvals & thresholds with two Super Admins; each process
   picks an applied version up within 60 s. A one-person agency changes the
   defaults by a deploy instead (`packages/domain/src/settings/operating.ts` and the
-  manifest's payment terms).
+  manifest's payment terms and feature flags). Once any version has applied, the
+  flags it holds win over a later edit of the manifest's `features`; change them in
+  Settings instead.
 - The desk always needs one active Super Admin: the API refuses to demote or
   deactivate the last one. If it is lost anyway, set a user's `role` to
   `SUPER_ADMIN` in the database and audit the change by hand.

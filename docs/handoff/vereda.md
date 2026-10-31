@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-31 12:00
+# Handoff — vereda — updated 2026-10-31 17:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -8,7 +8,7 @@ Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, o
 reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follow-ups and the
 server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
-on 2026-10-31 the desk idle lock) and ADR 0007 (worker app). Staff passkeys:
+on 2026-10-31 the desk idle lock and the runtime feature flags) and ADR 0007 (worker app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
@@ -17,6 +17,25 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-10-31 (afternoon): runtime feature flags** (M9 D8b), the owner's pick, decided as
+  recommended: two Super Admins per change, the API refuses what an off flag covers, and
+  `interactiveSvgMap` (read by nothing before) gates the map (`bd67105`…`974777f`; ADR 0006
+  amendment of that day). No migration, dependency or spend.
+  - Domain `packages/domain/src/settings/features.ts`: `FEATURE_FLAGS`, `featureFlagsOf`,
+    `railFeature` (CARD → card flag, SEPA/OTHER → wire flag). `OperatingThresholds` now
+    extends the flags, so they are seven more keys of the versioned settings document;
+    `OperatingSettingsService.defaults()` takes them from the manifest.
+  - API: `GET /tenant/config` (public) serves the flags in force; `requireFeature(flag)` →
+    409 `{code: 'FEATURE_OFF', feature}` in `PaymentsService.createIntent` (both rails, desk
+    and traveler) and in the controllers of `POST /supplier-applications`,
+    `POST /me/custom-requests` and `POST /me/reservations`. No new route (RBAC matrix
+    unchanged). Test `apps/api/test/feature-flags.e2e.test.ts`.
+  - Storefront: `lib/features.ts` `getFeatures()` (per request, from the API, manifest as
+    fallback) replaces every `isFeatureEnabled(tenant, …)`; `components/feature-off.tsx`
+    closes `/join` and `/custom`; the trip's payments show `account.payment.railOff` in place
+    of new transfers; Destinations drops the map card. Desk: a "Features" group in the
+    thresholds (`lib/threshold-fields.ts`), the payment panel offers only open rails
+    (`noRail` when none). en/es/fr. e2e `e2e/feature-flags.spec.ts`.
 - **2026-10-31: the desk idle lock**, the owner's pick (M9 D9's deferred item), approved
   L1(b), L2a–L7a, on migration `20261031091301_session_idle_lock` (`ce82491`…`716896a`;
   ADR 0006 amendment of that day).
@@ -187,8 +206,8 @@ events (T-Events)".
   (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
-  deferred items (recovery codes, permission overrides, display currencies, runtime flags, the
-  IP allowlist, new-device email); changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
+  deferred items (recovery codes, permission overrides, display currencies, manifest editing
+  beyond the flags, the IP allowlist, new-device email); changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
   desk's `/` (no desk search) and the cue on desk pages other than the dashboard; Ops Lite;
   a real screen-reader run; the custom date-range picker (owner: native fields).
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
@@ -197,32 +216,35 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-31, desk idle lock, dev stack stopped for the build)
+## Verified (2026-10-31, runtime feature flags, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1051 passed / 28 skipped**, 30/30 tasks, 0 cached (domain
-  398 with `idle-lock.test.ts`; auth 8; api 395 with `idle-lock.e2e.test.ts` (16) and the
-  RBAC matrix's three new routes; i18n key parity green).
+- `TURBO_FORCE=true pnpm test` **1064 passed / 28 skipped**, 30/30 tasks, 0 cached (domain
+  with `features.test.ts` (4); api 404 with `feature-flags.e2e.test.ts` (6) and three flag
+  cases in `settings.service.test.ts`; i18n key parity green).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- Migration `20261031091301_session_idle_lock` applied to the dev DB by `prisma migrate dev`.
-- `pnpm e2e` (`.next` deleted first): **133 passed, 1 failed, 3 skipped** in 56.5 min.
-  `e2e/idle-lock.spec.ts` 2/2. The failure is `e2e/responsive.spec.ts:118` at ds07-768 (a
-  storefront page load timed out): the storefront `next dev` had grown to 8.5 GB RSS with
-  the machine nearly out of memory and answered nothing. Leftovers killed by PID, `.next`
+- `pnpm e2e` (`.next` deleted first): **136 passed, 1 failed, 3 skipped** in 41.4 min.
+  `e2e/feature-flags.spec.ts` 3/3. The failure is `e2e/supplier-resources.spec.ts:156`: a
+  storefront heading never appeared within 90 s while the storefront `next dev` was at
+  ~8 GB RSS with ~0 GB free (the memory trap under Traps). Leftovers killed by PID, `.next`
   deleted, rerun alone on fresh servers: **1/1**. Skips: the desk at 320/375/414.
-- Before the full run, against the dev stack: `idle-lock`, `passkeys`, `settings`,
-  `desk-alerts`, `escalation`, `messages`, `desk-keyboard`, `admin-shell` specs **21/21**.
+- Before the full run, against the dev stack: `feature-flags` 3/3, then `settings`,
+  `passkeys`, `recruitment`, `payment-schedule`, `payments`, `storefront-builder`,
+  `storefront-checkout`, `storefront-content`, `idle-lock` **17/17**; `feature-flags` and
+  `storefront-content` again after the Destinations panel fix **6/6**. After each, the
+  public config served the manifest's flags again.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Browser (dev stack, Chromium) at 390, 1024 and 1280: the lock (rendered locked by the
-  server) is an open `:modal` dialog on the page background, card 358/384 px, title 20 px/600,
-  focus on "Unlock with passkey", buttons 40 px (desk md, 44 on touch), no sideways scroll;
-  the login's own-device row is 16 px with a 20 px box, no sideways scroll. Screenshots
-  checked.
-- Not run: a real screen reader; the socket re-check firing on a live socket after a
-  minute (unit-tested with a fake server; the e2e locks through the page and the API).
+- Browser (dev stack, Chromium, a throwaway script that switched five flags off with two
+  Super Admins and back on) at 390, 1024 and 1280: no sideways scroll on the Features group,
+  `/en/join`, `/en/custom`, `/en/destinations`, the trip page and the desk booking; the
+  closed pages' h1 is 28 px at 390 and 40 px from 1024 (600), buttons 40 px with a mouse;
+  the Features selects 40 px; the desk panel showed `noRail` with both rails off; the
+  trip showed the rail-off alert. Screenshots checked; they showed the panel's "on the map"
+  line, since fixed.
+- Not run: a real screen reader; a second API process picking a flag up within 60 s.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -268,10 +290,23 @@ events (T-Events)".
   and every action, not what the last page showed (developer tools could read its DOM).
   The default 30 minutes applies to every staff session not marked as own device, including
   an ops desk watched without input.
+- **Runtime flags (2026-10-31):** once any settings version has applied, the flags it holds
+  win over a later edit of the manifest's `features` (as the payment window already did); a
+  fork changes them in Settings. The storefront asks the API on every request; if the API is
+  down it shows the manifest's flags, while the API (the only enforcement) is down anyway.
+  Destinations' lede is tenant content and still says "The map shows…" with the map off.
 - **For the owner:** the items under Next; the storefront's sample "Cuba right now" banner says
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Runtime flags (2026-10-31):** a value exported from a `'use client'` module arrives in a
+  server component as a client reference, not the value, so the desk page passes the flags to
+  `PaymentPanel` and the panel filters its own `RAILS`. The API test fake's
+  `requireFeature` calls the real prototype method through `this.features()`, so a test that
+  overrides `thresholds` alone must override `features` too. `e2e/settings.spec.ts`' cleanup
+  deletes every version whose reason starts with "E2E", including `E2E flags…`; the flags
+  spec switches them back on in `afterAll` before deleting, so the 60 s cache holds the
+  manifest's values. A storefront gate goes before the sign-in redirect (`/custom`).
 - **Idle lock (2026-10-31):** a test or fixture that fakes a staff session with a
   `createdAt` more than 30 minutes old and no `lastActiveAt` is now refused as locked
   (`apps/api/test/auth-guard.e2e.test.ts` gives its sessions `lastActiveAt: new Date()`);
@@ -289,6 +324,9 @@ events (T-Events)".
   storefront spec timed out at `page.goto` (`responsive.spec.ts` ds07-768, 4 min). Check
   `ps -o rss` on the :3000 PID; kill the leftovers by PID (`kill -9` if a hung next-server
   ignores SIGTERM), delete `apps/*/.next` and rerun the spec alone.
+  It recurred in the next run the same day (storefront ~8 GB, back-office ~4 GB, test 112,
+  `supplier-resources.spec.ts`). Do not `kill $(pgrep -f "turbo run dev|…")` from a
+  shell whose own command line matches: it kills that shell; kill by the ports' PIDs.
 - **Storefront design changes (2026-10-29, night):** a new message key shows as its raw key
   (`cookies.choose`) in a running dev server until `pnpm --filter @ota/i18n build`. Test
   a `ResponsiveTable` cell by its role and name (`getByRole('cell', { name, exact: true })`):
@@ -514,6 +552,11 @@ events (T-Events)".
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-10-31: feature flags are runtime settings (M9 D8b): the manifest's `features` are
+    the defaults of seven keys in the operating-settings document, changed by two Super
+    Admins. Read them through `OperatingSettingsService.features()`/`requireFeature()` (API,
+    409 `FEATURE_OFF`), `getFeatures()` (storefront) or `getThresholds()` (desk), never
+    `isFeatureEnabled(tenant, …)` in an app. A new flag-gated action calls `requireFeature`."
   - "2026-10-29: storefront touch sizes use the preset's `pointer-coarse:` variant
     (`@media (pointer: coarse)`): md buttons, Input and Select are 44 px on touch and 40 px with
     a mouse; stand-alone link lists take `TOUCH_ROW` (`apps/storefront/src/lib/button.ts`).
@@ -595,10 +638,10 @@ events (T-Events)".
 
 ## Next
 1. Owner: choose the next batch. Buildable without a migration: an M9 deferred item
-   (runtime flags (D8b, rides on `operating_settings`), recovery codes, permission
-   overrides, display currencies, IP allowlist, new-device email; a doc first where it
-   changes how auth decides, and new-device email needs a "known device" record), or the
-   desk's cue on pages other than the dashboard. M10's room holds/event photos need a
+   (recovery codes, permission overrides, display currencies, IP allowlist, new-device
+   email; a doc first where it changes how auth decides, and new-device email needs a
+   "known device" record), the desk's cue on pages other than the dashboard, or a desk
+   notice on Applications/Custom requests while their flag is off. M10's room holds/event photos need a
    migration doc first. A real screen-reader run (desk and storefront) needs a machine with
    NVDA or VoiceOver. Optional: the desktop cookie banner still covers about 61 % of a
    1280 × 844 window (the board's layout; focus is now kept clear of it).
@@ -1043,3 +1086,12 @@ events (T-Events)".
   passkey rule from Better Auth's gate (setup needs those routes), had the 401 carry the
   limit so a page rendered locked can name it, showed both unlock paths when the page could
   not tell whether the person has a passkey, and put the lock's axe check in its own spec.
+- 2026-10-31 — the owner chose runtime feature flags next (M9 D8b; over the new-device email,
+  the cue on other desk pages and recovery codes; the deployment plan is unanswered and
+  Plausible CE is not installed) and decided as recommended: two Super Admins per change
+  (over a one-person kill switch), the API refuses what an off flag covers (over pages only),
+  and `interactiveSvgMap` gates the map (over listing it as unused). The build put the flags
+  in the thresholds document (no migration), gated the builder's older
+  `POST /me/reservations` too, refused after body validation and a traveler's ownership
+  check, kept a transfer already started payable by proof, and closed `/custom` before
+  asking anyone to sign in.

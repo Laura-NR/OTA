@@ -1334,3 +1334,45 @@ decided:
   label and "Used by", and `settings.security.idleLock`/`idleLockValue`, in en, es and fr.
 - **Not built:** changing "own device" after sign-in (sign in again), and an idle lock for
   travelers or suppliers.
+
+## Amendment, 2026-10-31: runtime feature flags (M9 D8b)
+
+The owner chose runtime feature flags as the next M9 deferred item (`docs/schema-m9-settings.md`
+D8 (b)) and decided, on 2026-10-31: a flag changes like a threshold (one Super Admin proposes,
+a second applies, versioned and audited); switching one off makes the API refuse what it
+covers, not only the pages; and `interactiveSvgMap`, which nothing read, now gates the
+destinations map. No migration (the flags ride on `operating_settings`), dependency or spend.
+Where the boards (A-Settings, Join, Custom, Destinations) were silent, the build decided:
+
+- **Where the flags sit.** A "Features" group after Security in "Approvals & thresholds": the
+  seven manifest flags as On/Off selects (the `switch` unit the passkey rule already uses),
+  in the table with their "Default" (the manifest's value) and "Used by". A version written
+  before the flags existed keeps the manifest's values. The Manifest tab still shows the
+  file's flags, now noted as the defaults.
+- **What off stops.** The two rails refuse new payment links on their rail (`OTHER` is a
+  transfer), desk and traveler; the recruitment portal refuses new public applications; the
+  builder refuses new custom requests and the older `POST /me/reservations` itinerary. Each
+  refusal is 409 `{code: 'FEATURE_OFF', feature}`, after the body is validated and after a
+  traveler's ownership check. What already exists (a pending transfer, its proof, an
+  application or request under review, a proposal) goes on. The events strip and the
+  "Instant" label change only the pages.
+- **The closed pages.** `/join` and `/custom` render a page laid out like the 404 (h1, one
+  line, Home / Browse trips or About us / Contact us; `featureOff.*`), `/custom` before
+  asking anyone to sign in. Their footer and page links disappear as before. Without the
+  map, Destinations keeps the layer chips, the province buttons and the list, and the
+  panel's line no longer points at the map (`destinations.panel.textNoMap`).
+- **Payments.** The desk panel offers only the rails that are on; with none, it says so and
+  where a Super Admin switches one on (`backoffice.payments.noRail`). The traveler's trip
+  keeps a transfer already started (bank details, proof) but, with the wire rail off, shows
+  an info alert with a contact link in place of the plan chooser or the pay button
+  (`account.payment.railOff`).
+- **How fast.** The storefront reads the flags from `GET /tenant/config` on every request
+  (falling back to the manifest when the API is down); the API applies a version at once in
+  the process that applied it and within 60 s in others, as for every threshold.
+- Copy: the group, labels and "Used by" lines, the manifest note, `featureOff.*`,
+  `account.payment.railOff`/`contactUs`, `destinations.panel.textNoMap` and
+  `backoffice.payments.noRail`, in en, es and fr.
+- **Not built:** a one-person kill switch (owner: two Super Admins), editing the rest of the
+  manifest at runtime (D8 (c)), a desk notice on Applications or Custom requests when
+  their flag is off, and Destinations' lede without the map (it is the tenant's content and
+  still says "The map shows…").

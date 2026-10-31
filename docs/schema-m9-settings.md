@@ -148,6 +148,8 @@ the fork model wants (`tenant/` is the fork's contract; `docs/forking.md`).
 (b) Runtime overrides for the feature flags only, stored with the thresholds (D1) and applied
 instantly; the rest of the manifest stays a file.
 (c) Edit the whole manifest in the database.
+**Status (2026-10-31):** (b) built at the owner's request, with two Super Admins per change and
+the API refusing what a switched-off flag covers (ADR 0006 amendment of that day).
 **Recommend (a).** Flags are read by the storefront and the back-office at build and render time
 from the file; making them runtime means both apps fetch them from the API. (b) can follow, with
 no further migration if it rides on `operating_settings`, once you want a rail switched off
