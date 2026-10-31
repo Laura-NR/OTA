@@ -10,6 +10,8 @@ export interface AuthUser {
   role: UserRole;
   /** How the session was created (`session.signInMethod`); `passkey` for a passkey sign-in. */
   signInMethod?: string | null;
+  /** The Better Auth session behind the request (the idle lock writes to it). */
+  sessionId?: string;
 }
 
 export interface RequestWithUser {

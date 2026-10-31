@@ -14,7 +14,7 @@ import { ROLES_KEY } from '../common/auth/roles.decorator';
 import { ALLOW_WITHOUT_PASSKEY_KEY } from './allow-without-passkey.decorator';
 import { AuthService } from './auth.service';
 import { IS_PUBLIC_KEY } from './public.decorator';
-import { SessionPolicy } from './session-policy';
+import { SESSION_LOCKED_CODE, SessionPolicy } from './session-policy';
 
 interface RequestWithAuth extends RequestWithUser {
   headers: IncomingHttpHeaders;
@@ -24,7 +24,8 @@ interface RequestWithAuth extends RequestWithUser {
  * Global auth guard. Secure by default: every route requires a valid session
  * unless marked `@Public()`. A deactivated user is refused, and a staff
  * session ends 12 hours after sign-in (M9 D5, D9); travelers keep Better
- * Auth's session. With the staff passkey rule on, a staff session that did
+ * Auth's session. An idle-locked staff session is refused with 401
+ * `SESSION_LOCKED` (`docs/schema-m9-idle-lock.md`). With the staff passkey rule on, a staff session that did
  * not come from a passkey is refused: 403 `PASSKEY_SETUP_REQUIRED` when the
  * person has none yet, 401 `PASSKEY_SIGN_IN_REQUIRED` otherwise, except on
  * `@AllowWithoutPasskey()` routes. A route with `@Roles(...)` also requires
@@ -55,7 +56,7 @@ export class AuthGuard implements CanActivate {
     const refusal = await this.policy.refusal(session);
     if (refusal) {
       const allowed =
-        refusal.kind !== 'session' &&
+        (refusal.kind === 'enroll' || refusal.kind === 'use_passkey') &&
         this.reflector.getAllAndOverride<boolean>(ALLOW_WITHOUT_PASSKEY_KEY, [
           context.getHandler(),
           context.getClass(),
@@ -75,6 +76,13 @@ export class AuthGuard implements CanActivate {
             message: refusal.message,
           });
         }
+        if (refusal.kind === 'locked') {
+          throw new UnauthorizedException({
+            statusCode: 401,
+            code: SESSION_LOCKED_CODE,
+            message: refusal.message,
+          });
+        }
         throw new UnauthorizedException(refusal.message);
       }
     }
@@ -84,6 +92,7 @@ export class AuthGuard implements CanActivate {
       email: session.user.email,
       role: (session.user.role ?? UserRole.Traveler) as UserRole,
       signInMethod: session.session.signInMethod ?? null,
+      sessionId: session.session.id,
     };
     request.user = user;
 

@@ -5,6 +5,7 @@ import {
   PASSKEY_SIGN_IN_METHOD,
   isStaffRole,
   isStaffSessionExpired,
+  isStaffSessionLocked,
   passkeyChangeRefusal,
   passkeyRefusal,
   staffPasskeysEnforced,
@@ -73,8 +74,19 @@ export async function sessionMayConnect(
   }
 }
 
-/** `session`: deactivated or past the staff limit; the others are the passkey rule. */
-export type SessionRefusal = { kind: 'session' | PasskeyRefusal; message: string };
+/**
+ * `session`: deactivated or past the staff limit; `locked`: the desk's idle
+ * lock (`docs/schema-m9-idle-lock.md`); the others are the passkey rule.
+ */
+export type SessionRefusal = {
+  kind: 'session' | 'locked' | PasskeyRefusal;
+  message: string;
+};
+
+/** The error code of a refusal for an idle-locked desk session (L5). */
+export const SESSION_LOCKED_CODE = 'SESSION_LOCKED';
+
+const LOCKED_MESSAGE = 'The desk locked after a period with no input; unlock it';
 
 const PASSKEY_MESSAGES: Record<PasskeyRefusal, string> = {
   enroll: 'Set up a passkey to use the desk',
@@ -87,10 +99,12 @@ const CHANGE_MESSAGES: Record<PasskeyChangeRefusal, string> = {
 };
 
 /**
- * Who may use a session (`docs/schema-m9-passkeys.md`): the account and
- * staff-session rules, then the staff passkey rule. The guard, the `/ops` and
- * `/conversations` gateways and the T-Events intake share it, and Better
- * Auth's passkey routes ask it before a staff member's passkeys change.
+ * Who may use a session (`docs/schema-m9-passkeys.md`,
+ * `docs/schema-m9-idle-lock.md`): the account and staff-session rules, the
+ * idle lock, then the staff passkey rule. The guard, the `/ops` and
+ * `/conversations` gateways and the T-Events intake share it; Better Auth's
+ * session routes ask `gateRefusal`, and its passkey routes ask
+ * `changeRefusal` before a staff member's passkeys change.
  */
 @Injectable()
 export class SessionPolicy {
@@ -118,12 +132,52 @@ export class SessionPolicy {
   ): Promise<SessionRefusal | null> {
     const message = sessionRefusal(session, now);
     if (message) return { kind: 'session', message };
+    if (await this.idleLocked(session, now)) {
+      return { kind: 'locked', message: LOCKED_MESSAGE };
+    }
     const passkey = await this.passkeyRefusal(
       session.user.id,
       session.user.role,
       session.session.signInMethod,
     );
     return passkey ? { kind: passkey, message: PASSKEY_MESSAGES[passkey] } : null;
+  }
+
+  /**
+   * The idle lock (L1, L2): a staff session with no input reported for the
+   * applied limit. Travelers and own-device sessions never read the setting,
+   * and a session with no sign-in time is left to the other rules.
+   */
+  async idleLocked(session: AuthSession, now: Date = new Date()): Promise<boolean> {
+    const { role } = session.user;
+    const { createdAt, lastActiveAt, ownDevice } = session.session;
+    if (!isStaffRole(role) || ownDevice === true || !createdAt) return false;
+    const { staffIdleLockMinutes } = await this.settings.thresholds();
+    return isStaffSessionLocked({
+      role,
+      ownDevice,
+      lastActiveAt: lastActiveAt ? new Date(lastActiveAt) : null,
+      signedInAt: new Date(createdAt),
+      now,
+      minutes: staffIdleLockMinutes,
+    });
+  }
+
+  /**
+   * Better Auth's routes ask this before acting on a session (L5): the
+   * account, staff-limit and idle rules. The passkey rule is left out, since
+   * a setup-only session enrolls through those routes (P3).
+   */
+  async gateRefusal(
+    session: AuthSession,
+    now: Date = new Date(),
+  ): Promise<{ code: string; message: string } | null> {
+    const message = sessionRefusal(session, now);
+    if (message) return { code: 'SESSION_REFUSED', message };
+    if (await this.idleLocked(session, now)) {
+      return { code: SESSION_LOCKED_CODE, message: LOCKED_MESSAGE };
+    }
+    return null;
   }
 
   /** The setup page's view of the signed-in person (P3, P4). */

@@ -45,8 +45,9 @@ async function bootstrap(): Promise<void> {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  // Better Auth's passkey routes ask the Nest session policy (P4); requests
-  // arrive only after `listen`, by which time it is resolved below.
+  // Better Auth's session and passkey routes ask the Nest session policy
+  // (idle lock L5, passkeys P4); requests arrive only after `listen`, by
+  // which time it is resolved below.
   const resolved: { sessionPolicy?: SessionPolicy } = {};
   const policy = (): SessionPolicy => {
     if (!resolved.sessionPolicy) throw new Error('The session policy is not ready');
@@ -74,6 +75,7 @@ async function bootstrap(): Promise<void> {
         changed: (input) => policy().passkeyChanged(input),
       },
     },
+    sessionGate: { refusal: (session) => policy().gateRefusal(session) },
   });
   setAuthRuntime({ auth, toWebHeaders });
   const authHandler = createAuthMiddleware(auth);

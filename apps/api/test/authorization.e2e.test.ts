@@ -166,6 +166,10 @@ const ROUTES: Route[] = [
   },
   // docs/schema-m9-passkeys.md P3: the setup page's status, for any signed-in person.
   { method: 'get', path: '/me/passkeys', allowed: 'authenticated' },
+  // docs/schema-m9-idle-lock.md: the desk's lock facts, input reports and own-device choice.
+  { method: 'get', path: '/me/session', allowed: 'opsRead' },
+  { method: 'post', path: '/me/activity', allowed: 'opsRead' },
+  { method: 'post', path: '/me/session/own-device', allowed: 'opsRead' },
   { method: 'get', path: '/me/consents', allowed: 'authenticated' },
   { method: 'post', path: '/me/consents', allowed: 'authenticated' },
   // M5: the traveler's own custom requests and proposals.

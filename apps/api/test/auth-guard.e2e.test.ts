@@ -45,6 +45,8 @@ const fakeAuthService = {
         userId: '11111111-1111-4111-8111-111111111111',
         expiresAt: new Date(Date.now() + 7 * 24 * HOUR),
         createdAt: new Date(Date.now() - session.signedInHoursAgo * HOUR),
+        // A desk in use, so the idle lock (docs/schema-m9-idle-lock.md) stays out of it.
+        lastActiveAt: new Date(),
       },
     };
   },

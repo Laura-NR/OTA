@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, type OnModuleDestroy } from '@nestjs/common';
 import {
   OnGatewayConnection,
   WebSocketGateway,
@@ -11,6 +11,7 @@ import type { Server, Socket } from 'socket.io';
 
 import { AuthService } from '../auth/auth.service';
 import { SessionPolicy, sessionMayConnect } from '../auth/session-policy';
+import { startSocketRecheck } from '../auth/socket-recheck';
 import type {
   DeskAlertEvent,
   EscalationEvent,
@@ -28,18 +29,21 @@ const OPS_ROLES: readonly string[] = [
  * Real-time escalation channel for the operations desk. Clients connect to the
  * `ops` namespace; the handshake is authenticated with the Better Auth session
  * cookie, and only operations roles whose session the guard would accept
- * (`SessionPolicy`, passkey rule included) may join. Events mirror dispatch activity so
+ * (`SessionPolicy`, passkey rule included) may join, and a socket whose
+ * session is refused later (idle lock, deactivation) is dropped within a
+ * minute. Events mirror dispatch activity so
  * the dashboard can raise amber/red cues and offer click-to-call, and the desk's
  * acknowledgements and mutes so every open desk stops or resumes its cue.
  */
 @WebSocketGateway({ namespace: 'ops', cors: { origin: true, credentials: true } })
 export class EscalationGateway
-  implements EscalationPublisher, OnGatewayConnection, OnGatewayInit
+  implements EscalationPublisher, OnGatewayConnection, OnGatewayInit, OnModuleDestroy
 {
   @WebSocketServer()
   server!: Server;
 
   private readonly logger = new Logger(EscalationGateway.name);
+  private stopRecheck?: () => void;
 
   constructor(
     private readonly auth: AuthService,
@@ -47,7 +51,17 @@ export class EscalationGateway
   ) {}
 
   afterInit(): void {
+    this.stopRecheck = startSocketRecheck(
+      this.server,
+      this.auth,
+      this.policy,
+      this.logger,
+    );
     this.logger.log('Escalation gateway ready on namespace /ops');
+  }
+
+  onModuleDestroy(): void {
+    this.stopRecheck?.();
   }
 
   async handleConnection(client: Socket): Promise<void> {
