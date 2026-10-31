@@ -1,4 +1,3 @@
-import { isFeatureEnabled } from '@ota/config';
 import { destinationsContentSchema, type ConditionTopic } from '@ota/schemas';
 import {
   AccordionItem,
@@ -24,6 +23,7 @@ import { getCatalog } from '@/lib/catalog';
 import { getPageContent } from '@/lib/content';
 import { buildDestinationViews, buildProvinceViews, getGeography } from '@/lib/geography';
 import { getPackages } from '@/lib/packages';
+import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
 
 const wrap = 'mx-auto w-full max-w-container px-6 md:px-8 lg:px-10';
@@ -111,8 +111,9 @@ export default async function DestinationPage({
   }
   const { destination, province, detail, trips } = data;
   const tenant = getTenantConfig();
-  const builder = isFeatureEnabled(tenant, 'customItineraryBuilder');
-  const instant = isFeatureEnabled(tenant, 'instantBooking');
+  const features = await getFeatures();
+  const builder = features.customItineraryBuilder;
+  const instant = features.instantBooking;
   const [t, nav, common, experiences, stays] = await Promise.all([
     getTranslations('destinations'),
     getTranslations('nav'),

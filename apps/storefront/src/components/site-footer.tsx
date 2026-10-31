@@ -1,5 +1,4 @@
 import type { TenantConfig } from '@ota/config';
-import { isFeatureEnabled } from '@ota/config';
 import { destinationsContentSchema } from '@ota/schemas';
 import { cn } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
@@ -10,6 +9,7 @@ import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
 import { TOUCH_ROW } from '@/lib/button';
 import { getPageContent } from '@/lib/content';
+import { getFeatures } from '@/lib/features';
 import { getGeography } from '@/lib/geography';
 
 type Href = ComponentProps<typeof Link>['href'];
@@ -66,6 +66,7 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
   const t = await getTranslations('footer');
   const nav = await getTranslations('nav');
   const content = await getTranslations('content');
+  const features = await getFeatures();
   const tagline = content.has('footer.tagline') ? content('footer.tagline') : null;
   const { whatsappNumber, supportEmail } = tenant.branding;
   const geography = getGeography();
@@ -92,7 +93,7 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
       title: nav('packages'),
       links: [
         { key: 'compare', label: t('compare'), href: '/packages/compare' },
-        ...(isFeatureEnabled(tenant, 'customItineraryBuilder')
+        ...(features.customItineraryBuilder
           ? [{ key: 'custom', label: t('customItinerary'), href: '/custom' }]
           : []),
       ],
@@ -158,7 +159,7 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
           label: t('contact'),
           href: { pathname: '/support', hash: 'contact' },
         },
-        ...(isFeatureEnabled(tenant, 'recruitmentPortal')
+        ...(features.recruitmentPortal
           ? [{ key: 'join', label: t('joinNetwork'), href: '/join' }]
           : []),
         { key: 'about', label: t('about'), href: '/about' },
@@ -195,7 +196,7 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
               </div>
             ))}
         </div>
-        {isFeatureEnabled(tenant, 'directBankTransferRail') ? (
+        {features.directBankTransferRail ? (
           <ul
             aria-label={t('paymentMethods')}
             className="flex flex-wrap gap-2 border-t border-neutral-0/15 pt-6"

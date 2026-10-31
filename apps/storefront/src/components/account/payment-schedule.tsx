@@ -3,6 +3,7 @@ import { Alert, Badge, type BadgeVariant } from '@ota/ui';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
+import { getFeatures } from '@/lib/features';
 import { formatMoney } from '@/lib/format';
 
 import {
@@ -31,7 +32,8 @@ const PROOF_BADGES: Record<string, BadgeVariant> = {
  * choice of deposit or full amount; after it, each instalment with its due
  * date, the pending transfer's bank details and its proof of transfer, and
  * any refunds. Rendered on the server, so amounts and dates are formatted once;
- * only the actions are client components.
+ * only the actions are client components. With the wire rail switched off
+ * (M9 D8b) no new transfer starts; one already started keeps its details.
  */
 export async function PaymentSchedule({
   reservationId,
@@ -47,10 +49,11 @@ export async function PaymentSchedule({
   /** The OFAC gate holds payment until every US traveler has certified (M3). */
   locked: boolean;
 }) {
-  const [t, format, locale] = await Promise.all([
+  const [t, format, locale, features] = await Promise.all([
     getTranslations('account.payment'),
     getFormatter(),
     getLocale(),
+    getFeatures(),
   ]);
   const money = (value: string) => formatMoney(value, schedule.currency, locale);
   // A balance falls due on a calendar day (stored at UTC midnight); a payment
@@ -114,6 +117,18 @@ export async function PaymentSchedule({
       ]
     : [];
 
+  const railOff = (
+    <Alert variant="info">
+      {t('railOff')}{' '}
+      <Link
+        href={{ pathname: '/support', hash: 'contact' }}
+        className="font-semibold underline underline-offset-[3px]"
+      >
+        {t('contactUs')}
+      </Link>
+    </Alert>
+  );
+
   return (
     <section
       aria-labelledby="pay-title"
@@ -126,6 +141,8 @@ export async function PaymentSchedule({
       {schedule.instalments.length === 0 ? (
         locked ? (
           <Alert variant="warning">{t('locked')}</Alert>
+        ) : !features.directBankTransferRail ? (
+          railOff
         ) : (
           <>
             <p className="text-body-sm text-secondary">{t('choose')}</p>
@@ -231,12 +248,14 @@ export async function PaymentSchedule({
                   />
                 )}
               </div>
-            ) : (
+            ) : features.directBankTransferRail ? (
               <PayInstalmentButton
                 reservationId={reservationId}
                 bookingCode={bookingCode}
                 label={t('pay', { amount: money(next.amount) })}
               />
+            ) : (
+              railOff
             )
           ) : null}
         </>

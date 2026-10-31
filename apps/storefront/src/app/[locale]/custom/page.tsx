@@ -9,10 +9,12 @@ import {
   type BuilderActivity,
   type BuilderProvince,
 } from '@/components/custom-builder';
+import { FeatureOff } from '@/components/feature-off';
 import { getServerSession } from '@/lib/api';
 import { getCatalog } from '@/lib/catalog';
 import { getPageContent } from '@/lib/content';
 import { countryOptions } from '@/lib/countries';
+import { getFeatures } from '@/lib/features';
 import { getGeography, provinceCode, provinceName } from '@/lib/geography';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -25,9 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
  * The designed custom builder (Custom / M-Custom boards), behind sign-in like
  * the Booking form. Provinces come from the tenant's destination data (only
  * those it serves), activities from the live catalogue's experiences, and the
- * styles and sample rates from the manifest's `customBuilder` block.
+ * styles and sample rates from the manifest's `customBuilder` block. Closed,
+ * before sign-in, while the builder is switched off (M9 D8b).
  */
 export default async function CustomPage() {
+  if (!(await getFeatures()).customItineraryBuilder) {
+    return <FeatureOff feature="customItineraryBuilder" />;
+  }
   const locale = await getLocale();
   const session = await getServerSession();
   if (!session) {

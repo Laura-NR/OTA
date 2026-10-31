@@ -67,9 +67,11 @@ function swatch(province: ProvinceView, layer: MapLayer, inRoute: boolean): stri
  * Destinations (Destinations board): a province map with three layers — where
  * the network operates, conditions now, and a route sketch — a panel for the
  * picked province or the route, the same provinces as a strip of buttons, and
- * the destinations filtered by province or route and by theme.
+ * the destinations filtered by province or route and by theme. Without the
+ * map (`interactiveSvgMap` switched off, M9 D8b) the buttons pick alone.
  */
 export function DestinationsExplorer({
+  map,
   provinces,
   destinations,
   themes,
@@ -77,6 +79,7 @@ export function DestinationsExplorer({
   conditionsNote,
   initialProvince,
 }: {
+  map: boolean;
   provinces: readonly ProvinceView[];
   destinations: readonly DestinationView[];
   themes: readonly { key: string; label: string }[];
@@ -260,28 +263,30 @@ export function DestinationsExplorer({
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="flex min-w-0 flex-col gap-4">
-          <section
-            aria-labelledby="map-title"
-            className="flex flex-col gap-3 rounded-lg border bg-surface p-4 md:p-5"
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 id="map-title" className="text-h4 text-default">
-                {t('mapTitle')}
-              </h2>
-              <p className="text-caption text-muted">{t(`legend.${layer}`)}</p>
-            </div>
-            <ProvinceMap
-              provinces={provinces}
-              points={destinations.map((destination) => destination.point)}
-              layer={layer}
-              selected={selected}
-              route={route}
-              label={t('mapAria')}
-              describe={describe}
-              onPick={pick}
-            />
-            <p className="text-caption text-muted">{t('mapNote')}</p>
-          </section>
+          {map ? (
+            <section
+              aria-labelledby="map-title"
+              className="flex flex-col gap-3 rounded-lg border bg-surface p-4 md:p-5"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 id="map-title" className="text-h4 text-default">
+                  {t('mapTitle')}
+                </h2>
+                <p className="text-caption text-muted">{t(`legend.${layer}`)}</p>
+              </div>
+              <ProvinceMap
+                provinces={provinces}
+                points={destinations.map((destination) => destination.point)}
+                layer={layer}
+                selected={selected}
+                route={route}
+                label={t('mapAria')}
+                describe={describe}
+                onPick={pick}
+              />
+              <p className="text-caption text-muted">{t('mapNote')}</p>
+            </section>
+          ) : null}
 
           <div className="flex gap-2 overflow-x-auto pb-1 md:hidden">
             {stripProvinces.map((province) => provinceButton(province, true))}

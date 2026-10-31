@@ -5,8 +5,10 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import { ApplicationForm } from '@/components/application-form';
+import { FeatureOff } from '@/components/feature-off';
 import { getPageContent } from '@/lib/content';
 import { CUBA_PROVINCES } from '@/lib/cuba-provinces';
+import { getFeatures } from '@/lib/features';
 import { getGeography, provinceName } from '@/lib/geography';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -21,9 +23,13 @@ export async function generateMetadata(): Promise<Metadata> {
  * Join (Join / M-Join boards, written in Spanish for Cuban guides, drivers and
  * hosts): the agency's offer on primary 700 with its figures, how joining
  * works, and the four-step application beside what the agency asks and gives.
- * The board's sample testimonial is left out.
+ * The board's sample testimonial is left out. Closed while the recruitment
+ * portal is switched off (M9 D8b).
  */
 export default async function JoinPage() {
+  if (!(await getFeatures()).recruitmentPortal) {
+    return <FeatureOff feature="recruitmentPortal" />;
+  }
   const tenant = getTenantConfig();
   const [content, t, common] = await Promise.all([
     getPageContent('join', joinContentSchema),

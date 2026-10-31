@@ -2,7 +2,6 @@ import '@ota/ui/styles.css';
 
 import '../globals.css';
 
-import { isFeatureEnabled } from '@ota/config';
 import { CONSENT_COOKIE, DISPLAY_COOKIE, parseDisplayPreferences } from '@ota/domain';
 import { SUPPORTED_LOCALES, isSupportedLocale } from '@ota/i18n';
 import { legalContentSchema } from '@ota/schemas';
@@ -29,6 +28,7 @@ import { brand } from '@/lib/brand';
 import { getPageContent } from '@/lib/content';
 import { displayAttributes } from '@/lib/display';
 import { fontVariables } from '@/lib/font';
+import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
 
 export async function generateMetadata({
@@ -60,6 +60,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const tenant = getTenantConfig();
+  const features = await getFeatures();
   // Tenant tokens and font families live on <html>, where the alias tokens
   // resolve (see themeCssVariables).
   const tokens = themeCssVariables(tenant) as CSSProperties;
@@ -106,10 +107,7 @@ export default async function LocaleLayout({
               locales={SUPPORTED_LOCALES}
             >
               <BandwidthStrip />
-              <SiteStrips
-                events={isFeatureEnabled(tenant, 'culturalEventsBanner')}
-                signedIn={signedIn}
-              />
+              <SiteStrips events={features.culturalEventsBanner} signedIn={signedIn} />
               <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
               <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
                 {children}

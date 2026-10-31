@@ -1,4 +1,3 @@
-import { isFeatureEnabled } from '@ota/config';
 import {
   blogContentSchema,
   conditionsContentSchema,
@@ -17,6 +16,7 @@ import { getPathname, Link } from '@/i18n/navigation';
 import { getPageContent } from '@/lib/content';
 import { buildDestinationViews, getGeography } from '@/lib/geography';
 import { getPackages } from '@/lib/packages';
+import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
 
 const wrap = 'mx-auto w-full max-w-container px-6 md:px-8 lg:px-10';
@@ -44,6 +44,7 @@ const STAT_TONES: Record<HomeContent['why']['stats'][number]['tone'], string> = 
  */
 export default async function HomePage() {
   const tenant = getTenantConfig();
+  const features = await getFeatures();
   const locale = await getLocale();
   const [
     t,
@@ -76,8 +77,8 @@ export default async function HomePage() {
   const levels = new Map(
     geography?.provinces.map((province) => [province.code, province.advisoryLevel]),
   );
-  const builder = isFeatureEnabled(tenant, 'customItineraryBuilder');
-  const instant = isFeatureEnabled(tenant, 'instantBooking');
+  const builder = features.customItineraryBuilder;
+  const instant = features.instantBooking;
   const featured = packages.slice(0, FEATURED);
   const guides = blog?.articles.slice(0, FEATURED) ?? [];
 

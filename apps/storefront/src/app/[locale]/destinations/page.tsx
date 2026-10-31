@@ -7,6 +7,7 @@ import { Breadcrumb } from '@/components/breadcrumb';
 import { PageIntro } from '@/components/content/page-intro';
 import { DestinationsExplorer } from '@/components/destinations/destinations-explorer';
 import { getPageContent } from '@/lib/content';
+import { getFeatures } from '@/lib/features';
 import {
   buildDestinationViews,
   buildProvinceViews,
@@ -33,14 +34,16 @@ export default async function DestinationsPage({
   searchParams: Promise<{ province?: string }>;
 }) {
   const geography = getGeography();
-  const [content, conditions, packages, nav, t, { province }] = await Promise.all([
-    getPageContent('destinations', destinationsContentSchema),
-    getPageContent('conditions', conditionsContentSchema),
-    getPackages(),
-    getTranslations('nav'),
-    getTranslations('destinations'),
-    searchParams,
-  ]);
+  const [content, conditions, packages, nav, t, { province }, features] =
+    await Promise.all([
+      getPageContent('destinations', destinationsContentSchema),
+      getPageContent('conditions', conditionsContentSchema),
+      getPackages(),
+      getTranslations('nav'),
+      getTranslations('destinations'),
+      searchParams,
+      getFeatures(),
+    ]);
   if (!geography || !content) {
     notFound();
   }
@@ -77,6 +80,7 @@ export default async function DestinationsPage({
         large
       />
       <DestinationsExplorer
+        map={features.interactiveSvgMap}
         provinces={provinces}
         destinations={destinations}
         themes={themes}

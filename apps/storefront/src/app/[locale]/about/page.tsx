@@ -1,4 +1,3 @@
-import { isFeatureEnabled } from '@ota/config';
 import { contentPageSchema } from '@ota/schemas';
 import { buttonClassName, cn } from '@ota/ui';
 import type { Metadata } from 'next';
@@ -8,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { ContentPageView } from '@/components/content/content-page';
 import { Link } from '@/i18n/navigation';
 import { getPageContent } from '@/lib/content';
+import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,11 +25,12 @@ export default async function AboutPage() {
     notFound();
   }
   const tenant = getTenantConfig();
+  const features = await getFeatures();
   const t = await getTranslations('pages.about');
 
   return (
     <ContentPageView content={content} agencyName={tenant.branding.agencyName}>
-      {isFeatureEnabled(tenant, 'recruitmentPortal') ? (
+      {features.recruitmentPortal ? (
         <section aria-labelledby="join-title" className="flex flex-col gap-3">
           <h2 id="join-title" className="text-h3">
             {t('joinTitle')}

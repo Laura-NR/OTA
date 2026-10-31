@@ -1,4 +1,3 @@
-import { isFeatureEnabled } from '@ota/config';
 import { packageProvinces } from '@ota/domain';
 import { destinationsContentSchema, type PackageDto } from '@ota/schemas';
 import { Badge, cn, Icon } from '@ota/ui';
@@ -22,6 +21,7 @@ import { getPageContent } from '@/lib/content';
 import { formatMoney } from '@/lib/format';
 import { buildProvinceViews, getGeography, provinceCode } from '@/lib/geography';
 import { getPackage, getPackages } from '@/lib/packages';
+import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
 
 const wrap = 'mx-auto w-full max-w-container px-6 md:px-8 lg:px-10';
@@ -96,8 +96,9 @@ export default async function PackageDetailPage({
     permanentRedirect({ href: `/packages/${pkg.slug}`, locale });
   }
   const tenant = getTenantConfig();
-  const instant = isFeatureEnabled(tenant, 'instantBooking');
-  const builder = isFeatureEnabled(tenant, 'customItineraryBuilder');
+  const features = await getFeatures();
+  const instant = features.instantBooking;
+  const builder = features.customItineraryBuilder;
   const provinces = packageProvinces(pkg);
   const advisories = advisoriesForProvinces(await getActiveAdvisories(locale), provinces);
   const nights = pkg.durationDays - 1;

@@ -1,4 +1,3 @@
-import { isFeatureEnabled } from '@ota/config';
 import { packageProvinces } from '@ota/domain';
 import { packagesContentSchema, type PackageDto } from '@ota/schemas';
 import { buttonClassName, cn } from '@ota/ui';
@@ -19,6 +18,7 @@ import { MAX_COMPARE } from '@/lib/compare-limits';
 import { getPageContent } from '@/lib/content';
 import { formatMoney } from '@/lib/format';
 import { getPackages } from '@/lib/packages';
+import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -39,6 +39,7 @@ export default async function ComparePage({
   searchParams: Promise<{ trips?: string }>;
 }) {
   const tenant = getTenantConfig();
+  const features = await getFeatures();
   const locale = await getLocale();
   const [{ trips: wanted = '' }, packages, content, t, tp, nav] = await Promise.all([
     searchParams,
@@ -53,7 +54,7 @@ export default async function ComparePage({
     .map((slug) => packages.find((pkg) => pkg.slug === slug))
     .filter((pkg): pkg is PackageDto => Boolean(pkg))
     .slice(0, MAX_COMPARE);
-  const builder = isFeatureEnabled(tenant, 'customItineraryBuilder');
+  const builder = features.customItineraryBuilder;
   const whatsapp = tenant.branding.whatsappNumber;
 
   const length = (days: number) =>
@@ -74,9 +75,7 @@ export default async function ComparePage({
       key: 'booking',
       label: t('rows.booking'),
       values: trips.map(() =>
-        isFeatureEnabled(tenant, 'instantBooking')
-          ? tp('instantPill')
-          : tp('requestPill'),
+        features.instantBooking ? tp('instantPill') : tp('requestPill'),
       ),
     },
     {

@@ -1,4 +1,3 @@
-import { isFeatureEnabled } from '@ota/config';
 import { packagesContentSchema } from '@ota/schemas';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
@@ -9,6 +8,7 @@ import { PackagesBrowser } from '@/components/packages/packages-browser';
 import { getPageContent } from '@/lib/content';
 import { parsePackageQuery } from '@/lib/package-query';
 import { getPackages } from '@/lib/packages';
+import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,6 +27,7 @@ export default async function PackagesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const tenant = getTenantConfig();
+  const features = await getFeatures();
   const [params, content, packages, t, nav] = await Promise.all([
     searchParams,
     getPageContent('packages', packagesContentSchema),
@@ -53,12 +54,8 @@ export default async function PackagesPage({
         <PackagesBrowser
           packages={packages}
           initial={parsePackageQuery(params)}
-          instant={isFeatureEnabled(tenant, 'instantBooking')}
-          custom={
-            isFeatureEnabled(tenant, 'customItineraryBuilder')
-              ? (content?.custom ?? null)
-              : null
-          }
+          instant={features.instantBooking}
+          custom={features.customItineraryBuilder ? (content?.custom ?? null) : null}
         />
       )}
     </div>
