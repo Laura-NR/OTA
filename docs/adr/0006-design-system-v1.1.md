@@ -1297,3 +1297,40 @@ were silent, the build decided:
 - Copy: `cookies.choose` (en "Choose by purpose", es "Elegir por finalidad", fr "Choisir
   par finalité").
 - **Not built:** the custom date-range picker (owner: native fields).
+
+## Amendment, 2026-10-31: the desk idle lock
+
+The owner chose the idle lock as the next M9 deferred item and approved
+`docs/schema-m9-idle-lock.md` as recommended (L1(b), L2a–L7a): every staff session locks after
+the limit with no input unless the person ticked "This is my own device" at sign-in, and the
+lock holds on the server. One migration (`session.lastActiveAt`, `session.ownDevice`), no
+dependency or spend. Where the boards (A-States 02, A-Login, A-Settings) were silent, the build
+decided:
+
+- **Which computer is shared.** The boards lock "the shared desk PC" and give "a personal
+  device" 12 h, but nothing tells them apart, so the login page asks: a "This is my own
+  device" checkbox (DS 02 `Checkbox`) above the passkey button, with the 12 h and the lock
+  explained in its hint. It is remembered in that browser only, so the shared PC keeps it
+  unticked, and it is sent once the desk loads, within ten minutes of sign-in. A link opened
+  in another browser carries no choice and locks.
+- **The lock screen** is A-States 02 as a full-screen native modal `<dialog>` on the page
+  background (not the 50 % ink backdrop of DS 06, since nothing behind it may show): a
+  384 px card with "Locked · <name>", the board's sentence with the applied limit, "Unlock
+  with passkey" (primary, focused), and "Not <first name>? Sign in" (tertiary). Someone with
+  no passkey gets "Sign in again" (it returns to the same address) instead of the passkey
+  button. When the page itself loaded locked, the desk cannot ask whether the person has a
+  passkey, so it shows both. Esc does not close it, and if the browser closes it anyway it
+  reopens.
+- **The page is kept.** The page stays mounted under the lock, hidden and `inert`; on unlock
+  it re-reads its data. Reloading a locked page shows only the lock, at the same address. The
+  dashboard's `/ops` feed, the conversation feed and the alert cue stop while locked.
+- **What counts as input** is a key, click, touch, wheel or pointer movement in any desk tab
+  of the browser. The tabs share it and report it at most once a minute; background refreshes
+  never move the clock. Every tab locks together, and an unlock in one tab unlocks the others.
+- **Settings.** "Idle lock after no input" joins the Security group of the thresholds (5–240
+  min, default 30, two Super Admins). Security & audit lists it with the sessions, and its
+  "not built yet" note now names only the IP allowlist and the new-device email.
+- Copy: `backoffice.idleLock.*`, `backoffice.login.ownDevice`/`ownDeviceHint`, the threshold's
+  label and "Used by", and `settings.security.idleLock`/`idleLockValue`, in en, es and fr.
+- **Not built:** changing "own device" after sign-in (sign in again), and an idle lock for
+  travelers or suppliers.

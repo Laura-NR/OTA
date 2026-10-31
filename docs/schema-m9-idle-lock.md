@@ -1,6 +1,6 @@
 # M9 desk idle lock: policy and schema diff for review
 
-**Status:** Proposal, for the owner's approval. Nothing is built.
+**Status:** **Approved 2026-10-31 as recommended (L1(b), L2a–L7a) and built the same day** (§7).
 **Date:** 2026-10-30
 **Scope:** the idle lock deferred under D9 in `docs/schema-m9-settings.md` ("the idle lock on a
 shared PC"), which the owner picked next on 2026-10-30. D9 deferred it until the passkey
@@ -179,3 +179,37 @@ ALTER TABLE "session" ADD COLUMN "ownDevice" BOOLEAN NOT NULL DEFAULT false;
 ```
 
 With L1(a) or (c) the `ownDevice` column is dropped from the diff.
+
+## 7. As built (2026-10-31)
+
+- **Migration** `20261031091301_session_idle_lock` (`ce82491`): `session.lastActiveAt`
+  (nullable) and `session.ownDevice` (default false), no backfill.
+- **Domain** (`5bfc14d`): `packages/domain/src/settings/idle-lock.ts`
+  (`isStaffSessionLocked`, `ownDeviceMayBeMarked` with a ten-minute window, `idleLockAt`,
+  `activityReportDue`) and `staffIdleLockMinutes` (default 30) in the thresholds document;
+  the schemas add the field (5–240) and `deskSessionSchema`. The own-device route takes no
+  body.
+- **Auth** (`ac4776e`): the two server-owned session fields, and a `sessionGate` that
+  Better Auth's `before` hook asks on every route except those in
+  `routeOpenToRefusedSession` (read the session, sign out, the sign-in routes). A refused
+  session gets 401 with the API's code (`SESSION_LOCKED` or `SESSION_REFUSED`). It covers
+  deactivated and expired sessions as well as locked ones; the passkey rule stays out of it.
+- **API** (`a1f500d`, `eb7e9e1`): `SessionPolicy.refusal` adds the `locked` kind after the
+  account rules and before the passkey rule (`@AllowWithoutPasskey` routes do not let it
+  through); the guard answers 401 `{ code: 'SESSION_LOCKED', idleLockMinutes }`.
+  `GET /me/session`, `POST /me/activity` (the server's clock, not the browser's) and
+  `POST /me/session/own-device` (409 after ten minutes; audited `auth.session_own_device`)
+  are staff-only and in the RBAC matrix. Both gateways re-check their sockets every minute
+  (`apps/api/src/auth/socket-recheck.ts`). A session with no `createdAt` is left to the
+  other rules, as with the 12 h limit.
+- **Desk** (`b61477b`, `e5d4e23`): `components/desk-idle-lock.tsx` in the dashboard layout,
+  which asks `/me/session` first and renders only the lock for a locked session;
+  `lib/idle-lock.ts` (browser keys, the `SESSION_LOCKED` reader); `apiRequest` raises the
+  lock on that code; `ops-desk.tsx` and `message-thread.tsx` close their sockets and the
+  cue while locked; the login checkbox; the threshold field and the Security fact.
+- **e2e** (`c8e87a5`, `e2e/idle-lock.spec.ts`): the lock, the API's refusals (including
+  Better Auth's passkey registration and the activity route), axe on the lock, the unlock
+  in place with a virtual authenticator, a reload while locked, and an own-device session
+  that does not lock. The axe check sits in this spec rather than `accessibility.spec.ts`,
+  because a lock needs a session made idle in the database.
+
