@@ -876,7 +876,9 @@
         "REJECTED": "Refusé",
         "SENT": "Envoyé le {date}",
         "FAILED": "Nouvelle tentative en cours"
-      }
+      },
+      "railOff": "Le paiement par virement bancaire en ligne est désactivé pour le moment. Contactez-nous pour finaliser le paiement.",
+      "contactUs": "Nous contacter"
     }
   },
   "join": {
@@ -1096,7 +1098,7 @@
         "readOnly": "Le manifeste est le fichier du fork (tenant/agency.config.json) : il change par un commit et un déploiement, pas ici.",
         "staffDomains": "Domaines d'invitation du personnel",
         "anyDomain": "tout domaine",
-        "flagsNote": "Les fonctions changent dans le manifeste et s'appliquent au prochain déploiement.",
+        "flagsNote": "Ce sont les valeurs par défaut du manifeste. Les fonctions en vigueur, et leurs changements, sont sous Approbations et seuils.",
         "previewTitle": "agency.config.json · aperçu"
       },
       "users": {
@@ -1266,7 +1268,8 @@
           "content": "Contenu",
           "customers": "Clients",
           "bookings": "Réservations",
-          "security": "Sécurité"
+          "security": "Sécurité",
+          "features": "Fonctions"
         },
         "levels": {
           "CAUTION": "Prudence et critique",
@@ -1305,7 +1308,14 @@
           "reliabilityMinAnswered": "Offres répondues avant le seuil",
           "conciergeAnswerHours": "Demande d’événement traitée sous",
           "staffPasskeysRequired": "Le personnel se connecte avec une clé d'accès",
-          "staffIdleLockMinutes": "Verrouillage d'inactivité"
+          "staffIdleLockMinutes": "Verrouillage d'inactivité",
+          "interactiveSvgMap": "Carte des destinations",
+          "culturalEventsBanner": "Bandeau des événements culturels",
+          "recruitmentPortal": "Portail de recrutement",
+          "customItineraryBuilder": "Créateur de voyages sur mesure",
+          "instantBooking": "Mention de réservation immédiate",
+          "directBankTransferRail": "Rail de virement bancaire",
+          "creditCardGatewayRail": "Rail carte"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
@@ -1324,7 +1334,14 @@
           "reliabilityMinAnswered": "Dispatch, Fournisseurs, liste de réaffectation",
           "conciergeAnswerHours": "Réservations › Demandes d’événements, Tableau de bord, e-mail de demande",
           "staffPasskeysRequired": "Connexion au bureau, flux d'escalade et messagerie",
-          "staffIdleLockMinutes": "Sessions du bureau non marquées comme appareil personnel"
+          "staffIdleLockMinutes": "Sessions du bureau non marquées comme appareil personnel",
+          "interactiveSvgMap": "La carte des provinces sur Destinations",
+          "culturalEventsBanner": "Le bandeau d'événements du site",
+          "recruitmentPortal": "Rejoindre notre réseau : la page et les nouvelles candidatures",
+          "customItineraryBuilder": "Le créateur sur mesure : la page, ses liens et les nouvelles demandes",
+          "instantBooking": "La mention « Immédiat » ou « Demande de réservation » sur les voyages",
+          "directBankTransferRail": "Nouveaux liens de virement, bureau et voyageur",
+          "creditCardGatewayRail": "Nouveaux liens carte au bureau"
         },
         "passkeyWarning": "{count, plural, =0 {Tout le personnel actif a une clé d'accès.} one {# membre actif du personnel n'a pas encore de clé d'accès et devra en configurer une à la prochaine connexion.} other {# membres actifs du personnel n'ont pas encore de clé d'accès et devront en configurer une à la prochaine connexion.}}"
       },
@@ -1852,7 +1869,8 @@
         "OPEN_BANKING_SEPA": "Virement",
         "CARD": "Carte",
         "OTHER": "Autre"
-      }
+      },
+      "noRail": "Aucun rail de paiement n'est activé. Un Super Admin peut en activer un sous Paramètres › Approbations et seuils."
     },
     "dispatchControls": {
       "dispatching": "Répartition…",
@@ -4106,5 +4124,19 @@
         "lifetime": "Jusqu’à la fermeture de l’onglet"
       }
     }
+  },
+  "featureOff": {
+    "recruitmentPortal": {
+      "title": "Les candidatures sont fermées pour le moment",
+      "text": "Nous n'acceptons pas de nouvelles candidatures pour rejoindre notre réseau en ce moment. Revenez bientôt, ou écrivez-nous."
+    },
+    "customItineraryBuilder": {
+      "title": "Le créateur de voyages est fermé pour le moment",
+      "text": "Vous ne pouvez pas créer un voyage sur mesure en ligne en ce moment. Nos voyages tout prêts restent ouverts, et un spécialiste peut en préparer un avec vous."
+    },
+    "home": "Aller à l'accueil",
+    "packages": "Voir les voyages",
+    "about": "À propos",
+    "contact": "Nous contacter"
   }
 }

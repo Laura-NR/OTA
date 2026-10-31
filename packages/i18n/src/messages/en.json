@@ -876,7 +876,9 @@
         "REJECTED": "Declined",
         "SENT": "Sent {date}",
         "FAILED": "Being retried"
-      }
+      },
+      "railOff": "Paying by bank transfer online is switched off for now. Contact us to complete the payment.",
+      "contactUs": "Contact us"
     }
   },
   "join": {
@@ -1096,7 +1098,7 @@
         "readOnly": "The manifest is the fork's file (tenant/agency.config.json): it changes by a commit and a deploy, not here.",
         "staffDomains": "Staff invitation domains",
         "anyDomain": "any domain",
-        "flagsNote": "Flags change in the manifest and apply on the next deploy.",
+        "flagsNote": "These are the manifest's defaults. The flags in force, and changes to them, are under Approvals & thresholds.",
         "previewTitle": "agency.config.json · preview"
       },
       "users": {
@@ -1266,7 +1268,8 @@
           "content": "Content",
           "customers": "Customers",
           "bookings": "Bookings",
-          "security": "Security"
+          "security": "Security",
+          "features": "Features"
         },
         "levels": {
           "CAUTION": "Caution and critical",
@@ -1305,7 +1308,14 @@
           "reliabilityMinAnswered": "Answered offers before the floor applies",
           "conciergeAnswerHours": "Event request answered within",
           "staffPasskeysRequired": "Staff sign in with a passkey",
-          "staffIdleLockMinutes": "Idle lock after no input"
+          "staffIdleLockMinutes": "Idle lock after no input",
+          "interactiveSvgMap": "Destinations map",
+          "culturalEventsBanner": "Cultural events strip",
+          "recruitmentPortal": "Recruitment portal",
+          "customItineraryBuilder": "Custom trip builder",
+          "instantBooking": "Instant booking label",
+          "directBankTransferRail": "Bank transfer rail",
+          "creditCardGatewayRail": "Card rail"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Dashboard, Booking",
@@ -1324,7 +1334,14 @@
           "reliabilityMinAnswered": "Dispatch, Suppliers, re-dispatch list",
           "conciergeAnswerHours": "Bookings › Event requests, Dashboard, request email",
           "staffPasskeysRequired": "Desk sign-in, the escalation and messaging feeds",
-          "staffIdleLockMinutes": "Desk sessions not marked as own device"
+          "staffIdleLockMinutes": "Desk sessions not marked as own device",
+          "interactiveSvgMap": "The province map on Destinations",
+          "culturalEventsBanner": "The site's events strip",
+          "recruitmentPortal": "Join our network: the page and new applications",
+          "customItineraryBuilder": "The custom builder: the page, its links and new requests",
+          "instantBooking": "The \"Instant\" or \"Request to book\" label on trips",
+          "directBankTransferRail": "New transfer links, desk and traveler",
+          "creditCardGatewayRail": "New card links on the desk"
         },
         "passkeyWarning": "{count, plural, =0 {Every active staff member has a passkey.} one {# active staff member has no passkey yet and will be asked to set one up at the next sign-in.} other {# active staff members have no passkey yet and will be asked to set one up at the next sign-in.}}"
       },
@@ -1852,7 +1869,8 @@
         "OPEN_BANKING_SEPA": "Bank transfer",
         "CARD": "Card",
         "OTHER": "Other"
-      }
+      },
+      "noRail": "No payment rail is switched on. A Super Admin can switch one on under Settings › Approvals & thresholds."
     },
     "dispatchControls": {
       "dispatching": "Dispatching…",
@@ -4106,5 +4124,19 @@
         "lifetime": "Until you close the tab"
       }
     }
+  },
+  "featureOff": {
+    "recruitmentPortal": {
+      "title": "Applications are closed for now",
+      "text": "We aren't taking new applications to join our network at the moment. Please check back soon, or write to us."
+    },
+    "customItineraryBuilder": {
+      "title": "The trip builder is closed for now",
+      "text": "You can't build a custom trip online at the moment. Our ready-made trips are open, and a specialist can plan one with you."
+    },
+    "home": "Go to the homepage",
+    "packages": "Browse trips",
+    "about": "About us",
+    "contact": "Contact us"
   }
 }
