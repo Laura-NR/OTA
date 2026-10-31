@@ -1376,3 +1376,46 @@ Where the boards (A-Settings, Join, Custom, Destinations) were silent, the build
   manifest at runtime (D8 (c)), a desk notice on Applications or Custom requests when
   their flag is off, and Destinations' lede without the map (it is the tenant's content and
   still says "The map shows…").
+
+## Amendment, 2026-10-31: the desk's alerts on every page, and the queues' flag notices
+
+The owner chose the alert cue on desk pages other than the dashboard next, with a notice on
+the desk's Applications and Custom proposals while their flag is off. No migration,
+dependency, route or spend. The boards draw the strip, the mute and the acknowledgement
+only on A-Dashboard; where they were silent, the build decided:
+
+- **One desk, every page.** The board, its clock, the `/ops` socket, the announced
+  crossings, the cue, acknowledgements and the mute live in the dashboard layout
+  (`DeskAlerts`), which stays mounted while the person moves between desk pages. This
+  replaces "other desk pages do not sound" (2026-10-29): a red alert sounds, shows and is
+  announced wherever the person is in the shell. Moving between pages keeps the sound on
+  (no second "Turn on sound") and does not replay an alert already cued; the 60 s repeat
+  runs on. Pages outside the shell (sign-in, invitation, passkeys, the idle lock) stay
+  silent, as before.
+- **The strip elsewhere** is A-Dashboard's strip, unchanged in tokens (error 600 with
+  white text when red, warning 100 with a warning 500 rule when amber, the plain surface
+  while only the mute is on), first in the page's `<main>`, under the section tabs and
+  above the page title, so the skip link lands on it. "Go to matrix" leads to
+  `/dashboard#matrix`. With no matrix row to press `A` on, it carries one "Acknowledge red
+  alert · <code>" button per booking with an unacknowledged red alert, with the same 6 s
+  undo; focus then moves to the page's start. The dashboard keeps its own strip above the
+  matrix, so it never shows twice. On a phone each such button takes a line.
+- **The undo outlives a page change.** It was closed (and recorded) on leaving the
+  dashboard; now the toast stays up across desk pages and records when it runs out. Leaving
+  the shell for a page outside it (Passkeys) records it at once; signing out (the session
+  ends first), reloading or closing the tab drops it, as an undo would.
+- **Announcements** are the same sentences on every page; "Press R to re-dispatch" is added
+  only on the dashboard, where `R` reaches a matrix row.
+- **Roles** as before: Operations Admin and Super Admin acknowledge and mute; support sees
+  the strip and hears the cue, with no buttons.
+- **Telemetry:** `admin_state_shown {kind: degraded}` is still sent only when the
+  dashboard's live indicator would show the lost feed; the other events are unchanged.
+- **The queues' notices.** While `recruitmentPortal` or `customItineraryBuilder` is off,
+  Suppliers › Applications and Bookings › Custom proposals open with an info alert (DS 04):
+  the storefront page is closed and new applications, or requests and itineraries, are
+  refused; what is already there can still be worked; two Super Admins switch it back on
+  under Features in Approvals & thresholds (a link to that tab, which every staff role
+  reads). Copy `backoffice.featureOff.*` in en, es and fr; the storefront pages are named as
+  the storefront titles them («Únete a nuestra red», « Rejoignez notre réseau »).
+- **Not built:** `A` on a booking page's own services (the strip's buttons cover it), and a
+  per-page choice to hide the strip.
