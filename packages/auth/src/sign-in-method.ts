@@ -32,3 +32,31 @@ export function passkeyChangeForPath(
 ): PasskeyChange | null {
   return (path && PASSKEY_CHANGE_PATHS[path]) || null;
 }
+
+/**
+ * Better Auth's routes that a refused session (deactivated, past the staff
+ * limit, or idle-locked) may still call: read itself, sign out, and sign in
+ * again (`docs/schema-m9-idle-lock.md` L5). Every other route that acts on a
+ * session asks the API first, so a locked desk cannot, for instance, add a
+ * passkey and unlock itself with it.
+ */
+const OPEN_TO_REFUSED_SESSION = new Set([
+  '/get-session',
+  '/sign-out',
+  '/ok',
+  '/error',
+  '/magic-link/verify',
+  '/passkey/generate-authenticate-options',
+  '/passkey/verify-authentication',
+]);
+
+export function routeOpenToRefusedSession(path: string | null | undefined): boolean {
+  if (!path) return false;
+  return (
+    OPEN_TO_REFUSED_SESSION.has(path) ||
+    path.startsWith('/sign-in/') ||
+    path.startsWith('/sign-up/') ||
+    path.startsWith('/callback/') ||
+    path.startsWith('/oauth2/callback/')
+  );
+}

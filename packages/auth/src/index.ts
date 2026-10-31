@@ -12,12 +12,14 @@ import type { IncomingHttpHeaders } from 'node:http';
 
 import {
   passkeyChangeForPath,
+  routeOpenToRefusedSession,
   signInMethodForPath,
   type PasskeyChange,
 } from './sign-in-method.js';
 
 export {
   passkeyChangeForPath,
+  routeOpenToRefusedSession,
   signInMethodForPath,
   type PasskeyChange,
   type SignInMethod,
@@ -47,6 +49,17 @@ export interface CreateAuthOptions {
   magicLinkExpiresInSeconds?: number;
   /** The passkey relying party and the staff rule (`docs/schema-m9-passkeys.md`). */
   passkey?: PasskeySettings;
+  /** The API's session rules for Better Auth's own routes (`docs/schema-m9-idle-lock.md` L5). */
+  sessionGate?: SessionGate;
+}
+
+/**
+ * Asked before a Better Auth route acts on a session, except the routes a
+ * refused session may still call (`routeOpenToRefusedSession`).
+ */
+export interface SessionGate {
+  /** Why this session may not act, as an error code and message, or null. */
+  refusal(session: AuthSession): Promise<{ code: string; message: string } | null>;
 }
 
 export interface PasskeySettings {
@@ -101,6 +114,10 @@ export interface AuthSession {
     expiresAt: Date;
     createdAt?: Date;
     signInMethod?: string | null;
+    /** The desk's last reported input (`docs/schema-m9-idle-lock.md` L2). */
+    lastActiveAt?: Date | null;
+    /** Marked at sign-in as the person's own device: no idle lock (L1). */
+    ownDevice?: boolean | null;
   };
 }
 
@@ -129,11 +146,14 @@ export type NodeAuthHandler = (
  * and Google OAuth when credentials are supplied. Roles are a server-owned
  * additional field (`input: false`) so a client can never self-assign one.
  * Each session records how it was created, and a passkey must verify the
- * user (PIN or biometric) to register or sign in.
+ * user (PIN or biometric) to register or sign in. With a `sessionGate`, a
+ * route that acts on a session asks it first, so a refused session (for
+ * instance an idle-locked desk) can only read itself, sign out or sign in.
  */
 export function createAuth(options: CreateAuthOptions): AuthInstance {
   const passkeySettings = options.passkey ?? {};
   const policy = passkeySettings.policy;
+  const gate = options.sessionGate;
   const instance = betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
@@ -184,6 +204,18 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
           required: false,
           input: false,
         },
+        // Server-owned (docs/schema-m9-idle-lock.md L1, L2): the API writes them.
+        lastActiveAt: {
+          type: 'date',
+          required: false,
+          input: false,
+        },
+        ownDevice: {
+          type: 'boolean',
+          required: false,
+          defaultValue: false,
+          input: false,
+        },
       },
     },
     databaseHooks: {
@@ -198,10 +230,21 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
     hooks: {
       before: createAuthHook(async (ctx) => {
         const change = passkeyChangeForPath(ctx.path);
-        if (!change || !policy) return;
+        const gated = gate !== undefined && !routeOpenToRefusedSession(ctx.path);
+        if (!gated && (!change || !policy)) return;
         const session = await getSessionFromCtx(ctx);
-        // No session: the passkey route itself refuses the call.
+        // No session: the route itself refuses or ignores the call.
         if (!session) return;
+        if (gated) {
+          const refused = await gate.refusal(session as unknown as AuthSession);
+          if (refused) {
+            throw new APIError('UNAUTHORIZED', {
+              message: refused.message,
+              code: refused.code,
+            });
+          }
+        }
+        if (!change || !policy) return;
         const refusal = await policy.changeRefusal({
           userId: session.user.id,
           signInMethod:

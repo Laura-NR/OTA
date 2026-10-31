@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { passkeyChangeForPath, signInMethodForPath } from '../src/sign-in-method';
+import {
+  passkeyChangeForPath,
+  routeOpenToRefusedSession,
+  signInMethodForPath,
+} from '../src/sign-in-method';
 
 describe('the sign-in method a session records (docs/schema-m9-passkeys.md P2)', () => {
   it('records a passkey only for a passkey sign-in', () => {
@@ -42,6 +46,39 @@ describe('the passkey routes the staff rule guards (P4)', () => {
       undefined,
     ]) {
       expect(passkeyChangeForPath(path)).toBeNull();
+    }
+  });
+});
+
+describe('the routes a refused session may still call (docs/schema-m9-idle-lock.md L5)', () => {
+  it('lets it read itself, sign out and sign in again', () => {
+    for (const path of [
+      '/get-session',
+      '/sign-out',
+      '/sign-in/magic-link',
+      '/magic-link/verify',
+      '/passkey/generate-authenticate-options',
+      '/passkey/verify-authentication',
+      '/callback/google',
+    ]) {
+      expect(routeOpenToRefusedSession(path)).toBe(true);
+    }
+  });
+
+  it('asks the API before anything that acts on the session', () => {
+    for (const path of [
+      '/passkey/generate-register-options',
+      '/passkey/verify-registration',
+      '/passkey/delete-passkey',
+      '/passkey/list-user-passkeys',
+      '/update-user',
+      '/list-sessions',
+      '/revoke-sessions',
+      '',
+      null,
+      undefined,
+    ]) {
+      expect(routeOpenToRefusedSession(path)).toBe(false);
     }
   });
 });
