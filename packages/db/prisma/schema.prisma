@@ -491,6 +491,11 @@ model Session {
   /// auth package's session hook and never by a client. Null for sessions from before it
   /// existed; only "passkey" satisfies the staff passkey rule.
   signInMethod String?
+  /// The desk's last reported input (docs/schema-m9-idle-lock.md L2), written by
+  /// POST /me/activity only. Null reads as the sign-in time.
+  lastActiveAt DateTime?
+  /// The person said at sign-in that this is their own device (L1): no idle lock.
+  ownDevice    Boolean   @default(false)
   userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
