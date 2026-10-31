@@ -1304,7 +1304,8 @@
           "reliabilityFloorPercent": "Seuil de fiabilité de la répartition auto",
           "reliabilityMinAnswered": "Offres répondues avant le seuil",
           "conciergeAnswerHours": "Demande d’événement traitée sous",
-          "staffPasskeysRequired": "Le personnel se connecte avec une clé d'accès"
+          "staffPasskeysRequired": "Le personnel se connecte avec une clé d'accès",
+          "staffIdleLockMinutes": "Verrouillage d'inactivité"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
@@ -1322,7 +1323,8 @@
           "reliabilityFloorPercent": "Dispatch, Fournisseurs, liste de réaffectation",
           "reliabilityMinAnswered": "Dispatch, Fournisseurs, liste de réaffectation",
           "conciergeAnswerHours": "Réservations › Demandes d’événements, Tableau de bord, e-mail de demande",
-          "staffPasskeysRequired": "Connexion au bureau, flux d'escalade et messagerie"
+          "staffPasskeysRequired": "Connexion au bureau, flux d'escalade et messagerie",
+          "staffIdleLockMinutes": "Sessions du bureau non marquées comme appareil personnel"
         },
         "passkeyWarning": "{count, plural, =0 {Tout le personnel actif a une clé d'accès.} one {# membre actif du personnel n'a pas encore de clé d'accès et devra en configurer une à la prochaine connexion.} other {# membres actifs du personnel n'ont pas encore de clé d'accès et devront en configurer une à la prochaine connexion.}}"
       },
@@ -1336,7 +1338,7 @@
         "deactivationValue": "Déconnectés et refusés",
         "hours": "{count, plural, one {# heure} other {# heures}} après la connexion",
         "minutes": "{count} minutes, usage unique",
-        "deferred": "Le verrouillage d'inactivité sur un PC partagé, la liste d'IP autorisées et les e-mails de nouvel appareil n'existent pas encore.",
+        "deferred": "La liste d'IP autorisées et les e-mails de nouvel appareil n'existent pas encore.",
         "integrationsTitle": "Intégrations et clés",
         "configured": "Configurée",
         "notConfigured": "Non définie",
@@ -1347,7 +1349,9 @@
         "loadError": "Impossible de charger cette section.",
         "staffPasskeys": "Clés d'accès du personnel",
         "passkeysRequired": "Obligatoires à la connexion",
-        "passkeysOptional": "Facultatives"
+        "passkeysOptional": "Facultatives",
+        "idleLock": "Verrouillage d'inactivité",
+        "idleLockValue": "{count} min sans activité ; jamais sur un appareil personnel"
       },
       "agency": "Agence",
       "agencyName": "Nom",
@@ -1395,7 +1399,19 @@
       "passkey": "Se connecter avec une clé d'accès",
       "or": "ou recevoir un lien par e-mail",
       "passkeyRequired": "Le personnel se connecte au bureau avec une clé d'accès. Utilisez la vôtre ci-dessous ; si vous l'avez perdue, demandez à un Super Admin de la réinitialiser.",
-      "passkeyFailed": "La connexion avec la clé d'accès n'a pas abouti. Réessayez."
+      "passkeyFailed": "La connexion avec la clé d'accès n'a pas abouti. Réessayez.",
+      "ownDevice": "C'est mon propre appareil",
+      "ownDeviceHint": "Le bureau reste alors connecté 12 h. Laissez la case vide sur un ordinateur partagé, où le bureau se verrouille après un moment sans activité."
+    },
+    "idleLock": {
+      "title": "Verrouillé · {name}",
+      "body": "Aucune activité pendant {minutes} minutes. La page où vous étiez est conservée ; les minuteries ont continué sur le serveur.",
+      "bodyNoMinutes": "Aucune activité depuis un moment. La page où vous étiez est conservée ; les minuteries ont continué sur le serveur.",
+      "unlock": "Déverrouiller avec la clé d'accès",
+      "unlocking": "Déverrouillage…",
+      "signInAgain": "Se reconnecter",
+      "notYou": "Vous n'êtes pas {name} ? Connectez-vous",
+      "failed": "La clé d'accès n'a pas déverrouillé le bureau. Réessayez ou reconnectez-vous."
     },
     "common": {
       "save": "Enregistrer",
