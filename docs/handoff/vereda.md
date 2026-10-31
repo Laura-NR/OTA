@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-29 23:30
+# Handoff — vereda — updated 2026-10-31 12:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -7,15 +7,42 @@ Decisions: ADR 0006 (design system; amended through 2026-10-24 for Phase 4, M4�
 Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, on 2026-10-25,
 reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follow-ups and the
 server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
-and on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes)
-and ADR 0007 (worker app). Staff passkeys: `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as
-built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
+on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
+on 2026-10-31 the desk idle lock) and ADR 0007 (worker app). Staff passkeys:
+`docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
+`docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-10-31: the desk idle lock**, the owner's pick (M9 D9's deferred item), approved
+  L1(b), L2a–L7a, on migration `20261031091301_session_idle_lock` (`ce82491`…`716896a`;
+  ADR 0006 amendment of that day).
+  - Every staff session locks after `staffIdleLockMinutes` (threshold, default 30, 5–240, two
+    Super Admins) with no reported input, unless the person ticked "This is my own device"
+    on the desk login (remembered per browser in `localStorage` `ota-desk-own-device`; sent
+    once within ten minutes of sign-in → `session.ownDevice`, audited
+    `auth.session_own_device`). Rules: `packages/domain/src/settings/idle-lock.ts`.
+  - Server: `SessionPolicy.refusal` kind `locked` (after deactivated/12 h, before the passkey
+    rule); the guard answers 401 `{code: 'SESSION_LOCKED', idleLockMinutes}`, also on
+    `@AllowWithoutPasskey` routes. `GET /me/session`, `POST /me/activity` (sets
+    `session.lastActiveAt` to the server's now), `POST /me/session/own-device` (staff; in the
+    RBAC matrix). Better Auth's `before` hook asks `SessionPolicy.gateRefusal` on every route
+    except reading the session, signing out and signing in (`routeOpenToRefusedSession`), so
+    a locked, deactivated or expired session cannot e.g. register a passkey. Both gateways
+    re-check their sockets every minute (`apps/api/src/auth/socket-recheck.ts`), which also
+    closes the old gap where a deactivated user's socket stayed connected.
+  - Desk: `components/desk-idle-lock.tsx` wraps the shell; tabs share the last input
+    (`ota-desk-last-input`) and report it at most once a minute; at the limit, or on any
+    `SESSION_LOCKED` answer, the page is hidden and `inert` behind a full-screen modal
+    `<dialog>` (A-States 02). Unlock with passkey signs in again in place (a new session);
+    "Sign in again" / "Not <name>? Sign in" sign out first. The dashboard layout asks
+    `/me/session` first and renders only the lock when it is refused as locked. The `/ops`
+    and conversation sockets and the alert cue stop while locked (`useDeskLocked`). Settings:
+    the threshold in the Security group, an "Idle lock" fact on Security & audit. en/es/fr.
+  - e2e `e2e/idle-lock.spec.ts` (owns `idle-e2e-ops@`/`idle-e2e-own@example.test`).
 - **2026-10-29 (night): the storefront pass's deferred design changes**, the owner's pick,
   native date fields kept (`9e10753`…`c740740`; ADR 0006 amendment of that day;
   `docs/a11y-storefront-manual-pass.md` rows now fixed). No migration, dependency or spend.
@@ -161,7 +188,7 @@ events (T-Events)".
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
   deferred items (recovery codes, permission overrides, display currencies, runtime flags, the
-  idle lock, IP allowlist, new-device email); passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
+  IP allowlist, new-device email); changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
   desk's `/` (no desk search) and the cue on desk pages other than the dashboard; Ops Lite;
   a real screen-reader run; the custom date-range picker (owner: native fields).
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
@@ -170,35 +197,32 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-30, storefront design changes, dev stack stopped for the build)
+## Verified (2026-10-31, desk idle lock, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1022 passed / 28 skipped**, 30/30 tasks, 0 cached (ui 47, up
-  from 44: three `ResponsiveTable` tests; i18n key parity green with `cookies.choose`; the
-  rest as on 2026-10-29).
+- `TURBO_FORCE=true pnpm test` **1051 passed / 28 skipped**, 30/30 tasks, 0 cached (domain
+  398 with `idle-lock.test.ts`; auth 8; api 395 with `idle-lock.e2e.test.ts` (16) and the
+  RBAC matrix's three new routes; i18n key parity green).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `e2e/storefront-keyboard.spec.ts` against the dev stack: **12/12**, including the four new
-  tests. With the banner's `globals.css` lines reverted, both banner walks fail; restored,
-  they pass.
-- Browser (dev stack, Chromium) at 390, 1024 and 1280, plus 320 for the cookie list:
-  screenshots and computed styles of the five tables. Under sm: `display:block`/flex/grid,
-  key field 16 px/600, labels in the secondary colour, no sideways scroll at any width; from
-  sm up: table layout, labels `display:none`. The banner at 390 is 303 px (36 %) closed and
-  522 px open, with `--cookie-banner` in the scroll padding (+4 rem bar) and the root's
-  bottom padding. At 1024/1280 it is 514 px (61 % of 844). The first pass showed rows
-  through the 20 px under the sticky actions; fixed with `-bottom-5`.
-- `pnpm e2e` (`.next` deleted first): **130 passed, 2 failed, 3 skipped** in 41.0 min of
-  running time. A system suspend paused the run overnight. The new
-  `storefront-keyboard.spec.ts` tests and the axe audit (banner at 1280 and 390) are green.
-  Both failures are desk specs this batch did not touch: `e2e/ofac.spec.ts:61` ("Not
-  certified" not shown) and `e2e/supplier-resources.spec.ts:156`. Rerun alone, with the
-  leftovers killed by PID and `.next` deleted: **2/2**. Skips: the desk at 320/375/414.
+- Migration `20261031091301_session_idle_lock` applied to the dev DB by `prisma migrate dev`.
+- `pnpm e2e` (`.next` deleted first): **133 passed, 1 failed, 3 skipped** in 56.5 min.
+  `e2e/idle-lock.spec.ts` 2/2. The failure is `e2e/responsive.spec.ts:118` at ds07-768 (a
+  storefront page load timed out): the storefront `next dev` had grown to 8.5 GB RSS with
+  the machine nearly out of memory and answered nothing. Leftovers killed by PID, `.next`
+  deleted, rerun alone on fresh servers: **1/1**. Skips: the desk at 320/375/414.
+- Before the full run, against the dev stack: `idle-lock`, `passkeys`, `settings`,
+  `desk-alerts`, `escalation`, `messages`, `desk-keyboard`, `admin-shell` specs **21/21**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Not run: a real screen reader; no sent proposal in dev data, so the proposal's lines were
-  not checked in a browser (the full e2e's builder spec drives that page).
+- Browser (dev stack, Chromium) at 390, 1024 and 1280: the lock (rendered locked by the
+  server) is an open `:modal` dialog on the page background, card 358/384 px, title 20 px/600,
+  focus on "Unlock with passkey", buttons 40 px (desk md, 44 on touch), no sideways scroll;
+  the login's own-device row is 16 px with a 20 px box, no sideways scroll. Screenshots
+  checked.
+- Not run: a real screen reader; the socket re-check firing on a live socket after a
+  minute (unit-tested with a fake server; the e2e locks through the page and the API).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -237,10 +261,29 @@ events (T-Events)".
   `service_item_id` and a time can still point to one supplier (the same counsel question). A
   transition written outside the six reporting sites would go unreported: there are none today
   (`grep` for `status: ReservationStatus` writes in `apps/api/src`).
+- **Idle lock (2026-10-31):** the desk's timer runs on the browser's clock and the API's on
+  the server's; a browser clock that runs slow locks later than the API, and the first API
+  answer (`SESSION_LOCKED`) then locks it. "Own device" is the person's own statement; only
+  an unlocked session can make it, within ten minutes of sign-in. The lock stops new data
+  and every action, not what the last page showed (developer tools could read its DOM).
+  The default 30 minutes applies to every staff session not marked as own device, including
+  an ops desk watched without input.
 - **For the owner:** the items under Next; the storefront's sample "Cuba right now" banner says
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Idle lock (2026-10-31):** a test or fixture that fakes a staff session with a
+  `createdAt` more than 30 minutes old and no `lastActiveAt` is now refused as locked
+  (`apps/api/test/auth-guard.e2e.test.ts` gives its sessions `lastActiveAt: new Date()`);
+  fakes with no `createdAt` skip the lock, as they skip the 12 h limit. An e2e makes a
+  session idle by moving `session.lastActiveAt` back with its own Prisma client, and moves
+  the page's clock with `page.clock.install()` (before the navigation) and
+  `fastForward`, so the desk's timer agrees. A spec that keeps one staff session for over
+  30 minutes using only `page.request` (no clicks or keys) will lock. The dashboard layout
+  calls `/me/session` before the passkey check and must let 401/403 that are not
+  `SESSION_LOCKED` fall through to it, or a setup-only passkey session errors instead of
+  going to `/passkeys`. Better Auth routes that act on a session are refused for a locked
+  session unless listed in `routeOpenToRefusedSession`; a new sign-in route belongs there.
 - **Storefront design changes (2026-10-29, night):** a new message key shows as its raw key
   (`cookies.choose`) in a running dev server until `pnpm --filter @ota/i18n build`. Test
   a `ResponsiveTable` cell by its role and name (`getByRole('cell', { name, exact: true })`):
@@ -536,11 +579,20 @@ events (T-Events)".
     `packages/domain/src/dispatch/alert-cue.ts`. A spec that mutes must delete its
     `DispatchDesk` rows. The cue is Web Audio in `apps/backoffice/src/lib/alert-sound.ts` and
     starts only after a user gesture."
+  - "2026-10-31: the desk idle lock (migration 20261031091301_session_idle_lock:
+    `session.lastActiveAt`, `session.ownDevice`) is enforced by `SessionPolicy` (401
+    `SESSION_LOCKED`) for staff sessions not marked as own device, after
+    `staffIdleLockMinutes` (threshold, default 30) with no input reported to
+    `POST /me/activity`. Better Auth's session routes ask `SessionPolicy.gateRefusal` through
+    `createAuth`'s `sessionGate`, except those in `routeOpenToRefusedSession`. Both gateways
+    re-check sockets every minute. A staff fixture older than 30 minutes needs
+    `lastActiveAt`."
 
 ## Next
 1. Owner: choose the next batch. Buildable without a migration: an M9 deferred item
-   (recovery codes, permission overrides, display currencies, runtime flags, the idle lock,
-   IP allowlist, new-device email; a doc first where it changes how auth decides), or the
+   (runtime flags (D8b, rides on `operating_settings`), recovery codes, permission
+   overrides, display currencies, IP allowlist, new-device email; a doc first where it
+   changes how auth decides, and new-device email needs a "known device" record), or the
    desk's cue on pages other than the dashboard. M10's room holds/event photos need a
    migration doc first. A real screen-reader run (desk and storefront) needs a machine with
    NVDA or VoiceOver. Optional: the desktop cookie banner still covers about 61 % of a
@@ -974,3 +1026,15 @@ events (T-Events)".
   data-driven `ResponsiveTable` (pages are server components, so no context), divided the
   cards by the row rule rather than boxing them, kept the board's full banner from md, and
   on a phone put the purposes behind a disclosure instead of shrinking the copy.
+- 2026-10-31 — the owner chose the desk idle lock next (over the new-device email, runtime
+  flags and the cue on other desk pages; the deployment plan is unanswered and Plausible CE
+  is not installed) and approved `docs/schema-m9-idle-lock.md` as recommended: L1(b) every
+  staff session locks unless marked "own device" at sign-in, L2a a `session.lastActiveAt`
+  column (one migration with `session.ownDevice`), L3a only real input counts, reported at
+  most once a minute, L4a unlocking is a passkey sign-in in place, L5a a locked session is
+  refused everywhere including Better Auth's routes and the sockets, L6a a two-Super-Admin
+  threshold (default 30, 5–240, no off), L7a the A-States lock dialog keeping the page. The
+  build accepted the own-device mark only within ten minutes of sign-in, left out the
+  passkey rule from Better Auth's gate (setup needs those routes), had the 401 carry the
+  limit so a page rendered locked can name it, showed both unlock paths when the page could
+  not tell whether the person has a passkey, and put the lock's axe check in its own spec.

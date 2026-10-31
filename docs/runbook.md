@@ -274,6 +274,12 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   deleted and the API refuses them) or uses "Sign out everywhere".
 - Staff sessions end `STAFF_SESSION_HOURS` (12) after sign-in; sign-in links last
   `MAGIC_LINK_EXPIRES_MINUTES` (10). Both are config: change them by a deploy.
+- A staff desk locks after "Idle lock after no input" (a threshold, default 30
+  min) unless the person ticked "This is my own device" at sign-in
+  (`docs/schema-m9-idle-lock.md`). Unlocking is a passkey sign-in, or signing in
+  again by link. The lock holds on the API (401 `SESSION_LOCKED`), on Better Auth's
+  routes and on the sockets, which are re-checked every minute. When the change
+  first deploys, staff sessions idle for longer than the limit lock once.
 - Operating thresholds (dispatch timers, amber, refund limits, retention clock…)
   change in Settings › Approvals & thresholds with two Super Admins; each process
   picks an applied version up within 60 s. A one-person agency changes the
