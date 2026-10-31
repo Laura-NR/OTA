@@ -8,6 +8,8 @@ process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 const ACKED = 'E2EACK01';
 const LATER = 'E2EACK02';
+const ELSEWHERE = 'E2EACK03';
+const SUPPORT = 'alerts-e2e-support@example.test';
 const HOUR = 60 * 60 * 1000;
 
 /** When this spec started: its mute entries are the desk's newer ones. */
@@ -57,6 +59,17 @@ async function timedOut(bookingCode: string, minutesAgo: number) {
   return serviceItem.id;
 }
 
+async function deleteSupport(): Promise<void> {
+  const users = await prisma.user.findMany({
+    where: { email: SUPPORT },
+    select: { id: true },
+  });
+  await prisma.auditLog.deleteMany({
+    where: { entityId: { in: users.map((user) => user.id) } },
+  });
+  await prisma.user.deleteMany({ where: { email: SUPPORT } });
+}
+
 async function clearMutes(): Promise<void> {
   await prisma.auditLog.deleteMany({
     where: { entityType: 'DispatchDesk', createdAt: { gte: started } },
@@ -81,6 +94,8 @@ test.describe.serial('desk alert cue, acknowledgement and mute', () => {
     await clearMutes();
     await deleteReservationFixture(prisma, ACKED);
     await deleteReservationFixture(prisma, LATER);
+    await deleteReservationFixture(prisma, ELSEWHERE);
+    await deleteSupport();
     await prisma.$disconnect();
   });
 
@@ -199,5 +214,93 @@ test.describe.serial('desk alert cue, acknowledgement and mute', () => {
         where: { action: 'dispatch.alerts_unmuted', createdAt: { gte: started } },
       }),
     ).toBe(1);
+  });
+
+  test('a red alert follows the desk to other pages, which acknowledge it too', async ({
+    page,
+  }) => {
+    const itemId = await timedOut(ELSEWHERE, 20);
+    await page.goto('/payments');
+    const nav = page.getByRole('navigation', { name: 'Admin' });
+    const strip = page.getByText(new RegExp(`^\\d+ red alerts? · .*${ELSEWHERE}`));
+    await expect(strip).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Dispatch matrix' })).toHaveCount(0);
+
+    // The cue starts after the first interaction here as on the dashboard…
+    const turnOn = page.getByRole('button', { name: 'Turn on sound' });
+    await expect(async () => {
+      await turnOn.click({ timeout: 1_000 });
+      await expect(turnOn).toBeHidden({ timeout: 1_000 });
+    }).toPass();
+    await expect.poll(() => cues(page)).toContain('RED');
+    const played = (await cues(page)).length;
+
+    // …and moving around the desk keeps the sound on without replaying the alert.
+    await nav.getByRole('link', { name: 'Bookings' }).click();
+    await expect(page).toHaveURL(/\/bookings$/);
+    await expect(strip).toBeVisible();
+    await expect(turnOn).toBeHidden();
+    await page.waitForTimeout(2_500);
+    expect(await cues(page)).toHaveLength(played);
+
+    // The strip acknowledges the booking; the undo survives a page change.
+    const acknowledge = page.getByRole('button', {
+      name: `Acknowledge red alert · ${ELSEWHERE}`,
+    });
+    const toast = page.getByRole('status').filter({
+      hasText: `Alert acknowledged · audio off for ${ELSEWHERE}`,
+    });
+    await acknowledge.click();
+    await expect(toast).toBeVisible();
+    await expect(acknowledge).toBeHidden();
+    await expect(page.locator('#main')).toBeFocused();
+    await nav.getByRole('link', { name: 'Payments' }).click();
+    await expect(page).toHaveURL(/\/payments$/);
+    await expect(toast).toBeVisible();
+    await expect(toast).toBeHidden({ timeout: 10_000 });
+    await expect
+      .poll(() =>
+        prisma.auditLog.count({
+          where: { action: 'dispatch.alert_acknowledged', entityId: itemId },
+        }),
+      )
+      .toBe(1);
+
+    // "Go to matrix" leads to the dashboard, which draws the strip once.
+    await page.getByRole('link', { name: 'Go to matrix' }).click();
+    await expect(page).toHaveURL(/\/dashboard#matrix$/);
+    await expect(page.getByRole('link', { name: 'Go to matrix' })).toHaveCount(1);
+    const row = page
+      .getByRole('region', { name: 'Dispatch matrix' })
+      .getByRole('row')
+      .filter({ hasText: ELSEWHERE });
+    await expect(row.getByText(/^Acknowledged · .+ · \d\d:\d\d$/)).toBeVisible();
+  });
+
+  test('support sees the alert on every page but cannot acknowledge or mute', async ({
+    browser,
+  }) => {
+    await deleteReservationFixture(prisma, ELSEWHERE);
+    await timedOut(ELSEWHERE, 20);
+    await deleteSupport();
+    await prisma.user.create({
+      data: {
+        email: SUPPORT,
+        fullName: 'E2E Alerts Support',
+        role: 'ADMINISTRATIVE_SUPPORT',
+      },
+    });
+    const context = await browser.newContext({ baseURL: 'http://localhost:3002' });
+    const support = await context.newPage();
+    await signIn(support, SUPPORT, { callbackPath: '/payments' });
+    await expect(
+      support.getByText(new RegExp(`^\\d+ red alerts? · .*${ELSEWHERE}`)),
+    ).toBeVisible();
+    await expect(support.getByRole('link', { name: 'Go to matrix' })).toBeVisible();
+    await expect(
+      support.getByRole('button', { name: `Acknowledge red alert · ${ELSEWHERE}` }),
+    ).toHaveCount(0);
+    await expect(support.getByRole('button', { name: 'Mute 15 min' })).toHaveCount(0);
+    await context.close();
   });
 });
