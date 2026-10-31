@@ -284,6 +284,11 @@ events (T-Events)".
   `SESSION_LOCKED` fall through to it, or a setup-only passkey session errors instead of
   going to `/passkeys`. Better Auth routes that act on a session are refused for a locked
   session unless listed in `routeOpenToRefusedSession`; a new sign-in route belongs there.
+- **Full e2e memory (2026-10-31):** late in a ~55-minute `pnpm e2e`, the storefront's
+  `next dev` reached 8.5 GB RSS (machine ~22/23 GB used) and stopped answering, so a
+  storefront spec timed out at `page.goto` (`responsive.spec.ts` ds07-768, 4 min). Check
+  `ps -o rss` on the :3000 PID; kill the leftovers by PID (`kill -9` if a hung next-server
+  ignores SIGTERM), delete `apps/*/.next` and rerun the spec alone.
 - **Storefront design changes (2026-10-29, night):** a new message key shows as its raw key
   (`cookies.choose`) in a running dev server until `pnpm --filter @ota/i18n build`. Test
   a `ResponsiveTable` cell by its role and name (`getByRole('cell', { name, exact: true })`):
