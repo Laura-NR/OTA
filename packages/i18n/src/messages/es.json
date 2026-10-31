@@ -2926,6 +2926,17 @@
       "chooseBookings": "Elige al menos una reserva primero.",
       "disruptionOptions": "Añade al menos una opción primero.",
       "limit": "Puedes añadir hasta {max}."
+    },
+    "featureOff": {
+      "recruitmentPortal": {
+        "title": "Portal de reclutamiento desactivado",
+        "text": "La página «Únete a nuestra red» de la web está cerrada y se rechazan las nuevas solicitudes. Las solicitudes ya recibidas se pueden seguir revisando aquí."
+      },
+      "customItineraryBuilder": {
+        "title": "Creador de viajes a medida desactivado",
+        "text": "La página de viajes a medida de la web está cerrada y se rechazan las nuevas solicitudes e itinerarios a medida. Las solicitudes y propuestas que ya están aquí se pueden seguir trabajando."
+      },
+      "switchOn": "Dos Super Admins pueden volver a activarlo en Funciones, dentro de <link>Aprobaciones y umbrales</link>."
     }
   },
   "conditions": {

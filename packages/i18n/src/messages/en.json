@@ -2926,6 +2926,17 @@
       "chooseBookings": "Choose at least one booking first.",
       "disruptionOptions": "Add at least one option first.",
       "limit": "You can add up to {max}."
+    },
+    "featureOff": {
+      "recruitmentPortal": {
+        "title": "Recruitment portal switched off",
+        "text": "The storefront's Join our network page is closed and new applications are refused. Applications already received can still be reviewed here."
+      },
+      "customItineraryBuilder": {
+        "title": "Custom trip builder switched off",
+        "text": "The storefront's custom trip page is closed and new custom requests and itineraries are refused. Requests and proposals already here can still be worked."
+      },
+      "switchOn": "Two Super Admins can switch it back on under Features in <link>Approvals & thresholds</link>."
     }
   },
   "conditions": {
