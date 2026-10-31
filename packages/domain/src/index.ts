@@ -461,6 +461,16 @@ export {
   type PasskeyRefusal,
 } from './settings/passkeys';
 export {
+  DEFAULT_FEATURE_FLAGS,
+  FEATURE_FLAGS,
+  featureFlagsOf,
+  railEnabled,
+  railFeature,
+  type FeatureFlag,
+  type FeatureFlagValues,
+  type FeatureRail,
+} from './settings/features';
+export {
   ACTIVITY_REPORT_INTERVAL_MS,
   OWN_DEVICE_WINDOW_MINUTES,
   STAFF_IDLE_LOCK_MINUTES,

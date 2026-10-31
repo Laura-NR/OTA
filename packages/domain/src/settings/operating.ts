@@ -1,19 +1,21 @@
 import type { DispatchTimers } from '../dispatch/policy';
 import { UserRole } from '../reservation/status';
+import { DEFAULT_FEATURE_FLAGS, type FeatureFlagValues } from './features';
 import { STAFF_IDLE_LOCK_MINUTES } from './idle-lock';
 
 /**
  * M9 operating thresholds (`docs/schema-m9-settings.md` D1–D3, Q13). The
  * numbers the desk refers to live in one document, versioned in the
  * database; the domain functions take them as parameters, and these defaults
- * are the values the code ran on before M9. The payment window and the refund
- * limits default to the tenant manifest instead, which the API merges in.
+ * are the values the code ran on before M9. The payment window, the refund
+ * limits and the feature flags default to the tenant manifest instead, which
+ * the API merges in.
  */
 
 export const ADVISORY_DUAL_APPROVAL_LEVELS = ['CAUTION', 'CRITICAL'] as const;
 export type AdvisoryDualApprovalLevel = (typeof ADVISORY_DUAL_APPROVAL_LEVELS)[number];
 
-export interface OperatingThresholds {
+export interface OperatingThresholds extends FeatureFlagValues {
   /** Minutes a worker has to accept a standard offer. */
   dispatchTimeoutMinutes: number;
   /** Minutes for an offer when arrival is within the short-notice window. */
@@ -68,6 +70,7 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   conciergeAnswerHours: 48,
   staffPasskeysRequired: false,
   staffIdleLockMinutes: STAFF_IDLE_LOCK_MINUTES,
+  ...DEFAULT_FEATURE_FLAGS,
 };
 
 export const OPERATING_THRESHOLD_KEYS = Object.keys(
