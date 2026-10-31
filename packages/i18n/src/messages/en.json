@@ -2992,6 +2992,7 @@
       "eyebrow": "The network this month",
       "title": "Pick a province",
       "text": "Tap a province on the map or in the strip for its hosts, guides, drivers, conditions and destinations.",
+      "textNoMap": "Pick a province for its hosts, guides, drivers, conditions and destinations.",
       "activeProvinces": "Active provinces",
       "activeValue": "{active} of {total}",
       "casasVetted": "Casas vetted",

@@ -2992,6 +2992,7 @@
       "eyebrow": "La red este mes",
       "title": "Elige una provincia",
       "text": "Toca una provincia en el mapa o en la franja para ver sus anfitriones, guías, choferes, condiciones y destinos.",
+      "textNoMap": "Toca una provincia para ver sus anfitriones, guías, choferes, condiciones y destinos.",
       "activeProvinces": "Provincias activas",
       "activeValue": "{active} de {total}",
       "casasVetted": "Casas verificadas",

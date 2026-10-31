@@ -2992,6 +2992,7 @@
       "eyebrow": "Le réseau ce mois-ci",
       "title": "Choisissez une province",
       "text": "Touchez une province sur la carte ou dans la bande pour voir ses hôtes, guides, chauffeurs, conditions et destinations.",
+      "textNoMap": "Touchez une province pour voir ses hôtes, guides, chauffeurs, conditions et destinations.",
       "activeProvinces": "Provinces actives",
       "activeValue": "{active} sur {total}",
       "casasVetted": "Casas vérifiées",

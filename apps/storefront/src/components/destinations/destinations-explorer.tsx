@@ -414,7 +414,9 @@ export function DestinationsExplorer({
           <p className="text-overline uppercase text-primary-600">{t('panel.eyebrow')}</p>
           <h3 className="font-display text-h3 text-default">{t('panel.title')}</h3>
         </div>
-        <p className="text-body-sm text-secondary">{t('panel.text')}</p>
+        <p className="text-body-sm text-secondary">
+          {t(map ? 'panel.text' : 'panel.textNoMap')}
+        </p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-body-sm">
           <dt className="text-secondary">{t('panel.activeProvinces')}</dt>
           <dd className="font-semibold text-default">
