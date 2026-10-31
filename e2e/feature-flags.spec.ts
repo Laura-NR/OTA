@@ -1,5 +1,11 @@
 import { PrismaClient } from '@ota/db';
-import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import {
+  expect,
+  test,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test';
 
 import { deleteReservationFixture } from './fixtures';
 import { signIn } from './helpers';
@@ -111,7 +117,9 @@ test.describe('M9 runtime feature flags', () => {
 
   test('a Super Admin proposes flags off in the Features group and a second applies them', async () => {
     const { page } = proposer;
-    await expect(page.getByRole('heading', { name: 'Thresholds in force' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Thresholds in force' }),
+    ).toBeVisible();
     const row = page.getByRole('row', { name: /Recruitment portal/ });
     await expect(row.getByRole('cell').nth(1)).toHaveText('On');
     await expect(row.getByRole('cell').nth(3)).toHaveText(
@@ -120,7 +128,9 @@ test.describe('M9 runtime feature flags', () => {
 
     const features = page.getByRole('group', { name: 'Features' });
     await expect(async () => {
-      await features.getByLabel('Recruitment portal', { exact: true }).selectOption('off');
+      await features
+        .getByLabel('Recruitment portal', { exact: true })
+        .selectOption('off');
       await expect(page.getByText('Changes: Recruitment portal.')).toBeVisible({
         timeout: 2_000,
       });
@@ -138,16 +148,23 @@ test.describe('M9 runtime feature flags', () => {
 
     // Proposed is not applied: the portal is still open.
     expect(
-      ((await (await page.request.get(`${STOREFRONT_URL}/api/ota/tenant/config`)).json()) as {
-        features: Record<string, boolean>;
-      }).features.recruitmentPortal,
+      (
+        (await (
+          await page.request.get(`${STOREFRONT_URL}/api/ota/tenant/config`)
+        ).json()) as {
+          features: Record<string, boolean>;
+        }
+      ).features.recruitmentPortal,
     ).toBe(true);
 
     await founder.page.reload();
     await founder.page.getByRole('button', { name: 'Apply', exact: true }).click();
     flagsOff = true;
     await expect(
-      founder.page.getByRole('row', { name: /Recruitment portal/ }).getByRole('cell').nth(1),
+      founder.page
+        .getByRole('row', { name: /Recruitment portal/ })
+        .getByRole('cell')
+        .nth(1),
     ).toHaveText('Off');
   });
 
@@ -181,8 +198,11 @@ test.describe('M9 runtime feature flags', () => {
 
     // The province map is gone; the province buttons still pick.
     await page.goto(`${STOREFRONT_URL}/en/destinations`);
-    await expect(page.getByRole('heading', { name: 'Cuba, west to east' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Cuba, west to east' })).toHaveCount(
+      0,
+    );
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.getByText('Pick a province for its hosts')).toBeVisible();
 
     // The desk offers only the transfer rail, and the API refuses a card link.
     const { page: deskPage } = proposer;
