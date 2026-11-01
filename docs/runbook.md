@@ -319,6 +319,14 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   does the same. Issue, use, withdrawal and the wrong-try withdrawal are audited
   (`staff.recovery_code_*`, `auth.recovery_code_*`) and the person is emailed.
   A Super Admin who lost both needs a second Super Admin; nobody issues their own.
+- New-device email (`docs/schema-m9-new-device-email.md`): a staff sign-in from a
+  browser not seen in 180 days emails the person (device, IP, method) and audits
+  `auth.new_device_sign_in`; the `ota_device` cookie is what makes a browser known.
+  The switch is "Email staff on every new-device sign-in" (Thresholds › Security,
+  two Super Admins, on by default); devices are still recorded while it is off.
+  Someone who reports a sign-in that was not theirs: "Sign out everywhere" on their
+  row, then "Reset passkeys" (which also forgets their devices); check the audit
+  log for the IP. Deactivating and issuing a recovery code forget devices too.
 - Last Super Admin with no passkey left: set `STAFF_PASSKEYS_OVERRIDE=off` on the
   API and restart. The rule is suspended (the API warns at every start), the
   Super Admin signs in by link and enrolls, then remove the variable and restart.

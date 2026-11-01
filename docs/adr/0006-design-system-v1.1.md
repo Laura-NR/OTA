@@ -1459,3 +1459,26 @@ and tokens:
   Re-dispatch. The shortcut list's "Where" for `A` now reads "Dashboard matrix, a booking's
   services".
 - **Applications' empty state** names `/join`, the storefront's address since the redirect.
+
+## Amendment, 2026-11-01: the new-device email
+
+The owner chose the new-device email next (M9 D9) and approved
+`docs/schema-m9-new-device-email.md` as recommended (N1a–N6a, migration
+`20261101145749_staff_known_devices`). The board draws one ticked checkbox in A-Settings ›
+Security, "Email the user on every new device sign-in", beside the IP allowlist, and no email.
+The build resolved it with existing components and tokens:
+
+- **The switch** is a threshold, not a checkbox on Security: it sits in Thresholds › Security
+  under "Staff sign in with a passkey" and the idle lock, as a switch with the same
+  two-Super-Admin save, because every other control on the board's Security card that changes
+  how sign-in behaves already lives there. Label "Email staff on every new-device sign-in";
+  "used by" reads "Desk sign-ins from a browser not seen before".
+- **Security** keeps its facts list: a "New-device email" row ("Emailed on every sign-in from
+  a new device", or "Off; new devices are still recorded"), then a caption explaining what a
+  new device is and what forgets one, with a link "Thresholds › Security" in the link style of
+  the recovery note above it. The "not built yet" caption now names only the IP allowlist.
+- **The email** uses the Phase 6 shell: one paragraph, three facts as the shell's points
+  (device, IP address, how they signed in), the "if this was not you" paragraph, and "Open the
+  desk". The device reads "Chrome · Linux" in every language. It goes out in the tenant's
+  primary language like the other staff emails, with the time in UTC.
+- No desk page lists a person's known devices; that stays deferred with "forget this device".

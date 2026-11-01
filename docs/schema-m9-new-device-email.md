@@ -1,6 +1,7 @@
 # M9 new-device email: policy and schema diff for review
 
-**Status:** **Approved 2026-11-01 as recommended (N1a–N6a, with the migration).**
+**Status:** **Approved 2026-11-01 as recommended (N1a–N6a, with the migration) and built the
+same day** (§7).
 **Date:** 2026-11-01
 **Scope:** the new-device email deferred under D9 in `docs/schema-m9-settings.md` ("the IP
 allowlist and new-device emails are deferred") and again in `docs/schema-m9-passkeys.md` and
@@ -166,3 +167,43 @@ model User {
 
 The relation field on `User` adds no column. The migration creates the table, its unique and
 plain indexes and the foreign key; Prisma generates the SQL.
+
+## 7. As built (2026-11-01)
+
+- **Migration** `20261101145749_staff_known_devices` (`5036414`): the table of §6, no backfill.
+- **Domain** (`e5badfe`): `packages/domain/src/settings/new-device.ts` (`deviceLabel`,
+  `knownDeviceCutoff`, `recordsSignInDevice`, `newDeviceEmailDue`, `KNOWN_DEVICE_STALE_DAYS`)
+  and `staffNewDeviceEmail` (default true) in the thresholds document and its schema.
+- **Auth** (`0017931`, `34cf119`): `packages/auth/src/sign-in-device.ts`, a Better Auth plugin
+  whose `after` hook runs when a route created a session (`ctx.context.newSession`), asks the
+  injected `SignInDeviceCheck.signedIn` with the request's `ota_device` cookie and the
+  session's user agent, IP and `signInMethod`, and sets the cookie it returns (HttpOnly,
+  SameSite=Lax, Secure as the session cookie, 400 days). A failure is logged, never thrown.
+  Tested against Better Auth's memory adapter, including a sign-in link's 302.
+- **API** (`4d24582`): `SignInDevicesService` (`apps/api/src/auth/`) prunes the person's
+  stale devices, refreshes a known one, else records it, audits `auth.new_device_sign_in`
+  (device, IP, method) and, while the switch is on, sends the email without awaiting it.
+  `StaffService` forgets the person's devices in "Reset passkeys", issuing a recovery code
+  and deactivation (N6; the count is in the first two audit rows). Email (`d09fc8c`):
+  `newDeviceSignInEmail` in `packages/email`.
+- **Desk** (`c98b95a`): the switch in Thresholds › Security beside the passkey rule and the
+  idle lock; Security's "New-device email" fact, a note with a link to the switch, and the
+  "not built" note now naming only the IP allowlist. en/es/fr.
+- **e2e** (`f938655`, `e2e/new-device-email.spec.ts`): a first sign-in emails (Spanish, the
+  tenant's primary language) and sets the cookie; the same browser again sends nothing;
+  another browser emails; "Reset passkeys" makes the first browser new again; with the switch
+  off (two Super Admins) a new browser is audited but not emailed; a traveler gets neither;
+  axe on Security. `e2e/helpers.ts`' `latestMagicLink` now reads the newest message to the
+  address that holds a link, since a staff address's new-device email can land after it.
+
+**Differences from §2–§5:**
+- The stored hash is SHA-256 of the person's id and the cookie value, not of the cookie alone,
+  so one browser shared by several staff (the board's shared desk PC) is known to each of them
+  and nobody's sign-in replaces another's device. The cookie stays one value per browser.
+- The label is language-neutral ("Firefox · Windows", "—" when nothing is recognised) rather
+  than "Firefox on Windows", so the email and the audit row show it as stored.
+- The email's time is UTC with its zone: the tenant manifest has no time zone.
+- The email is its own template (`new-device-sign-in.ts`), not a kind of the passkey change
+  email: its facts (device, IP, method) and its footer differ.
+- The security DTO is unchanged: Security already reads the thresholds document.
+- A deactivated account's sign-in records nothing (it is refused anyway).
