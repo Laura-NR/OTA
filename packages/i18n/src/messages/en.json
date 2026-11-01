@@ -4147,6 +4147,20 @@
     "loadPhoto": "Load photo",
     "loadPhotoOf": "Load photo: {alt}"
   },
+  "currency": {
+    "label": "Currency",
+    "menuLabel": "Currency: {code}",
+    "base": "Prices are set in EUR",
+    "noteDeposit": "Prices are set and charged in EUR; other currencies are a guide at the day's rate. Your rate is locked when you pay the deposit.",
+    "noteInvoice": "Prices are set and charged in EUR; other currencies are a guide at the day's rate. Your rate is locked when we send the invoice.",
+    "pricesSetInEur": "Prices set in EUR",
+    "locksAtDeposit": "the rate locks when you pay the deposit",
+    "locksAtInvoice": "the rate locks when we send the invoice",
+    "locked": "rate locked on {date}",
+    "bankSets": "your bank sets the rate it charges",
+    "accountTitle": "Display currency",
+    "accountLede": "Prices are set and charged in EUR. Another currency is shown as a guide, at the day's rate."
+  },
   "offline": {
     "pill": "You're offline · nothing can be booked, paid or sent until you're back",
     "pillSaved": "You're offline · showing your saved trip, updated {age}",

@@ -4147,6 +4147,20 @@
     "loadPhoto": "Charger la photo",
     "loadPhotoOf": "Charger la photo : {alt}"
   },
+  "currency": {
+    "label": "Devise",
+    "menuLabel": "Devise : {code}",
+    "base": "Les prix sont fixés en EUR",
+    "noteDeposit": "Les prix sont fixés et facturés en EUR ; les autres devises sont indicatives, au taux du jour. Votre taux est figé au paiement de l'acompte.",
+    "noteInvoice": "Les prix sont fixés et facturés en EUR ; les autres devises sont indicatives, au taux du jour. Votre taux est figé à l'envoi de la facture.",
+    "pricesSetInEur": "Prix fixés en EUR",
+    "locksAtDeposit": "le taux est figé au paiement de l'acompte",
+    "locksAtInvoice": "le taux est figé à l'envoi de la facture",
+    "locked": "taux figé le {date}",
+    "bankSets": "votre banque applique son propre taux",
+    "accountTitle": "Devise d'affichage",
+    "accountLede": "Les prix sont fixés et facturés en EUR. Une autre devise est affichée à titre indicatif, au taux du jour."
+  },
   "offline": {
     "pill": "Hors ligne · rien ne peut être réservé, payé ni envoyé avant votre retour en ligne",
     "pillSaved": "Hors ligne · voici votre voyage enregistré, mis à jour {age}",

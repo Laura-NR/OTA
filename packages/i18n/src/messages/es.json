@@ -4147,6 +4147,20 @@
     "loadPhoto": "Cargar foto",
     "loadPhotoOf": "Cargar foto: {alt}"
   },
+  "currency": {
+    "label": "Moneda",
+    "menuLabel": "Moneda: {code}",
+    "base": "Los precios se fijan en EUR",
+    "noteDeposit": "Los precios se fijan y se cobran en EUR; las demás monedas son orientativas, a la tasa del día. Tu tasa queda fijada al pagar el depósito.",
+    "noteInvoice": "Los precios se fijan y se cobran en EUR; las demás monedas son orientativas, a la tasa del día. Tu tasa queda fijada cuando enviamos la factura.",
+    "pricesSetInEur": "Precios fijados en EUR",
+    "locksAtDeposit": "la tasa se fija al pagar el depósito",
+    "locksAtInvoice": "la tasa se fija cuando enviamos la factura",
+    "locked": "tasa fijada el {date}",
+    "bankSets": "tu banco aplica su propia tasa",
+    "accountTitle": "Moneda de visualización",
+    "accountLede": "Los precios se fijan y se cobran en EUR. Otra moneda se muestra como referencia, a la tasa del día."
+  },
   "offline": {
     "pill": "Sin conexión · no se puede reservar, pagar ni enviar nada hasta que vuelvas",
     "pillSaved": "Sin conexión · mostrando tu viaje guardado, actualizado {age}",
