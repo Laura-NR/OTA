@@ -17,11 +17,15 @@ async function latestMagicLink(email: string): Promise<string> {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     const listResponse = await fetch(`${MAILPIT_URL}/api/v1/messages`);
     const { messages } = (await listResponse.json()) as { messages: MailpitMessage[] };
-    const message = messages.find((candidate) =>
-      candidate.To?.some((recipient) => recipient.Address === email),
-    );
+    // Newest first. A staff address also gets new-device emails, sent after
+    // a sign-in without holding it up, so one can land after this link.
+    const candidates = messages
+      .filter((candidate) =>
+        candidate.To?.some((recipient) => recipient.Address === email),
+      )
+      .slice(0, 5);
 
-    if (message) {
+    for (const message of candidates) {
       const detailResponse = await fetch(`${MAILPIT_URL}/api/v1/message/${message.ID}`);
       const detail = (await detailResponse.json()) as { Text?: string; HTML?: string };
       const body = `${detail.Text ?? ''}\n${detail.HTML ?? ''}`;
