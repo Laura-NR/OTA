@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { displayRateLockSchema } from './currency';
 import { paymentRailSchema, paymentReceiptSchema, paymentStatusSchema } from './payment';
 
 /**
@@ -149,6 +150,8 @@ export const paymentScheduleSchema = z.object({
   cardFeePercent: z.number(),
   receipts: z.array(scheduleReceiptSchema),
   refunds: z.array(refundSchema),
+  /** The display rate locked at the deposit or invoice (M9 C6); null before, or for EUR. */
+  rateLock: displayRateLockSchema.nullable(),
 });
 
 export type PaymentScheduleDto = z.infer<typeof paymentScheduleSchema>;

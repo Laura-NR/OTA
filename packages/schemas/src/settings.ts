@@ -1,11 +1,14 @@
 import {
   ADVISORY_DUAL_APPROVAL_LEVELS,
+  FX_LOCK_POINTS,
+  FX_SPREAD_PERCENT,
   INVITE_STATES,
   OVERRIDE_EXPIRY_HOURS,
   PERMISSION_CAPABILITIES,
   SETTINGS_VERSION_STATUSES,
   UserRole,
   type AdvisoryDualApprovalLevel,
+  type FxLockPoint,
   type InviteState,
   type OverrideStatus,
   type PermissionCapability,
@@ -45,6 +48,20 @@ export const operatingThresholdsSchema = z.object({
   staffIdleLockMinutes: whole(5, 240),
   staffNewDeviceEmail: z.boolean(),
   overrideExpiryHours: whole(OVERRIDE_EXPIRY_HOURS.min, OVERRIDE_EXPIRY_HOURS.max),
+  // Display currencies (`docs/schema-m9-display-currencies.md` C2, C5, C6).
+  displayCurrencyUSD: z.boolean(),
+  displayCurrencyCAD: z.boolean(),
+  displayCurrencyGBP: z.boolean(),
+  displayCurrencyCHF: z.boolean(),
+  // Steps of 0.1 %; the multiply-then-round absorbs binary error (0.6 × 10).
+  fxSpreadPercent: z
+    .number()
+    .min(FX_SPREAD_PERCENT.min)
+    .max(FX_SPREAD_PERCENT.max)
+    .refine((value) => Number.isInteger(Math.round(value * 1e6) / 1e5), {
+      message: 'Use steps of 0.1',
+    }),
+  fxLockAt: z.enum([...FX_LOCK_POINTS] as [FxLockPoint, ...FxLockPoint[]]),
   // Runtime feature flags (M9 D8b); the manifest's values are the defaults.
   interactiveSvgMap: z.boolean(),
   culturalEventsBanner: z.boolean(),

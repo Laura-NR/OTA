@@ -710,3 +710,15 @@ export {
   type TelemetryEventRequest,
   type TelemetryReceiptDto,
 } from './telemetry';
+export {
+  currencySettingsSchema,
+  displayCurrencyCodeSchema,
+  displayRateLockSchema,
+  publicCurrenciesSchema,
+  setDisplayCurrencySchema,
+  shownCurrencySchema,
+  type CurrencySettingsDto,
+  type DisplayRateLockDto,
+  type PublicCurrenciesDto,
+  type SetDisplayCurrencyRequest,
+} from './currency';

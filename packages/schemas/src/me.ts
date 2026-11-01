@@ -14,6 +14,8 @@ export const meProfileSchema = z.object({
   /** M10 D4: a request form asks for these only when they are missing. */
   phone: z.string().nullable(),
   nationality: z.string().nullable(),
+  /** M9 C4: the saved display currency; null follows the cookie or the default. */
+  displayCurrency: z.string().nullable(),
 });
 
 export type MeProfileDto = z.infer<typeof meProfileSchema>;

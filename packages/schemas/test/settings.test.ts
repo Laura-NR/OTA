@@ -27,6 +27,20 @@ describe('M9 settings DTOs', () => {
     expect(bad({ staffPasskeysRequired: true })).toBe(true);
   });
 
+  it('bounds the display-currency spread to 0–3 % in steps of 0.1 (docs/schema-m9-display-currencies.md C5)', () => {
+    const ok = (patch: Record<string, unknown>) =>
+      operatingThresholdsSchema.safeParse({ ...DEFAULT_OPERATING_THRESHOLDS, ...patch })
+        .success;
+    expect(ok({ fxSpreadPercent: 0 })).toBe(true);
+    expect(ok({ fxSpreadPercent: 0.7 })).toBe(true);
+    expect(ok({ fxSpreadPercent: 3 })).toBe(true);
+    expect(ok({ fxSpreadPercent: 0.65 })).toBe(false);
+    expect(ok({ fxSpreadPercent: 3.1 })).toBe(false);
+    expect(ok({ fxSpreadPercent: -0.1 })).toBe(false);
+    expect(ok({ fxLockAt: 'INVOICE' })).toBe(true);
+    expect(ok({ fxLockAt: 'BALANCE' })).toBe(false);
+  });
+
   it('asks a reason for a passkey reset (docs/schema-m9-passkeys.md P5)', () => {
     expect(resetPasskeysSchema.safeParse({ reason: '  ' }).success).toBe(false);
     expect(resetPasskeysSchema.parse({ reason: ' Phone stolen ' })).toEqual({
