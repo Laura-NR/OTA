@@ -1,4 +1,4 @@
-import type { UserRole } from '@ota/domain';
+import type { PermissionCapability, UserRole } from '@ota/domain';
 
 /**
  * The authenticated principal attached to each request. Populated by the
@@ -12,6 +12,8 @@ export interface AuthUser {
   signInMethod?: string | null;
   /** The Better Auth session behind the request (the idle lock writes to it). */
   sessionId?: string;
+  /** Set when the guard let this request through on a permission override (O7). */
+  override?: { id: string; capability: PermissionCapability };
 }
 
 export interface RequestWithUser {

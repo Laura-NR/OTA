@@ -32,6 +32,7 @@ import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { PackagesService } from './packages.service';
@@ -44,6 +45,7 @@ const READ_ROLES = [
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
 /** Curated-package CMS (spec §3.3, §4.6). */
+@Capability('catalog')
 @Controller('packages')
 export class PackagesController {
   constructor(private readonly packages: PackagesService) {}

@@ -27,6 +27,7 @@ import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { AffidavitsService } from './affidavits.service';
@@ -45,6 +46,7 @@ const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
  * full record and scan, the Super Admin's legal export, and a customer's
  * consent log. Support staff see statuses, never a signature or an IP.
  */
+@Capability('customers')
 @Controller()
 export class ComplianceController {
   constructor(
@@ -73,6 +75,7 @@ export class ComplianceController {
 
   /** Declared before `affidavits/:id` so "export" is never read as an id. */
   @Get('affidavits/export')
+  @Capability('ofacExport')
   @Roles(UserRole.SuperAdmin)
   @Header('Content-Type', 'text/csv; charset=utf-8')
   @Header('Content-Disposition', 'attachment; filename="ofac-affidavits.csv"')

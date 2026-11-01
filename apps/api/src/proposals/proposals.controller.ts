@@ -24,6 +24,7 @@ import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -41,6 +42,7 @@ const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
  * M5 on the desk: the custom-request/proposal queue, the request detail and
  * the priced versions. Pricing is a write; reading the queue is an ops read.
  */
+@Capability('bookings')
 @Controller('proposals')
 @UseFilters(DomainExceptionFilter)
 export class ProposalsController {

@@ -6,11 +6,13 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '@ota/domain';
+import { UserRole, isOverridable, type PermissionCapability } from '@ota/domain';
 import type { IncomingHttpHeaders } from 'node:http';
 
 import type { AuthUser, RequestWithUser } from '../common/auth/auth-user';
+import { CAPABILITY_KEY, NOT_OVERRIDABLE_KEY } from '../common/auth/capability.decorator';
 import { ROLES_KEY } from '../common/auth/roles.decorator';
+import { PermissionOverridesService } from '../overrides/permission-overrides.service';
 import { ALLOW_WITHOUT_PASSKEY_KEY } from './allow-without-passkey.decorator';
 import { AuthService } from './auth.service';
 import { IS_PUBLIC_KEY } from './public.decorator';
@@ -29,7 +31,10 @@ interface RequestWithAuth extends RequestWithUser {
  * not come from a passkey is refused: 403 `PASSKEY_SETUP_REQUIRED` when the
  * person has none yet, 401 `PASSKEY_SIGN_IN_REQUIRED` otherwise, except on
  * `@AllowWithoutPasskey()` routes. A route with `@Roles(...)` also requires
- * the user to hold one of those roles.
+ * the user to hold one of those roles, or an active permission override for
+ * the route's `@Capability` row where an Operations Admin may act
+ * (`docs/schema-m9-permission-overrides.md` O7); the request then carries
+ * the override.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -37,6 +42,7 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly auth: AuthService,
     private readonly policy: SessionPolicy,
+    private readonly overrides: PermissionOverridesService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -107,9 +113,40 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!required.includes(user.role)) {
-      throw new ForbiddenException('Insufficient role');
+      const override = await this.overrideFor(context, required, user);
+      if (!override) {
+        throw new ForbiddenException('Insufficient role');
+      }
+      user.override = override;
     }
 
     return true;
+  }
+
+  /**
+   * The person's running override for this route's row (O2, O3, O7): only on
+   * a tagged route an Operations Admin may use, never on an approval, and
+   * only for a row the person's role may ask for.
+   */
+  private async overrideFor(
+    context: ExecutionContext,
+    required: UserRole[],
+    user: AuthUser,
+  ): Promise<AuthUser['override'] | null> {
+    const targets = [context.getHandler(), context.getClass()];
+    const capability = this.reflector.getAllAndOverride<PermissionCapability | undefined>(
+      CAPABILITY_KEY,
+      targets,
+    );
+    if (
+      !capability ||
+      !required.includes(UserRole.OperationsAdmin) ||
+      this.reflector.getAllAndOverride<boolean>(NOT_OVERRIDABLE_KEY, targets) ||
+      !isOverridable(user.role, capability)
+    ) {
+      return null;
+    }
+    const active = await this.overrides.activeFor(user.id, capability);
+    return active ? { id: active.id, capability } : null;
   }
 }

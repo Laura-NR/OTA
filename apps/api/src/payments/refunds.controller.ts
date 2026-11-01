@@ -23,12 +23,14 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability, NotOverridable } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { PAYMENT_READ_ROLES, PAYMENT_WRITE_ROLES } from './payment-roles';
 import { RefundsService } from './refunds.service';
 
 /** The A-Payments refund queue and its approvals (M4 D7). */
+@Capability('payments')
 @Controller('refunds')
 export class RefundsController {
   constructor(private readonly refunds: RefundsService) {}
@@ -42,6 +44,7 @@ export class RefundsController {
   }
 
   @Post(':id/approve')
+  @NotOverridable()
   @HttpCode(HttpStatus.OK)
   @Roles(...PAYMENT_WRITE_ROLES)
   approve(
@@ -53,6 +56,7 @@ export class RefundsController {
   }
 
   @Post(':id/reject')
+  @NotOverridable()
   @HttpCode(HttpStatus.OK)
   @Roles(...PAYMENT_WRITE_ROLES)
   reject(

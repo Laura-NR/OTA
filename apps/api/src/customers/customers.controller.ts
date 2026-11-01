@@ -2,6 +2,7 @@ import { Controller, Get, Param, ParseUUIDPipe, UseFilters } from '@nestjs/commo
 import { UserRole } from '@ota/domain';
 import type { CustomerDetailDto, CustomerDto } from '@ota/schemas';
 
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { CustomersService } from './customers.service';
@@ -17,6 +18,7 @@ const READ_ROLES = [
  * retention). Read-only; the OFAC, consent and communication surfaces arrive
  * with M2/M3.
  */
+@Capability('customers')
 @Controller('customers')
 @UseFilters(DomainExceptionFilter)
 export class CustomersController {

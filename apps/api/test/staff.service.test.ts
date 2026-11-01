@@ -89,6 +89,21 @@ function fakePrisma() {
   ]);
   const passkeys = new Map<string, number>([['u-ana', 2]]);
   const devices = new Map<string, number>([['u-ana', 1]]);
+  // Ana holds a running permission override and an expired one (O5).
+  const overrides = [
+    {
+      id: 'o-running',
+      userId: 'u-ana',
+      state: 'APPROVED',
+      expiresAt: new Date('2999-01-01'),
+    },
+    {
+      id: 'o-expired',
+      userId: 'u-ana',
+      state: 'APPROVED',
+      expiresAt: new Date('2020-01-01'),
+    },
+  ];
   const audits: Record<string, unknown>[] = [];
   const codes: RecoveryCode[] = [];
   const isOpen = (code: RecoveryCode, now = new Date()) =>
@@ -133,6 +148,7 @@ function fakePrisma() {
     sessions,
     passkeys,
     devices,
+    overrides,
     audits,
     codes,
     user: {
@@ -244,6 +260,27 @@ function fakePrisma() {
         const count = devices.get(where.userId) ?? 0;
         devices.delete(where.userId);
         return { count };
+      },
+    },
+    permissionOverride: {
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: { userId: string; OR: { state: string; expiresAt?: { gt: Date } }[] };
+        data: { state: string };
+      }) => {
+        const ended = overrides.filter(
+          (row) =>
+            row.userId === where.userId &&
+            where.OR.some(
+              (rule) =>
+                rule.state === row.state &&
+                (!rule.expiresAt || row.expiresAt > rule.expiresAt.gt),
+            ),
+        );
+        for (const row of ended) row.state = data.state;
+        return { count: ended.length };
       },
     },
     staffRecoveryCode: {
@@ -440,11 +477,12 @@ describe('StaffService (M9 D4, D5)', () => {
     expect(invite.state).toBe('SENT');
   });
 
-  it('deactivates a user, ending their sessions and forgetting their devices, but never the last Super Admin or oneself', async () => {
+  it('deactivates a user, ending their sessions and overrides and forgetting their devices, but never the last Super Admin or oneself', async () => {
     const ana = await service.deactivate(DAYANA, 'u-ana');
     expect(ana.deactivatedAt).not.toBeNull();
     expect(prisma.sessions.has('u-ana')).toBe(false);
     expect(prisma.devices.has('u-ana')).toBe(false);
+    expect(prisma.overrides[0]!.state).toBe('ENDED');
     await expect(service.deactivate(DAYANA, DAYANA.id)).rejects.toBeInstanceOf(
       UnprocessableEntityException,
     );
@@ -462,7 +500,7 @@ describe('StaffService (M9 D4, D5)', () => {
     expect(prisma.audits.map((entry) => entry.action)).toContain('staff.deactivated');
   });
 
-  it('resets a lost device: passkeys, sessions and known devices go, audited with the reason, and the user is told', async () => {
+  it('resets a lost device: passkeys, sessions, known devices and running overrides go, audited with the reason, and the user is told', async () => {
     const ana = await service.resetPasskeys(DAYANA, 'u-ana', { reason: 'Phone stolen' });
     expect(ana.passkeys).toBe(0);
     expect(prisma.passkeys.has('u-ana')).toBe(false);
@@ -472,8 +510,16 @@ describe('StaffService (M9 D4, D5)', () => {
     expect(prisma.audits.at(-1)).toMatchObject({
       action: 'staff.passkeys_reset',
       entityId: 'u-ana',
-      metadata: { reason: 'Phone stolen', passkeys: 2, sessions: 2, devices: 1 },
+      metadata: {
+        reason: 'Phone stolen',
+        passkeys: 2,
+        sessions: 2,
+        devices: 1,
+        overrides: 1,
+      },
     });
+    // O5: the running override ends; the expired one is left as it was.
+    expect(prisma.overrides.map((row) => row.state)).toEqual(['ENDED', 'APPROVED']);
     const email = mailer.sent.at(-1)!;
     expect(email.to).toBe('ana@vereda.travel');
     expect(email.subject).toBe('Your Vereda desk passkeys were reset');
@@ -493,14 +539,14 @@ describe('StaffService (M9 D4, D5)', () => {
     );
   });
 
-  it('moves a staff member between Operations Admin and Administrative Support, audited', async () => {
+  it('moves a staff member between Operations Admin and Administrative Support, ending their overrides, audited', async () => {
     const ana = await service.changeRole(DAYANA, 'u-ana', {
       role: 'ADMINISTRATIVE_SUPPORT',
     });
     expect(ana.role).toBe('ADMINISTRATIVE_SUPPORT');
     expect(prisma.audits.at(-1)).toMatchObject({
       action: 'staff.role_changed',
-      metadata: { from: 'OPERATIONS_ADMIN', to: 'ADMINISTRATIVE_SUPPORT' },
+      metadata: { from: 'OPERATIONS_ADMIN', to: 'ADMINISTRATIVE_SUPPORT', overrides: 1 },
     });
   });
 });
@@ -559,6 +605,7 @@ describe('staff recovery codes (docs/schema-m9-recovery-codes.md)', () => {
         passkeys: 2,
         sessions: 2,
         devices: 1,
+        overrides: 1,
         replaced: 0,
       },
     });

@@ -39,6 +39,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -56,6 +57,7 @@ const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
  * playbook steps, attaching bookings, the options, the status board and the
  * banner draft are writes. `alerts` is declared before `:id`.
  */
+@Capability('disruptions')
 @Controller('disruptions')
 @UseFilters(DomainExceptionFilter)
 export class DisruptionsController {

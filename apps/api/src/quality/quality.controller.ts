@@ -28,6 +28,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -41,6 +42,7 @@ const READ_ROLES = [
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
 /** Quality, incident, and duty-of-care surface (spec §4.9.4). */
+@Capability('bookings')
 @Controller()
 @UseFilters(DomainExceptionFilter)
 export class QualityController {

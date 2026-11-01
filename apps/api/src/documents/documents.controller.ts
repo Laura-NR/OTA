@@ -12,6 +12,7 @@ import type { DocumentDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DocumentsService } from './documents.service';
 
@@ -22,6 +23,7 @@ const READ_ROLES = [
 ] as const;
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
+@Capability('bookings')
 @Controller('reservations/:id/documents')
 export class DocumentsController {
   constructor(private readonly documents: DocumentsService) {}

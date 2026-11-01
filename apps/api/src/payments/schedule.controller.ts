@@ -24,6 +24,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { PAYMENT_READ_ROLES, PAYMENT_WRITE_ROLES } from './payment-roles';
@@ -31,6 +32,7 @@ import { RefundsService } from './refunds.service';
 import { ScheduleService } from './schedule.service';
 
 /** M4 on one booking for the desk: the schedule, more time, and refunds. */
+@Capability('payments')
 @Controller('reservations/:reservationId')
 export class ScheduleController {
   constructor(

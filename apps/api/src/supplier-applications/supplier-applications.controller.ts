@@ -23,6 +23,7 @@ import {
 import { Public } from '../auth/public.decorator';
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability, NotOverridable } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
@@ -35,6 +36,7 @@ const READ_ROLES = [
 ] as const;
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
+@Capability('suppliers')
 @Controller('supplier-applications')
 export class SupplierApplicationsController {
   constructor(
@@ -63,6 +65,7 @@ export class SupplierApplicationsController {
   }
 
   @Post(':id/approve')
+  @NotOverridable()
   @HttpCode(HttpStatus.OK)
   @Roles(...WRITE_ROLES)
   approve(

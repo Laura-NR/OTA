@@ -18,6 +18,7 @@ import {
 import type { Response } from 'express';
 
 import { Public } from '../auth/public.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -35,6 +36,7 @@ const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
  * the notice email, an operations view of pending records, and a manual scan
  * trigger (the daily worker calls the same service).
  */
+@Capability('customers')
 @Controller()
 @UseFilters(DomainExceptionFilter)
 export class RetentionController {

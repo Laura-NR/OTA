@@ -21,10 +21,12 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { DispatchService } from './dispatch.service';
 
+@Capability('dispatch')
 @Controller()
 export class DispatchController {
   constructor(private readonly dispatch: DispatchService) {}

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggerModule, type Params } from 'nestjs-pino';
 
 import { AdvisoriesModule } from './advisories/advisories.module';
@@ -18,6 +18,8 @@ import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { ImportsModule } from './imports/imports.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { OverrideAuditInterceptor } from './overrides/override-audit.interceptor';
+import { PermissionOverridesModule } from './overrides/permission-overrides.module';
 import { MeModule } from './me/me.module';
 import { MessagesModule } from './messages/messages.module';
 import { PackagesModule } from './packages/packages.module';
@@ -97,7 +99,11 @@ export const httpLoggerOptions = {
     DisruptionsModule,
     EventsModule,
     TelemetryModule,
+    PermissionOverridesModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_INTERCEPTOR, useClass: OverrideAuditInterceptor },
+  ],
 })
 export class AppModule {}

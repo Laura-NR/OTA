@@ -6,6 +6,7 @@ import {
   type RegulatorySummaryDto,
 } from '@ota/schemas';
 
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { RegulatoryService } from './regulatory.service';
@@ -17,6 +18,7 @@ const READ_ROLES = [
 ] as const;
 
 /** Statutory reporting for MINTUR/ONAT (spec §4.9.2). */
+@Capability('reports')
 @Controller('analytics/regulatory')
 export class RegulatoryController {
   constructor(private readonly regulatory: RegulatoryService) {}

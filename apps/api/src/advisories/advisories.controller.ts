@@ -33,6 +33,7 @@ import {
 import { Public } from '../auth/public.decorator';
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability, NotOverridable } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -50,6 +51,7 @@ const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
  * Current Conditions history) are declared before `:id` so they never reach
  * the desk's routes; drafting, approving, versioning and lifting are writes.
  */
+@Capability('advisories')
 @Controller('advisories')
 @UseFilters(DomainExceptionFilter)
 export class AdvisoriesController {
@@ -116,6 +118,7 @@ export class AdvisoriesController {
   }
 
   @Post(':id/approve')
+  @NotOverridable()
   @HttpCode(HttpStatus.OK)
   @Roles(...WRITE_ROLES)
   approve(
@@ -126,6 +129,7 @@ export class AdvisoriesController {
   }
 
   @Post(':id/request-changes')
+  @NotOverridable()
   @HttpCode(HttpStatus.OK)
   @Roles(...WRITE_ROLES)
   requestChanges(

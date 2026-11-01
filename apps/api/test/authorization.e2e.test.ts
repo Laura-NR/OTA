@@ -70,6 +70,7 @@ const INVITE = 'fcfcfcfc-fcfc-4cfc-8cfc-fcfcfcfcfcfc';
 const STAFF_USER = '0d0d0d0d-0d0d-4d0d-8d0d-0d0d0d0d0d0d';
 const EVENT = '1e1e1e1e-1e1e-4e1e-8e1e-1e1e1e1e1e1e';
 const EVENT_REQUEST = '2f2f2f2f-2f2f-4f2f-8f2f-2f2f2f2f2f2f';
+const OVERRIDE = '3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -482,12 +483,37 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/staff/${STAFF_USER}/reactivate`, allowed: 'superAdmin' },
   { method: 'get', path: '/customers', allowed: 'opsRead' },
   { method: 'get', path: `/customers/${CUSTOMER}`, allowed: 'opsRead' },
+  // M9 permission overrides: any staff member asks, reads their own and ends
+  // their own; Super Admins list and decide.
+  { method: 'post', path: '/permission-overrides', allowed: 'opsRead' },
+  { method: 'get', path: '/permission-overrides/mine', allowed: 'opsRead' },
+  { method: 'post', path: `/permission-overrides/${OVERRIDE}/end`, allowed: 'opsRead' },
+  { method: 'get', path: '/permission-overrides', allowed: 'superAdmin' },
+  {
+    method: 'post',
+    path: `/permission-overrides/${OVERRIDE}/approve`,
+    allowed: 'superAdmin',
+  },
+  {
+    method: 'post',
+    path: `/permission-overrides/${OVERRIDE}/decline`,
+    allowed: 'superAdmin',
+  },
 ];
 
 const DOCUMENT = 'f6f6f6f6-f6f6-4f6f-8f6f-f6f6f6f6f6f6';
 
+/** The matrix row support holds an override for, in the override cases; none by default. */
+let supportOverride: string | null = null;
+
 const fakePrisma = {
   serviceItem: { findUnique: async () => null },
+  permissionOverride: {
+    findFirst: async ({ where }: { where: { userId: string; capability: string } }) =>
+      where.userId === USERS.support.id && where.capability === supportOverride
+        ? { id: OVERRIDE }
+        : null,
+  },
   // A traveler voucher on a booking the fixture traveler owns.
   document: {
     findUnique: async () => ({
@@ -533,6 +559,7 @@ describe('authorization matrix', () => {
   });
 
   afterEach(async () => {
+    supportOverride = null;
     await app.close();
   });
 
@@ -671,5 +698,55 @@ describe('authorization matrix', () => {
       .post('/telemetry/events')
       .send({ events: [] });
     expect(telemetry.status).toBe(400);
+  });
+
+  // docs/schema-m9-permission-overrides.md O2, O3, O7.
+  it('lets support through only its overridden row, never an approval or a Super Admin row', async () => {
+    const as = (method: Method, path: string) =>
+      request(app.getHttpServer())[method](path).set('x-test-user', USERS.support.email);
+    const blocked = [
+      ['post', `/reservations/${RESERVATION}/payments`],
+      ['post', `/refunds/${REFUND}/sent`],
+      ['post', `/payments/proofs/${PROOF}/accept`],
+    ] as const;
+    for (const [method, path] of blocked) {
+      expect((await as(method, path)).status, `${path} without an override`).toBe(403);
+    }
+
+    supportOverride = 'payments';
+    for (const [method, path] of blocked) {
+      expect([401, 403], `${path} with a payments override`).not.toContain(
+        (await as(method, path)).status,
+      );
+    }
+    for (const [method, path] of [
+      // O3: refund votes stay with the roles that hold them.
+      ['post', `/refunds/${REFUND}/approve`],
+      ['post', `/refunds/${REFUND}/reject`],
+      // Another row.
+      ['post', '/reservations'],
+      ['post', `/reservations/${RESERVATION}/dispatch`],
+      // Super Admin rows.
+      ['get', '/staff'],
+      ['get', '/affidavits/export'],
+      ['post', '/settings/operating/versions'],
+    ] as const) {
+      expect((await as(method, path)).status, `${path} with a payments override`).toBe(
+        403,
+      );
+    }
+  });
+
+  it('keeps advisory and supplier-application approvals with their roles under an override', async () => {
+    const as = (path: string) =>
+      request(app.getHttpServer()).post(path).set('x-test-user', USERS.support.email);
+    supportOverride = 'advisories';
+    expect((await as(`/advisories/${ADVISORY}/approve`)).status).toBe(403);
+    expect((await as(`/advisories/${ADVISORY}/request-changes`)).status).toBe(403);
+    supportOverride = 'suppliers';
+    expect((await as(`/supplier-applications/${APPLICATION}/approve`)).status).toBe(403);
+    expect([401, 403]).not.toContain(
+      (await as(`/supplier-applications/${APPLICATION}/reject`)).status,
+    );
   });
 });

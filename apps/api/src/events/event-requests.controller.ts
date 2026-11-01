@@ -24,6 +24,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -37,6 +38,7 @@ const READ_ROLES = [
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
 /** M10 D10: the desk's request queue (Bookings › Event requests). */
+@Capability('bookings')
 @Controller('event-requests')
 @UseFilters(DomainExceptionFilter)
 export class EventRequestsController {

@@ -38,6 +38,7 @@ import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { SuppliersService } from './suppliers.service';
@@ -48,6 +49,7 @@ const READ_ROLES = [
   UserRole.SuperAdmin,
 ] as const;
 
+@Capability('suppliers')
 @Controller('suppliers')
 export class SuppliersController {
   constructor(private readonly suppliers: SuppliersService) {}

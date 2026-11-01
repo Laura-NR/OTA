@@ -25,6 +25,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { TravelersService } from './travelers.service';
@@ -37,6 +38,7 @@ const READ_ROLES = [
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
 /** M2 party, extras, price lines and the passport vault on a booking (ops-only). */
+@Capability('bookings')
 @Controller('reservations/:id')
 export class TravelersController {
   constructor(private readonly travelers: TravelersService) {}

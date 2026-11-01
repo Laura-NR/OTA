@@ -6,11 +6,13 @@ import {
   type PaymentLedgerQuery,
 } from '@ota/schemas';
 
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { PaymentsService } from './payments.service';
 
 /** The operations payment ledger (A-Payments, read-only until refunds and proofs land with M4). */
+@Capability('payments')
 @Controller('payments')
 export class PaymentsLedgerController {
   constructor(private readonly payments: PaymentsService) {}

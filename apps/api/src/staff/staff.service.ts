@@ -352,7 +352,10 @@ export class StaffService {
     return { role: invite.role };
   }
 
-  /** Move a staff member between Operations Admin and Administrative Support. */
+  /**
+   * Move a staff member between Operations Admin and Administrative Support;
+   * their permission overrides end (O5).
+   */
   async changeRole(
     actor: AuthUser,
     id: string,
@@ -364,9 +367,11 @@ export class StaffService {
     }
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({ where: { id }, data: { role: input.role } });
+      const overrides = await this.endOverrides(tx, actor, id);
       await this.audit(tx, actor, 'staff.role_changed', ENTITY_USER, id, {
         from: target.role,
         to: input.role,
+        overrides: overrides.count,
       });
     });
     return this.one(id);
@@ -386,8 +391,9 @@ export class StaffService {
 
   /**
    * A lost device (P5): another Super Admin deletes the user's passkeys,
-   * sessions and known devices (`docs/schema-m9-new-device-email.md` N6), with
-   * a reason; the user signs in by link and sets one up again.
+   * sessions and known devices (`docs/schema-m9-new-device-email.md` N6) and
+   * ends their permission overrides (O5), with a reason; the user signs in
+   * by link and sets one up again.
    */
   async resetPasskeys(
     actor: AuthUser,
@@ -399,11 +405,13 @@ export class StaffService {
       const passkeys = await tx.passkey.deleteMany({ where: { userId: id } });
       const sessions = await tx.session.deleteMany({ where: { userId: id } });
       const devices = await tx.staffKnownDevice.deleteMany({ where: { userId: id } });
+      const overrides = await this.endOverrides(tx, actor, id);
       await this.audit(tx, actor, 'staff.passkeys_reset', ENTITY_USER, id, {
         reason: input.reason,
         passkeys: passkeys.count,
         sessions: sessions.count,
         devices: devices.count,
+        overrides: overrides.count,
       });
       const target = await tx.user.findUniqueOrThrow({
         where: { id },
@@ -424,8 +432,9 @@ export class StaffService {
    * Super Admin issues a one-time code, returned once and stored only as a
    * hash. It replaces an open one, and the person's passkeys and sessions go,
    * since the code's session may add only a first passkey, as do their known
-   * devices (N6), so the code's sign-in is announced. Audited with both
-   * names and the reason; the person is told.
+   * devices (N6), so the code's sign-in is announced, and their permission
+   * overrides end (O5). Audited with both names and the reason; the person
+   * is told.
    */
   async issueRecoveryCode(
     actor: AuthUser,
@@ -449,6 +458,7 @@ export class StaffService {
       const passkeys = await tx.passkey.deleteMany({ where: { userId: id } });
       const sessions = await tx.session.deleteMany({ where: { userId: id } });
       const devices = await tx.staffKnownDevice.deleteMany({ where: { userId: id } });
+      const overrides = await this.endOverrides(tx, actor, id, now);
       const row = await tx.staffRecoveryCode.create({
         data: {
           userId: id,
@@ -465,6 +475,7 @@ export class StaffService {
         passkeys: passkeys.count,
         sessions: sessions.count,
         devices: devices.count,
+        overrides: overrides.count,
       });
       const person = await tx.user.findUniqueOrThrow({
         where: { id },
@@ -512,7 +523,10 @@ export class StaffService {
     return this.one(id);
   }
 
-  /** The guard refuses a deactivated user; their sessions and known devices go at once. */
+  /**
+   * The guard refuses a deactivated user; their sessions, known devices and
+   * permission overrides go at once.
+   */
   async deactivate(actor: AuthUser, id: string): Promise<StaffUserDto> {
     const target = await this.loadStaff(actor, id);
     if (target.deactivatedAt) {
@@ -525,7 +539,10 @@ export class StaffService {
       await tx.user.update({ where: { id }, data: { deactivatedAt: new Date() } });
       await tx.session.deleteMany({ where: { userId: id } });
       await tx.staffKnownDevice.deleteMany({ where: { userId: id } });
-      await this.audit(tx, actor, 'staff.deactivated', ENTITY_USER, id, {});
+      const overrides = await this.endOverrides(tx, actor, id);
+      await this.audit(tx, actor, 'staff.deactivated', ENTITY_USER, id, {
+        overrides: overrides.count,
+      });
     });
     return this.one(id);
   }
@@ -630,6 +647,26 @@ export class StaffService {
       expiresAt: row.expiresAt.toISOString(),
       createdAt: row.createdAt.toISOString(),
     };
+  }
+
+  /**
+   * `docs/schema-m9-permission-overrides.md` O5: a changed role, a
+   * deactivation or a suspected compromise ends the person's pending
+   * requests and running overrides; expired ones are left as they are.
+   */
+  private endOverrides(
+    tx: Prisma.TransactionClient,
+    actor: AuthUser,
+    userId: string,
+    now: Date = new Date(),
+  ) {
+    return tx.permissionOverride.updateMany({
+      where: {
+        userId,
+        OR: [{ state: 'REQUESTED' }, { state: 'APPROVED', expiresAt: { gt: now } }],
+      },
+      data: { state: 'ENDED', endedById: actor.id, endedAt: now },
+    });
   }
 
   private audit(

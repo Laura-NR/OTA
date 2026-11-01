@@ -19,6 +19,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { DeskAlertsService } from './desk-alerts.service';
@@ -28,6 +29,7 @@ import { DeskAlertsService } from './desk-alerts.service';
  * operations role sees the mute; acknowledging and muting are for those who
  * re-dispatch.
  */
+@Capability('dispatch')
 @Controller()
 export class DeskAlertsController {
   constructor(private readonly alerts: DeskAlertsService) {}
