@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-31 17:00
+# Handoff — vereda — updated 2026-10-31 23:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -8,7 +8,8 @@ Confirmation screen, the Custom builder, the DS 07 widths, Phase 8 item 2 and, o
 reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follow-ups and the
 server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
-on 2026-10-31 the desk idle lock and the runtime feature flags) and ADR 0007 (worker app). Staff passkeys:
+on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
+page) and ADR 0007 (worker app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
@@ -17,6 +18,28 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-10-31 (evening): the desk's alerts on every page, and the queues' flag notices**,
+  the owner's pick (`8d8d461`…`432c8af`; ADR 0006 amendment of that day). No migration,
+  dependency, route or spend.
+  - `apps/backoffice/src/components/desk-alerts.tsx` (`DeskAlerts`, `useDeskAlerts`) now
+    holds the board, the 1 s clock, the `/ops` socket, the announced crossings, the cue,
+    acknowledgements with the undo toast and the mute. The dashboard layout mounts it for
+    staff (it reads `/dispatch/active`, `/dispatch/alert-mute` and the thresholds); it stays
+    mounted across desk pages, so the sound, the cued set and an open undo carry over.
+    `OpsDesk` reads it and seeds it with the page's own reads (null = unread, kept).
+  - `components/alert-strip.tsx`: `AlertStrip` (the dashboard's strip, moved) and
+    `ShellAlertStrip`, first in `<main>` on every shell page but `/dashboard`, with "Go to
+    matrix" → `/dashboard#matrix` and one "Acknowledge red alert · <code>" per red booking
+    (ops write roles); focus goes to `#main` after one. "Press R" is announced only on the
+    dashboard. `AlertAnnouncements` renders the two live regions first in every shell
+    page's `<main>`. Matrix columns moved to `lib/matrix-columns.ts`.
+  - `components/feature-off-notice.tsx`: an info alert on Suppliers › Applications
+    (`recruitmentPortal`) and Bookings › Custom proposals (`customItineraryBuilder`) while
+    the flag is off, linking to `/settings?tab=thresholds`; `backoffice.featureOff.*`
+    en/es/fr.
+  - e2e: `e2e/desk-alerts.spec.ts` +2 (strip, cue and undo across pages; support read-only;
+    owns E2EACK03 and `alerts-e2e-support@`), `e2e/feature-flags.spec.ts` now also switches
+    the builder and checks both notices.
 - **2026-10-31 (afternoon): runtime feature flags** (M9 D8b), the owner's pick, decided as
   recommended: two Super Admins per change, the API refuses what an off flag covers, and
   `interactiveSvgMap` (read by nothing before) gates the map (`bd67105`…`974777f`; ADR 0006
@@ -208,7 +231,7 @@ events (T-Events)".
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
   deferred items (recovery codes, permission overrides, display currencies, manifest editing
   beyond the flags, the IP allowlist, new-device email); changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
-  desk's `/` (no desk search) and the cue on desk pages other than the dashboard; Ops Lite;
+  desk's `/` (no desk search) and `A` on a booking page's own services; Ops Lite;
   a real screen-reader run; the custom date-range picker (owner: native fields).
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
@@ -216,35 +239,34 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-31, runtime feature flags, dev stack stopped for the build)
+## Verified (2026-10-31/11-01, the desk's alerts on every page, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1064 passed / 28 skipped**, 30/30 tasks, 0 cached (domain
-  with `features.test.ts` (4); api 404 with `feature-flags.e2e.test.ts` (6) and three flag
-  cases in `settings.service.test.ts`; i18n key parity green).
+- `TURBO_FORCE=true pnpm test` **1064 passed / 28 skipped**, 30/30 tasks, 0 cached (no new
+  unit tests: the cue's rules were already pure and tested; i18n key parity green).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **136 passed, 1 failed, 3 skipped** in 41.4 min.
-  `e2e/feature-flags.spec.ts` 3/3. The failure is `e2e/supplier-resources.spec.ts:156`: a
-  storefront heading never appeared within 90 s while the storefront `next dev` was at
-  ~8 GB RSS with ~0 GB free (the memory trap under Traps). Leftovers killed by PID, `.next`
-  deleted, rerun alone on fresh servers: **1/1**. Skips: the desk at 320/375/414.
-- Before the full run, against the dev stack: `feature-flags` 3/3, then `settings`,
-  `passkeys`, `recruitment`, `payment-schedule`, `payments`, `storefront-builder`,
-  `storefront-checkout`, `storefront-content`, `idle-lock` **17/17**; `feature-flags` and
-  `storefront-content` again after the Destinations panel fix **6/6**. After each, the
-  public config served the manifest's flags again.
+- `pnpm e2e` (`.next` deleted first): **137 passed, 2 failed, 3 skipped** in 50.5 min.
+  - `e2e/desk-keyboard.spec.ts:104` was this batch's: the live regions had moved out of
+    `<main>`. Fixed (`432c8af`); then `desk-keyboard`, `desk-alerts` and `accessibility`
+    rerun on fresh servers: **15/15**.
+  - `e2e/responsive.spec.ts:118` (ds07-768, storefront with larger text) timed out at
+    `page.goto`: the memory trap (storefront `next dev` 5.1–5.7 GB, answering no page).
+    After `kill -9` by port PID and deleting `.next`, rerun alone: **1/1**.
+  - Skips: the desk at 320/375/414.
+- Before the full run, against the dev stack: `desk-alerts` **4/4** (two new),
+  `feature-flags` **3/3**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Browser (dev stack, Chromium, a throwaway script that switched five flags off with two
-  Super Admins and back on) at 390, 1024 and 1280: no sideways scroll on the Features group,
-  `/en/join`, `/en/custom`, `/en/destinations`, the trip page and the desk booking; the
-  closed pages' h1 is 28 px at 390 and 40 px from 1024 (600), buttons 40 px with a mouse;
-  the Features selects 40 px; the desk panel showed `noRail` with both rails off; the
-  trip showed the rail-off alert. Screenshots checked; they showed the panel's "on the map"
-  line, since fixed.
-- Not run: a real screen reader; a second API process picking a flag up within 60 s.
+- Browser (dev stack, Chromium, a throwaway spec with two red bookings and both flags off
+  via two Super Admins, then restored and deleted) at 390, 1024 and 1280 on Payments,
+  Applications, Custom proposals and the dashboard: no sideways scroll; the strip is
+  error 600 / white with 32 px buttons (as on the dashboard), 352 px tall at 390 with two
+  red bookings, 148 px from 1024; the notice is info 100 / info 700 with an underlined link.
+  Screenshots checked. The announcer fix (sr-only regions only) came after this check.
+- Not run: a real screen reader; the announcements heard on a page other than the dashboard
+  (the e2e reads the region on the dashboard only).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -290,6 +312,12 @@ events (T-Events)".
   and every action, not what the last page showed (developer tools could read its DOM).
   The default 30 minutes applies to every staff session not marked as own device, including
   an ops desk watched without input.
+- **Alerts on every page (2026-10-31):** each full load of a desk page now also reads the
+  board, the mute and the thresholds in the layout (the dashboard reads the first two again
+  for its own render). A pending acknowledgement is recorded when its toast runs out, or
+  when the person leaves the shell for Passkeys; signing out, reloading or closing the tab
+  drops it. With many red bookings at once the strip grows by one button per booking (a
+  line each on a phone).
 - **Runtime flags (2026-10-31):** once any settings version has applied, the flags it holds
   win over a later edit of the manifest's `features` (as the payment window already did); a
   fork changes them in Settings. The storefront asks the API on every request; if the API is
@@ -299,6 +327,12 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Alerts on every page (2026-10-31):** a red fixture left by one e2e spec now puts the
+  strip, with "Acknowledge red alert · <code>" and "Mute 15 min" buttons, on every desk page
+  of later specs: locate buttons by their full name, and anchor text locators for the strip
+  (`/^\d+ red alerts? · /`), since the per-booking buttons also contain "red alert · <code>"
+  (a strict-mode violation otherwise). `OpsDesk` throws outside `DeskAlerts`; render it only
+  in the shell. A second copy of the cue logic anywhere would play the cue twice.
 - **Runtime flags (2026-10-31):** a value exported from a `'use client'` module arrives in a
   server component as a client reference, not the value, so the desk page passes the flags to
   `PaymentPanel` and the panel filters its own `RAILS`. The API test fake's
@@ -327,6 +361,9 @@ events (T-Events)".
   It recurred in the next run the same day (storefront ~8 GB, back-office ~4 GB, test 112,
   `supplier-resources.spec.ts`). Do not `kill $(pgrep -f "turbo run dev|…")` from a
   shell whose own command line matches: it kills that shell; kill by the ports' PIDs.
+  On 2026-11-01 it hit `responsive.spec.ts` ds07-768 again; a "fresh" rerun after a plain
+  `kill` failed differently (`/en/about` body 16 px, not 18) until `kill -9` and a check that
+  3000–3002 were free; then it passed.
 - **Storefront design changes (2026-10-29, night):** a new message key shows as its raw key
   (`cookies.choose`) in a running dev server until `pnpm --filter @ota/i18n build`. Test
   a `ResponsiveTable` cell by its role and name (`getByRole('cell', { name, exact: true })`):
@@ -635,16 +672,23 @@ events (T-Events)".
     `createAuth`'s `sessionGate`, except those in `routeOpenToRefusedSession`. Both gateways
     re-check sockets every minute. A staff fixture older than 30 minutes needs
     `lastActiveAt`."
+  - "2026-10-31: the desk's dispatch alerts (board, `/ops` socket, cue, acknowledgements,
+    mute, announcements) live in `DeskAlerts` (`apps/backoffice/src/components/desk-alerts.tsx`)
+    in the dashboard layout, not in a page; every shell page but `/dashboard` shows
+    `ShellAlertStrip`. Read them with `useDeskAlerts()`; never open a second `/ops` socket
+    for the cue."
 
 ## Next
-1. Owner: choose the next batch. Buildable without a migration: an M9 deferred item
-   (recovery codes, permission overrides, display currencies, IP allowlist, new-device
-   email; a doc first where it changes how auth decides, and new-device email needs a
-   "known device" record), the desk's cue on pages other than the dashboard, or a desk
-   notice on Applications/Custom requests while their flag is off. M10's room holds/event photos need a
-   migration doc first. A real screen-reader run (desk and storefront) needs a machine with
-   NVDA or VoiceOver. Optional: the desktop cookie banner still covers about 61 % of a
-   1280 × 844 window (the board's layout; focus is now kept clear of it).
+1. Owner: choose the next batch. An M9 deferred item: recovery codes (a doc first: it
+   changes how auth decides and needs hashed codes stored, so a migration), new-device email
+   (a "known device" record, so a migration doc), the IP allowlist (a policy doc first; its
+   use depends on the deploy topology's proxy), permission overrides or display currencies
+   (the ECB feed is a Q10 third party). Smaller, no migration: `A` on a booking page's own
+   services, or the Applications empty state's old `/join-our-network` path (it redirects
+   to `/join`). M10's room holds/event photos need a migration doc first. A real
+   screen-reader run (desk and storefront) needs a machine with NVDA or VoiceOver.
+   Optional: the desktop cookie banner still covers about 61 % of a 1280 × 844 window (the
+   board's layout; focus is now kept clear of it).
 2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
    answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
    plan recommends renting the server only when the agency's legal entity exists (D1).
@@ -1095,3 +1139,11 @@ events (T-Events)".
   `POST /me/reservations` too, refused after body validation and a traveler's ownership
   check, kept a transfer already started payable by proof, and closed `/custom` before
   asking anyone to sign in.
+- 2026-10-31 — the owner chose the desk's alerts on every page next, with the flag-off
+  notices on Applications and Custom proposals (over recovery codes, the new-device email
+  and the IP allowlist; the deployment plan is unanswered and Plausible CE is not
+  installed). The build moved the alert state into the dashboard layout rather than
+  duplicating it per page (one socket, one cue, and the cue's memory survives navigation),
+  reused A-Dashboard's strip with a per-booking Acknowledge where no matrix row exists,
+  kept the undo open across page changes, announced "Press R" only on the dashboard, and
+  showed the notices to every staff role with a link to the thresholds tab.
