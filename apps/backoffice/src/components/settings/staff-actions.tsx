@@ -185,7 +185,8 @@ export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boo
 /**
  * "Issue recovery code…" (A-Settings): a reason, a warning that the person's
  * passkeys and sessions go, then the code, shown once, to read out by phone
- * or in person. Closing the dialog forgets it.
+ * or in person. Closing the dialog forgets it. The form exists only while the
+ * dialog is open, so the row holds one "Reason" field at a time.
  */
 function RecoveryCodeAction({ user }: { user: StaffUserDto }) {
   const t = useTranslations('backoffice.settings.users');
@@ -238,7 +239,7 @@ function RecoveryCodeAction({ user }: { user: StaffUserDto }) {
         description={issued ? undefined : t('recoveryDescription')}
         closeLabel={t('recoveryClose')}
       >
-        {issued ? (
+        {!open ? null : issued ? (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1 rounded-md border bg-page p-4">
               <span className="text-caption text-secondary">
