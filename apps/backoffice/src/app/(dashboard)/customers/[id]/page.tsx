@@ -7,10 +7,12 @@ import { notFound } from 'next/navigation';
 
 import { getThresholds } from '@/lib/operating';
 import { CertificationReminderButton } from '@/components/certification-reminder-button';
+import { OverrideNotice } from '@/components/override-notice';
 import { StatusBadge } from '@/components/status-badge';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { bookingDates, money, opsDate } from '@/lib/ops-format';
+import { deskAccess } from '@/lib/overrides';
 
 const RETENTION_VARIANT: Record<CustomerDetailDto['retentionStatus'], BadgeVariant> = {
   ACTIVE: 'success',
@@ -61,9 +63,12 @@ export default async function CustomerDetailPage({
     },
   );
 
-  const consents = await apiFetch<ConsentRecordDto[]>(`/customers/${id}/consents`).catch(
-    () => [],
-  );
+  const [consents, session] = await Promise.all([
+    apiFetch<ConsentRecordDto[]>(`/customers/${id}/consents`).catch(() => []),
+    getServerSession(),
+  ]);
+  // Support views customers; the reminder is the row's action (M9 overrides).
+  const access = await deskAccess(session?.user.role, 'customers');
   const name = customer.fullName ?? customer.email;
 
   return (
@@ -106,6 +111,8 @@ export default async function CustomerDetailPage({
           </div>
         </div>
       </div>
+
+      <OverrideNotice capability="customers" overrides={access.overrides} />
 
       <section className="flex min-w-0 flex-col gap-3 rounded-lg border bg-surface px-5 py-4">
         <div className="flex flex-col gap-0.5">
@@ -170,7 +177,7 @@ export default async function CustomerDetailPage({
                               ? t('ofacStatus.missing', { count: trip.ofacMissing })
                               : t('ofacStatus.certified')}
                           </Badge>
-                          {trip.ofacMissing > 0 ? (
+                          {trip.ofacMissing > 0 && access.canManage ? (
                             <CertificationReminderButton
                               customerId={customer.id}
                               reservationId={trip.id}
