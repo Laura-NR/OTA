@@ -1959,7 +1959,7 @@
       "description": "Reclutamiento de proveedores. Aprobar una solicitud crea la cuenta de trabajador y el perfil de cumplimiento.",
       "recruitment": "Reclutamiento",
       "applicationsCount": "{count} solicitud(es)",
-      "empty": "Aún no hay solicitudes. El formulario público está en /join-our-network.",
+      "empty": "Aún no hay solicitudes. El formulario público está en /join.",
       "loadError": "No se pudieron cargar las solicitudes.",
       "applicant": "Solicitante",
       "category": "Categoría",

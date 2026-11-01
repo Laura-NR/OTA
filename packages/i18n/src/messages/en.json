@@ -1959,7 +1959,7 @@
       "description": "Supplier recruitment. Approving an application creates the worker account and compliance profile.",
       "recruitment": "Recruitment",
       "applicationsCount": "{count} application(s)",
-      "empty": "No applications yet. The public form lives at /join-our-network.",
+      "empty": "No applications yet. The public form lives at /join.",
       "loadError": "Could not load applications.",
       "applicant": "Applicant",
       "category": "Category",

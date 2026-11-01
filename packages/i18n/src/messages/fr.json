@@ -1959,7 +1959,7 @@
       "description": "Recrutement des fournisseurs. Approuver une candidature crée le compte travailleur et le profil de conformité.",
       "recruitment": "Recrutement",
       "applicationsCount": "{count} candidature(s)",
-      "empty": "Aucune candidature pour l'instant. Le formulaire public est sur /join-our-network.",
+      "empty": "Aucune candidature pour l'instant. Le formulaire public est sur /join.",
       "loadError": "Impossible de charger les candidatures.",
       "applicant": "Candidat",
       "category": "Catégorie",
