@@ -53,6 +53,10 @@ export {
   type NewDeviceSignInEmailInput,
   type NewDeviceSignInMethod,
 } from './templates/new-device-sign-in';
+export {
+  permissionOverrideRequestEmail,
+  type PermissionOverrideRequestEmailInput,
+} from './templates/permission-override-request';
 export type { StaffInviteEmailInput } from './templates/staff-invite';
 export { eventRequestEmail } from './templates/event-request';
 export type {

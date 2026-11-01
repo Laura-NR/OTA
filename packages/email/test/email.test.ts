@@ -6,6 +6,7 @@ import {
   staffInviteEmail,
   passkeyChangeEmail,
   newDeviceSignInEmail,
+  permissionOverrideRequestEmail,
   ConsoleMailer,
   SmtpMailer,
   bookingReceivedEmail,
@@ -786,5 +787,40 @@ describe('eventRequestEmail (M10)', () => {
     });
     expect(message.subject).toMatch(/^No pudimos conseguir tus entradas/);
     expect(message.text).toContain('Nota de la mesa: The gala sold out.');
+  });
+});
+
+describe('permissionOverrideRequestEmail (docs/schema-m9-permission-overrides.md O8)', () => {
+  const base = {
+    to: 'dayana@vereda.travel',
+    requesterName: 'Ernesto Vila',
+    capability: 'payments',
+    reason: 'Covering the payments desk while Ana is away',
+    expiryHours: 24,
+    url: 'http://localhost:3002/settings?tab=permissions',
+    branding,
+  };
+
+  it('names who asks, the row, the reason, the length and where to decide', () => {
+    const message = permissionOverrideRequestEmail(base);
+    expect(message.to).toBe('dayana@vereda.travel');
+    expect(message.subject).toBe('Ernesto Vila asks for a permission override');
+    expect(message.text).toContain('"Payments, proofs and refunds"');
+    expect(message.text).toContain('Reason: Covering the payments desk while Ana is away');
+    expect(message.text).toContain('it ends 24 h after approval');
+    expect(message.text).toContain('lapses after 24 hours');
+    expect(message.html).toContain('http://localhost:3002/settings?tab=permissions');
+  });
+
+  it('writes Spanish and French, and keeps an unknown row key as given', () => {
+    expect(permissionOverrideRequestEmail({ ...base, locale: 'es' }).text).toContain(
+      '«Pagos, comprobantes y reembolsos»',
+    );
+    expect(permissionOverrideRequestEmail({ ...base, locale: 'fr' }).subject).toBe(
+      'Ernesto Vila demande une dérogation de permissions',
+    );
+    expect(
+      permissionOverrideRequestEmail({ ...base, capability: 'somethingElse' }).text,
+    ).toContain('"somethingElse"');
   });
 });
