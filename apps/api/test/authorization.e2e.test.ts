@@ -472,6 +472,12 @@ const ROUTES: Route[] = [
   { method: 'patch', path: `/staff/${STAFF_USER}`, allowed: 'superAdmin' },
   { method: 'post', path: `/staff/${STAFF_USER}/revoke-sessions`, allowed: 'superAdmin' },
   { method: 'post', path: `/staff/${STAFF_USER}/reset-passkeys`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/recovery-code`, allowed: 'superAdmin' },
+  {
+    method: 'post',
+    path: `/staff/${STAFF_USER}/recovery-code/withdraw`,
+    allowed: 'superAdmin',
+  },
   { method: 'post', path: `/staff/${STAFF_USER}/deactivate`, allowed: 'superAdmin' },
   { method: 'post', path: `/staff/${STAFF_USER}/reactivate`, allowed: 'superAdmin' },
   { method: 'get', path: '/customers', allowed: 'opsRead' },

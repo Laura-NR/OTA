@@ -9,6 +9,7 @@ import type { EmailMessage, Mailer } from '@ota/email';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
+import { RecoveryCodesService } from '../src/auth/recovery-codes.service';
 import { SessionPolicy } from '../src/auth/session-policy';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { StaffService } from '../src/staff/staff.service';
@@ -41,6 +42,18 @@ interface User {
   createdAt: Date;
   reservations: number;
   supplier: boolean;
+}
+
+interface RecoveryCode {
+  id: string;
+  userId: string;
+  codeHash: string;
+  issuedById: string | null;
+  expiresAt: Date;
+  failedAttempts: number;
+  usedAt: Date | null;
+  withdrawnAt: Date | null;
+  createdAt: Date;
 }
 
 type Invite = Record<string, unknown> & {
@@ -76,6 +89,22 @@ function fakePrisma() {
   ]);
   const passkeys = new Map<string, number>([['u-ana', 2]]);
   const audits: Record<string, unknown>[] = [];
+  const codes: RecoveryCode[] = [];
+  const isOpen = (code: RecoveryCode, now = new Date()) =>
+    code.usedAt === null && code.withdrawnAt === null && code.expiresAt > now;
+  type CodeWhere = {
+    id?: string;
+    userId?: string;
+    usedAt?: null;
+    withdrawnAt?: null;
+    expiresAt?: { gt: Date };
+  };
+  const codeMatches = (code: RecoveryCode, where: CodeWhere) =>
+    (!where.id || code.id === where.id) &&
+    (!where.userId || code.userId === where.userId) &&
+    (!('usedAt' in where) || code.usedAt === null) &&
+    (!('withdrawnAt' in where) || code.withdrawnAt === null) &&
+    (!where.expiresAt || code.expiresAt > where.expiresAt.gt);
   let sequence = 0;
   const person = (id: unknown) => {
     const user = users.find((item) => item.id === id);
@@ -93,6 +122,9 @@ function fakePrisma() {
       ? [{ createdAt: new Date('2026-10-23T08:00:00Z') }]
       : [],
     supplierProfile: user.supplier ? { id: 's-1' } : null,
+    recoveryCodes: codes
+      .filter((code) => code.userId === user.id && isOpen(code))
+      .map((code) => ({ expiresAt: code.expiresAt })),
   });
   const prisma = {
     users,
@@ -100,6 +132,7 @@ function fakePrisma() {
     sessions,
     passkeys,
     audits,
+    codes,
     user: {
       findUnique: async ({ where }: { where: { id?: string; email?: string } }) => {
         const user = users.find((item) =>
@@ -202,6 +235,50 @@ function fakePrisma() {
         const count = passkeys.get(where.userId) ?? 0;
         passkeys.delete(where.userId);
         return { count };
+      },
+    },
+    staffRecoveryCode: {
+      findFirst: async ({ where }: { where: CodeWhere }) =>
+        codes
+          .filter((code) => codeMatches(code, where))
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null,
+      create: async ({ data }: { data: Partial<RecoveryCode> }) => {
+        const code: RecoveryCode = {
+          id: `rc-${(sequence += 1)}`,
+          userId: '',
+          codeHash: '',
+          issuedById: null,
+          expiresAt: new Date(),
+          failedAttempts: 0,
+          usedAt: null,
+          withdrawnAt: null,
+          createdAt: new Date(),
+          ...data,
+        };
+        codes.push(code);
+        return code;
+      },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: { failedAttempts: { increment: number } };
+      }) => {
+        const code = codes.find((item) => item.id === where.id)!;
+        code.failedAttempts += data.failedAttempts.increment;
+        return code;
+      },
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: CodeWhere;
+        data: Partial<RecoveryCode>;
+      }) => {
+        const matched = codes.filter((code) => codeMatches(code, where));
+        for (const code of matched) Object.assign(code, data);
+        return { count: matched.length };
       },
     },
     auditLog: {
@@ -413,5 +490,185 @@ describe('StaffService (M9 D4, D5)', () => {
       action: 'staff.role_changed',
       metadata: { from: 'OPERATIONS_ADMIN', to: 'ADMINISTRATIVE_SUPPORT' },
     });
+  });
+});
+
+describe('staff recovery codes (docs/schema-m9-recovery-codes.md)', () => {
+  let prisma: ReturnType<typeof fakePrisma>;
+  let mailer: FakeMailer;
+  let service: StaffService;
+  let recovery: RecoveryCodesService;
+
+  beforeEach(() => {
+    prisma = fakePrisma();
+    mailer = new FakeMailer();
+    const policy = new SessionPolicy(
+      prisma as unknown as PrismaService,
+      fakeOperatingSettings(),
+      mailer,
+      tenant,
+    );
+    service = new StaffService(
+      prisma as unknown as PrismaService,
+      mailer,
+      tenant,
+      policy,
+    );
+    recovery = new RecoveryCodesService(prisma as unknown as PrismaService, policy);
+  });
+
+  const issue = () =>
+    service.issueRecoveryCode(DAYANA, 'u-ana', { reason: 'Mailbox locked' });
+  const actions = () => prisma.audits.map((entry) => entry.action);
+
+  it('issues a code shown once, stored as a hash, open 15 minutes, with both names and the reason', async () => {
+    const before = Date.now();
+    const issued = await issue();
+    expect(issued.code).toMatch(
+      /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/,
+    );
+    const expiresIn = new Date(issued.expiresAt).getTime() - before;
+    expect(expiresIn).toBeGreaterThan(14 * 60_000);
+    expect(expiresIn).toBeLessThanOrEqual(15 * 60_000);
+    expect(issued.user.recoveryCodeOpenUntil).toBe(issued.expiresAt);
+    const [row] = prisma.codes;
+    expect(row).toMatchObject({ userId: 'u-ana', issuedById: DAYANA.id });
+    expect(row!.codeHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify(prisma.codes)).not.toContain(issued.code.replace(/-/g, ''));
+    expect(prisma.audits.at(-1)).toMatchObject({
+      actorUserId: DAYANA.id,
+      action: 'staff.recovery_code_issued',
+      entityId: 'u-ana',
+      metadata: { reason: 'Mailbox locked', passkeys: 2, sessions: 2, replaced: 0 },
+    });
+    const email = mailer.sent.at(-1)!;
+    expect(email.to).toBe('ana@vereda.travel');
+    expect(email.subject).toBe('A recovery code was issued for your Vereda desk account');
+    expect(email.text).toContain('Dayana issued a one-time recovery code');
+  });
+
+  it('removes the person’s passkeys and sessions, since the code’s session may add only a first passkey', async () => {
+    const issued = await issue();
+    expect(issued.passkeysRemoved).toBe(2);
+    expect(issued.user.passkeys).toBe(0);
+    expect(prisma.passkeys.has('u-ana')).toBe(false);
+    expect(prisma.sessions.has('u-ana')).toBe(false);
+  });
+
+  it('replaces an open code with a new one', async () => {
+    const first = await issue();
+    const second = await issue();
+    expect(prisma.codes.filter((code) => code.withdrawnAt === null)).toHaveLength(1);
+    expect(prisma.audits.at(-1)).toMatchObject({ metadata: { replaced: 1 } });
+    expect(
+      await recovery.redeem({ email: 'ana@vereda.travel', code: first.code }),
+    ).toBeNull();
+    expect(await recovery.redeem({ email: 'ana@vereda.travel', code: second.code })).toBe(
+      'u-ana',
+    );
+  });
+
+  it('is never issued for oneself, a traveler or a deactivated account', async () => {
+    await expect(
+      service.issueRecoveryCode(DAYANA, DAYANA.id, { reason: 'Locked out' }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(
+      service.issueRecoveryCode(DAYANA, 'u-traveler', { reason: 'Locked out' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    prisma.users.find((user) => user.id === 'u-ana')!.deactivatedAt = new Date();
+    await expect(issue()).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.codes).toHaveLength(0);
+    expect(actions()).not.toContain('staff.recovery_code_issued');
+  });
+
+  it('is issued by one Super Admin for another Super Admin', async () => {
+    const issued = await service.issueRecoveryCode(DAYANA, FOUNDER.id, {
+      reason: 'Lost phone and mailbox',
+    });
+    expect(issued.user.id).toBe(FOUNDER.id);
+  });
+
+  it('signs in once, typed in any case and without hyphens, and tells the person', async () => {
+    const issued = await issue();
+    const typed = issued.code.replace(/-/g, '').toLowerCase();
+    expect(await recovery.redeem({ email: 'ana@vereda.travel', code: typed })).toBe(
+      'u-ana',
+    );
+    expect(prisma.codes[0]!.usedAt).toBeInstanceOf(Date);
+    expect(prisma.audits.at(-1)).toMatchObject({
+      actorUserId: 'u-ana',
+      action: 'auth.recovery_code_used',
+      entityId: 'u-ana',
+    });
+    expect(mailer.sent.at(-1)!.subject).toBe('Your Vereda desk recovery code was used');
+    expect(
+      await recovery.redeem({ email: 'ana@vereda.travel', code: issued.code }),
+    ).toBeNull();
+    expect(
+      (await service.list()).find((user) => user.id === 'u-ana')!.recoveryCodeOpenUntil,
+    ).toBeNull();
+  });
+
+  it('refuses another person’s email, a traveler and a deactivated account alike', async () => {
+    const issued = await issue();
+    for (const email of [
+      'founder@vereda.travel',
+      'holm@example.test',
+      'nobody@vereda.travel',
+    ]) {
+      expect(await recovery.redeem({ email, code: issued.code })).toBeNull();
+    }
+    prisma.users.find((user) => user.id === 'u-ana')!.deactivatedAt = new Date();
+    expect(
+      await recovery.redeem({ email: 'ana@vereda.travel', code: issued.code }),
+    ).toBeNull();
+    expect(prisma.codes[0]!.usedAt).toBeNull();
+  });
+
+  it('refuses an expired code', async () => {
+    const issued = await issue();
+    const later = new Date(Date.parse(issued.expiresAt) + 1);
+    expect(
+      await recovery.redeem({ email: 'ana@vereda.travel', code: issued.code }, later),
+    ).toBeNull();
+  });
+
+  it('withdraws the code at the fifth wrong try, after which the right one fails too', async () => {
+    const issued = await issue();
+    for (let attempt = 1; attempt <= 4; attempt += 1) {
+      expect(
+        await recovery.redeem({ email: 'ana@vereda.travel', code: 'AAAA-AAAA-AAAA' }),
+      ).toBeNull();
+    }
+    expect(prisma.codes[0]!.withdrawnAt).toBeNull();
+    // Something that cannot be a code is a wrong try as well.
+    expect(
+      await recovery.redeem({ email: 'ana@vereda.travel', code: 'nope' }),
+    ).toBeNull();
+    expect(prisma.codes[0]).toMatchObject({ failedAttempts: 5 });
+    expect(prisma.codes[0]!.withdrawnAt).toBeInstanceOf(Date);
+    expect(prisma.audits.at(-1)).toMatchObject({
+      action: 'auth.recovery_code_voided',
+      entityId: 'u-ana',
+      metadata: { failedAttempts: 5 },
+    });
+    expect(prisma.audits.at(-1)).not.toHaveProperty('actorUserId');
+    expect(
+      await recovery.redeem({ email: 'ana@vereda.travel', code: issued.code }),
+    ).toBeNull();
+  });
+
+  it('is withdrawn by a Super Admin, audited; with none open there is nothing to withdraw', async () => {
+    await issue();
+    const ana = await service.withdrawRecoveryCode(DAYANA, 'u-ana');
+    expect(ana.recoveryCodeOpenUntil).toBeNull();
+    expect(prisma.audits.at(-1)).toMatchObject({
+      actorUserId: DAYANA.id,
+      action: 'staff.recovery_code_withdrawn',
+      entityId: 'u-ana',
+    });
+    await expect(service.withdrawRecoveryCode(DAYANA, 'u-ana')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
   });
 });

@@ -10,6 +10,7 @@ import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 import { setAuthRuntime } from './auth/auth.runtime';
+import { RecoveryCodesService } from './auth/recovery-codes.service';
 import { SessionPolicy } from './auth/session-policy';
 import {
   DEFAULT_SHUTDOWN_TIMEOUT_MS,
@@ -45,13 +46,20 @@ async function bootstrap(): Promise<void> {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  // Better Auth's session and passkey routes ask the Nest session policy
-  // (idle lock L5, passkeys P4); requests arrive only after `listen`, by
-  // which time it is resolved below.
-  const resolved: { sessionPolicy?: SessionPolicy } = {};
+  // Better Auth's session, passkey and recovery-code routes ask the Nest
+  // session policy (idle lock L5, passkeys P4) and recovery codes; requests
+  // arrive only after `listen`, by which time both are resolved below.
+  const resolved: {
+    sessionPolicy?: SessionPolicy;
+    recoveryCodes?: RecoveryCodesService;
+  } = {};
   const policy = (): SessionPolicy => {
     if (!resolved.sessionPolicy) throw new Error('The session policy is not ready');
     return resolved.sessionPolicy;
+  };
+  const recoveryCodes = (): RecoveryCodesService => {
+    if (!resolved.recoveryCodes) throw new Error('Recovery codes are not ready');
+    return resolved.recoveryCodes;
   };
 
   const { createAuth, createAuthMiddleware, toWebHeaders } = await import('@ota/auth');
@@ -76,6 +84,7 @@ async function bootstrap(): Promise<void> {
       },
     },
     sessionGate: { refusal: (session) => policy().gateRefusal(session) },
+    recoveryCode: { redeem: (input) => recoveryCodes().redeem(input) },
   });
   setAuthRuntime({ auth, toWebHeaders });
   const authHandler = createAuthMiddleware(auth);
@@ -85,6 +94,7 @@ async function bootstrap(): Promise<void> {
     bufferLogs: true,
   });
   resolved.sessionPolicy = app.get(SessionPolicy);
+  resolved.recoveryCodes = app.get(RecoveryCodesService);
   if (process.env.STAFF_PASSKEYS_OVERRIDE?.trim().toLowerCase() === 'off') {
     new NestLogger('Bootstrap').warn(
       'STAFF_PASSKEYS_OVERRIDE=off: the staff passkey rule is suspended (break-glass)',

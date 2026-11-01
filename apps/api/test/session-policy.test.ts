@@ -134,3 +134,50 @@ describe('SessionPolicy: a changed passkey is recorded (P4)', () => {
     expect(mailer.sent).toEqual([]);
   });
 });
+
+describe('SessionPolicy: a recovery-code session (docs/schema-m9-recovery-codes.md R3)', () => {
+  const SIGNED_IN = new Date('2026-11-01T10:00:00Z');
+  const session = (signInMethod: string) =>
+    ({
+      user: { id: 'u-ana', email: 'ana@vereda.travel', role: 'OPERATIONS_ADMIN' },
+      session: {
+        id: 's-1',
+        userId: 'u-ana',
+        expiresAt: new Date('2026-11-08T10:00:00Z'),
+        createdAt: SIGNED_IN,
+        lastActiveAt: SIGNED_IN,
+        ownDevice: true,
+        signInMethod,
+      },
+    }) as Parameters<SessionPolicy['refusal']>[0];
+  const at = (minutes: number) => new Date(SIGNED_IN.getTime() + minutes * 60_000);
+
+  it('may only set up a passkey, even while the passkey rule is off', async () => {
+    const { policy } = setup({ role: 'OPERATIONS_ADMIN', passkeys: 0, required: false });
+    expect(await policy.refusal(session('recovery_code'), at(1))).toMatchObject({
+      kind: 'enroll',
+    });
+    // A link session is untouched while the rule is off.
+    expect(await policy.refusal(session('magic_link'), at(1))).toBeNull();
+    // Better Auth's routes stay open to it, so it can add the passkey.
+    expect(await policy.gateRefusal(session('recovery_code'), at(1))).toBeNull();
+  });
+
+  it('asks for a passkey sign-in once one is set up', async () => {
+    const { policy } = setup({ role: 'OPERATIONS_ADMIN', passkeys: 1, required: false });
+    expect(await policy.refusal(session('recovery_code'), at(2))).toMatchObject({
+      kind: 'use_passkey',
+    });
+  });
+
+  it('ends 15 minutes after the code signed in, Better Auth’s routes included', async () => {
+    const { policy } = setup({ role: 'OPERATIONS_ADMIN', passkeys: 0, required: false });
+    expect(await policy.refusal(session('recovery_code'), at(15))).toEqual({
+      kind: 'session',
+      message: 'The recovery session ended; ask a Super Admin for a new code',
+    });
+    expect(await policy.gateRefusal(session('recovery_code'), at(15))).toMatchObject({
+      code: 'SESSION_REFUSED',
+    });
+  });
+});

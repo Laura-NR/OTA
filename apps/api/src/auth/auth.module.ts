@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { DeskSessionController } from './desk-session.controller';
 import { DeskSessionService } from './desk-session.service';
 import { PasskeysController } from './passkeys.controller';
+import { RecoveryCodesService } from './recovery-codes.service';
 import { SessionPolicy } from './session-policy';
 
 /**
@@ -14,7 +15,7 @@ import { SessionPolicy } from './session-policy';
 @Global()
 @Module({
   controllers: [PasskeysController, DeskSessionController],
-  providers: [AuthService, SessionPolicy, DeskSessionService],
-  exports: [AuthService, SessionPolicy],
+  providers: [AuthService, SessionPolicy, DeskSessionService, RecoveryCodesService],
+  exports: [AuthService, SessionPolicy, RecoveryCodesService],
 })
 export class AuthModule {}

@@ -3,6 +3,8 @@ import type { AuthSession, PasskeyChange } from '@ota/auth';
 import type { TenantConfig } from '@ota/config';
 import {
   PASSKEY_SIGN_IN_METHOD,
+  RECOVERY_CODE_SIGN_IN_METHOD,
+  isRecoverySessionOver,
   isStaffRole,
   isStaffSessionExpired,
   isStaffSessionLocked,
@@ -29,9 +31,10 @@ function staffSessionHours(): number {
 }
 
 /**
- * Why a session may not act, or null when it may: a deactivated account, or
- * a staff session past its limit. The passkey rule comes on top of this, in
- * `SessionPolicy.refusal`.
+ * Why a session may not act, or null when it may: a deactivated account, a
+ * staff session past its limit, or a recovery-code session past its 15
+ * minutes (`docs/schema-m9-recovery-codes.md` R3). The passkey rule comes on
+ * top of this, in `SessionPolicy.refusal`.
  */
 export function sessionRefusal(
   session: AuthSession,
@@ -51,6 +54,12 @@ export function sessionRefusal(
     )
   ) {
     return 'The desk session ended; sign in again';
+  }
+  if (
+    signedInAt &&
+    isRecoverySessionOver(session.session.signInMethod, new Date(signedInAt), now)
+  ) {
+    return 'The recovery session ended; ask a Super Admin for a new code';
   }
   return null;
 }
@@ -213,6 +222,7 @@ export class SessionPolicy {
     return {
       required,
       passkeySession: user.signInMethod === PASSKEY_SIGN_IN_METHOD,
+      recoverySession: user.signInMethod === RECOVERY_CODE_SIGN_IN_METHOD,
       state: state ?? 'ok',
       passkeys: passkeys.map((passkey) => ({
         id: passkey.id,
@@ -319,9 +329,15 @@ export class SessionPolicy {
     role: string | null | undefined,
     signInMethod: string | null | undefined,
   ): Promise<PasskeyRefusal | null> {
-    // Travelers, suppliers and passkey sessions never read the setting.
+    // Travelers, suppliers and passkey sessions never read the setting, and a
+    // recovery-code session may only set up a passkey whatever it says (R3).
     if (!isStaffRole(role) || signInMethod === PASSKEY_SIGN_IN_METHOD) return null;
-    if (!(await this.passkeysRequired())) return null;
+    if (
+      signInMethod !== RECOVERY_CODE_SIGN_IN_METHOD &&
+      !(await this.passkeysRequired())
+    ) {
+      return null;
+    }
     const passkeyCount = await this.prisma.passkey.count({ where: { userId } });
     return passkeyRefusal({ role, required: true, signInMethod, passkeyCount });
   }

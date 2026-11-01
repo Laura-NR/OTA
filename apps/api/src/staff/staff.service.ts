@@ -11,25 +11,32 @@ import type { TenantConfig } from '@ota/config';
 import type { Prisma, StaffInvite } from '@ota/db';
 import {
   INVITE_VALID_DAYS,
+  RECOVERY_CODE_LENGTH,
   STAFF_ROLES,
   UserRole,
   emailDomainAllowed,
+  formatRecoveryCode,
   inviteAcceptRefusal,
   inviteConfirmRefusal,
   inviteState,
   isStaffRole,
   leavesNoSuperAdmin,
+  recoveryCodeExpiresAt,
+  recoveryCodeFromBytes,
 } from '@ota/domain';
 import { staffInviteEmail, type Mailer } from '@ota/email';
 import type {
   ChangeStaffRoleRequest,
   CreateInviteRequest,
+  IssueRecoveryCodeRequest,
+  RecoveryCodeIssuedDto,
   ResetPasskeysRequest,
   StaffInviteDto,
   StaffUserDto,
 } from '@ota/schemas';
 import { createHash, randomBytes } from 'node:crypto';
 
+import { hashRecoveryCode } from '../auth/recovery-codes.service';
 import { SessionPolicy } from '../auth/session-policy';
 import type { AuthUser } from '../common/auth/auth-user';
 import { backofficeBaseUrl } from '../common/backoffice-url';
@@ -83,8 +90,9 @@ function newToken(): { token: string; tokenHash: string } {
  * M9 staff users (`docs/schema-m9-settings.md` D4, D5): the desk's users,
  * invitations (a Super Admin invite, also the way to promote an existing
  * staff member, is sent only once a second Super Admin confirms it), role
- * changes, session revocation, deactivation and a passkey reset
- * (`docs/schema-m9-passkeys.md` P5). Every change is audited.
+ * changes, session revocation, deactivation, a passkey reset
+ * (`docs/schema-m9-passkeys.md` P5) and recovery codes
+ * (`docs/schema-m9-recovery-codes.md`). Every change is audited.
  */
 @Injectable()
 export class StaffService {
@@ -97,7 +105,7 @@ export class StaffService {
     private readonly policy: SessionPolicy,
   ) {}
 
-  async list(): Promise<StaffUserDto[]> {
+  async list(now: Date = new Date()): Promise<StaffUserDto[]> {
     const users = await this.prisma.user.findMany({
       where: { role: { in: [...STAFF_ROLES] } },
       orderBy: [{ deactivatedAt: { sort: 'asc', nulls: 'first' } }, { createdAt: 'asc' }],
@@ -113,6 +121,12 @@ export class StaffService {
           take: 1,
           select: { createdAt: true },
         },
+        recoveryCodes: {
+          where: { usedAt: null, withdrawnAt: null, expiresAt: { gt: now } },
+          orderBy: { expiresAt: 'desc' },
+          take: 1,
+          select: { expiresAt: true },
+        },
       },
     });
     return users.map((user) => ({
@@ -123,6 +137,7 @@ export class StaffService {
       passkeys: user._count.passkeys,
       lastSignInAt: user.sessions[0]?.createdAt.toISOString() ?? null,
       deactivatedAt: user.deactivatedAt ? user.deactivatedAt.toISOString() : null,
+      recoveryCodeOpenUntil: user.recoveryCodes[0]?.expiresAt.toISOString() ?? null,
     }));
   }
 
@@ -398,6 +413,96 @@ export class StaffService {
       ...PERSON,
     });
     await this.policy.notify(email, 'reset', { actorName: personName(actorRow) });
+    return this.one(id);
+  }
+
+  /**
+   * Lost access (`docs/schema-m9-recovery-codes.md` R1, R3, R5): another
+   * Super Admin issues a one-time code, returned once and stored only as a
+   * hash. It replaces an open one, and the person's passkeys and sessions go,
+   * since the code's session may add only a first passkey. Audited with both
+   * names and the reason; the person is told.
+   */
+  async issueRecoveryCode(
+    actor: AuthUser,
+    id: string,
+    input: IssueRecoveryCodeRequest,
+    now: Date = new Date(),
+  ): Promise<RecoveryCodeIssuedDto> {
+    const target = await this.loadStaff(actor, id);
+    if (target.deactivatedAt) {
+      throw new ConflictException(
+        'Reactivate this account before issuing a recovery code',
+      );
+    }
+    const code = recoveryCodeFromBytes(randomBytes(RECOVERY_CODE_LENGTH));
+    const expiresAt = recoveryCodeExpiresAt(now);
+    const { email, passkeysRemoved } = await this.prisma.$transaction(async (tx) => {
+      const replaced = await tx.staffRecoveryCode.updateMany({
+        where: { userId: id, usedAt: null, withdrawnAt: null },
+        data: { withdrawnAt: now },
+      });
+      const passkeys = await tx.passkey.deleteMany({ where: { userId: id } });
+      const sessions = await tx.session.deleteMany({ where: { userId: id } });
+      const row = await tx.staffRecoveryCode.create({
+        data: {
+          userId: id,
+          codeHash: hashRecoveryCode(code),
+          issuedById: actor.id,
+          expiresAt,
+        },
+      });
+      await this.audit(tx, actor, 'staff.recovery_code_issued', ENTITY_USER, id, {
+        reason: input.reason,
+        recoveryCodeId: row.id,
+        expiresAt: expiresAt.toISOString(),
+        replaced: replaced.count,
+        passkeys: passkeys.count,
+        sessions: sessions.count,
+      });
+      const person = await tx.user.findUniqueOrThrow({
+        where: { id },
+        select: { email: true },
+      });
+      return { email: person.email, passkeysRemoved: passkeys.count };
+    });
+    const actorRow = await this.prisma.user.findUnique({
+      where: { id: actor.id },
+      ...PERSON,
+    });
+    await this.policy.notify(
+      email,
+      'recovery_issued',
+      { actorName: personName(actorRow) },
+      now,
+    );
+    return {
+      code: formatRecoveryCode(code),
+      expiresAt: expiresAt.toISOString(),
+      passkeysRemoved,
+      user: await this.one(id),
+    };
+  }
+
+  /** A Super Admin withdraws the open recovery code, for instance one read out to the wrong person. */
+  async withdrawRecoveryCode(
+    actor: AuthUser,
+    id: string,
+    now: Date = new Date(),
+  ): Promise<StaffUserDto> {
+    await this.loadStaff(actor, id);
+    await this.prisma.$transaction(async (tx) => {
+      const withdrawn = await tx.staffRecoveryCode.updateMany({
+        where: { userId: id, usedAt: null, withdrawnAt: null, expiresAt: { gt: now } },
+        data: { withdrawnAt: now },
+      });
+      if (withdrawn.count === 0) {
+        throw new ConflictException('No recovery code is open for this person');
+      }
+      await this.audit(tx, actor, 'staff.recovery_code_withdrawn', ENTITY_USER, id, {
+        withdrawn: withdrawn.count,
+      });
+    });
     return this.one(id);
   }
 

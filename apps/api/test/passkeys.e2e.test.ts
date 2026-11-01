@@ -99,6 +99,7 @@ describe('the staff passkey rule (guard, GET /me/passkeys)', () => {
     expect(status.body).toEqual({
       required: true,
       passkeySession: false,
+      recoverySession: false,
       state: 'enroll',
       passkeys: [],
     });

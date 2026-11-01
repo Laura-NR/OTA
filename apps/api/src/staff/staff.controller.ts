@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Param,
@@ -14,10 +15,13 @@ import {
   acceptInviteSchema,
   changeStaffRoleSchema,
   createInviteSchema,
+  issueRecoveryCodeSchema,
   resetPasskeysSchema,
   type AcceptInviteRequest,
   type ChangeStaffRoleRequest,
   type CreateInviteRequest,
+  type IssueRecoveryCodeRequest,
+  type RecoveryCodeIssuedDto,
   type ResetPasskeysRequest,
   type StaffInviteDto,
   type StaffUserDto,
@@ -30,8 +34,9 @@ import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { StaffService } from './staff.service';
 
 /**
- * Users & roles (A-Settings, M9 D4–D5, and the passkey reset of
- * `docs/schema-m9-passkeys.md` P5): Super Admin only, except accepting an
+ * Users & roles (A-Settings, M9 D4–D5, the passkey reset of
+ * `docs/schema-m9-passkeys.md` P5 and the recovery codes of
+ * `docs/schema-m9-recovery-codes.md`): Super Admin only, except accepting an
  * invitation, which the invited person does once signed in.
  */
 @Controller('staff')
@@ -128,6 +133,29 @@ export class StaffController {
     @Body(new ZodValidationPipe(resetPasskeysSchema)) body: ResetPasskeysRequest,
   ): Promise<StaffUserDto> {
     return this.staff.resetPasskeys(actor, id, body);
+  }
+
+  /** The answer carries the code, shown once: never cached. */
+  @Post(':id/recovery-code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.SuperAdmin)
+  @Header('Cache-Control', 'no-store')
+  issueRecoveryCode(
+    @CurrentUser() actor: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(issueRecoveryCodeSchema)) body: IssueRecoveryCodeRequest,
+  ): Promise<RecoveryCodeIssuedDto> {
+    return this.staff.issueRecoveryCode(actor, id, body);
+  }
+
+  @Post(':id/recovery-code/withdraw')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.SuperAdmin)
+  withdrawRecoveryCode(
+    @CurrentUser() actor: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<StaffUserDto> {
+    return this.staff.withdrawRecoveryCode(actor, id);
   }
 
   @Post(':id/deactivate')
