@@ -108,6 +108,8 @@ export const staffUserSchema = z.object({
   /** The newest session still on file; sessions end at sign-out. */
   lastSignInAt: z.string().nullable(),
   deactivatedAt: z.string().nullable(),
+  /** When the recovery code a Super Admin issued stops working, while one is open. */
+  recoveryCodeOpenUntil: z.string().nullable(),
 });
 
 export type StaffUserDto = z.infer<typeof staffUserSchema>;
@@ -212,6 +214,8 @@ export const passkeyStatusSchema = z.object({
   required: z.boolean(),
   /** This session came from a passkey sign-in. */
   passkeySession: z.boolean(),
+  /** This session came from a recovery code: it may only set up a passkey. */
+  recoverySession: z.boolean(),
   state: z.enum(['ok', 'enroll', 'use_passkey']),
   passkeys: z.array(passkeySchema),
 });
@@ -239,3 +243,24 @@ export const resetPasskeysSchema = z.object({
 });
 
 export type ResetPasskeysRequest = z.infer<typeof resetPasskeysSchema>;
+
+/**
+ * A Super Admin issues a one-time recovery code for another staff member, with
+ * a reason (`docs/schema-m9-recovery-codes.md` R1).
+ */
+export const issueRecoveryCodeSchema = z.object({
+  reason: z.string().trim().min(3).max(500),
+});
+
+export type IssueRecoveryCodeRequest = z.infer<typeof issueRecoveryCodeSchema>;
+
+/** The code, shown once to the issuer and never stored, and what issuing did. */
+export const recoveryCodeIssuedSchema = z.object({
+  code: z.string(),
+  expiresAt: z.string(),
+  /** The person's passkeys the issue removed (R3). */
+  passkeysRemoved: z.number().int(),
+  user: staffUserSchema,
+});
+
+export type RecoveryCodeIssuedDto = z.infer<typeof recoveryCodeIssuedSchema>;
