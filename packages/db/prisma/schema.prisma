@@ -431,6 +431,8 @@ model User {
   anonymizedAt              DateTime? @map("anonymized_at")
   /// M9 D5: a deactivated staff user is refused by the auth guard; null means active.
   deactivatedAt             DateTime? @map("deactivated_at")
+  /// M9 display currencies C4: the traveler's display currency; null follows the cookie or the default.
+  displayCurrency           String?   @map("display_currency") @db.Char(3)
 
   supplierProfile SupplierProfile?
   reservations    Reservation[]
@@ -975,6 +977,12 @@ model Reservation {
   completedAt             DateTime?         @map("completed_at")
   totalCurrency           String            @default("EUR") @map("total_currency")
   totalAmount             Decimal           @default(0) @map("total_amount") @db.Decimal(10, 2)
+  // M9 display currencies C6: the display currency and rate (spread included)
+  // locked at the deposit or the invoice; null before, or for a EUR traveler.
+  displayCurrency         String?           @map("display_currency") @db.Char(3)
+  displayRate             Decimal?          @map("display_rate") @db.Decimal(12, 6)
+  displayRateDate         DateTime?         @map("display_rate_date") @db.Date
+  displayRateLockedAt     DateTime?         @map("display_rate_locked_at")
   // M2: the party, the chosen tier/departure and the frozen price lines.
   partySize               Int               @map("party_size") @default(1)
   tierId                  String?           @map("tier_id") @db.Uuid
@@ -1983,4 +1991,19 @@ model EventRequest {
   @@index([userId, createdAt])
   @@index([reservationId])
   @@map("event_requests")
+}
+
+/// M9 display currencies C5: one reference rate per day and currency (units per 1 EUR), before the spread.
+model ExchangeRate {
+  id        String   @id @default(uuid()) @db.Uuid
+  rateDate  DateTime @map("rate_date") @db.Date
+  currency  String   @db.Char(3)
+  rate      Decimal  @db.Decimal(12, 6)
+  /// "mock" or "ecb".
+  source    String
+  fetchedAt DateTime @default(now()) @map("fetched_at")
+
+  @@unique([rateDate, currency])
+  @@index([currency, rateDate])
+  @@map("exchange_rates")
 }
