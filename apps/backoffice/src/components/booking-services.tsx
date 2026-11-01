@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react';
 import type { DeskClock } from '@/lib/desk-clock';
 import { bookingDates, hoursMinutes, money } from '@/lib/ops-format';
 
+import { useDeskAlerts } from './desk-alerts';
 import { StartDispatchButton } from './dispatch-controls';
 import { RedispatchPanel, type RedispatchTarget } from './redispatch-panel';
 import {
@@ -64,8 +65,10 @@ export interface BookingServicesProps {
 
 /**
  * A-Booking's service items: each service with its worker, its state and timer,
- * the payout agreed and what the desk can do (call, re-dispatch). A submitted
- * booking starts its dispatch here, as on the dashboard.
+ * the payout agreed and what the desk can do (call, acknowledge a red alert,
+ * re-dispatch). A submitted booking starts its dispatch here, as on the
+ * dashboard; `A` on a row acknowledges that service's red alert through the
+ * shell's desk alerts, as on the matrix.
  */
 export function BookingServices({
   reservationId,
@@ -86,6 +89,8 @@ export function BookingServices({
   const router = useRouter();
   const [nowMs, setNowMs] = useState(serverNow);
   const [target, setTarget] = useState<RedispatchTarget | null>(null);
+  const alerts = useDeskAlerts();
+  const boardRow = alerts?.rows.find((row) => row.reservationId === reservationId);
 
   useEffect(() => {
     const timer = setInterval(() => setNowMs(Date.now()), 1000);
@@ -142,6 +147,18 @@ export function BookingServices({
             };
             const alert = itemAlert(itemClock, now, clock.amberThreshold);
             const service = dashboard(`matrix.columns.${SERVICE_KEYS[item.serviceType]}`);
+            // The desk's board, not this page's read, decides what may be
+            // acknowledged: the acknowledgement is keyed by the offer it saw.
+            const boardItem = boardRow?.serviceItems.find(
+              (candidate) => candidate.id === item.id,
+            );
+            const acknowledgeable =
+              alerts !== null &&
+              alerts.canManage &&
+              boardRow !== undefined &&
+              boardItem !== undefined &&
+              itemAlert(boardItem, alerts.now, alerts.amberThreshold) === 'RED' &&
+              !alerts.isAcknowledged(boardItem);
             const reroute =
               canManage &&
               dispatching &&
@@ -202,6 +219,27 @@ export function BookingServices({
                         <Icon name="phone" />
                         {t('call')}
                       </a>
+                    ) : null}
+                    {acknowledgeable ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        aria-label={t('acknowledgeFor', { service, code: bookingCode })}
+                        data-shortcut-acknowledge=""
+                        onClick={(event) => {
+                          // The button leaves the row; its re-dispatch keeps focus there.
+                          const row = event.currentTarget.closest('[data-shortcut-row]');
+                          if (document.activeElement === event.currentTarget) {
+                            (
+                              row?.querySelector<HTMLElement>('[data-shortcut-redispatch]') ??
+                              document.getElementById('main')
+                            )?.focus();
+                          }
+                          alerts.acknowledge(boardRow, item.id);
+                        }}
+                      >
+                        {dashboard('acknowledge.button')}
+                      </Button>
                     ) : null}
                     {reroute ? (
                       <Button

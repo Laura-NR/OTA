@@ -1598,6 +1598,7 @@
         "act": "Actions",
         "empty": "Cette réservation n'a pas encore de services.",
         "call": "Appeler",
+        "acknowledgeFor": "Prendre en compte l’alerte rouge · {service} · {code}",
         "startHint": "Propose chaque service au prochain prestataire qualifié.",
         "rule": "États d'un service : UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un nouveau dispatch retire l'offre ouverte et l'inscrit au journal d'audit. Les rémunérations sont le net du prestataire ; le voyageur ne voit jamais cette colonne."
       },
@@ -2904,7 +2905,7 @@
       "where": {
         "redispatch": "Matrice du tableau de bord, services d'une réservation",
         "everywhere": "Partout",
-        "acknowledge": "Matrice du tableau de bord"
+        "acknowledge": "Matrice du tableau de bord, services d'une réservation"
       },
       "typing": "Les raccourcis ne se déclenchent jamais pendant la saisie dans un champ ou avec Ctrl, Cmd ou Alt enfoncé."
     },

@@ -82,8 +82,11 @@ export interface DeskAlertsValue {
   soundReady: boolean;
   unlockSound: () => void;
   isAcknowledged: (item: DispatchBoardItemDto) => boolean;
-  /** Acknowledge the row's unacknowledged red alerts, with the undo. */
-  acknowledge: (row: DispatchBoardRowDto) => void;
+  /**
+   * Acknowledge the row's unacknowledged red alerts, or only that service
+   * item's, with the undo.
+   */
+  acknowledge: (row: DispatchBoardRowDto, onlyItemId?: string) => void;
   changeMute: (on: boolean) => Promise<void>;
   refresh: () => Promise<void>;
   /**
@@ -331,13 +334,16 @@ export function DeskAlerts({
   );
 
   /**
-   * Acknowledge the row's unacknowledged red alerts: the cue stops here at
-   * once, and the API records it for the whole desk only once the 6 s undo
-   * has passed (A-States).
+   * Acknowledge the row's unacknowledged red alerts (a booking page's row:
+   * only its own service's): the cue stops here at once, and the API records
+   * it for the whole desk only once the 6 s undo has passed (A-States).
    */
-  function acknowledge(row: DispatchBoardRowDto) {
+  function acknowledge(row: DispatchBoardRowDto, onlyItemId?: string) {
     const items = row.serviceItems.filter(
-      (item) => itemAlert(item, now, amberThreshold) === 'RED' && !isAcknowledged(item),
+      (item) =>
+        (onlyItemId === undefined || item.id === onlyItemId) &&
+        itemAlert(item, now, amberThreshold) === 'RED' &&
+        !isAcknowledged(item),
     );
     if (items.length === 0) {
       return;

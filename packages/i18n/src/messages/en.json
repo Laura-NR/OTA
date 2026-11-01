@@ -1598,6 +1598,7 @@
         "act": "Actions",
         "empty": "No service items on this booking yet.",
         "call": "Call",
+        "acknowledgeFor": "Acknowledge red alert · {service} · {code}",
         "startHint": "Offers each service to the next qualified worker.",
         "rule": "States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer and writes it to the audit log. Payout rates are the supplier's net; the traveler never sees this column."
       },
@@ -2904,7 +2905,7 @@
       "where": {
         "redispatch": "Dashboard matrix, a booking's services",
         "everywhere": "Everywhere",
-        "acknowledge": "Dashboard matrix"
+        "acknowledge": "Dashboard matrix, a booking's services"
       },
       "typing": "Shortcuts never fire while you type in a field or hold Ctrl, Cmd or Alt."
     },

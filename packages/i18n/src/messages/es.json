@@ -1598,6 +1598,7 @@
         "act": "Acciones",
         "empty": "Esta reserva aún no tiene servicios.",
         "call": "Llamar",
+        "acknowledgeFor": "Acusar recibo de la alerta roja · {service} · {code}",
         "startHint": "Ofrece cada servicio al siguiente trabajador cualificado.",
         "rule": "Estados de cada servicio: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un redespacho retira la oferta abierta y lo anota en el registro de auditoría. Las tarifas de pago son el neto del proveedor; el viajero nunca ve esta columna."
       },
@@ -2904,7 +2905,7 @@
       "where": {
         "redispatch": "Matriz del panel, servicios de una reserva",
         "everywhere": "En todas partes",
-        "acknowledge": "Matriz del panel"
+        "acknowledge": "Matriz del panel, servicios de una reserva"
       },
       "typing": "Los atajos nunca se activan mientras escribes en un campo o mantienes Ctrl, Cmd o Alt."
     },
