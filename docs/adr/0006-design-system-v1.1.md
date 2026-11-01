@@ -1482,3 +1482,38 @@ The build resolved it with existing components and tokens:
   desk". The device reads "Chrome · Linux" in every language. It goes out in the tenant's
   primary language like the other staff emails, with the time in UTC.
 - No desk page lists a person's known devices; that stays deferred with "forget this device".
+
+## Amendment, 2026-11-01: permission overrides
+
+The owner chose permission overrides next (M9) and approved
+`docs/schema-m9-permission-overrides.md` as recommended (O1a–O8a, migration
+`20261101202627_permission_overrides`). The board names them in four places: A-Settings ›
+Permissions ("overrides are requested per action with a reason and expire after 24 h"),
+A-States (a blocked Support member: "Read-only view · Request an override (reason · expires
+24 h)"), A-Login ("Overrides outside this role go through Settings › Approvals with a mandatory
+reason") and the thresholds table ("Override expiry — Everywhere an override exists"). It draws
+no request form, no list of requests and no running override. The build resolved them with
+existing components and tokens:
+
+- **The request** sits on the page itself, not on a blocked page: the desk's view-only pages
+  are readable, so A-States' block becomes an `Alert` under the page header, in the neutral
+  tone, "Your role can view “Packages, catalog and imports” but not act on it here.", with
+  "Request an override" as a small secondary button. It opens the small `Dialog` with a
+  required reason (`Textarea`) and says the override ends after the threshold's hours and
+  never counts as an approval. While the request waits the alert turns info ("… waiting for a
+  Super Admin", "Withdraw the request"); while the override runs it turns success ("… active
+  until …", "Give it back"). A decline, an end or a lapse is a caption under the offer.
+- **Settings › Approvals** is the board's "Approvals & thresholds" tab, which holds only the
+  thresholds table. The requests go on Permissions, under the matrix, as three cards in the
+  matrix's table style: "Override requests" (person, permission, reason, asked, a note field
+  with Approve and Decline), "Active overrides" (until and who approved, End) and "Overrides in
+  the last 30 days" (an outline badge with the status, who decided, the note). The request
+  email links there.
+- **Override expiry** sits in Thresholds › Security, beside the passkey rule, the idle lock and
+  the new-device email, rather than in a separate approvals group, with the same two-Super-Admin
+  save; "used by" reads "Every permission override, from its approval".
+- **Support on Settings** sees the read-only thresholds without the request button the A-States
+  drawing shows (O2a): thresholds are a Super Admin row an override never reaches.
+- **Approvals stay with the role**: an override holder sees a row's actions but not its refund
+  votes, advisory approvals or supplier approvals (O3), so no button offers what the API would
+  refuse.

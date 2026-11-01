@@ -210,3 +210,43 @@ enum PermissionOverrideState {
 
 `User` gains the three back-relations. The migration only creates the table, the enum and the
 index; no existing row changes.
+
+## 7. As built (2026-11-01)
+
+- **Migration** `20261101202627_permission_overrides` (`f1be189`): the table and enum of §6.
+- **Domain** (`4207af9`): `packages/domain/src/settings/overrides.ts` holds the matrix
+  (`PERMISSION_MATRIX`, moved from the desk's `lib/permissions.ts`, which is deleted), the
+  Super Admin rows, `isOverridable`, `overrideRequestRefusal`, `overrideStatus` (lapsed and
+  expired from the clock), `overrideDecisionRefusal`, and `overrideExpiryHours` (default 24,
+  1–24) in the thresholds document and its schema (`2094508`).
+- **API** (`2a18f56`): `@Capability(row)` on every staff controller (`@Capability('ofacExport')`
+  on the affidavit export) and `@NotOverridable()` on the approval routes; `AuthGuard` asks
+  `PermissionOverridesService.activeFor` only after the role check fails; the
+  `OverrideAuditInterceptor` writes `permission.override_used` (row, method, route pattern, path
+  params) after a change succeeds. Routes under `/permission-overrides` (§5), all in the RBAC
+  matrix with override cases. `StaffService` ends a person's pending and running overrides on
+  a role change, deactivation, "Reset passkeys" and a recovery code (the count is in each audit
+  row). Email (`5fb7a8b`, `26ca253`): `permissionOverrideRequestEmail` to every active Super
+  Admin.
+- **Desk** (`c958b8a`): `deskAccess(role, row)` decides each page's actions from the role or a
+  running override; `OverrideNotice` under the header of every view-only page of an overridable
+  row (request dialog, pending with "Withdraw", running with "Give it back", the last decline
+  or end); Settings › Permissions lists requests, active overrides and the last 30 days with
+  Approve, Decline and End; Thresholds › Security has "Override expiry". en/es/fr (`103eb5a`).
+- **e2e** (`b99a875`, `e2e/permission-overrides.spec.ts`): Support asks for the catalog row on
+  Inventory and the Super Admins are emailed; a Super Admin approves; Support adds an item and
+  the audit row names the override, while a payments route stays 403; the Super Admin ends it
+  and the form and the API refuse again; axe on both pages.
+
+**Differences from §2–§5:**
+- O3's routes also include rejecting a refund and requesting changes on an advisory: they are
+  the same votes. Rejecting a supplier application stays overridable (it provisions nothing).
+- The guard also requires the route to admit an Operations Admin, so a Super-Admin-only route
+  inside a tagged controller never passes; untagged controllers (settings, staff, the desk
+  session, the assistant, the overrides themselves) are never overridable.
+- Approving refuses with 409 when the holder's role no longer allows the row.
+- The booking page reads each card's own row (services: dispatch; the payment panel:
+  payments; OFAC: customers; the rest: bookings) and shows the bookings notice only.
+- The customers pages already showed their actions to every role (the API refuses Support);
+  this batch adds the notice to the customers list and leaves that gating as it was.
+- A reset ends overrides without a note; the reset's own audit row carries the count.

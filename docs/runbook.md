@@ -293,6 +293,17 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   manifest's payment terms and feature flags). Once any version has applied, the
   flags it holds win over a later edit of the manifest's `features`; change them in
   Settings instead.
+- Permission overrides (`docs/schema-m9-permission-overrides.md`): Administrative
+  Support asks, with a reason, to act on a row it can only view (bookings, dispatch,
+  suppliers, advisories, disruptions, payments, catalog, customers) from the notice
+  on that page; every active Super Admin is emailed. Any one Super Admin approves,
+  declines or ends it on Settings › Permissions; it ends by itself after "Override
+  expiry" (Thresholds › Security, default 24 h, 1–24) and a request no one answers
+  lapses after 24 h. An override never approves refunds, advisories or supplier
+  applications and never reaches thresholds, staff or the OFAC export. Each change
+  made through one is audited as `permission.override_used` (row, route, record
+  ids); requests and decisions are `permission.override_*`. A role change,
+  deactivation, "Reset passkeys" or a recovery code ends the person's overrides.
 - The desk always needs one active Super Admin: the API refuses to demote or
   deactivate the last one. If it is lost anyway, set a user's `role` to
   `SUPER_ADMIN` in the database and audit the change by hand.

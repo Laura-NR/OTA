@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-01 18:30
+# Handoff — vereda — updated 2026-11-01 23:05
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -9,18 +9,42 @@ reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follo
 server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
-page, on 2026-11-01 the staff recovery codes and the new-device email) and ADR 0007 (worker
+page, on 2026-11-01 the staff recovery codes, the new-device email and permission overrides) and
+ADR 0007 (worker
 app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
 `docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
-`docs/schema-m9-new-device-email.md` (approved N1a–N6a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
+`docs/schema-m9-new-device-email.md` (approved N1a–N6a, §7 as built). Permission overrides:
+`docs/schema-m9-permission-overrides.md` (approved O1a–O8a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-01 (night): permission overrides** (M9), the owner's pick, approved O1a–O8a on
+  migration `20261101202627_permission_overrides` (`39575ad`…`b99a875`; ADR 0006 amendment of
+  that day). No dependency or spend.
+  - Rules `packages/domain/src/settings/overrides.ts`: the permission matrix
+    (`PERMISSION_MATRIX`, moved from the desk), the Super Admin rows (thresholds, staff, OFAC
+    export) never overridable, so only Administrative Support can ask (the 8 rows it views); a
+    request lapses after 24 h; an approved override runs `overrideExpiryHours` (a threshold,
+    default 24, 1–24, two Super Admins).
+  - API: `@Capability(row)` on every staff controller; `@NotOverridable()` on refund
+    approve/reject, advisory approve/request-changes and supplier-application approve.
+    `AuthGuard` looks for a running override only when the role check fails and the route
+    admits an Operations Admin; `OverrideAuditInterceptor` audits each successful change as
+    `permission.override_used`. Routes under `/permission-overrides` (request, mine, list,
+    approve, decline, end) are in the RBAC matrix with override cases. A role change,
+    deactivation, "Reset passkeys" and a recovery code end the person's overrides. Every
+    active Super Admin is emailed a request.
+  - Desk: `deskAccess(role, row)` (`apps/backoffice/src/lib/overrides.ts`) replaces the pages'
+    role lists; `OverrideNotice` under each view-only page's header; Settings › Permissions
+    lists requests, active overrides and the last 30 days; "Override expiry" on Thresholds ›
+    Security. en/es/fr. e2e `e2e/permission-overrides.spec.ts`.
+  - Also `8a15c33`: a 1 ms timing flake in the recovery-code staff test (the test's clock
+    read before the service's), now bounded by the call's start and end.
 - **2026-11-01 (evening): the new-device email** (M9 D9), the owner's pick, approved N1a–N6a
   on migration `20261101145749_staff_known_devices` (`6a3fd8c`…`0267b26`; ADR 0006 amendment
   of that day). No dependency, route or spend.
@@ -287,34 +311,34 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-01, the new-device email, dev stack stopped for the build)
+## Verified (2026-11-01, permission overrides, dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1119 passed / 28 skipped**, 30/30 tasks (new: domain
-  new-device rules, the auth plugin against Better Auth's memory adapter including a link's
-  302, the email in en/es/fr, `SignInDevicesService`, and the resets forgetting devices).
+- `TURBO_FORCE=true pnpm test` **1148 passed / 30 skipped**, 30/30 tasks (new: domain override
+  rules, the request email in en/es/fr, `PermissionOverridesService` with a fake, the audit
+  interceptor, the RBAC matrix's new routes and override cases, the resets ending overrides).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **147 passed, 3 failed, 3 skipped** in 58.5 min. Not
-  this batch's, each passing on fresh servers (killed by port PID, `.next` deleted):
-  `events.spec.ts:132` and `supplier-resources.spec.ts:156` **3/3** together;
-  `responsive.spec.ts:118` (ds07-768, `page.goto` timeout, storefront `next dev` at 5 GB)
-  **1/1** alone (a first rerun on the servers left by the previous one timed out again at
-  3.6 GB). Skips: the desk at 320/375/414. Before it, on the owner's stack:
-  `new-device-email.spec.ts` **6/6**.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
-  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
-  advisories,disruptions,events}.integration.test.ts` and
-  `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Migration `20261101145749_staff_known_devices` applied to the dev DB; `prisma migrate diff`
-  from the database to the schema: no difference.
-- Browser (the owner's restarted stack, a throwaway spec, deleted, with its own Super Admin,
-  cleaned up) at 390, 1024 and 1280: Security's fact, note and link, the Thresholds switch
-  label, and the Spanish email in Mailpit at 390 and 1280. No sideways scroll anywhere; the
-  fact is 14 px like its neighbours, the note 12/16 px muted with an underlined link, as the
-  recovery note. Screenshots checked.
-- The full e2e run left **70** `staff_known_devices` rows and 70 `auth.new_device_sign_in`
-  audit rows for `admin@example.test` in the dev DB (every fresh context is a new device);
-  they now fill most of Security's "latest 50" list. Left as is (dev data).
+- `pnpm e2e` (`.next` deleted first): **152 passed, 2 failed, 3 skipped** in 51.2 min, including
+  `permission-overrides.spec.ts` **4/4**. Not this batch's (storefront pages; the storefront
+  `next-server` had restarted mid-run, a later PID than the others): `responsive.spec.ts:118`
+  at ds07-414 (the 404 page's body read 16 px instead of 18) and `responsive.spec.ts:130` at
+  ds07-768 (`page.goto` 180 s timeout). On fresh servers (killed by PID, `.next` deleted) both
+  tests at both widths **4/4**. Skips: the desk at 320/375/414.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **29/29**, 12 files: the 11
+  listed before (`apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,
+  proposals,advisories,disruptions,events}.integration.test.ts`,
+  `{dispatch,compliance}.bullmq.integration.test.ts`) plus
+  `permission-overrides.integration.test.ts`.
+- Migration `20261101202627_permission_overrides` applied to the dev DB; `prisma migrate dev`
+  reports no drift and `prisma migrate status` is up to date.
+- Browser (the owner's restarted stack, a scratch script with its own Super Admin and Support
+  user, cleaned up; no override rows left) at 390, 1024 and 1280: Settings › Permissions with a
+  request, an active and a declined override; the running (success tone), pending (info) and
+  offer-with-decline (neutral) notices; the request dialog at 390; the Spanish pending notice.
+  No sideways scroll on any of the 15 page checks; the notice is the `Alert` (8 px radius,
+  14/16 px padding) with a 32 px small button; body 14 px. The recent card's status badge
+  stretched across its cell; fixed (`b154289`) and rechecked. At 390 the override tables
+  scroll inside their boxes like the matrix.
 - Not run: a real screen reader.
 
 ## Assumptions & unknowns
@@ -324,6 +348,12 @@ events (T-Events)".
   `PASSKEY_RP_ID` binds every passkey, so it belongs to the deploy-topology decision (still
   open; `docs/deployment-plan.md` D6 recommends the apex domain): the desk's origin must be
   that domain or under it, and in `TRUSTED_ORIGINS`.
+- **Permission overrides:** any one Super Admin approves (O4a), so one Super Admin can give
+  Support a row for up to 24 h. Reasons and notes are staff free text kept with the override
+  (not traveler PII; outside the retention purge). The customers pages still show their actions
+  to every role (pre-existing; the API refuses Support); the notice is on the customers list
+  only. Two requests sent at the same instant for the same row are not locked against each
+  other; both would be listed and either can be decided.
 - **New-device email:** on by default, so after a deploy every staff browser emails once. The
   `ota_device` cookie is "essential" (a security function), assumed to fall under the cookie
   notice's existing essential group; counsel holds the cookie words. A private window or
@@ -386,6 +416,18 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Permission overrides (2026-11-01):** a new staff controller needs `@Capability(row)` or
+  no override ever reaches it; a new approval or vote route needs `@NotOverridable()`. Desk
+  pages decide actions with `deskAccess(role, row)` and pass `byRole` to approval buttons,
+  never a local role list. The RBAC matrix's fake Prisma answers
+  `permissionOverride.findFirst` (null unless a case sets `supportOverride`); a new fake used
+  with a Support user on a tagged write route needs it too.
+- **`prisma format` rewrites the whole schema** (the file is not Prisma-formatted: 391 lines
+  changed for a 39-line model). Edit `schema.prisma` by hand and run only `prisma migrate dev`.
+- **The dev stack `pnpm e2e` leaves behind can hang:** after a single-spec run the left
+  servers answered `/health` but every Next page timed out at 60 s. Kill the listening PIDs
+  and their `next dev` parents (`pgrep -af "next dev|next-server|src/main.ts"`); Next needed
+  `kill -9`.
 - **New-device email (2026-11-01):** every e2e staff sign-in now sends a new-device email
   (asynchronously, so it can land after the next magic link): `latestMagicLink` reads the
   newest message to the address that holds a link; a spec asserting "the newest email to a
@@ -770,16 +812,21 @@ events (T-Events)".
     route that creates a session; `SignInDevicesService` keeps SHA-256 of
     `<userId>:<ota_device cookie>`. Every staff sign-in in e2e sends one, so read Mailpit by
     subject, not by newest message."
+  - "2026-11-01: permission overrides (migration 20261101202627_permission_overrides): every
+    staff controller carries `@Capability(row)` (rows in
+    `packages/domain/src/settings/overrides.ts`); the guard passes a role outside `@Roles` only
+    with a running override, on a route an Operations Admin may use and not marked
+    `@NotOverridable()`. The desk decides actions with `deskAccess(role, row)`. Tag new staff
+    routes and add them to the RBAC matrix."
 
 ## Next
-1. Owner: choose the next batch. An M9 deferred item: permission overrides (changes how
-   authorisation decides; the board's per-action overrides with a reason and a 24 h expiry,
-   so a doc first), the IP allowlist (a policy doc first; its use depends on the deploy
-   topology's proxy) or display currencies (the ECB feed is a Q10 third party). M10's room
-   holds/event photos need a migration doc first. A real
-   screen-reader run (desk and storefront) needs a machine with NVDA or VoiceOver.
-   Optional: the desktop cookie banner still covers about 61 % of a 1280 × 844 window (the
-   board's layout; focus is now kept clear of it).
+1. Owner: choose the next batch. An M9 deferred item: the IP allowlist (a policy doc first; its
+   use depends on the deploy topology's proxy) or display currencies (the ECB feed is a Q10
+   third party). M10's room holds/event photos need a migration doc first. Small, no
+   migration: hide the customers pages' actions from Support unless a customers override runs
+   (they show today and the API refuses). A real screen-reader run (desk and storefront) needs
+   a machine with NVDA or VoiceOver. Optional: the desktop cookie banner still covers about
+   61 % of a 1280 × 844 window (the board's layout; focus is now kept clear of it).
 2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
    answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
    plan recommends renting the server only when the agency's legal entity exists (D1).
@@ -1259,3 +1306,15 @@ events (T-Events)".
   devices. The build hashed the person's id with the cookie so a shared desk PC stays known to
   each person, kept the label language-neutral, wrote the email in UTC (no tenant time zone)
   as its own template, and put the switch on Thresholds rather than as a checkbox on Security.
+- 2026-11-01 — the owner chose permission overrides next (over M10's room holds and event
+  photos, display currencies and the IP allowlist; the deployment plan is unanswered and
+  Plausible CE is not installed) and approved `docs/schema-m9-permission-overrides.md` as
+  recommended: O1a one matrix row for one person for a limited time, O2a only rows the role
+  views and never a Super Admin row (so only Support asks), O3a an override never approves,
+  O4a any one Super Admin approves, O5a a two-Super-Admin threshold (default 24 h, 1–24) and
+  early ends on a role change, deactivation and the resets, O6a a `permission_overrides`
+  table, O7a routes tagged with their row and every change audited, O8a an email to every
+  Super Admin. The build also kept refund rejects and advisory change requests with the role
+  (they are votes), required the route to admit an Operations Admin, put the request on each
+  view-only page instead of a blocked page and the lists on Permissions, and gave the booking
+  page's cards their own rows.
