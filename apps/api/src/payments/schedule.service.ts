@@ -15,6 +15,7 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { rateLockOf } from '../currencies/currencies.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
@@ -168,6 +169,7 @@ export class ScheduleService {
           dualUpTo: thresholds.refundDualUpTo,
         }),
       ),
+      rateLock: rateLockOf(row),
     };
   }
 

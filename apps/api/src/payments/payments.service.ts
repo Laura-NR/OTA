@@ -30,6 +30,7 @@ import type {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { loadOfacGate } from '../compliance/ofac-gate';
+import { CurrenciesService } from '../currencies/currencies.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
@@ -89,6 +90,7 @@ export class PaymentsService {
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     private readonly settings: OperatingSettingsService,
     private readonly telemetry: ServerTelemetry,
+    private readonly currencies: CurrenciesService,
   ) {}
 
   async list(reservationId: string): Promise<PaymentReceiptDto[]> {
@@ -228,6 +230,8 @@ export class PaymentsService {
             policyKey: plan === 'DEPOSIT' ? policyKey : null,
           })),
         });
+        // The first link is the invoice: it locks the display rate under INVOICE (M9 C6).
+        await this.currencies.lockRate(tx, reservationId, 'PAYMENT_LINK', actor.id);
         await tx.auditLog.create({
           data: {
             actorUserId: actor.id,
@@ -359,6 +363,16 @@ export class PaymentsService {
           where: { id: receipt.instalmentId },
           data: { status: 'PAID', paidAt: new Date() },
         });
+      }
+      // The first payment received locks the display rate (M9 C6, BR-CU-02);
+      // a booking paid before display currencies keeps showing EUR only.
+      if (event.status === 'PAID') {
+        const earlier = await tx.paymentReceipt.count({
+          where: { reservationId, status: 'PAID', id: { not: paymentId } },
+        });
+        if (earlier === 0) {
+          await this.currencies.lockRate(tx, reservationId, 'FIRST_PAYMENT', actor.id);
+        }
       }
       await tx.auditLog.create({
         data: {

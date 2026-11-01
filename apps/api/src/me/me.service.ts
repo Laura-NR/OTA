@@ -28,6 +28,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
 import { accountReservationUrl } from '../common/storefront-url';
 import type { SigningClient } from '../compliance/affidavits.service';
+import { CurrenciesService } from '../currencies/currencies.service';
 import { MAILER } from '../email/email.module';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -204,6 +205,7 @@ export class MeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
+    private readonly currencies: CurrenciesService,
     private readonly bookings: PackageBookingService,
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
@@ -222,6 +224,7 @@ export class MeService {
       locale: user.locale,
       phone: user.phone,
       nationality: user.nationality,
+      displayCurrency: user.displayCurrency,
     };
   }
 
@@ -570,6 +573,7 @@ export class MeService {
     if (!reservation) {
       throw new NotFoundException(`Reservation ${reservationId} not found`);
     }
+    await this.currencies.adoptShown(actor.id, input.displayCurrency);
     return this.payments.createIntent(reservationId, input, actor);
   }
 

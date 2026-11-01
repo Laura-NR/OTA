@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { shownCurrencySchema } from './currency';
+
 /** Mirrors the Prisma `PaymentRail` / `PaymentStatus` enums (spec §7.1). */
 export const paymentRailSchema = z.enum(['OPEN_BANKING_SEPA', 'CARD', 'OTHER']);
 
@@ -18,6 +20,11 @@ export const createPaymentIntentSchema = z.object({
    * has a schedule. Omitted means full.
    */
   plan: z.enum(['DEPOSIT', 'FULL']).optional(),
+  /**
+   * M9 C4: the currency the storefront showed; kept as the traveler's choice
+   * when they have none, so the deposit locks what they saw. The desk omits it.
+   */
+  displayCurrency: shownCurrencySchema.optional(),
 });
 
 export type CreatePaymentIntentRequest = z.infer<typeof createPaymentIntentSchema>;

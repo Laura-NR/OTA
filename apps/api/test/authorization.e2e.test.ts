@@ -173,6 +173,8 @@ const ROUTES: Route[] = [
   { method: 'post', path: '/me/session/own-device', allowed: 'opsRead' },
   { method: 'get', path: '/me/consents', allowed: 'authenticated' },
   { method: 'post', path: '/me/consents', allowed: 'authenticated' },
+  // M9 C4: anyone signed in keeps their own display currency.
+  { method: 'put', path: '/me/display-currency', allowed: 'authenticated' },
   // M5: the traveler's own custom requests and proposals.
   { method: 'post', path: '/me/custom-requests', allowed: 'authenticated' },
   { method: 'get', path: '/me/proposals', allowed: 'authenticated' },
@@ -443,6 +445,8 @@ const ROUTES: Route[] = [
   // Customers read model.
   // M9 settings: the desk reads the thresholds in force; the rest is Super Admin.
   { method: 'get', path: '/settings/operating', allowed: 'opsRead' },
+  // docs/schema-m9-display-currencies.md: A-Settings' currency table, for every desk role.
+  { method: 'get', path: '/settings/currencies', allowed: 'opsRead' },
   { method: 'get', path: '/settings/operating/versions', allowed: 'superAdmin' },
   { method: 'post', path: '/settings/operating/versions', allowed: 'superAdmin' },
   {
@@ -527,6 +531,11 @@ const fakePrisma = {
   $queryRaw: async () => [{ '?column?': 1 }],
   advisory: { findMany: async () => [] },
   event: { findMany: async () => [], findFirst: async () => null },
+  // M9: no stored rate (the mock provider's write is dropped), so the rates read is empty.
+  exchangeRate: {
+    findFirst: async () => null,
+    createMany: async () => ({ count: 0 }),
+  },
   // M9: no applied settings version, so the public events read the defaults.
   operatingSettings: { findFirst: async () => null },
 };
@@ -687,6 +696,11 @@ describe('authorization matrix', () => {
     expect(
       (await request(app.getHttpServer()).get('/catalog/events/no-such-event')).status,
     ).toBe(404);
+
+    // The display rates are public: the storefront converts browsing prices with them.
+    expect((await request(app.getHttpServer()).get('/catalog/currencies')).status).toBe(
+      200,
+    );
 
     // The Support form is public; an empty body fails validation (400), not auth.
     const contact = await request(app.getHttpServer()).post('/contact').send({});

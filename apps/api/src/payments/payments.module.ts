@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { createPaymentProviders, type PaymentProviderName } from '@ota/payments';
 
+import { CurrenciesModule } from '../currencies/currencies.module';
 import { ReservationsModule } from '../reservations/reservations.module';
 import { PaymentsLedgerController } from './payments-ledger.controller';
 import { PaymentsController } from './payments.controller';
@@ -30,7 +31,7 @@ import { ScheduleService } from './schedule.service';
  * mock until a signed card gateway is wired.
  */
 @Module({
-  imports: [ReservationsModule],
+  imports: [ReservationsModule, CurrenciesModule],
   controllers: [
     PaymentsController,
     PaymentsLedgerController,

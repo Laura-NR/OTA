@@ -80,6 +80,9 @@ interface State {
   refunds: Row[];
   approvals: Row[];
   audits: Row[];
+  /** M9: the owner's saved display currency and the stored rates. */
+  displayCurrency?: string | null;
+  rates?: Row[];
 }
 
 const decimal = (value: unknown) => new Prisma.Decimal(value as number | string);
@@ -103,6 +106,10 @@ function seed(departureInDays = 120): State {
       endDate: utcDaysFromNow(departureInDays + 7),
       totalCurrency: 'EUR',
       totalAmount: decimal('3100.00'),
+      displayCurrency: null,
+      displayRate: null,
+      displayRateDate: null,
+      displayRateLockedAt: null,
       createdAt: new Date('2026-10-01T00:00:00Z'),
       updatedAt: new Date('2026-10-01T00:00:00Z'),
     },
@@ -161,9 +168,17 @@ function createFakePrisma(state: State) {
       findUnique: async (args: {
         where: { id: string };
         include?: Record<string, unknown>;
+        select?: Record<string, unknown>;
       }) => {
         if (args.where.id !== BOOKING) return null;
         const row = state.reservation;
+        // M9: the rate lock reads the lock and the traveler's display currency.
+        if (args.select) {
+          return {
+            displayRateLockedAt: row.displayRateLockedAt,
+            user: { displayCurrency: state.displayCurrency ?? null },
+          };
+        }
         if (!args.include) return row;
         return {
           ...row,
@@ -234,6 +249,15 @@ function createFakePrisma(state: State) {
       },
       findUnique: async (args: { where: { id: string } }) =>
         state.receipts.find((row) => row.id === args.where.id) ?? null,
+      count: async (args: {
+        where: { reservationId: string; status: string; id: { not: string } };
+      }) =>
+        state.receipts.filter(
+          (row) =>
+            row.reservationId === args.where.reservationId &&
+            row.status === args.where.status &&
+            row.id !== args.where.id.not,
+        ).length,
       findUniqueOrThrow: async (args: { where: { id: string } }) =>
         state.receipts.find((row) => row.id === args.where.id)!,
       findFirst: async (args: {
@@ -323,6 +347,32 @@ function createFakePrisma(state: State) {
       create: async (args: { data: Row }) => {
         state.audits.push(args.data);
         return args.data;
+      },
+    },
+    user: {
+      // M9 C4: a link that names the shown currency keeps it when none is saved.
+      updateMany: async (args: {
+        where: { id: string; displayCurrency: null };
+        data: { displayCurrency: string };
+      }) => {
+        if (args.where.id !== USERS.owner.id || state.displayCurrency)
+          return { count: 0 };
+        state.displayCurrency = args.data.displayCurrency;
+        return { count: 1 };
+      },
+    },
+    exchangeRate: {
+      findFirst: async () =>
+        [...(state.rates ?? [])].sort(
+          (a, b) => (b.rateDate as Date).getTime() - (a.rateDate as Date).getTime(),
+        )[0] ?? null,
+      findMany: async (args: { where: { rateDate: Date } }) =>
+        (state.rates ?? []).filter(
+          (row) => (row.rateDate as Date).getTime() === args.where.rateDate.getTime(),
+        ),
+      createMany: async (args: { data: Row[] }) => {
+        state.rates = [...(state.rates ?? []), ...args.data];
+        return { count: args.data.length };
       },
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
@@ -444,6 +494,37 @@ describe('M4 payment schedule API', () => {
 
       const nothing = await link({ rail: 'OPEN_BANKING_SEPA' });
       expect(nothing.status).toBe(409);
+    });
+
+    it('locks the currency the traveler saw at the deposit and keeps it for the balance (M9 C4, C6)', async () => {
+      const deposit = await http()
+        .post(`/me/reservations/${BOOKING}/payments`)
+        .set(as('owner'))
+        .send({ rail: 'OPEN_BANKING_SEPA', plan: 'DEPOSIT', displayCurrency: 'CAD' });
+      expect(deposit.status).toBe(201);
+      expect(state.displayCurrency).toBe('CAD');
+      const before = await http()
+        .get(`/me/reservations/${BOOKING}/schedule`)
+        .set(as('owner'));
+      expect(before.body.rateLock).toBeNull();
+
+      await confirm(deposit.body.id);
+      const locked = await http()
+        .get(`/me/reservations/${BOOKING}/schedule`)
+        .set(as('owner'));
+      expect(locked.body.rateLock).toMatchObject({ currency: 'CAD', rate: 1.489081 });
+
+      const balance = await link({ rail: 'OPEN_BANKING_SEPA' });
+      await confirm(balance.body.id);
+      const after = await http()
+        .get(`/me/reservations/${BOOKING}/schedule`)
+        .set(as('owner'));
+      expect(after.body.rateLock).toEqual(locked.body.rateLock);
+      expect(
+        state.audits.filter(
+          (audit) => audit.action === 'reservation.display_rate_locked',
+        ),
+      ).toHaveLength(1);
     });
 
     it('lets the desk give an instalment more time, audited', async () => {

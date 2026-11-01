@@ -9,6 +9,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { ContactModule } from './contact/contact.module';
+import { CurrenciesModule } from './currencies/currencies.module';
 import { CustomersModule } from './customers/customers.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { DisruptionsModule } from './disruptions/disruptions.module';
@@ -69,6 +70,7 @@ export const httpLoggerOptions = {
     AuthModule,
     TenantModule,
     SettingsModule,
+    CurrenciesModule,
     StaffModule,
     EmailModule,
     StorageModule,

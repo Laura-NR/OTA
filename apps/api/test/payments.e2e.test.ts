@@ -38,6 +38,10 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     totalCurrency: 'EUR',
     totalAmount: new Prisma.Decimal('321.00'),
     customItineraryPayload: null,
+    displayCurrency: null,
+    displayRate: null,
+    displayRateDate: null,
+    displayRateLockedAt: null,
     createdAt: new Date('2026-09-20T10:00:00Z'),
     updatedAt: new Date('2026-09-20T10:00:00Z'),
     ...overrides,
@@ -78,6 +82,13 @@ interface FakeInstalment {
   status: string;
 }
 
+interface FakeRate {
+  rateDate: Date;
+  currency: string;
+  rate: number;
+  source: string;
+}
+
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
   receipts: Map<string, PaymentReceipt>;
@@ -85,17 +96,32 @@ function createFakePrisma(state: {
   travelers?: GateTraveler[];
   affidavits?: { travelerId: string }[];
   instalments?: FakeInstalment[];
+  /** M9: the traveler's saved display currency and the stored rates. */
+  displayCurrency?: string | null;
+  rates?: FakeRate[];
 }) {
   const instalments = () => (state.instalments ??= []);
+  const rates = () => (state.rates ??= []);
   const fake = {
     // M3: the OFAC gate reads the party and its affidavits.
     reservationTraveler: { findMany: async () => state.travelers ?? [] },
     travelerAffidavit: { findMany: async () => state.affidavits ?? [] },
     reservation: {
       // M4: a payment link reads the schedule and the package's deposit plan.
-      findUnique: async (args: { where: { id: string }; include?: unknown }) => {
+      findUnique: async (args: {
+        where: { id: string };
+        include?: unknown;
+        select?: unknown;
+      }) => {
         const row = state.reservations.get(args.where.id);
         if (!row) return null;
+        // M9: the rate lock reads the lock and the traveler's display currency.
+        if (args.select) {
+          return {
+            displayRateLockedAt: row.displayRateLockedAt,
+            user: { displayCurrency: state.displayCurrency ?? null },
+          };
+        }
         return args.include
           ? {
               ...row,
@@ -106,13 +132,10 @@ function createFakePrisma(state: {
             }
           : row;
       },
-      update: async (args: {
-        where: { id: string };
-        data: { status: Reservation['status'] };
-      }) => {
+      update: async (args: { where: { id: string }; data: Partial<Reservation> }) => {
         const existing = state.reservations.get(args.where.id);
         if (!existing) throw new Error('not found');
-        const updated = { ...existing, status: args.data.status };
+        const updated = { ...existing, ...args.data };
         state.reservations.set(args.where.id, updated);
         return updated;
       },
@@ -120,6 +143,15 @@ function createFakePrisma(state: {
     paymentReceipt: {
       findUnique: async (args: { where: { id: string } }) =>
         state.receipts.get(args.where.id) ?? null,
+      count: async (args: {
+        where: { reservationId: string; status: string; id: { not: string } };
+      }) =>
+        [...state.receipts.values()].filter(
+          (receipt) =>
+            receipt.reservationId === args.where.reservationId &&
+            receipt.status === args.where.status &&
+            receipt.id !== args.where.id.not,
+        ).length,
       findFirst: async (args: { where: { gatewayTxId?: string } }) => {
         const receipt = [...state.receipts.values()].find(
           (row) => row.gatewayTxId === args.where.gatewayTxId,
@@ -173,6 +205,25 @@ function createFakePrisma(state: {
         return args.data;
       },
     },
+    exchangeRate: {
+      findFirst: async () =>
+        [...rates()].sort((a, b) => b.rateDate.getTime() - a.rateDate.getTime())[0] ??
+        null,
+      findMany: async (args: { where: { rateDate: Date } }) =>
+        rates().filter((row) => row.rateDate.getTime() === args.where.rateDate.getTime()),
+      createMany: async (args: { data: FakeRate[] }) => {
+        const fresh = args.data.filter(
+          (row) =>
+            !rates().some(
+              (stored) =>
+                stored.currency === row.currency &&
+                stored.rateDate.getTime() === row.rateDate.getTime(),
+            ),
+        );
+        rates().push(...fresh);
+        return { count: fresh.length };
+      },
+    },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
 
@@ -201,6 +252,7 @@ describe('payments API', () => {
     audits: { action: string }[];
     travelers?: GateTraveler[];
     affidavits?: { travelerId: string }[];
+    displayCurrency?: string | null;
   };
 
   let sink: MockTelemetrySink;
@@ -303,6 +355,40 @@ describe('payments API', () => {
         to: 'CONFIRMED',
         reason: 'payment_confirmed',
       }),
+    );
+  });
+
+  it("locks the traveler's display rate, spread included, at the first payment (M9 C6)", async () => {
+    state.displayCurrency = 'CAD';
+    const intent = await createIntent();
+
+    await request(app.getHttpServer())
+      .post(`/reservations/${RESERVATION_ID}/payments/${intent.body.id}/confirm`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .expect(200);
+
+    const reservation = state.reservations.get(RESERVATION_ID);
+    expect(reservation?.displayCurrency).toBe('CAD');
+    // The mock's CAD reference 1.4802 plus the default 0.6 % spread.
+    expect(Number(reservation?.displayRate)).toBe(1.489081);
+    expect(reservation?.displayRateLockedAt).toBeInstanceOf(Date);
+    expect(state.audits.map((entry) => entry.action)).toContain(
+      'reservation.display_rate_locked',
+    );
+  });
+
+  it('locks nothing for a traveler who sees EUR', async () => {
+    state.displayCurrency = 'EUR';
+    const intent = await createIntent();
+
+    await request(app.getHttpServer())
+      .post(`/reservations/${RESERVATION_ID}/payments/${intent.body.id}/confirm`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .expect(200);
+
+    expect(state.reservations.get(RESERVATION_ID)?.displayRateLockedAt).toBeNull();
+    expect(state.audits.map((entry) => entry.action)).not.toContain(
+      'reservation.display_rate_locked',
     );
   });
 
