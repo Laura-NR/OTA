@@ -1,6 +1,6 @@
 # M9 staff recovery codes: policy and schema diff for review
 
-**Status:** proposed, awaiting the owner's decision.
+**Status:** **Approved 2026-11-01 as recommended (R1a–R5a, with the migration).**
 **Date:** 2026-11-01
 **Scope:** the recovery codes deferred under D5 in `docs/schema-m9-settings.md` ("a phone-issued
 code needs its own security review") and again under P5 in `docs/schema-m9-passkeys.md`, which

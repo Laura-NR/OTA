@@ -465,6 +465,8 @@ model User {
   invitesSent      StaffInvite[]       @relation("StaffInviteInvitedBy")
   invitesConfirmed StaffInvite[]       @relation("StaffInviteConfirmedBy")
   invitesAccepted  StaffInvite[]       @relation("StaffInviteAcceptedBy")
+  recoveryCodes       StaffRecoveryCode[] @relation("StaffRecoveryCodeUser")
+  recoveryCodesIssued StaffRecoveryCode[] @relation("StaffRecoveryCodeIssuedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -1765,6 +1767,29 @@ model StaffInvite {
 
   @@index([email])
   @@map("staff_invites")
+}
+
+/// A one-time code a Super Admin issues for a staff member who lost access
+/// (docs/schema-m9-recovery-codes.md). The code itself is never stored.
+model StaffRecoveryCode {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  /// SHA-256 of the normalised code (R4).
+  codeHash       String    @map("code_hash")
+  issuedById     String?   @map("issued_by_id") @db.Uuid
+  expiresAt      DateTime  @map("expires_at")
+  /// Wrong codes typed for this person while the code was open; the fifth withdraws it.
+  failedAttempts Int       @default(0) @map("failed_attempts")
+  usedAt         DateTime? @map("used_at")
+  /// Replaced by a newer code, withdrawn by a Super Admin, or by wrong tries.
+  withdrawnAt    DateTime? @map("withdrawn_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  user     User  @relation("StaffRecoveryCodeUser", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy User? @relation("StaffRecoveryCodeIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("staff_recovery_codes")
 }
 
 /// M10: an event the concierge can request seats for (D1, D2).
