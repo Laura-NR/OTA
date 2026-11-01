@@ -467,6 +467,7 @@ model User {
   invitesAccepted  StaffInvite[]       @relation("StaffInviteAcceptedBy")
   recoveryCodes       StaffRecoveryCode[] @relation("StaffRecoveryCodeUser")
   recoveryCodesIssued StaffRecoveryCode[] @relation("StaffRecoveryCodeIssuedBy")
+  knownDevices        StaffKnownDevice[]
 
   // Better Auth relations
   sessions Session[]
@@ -1790,6 +1791,24 @@ model StaffRecoveryCode {
 
   @@index([userId])
   @@map("staff_recovery_codes")
+}
+
+/// A browser a staff member signed in from (docs/schema-m9-new-device-email.md).
+/// The device cookie itself is never stored.
+model StaffKnownDevice {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  /// SHA-256 of the `ota_device` cookie value (N1).
+  tokenHash   String   @unique @map("token_hash")
+  /// "Firefox on Windows", read from the user agent at first sign-in.
+  label       String
+  firstSeenAt DateTime @default(now()) @map("first_seen_at")
+  lastSeenAt  DateTime @default(now()) @map("last_seen_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lastSeenAt])
+  @@map("staff_known_devices")
 }
 
 /// M10: an event the concierge can request seats for (D1, D2).
