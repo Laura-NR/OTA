@@ -15,10 +15,12 @@ import { EventRequestForm } from '@/components/events/event-request-form';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { getPageContent } from '@/lib/content';
+import { getDisplayCurrency } from '@/lib/currency';
 import { countryOptions } from '@/lib/countries';
+import { browsingPrice } from '@/lib/display-money';
 import { eventDateLine, nightLabel } from '@/lib/event-dates';
 import { getEvent } from '@/lib/events';
-import { formatMoney, plainSpaces } from '@/lib/format';
+import { plainSpaces } from '@/lib/format';
 import { getGeography, provinceName } from '@/lib/geography';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -56,7 +58,14 @@ export default async function EventPage({
   ]);
   const tenant = getTenantConfig();
   const concierge = tenant.concierge;
-  const fee = plainSpaces(formatMoney(concierge.feePerSeat, concierge.currency, locale));
+  const fee = plainSpaces(
+    browsingPrice(
+      concierge.feePerSeat,
+      concierge.currency,
+      await getDisplayCurrency(),
+      locale,
+    ),
+  );
   const prefix = locale === DEFAULT_LOCALE ? '' : `/${locale}`;
   const signInHref = `/login?next=${encodeURIComponent(`${prefix}/events/${event.slug}`)}`;
   const takesRequests = event.access !== 'GUIDE_ONLY';

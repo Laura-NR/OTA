@@ -18,11 +18,13 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { useDisplayMoney } from '@/components/currency/currency-provider';
 import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
 import type { CountryOption } from '@/lib/countries';
 import { nightLabel } from '@/lib/event-dates';
-import { formatMoney, plainSpaces } from '@/lib/format';
+import { browsingPrice } from '@/lib/display-money';
+import { plainSpaces } from '@/lib/format';
 
 const STEP_IDS = ['seats', 'trip', 'send'] as const;
 const DAY_MS = 86_400_000;
@@ -109,7 +111,9 @@ export function EventRequestForm({
   const first = isPass ? event.startsOn : (chosenNights[0]?.date ?? event.startsOn);
   const last = isPass ? event.endsOn : (chosenNights.at(-1)?.date ?? event.endsOn);
   const festivalNights = arrival ? nightsBetween(arrival, addDays(last, 1)) : 0;
-  const money = (amount: number) => plainSpaces(formatMoney(amount, currency, locale));
+  const display = useDisplayMoney();
+  const money = (amount: number) =>
+    plainSpaces(browsingPrice(amount, currency, display, locale));
 
   const stepOneValid = Boolean(category) && (isPass || chosenNights.length > 0);
   const stepTwoValid =

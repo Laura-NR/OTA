@@ -9,6 +9,7 @@ import { notFound, redirect } from 'next/navigation';
 import { AccountShell } from '@/components/account/account-shell';
 import { ProposalActions } from '@/components/account/proposal-actions';
 import { ProviderProgress } from '@/components/account/provider-progress';
+import { ApproxPrice } from '@/components/currency/price';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { formatDay, formatMoney } from '@/lib/format';
@@ -254,6 +255,7 @@ export default async function ProposalPage({
                 <span className="font-mono text-h3">
                   {formatMoney(version.total, version.currency, locale)}
                 </span>
+                <ApproxPrice amount={version.total} currency={version.currency} />
                 {version.perPerson ? (
                   <span className="text-caption text-muted">
                     {t('perPerson', {

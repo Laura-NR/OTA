@@ -15,6 +15,7 @@ import { notFound } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 
 import { BottomNav } from '@/components/bottom-nav';
+import { CurrencyProvider } from '@/components/currency/currency-provider';
 import { BandwidthStrip } from '@/components/display/bandwidth-strip';
 import { DisplayProvider } from '@/components/display/display-provider';
 import { OfflinePill } from '@/components/offline/offline-pill';
@@ -26,6 +27,7 @@ import { TelemetryProvider } from '@/components/telemetry/telemetry-provider';
 import { getServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
 import { getPageContent } from '@/lib/content';
+import { getDisplayCurrency } from '@/lib/currency';
 import { displayAttributes } from '@/lib/display';
 import { fontVariables } from '@/lib/font';
 import { getFeatures } from '@/lib/features';
@@ -67,6 +69,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const nav = await getTranslations({ locale, namespace: 'nav' });
   const signedIn = Boolean(await getServerSession());
+  const money = await getDisplayCurrency();
   // Larger text and low-bandwidth mode are the device's (a cookie), so the
   // page renders in them from its first byte.
   const store = await cookies();
@@ -98,25 +101,26 @@ export default async function LocaleLayout({
         <IconSprite />
         <NextIntlClientProvider messages={messages}>
           <DisplayProvider initial={display}>
-            {/* EUR is the base currency; display currencies are M9 D7 (deferred). */}
-            <TelemetryProvider
-              initialCookie={store.get(CONSENT_COOKIE)?.value ?? null}
-              texts={cookieTexts}
-              signedIn={signedIn}
-              currency="EUR"
-              locales={SUPPORTED_LOCALES}
-            >
-              <BandwidthStrip />
-              <SiteStrips events={features.culturalEventsBanner} signedIn={signedIn} />
-              <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
-              <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-                {children}
-              </main>
-              <SiteFooter tenant={tenant} />
-              <BottomNav signedIn={signedIn} />
-              <OfflinePill />
-              <ServiceWorkerRegistration />
-            </TelemetryProvider>
+            <CurrencyProvider initial={money}>
+              <TelemetryProvider
+                initialCookie={store.get(CONSENT_COOKIE)?.value ?? null}
+                texts={cookieTexts}
+                signedIn={signedIn}
+                currency={money.code}
+                locales={SUPPORTED_LOCALES}
+              >
+                <BandwidthStrip />
+                <SiteStrips events={features.culturalEventsBanner} signedIn={signedIn} />
+                <SiteHeader agencyName={tenant.branding.agencyName} signedIn={signedIn} />
+                <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+                  {children}
+                </main>
+                <SiteFooter tenant={tenant} />
+                <BottomNav signedIn={signedIn} />
+                <OfflinePill />
+                <ServiceWorkerRegistration />
+              </TelemetryProvider>
+            </CurrencyProvider>
           </DisplayProvider>
         </NextIntlClientProvider>
       </body>

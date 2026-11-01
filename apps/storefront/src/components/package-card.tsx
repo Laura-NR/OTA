@@ -1,12 +1,12 @@
 import { packageProvinces } from '@ota/domain';
 import type { PackageDto } from '@ota/schemas';
 import { Badge, buttonClassName, cn, Icon } from '@ota/ui';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
+import { BrowsingPrice } from '@/components/currency/price';
 import { Photo } from '@/components/display/photo';
 import { Link } from '@/i18n/navigation';
-import { formatMoney } from '@/lib/format';
 
 /** How many of a package's services the card lists as highlights. */
 const HIGHLIGHTS = 3;
@@ -65,7 +65,6 @@ export function PackageCard({
 }) {
   const t = useTranslations('packages');
   const common = useTranslations('pages.common');
-  const locale = useLocale();
   const length = useTripLength(pkg.durationDays);
   const mediaId = packageMediaId(pkg);
   const highlights = [...new Set(pkg.services.map((service) => service.itemName))].slice(
@@ -124,7 +123,7 @@ export function PackageCard({
           <div>
             <p className="text-caption text-muted">{t('fromLabel')}</p>
             <p className="text-h2-compact font-body font-bold text-default">
-              {formatMoney(pkg.basePrice, pkg.currency, locale)}
+              <BrowsingPrice amount={pkg.basePrice} currency={pkg.currency} />
             </p>
           </div>
           <BookingModelPill instant={instant} />

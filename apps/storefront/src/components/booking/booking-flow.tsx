@@ -37,6 +37,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { ApproxPrice } from '@/components/currency/price';
 import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
 import type { CountryOption } from '@/lib/countries';
@@ -1443,6 +1444,11 @@ export function BookingFlow({
                 </span>
                 <span className="text-h4 text-default">{money(price.total)}</span>
               </div>
+              <ApproxPrice
+                amount={price.total}
+                currency={pkg.currency}
+                className="-mt-2 self-end"
+              />
               <div className="flex items-baseline justify-between gap-3 text-body-sm">
                 <span className="text-secondary">{t('summary.payToday')}</span>
                 <span className="font-semibold text-default">{money(0)}</span>

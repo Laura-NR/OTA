@@ -15,6 +15,7 @@ import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
+import { ApproxPrice } from '@/components/currency/price';
 import { ReviewForm } from '@/components/review-form';
 import { TrackEvent } from '@/components/telemetry/track-event';
 import { TravelerStatusBadge } from '@/components/traveler-status-badge';
@@ -268,6 +269,14 @@ export default async function ConfirmationPage({
             <dt>{t('summary.paidInFull')}</dt>
           )}
         </div>
+        {next ? (
+          <ApproxPrice
+            amount={next.amount}
+            currency={currency}
+            lock={schedule?.rateLock ?? null}
+            className="self-end"
+          />
+        ) : null}
       </dl>
       {next && reservation.status === 'CONFIRMED' ? (
         <Link

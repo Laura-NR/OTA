@@ -3,13 +3,14 @@
 import { buttonClassName, cn, Icon } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 
+import { PricesSetInEur } from '@/components/currency/price';
 import { BookingModelPill } from '@/components/package-card';
 import { Link } from '@/i18n/navigation';
 
 export interface PackageBookingFormProps {
   slug: string;
   signedIn: boolean;
-  /** The package price, formatted for the visitor's locale. */
+  /** The package price, formatted for the visitor's locale and display currency. */
   price: string;
   instant: boolean;
   /** The agency's phone line from the manifest, for "Call to book". */
@@ -41,6 +42,7 @@ export function PackageBookingForm({
         <div>
           <p className="text-caption text-muted">{t('fromLabel')}</p>
           <p className="text-h1-compact font-body font-bold text-default">{price}</p>
+          <PricesSetInEur />
         </div>
         <BookingModelPill instant={instant} />
       </div>

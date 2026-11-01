@@ -14,6 +14,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { AccountShell } from '@/components/account/account-shell';
 import { DisruptionChoice } from '@/components/account/disruption-choice';
+import { ApproxPrice } from '@/components/currency/price';
 import { MyEventRequests } from '@/components/events/my-event-requests';
 import { OfacCertification } from '@/components/account/ofac-certification';
 import { PaymentSchedule } from '@/components/account/payment-schedule';
@@ -142,7 +143,12 @@ export default async function AccountReservationPage({
               year: 'numeric',
             },
           )}{' '}
-          · {formatMoney(reservation.totalAmount, reservation.totalCurrency, locale)}
+          · {formatMoney(reservation.totalAmount, reservation.totalCurrency, locale)}{' '}
+          <ApproxPrice
+            amount={reservation.totalAmount}
+            currency={reservation.totalCurrency}
+            lock={schedule?.rateLock ?? null}
+          />
         </p>
       </header>
 

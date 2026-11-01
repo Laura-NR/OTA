@@ -18,7 +18,8 @@ import { Link, permanentRedirect } from '@/i18n/navigation';
 import { advisoriesForProvinces, getActiveAdvisories } from '@/lib/advisories';
 import { getServerSession } from '@/lib/api';
 import { getPageContent } from '@/lib/content';
-import { formatMoney } from '@/lib/format';
+import { getDisplayCurrency } from '@/lib/currency';
+import { browsingPrice } from '@/lib/display-money';
 import { buildProvinceViews, getGeography, provinceCode } from '@/lib/geography';
 import { getPackage, getPackages } from '@/lib/packages';
 import { getFeatures } from '@/lib/features';
@@ -97,6 +98,7 @@ export default async function PackageDetailPage({
   }
   const tenant = getTenantConfig();
   const features = await getFeatures();
+  const money = await getDisplayCurrency();
   const instant = features.instantBooking;
   const builder = features.customItineraryBuilder;
   const provinces = packageProvinces(pkg);
@@ -223,7 +225,12 @@ export default async function PackageDetailPage({
                       {Number(tier.priceDelta) === 0
                         ? t('detail.tiersBase')
                         : t('detail.tierDelta', {
-                            delta: formatMoney(tier.priceDelta, pkg.currency, locale),
+                            delta: browsingPrice(
+                              tier.priceDelta,
+                              pkg.currency,
+                              money,
+                              locale,
+                            ),
                           })}
                     </span>
                   </li>
@@ -248,9 +255,10 @@ export default async function PackageDetailPage({
                     <span className="text-body-sm text-secondary">
                       {t('detail.departureSeats', { count: departure.capacity })} ·{' '}
                       {t('detail.departureFrom', {
-                        price: formatMoney(
+                        price: browsingPrice(
                           departure.price ?? pkg.basePrice,
                           pkg.currency,
+                          money,
                           locale,
                         ),
                       })}
@@ -275,7 +283,7 @@ export default async function PackageDetailPage({
                     >
                       <span className="font-medium text-default">{extra.name}</span>
                       <span className="text-body-sm text-secondary">
-                        {formatMoney(extra.price, pkg.currency, locale)} ·{' '}
+                        {browsingPrice(extra.price, pkg.currency, money, locale)} ·{' '}
                         {extra.priceUnit === 'PER_PERSON'
                           ? t('detail.extraPerPerson')
                           : t('detail.extraPerBooking')}
@@ -504,7 +512,7 @@ export default async function PackageDetailPage({
         <PackageBookingForm
           slug={pkg.slug}
           signedIn={Boolean(session)}
-          price={formatMoney(pkg.basePrice, pkg.currency, locale)}
+          price={browsingPrice(pkg.basePrice, pkg.currency, money, locale)}
           instant={instant}
           supportPhone={tenant.branding.supportPhone ?? null}
         />

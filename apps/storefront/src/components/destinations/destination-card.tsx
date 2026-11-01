@@ -1,8 +1,8 @@
 import { Badge, Icon } from '@ota/ui';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
+import { PriceMessage } from '@/components/currency/price';
 import { Link } from '@/i18n/navigation';
-import { formatMoney } from '@/lib/format';
 import type { DestinationView } from '@/lib/geography';
 
 /** The backup-power pill: green when settled, amber when it needs planning. */
@@ -47,7 +47,6 @@ export function DestinationCard({
   advisoryLevel?: number;
 }) {
   const t = useTranslations('destinations');
-  const locale = useLocale();
   const href = `/destinations/${destination.slug}`;
   const trips = t('packagesCount', { count: destination.packageCount });
 
@@ -108,15 +107,16 @@ export function DestinationCard({
             <span className="max-sm:hidden"> · {destination.stays}</span>
           </span>
           <span className="whitespace-nowrap font-semibold text-default">
-            {destination.fromPrice
-              ? t('fromPrice', {
-                  price: formatMoney(
-                    destination.fromPrice.amount,
-                    destination.fromPrice.currency,
-                    locale,
-                  ),
-                })
-              : t('onRequest')}
+            {destination.fromPrice ? (
+              <PriceMessage
+                namespace="destinations"
+                message="fromPrice"
+                amount={destination.fromPrice.amount}
+                currency={destination.fromPrice.currency}
+              />
+            ) : (
+              t('onRequest')
+            )}
           </span>
         </span>
       </span>

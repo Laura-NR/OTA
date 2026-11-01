@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useId, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
+import { CurrencyMenu } from '@/components/currency/currency-menu';
 import { DisplayPreferencesForm } from '@/components/display/display-preferences';
 import { Link, usePathname } from '@/i18n/navigation';
 import { isCurrent, PRIMARY_NAV } from '@/lib/site-nav';
@@ -97,6 +98,7 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
                   );
                 })}
               </ul>
+              <CurrencyMenu variant="list" className="mt-6" />
               <section aria-labelledby={displayTitleId} className="mt-6 flex flex-col">
                 <h2 id={displayTitleId} className="text-overline uppercase text-muted">
                   {display('title')}

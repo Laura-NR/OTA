@@ -1,10 +1,10 @@
 import type { InventoryItemDto } from '@ota/schemas';
 import { buttonClassName, Icon } from '@ota/ui';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
+import { PriceMessage } from '@/components/currency/price';
 import { Photo } from '@/components/display/photo';
 import { Link } from '@/i18n/navigation';
-import { formatMoney } from '@/lib/format';
 
 /**
  * A live catalogue item on a destination page (Destination board's
@@ -22,7 +22,6 @@ export function CatalogItemCard({
   const t = useTranslations('destinations.detail');
   const common = useTranslations('pages.common');
   const types = useTranslations('catalog.types');
-  const locale = useLocale();
   const photo = item.media[0];
 
   return (
@@ -49,9 +48,12 @@ export function CatalogItemCard({
         ) : null}
         <div className="mt-auto flex items-center justify-between gap-3 border-t pt-3">
           <p className="text-body-sm text-secondary">
-            {t('fromPrice', {
-              price: formatMoney(item.basePrice, item.currency, locale),
-            })}
+            <PriceMessage
+              namespace="destinations.detail"
+              message="fromPrice"
+              amount={item.basePrice}
+              currency={item.currency}
+            />
           </p>
           {builder ? (
             <Link

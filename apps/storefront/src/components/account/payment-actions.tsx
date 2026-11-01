@@ -1,10 +1,12 @@
 'use client';
 
+import type { ShownCurrency } from '@ota/domain';
 import { Alert, Button, Icon, cn } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type ChangeEvent } from 'react';
 
+import { useDisplayMoney } from '@/components/currency/currency-provider';
 import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 
 /** Up to 10 MB, as the API accepts. */
@@ -22,13 +24,22 @@ class TransferError extends Error {
   }
 }
 
-async function startTransfer(reservationId: string, plan?: Plan): Promise<string> {
+async function startTransfer(
+  reservationId: string,
+  displayCurrency: ShownCurrency,
+  plan?: Plan,
+): Promise<string> {
   let response: Response;
   try {
+    // The currency shown is kept when none is saved, so the deposit locks it (M9 C4).
     response = await fetch(`/api/ota/me/reservations/${reservationId}/payments`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ rail: 'OPEN_BANKING_SEPA', ...(plan ? { plan } : {}) }),
+      body: JSON.stringify({
+        rail: 'OPEN_BANKING_SEPA',
+        displayCurrency,
+        ...(plan ? { plan } : {}),
+      }),
     });
   } catch {
     throw new TransferError('', 'network');
@@ -51,6 +62,7 @@ async function startTransfer(reservationId: string, plan?: Plan): Promise<string
  */
 function useStartTransfer(reservationId: string, bookingCode: string) {
   const { track } = useTelemetry();
+  const display = useDisplayMoney();
   return async (plan?: Plan): Promise<string> => {
     const started = Date.now();
     // Sent at once: on success the browser leaves for the wire page.
@@ -64,7 +76,7 @@ function useStartTransfer(reservationId: string, bookingCode: string) {
       true,
     );
     try {
-      return await startTransfer(reservationId, plan);
+      return await startTransfer(reservationId, display.code, plan);
     } catch (error) {
       track('payment_failed', {
         booking_code: bookingCode,

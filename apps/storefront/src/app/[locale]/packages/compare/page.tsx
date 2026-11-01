@@ -16,7 +16,8 @@ import { Link } from '@/i18n/navigation';
 import { WRAPPING_BUTTON } from '@/lib/button';
 import { MAX_COMPARE } from '@/lib/compare-limits';
 import { getPageContent } from '@/lib/content';
-import { formatMoney } from '@/lib/format';
+import { getDisplayCurrency } from '@/lib/currency';
+import { browsingPrice } from '@/lib/display-money';
 import { getPackages } from '@/lib/packages';
 import { getFeatures } from '@/lib/features';
 import { getTenantConfig } from '@/lib/tenant';
@@ -41,6 +42,7 @@ export default async function ComparePage({
   const tenant = getTenantConfig();
   const features = await getFeatures();
   const locale = await getLocale();
+  const money = await getDisplayCurrency();
   const [{ trips: wanted = '' }, packages, content, t, tp, nav] = await Promise.all([
     searchParams,
     getPackages(),
@@ -107,7 +109,7 @@ export default async function ComparePage({
       key: 'price',
       label: t('rows.price'),
       values: trips.map((pkg) =>
-        t('from', { price: formatMoney(pkg.basePrice, pkg.currency, locale) }),
+        t('from', { price: browsingPrice(pkg.basePrice, pkg.currency, money, locale) }),
       ),
     },
   ];
@@ -150,7 +152,7 @@ export default async function ComparePage({
             slug: pkg.slug,
             name: pkg.name,
             length: length(pkg.durationDays),
-            price: formatMoney(pkg.basePrice, pkg.currency, locale),
+            price: browsingPrice(pkg.basePrice, pkg.currency, money, locale),
             mediaId: packageMediaId(pkg),
           }))}
           rows={rows}

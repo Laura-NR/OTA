@@ -12,9 +12,11 @@ import type { BadgeVariant } from '@ota/ui';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { useDisplayMoney } from '@/components/currency/currency-provider';
 import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
-import { formatMoney } from '@/lib/format';
+import { browsingPrice } from '@/lib/display-money';
+import { plainSpaces } from '@/lib/format';
 import type { DestinationView, ProvinceView } from '@/lib/geography';
 
 import { DestinationCard } from './destination-card';
@@ -92,6 +94,7 @@ export function DestinationsExplorer({
   const t = useTranslations('destinations');
   const format = useFormatter();
   const locale = useLocale();
+  const display = useDisplayMoney();
   const [layer, setLayer] = useState<MapLayer>('coverage');
   const [selected, setSelected] = useState<string | null>(initialProvince);
   const [theme, setTheme] = useState('all');
@@ -580,10 +583,13 @@ export function DestinationsExplorer({
                         {t('packagesCount', { count: destination.packageCount })} ·{' '}
                         {destination.fromPrice
                           ? t('fromPrice', {
-                              price: formatMoney(
-                                destination.fromPrice.amount,
-                                destination.fromPrice.currency,
-                                locale,
+                              price: plainSpaces(
+                                browsingPrice(
+                                  destination.fromPrice.amount,
+                                  destination.fromPrice.currency,
+                                  display,
+                                  locale,
+                                ),
                               ),
                             })
                           : t('onRequest')}

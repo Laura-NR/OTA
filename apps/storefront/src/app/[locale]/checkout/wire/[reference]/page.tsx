@@ -6,6 +6,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
 import { CopyButton } from '@/components/copy-button';
+import { ApproxPrice } from '@/components/currency/price';
 import { TrackEvent } from '@/components/telemetry/track-event';
 import { Link } from '@/i18n/navigation';
 import { apiFetch } from '@/lib/api';
@@ -223,6 +224,11 @@ export default async function WireCheckoutPage({
                 </span>
                 <span className="font-mono text-h2-compact text-default">{amount}</span>
               </div>
+              <ApproxPrice
+                amount={intent.amount}
+                currency={intent.currency}
+                className="-mt-2 self-end"
+              />
             </>
           ) : null}
           <Link

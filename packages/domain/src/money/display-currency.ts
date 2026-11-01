@@ -8,6 +8,9 @@
 
 export const BASE_CURRENCY = 'EUR';
 
+/** The visitor's display currency (C4a): essential, a display setting. */
+export const CURRENCY_COOKIE = 'ota_currency';
+
 export const DISPLAY_CURRENCIES = ['USD', 'CAD', 'GBP', 'CHF'] as const;
 export type DisplayCurrencyCode = (typeof DISPLAY_CURRENCIES)[number];
 

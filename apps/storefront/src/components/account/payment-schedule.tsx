@@ -2,6 +2,7 @@ import type { PaymentScheduleDto } from '@ota/schemas';
 import { Alert, Badge, type BadgeVariant } from '@ota/ui';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 
+import { ApproxPrice } from '@/components/currency/price';
 import { Link } from '@/i18n/navigation';
 import { getFeatures } from '@/lib/features';
 import { formatMoney } from '@/lib/format';
@@ -151,6 +152,13 @@ export async function PaymentSchedule({
               bookingCode={bookingCode}
               options={options}
             />
+            {schedule.options ? (
+              <ApproxPrice
+                amount={schedule.options.full.amount}
+                currency={schedule.currency}
+                lock={schedule.rateLock}
+              />
+            ) : null}
           </>
         )
       ) : (
@@ -171,6 +179,13 @@ export async function PaymentSchedule({
                     <span className="text-body font-medium text-default">
                       {t(`kinds.${instalment.kind}`)} · {money(instalment.amount)}
                     </span>
+                    {instalment.status === 'DUE' ? (
+                      <ApproxPrice
+                        amount={instalment.amount}
+                        currency={instalment.currency}
+                        lock={schedule.rateLock}
+                      />
+                    ) : null}
                     <span className="text-body-sm text-muted">
                       {instalment.status === 'PAID' && instalment.paidAt
                         ? t('statuses.PAID', { date: day(instalment.paidAt) })

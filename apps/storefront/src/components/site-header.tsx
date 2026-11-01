@@ -2,6 +2,7 @@ import { buttonClassName, cn } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 
+import { CurrencyMenu } from '@/components/currency/currency-menu';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { PrimaryNav } from '@/components/primary-nav';
 import { SiteMenu } from '@/components/site-menu';
@@ -45,6 +46,8 @@ export async function SiteHeader({
         <PrimaryNav />
         <div className="ml-auto flex items-center gap-2">
           <LocaleSwitcher />
+          {/* Below md the currency is in the drawer, so the header stays clean (DS-Mobile-Patterns). */}
+          <CurrencyMenu className="hidden md:block" />
           <Link
             href={signedIn ? '/account' : '/login'}
             className={cn(

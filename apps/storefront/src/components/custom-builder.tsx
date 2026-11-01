@@ -32,10 +32,13 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useDisplayMoney } from '@/components/currency/currency-provider';
+import { PricesSetInEur } from '@/components/currency/price';
 import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
 import type { CountryOption } from '@/lib/countries';
-import { formatMoney, plainSpaces } from '@/lib/format';
+import { browsingPrice } from '@/lib/display-money';
+import { plainSpaces } from '@/lib/format';
 
 const STEP_IDS = ['route', 'transport', 'stays', 'activities', 'summary'] as const;
 const DAY_MS = 86_400_000;
@@ -135,7 +138,10 @@ export function CustomBuilder({
   const [sent, setSent] = useState<SentRequest | null>(null);
 
   const currency = builder?.currency ?? 'EUR';
-  const money = (amount: number) => plainSpaces(formatMoney(amount, currency, locale));
+  // The estimate browses in the display currency (M9 C1a); the request stays in EUR.
+  const display = useDisplayMoney();
+  const money = (amount: number) =>
+    plainSpaces(browsingPrice(amount, currency, display, locale));
   const byCode = useMemo(
     () => new Map(provinces.map((province) => [province.code, province])),
     [provinces],
@@ -687,7 +693,7 @@ export function CustomBuilder({
                   label={activity.name}
                   description={t('activities.perPerson', {
                     amount: plainSpaces(
-                      formatMoney(activity.price, activity.currency, locale),
+                      browsingPrice(activity.price, activity.currency, display, locale),
                     ),
                   })}
                 />
@@ -943,6 +949,7 @@ export function CustomBuilder({
             ))}
           </dl>
           <p className="text-caption text-muted">{t('estimate.excludes')}</p>
+          <PricesSetInEur />
           {builder.status === 'placeholder' ? (
             <Alert variant="info">{t('estimate.sample')}</Alert>
           ) : null}

@@ -25,6 +25,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
+import { PricesSetInEur } from '@/components/currency/price';
 import { PackageCard } from '@/components/package-card';
 import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link, usePathname } from '@/i18n/navigation';
@@ -455,6 +456,7 @@ export function PackagesBrowser({
               {t('showing', { shown: shown.length, total: packages.length })}
             </p>
           </div>
+          <PricesSetInEur className="-mt-3" />
 
           {shown.length === 0 ? (
             <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
