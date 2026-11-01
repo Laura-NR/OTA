@@ -59,8 +59,16 @@ export interface FlaggedItem {
   alert: EscalationAlert;
 }
 
+/** The latest crossings' sentences; `seq` re-keys them so a repeat is read again. */
+export interface DeskAnnouncements {
+  red: string;
+  amber: string;
+  seq: number;
+}
+
 export interface DeskAlertsValue {
   rows: DispatchBoardRowDto[];
+  announced: DeskAnnouncements;
   now: Date;
   connected: boolean;
   amberThreshold: number;
@@ -127,8 +135,9 @@ export interface DeskAlertsProps {
  * which stays mounted while the person moves between desk pages, so the feed,
  * the cue and what it has already cued carry over. It seeds from the API, then
  * follows the `/ops` socket; amber and red are recomputed every second from
- * each offer's deadline. A screen reader hears each threshold crossing once:
- * red in an assertive region, amber in a polite one. The cue (`alertCue`)
+ * each offer's deadline. A screen reader hears each threshold crossing once
+ * (`AlertAnnouncements`, in the page's main): red in an assertive region,
+ * amber in a polite one. The cue (`alertCue`)
  * sounds a red alert until someone on the desk acknowledges it, amber once;
  * "Mute 15 min" silences the alerts already raised. Acknowledgements wait out
  * a 6 s undo here before they are recorded; both they and the mute are the
@@ -154,11 +163,11 @@ export function DeskAlerts({
   const track = useDeskTelemetry();
   /** Each item's alert at the last tick; null until the first look. */
   const lastAlerts = useRef<Map<string, EscalationAlert> | null>(null);
-  const [announced, setAnnounced] = useState<{
-    red: string;
-    amber: string;
-    seq: number;
-  }>({ red: '', amber: '', seq: 0 });
+  const [announced, setAnnounced] = useState<DeskAnnouncements>({
+    red: '',
+    amber: '',
+    seq: 0,
+  });
   const [mute, setMute] = useState(initialMute?.mute ?? null);
   const [muteBusy, setMuteBusy] = useState(false);
   const [alertError, setAlertError] = useState<string | null>(null);
@@ -478,6 +487,7 @@ export function DeskAlerts({
 
   const value: DeskAlertsValue = {
     rows,
+    announced,
     now,
     connected,
     amberThreshold,
@@ -499,12 +509,6 @@ export function DeskAlerts({
 
   return (
     <DeskAlertsContext.Provider value={value}>
-      <div role="alert" className="sr-only">
-        {announced.red ? <p key={announced.seq}>{announced.red}</p> : null}
-      </div>
-      <div role="status" className="sr-only">
-        {announced.amber ? <p key={announced.seq}>{announced.amber}</p> : null}
-      </div>
       {children}
       {pendingAck ? (
         <UndoToast

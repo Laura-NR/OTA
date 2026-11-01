@@ -195,3 +195,25 @@ export function ShellAlertStrip() {
     </div>
   );
 }
+
+/**
+ * The crossings' live regions (A-A11y 01), first in every shell page's main:
+ * red is assertive, amber polite; the ticking timers stay silent.
+ */
+export function AlertAnnouncements() {
+  const alerts = useDeskAlerts();
+  if (!alerts) {
+    return null;
+  }
+  const { announced } = alerts;
+  return (
+    <>
+      <div role="alert" className="sr-only">
+        {announced.red ? <p key={announced.seq}>{announced.red}</p> : null}
+      </div>
+      <div role="status" className="sr-only">
+        {announced.amber ? <p key={announced.seq}>{announced.amber}</p> : null}
+      </div>
+    </>
+  );
+}

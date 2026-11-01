@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import type { ServerSession } from '@/lib/api';
 import { brand } from '@/lib/brand';
 
-import { ShellAlertStrip } from './alert-strip';
+import { AlertAnnouncements, ShellAlertStrip } from './alert-strip';
 import { DeskShortcuts } from './desk-shortcuts';
 import { LocaleSwitcher } from './locale-switcher';
 import { MainNav } from './main-nav';
@@ -108,6 +108,7 @@ export async function AppShell({ user, agencyName, children }: AppShellProps) {
         </header>
         <SectionNav />
         <main id="main" tabIndex={-1} className="flex-1 bg-page p-6 focus:outline-none">
+          <AlertAnnouncements />
           <ShellAlertStrip />
           {children}
         </main>
