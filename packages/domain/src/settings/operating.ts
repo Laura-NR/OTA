@@ -1,4 +1,10 @@
 import type { DispatchTimers } from '../dispatch/policy';
+import {
+  DEFAULT_DISPLAY_CURRENCY_SWITCHES,
+  FX_SPREAD_PERCENT,
+  type DisplayCurrencySwitches,
+  type FxLockPoint,
+} from '../money/display-currency';
 import { UserRole } from '../reservation/status';
 import { DEFAULT_FEATURE_FLAGS, type FeatureFlagValues } from './features';
 import { STAFF_IDLE_LOCK_MINUTES } from './idle-lock';
@@ -16,7 +22,7 @@ import { OVERRIDE_EXPIRY_HOURS } from './overrides';
 export const ADVISORY_DUAL_APPROVAL_LEVELS = ['CAUTION', 'CRITICAL'] as const;
 export type AdvisoryDualApprovalLevel = (typeof ADVISORY_DUAL_APPROVAL_LEVELS)[number];
 
-export interface OperatingThresholds extends FeatureFlagValues {
+export interface OperatingThresholds extends FeatureFlagValues, DisplayCurrencySwitches {
   /** Minutes a worker has to accept a standard offer. */
   dispatchTimeoutMinutes: number;
   /** Minutes for an offer when arrival is within the short-notice window. */
@@ -55,6 +61,10 @@ export interface OperatingThresholds extends FeatureFlagValues {
   staffNewDeviceEmail: boolean;
   /** Hours a permission override lasts once approved (`docs/schema-m9-permission-overrides.md` O5). */
   overrideExpiryHours: number;
+  /** Percent added to the reference rate for display currencies (`docs/schema-m9-display-currencies.md` C5). */
+  fxSpreadPercent: number;
+  /** When a booking locks its display rate (C6). */
+  fxLockAt: FxLockPoint;
 }
 
 export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
@@ -77,6 +87,9 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   staffIdleLockMinutes: STAFF_IDLE_LOCK_MINUTES,
   staffNewDeviceEmail: true,
   overrideExpiryHours: OVERRIDE_EXPIRY_HOURS.default,
+  ...DEFAULT_DISPLAY_CURRENCY_SWITCHES,
+  fxSpreadPercent: FX_SPREAD_PERCENT.default,
+  fxLockAt: 'DEPOSIT',
   ...DEFAULT_FEATURE_FLAGS,
 };
 
