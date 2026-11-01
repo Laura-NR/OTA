@@ -63,6 +63,7 @@ export const THRESHOLD_GROUPS: readonly {
     fields: [
       { key: 'staffPasskeysRequired', unit: 'switch' },
       { key: 'staffIdleLockMinutes', unit: 'min', min: 5, max: 240 },
+      { key: 'staffNewDeviceEmail', unit: 'switch' },
     ],
   },
   {

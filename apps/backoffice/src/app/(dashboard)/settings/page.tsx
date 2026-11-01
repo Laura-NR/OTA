@@ -692,6 +692,12 @@ async function SecurityTab({ locale }: { locale: string }) {
                       ]
                     : []),
                   [t('recovery'), t('recoveryValue')],
+                  [
+                    t('newDeviceEmail'),
+                    thresholds.staffNewDeviceEmail
+                      ? t('newDeviceEmailOn')
+                      : t('newDeviceEmailOff'),
+                  ],
                 ]}
               />
             ) : (
@@ -701,6 +707,12 @@ async function SecurityTab({ locale }: { locale: string }) {
               {t('recoveryNote')}{' '}
               <Link href="/settings?tab=users" className="text-link underline">
                 {t('recoveryLink')}
+              </Link>
+            </p>
+            <p className="text-caption text-muted">
+              {t('newDeviceNote')}{' '}
+              <Link href="/settings?tab=thresholds" className="text-link underline">
+                {t('newDeviceLink')}
               </Link>
             </p>
             <p className="text-caption text-muted">{t('deferred')}</p>
