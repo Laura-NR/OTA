@@ -67,5 +67,5 @@ export function signInDevicePlugin(check: SignInDeviceCheck) {
         },
       ],
     },
-  } as const;
+  };
 }
