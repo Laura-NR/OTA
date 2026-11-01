@@ -468,6 +468,9 @@ model User {
   recoveryCodes       StaffRecoveryCode[] @relation("StaffRecoveryCodeUser")
   recoveryCodesIssued StaffRecoveryCode[] @relation("StaffRecoveryCodeIssuedBy")
   knownDevices        StaffKnownDevice[]
+  overrides           PermissionOverride[] @relation("PermissionOverrideUser")
+  overridesDecided    PermissionOverride[] @relation("PermissionOverrideDecidedBy")
+  overridesEnded      PermissionOverride[] @relation("PermissionOverrideEndedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -1809,6 +1812,42 @@ model StaffKnownDevice {
 
   @@index([userId, lastSeenAt])
   @@map("staff_known_devices")
+}
+
+/// A time-limited grant of one permission-matrix row to one staff member
+/// (docs/schema-m9-permission-overrides.md).
+model PermissionOverride {
+  id           String                  @id @default(uuid()) @db.Uuid
+  userId       String                  @map("user_id") @db.Uuid
+  /// A matrix row key from @ota/domain (`payments`, `catalog`, …).
+  capability   String
+  reason       String
+  state        PermissionOverrideState @default(REQUESTED)
+  requestedAt  DateTime                @default(now()) @map("requested_at")
+  decidedById  String?                 @map("decided_by_id") @db.Uuid
+  decidedAt    DateTime?               @map("decided_at")
+  decisionNote String?                 @map("decision_note")
+  /// Set at approval: decidedAt + overrideExpiryHours (O5).
+  expiresAt    DateTime?               @map("expires_at")
+  /// Ended before expiresAt by a Super Admin, the holder, or a reset (O5).
+  endedById    String?                 @map("ended_by_id") @db.Uuid
+  endedAt      DateTime?               @map("ended_at")
+  endNote      String?                 @map("end_note")
+
+  user      User  @relation("PermissionOverrideUser", fields: [userId], references: [id], onDelete: Cascade)
+  decidedBy User? @relation("PermissionOverrideDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  endedBy   User? @relation("PermissionOverrideEndedBy", fields: [endedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, capability, state])
+  @@map("permission_overrides")
+}
+
+/// Lapsed requests and expired overrides are derived from the clock, not stored.
+enum PermissionOverrideState {
+  REQUESTED
+  APPROVED
+  DECLINED
+  ENDED
 }
 
 /// M10: an event the concierge can request seats for (D1, D2).
