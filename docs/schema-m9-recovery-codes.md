@@ -1,6 +1,7 @@
 # M9 staff recovery codes: policy and schema diff for review
 
-**Status:** **Approved 2026-11-01 as recommended (R1a–R5a, with the migration).**
+**Status:** **Approved 2026-11-01 as recommended (R1a–R5a, with the migration) and built the
+same day** (§7).
 **Date:** 2026-11-01
 **Scope:** the recovery codes deferred under D5 in `docs/schema-m9-settings.md` ("a phone-issued
 code needs its own security review") and again under P5 in `docs/schema-m9-passkeys.md`, which
@@ -188,3 +189,45 @@ model User {
 
 The relation fields on `User` add no column. The migration creates the table, its index and
 the two foreign keys; Prisma generates the SQL.
+
+## 7. As built (2026-11-01)
+
+- **Migration** `20261101114418_staff_recovery_codes` (`12a5487`): the table of §6, no
+  backfill.
+- **Domain** (`0ce23d6`): `packages/domain/src/settings/recovery-codes.ts`
+  (`recoveryCodeFromBytes`, `formatRecoveryCode`, `normalizeRecoveryCode` reading I, L and O
+  as 1, 1 and 0, `recoveryCodeExpiresAt`, `recoveryCodeState`, `recoveryFailureWithdraws`,
+  `isRecoverySessionOver`); `passkeyRefusal` holds a `recovery_code` session to setup whether
+  the switch is on or off. Schemas (`406dd0a`): `issueRecoveryCodeSchema`,
+  `recoveryCodeIssuedSchema`, `StaffUserDto.recoveryCodeOpenUntil` and
+  `PasskeyStatusDto.recoverySession`.
+- **Auth** (`d603ac0`): `packages/auth/src/recovery-code.ts`, a Better Auth plugin endpoint
+  `POST /sign-in/recovery-code` that asks the injected `RecoveryCodeCheck.redeem`, then
+  creates the session and its cookie; every refusal is 401 `RECOVERY_CODE_INVALID` with one
+  message. `signInMethodForPath` records `recovery_code`. Tested against Better Auth's memory
+  adapter.
+- **API** (`af58671`): `RecoveryCodesService.redeem` (`apps/api/src/auth/`) compares SHA-256
+  hashes in constant time, marks a use only once under a race, counts wrong tries and
+  withdraws at the fifth (audited without an actor). `POST /staff/:id/recovery-code`
+  (`Cache-Control: no-store`) and `POST /staff/:id/recovery-code/withdraw` (409 when none is
+  open), Super Admin only, in the RBAC matrix. `sessionRefusal` ends a recovery session 15
+  minutes after sign-in, so the guard, the sockets and Better Auth's gate all refuse it.
+  Emails (`5440199`): `recovery_issued` and `recovery_used` kinds of the passkey change
+  email.
+- **Desk** (`4fdf97a`, words `382feaa`): R6, resolved in the ADR 0006 amendment of
+  2026-11-01.
+- **e2e** (`e2e/recovery-codes.spec.ts`): a lost passkey removed by the issue, both emails in
+  Mailpit, a wrong code then the right one typed in lower case with spaces, the setup-only
+  session refused elsewhere with the switch off, a passkey added and used, a second use
+  refused, five wrong tries, a withdrawal, the Security rule, and axe on the dialog and the
+  login form.
+
+**Differences from §5:**
+- There is no sign-in body schema in `@ota/schemas`: the Better Auth endpoint checks its own
+  two strings (and their lengths) before it asks the API.
+- The 15-minute limit on a recovery session is a rule on the session's sign-in time, not a
+  short `expiresAt`: Better Auth's refresh would push a short expiry back out to 7 days on
+  the next read.
+- The axe checks sit in the recovery spec rather than `accessibility.spec.ts`, because the
+  dialog needs a code issued and the login form needs the code field opened.
+- Issuing for a deactivated account is refused (409); reactivate first.

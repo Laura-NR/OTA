@@ -1419,3 +1419,43 @@ only on A-Dashboard; where they were silent, the build decided:
   the storefront titles them («Únete a nuestra red», « Rejoignez notre réseau »).
 - **Not built:** `A` on a booking page's own services (the strip's buttons cover it), and a
   per-page choice to hide the strip.
+
+## Amendment, 2026-11-01: staff recovery codes, and `A` on a booking's services
+
+The owner chose recovery codes next (M9 D5), approved `docs/schema-m9-recovery-codes.md` as
+recommended (R1a–R5a, migration `20261101114418_staff_recovery_codes`), and added two small
+items. The boards give the rule (A-Settings › Security "Recovery", A-Login's "Lost access to
+your email?" line, the permission matrix's "Users, roles, recovery codes" for Super Admins)
+but no screen for issuing or using a code. The build resolved them with existing components
+and tokens:
+
+- **Where a code is issued.** On the person's row in Users & roles, as A-Login's line says
+  ("in Settings › Users"): "Issue recovery code…" (secondary, small) opens a DS 06 dialog
+  (small). Step one is a warning alert naming what goes (the person's passkeys, counted, and
+  every session) and the reason field, with Cancel and a destructive "Issue code". Step two
+  shows the code once, in the mono face at the h3 size on the page surface inside a bordered
+  box, then "Read it to <name> by phone or in person. It works once, until <time>, and is not
+  shown again." and Done. Closing the dialog forgets the code. Security keeps the board's
+  sentence and adds the rule as a fact ("One-time code from a Super Admin, 15 minutes") with a
+  link "Issue recovery code…" to Users & roles, since a code needs a person. The board's
+  "Revoke all sessions of a user…" there is the row's existing "Sign out everywhere".
+- **An open code** shows on the row as a caption, "Recovery code open until 14:32" (desk
+  time, Havana), with a tertiary "Withdraw code".
+- **Using a code.** On the desk login, under a rule after the email form: the board's line,
+  then a tertiary "Use a recovery code" that reveals one field, "Recovery code" (mono,
+  one-time-code autocomplete, a hint), which signs in with the work email typed above; the
+  submit is secondary and says what is missing while the email is empty. A refusal shows
+  beside it, the same words for every cause. The session goes to `/passkeys`, which opens
+  with an info alert ("You signed in with a recovery code…") and, once the passkey is added,
+  "Your new passkey is ready. Sign in with it to use the desk."
+- **Emails.** Two more kinds in the passkey change email (same shell and button): "A
+  recovery code was issued…" naming the Super Admin, and "Your recovery code was used",
+  in the tenant's primary language like the other staff emails.
+- **The permission matrix** row reads "Users, roles, invitations and recovery codes".
+- **`A` on a booking page's own services** (listed as not built on 2026-10-31): each red
+  service row gets a secondary "Acknowledge" (named "Acknowledge red alert · <service> ·
+  <code>") for ops write roles, before Re-dispatch, and `A` with focus in the row presses it.
+  It acknowledges that service only, with the same 6 s undo; focus stays on the row's
+  Re-dispatch. The shortcut list's "Where" for `A` now reads "Dashboard matrix, a booking's
+  services".
+- **Applications' empty state** names `/join`, the storefront's address since the redirect.

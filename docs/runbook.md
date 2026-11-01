@@ -309,6 +309,16 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
 - Lost device: another Super Admin uses "Reset passkeys" on the user's row (a
   reason is required). It deletes the passkeys, signs the user out and emails
   them; they sign in by link and set up a new one. Nobody resets their own.
+- Lost mailbox (and no usable passkey): another Super Admin checks who is asking
+  (a number they already know, or in person) and uses "Issue recovery code…" on the
+  row, with a reason (`docs/schema-m9-recovery-codes.md`). The code shows once; read
+  it out. It works once, for 15 minutes; issuing it removes the person's passkeys
+  and signs them out. They type it under "Use a recovery code" on the desk login
+  with their work email, which only lets them set up a passkey (for 15 minutes),
+  then sign in with it. Five wrong codes withdraw it; "Withdraw code" on the row
+  does the same. Issue, use, withdrawal and the wrong-try withdrawal are audited
+  (`staff.recovery_code_*`, `auth.recovery_code_*`) and the person is emailed.
+  A Super Admin who lost both needs a second Super Admin; nobody issues their own.
 - Last Super Admin with no passkey left: set `STAFF_PASSKEYS_OVERRIDE=off` on the
   API and restart. The rule is suspended (the API warns at every start), the
   Super Admin signs in by link and enrolls, then remove the variable and restart.
