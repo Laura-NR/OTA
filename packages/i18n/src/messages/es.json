@@ -1180,7 +1180,7 @@
           "view": "Ver",
           "no": "No"
         },
-        "note": "Solo lectura. Las excepciones por acción con motivo y vencimiento aún no existen.",
+        "note": "Soporte Administrativo puede pedir actuar en una fila marcada «Ver», salvo los umbrales, con un motivo. Un Super Admin la aprueba y termina tras la duración de excepción fijada en Aprobaciones y umbrales. Una excepción nunca cuenta como aprobación, y cada cambio hecho con ella queda en el registro de auditoría.",
         "rows": {
           "bookings": {
             "label": "Reservas y cambios de estado",
@@ -1238,7 +1238,40 @@
             "label": "Usuarios, roles, invitaciones y códigos de recuperación",
             "note": "una invitación de Super Admin requiere un segundo Super Admin"
           }
-        }
+        },
+        "requestsTitle": "Solicitudes de excepción",
+        "requestsEmpty": "No hay solicitudes pendientes.",
+        "activeTitle": "Excepciones activas",
+        "activeEmpty": "No hay ninguna excepción activa.",
+        "recentTitle": "Excepciones de los últimos 30 días",
+        "recentEmpty": "Ninguna en los últimos 30 días.",
+        "person": "Persona",
+        "row": "Permiso",
+        "reason": "Motivo",
+        "asked": "Pedida",
+        "until": "Hasta",
+        "status": "Estado",
+        "act": "Acción",
+        "approvedBy": "aprobada por {name}",
+        "by": "por {name}",
+        "decisionNote": "Nota (opcional)",
+        "noteFor": "Nota para {name}",
+        "approve": "Aprobar",
+        "decline": "Rechazar",
+        "end": "Terminar",
+        "approveFor": "Aprobar la excepción de {name}",
+        "declineFor": "Rechazar la excepción de {name}",
+        "endFor": "Terminar la excepción de {name}",
+        "statuses": {
+          "REQUESTED": "Pendiente",
+          "LAPSED": "Caducada",
+          "ACTIVE": "Activa",
+          "EXPIRED": "Vencida",
+          "DECLINED": "Rechazada",
+          "ENDED": "Terminada"
+        },
+        "failed": "No se guardó la decisión.",
+        "loadError": "No se pudieron cargar las excepciones."
       },
       "locales": "Idiomas",
       "thresholds": {
@@ -1249,7 +1282,7 @@
         "value": "Vigente",
         "default": "Por defecto",
         "usedBy": "Se usa en",
-        "notEnforced": "Aún no se aplican, así que no se guardan: el plazo de respuesta del viajero, la revisión de descuentos, el margen mínimo y el vencimiento de excepciones.",
+        "notEnforced": "Aún no se aplican, así que no se guardan: el plazo de respuesta del viajero, la revisión de descuentos y el margen mínimo.",
         "changeTitle": "Cambiar umbrales",
         "changeDescription": "Un Super Admin propone; un segundo Super Admin aplica o rechaza. Solo una propuesta espera a la vez.",
         "superOnly": "Solo los Super Admin cambian los umbrales.",
@@ -1328,7 +1361,8 @@
           "customItineraryBuilder": "Creador de viajes a medida",
           "instantBooking": "Etiqueta de reserva inmediata",
           "directBankTransferRail": "Carril de transferencia bancaria",
-          "creditCardGatewayRail": "Carril de tarjeta"
+          "creditCardGatewayRail": "Carril de tarjeta",
+          "overrideExpiryHours": "Duración de una excepción"
         },
         "used": {
           "dispatchTimeoutMinutes": "Despacho, Panel, Reserva",
@@ -1355,7 +1389,8 @@
           "customItineraryBuilder": "El creador a medida: la página, sus enlaces y las nuevas solicitudes",
           "instantBooking": "La etiqueta «Inmediata» o «Solicitud de reserva» en los viajes",
           "directBankTransferRail": "Nuevos enlaces de transferencia, mesa y viajero",
-          "creditCardGatewayRail": "Nuevos enlaces de tarjeta en la mesa"
+          "creditCardGatewayRail": "Nuevos enlaces de tarjeta en la mesa",
+          "overrideExpiryHours": "Cada excepción de permisos, desde su aprobación"
         },
         "passkeyWarning": "{count, plural, =0 {Todo el personal activo tiene una llave de acceso.} one {# persona del personal activo aún no tiene llave de acceso y deberá configurarla en su próximo acceso.} other {# personas del personal activo aún no tienen llave de acceso y deberán configurarla en su próximo acceso.}}"
       },
@@ -2971,6 +3006,26 @@
         "text": "La página de viajes a medida de la web está cerrada y se rechazan las nuevas solicitudes e itinerarios a medida. Las solicitudes y propuestas que ya están aquí se pueden seguir trabajando."
       },
       "switchOn": "Dos Super Admins pueden volver a activarlo en Funciones, dentro de <link>Aprobaciones y umbrales</link>."
+    },
+    "overrides": {
+      "notice": "Su rol puede ver «{row}», pero no actuar aquí.",
+      "request": "Pedir una excepción",
+      "dialogTitle": "Pedir una excepción",
+      "dialogDescription": "Para «{row}». Un Super Admin la aprueba o la rechaza; una vez aprobada, termina a las {hours} h. Nunca cuenta como una aprobación.",
+      "reason": "Por qué la necesita",
+      "reasonHint": "Todos los Super Admin lo leen en el correo de la solicitud.",
+      "send": "Enviar la solicitud",
+      "cancel": "Cancelar",
+      "close": "Cerrar",
+      "pending": "Excepción para «{row}» pedida el {time}, a la espera de un Super Admin.",
+      "withdraw": "Retirar la solicitud",
+      "active": "Excepción para «{row}» activa hasta el {time}. Cada cambio que haga con ella queda en el registro de auditoría.",
+      "giveBack": "Devolverla",
+      "declined": "{name} rechazó su última solicitud.",
+      "declinedNote": "{name} rechazó su última solicitud: {note}",
+      "ended": "Su última excepción para esto terminó.",
+      "lapsed": "Su última solicitud caducó: ningún Super Admin respondió en 24 horas.",
+      "failed": "No se pudo completar."
     }
   },
   "conditions": {

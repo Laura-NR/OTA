@@ -1180,7 +1180,7 @@
           "view": "Lecture",
           "no": "Non"
         },
-        "note": "Lecture seule. Les dérogations par action avec motif et expiration n'existent pas encore.",
+        "note": "Le support administratif peut demander à agir sur une ligne marquée « Lecture », sauf les seuils, avec un motif. Un Super Admin l'approuve, et elle prend fin après la durée de dérogation fixée dans Approbations et seuils. Une dérogation ne compte jamais comme une approbation, et chaque modification faite grâce à elle figure au journal d'audit.",
         "rows": {
           "bookings": {
             "label": "Réservations et changements de statut",
@@ -1238,7 +1238,40 @@
             "label": "Utilisateurs, rôles, invitations et codes de récupération",
             "note": "une invitation Super Admin nécessite un second Super Admin"
           }
-        }
+        },
+        "requestsTitle": "Demandes de dérogation",
+        "requestsEmpty": "Aucune demande en attente.",
+        "activeTitle": "Dérogations actives",
+        "activeEmpty": "Aucune dérogation en cours.",
+        "recentTitle": "Dérogations des 30 derniers jours",
+        "recentEmpty": "Aucune ces 30 derniers jours.",
+        "person": "Personne",
+        "row": "Permission",
+        "reason": "Motif",
+        "asked": "Demandée",
+        "until": "Jusqu'au",
+        "status": "Statut",
+        "act": "Action",
+        "approvedBy": "approuvée par {name}",
+        "by": "par {name}",
+        "decisionNote": "Note (facultative)",
+        "noteFor": "Note pour {name}",
+        "approve": "Approuver",
+        "decline": "Refuser",
+        "end": "Terminer",
+        "approveFor": "Approuver la dérogation de {name}",
+        "declineFor": "Refuser la dérogation de {name}",
+        "endFor": "Terminer la dérogation de {name}",
+        "statuses": {
+          "REQUESTED": "En attente",
+          "LAPSED": "Sans réponse",
+          "ACTIVE": "Active",
+          "EXPIRED": "Échue",
+          "DECLINED": "Refusée",
+          "ENDED": "Terminée"
+        },
+        "failed": "La décision n'a pas été enregistrée.",
+        "loadError": "Impossible de charger les dérogations."
       },
       "locales": "Langues",
       "thresholds": {
@@ -1249,7 +1282,7 @@
         "value": "En vigueur",
         "default": "Par défaut",
         "usedBy": "Utilisé par",
-        "notEnforced": "Pas encore appliqués, donc pas enregistrés : le délai de réponse du voyageur, la revue des remises, la marge minimale et l'expiration des dérogations.",
+        "notEnforced": "Pas encore appliqués, donc pas enregistrés : le délai de réponse du voyageur, la revue des remises et la marge minimale.",
         "changeTitle": "Modifier les seuils",
         "changeDescription": "Un Super Admin propose ; un second Super Admin applique ou rejette. Une seule proposition attend à la fois.",
         "superOnly": "Seuls les Super Admin modifient les seuils.",
@@ -1328,7 +1361,8 @@
           "customItineraryBuilder": "Créateur de voyages sur mesure",
           "instantBooking": "Mention de réservation immédiate",
           "directBankTransferRail": "Rail de virement bancaire",
-          "creditCardGatewayRail": "Rail carte"
+          "creditCardGatewayRail": "Rail carte",
+          "overrideExpiryHours": "Durée d'une dérogation"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
@@ -1355,7 +1389,8 @@
           "customItineraryBuilder": "Le créateur sur mesure : la page, ses liens et les nouvelles demandes",
           "instantBooking": "La mention « Immédiat » ou « Demande de réservation » sur les voyages",
           "directBankTransferRail": "Nouveaux liens de virement, bureau et voyageur",
-          "creditCardGatewayRail": "Nouveaux liens carte au bureau"
+          "creditCardGatewayRail": "Nouveaux liens carte au bureau",
+          "overrideExpiryHours": "Chaque dérogation, à partir de son approbation"
         },
         "passkeyWarning": "{count, plural, =0 {Tout le personnel actif a une clé d'accès.} one {# membre actif du personnel n'a pas encore de clé d'accès et devra en configurer une à la prochaine connexion.} other {# membres actifs du personnel n'ont pas encore de clé d'accès et devront en configurer une à la prochaine connexion.}}"
       },
@@ -2971,6 +3006,26 @@
         "text": "La page des voyages sur mesure du site est fermée et les nouvelles demandes et itinéraires sur mesure sont refusés. Les demandes et propositions déjà présentes peuvent toujours être traitées."
       },
       "switchOn": "Deux Super Admins peuvent le réactiver sous Fonctions, dans <link>Approbations et seuils</link>."
+    },
+    "overrides": {
+      "notice": "Votre rôle peut consulter « {row} », mais pas agir ici.",
+      "request": "Demander une dérogation",
+      "dialogTitle": "Demander une dérogation",
+      "dialogDescription": "Pour « {row} ». Un Super Admin l'approuve ou la refuse ; une fois approuvée, elle prend fin après {hours} h. Elle ne compte jamais comme une approbation.",
+      "reason": "Pourquoi vous en avez besoin",
+      "reasonHint": "Chaque Super Admin le lit dans l'e-mail de la demande.",
+      "send": "Envoyer la demande",
+      "cancel": "Annuler",
+      "close": "Fermer",
+      "pending": "Dérogation pour « {row} » demandée le {time}, en attente d'un Super Admin.",
+      "withdraw": "Retirer la demande",
+      "active": "Dérogation pour « {row} » active jusqu'au {time}. Chaque modification faite grâce à elle figure au journal d'audit.",
+      "giveBack": "La rendre",
+      "declined": "{name} a refusé votre dernière demande.",
+      "declinedNote": "{name} a refusé votre dernière demande : {note}",
+      "ended": "Votre dernière dérogation pour ceci a pris fin.",
+      "lapsed": "Votre dernière demande a expiré : aucun Super Admin n'a répondu en 24 heures.",
+      "failed": "Cela n'a pas abouti."
     }
   },
   "conditions": {
