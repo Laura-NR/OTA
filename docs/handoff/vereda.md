@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-10-31 23:00
+# Handoff — vereda — updated 2026-11-01 15:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -9,15 +9,44 @@ reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follo
 server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
-page) and ADR 0007 (worker app). Staff passkeys:
+page, on 2026-11-01 the staff recovery codes) and ADR 0007 (worker app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
-`docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
+`docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
+`docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-01: staff recovery codes** (M9 D5), the owner's pick, approved R1a–R5a on
+  migration `20261101114418_staff_recovery_codes` (`30b730d`…`946bd20`; ADR 0006 amendment of that
+  day). No dependency or spend. The board's model, not self-service backup codes: a Super
+  Admin issues a one-time code for another staff member.
+  - Rules `packages/domain/src/settings/recovery-codes.ts`: 12 Crockford base-32 characters
+    (`XXXX-XXXX-XXXX`, I/L/O typed read as 1/1/0), open 15 min, the fifth wrong try
+    withdraws it; a `recovery_code` session is setup-only whatever the passkey switch says
+    (`passkeyRefusal`) and ends 15 min after sign-in (`isRecoverySessionOver`, read by
+    `sessionRefusal`, so guard, sockets and Better Auth's gate all refuse it).
+  - Auth: `packages/auth/src/recovery-code.ts`, Better Auth plugin endpoint
+    `POST /api/auth/sign-in/recovery-code` `{email, code}` → asks
+    `RecoveryCodesService.redeem` (`apps/api/src/auth/`), then creates the session and
+    cookie. Every refusal is 401 `RECOVERY_CODE_INVALID`. It sits in the strict auth rate
+    limit (`/api/auth/sign-in` prefix).
+  - API: `POST /staff/:id/recovery-code` (Super Admin, never oneself, not deactivated; a
+    reason; `no-store`) returns the code once, withdraws an open one, deletes the person's
+    passkeys and sessions, audits `staff.recovery_code_issued`, emails
+    `recovery_issued`; `POST /staff/:id/recovery-code/withdraw` (409 if none open). Use →
+    `auth.recovery_code_used` + email; fifth wrong try → `auth.recovery_code_voided` (no
+    actor). Both routes in the RBAC matrix. `StaffUserDto.recoveryCodeOpenUntil`,
+    `PasskeyStatusDto.recoverySession`.
+  - Desk: Users & roles "Issue recovery code…" dialog (reason, warning, the code once) and
+    "Recovery code open until …" + "Withdraw code" on the row; the login's "Use a recovery
+    code" field (with the email typed above) → `/passkeys` with a note; Security's
+    "Recovery" fact and the board's sentence. en/es/fr. e2e `e2e/recovery-codes.spec.ts`.
+  - Also: `A` on a booking page's service row acknowledges that service's red alert
+    (`booking-services.tsx`, `acknowledge(row, onlyItemId)` in `DeskAlerts`; e2e in
+    `desk-alerts.spec.ts`, owns E2EACK04), and the Applications empty state names `/join`.
 - **2026-10-31 (evening): the desk's alerts on every page, and the queues' flag notices**,
   the owner's pick (`8d8d461`…`432c8af`; ADR 0006 amendment of that day). No migration,
   dependency, route or spend.
@@ -229,9 +258,10 @@ events (T-Events)".
   (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
-  deferred items (recovery codes, permission overrides, display currencies, manifest editing
+  deferred items (permission overrides, display currencies, manifest editing
   beyond the flags, the IP allowlist, new-device email); changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
-  desk's `/` (no desk search) and `A` on a booking page's own services; Ops Lite;
+  desk's `/` (no desk search); self-service backup codes and a no-deploy recovery for the
+  last Super Admin; Ops Lite;
   a real screen-reader run; the custom date-range picker (owner: native fields).
 - **Placeholders:** M4 terms, card fee 0 %, legal texts, OFAC categories, pricing samples, the
   deposit's refundability and proof retention, the M5 sample terms, the builder rates, the M8
@@ -239,34 +269,38 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-10-31/11-01, the desk's alerts on every page, dev stack stopped for the build)
-- `pnpm lint` and `pnpm format:check` green.
+## Verified (2026-11-01, staff recovery codes and `A` on a booking's services, dev stack stopped for the build)
+- `pnpm lint` green; `pnpm format:check` green after `booking-services.tsx` was formatted
+  (`b630fe6`; the first run flagged it).
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1064 passed / 28 skipped**, 30/30 tasks, 0 cached (no new
-  unit tests: the cue's rules were already pure and tested; i18n key parity green).
+- `TURBO_FORCE=true pnpm test` **1097 passed / 28 skipped**, 30/30 tasks, 0 cached (new:
+  domain recovery rules, the auth endpoint against Better Auth's memory adapter, the
+  email kinds, the API issue/withdraw/redeem and the recovery session policy).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **137 passed, 2 failed, 3 skipped** in 50.5 min.
-  - `e2e/desk-keyboard.spec.ts:104` was this batch's: the live regions had moved out of
-    `<main>`. Fixed (`432c8af`); then `desk-keyboard`, `desk-alerts` and `accessibility`
-    rerun on fresh servers: **15/15**.
-  - `e2e/responsive.spec.ts:118` (ds07-768, storefront with larger text) timed out at
-    `page.goto`: the memory trap (storefront `next dev` 5.1–5.7 GB, answering no page).
-    After `kill -9` by port PID and deleting `.next`, rerun alone: **1/1**.
+- `pnpm e2e` (`.next` deleted first): **141 passed, 2 failed, 3 skipped** in 57.1 min.
+  - `e2e/passkeys.spec.ts:201` was this batch's: the recovery dialog kept its "Reason" field
+    in the row while closed, beside Reset passkeys' own. Fixed (`946bd20`); then
+    `passkeys` and `recovery-codes` on fresh servers: **8/8**.
+  - `e2e/responsive.spec.ts:110` (ds07-768) timed out at `page.goto`: the memory trap
+    (storefront `next dev` 5.9 GB, the desk's 5.6 GB). After `kill -9` by port PID and
+    deleting `.next`, rerun alone: **2/2**.
   - Skips: the desk at 320/375/414.
-- Before the full run, against the dev stack: `desk-alerts` **4/4** (two new),
-  `feature-flags` **3/3**.
+- Before the full run, on fresh servers: `recovery-codes` **4/4** and `desk-alerts`
+  **5/5** (one new).
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Browser (dev stack, Chromium, a throwaway spec with two red bookings and both flags off
-  via two Super Admins, then restored and deleted) at 390, 1024 and 1280 on Payments,
-  Applications, Custom proposals and the dashboard: no sideways scroll; the strip is
-  error 600 / white with 32 px buttons (as on the dashboard), 352 px tall at 390 with two
-  red bookings, 148 px from 1024; the notice is info 100 / info 700 with an underlined link.
-  Screenshots checked. The announcer fix (sr-only regions only) came after this check.
-- Not run: a real screen reader; the announcements heard on a page other than the dashboard
-  (the e2e reads the region on the dashboard only).
+- Migration `20261101114418_staff_recovery_codes` applied to the dev DB;
+  `prisma migrate diff` from the database to the schema: no difference.
+- Browser (the owner's dev stack, a throwaway spec, deleted, with its own users and a red
+  booking, cleaned up) at 390, 1024 and 1280: the issue dialog (reason step and code step),
+  the row's open-code line, Security, the booking's Acknowledge, the login's code field and
+  `/passkeys` after a code. No sideways scroll anywhere; the code is plexMono 24 px; the
+  dialog is a bottom sheet at 390 and 640 px wide from 1024; the code field is mono 16 px.
+  Screenshots checked.
+- Not run: a real screen reader; the Applications empty state (`/join`) in a browser (it
+  shows only with no applications).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -312,6 +346,12 @@ events (T-Events)".
   and every action, not what the last page showed (developer tools could read its DOM).
   The default 30 minutes applies to every staff session not marked as own device, including
   an ops desk watched without input.
+- **Recovery codes (2026-11-01):** the code is spoken, so the Super Admin's identity check
+  (a known number, in person) is the real control; the email to the work address only
+  helps if the real person can still read it. A recovery session's failed-email lookup
+  returns faster than a known staff email's (one query fewer), a small timing signal behind
+  the rate limit. The last Super Admin who loses mailbox and passkey still needs a deploy
+  or a database change (runbook). Wrong tries count only while a code is open.
 - **Alerts on every page (2026-10-31):** each full load of a desk page now also reads the
   board, the mute and the thresholds in the layout (the dashboard reads the first two again
   for its own render). A pending acknowledgement is recorded when its toast runs out, or
@@ -327,6 +367,20 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Closed dialogs and locators (2026-11-01):** a closed native `<dialog>` still holds its
+  children in the DOM, and Playwright's `getByLabel` inside a table row finds them, so a
+  second "Reason" field in the row broke `passkeys.spec.ts`' strict locator. Render a row
+  dialog's form only while it is open. The `next dev` memory trap now also hits the desk
+  (5.6 GB and no answer after the full e2e and a later browser check on the same servers):
+  restart the dev servers (kill by port PID, delete `.next`) before a browser check that
+  follows an e2e run.
+- **Recovery codes (2026-11-01):** a Better Auth session's `expiresAt` cannot hold a short
+  limit: its refresh pushes it back to 7 days on the next read, so time limits on a kind of
+  session go in `sessionRefusal` on `createdAt`. `pnpm --filter @ota/db exec prisma format`
+  reformats the whole schema (not prettier-aligned here): edit the schema by hand and run
+  `prisma validate`. `e2e/helpers.ts` `signIn` deletes every Mailpit message, so check an
+  email only after the spec's last sign-in before it. The issue dialog renders the code in
+  a `<code>`; e2e reads it by the code's pattern.
 - **Alerts on every page (2026-10-31):** a red fixture left by one e2e spec now puts the
   strip, with "Acknowledge red alert · <code>" and "Mute 15 min" buttons, on every desk page
   of later specs: locate buttons by their full name, and anchor text locators for the strip
@@ -589,6 +643,13 @@ events (T-Events)".
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-01: staff recovery codes (migration 20261101114418_staff_recovery_codes) are
+    issued by a Super Admin at `POST /staff/:id/recovery-code` and redeemed by Better Auth's
+    `POST /api/auth/sign-in/recovery-code` (a plugin in `packages/auth` asking
+    `RecoveryCodesService.redeem`). The session records `signInMethod = recovery_code`,
+    which `passkeyRefusal` holds to passkey setup and `sessionRefusal` ends after 15
+    minutes. A time limit on a kind of session goes in `sessionRefusal` on `createdAt`,
+    never in `expiresAt` (Better Auth's refresh extends it)."
   - "2026-10-31: feature flags are runtime settings (M9 D8b): the manifest's `features` are
     the defaults of seven keys in the operating-settings document, changed by two Super
     Admins. Read them through `OperatingSettingsService.features()`/`requireFeature()` (API,
@@ -679,13 +740,12 @@ events (T-Events)".
     for the cue."
 
 ## Next
-1. Owner: choose the next batch. An M9 deferred item: recovery codes (a doc first: it
-   changes how auth decides and needs hashed codes stored, so a migration), new-device email
-   (a "known device" record, so a migration doc), the IP allowlist (a policy doc first; its
-   use depends on the deploy topology's proxy), permission overrides or display currencies
-   (the ECB feed is a Q10 third party). Smaller, no migration: `A` on a booking page's own
-   services, or the Applications empty state's old `/join-our-network` path (it redirects
-   to `/join`). M10's room holds/event photos need a migration doc first. A real
+1. Owner: choose the next batch. An M9 deferred item: new-device email (a "known device"
+   record, so a migration doc), permission overrides (changes how authorisation decides;
+   the board's per-action overrides with a reason and a 24 h expiry, so a doc first), the
+   IP allowlist (a policy doc first; its use depends on the deploy topology's proxy) or
+   display currencies (the ECB feed is a Q10 third party). M10's room holds/event photos
+   need a migration doc first. A real
    screen-reader run (desk and storefront) needs a machine with NVDA or VoiceOver.
    Optional: the desktop cookie banner still covers about 61 % of a 1280 × 844 window (the
    board's layout; focus is now kept clear of it).
@@ -1147,3 +1207,15 @@ events (T-Events)".
   reused A-Dashboard's strip with a per-booking Acknowledge where no matrix row exists,
   kept the undo open across page changes, announced "Press R" only on the dashboard, and
   showed the notices to every staff role with a link to the thresholds tab.
+- 2026-11-01 — the owner chose staff recovery codes next (over the new-device email,
+  permission overrides and small fixes alone; the deployment plan is unanswered and
+  Plausible CE is not installed), with `A` on a booking's services and the `/join` empty
+  state alongside. The design turned out to describe a Super-Admin-issued one-time code,
+  not self-service backup codes (the question's wording had said "without help"); the owner
+  approved `docs/schema-m9-recovery-codes.md` as recommended after that was pointed out:
+  R1a (the board's issued code), R2a (a `staff_recovery_codes` table over Better Auth's
+  verification table), R3a (setup-only, and issuing removes the person's passkeys), R4a
+  (12 Crockford characters, five wrong tries), R5a (any one Super Admin, never oneself).
+  The build enforced the 15-minute session on the sign-in time rather than `expiresAt`,
+  refused issuing for a deactivated account, put the issue action on the user's row with
+  Security linking to it, and had `A` on a booking page acknowledge only that service.

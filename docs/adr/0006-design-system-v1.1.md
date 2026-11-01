@@ -1431,7 +1431,7 @@ and tokens:
 
 - **Where a code is issued.** On the person's row in Users & roles, as A-Login's line says
   ("in Settings › Users"): "Issue recovery code…" (secondary, small) opens a DS 06 dialog
-  (small). Step one is a warning alert naming what goes (the person's passkeys, counted, and
+  (the default 640 px from `md`, a bottom sheet on a phone). Step one is a warning alert naming what goes (the person's passkeys, counted, and
   every session) and the reason field, with Cancel and a destructive "Issue code". Step two
   shows the code once, in the mono face at the h3 size on the page surface inside a bordered
   box, then "Read it to <name> by phone or in person. It works once, until <time>, and is not
@@ -1446,7 +1446,7 @@ and tokens:
   one-time-code autocomplete, a hint), which signs in with the work email typed above; the
   submit is secondary and says what is missing while the email is empty. A refusal shows
   beside it, the same words for every cause. The session goes to `/passkeys`, which opens
-  with an info alert ("You signed in with a recovery code…") and, once the passkey is added,
+  with a default alert ("You signed in with a recovery code…") and, once the passkey is added,
   "Your new passkey is ready. Sign in with it to use the desk."
 - **Emails.** Two more kinds in the passkey change email (same shell and button): "A
   recovery code was issued…" naming the Super Admin, and "Your recovery code was used",
