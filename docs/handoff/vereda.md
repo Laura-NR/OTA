@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-01 15:00
+# Handoff — vereda — updated 2026-11-01 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -9,16 +9,34 @@ reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follo
 server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
-page, on 2026-11-01 the staff recovery codes) and ADR 0007 (worker app). Staff passkeys:
+page, on 2026-11-01 the staff recovery codes and the new-device email) and ADR 0007 (worker
+app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
-`docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
+`docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
+`docs/schema-m9-new-device-email.md` (approved N1a–N6a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-01 (evening): the new-device email** (M9 D9), the owner's pick, approved N1a–N6a
+  on migration `20261101145749_staff_known_devices` (`6a3fd8c`…`0267b26`; ADR 0006 amendment
+  of that day). No dependency, route or spend.
+  - Rules `packages/domain/src/settings/new-device.ts`: `deviceLabel` ("Chrome · Linux", "—"),
+    a device unseen 180 days is forgotten, staff only, `newDeviceEmailDue`; the switch is the
+    threshold `staffNewDeviceEmail` (default on, two Super Admins, Thresholds › Security).
+  - Auth: `packages/auth/src/sign-in-device.ts`, a Better Auth plugin whose `after` hook runs
+    on every route that created a session (`ctx.context.newSession`, also a link's 302),
+    asks `SignInDevicesService.signedIn` (`apps/api/src/auth/`) and sets the HttpOnly
+    `ota_device` cookie it returns (400 days). Failures are logged, never thrown.
+  - API: stores SHA-256 of `<userId>:<cookie>` in `staff_known_devices` (so a shared browser
+    is known to each person), audits `auth.new_device_sign_in`, emails
+    `newDeviceSignInEmail` (tenant primary language, UTC) without awaiting it. Reset
+    passkeys, issuing a recovery code and deactivating forget the person's devices.
+  - Desk: the switch on Thresholds; Security's "New-device email" fact and note; the "not
+    built" note names only the IP allowlist. en/es/fr. e2e `e2e/new-device-email.spec.ts`.
 - **2026-11-01: staff recovery codes** (M9 D5), the owner's pick, approved R1a–R5a on
   migration `20261101114418_staff_recovery_codes` (`30b730d`…`946bd20`; ADR 0006 amendment of that
   day). No dependency or spend. The board's model, not self-service backup codes: a Super
@@ -269,38 +287,35 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-01, staff recovery codes and `A` on a booking's services, dev stack stopped for the build)
-- `pnpm lint` green; `pnpm format:check` green after `booking-services.tsx` was formatted
-  (`b630fe6`; the first run flagged it).
+## Verified (2026-11-01, the new-device email, dev stack stopped for the build)
+- `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1097 passed / 28 skipped**, 30/30 tasks, 0 cached (new:
-  domain recovery rules, the auth endpoint against Better Auth's memory adapter, the
-  email kinds, the API issue/withdraw/redeem and the recovery session policy).
+- `TURBO_FORCE=true pnpm test` **1119 passed / 28 skipped**, 30/30 tasks (new: domain
+  new-device rules, the auth plugin against Better Auth's memory adapter including a link's
+  302, the email in en/es/fr, `SignInDevicesService`, and the resets forgetting devices).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **141 passed, 2 failed, 3 skipped** in 57.1 min.
-  - `e2e/passkeys.spec.ts:201` was this batch's: the recovery dialog kept its "Reason" field
-    in the row while closed, beside Reset passkeys' own. Fixed (`946bd20`); then
-    `passkeys` and `recovery-codes` on fresh servers: **8/8**.
-  - `e2e/responsive.spec.ts:110` (ds07-768) timed out at `page.goto`: the memory trap
-    (storefront `next dev` 5.9 GB, the desk's 5.6 GB). After `kill -9` by port PID and
-    deleting `.next`, rerun alone: **2/2**.
-  - Skips: the desk at 320/375/414.
-- Before the full run, on fresh servers: `recovery-codes` **4/4** and `desk-alerts`
-  **5/5** (one new).
+- `pnpm e2e` (`.next` deleted first): **147 passed, 3 failed, 3 skipped** in 58.5 min. Not
+  this batch's, each passing on fresh servers (killed by port PID, `.next` deleted):
+  `events.spec.ts:132` and `supplier-resources.spec.ts:156` **3/3** together;
+  `responsive.spec.ts:118` (ds07-768, `page.goto` timeout, storefront `next dev` at 5 GB)
+  **1/1** alone (a first rerun on the servers left by the previous one timed out again at
+  3.6 GB). Skips: the desk at 320/375/414. Before it, on the owner's stack:
+  `new-device-email.spec.ts` **6/6**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **27/27**, 11 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Migration `20261101114418_staff_recovery_codes` applied to the dev DB;
-  `prisma migrate diff` from the database to the schema: no difference.
-- Browser (the owner's dev stack, a throwaway spec, deleted, with its own users and a red
-  booking, cleaned up) at 390, 1024 and 1280: the issue dialog (reason step and code step),
-  the row's open-code line, Security, the booking's Acknowledge, the login's code field and
-  `/passkeys` after a code. No sideways scroll anywhere; the code is plexMono 24 px; the
-  dialog is a bottom sheet at 390 and 640 px wide from 1024; the code field is mono 16 px.
-  Screenshots checked.
-- Not run: a real screen reader; the Applications empty state (`/join`) in a browser (it
-  shows only with no applications).
+- Migration `20261101145749_staff_known_devices` applied to the dev DB; `prisma migrate diff`
+  from the database to the schema: no difference.
+- Browser (the owner's restarted stack, a throwaway spec, deleted, with its own Super Admin,
+  cleaned up) at 390, 1024 and 1280: Security's fact, note and link, the Thresholds switch
+  label, and the Spanish email in Mailpit at 390 and 1280. No sideways scroll anywhere; the
+  fact is 14 px like its neighbours, the note 12/16 px muted with an underlined link, as the
+  recovery note. Screenshots checked.
+- The full e2e run left **70** `staff_known_devices` rows and 70 `auth.new_device_sign_in`
+  audit rows for `admin@example.test` in the dev DB (every fresh context is a new device);
+  they now fill most of Security's "latest 50" list. Left as is (dev data).
+- Not run: a real screen reader.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -309,6 +324,10 @@ events (T-Events)".
   `PASSKEY_RP_ID` binds every passkey, so it belongs to the deploy-topology decision (still
   open; `docs/deployment-plan.md` D6 recommends the apex domain): the desk's origin must be
   that domain or under it, and in `TRUSTED_ORIGINS`.
+- **New-device email:** on by default, so after a deploy every staff browser emails once. The
+  `ota_device` cookie is "essential" (a security function), assumed to fall under the cookie
+  notice's existing essential group; counsel holds the cookie words. A private window or
+  cleared cookies count as a new device. The email's time is UTC (no tenant time zone).
 - **Staff passkeys:** the switch is off in dev (the e2e switches it on and off and deletes its
   versions). A one-Super-Admin agency cannot apply it (dual approval). The passkey emails use
   the tenant's primary language, as the invitation does. Synced passkeys (iCloud/Google) count
@@ -367,6 +386,14 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **New-device email (2026-11-01):** every e2e staff sign-in now sends a new-device email
+  (asynchronously, so it can land after the next magic link): `latestMagicLink` reads the
+  newest message to the address that holds a link; a spec asserting "the newest email to a
+  staff address" must filter by subject. Staff emails go out in the tenant's primary language
+  (es), so e2e asserts the Spanish copy. The running desk loads `packages/i18n/dist`: after
+  editing a catalog, `pnpm --filter @ota/i18n build` or the desk shows raw keys. A
+  `cmd | tail` inside an `&&` chain hides `cmd`'s failure (a commit went through on a failed
+  typecheck and needed `34cf119`).
 - **Closed dialogs and locators (2026-11-01):** a closed native `<dialog>` still holds its
   children in the DOM, and Playwright's `getByLabel` inside a table row finds them, so a
   second "Reason" field in the row broke `passkeys.spec.ts`' strict locator. Render a row
@@ -738,14 +765,18 @@ events (T-Events)".
     in the dashboard layout, not in a page; every shell page but `/dashboard` shows
     `ShellAlertStrip`. Read them with `useDeskAlerts()`; never open a second `/ops` socket
     for the cue."
+  - "2026-11-01: the new-device email (migration 20261101145749_staff_known_devices) runs in
+    the `signInDevice` Better Auth plugin (`packages/auth/src/sign-in-device.ts`) on every
+    route that creates a session; `SignInDevicesService` keeps SHA-256 of
+    `<userId>:<ota_device cookie>`. Every staff sign-in in e2e sends one, so read Mailpit by
+    subject, not by newest message."
 
 ## Next
-1. Owner: choose the next batch. An M9 deferred item: new-device email (a "known device"
-   record, so a migration doc), permission overrides (changes how authorisation decides;
-   the board's per-action overrides with a reason and a 24 h expiry, so a doc first), the
-   IP allowlist (a policy doc first; its use depends on the deploy topology's proxy) or
-   display currencies (the ECB feed is a Q10 third party). M10's room holds/event photos
-   need a migration doc first. A real
+1. Owner: choose the next batch. An M9 deferred item: permission overrides (changes how
+   authorisation decides; the board's per-action overrides with a reason and a 24 h expiry,
+   so a doc first), the IP allowlist (a policy doc first; its use depends on the deploy
+   topology's proxy) or display currencies (the ECB feed is a Q10 third party). M10's room
+   holds/event photos need a migration doc first. A real
    screen-reader run (desk and storefront) needs a machine with NVDA or VoiceOver.
    Optional: the desktop cookie banner still covers about 61 % of a 1280 × 844 window (the
    board's layout; focus is now kept clear of it).
@@ -1219,3 +1250,12 @@ events (T-Events)".
   The build enforced the 15-minute session on the sign-in time rather than `expiresAt`,
   refused issuing for a deactivated account, put the issue action on the user's row with
   Security linking to it, and had `A` on a booking page acknowledge only that service.
+- 2026-11-01 — the owner chose the new-device email next (over permission overrides, M10's
+  room holds and event photos, and the IP allowlist; the deployment plan is unanswered and
+  Plausible CE is not installed) and approved `docs/schema-m9-new-device-email.md` as
+  recommended: N1a a device cookie, N2a a `staff_known_devices` table (forgotten after 180
+  days), N3a every unknown device emails, the first included, N4a staff only, N5a a
+  two-Super-Admin threshold on by default, N6a resets, recovery codes and deactivation forget
+  devices. The build hashed the person's id with the cookie so a shared desk PC stays known to
+  each person, kept the label language-neutral, wrote the email in UTC (no tenant time zone)
+  as its own template, and put the switch on Thresholds rather than as a checkbox on Security.
