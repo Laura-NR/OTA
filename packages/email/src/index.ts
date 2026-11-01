@@ -48,6 +48,11 @@ export {
   type PasskeyChangeEmailInput,
   type PasskeyChangeKind,
 } from './templates/passkey-change';
+export {
+  newDeviceSignInEmail,
+  type NewDeviceSignInEmailInput,
+  type NewDeviceSignInMethod,
+} from './templates/new-device-sign-in';
 export type { StaffInviteEmailInput } from './templates/staff-invite';
 export { eventRequestEmail } from './templates/event-request';
 export type {

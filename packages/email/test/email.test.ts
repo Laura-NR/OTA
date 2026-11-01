@@ -5,6 +5,7 @@ import {
   eventRequestEmail,
   staffInviteEmail,
   passkeyChangeEmail,
+  newDeviceSignInEmail,
   ConsoleMailer,
   SmtpMailer,
   bookingReceivedEmail,
@@ -634,6 +635,48 @@ describe('staffInviteEmail', () => {
         branding,
       }).subject,
     ).toMatch(/^Invitación a la mesa de /);
+  });
+});
+
+describe('newDeviceSignInEmail (docs/schema-m9-new-device-email.md N3)', () => {
+  const base = {
+    to: 'yanet@vereda.travel',
+    at: new Date('2026-11-01T14:05:00Z'),
+    device: 'Firefox · Windows',
+    ipAddress: '203.0.113.7',
+    url: 'http://localhost:3002/login',
+    branding,
+  };
+
+  it('names the time, device, IP and method, and what to do if it was not you', () => {
+    const message = newDeviceSignInEmail({ ...base, signInMethod: 'passkey' });
+    expect(message.subject).toBe(
+      'New sign-in to your Authentic Cuba Expeditions desk account',
+    );
+    expect(message.text).toContain('November 1, 2026');
+    expect(message.text).toContain('UTC');
+    expect(message.text).toContain('Device: Firefox · Windows');
+    expect(message.text).toContain('IP address: 203.0.113.7');
+    expect(message.text).toContain('Signed in with: a passkey');
+    expect(message.text).toContain('they can end your sessions and reset your passkeys');
+    expect(message.html).toContain('http://localhost:3002/login');
+  });
+
+  it('reads an unknown IP and method plainly, in the given language', () => {
+    const message = newDeviceSignInEmail({
+      ...base,
+      ipAddress: null,
+      signInMethod: 'something_new',
+      locale: 'es',
+    });
+    expect(message.subject).toBe(
+      'Nuevo acceso a su cuenta de la mesa de Authentic Cuba Expeditions',
+    );
+    expect(message.text).toContain('Dirección IP: desconocida');
+    expect(message.text).toContain('Acceso con: otro método');
+    expect(
+      newDeviceSignInEmail({ ...base, signInMethod: 'magic_link', locale: 'fr' }).text,
+    ).toContain('Connexion avec : un lien de connexion');
   });
 });
 
