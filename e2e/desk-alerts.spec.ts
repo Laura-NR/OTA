@@ -9,6 +9,7 @@ const prisma = new PrismaClient();
 const ACKED = 'E2EACK01';
 const LATER = 'E2EACK02';
 const ELSEWHERE = 'E2EACK03';
+const ON_BOOKING = 'E2EACK04';
 const SUPPORT = 'alerts-e2e-support@example.test';
 const HOUR = 60 * 60 * 1000;
 
@@ -95,6 +96,7 @@ test.describe.serial('desk alert cue, acknowledgement and mute', () => {
     await deleteReservationFixture(prisma, ACKED);
     await deleteReservationFixture(prisma, LATER);
     await deleteReservationFixture(prisma, ELSEWHERE);
+    await deleteReservationFixture(prisma, ON_BOOKING);
     await deleteSupport();
     await prisma.$disconnect();
   });
@@ -275,6 +277,54 @@ test.describe.serial('desk alert cue, acknowledgement and mute', () => {
       .getByRole('row')
       .filter({ hasText: ELSEWHERE });
     await expect(row.getByText(/^Acknowledged · .+ · \d\d:\d\d$/)).toBeVisible();
+  });
+
+  test('A on a booking page’s service row acknowledges that service’s red alert', async ({
+    page,
+  }) => {
+    const itemId = await timedOut(ON_BOOKING, 20);
+    const { id } = await prisma.reservation.findUniqueOrThrow({
+      where: { bookingCode: ON_BOOKING },
+      select: { id: true },
+    });
+    await page.goto(`/bookings/${id}`);
+    const services = page.getByRole('region', { name: 'Service items' });
+    const row = services.getByRole('row').filter({ hasText: 'Guide' });
+    const acknowledge = row.getByRole('button', {
+      name: `Acknowledge red alert · Guide · ${ON_BOOKING}`,
+      exact: true,
+    });
+    const redispatch = row.getByRole('button', {
+      name: `Re-dispatch Guide · ${ON_BOOKING}`,
+    });
+    const toast = page.getByRole('status').filter({
+      hasText: `Alert acknowledged · audio off for ${ON_BOOKING}`,
+    });
+    await expect(acknowledge).toBeVisible();
+
+    // A with focus anywhere in the row, here its Re-dispatch, acknowledges it.
+    await expect(async () => {
+      await redispatch.focus();
+      await page.keyboard.press('a');
+      await expect(toast).toBeVisible({ timeout: 1_000 });
+    }).toPass();
+    await expect(acknowledge).toBeHidden();
+    await expect(redispatch).toBeFocused();
+    // The strip's own button goes too: the booking has no other red alert.
+    await expect(
+      page.getByRole('button', {
+        name: `Acknowledge red alert · ${ON_BOOKING}`,
+        exact: true,
+      }),
+    ).toBeHidden();
+    await expect(toast).toBeHidden({ timeout: 10_000 });
+    await expect
+      .poll(() =>
+        prisma.auditLog.count({
+          where: { action: 'dispatch.alert_acknowledged', entityId: itemId },
+        }),
+      )
+      .toBe(1);
   });
 
   test('support sees the alert on every page but cannot acknowledge or mute', async ({
