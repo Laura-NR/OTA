@@ -1129,7 +1129,19 @@
         "resetHint": "Deletes {name}'s passkeys and signs them out everywhere; they set up a new one at the next sign-in.",
         "resetReason": "Reason (for the audit log)",
         "resetConfirm": "Reset and sign out",
-        "resetCancel": "Cancel"
+        "resetCancel": "Cancel",
+        "issueRecovery": "Issue recovery code…",
+        "recoveryTitle": "Recovery code for {name}",
+        "recoveryDescription": "No self-service reset exists. Check who is asking first: call a number you already know, or speak in person.",
+        "recoveryWarning": "{count, plural, =0 {Issuing a code signs {name} out everywhere.} one {Issuing a code removes {name}'s passkey and signs them out everywhere.} other {Issuing a code removes {name}'s # passkeys and signs them out everywhere.}} The code lets them set up a new passkey, nothing else.",
+        "recoveryIssue": "Issue code",
+        "recoveryCodeLabel": "One-time recovery code",
+        "recoveryRead": "Read it to {name} by phone or in person. It works once, until {time}, and is not shown again.",
+        "recoveryDone": "Done",
+        "recoveryClose": "Close",
+        "recoveryOpen": "Recovery code open until {time}",
+        "recoveryWithdraw": "Withdraw code",
+        "recoveryWithdrawFor": "Withdraw the recovery code for {name}"
       },
       "invites": {
         "title": "Invite a user",
@@ -1223,7 +1235,7 @@
             "note": "a Super Admin proposes, a second one applies"
           },
           "staff": {
-            "label": "Users, roles and invitations",
+            "label": "Users, roles, invitations and recovery codes",
             "note": "a Super Admin invite needs a second Super Admin"
           }
         }
@@ -1368,7 +1380,11 @@
         "passkeysRequired": "Required at sign-in",
         "passkeysOptional": "Optional",
         "idleLock": "Idle lock",
-        "idleLockValue": "{count} min with no input; never on an own device"
+        "idleLockValue": "{count} min with no input; never on an own device",
+        "recovery": "Recovery",
+        "recoveryValue": "One-time code from a Super Admin, 15 minutes",
+        "recoveryNote": "No self-service reset exists. A Super Admin issues a one-time recovery code by phone or in person; the code works for 15 minutes and is logged with both names.",
+        "recoveryLink": "Issue recovery code…"
       },
       "agency": "Agency",
       "agencyName": "Name",
@@ -1418,7 +1434,15 @@
       "passkeyRequired": "Staff sign in to the desk with a passkey. Use yours below; if you lost it, ask a Super Admin to reset it.",
       "passkeyFailed": "The passkey sign-in did not complete. Try again.",
       "ownDevice": "This is my own device",
-      "ownDeviceHint": "The desk then stays signed in for 12 h. Leave it unticked on a shared computer, where the desk locks after a spell with no input."
+      "ownDeviceHint": "The desk then stays signed in for 12 h. Leave it unticked on a shared computer, where the desk locks after a spell with no input.",
+      "lostEmail": "Lost access to your email? A Super Admin issues a one-time recovery code in Settings › Users; there is no self-service reset.",
+      "recoveryOpen": "Use a recovery code",
+      "recoveryCode": "Recovery code",
+      "recoveryHint": "Twelve characters, as the Super Admin read them out. It signs you in with the work email above, only to set up a passkey.",
+      "recoverySubmit": "Sign in with the code",
+      "recoveryEmailFirst": "Type your work email above first",
+      "recoveryInvalid": "This code is not valid. Ask a Super Admin for a new one.",
+      "recoveryFailed": "The sign-in did not complete. Try again."
     },
     "idleLock": {
       "title": "Locked · {name}",
@@ -2858,6 +2882,7 @@
       "setupDescription": "Before you use the desk, set up a passkey on this device. Then sign in with it.",
       "useTitle": "Sign in with your passkey",
       "useDescription": "You signed in with a link, but your account has a passkey. Sign in with it to use the desk.",
+      "useDescriptionRecovery": "Your new passkey is ready. Sign in with it to use the desk.",
       "name": "Name (optional)",
       "nameHint": "For example: Office laptop",
       "add": "Set up a passkey",
@@ -2878,7 +2903,8 @@
       "twoAdvice": "Set up two passkeys, for example on your phone and your laptop, so a lost device does not lock you out.",
       "changeNote": "Adding, renaming or removing a passkey needs a passkey sign-in, and each change is emailed to you.",
       "back": "Back to the desk",
-      "failed": "That did not work. Try again."
+      "failed": "That did not work. Try again.",
+      "recoverySession": "You signed in with a recovery code. It lets you set up a passkey and nothing else, and it ends 15 minutes after you signed in."
     },
     "shortcuts": {
       "open": "Keyboard shortcuts",

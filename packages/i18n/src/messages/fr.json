@@ -1129,7 +1129,19 @@
         "resetHint": "Supprime les clés d'accès de {name} et ferme toutes ses sessions ; une nouvelle clé sera configurée à la prochaine connexion.",
         "resetReason": "Motif (pour le journal d'audit)",
         "resetConfirm": "Réinitialiser et déconnecter",
-        "resetCancel": "Annuler"
+        "resetCancel": "Annuler",
+        "issueRecovery": "Émettre un code de récupération…",
+        "recoveryTitle": "Code de récupération pour {name}",
+        "recoveryDescription": "Il n'existe pas de réinitialisation en libre-service. Vérifiez d'abord qui le demande : appelez un numéro que vous connaissez déjà, ou parlez-lui en personne.",
+        "recoveryWarning": "{count, plural, =0 {Émettre un code ferme toutes les sessions de {name}.} one {Émettre un code retire la clé d'accès de {name} et ferme toutes ses sessions.} other {Émettre un code retire les # clés d'accès de {name} et ferme toutes ses sessions.}} Le code permet seulement de configurer une nouvelle clé.",
+        "recoveryIssue": "Émettre le code",
+        "recoveryCodeLabel": "Code de récupération à usage unique",
+        "recoveryRead": "Lisez-le à {name} par téléphone ou en personne. Il fonctionne une fois, jusqu'à {time}, et ne sera plus affiché.",
+        "recoveryDone": "Terminé",
+        "recoveryClose": "Fermer",
+        "recoveryOpen": "Code de récupération ouvert jusqu'à {time}",
+        "recoveryWithdraw": "Retirer le code",
+        "recoveryWithdrawFor": "Retirer le code de récupération de {name}"
       },
       "invites": {
         "title": "Inviter un utilisateur",
@@ -1223,7 +1235,7 @@
             "note": "un Super Admin propose, un second applique"
           },
           "staff": {
-            "label": "Utilisateurs, rôles et invitations",
+            "label": "Utilisateurs, rôles, invitations et codes de récupération",
             "note": "une invitation Super Admin nécessite un second Super Admin"
           }
         }
@@ -1368,7 +1380,11 @@
         "passkeysRequired": "Obligatoires à la connexion",
         "passkeysOptional": "Facultatives",
         "idleLock": "Verrouillage d'inactivité",
-        "idleLockValue": "{count} min sans activité ; jamais sur un appareil personnel"
+        "idleLockValue": "{count} min sans activité ; jamais sur un appareil personnel",
+        "recovery": "Récupération",
+        "recoveryValue": "Code à usage unique d'un Super Admin, 15 minutes",
+        "recoveryNote": "Il n'existe pas de réinitialisation en libre-service. Un Super Admin émet un code de récupération à usage unique par téléphone ou en personne ; le code fonctionne 15 minutes et est consigné avec les deux noms.",
+        "recoveryLink": "Émettre un code de récupération…"
       },
       "agency": "Agence",
       "agencyName": "Nom",
@@ -1418,7 +1434,15 @@
       "passkeyRequired": "Le personnel se connecte au bureau avec une clé d'accès. Utilisez la vôtre ci-dessous ; si vous l'avez perdue, demandez à un Super Admin de la réinitialiser.",
       "passkeyFailed": "La connexion avec la clé d'accès n'a pas abouti. Réessayez.",
       "ownDevice": "C'est mon propre appareil",
-      "ownDeviceHint": "Le bureau reste alors connecté 12 h. Laissez la case vide sur un ordinateur partagé, où le bureau se verrouille après un moment sans activité."
+      "ownDeviceHint": "Le bureau reste alors connecté 12 h. Laissez la case vide sur un ordinateur partagé, où le bureau se verrouille après un moment sans activité.",
+      "lostEmail": "Vous n'avez plus accès à votre e-mail ? Un Super Admin émet un code de récupération à usage unique dans Paramètres › Utilisateurs ; il n'existe pas de réinitialisation en libre-service.",
+      "recoveryOpen": "Utiliser un code de récupération",
+      "recoveryCode": "Code de récupération",
+      "recoveryHint": "Douze caractères, tels que le Super Admin les a lus. Il vous connecte avec l'e-mail professionnel ci-dessus, uniquement pour configurer une clé d'accès.",
+      "recoverySubmit": "Se connecter avec le code",
+      "recoveryEmailFirst": "Saisissez d'abord votre e-mail professionnel ci-dessus",
+      "recoveryInvalid": "Ce code n'est pas valide. Demandez-en un nouveau à un Super Admin.",
+      "recoveryFailed": "La connexion n'a pas abouti. Réessayez."
     },
     "idleLock": {
       "title": "Verrouillé · {name}",
@@ -2858,6 +2882,7 @@
       "setupDescription": "Avant d'utiliser le bureau, configurez une clé d'accès sur cet appareil. Connectez-vous ensuite avec elle.",
       "useTitle": "Connectez-vous avec votre clé d'accès",
       "useDescription": "Vous vous êtes connecté avec un lien, mais votre compte a une clé d'accès. Connectez-vous avec elle pour utiliser le bureau.",
+      "useDescriptionRecovery": "Votre nouvelle clé d'accès est prête. Connectez-vous avec elle pour utiliser le bureau.",
       "name": "Nom (facultatif)",
       "nameHint": "Par exemple : Portable du bureau",
       "add": "Configurer une clé d'accès",
@@ -2878,7 +2903,8 @@
       "twoAdvice": "Configurez deux clés, par exemple sur votre téléphone et votre portable, pour qu'un appareil perdu ne vous bloque pas.",
       "changeNote": "Ajouter, renommer ou retirer une clé demande une connexion par clé d'accès, et chaque changement vous est envoyé par e-mail.",
       "back": "Retour au bureau",
-      "failed": "Cela n'a pas fonctionné. Réessayez."
+      "failed": "Cela n'a pas fonctionné. Réessayez.",
+      "recoverySession": "Vous vous êtes connecté avec un code de récupération. Il permet seulement de configurer une clé d'accès et prend fin 15 minutes après la connexion."
     },
     "shortcuts": {
       "open": "Raccourcis clavier",

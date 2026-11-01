@@ -1129,7 +1129,19 @@
         "resetHint": "Borra las llaves de acceso de {name} y cierra todas sus sesiones; configurará una nueva en su próximo acceso.",
         "resetReason": "Motivo (para el registro de auditoría)",
         "resetConfirm": "Restablecer y cerrar sesiones",
-        "resetCancel": "Cancelar"
+        "resetCancel": "Cancelar",
+        "issueRecovery": "Emitir código de recuperación…",
+        "recoveryTitle": "Código de recuperación para {name}",
+        "recoveryDescription": "No existe un restablecimiento por cuenta propia. Compruebe antes quién lo pide: llame a un número que ya conozca o hable en persona.",
+        "recoveryWarning": "{count, plural, =0 {Emitir un código cierra todas las sesiones de {name}.} one {Emitir un código quita la llave de acceso de {name} y cierra todas sus sesiones.} other {Emitir un código quita las # llaves de acceso de {name} y cierra todas sus sesiones.}} El código solo le permite configurar una nueva llave.",
+        "recoveryIssue": "Emitir código",
+        "recoveryCodeLabel": "Código de recuperación de un solo uso",
+        "recoveryRead": "Léaselo a {name} por teléfono o en persona. Funciona una vez, hasta las {time}, y no se vuelve a mostrar.",
+        "recoveryDone": "Hecho",
+        "recoveryClose": "Cerrar",
+        "recoveryOpen": "Código de recuperación abierto hasta las {time}",
+        "recoveryWithdraw": "Retirar código",
+        "recoveryWithdrawFor": "Retirar el código de recuperación de {name}"
       },
       "invites": {
         "title": "Invitar a un usuario",
@@ -1223,7 +1235,7 @@
             "note": "un Super Admin propone, otro aplica"
           },
           "staff": {
-            "label": "Usuarios, roles e invitaciones",
+            "label": "Usuarios, roles, invitaciones y códigos de recuperación",
             "note": "una invitación de Super Admin requiere un segundo Super Admin"
           }
         }
@@ -1368,7 +1380,11 @@
         "passkeysRequired": "Obligatorias al entrar",
         "passkeysOptional": "Opcionales",
         "idleLock": "Bloqueo por inactividad",
-        "idleLockValue": "{count} min sin actividad; nunca en un dispositivo propio"
+        "idleLockValue": "{count} min sin actividad; nunca en un dispositivo propio",
+        "recovery": "Recuperación",
+        "recoveryValue": "Código de un solo uso de un Super Admin, 15 minutos",
+        "recoveryNote": "No existe un restablecimiento por cuenta propia. Un Super Admin emite un código de recuperación de un solo uso por teléfono o en persona; el código funciona durante 15 minutos y queda registrado con ambos nombres.",
+        "recoveryLink": "Emitir código de recuperación…"
       },
       "agency": "Agencia",
       "agencyName": "Nombre",
@@ -1418,7 +1434,15 @@
       "passkeyRequired": "El personal entra en la mesa con una llave de acceso. Use la suya abajo; si la perdió, pida a un Super Admin que la restablezca.",
       "passkeyFailed": "El acceso con la llave no se completó. Inténtelo de nuevo.",
       "ownDevice": "Este es mi propio dispositivo",
-      "ownDeviceHint": "La mesa sigue abierta 12 h. Déjelo sin marcar en un ordenador compartido, donde la mesa se bloquea tras un rato sin actividad."
+      "ownDeviceHint": "La mesa sigue abierta 12 h. Déjelo sin marcar en un ordenador compartido, donde la mesa se bloquea tras un rato sin actividad.",
+      "lostEmail": "¿Perdió el acceso a su correo? Un Super Admin emite un código de recuperación de un solo uso en Configuración › Usuarios; no existe un restablecimiento por cuenta propia.",
+      "recoveryOpen": "Usar un código de recuperación",
+      "recoveryCode": "Código de recuperación",
+      "recoveryHint": "Doce caracteres, tal como se los leyó el Super Admin. Inicia sesión con el correo de trabajo de arriba, solo para configurar una llave de acceso.",
+      "recoverySubmit": "Iniciar sesión con el código",
+      "recoveryEmailFirst": "Escriba antes su correo de trabajo arriba",
+      "recoveryInvalid": "Este código no es válido. Pida uno nuevo a un Super Admin.",
+      "recoveryFailed": "No se completó el inicio de sesión. Inténtelo de nuevo."
     },
     "idleLock": {
       "title": "Bloqueada · {name}",
@@ -2858,6 +2882,7 @@
       "setupDescription": "Antes de usar la mesa, configure una llave de acceso en este dispositivo. Después, entre con ella.",
       "useTitle": "Entre con su llave de acceso",
       "useDescription": "Entró con un enlace, pero su cuenta tiene una llave de acceso. Entre con ella para usar la mesa.",
+      "useDescriptionRecovery": "Su nueva llave de acceso está lista. Inicie sesión con ella para usar la mesa.",
       "name": "Nombre (opcional)",
       "nameHint": "Por ejemplo: Portátil de la oficina",
       "add": "Configurar una llave de acceso",
@@ -2878,7 +2903,8 @@
       "twoAdvice": "Configure dos llaves, por ejemplo en su teléfono y en su portátil, para que perder un dispositivo no le deje fuera.",
       "changeNote": "Añadir, renombrar o quitar una llave exige entrar con una llave de acceso, y cada cambio se le notifica por correo.",
       "back": "Volver a la mesa",
-      "failed": "No funcionó. Inténtelo de nuevo."
+      "failed": "No funcionó. Inténtelo de nuevo.",
+      "recoverySession": "Inició sesión con un código de recuperación. Solo le permite configurar una llave de acceso y termina 15 minutos después de iniciar sesión."
     },
     "shortcuts": {
       "open": "Atajos de teclado",
