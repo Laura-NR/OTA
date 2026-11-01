@@ -71,7 +71,7 @@ const COPY = {
     expiry: (hours: number) =>
       `Si vous l'approuvez, elle prend fin ${hours} h après l'approbation.`,
     check:
-      "Approuvez-la ou refusez-la dans Paramètres › Permissions. Une demande sans réponse expire après 24 heures.",
+      'Approuvez-la ou refusez-la dans Paramètres › Permissions. Une demande sans réponse expire après 24 heures.',
     cta: 'Ouvrir Paramètres › Permissions',
     note: 'Chaque Super Admin reçoit ce message ; le premier qui décide clôt la demande.',
     rows: {

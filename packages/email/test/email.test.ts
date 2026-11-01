@@ -806,7 +806,9 @@ describe('permissionOverrideRequestEmail (docs/schema-m9-permission-overrides.md
     expect(message.to).toBe('dayana@vereda.travel');
     expect(message.subject).toBe('Ernesto Vila asks for a permission override');
     expect(message.text).toContain('"Payments, proofs and refunds"');
-    expect(message.text).toContain('Reason: Covering the payments desk while Ana is away');
+    expect(message.text).toContain(
+      'Reason: Covering the payments desk while Ana is away',
+    );
     expect(message.text).toContain('it ends 24 h after approval');
     expect(message.text).toContain('lapses after 24 hours');
     expect(message.html).toContain('http://localhost:3002/settings?tab=permissions');

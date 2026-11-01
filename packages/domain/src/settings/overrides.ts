@@ -102,7 +102,9 @@ export function isOverridable(
   role: string | null | undefined,
   capability: PermissionCapability,
 ): boolean {
-  return roleAccess(role, capability) === 'view' && !SUPER_ADMIN_ROWS.includes(capability);
+  return (
+    roleAccess(role, capability) === 'view' && !SUPER_ADMIN_ROWS.includes(capability)
+  );
 }
 
 /** The rows this role may ask to override, in matrix order. */

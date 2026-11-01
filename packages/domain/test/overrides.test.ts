@@ -99,12 +99,12 @@ describe("an override's status from its row and the clock (O4, O5)", () => {
   });
 
   it('keeps declined and ended overrides as stored', () => {
-    expect(overrideStatus({ state: 'DECLINED', requestedAt, expiresAt: null }, at(1))).toBe(
-      'DECLINED',
-    );
-    expect(overrideStatus({ state: 'ENDED', requestedAt, expiresAt: at(30) }, at(2))).toBe(
-      'ENDED',
-    );
+    expect(
+      overrideStatus({ state: 'DECLINED', requestedAt, expiresAt: null }, at(1)),
+    ).toBe('DECLINED');
+    expect(
+      overrideStatus({ state: 'ENDED', requestedAt, expiresAt: at(30) }, at(2)),
+    ).toBe('ENDED');
   });
 
   it('counts only a pending request or a running override as open', () => {
@@ -138,13 +138,21 @@ describe('who decides an override (O4, O5)', () => {
     expect(overrideDecisionRefusal(pending, holder, 'APPROVE')).toBe('ROLE');
     expect(overrideDecisionRefusal(active, superAdmin, 'APPROVE')).toBe('NOT_PENDING');
     expect(
-      overrideDecisionRefusal({ userId: holder.id, status: 'LAPSED' }, superAdmin, 'DECLINE'),
+      overrideDecisionRefusal(
+        { userId: holder.id, status: 'LAPSED' },
+        superAdmin,
+        'DECLINE',
+      ),
     ).toBe('NOT_PENDING');
   });
 
   it('never lets a Super Admin approve a request of their own', () => {
     expect(
-      overrideDecisionRefusal({ userId: superAdmin.id, status: 'REQUESTED' }, superAdmin, 'APPROVE'),
+      overrideDecisionRefusal(
+        { userId: superAdmin.id, status: 'REQUESTED' },
+        superAdmin,
+        'APPROVE',
+      ),
     ).toBe('OWN_REQUEST');
   });
 
