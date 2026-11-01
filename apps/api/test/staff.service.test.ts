@@ -536,12 +536,15 @@ describe('staff recovery codes (docs/schema-m9-recovery-codes.md)', () => {
   it('issues a code shown once, stored as a hash, open 15 minutes, with both names and the reason', async () => {
     const before = Date.now();
     const issued = await issue();
+    const after = Date.now();
     expect(issued.code).toMatch(
       /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/,
     );
-    const expiresIn = new Date(issued.expiresAt).getTime() - before;
-    expect(expiresIn).toBeGreaterThan(14 * 60_000);
-    expect(expiresIn).toBeLessThanOrEqual(15 * 60_000);
+    // The service reads its own clock during the call, so its 15 minutes start
+    // somewhere between these two readings.
+    const expiresAt = new Date(issued.expiresAt).getTime();
+    expect(expiresAt).toBeGreaterThanOrEqual(before + 15 * 60_000);
+    expect(expiresAt).toBeLessThanOrEqual(after + 15 * 60_000);
     expect(issued.user.recoveryCodeOpenUntil).toBe(issued.expiresAt);
     const [row] = prisma.codes;
     expect(row).toMatchObject({ userId: 'u-ana', issuedById: DAYANA.id });
