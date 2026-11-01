@@ -16,8 +16,10 @@ import type { BadgeVariant } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
-import { apiFetch } from '@/lib/api';
+import { OverrideNotice } from '@/components/override-notice';
+import { apiFetch, getServerSession } from '@/lib/api';
 import { opsDate } from '@/lib/ops-format';
+import { deskAccess } from '@/lib/overrides';
 
 const RETENTION_VARIANT: Record<CustomerDto['retentionStatus'], BadgeVariant> = {
   ACTIVE: 'success',
@@ -35,7 +37,11 @@ const RETENTION_VARIANT: Record<CustomerDto['retentionStatus'], BadgeVariant> = 
 export default async function CustomersPage() {
   const t = await getTranslations('backoffice.customers');
   const locale = await getLocale();
-  const customers = await apiFetch<CustomerDto[]>('/customers').catch(() => null);
+  const [customers, session] = await Promise.all([
+    apiFetch<CustomerDto[]>('/customers').catch(() => null),
+    getServerSession(),
+  ]);
+  const access = await deskAccess(session?.user.role, 'customers');
   const rows = customers ?? [];
   const withTrips = rows.filter((customer) => customer.tripCount > 0).length;
 
@@ -55,6 +61,8 @@ export default async function CustomersPage() {
           {t('retentionDesk')}
         </Link>
       </div>
+
+      <OverrideNotice capability="customers" overrides={access.overrides} />
 
       {customers === null ? (
         <Alert variant="destructive">{t('loadError')}</Alert>

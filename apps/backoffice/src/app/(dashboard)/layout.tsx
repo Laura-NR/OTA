@@ -1,9 +1,4 @@
-import {
-  PASSKEY_SIGN_IN_METHOD,
-  UserRole,
-  isStaffRole,
-  isStaffSessionExpired,
-} from '@ota/domain';
+import { PASSKEY_SIGN_IN_METHOD, isStaffRole, isStaffSessionExpired } from '@ota/domain';
 import type {
   DeskAlertMuteStateDto,
   DeskSessionDto,
@@ -18,17 +13,12 @@ import { DeskAlerts } from '@/components/desk-alerts';
 import { DeskIdleLock } from '@/components/desk-idle-lock';
 import { DeskTelemetryProvider } from '@/components/telemetry/desk-telemetry';
 import { apiFetch, getServerSession } from '@/lib/api';
+import { deskAccess } from '@/lib/overrides';
 import { deskClock } from '@/lib/desk-clock';
 import { ApiError } from '@/lib/errors';
 import { lockedRefusal } from '@/lib/idle-lock';
 import { getThresholds } from '@/lib/operating';
 import { getTenantConfig } from '@/lib/tenant';
-
-/** Those who acknowledge, mute and unmute the desk's alerts; support reads them. */
-const ALERT_MANAGE_ROLES: readonly string[] = [
-  UserRole.OperationsAdmin,
-  UserRole.SuperAdmin,
-];
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession();
@@ -108,10 +98,13 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // The dispatch alerts follow staff around the desk, not only the dashboard.
   let desk = shell;
   if (isStaffRole(session.user.role)) {
-    const [rows, muteState, thresholds] = await Promise.all([
+    // Acknowledging and muting is the dispatch row: support reads the alerts
+    // unless a permission override for dispatch runs.
+    const [rows, muteState, thresholds, dispatchAccess] = await Promise.all([
       apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
       apiFetch<DeskAlertMuteStateDto>('/dispatch/alert-mute').catch(() => null),
       getThresholds(),
+      deskAccess(session.user.role, 'dispatch'),
     ]);
     desk = (
       <DeskAlerts
@@ -119,7 +112,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         initialMute={muteState}
         serverNow={Date.now()}
         amberThreshold={deskClock(thresholds).amberThreshold}
-        canManage={ALERT_MANAGE_ROLES.includes(session.user.role ?? '')}
+        canManage={dispatchAccess.canManage}
       >
         {shell}
       </DeskAlerts>

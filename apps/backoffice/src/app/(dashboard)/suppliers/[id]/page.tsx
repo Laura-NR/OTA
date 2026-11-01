@@ -13,6 +13,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { AvailabilityCalendar } from '@/components/availability-calendar';
 import { SupplierCredential } from '@/components/supplier-credential';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
@@ -24,7 +26,6 @@ import { ApiError } from '@/lib/errors';
 import { opsDate, opsTime, percent } from '@/lib/ops-format';
 import { lastJobLabel } from '@/lib/suppliers';
 
-const VERIFY_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 const EDIT_ROLES: readonly string[] = [
   UserRole.OperationsAdmin,
   UserRole.AdministrativeSupport,
@@ -76,7 +77,8 @@ export default async function SupplierDetailPage({
   const locale = await getLocale();
   const session = await getServerSession();
   const role = session?.user.role ?? '';
-  const canVerify = VERIFY_ROLES.includes(role);
+  const access = await deskAccess(role, 'suppliers');
+  const canVerify = access.canManage;
   const canEdit = EDIT_ROLES.includes(role);
 
   const supplier = await apiFetch<SupplierDetailDto>(`/suppliers/${id}`).catch(
@@ -236,6 +238,8 @@ export default async function SupplierDetailPage({
           </div>
         </div>
       </div>
+
+      <OverrideNotice capability="suppliers" overrides={access.overrides} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t('profile')} description={supplier.category.replaceAll('_', ' ')}>

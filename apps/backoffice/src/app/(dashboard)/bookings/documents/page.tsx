@@ -1,4 +1,3 @@
-import { UserRole } from '@ota/domain';
 import type { DocumentDto, ReservationDto } from '@ota/schemas';
 import {
   Alert,
@@ -17,12 +16,12 @@ import {
 } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { RegenerateDocumentsButton } from '@/components/documents-controls';
 import { PageHeader } from '@/components/page-header';
 import { ReservationPicker } from '@/components/reservation-picker';
 import { apiFetch, getServerSession } from '@/lib/api';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 export default async function DocumentsPage({
   searchParams,
@@ -32,7 +31,8 @@ export default async function DocumentsPage({
   const { reservation } = await searchParams;
   const t = await getTranslations('backoffice.documents');
   const session = await getServerSession();
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'bookings');
+  const canManage = access.canManage;
 
   let reservations: ReservationDto[] = [];
   let documents: DocumentDto[] = [];
@@ -50,6 +50,7 @@ export default async function DocumentsPage({
   return (
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')} />
+      <OverrideNotice capability="bookings" overrides={access.overrides} />
 
       <ReservationPicker
         id="documents-reservation"

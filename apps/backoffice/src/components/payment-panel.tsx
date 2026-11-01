@@ -43,6 +43,7 @@ export function PaymentPanel({
   reservationId,
   status,
   canManage,
+  canVote = canManage,
   schedule,
   features,
   now,
@@ -50,6 +51,8 @@ export function PaymentPanel({
   reservationId: string;
   status: string;
   canManage: boolean;
+  /** Refund votes stay with the role, never a permission override (O3). */
+  canVote?: boolean;
   schedule: PaymentScheduleDto;
   /** The flags in force, which open or close each rail. */
   features: FeatureFlagValues;
@@ -323,7 +326,7 @@ export function PaymentPanel({
                   {t(`refundReasons.${refund.reason}`)} ·{' '}
                   <span className="text-secondary">{refund.note}</span>
                 </p>
-                <RefundActions refund={refund} canManage={canManage} />
+                <RefundActions refund={refund} canManage={canManage} canVote={canVote} />
               </li>
             ))}
           </ul>

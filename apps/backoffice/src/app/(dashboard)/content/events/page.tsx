@@ -1,4 +1,4 @@
-import { UserRole, cubaProvinceName } from '@ota/domain';
+import { cubaProvinceName } from '@ota/domain';
 import type { EventListItemDto } from '@ota/schemas';
 import {
   Badge,
@@ -16,11 +16,11 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { EVENT_ACCESS_BADGE, EVENT_STATUS_BADGE, eventDates } from '@/lib/events';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * A-Content's events tab (M10 D1): every event the concierge can request seats
@@ -33,7 +33,8 @@ export default async function EventsPage() {
     getServerSession(),
   ]);
   const events = await apiFetch<EventListItemDto[]>('/events').catch(() => []);
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'catalog');
+  const canManage = access.canManage;
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,6 +45,7 @@ export default async function EventsPage() {
           </Link>
         ) : null}
       </PageHeader>
+      <OverrideNotice capability="catalog" overrides={access.overrides} />
 
       <Card>
         <CardContent className="pt-6">

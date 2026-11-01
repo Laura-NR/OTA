@@ -27,14 +27,17 @@ const VARIANTS: Record<RefundDto['status'], BadgeVariant> = {
  * One refund's approval state and actions (A-Payments refund queue, M4 D7):
  * approve or reject by the manifest's limits, and record the bank reference
  * once an approved transfer refund has gone out. A card refund is sent through
- * the gateway as soon as it is approved.
+ * the gateway as soon as it is approved. A permission override never votes
+ * (`docs/schema-m9-permission-overrides.md` O3), so `canVote` can be narrower.
  */
 export function RefundActions({
   refund,
   canManage,
+  canVote = canManage,
 }: {
   refund: RefundDto;
   canManage: boolean;
+  canVote?: boolean;
 }) {
   const t = useTranslations('backoffice.payments');
   const why = useTranslations('backoffice.unavailable');
@@ -88,7 +91,7 @@ export function RefundActions({
           </span>
         ) : null}
       </div>
-      {canManage && refund.status === 'REQUESTED' && mode === 'idle' ? (
+      {canVote && refund.status === 'REQUESTED' && mode === 'idle' ? (
         <div className="flex flex-wrap gap-2">
           <Button size="sm" disabled={busy} onClick={() => post('approve', {})}>
             {t('approve')}

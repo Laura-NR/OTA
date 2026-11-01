@@ -1,4 +1,3 @@
-import { UserRole } from '@ota/domain';
 import type { InventoryItemDto, PackageDto } from '@ota/schemas';
 import {
   Alert,
@@ -17,17 +16,18 @@ import {
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { PageHeader } from '@/components/page-header';
 import { PackageActions } from '@/components/package-actions';
 import { PackageCreateForm } from '@/components/package-create-form';
 import { apiFetch, getServerSession } from '@/lib/api';
 
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
-
 export default async function PackagesPage() {
   const t = await getTranslations('backoffice.packagesPage');
   const session = await getServerSession();
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'catalog');
+  const canManage = access.canManage;
 
   const [packages, inventory] = await Promise.all([
     apiFetch<PackageDto[]>('/packages').catch(() => []),
@@ -37,6 +37,7 @@ export default async function PackagesPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')} />
+      <OverrideNotice capability="catalog" overrides={access.overrides} />
 
       {canManage ? <PackageCreateForm items={inventory} /> : null}
 

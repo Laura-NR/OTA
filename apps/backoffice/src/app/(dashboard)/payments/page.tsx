@@ -1,4 +1,3 @@
-import { UserRole } from '@ota/domain';
 import type { PaymentLedgerEntryDto, ProofQueueItemDto, RefundDto } from '@ota/schemas';
 import {
   Alert,
@@ -16,6 +15,8 @@ import type { BadgeVariant } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { ProofReview } from '@/components/proof-review';
 import { RefundActions } from '@/components/refund-actions';
 import { getThresholds } from '@/lib/operating';
@@ -36,8 +37,6 @@ const VARIANTS: Record<Status, BadgeVariant> = {
 function timestamp(value: string, locale: string): string {
   return `${opsDate(value, locale)} · ${opsTime(value, locale)}`;
 }
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * A-Payments: the proofs of transfer to check and the refund queue with its
@@ -60,7 +59,8 @@ export default async function PaymentsPage({
     apiFetch<RefundDto[]>('/refunds').catch(() => []),
     getServerSession(),
   ]);
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'payments');
+  const canManage = access.canManage;
   const thresholds = await getThresholds();
   const limits = {
     singleUpTo: thresholds.refundSingleUpTo,
@@ -94,6 +94,8 @@ export default async function PaymentsPage({
           </p>
         </div>
       </div>
+
+      <OverrideNotice capability="payments" overrides={access.overrides} />
 
       {entries === null ? (
         <Alert variant="destructive">{t('loadError')}</Alert>
@@ -223,7 +225,11 @@ export default async function PaymentsPage({
                       </span>
                       <span className="text-caption text-muted">{refund.note}</span>
                     </div>
-                    <RefundActions refund={refund} canManage={canManage} />
+                    <RefundActions
+                      refund={refund}
+                      canManage={canManage}
+                      canVote={access.byRole}
+                    />
                   </li>
                 ))}
               </ul>

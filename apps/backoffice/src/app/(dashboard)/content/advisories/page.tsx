@@ -1,4 +1,3 @@
-import { UserRole } from '@ota/domain';
 import type { AdvisoryListItemDto } from '@ota/schemas';
 import {
   Badge,
@@ -16,13 +15,13 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { PageHeader } from '@/components/page-header';
 import { SEVERITY_BADGE, STATUS_BADGE } from '@/lib/advisories';
 import { regionNames } from '@/lib/advisory-regions';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { opsDate } from '@/lib/ops-format';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * A-Content's advisories tab (M7): every advisory with its severity, regions,
@@ -37,7 +36,8 @@ export default async function AdvisoriesPage() {
   const advisories = await apiFetch<AdvisoryListItemDto[]>('/advisories?limit=200').catch(
     () => [],
   );
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'advisories');
+  const canManage = access.canManage;
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,6 +48,7 @@ export default async function AdvisoriesPage() {
           </Link>
         ) : null}
       </PageHeader>
+      <OverrideNotice capability="advisories" overrides={access.overrides} />
 
       <Card>
         <CardContent className="pt-6">

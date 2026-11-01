@@ -1,6 +1,5 @@
 import {
   BOOKING_PIPELINE,
-  UserRole,
   featureFlagsOf,
   pipelinePosition,
   travelerStatus,
@@ -25,6 +24,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { BookingServices, type ItemOffer } from '@/components/booking-services';
 import { IncidentLogForm } from '@/components/incident-log-form';
 import { IncidentResolveButton } from '@/components/incident-resolve-button';
@@ -43,7 +44,6 @@ import { ApiError } from '@/lib/errors';
 import { EVENT_REQUEST_BADGE } from '@/lib/events';
 import { bookingDates, money, opsDate, opsTime, percent } from '@/lib/ops-format';
 
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function Section({
@@ -86,7 +86,13 @@ export default async function BookingPage({
   const requestsT = await getTranslations('eventRequestsDesk');
   const locale = await getLocale();
   const session = await getServerSession();
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const [access, dispatchAccess, paymentsAccess, customersAccess] = await Promise.all([
+    deskAccess(session?.user.role, 'bookings'),
+    deskAccess(session?.user.role, 'dispatch'),
+    deskAccess(session?.user.role, 'payments'),
+    deskAccess(session?.user.role, 'customers'),
+  ]);
+  const canManage = access.canManage;
 
   const reservation = await apiFetch<ReservationDetailDto>(`/reservations/${id}`).catch(
     (error: unknown) => {
@@ -228,6 +234,8 @@ export default async function BookingPage({
         ) : null}
       </div>
 
+      <OverrideNotice capability="bookings" overrides={access.overrides} />
+
       <section
         aria-label={t('kpi.label')}
         className="grid grid-cols-2 gap-4 xl:grid-cols-4"
@@ -316,7 +324,7 @@ export default async function BookingPage({
           offers={offers}
           serverNow={now.getTime()}
           clock={deskClock(thresholds)}
-          canManage={canManage}
+          canManage={dispatchAccess.canManage}
         />
       </Section>
 
@@ -350,7 +358,11 @@ export default async function BookingPage({
           description={t('ofac.description')}
         >
           <div className="px-5">
-            <OfacPanel reservationId={reservation.id} ofac={ofac} canManage={canManage} />
+            <OfacPanel
+              reservationId={reservation.id}
+              ofac={ofac}
+              canManage={customersAccess.canManage}
+            />
           </div>
         </Section>
       ) : null}
@@ -377,7 +389,8 @@ export default async function BookingPage({
             <PaymentPanel
               reservationId={reservation.id}
               status={reservation.status}
-              canManage={canManage}
+              canManage={paymentsAccess.canManage}
+              canVote={paymentsAccess.byRole}
               schedule={schedule}
               features={featureFlagsOf(thresholds)}
               now={new Date().toISOString()}

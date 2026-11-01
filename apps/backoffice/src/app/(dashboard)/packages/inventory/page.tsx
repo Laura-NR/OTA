@@ -1,4 +1,3 @@
-import { UserRole } from '@ota/domain';
 import type { InventoryItemDto } from '@ota/schemas';
 import {
   Alert,
@@ -18,18 +17,19 @@ import {
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { InventoryActions } from '@/components/inventory-actions';
 import { InventoryCreateForm } from '@/components/inventory-create-form';
 import { PageHeader } from '@/components/page-header';
 import { PriceQuote } from '@/components/price-quote';
 import { apiFetch, getServerSession } from '@/lib/api';
 
-const WRITE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
-
 export default async function InventoryPage() {
   const t = await getTranslations('backoffice.inventory');
   const session = await getServerSession();
-  const canWrite = session?.user.role ? WRITE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'catalog');
+  const canWrite = access.canManage;
 
   let items: InventoryItemDto[] = [];
   let loadError: string | null = null;
@@ -42,6 +42,7 @@ export default async function InventoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')} />
+      <OverrideNotice capability="catalog" overrides={access.overrides} />
 
       {canWrite ? (
         <Card>

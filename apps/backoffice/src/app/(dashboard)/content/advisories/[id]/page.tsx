@@ -1,4 +1,4 @@
-import { UserRole, pickAdvisoryTranslation } from '@ota/domain';
+import { pickAdvisoryTranslation } from '@ota/domain';
 import type { AdvisoryDto } from '@ota/schemas';
 import {
   Alert,
@@ -13,6 +13,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { AdvisoryActions } from '@/components/advisory-actions';
 import { AdvisoryEditor } from '@/components/advisory-editor';
 import { PageHeader } from '@/components/page-header';
@@ -26,8 +28,6 @@ import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { opsDate, opsTime } from '@/lib/ops-format';
 import { getTenantConfig } from '@/lib/tenant';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * One advisory (A-Content): the editor while it is a draft or awaiting
@@ -57,7 +57,8 @@ export default async function AdvisoryPage({
     notFound();
   }
   const tenant = getTenantConfig();
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'advisories');
+  const canManage = access.canManage;
   const open = advisory.status === 'DRAFT' || advisory.status === 'IN_REVIEW';
   const when = (value: string) => `${opsDate(value, locale)} ${opsTime(value, locale)}`;
   const text = pickAdvisoryTranslation(
@@ -107,7 +108,11 @@ export default async function AdvisoryPage({
           </Alert>
         ) : null}
         {canManage ? (
-          <AdvisoryActions advisory={advisory} actorId={session!.user.id} />
+          <AdvisoryActions
+            advisory={advisory}
+            actorId={session!.user.id}
+            canApprove={access.byRole}
+          />
         ) : (
           <p className="text-caption text-muted">{t('approval.readOnly')}</p>
         )}
@@ -131,6 +136,7 @@ export default async function AdvisoryPage({
           </Badge>
         </div>
       </PageHeader>
+      <OverrideNotice capability="advisories" overrides={access.overrides} />
       {advisory.disruptionCase ? (
         <p className="text-body-sm">
           <Link
@@ -238,7 +244,11 @@ export default async function AdvisoryPage({
                     </p>
                   ) : null}
                   {canManage ? (
-                    <AdvisoryActions advisory={advisory} actorId={session!.user.id} />
+                    <AdvisoryActions
+                      advisory={advisory}
+                      actorId={session!.user.id}
+                      canApprove={access.byRole}
+                    />
                   ) : null}
                 </CardContent>
               </Card>

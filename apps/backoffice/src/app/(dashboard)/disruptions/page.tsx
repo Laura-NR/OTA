@@ -1,4 +1,4 @@
-import { CUBA_PROVINCE_NAMES, UserRole } from '@ota/domain';
+import { CUBA_PROVINCE_NAMES } from '@ota/domain';
 import type { DisruptionListItemDto } from '@ota/schemas';
 import {
   Badge,
@@ -16,12 +16,12 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { DISRUPTION_SEVERITY_BADGE } from '@/lib/disruptions';
 import { opsDate, opsTime } from '@/lib/ops-format';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * The Disruptions section (M8): every case with its severity, scenario and
@@ -37,7 +37,8 @@ export default async function DisruptionsPage() {
   const cases = await apiFetch<DisruptionListItemDto[]>('/disruptions?limit=200').catch(
     () => [],
   );
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'disruptions');
+  const canManage = access.canManage;
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,6 +49,7 @@ export default async function DisruptionsPage() {
           </Link>
         ) : null}
       </PageHeader>
+      <OverrideNotice capability="disruptions" overrides={access.overrides} />
 
       <Card>
         <CardContent className="pt-6">

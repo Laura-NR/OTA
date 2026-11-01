@@ -1,10 +1,4 @@
-import {
-  bookingMix,
-  monthRange,
-  paymentAlert,
-  relativeChange,
-  UserRole,
-} from '@ota/domain';
+import { bookingMix, monthRange, paymentAlert, relativeChange } from '@ota/domain';
 import type {
   AnalyticsOverviewDto,
   DeskAlertMuteStateDto,
@@ -19,6 +13,8 @@ import { Alert, Badge, buttonClassName, cn, Icon, Tag } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { StartDispatchButton } from '@/components/dispatch-controls';
 import { BarList } from '@/components/bar-list';
 import { KpiCard } from '@/components/kpi-card';
@@ -28,8 +24,6 @@ import { deskClock } from '@/lib/desk-clock';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { bookingDates, money, monthName, percent, signedPercent } from '@/lib/ops-format';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * The payment rails in A-Dashboard's order. They are drawn as one-hue bars
@@ -54,7 +48,8 @@ export default async function DashboardPage() {
   const t = await getTranslations('backoffice.dashboard');
   const locale = await getLocale();
   const session = await getServerSession();
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'dispatch');
+  const canManage = access.canManage;
 
   const now = new Date();
   const thresholds = await getThresholds();
@@ -229,6 +224,8 @@ export default async function DashboardPage() {
           </Link>
         ) : null}
       </div>
+
+      <OverrideNotice capability="dispatch" overrides={access.overrides} />
 
       {rows === null ? <Alert variant="destructive">{t('loadError')}</Alert> : null}
 

@@ -1,4 +1,4 @@
-import { CUBA_PROVINCE_NAMES, UserRole, zonedWallClock } from '@ota/domain';
+import { CUBA_PROVINCE_NAMES, zonedWallClock } from '@ota/domain';
 import type {
   DisruptionCaseDto,
   DisruptionLogEntryDto,
@@ -24,6 +24,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { getThresholds } from '@/lib/operating';
 import {
   AttachForm,
@@ -50,7 +52,6 @@ import {
 } from '@/lib/ops-format';
 import { getTenantConfig } from '@/lib/tenant';
 
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 const HOUR_MS = 3_600_000;
 
 /**
@@ -88,8 +89,8 @@ export default async function DisruptionCasePage({
   const scenario = disruptions.scenarios.find((entry) => entry.key === item.scenario);
   const now = new Date();
   const open = item.status === 'OPEN';
-  const canManage =
-    open && (session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false);
+  const access = await deskAccess(session?.user.role, 'disruptions');
+  const canManage = open && access.canManage;
   const when = (value: string) => `${opsDate(value, locale)} ${opsTime(value, locale)}`;
   const scenarioLabel = item.scenarioLabel ?? item.scenario;
   const provinceName = item.province
@@ -192,6 +193,7 @@ export default async function DisruptionCasePage({
           </Badge>
         </div>
       </PageHeader>
+      <OverrideNotice capability="disruptions" overrides={access.overrides} />
 
       <div className="flex flex-col gap-3">
         <p className="text-body-sm text-secondary">

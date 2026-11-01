@@ -1,10 +1,12 @@
-import { UserRole, cubaProvinceName } from '@ota/domain';
+import { cubaProvinceName } from '@ota/domain';
 import type { EventDto } from '@ota/schemas';
 import { Alert, Badge, Card, CardContent, CardHeader, CardTitle } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { EventActions } from '@/components/event-actions';
 import { EventEditor } from '@/components/event-editor';
 import { EventTranslations } from '@/components/event-translations';
@@ -14,8 +16,6 @@ import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { EVENT_ACCESS_BADGE, EVENT_STATUS_BADGE, eventDates } from '@/lib/events';
 import { getTenantConfig } from '@/lib/tenant';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * One event (A-Content, M10): the editor, the per-locale text, the publish
@@ -38,7 +38,8 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
   const tenant = getTenantConfig();
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'catalog');
+  const canManage = access.canManage;
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,6 +59,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
           </Badge>
         </div>
       </PageHeader>
+      <OverrideNotice capability="catalog" overrides={access.overrides} />
 
       <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[1fr_20rem] xl:items-start">
         <aside className="flex min-w-0 flex-col gap-6 xl:sticky xl:top-6 xl:order-2">

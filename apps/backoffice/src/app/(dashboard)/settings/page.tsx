@@ -1,8 +1,10 @@
 import { SUPPORTED_LOCALES, loadMessages } from '@ota/i18n';
-import { UserRole } from '@ota/domain';
+import { PERMISSION_MATRIX, UserRole, type PermissionAccess } from '@ota/domain';
 import type {
   OperatingSettingsDto,
   PasskeyStatusDto,
+  PermissionOverrideDto,
+  PermissionOverridesDto,
   SecurityStatusDto,
   SettingsVersionDto,
   StaffInviteDto,
@@ -30,6 +32,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { PageHeader } from '@/components/page-header';
+import { OverrideDecision } from '@/components/settings/override-decision';
 import {
   InviteActions,
   InviteForm,
@@ -39,7 +42,6 @@ import { ThresholdsProposal } from '@/components/settings/thresholds-proposal';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { opsDate, opsTime } from '@/lib/ops-format';
 import { getThresholds } from '@/lib/operating';
-import { CAPABILITIES, type Access } from '@/lib/permissions';
 import { THRESHOLD_GROUPS, thresholdText } from '@/lib/threshold-fields';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -55,7 +57,7 @@ type Tab = (typeof TABS)[number];
 /** Super Admin only (M9): who works on the desk, what each role may do, and the audit. */
 const SUPER_TABS: readonly Tab[] = ['users', 'permissions', 'security'];
 
-const ACCESS_BADGE: Record<Access, 'success' | 'secondary' | 'outline'> = {
+const ACCESS_BADGE: Record<PermissionAccess, 'success' | 'secondary' | 'outline'> = {
   yes: 'success',
   view: 'secondary',
   no: 'outline',
@@ -145,7 +147,7 @@ export default async function SettingsPage({
         </ul>
       </nav>
       {tab === 'users' ? <UsersTab actorId={session!.user.id} locale={locale} /> : null}
-      {tab === 'permissions' ? <PermissionsTab /> : null}
+      {tab === 'permissions' ? <PermissionsTab locale={locale} /> : null}
       {tab === 'locales' ? <LocalesTab /> : null}
       {tab === 'manifest' ? <ManifestTab /> : null}
       {tab === 'thresholds' ? (
@@ -276,47 +278,191 @@ async function UsersTab({ actorId, locale }: { actorId: string; locale: string }
   );
 }
 
-async function PermissionsTab() {
+async function PermissionsTab({ locale }: { locale: string }) {
   const t = await getTranslations('backoffice.settings.permissions');
+  const overrides = await apiFetch<PermissionOverridesDto>('/permission-overrides').catch(
+    () => null,
+  );
+  return (
+    <div className="flex flex-col gap-6">
+      <Card className="min-w-0">
+        <CardHeader>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <div className="overflow-x-auto">
+            <Table className="min-w-[680px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead scope="col">{t('capability')}</TableHead>
+                  <TableHead scope="col">{t('roles.superAdmin')}</TableHead>
+                  <TableHead scope="col">{t('roles.operations')}</TableHead>
+                  <TableHead scope="col">{t('roles.support')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {PERMISSION_MATRIX.map((capability) => (
+                  <TableRow key={capability.key}>
+                    <TableCell>
+                      <div className="font-medium">
+                        {t(`rows.${capability.key}.label`)}
+                      </div>
+                      <div className="text-caption text-muted">
+                        {t(`rows.${capability.key}.note`)}
+                      </div>
+                    </TableCell>
+                    {(['superAdmin', 'operations', 'support'] as const).map((role) => (
+                      <TableCell key={role}>
+                        <Badge variant={ACCESS_BADGE[capability[role]]}>
+                          {t(`access.${capability[role]}`)}
+                        </Badge>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <p className="text-caption text-muted">{t('note')}</p>
+        </CardContent>
+      </Card>
+      {overrides ? (
+        <>
+          <OverridesCard
+            title={t('requestsTitle')}
+            empty={t('requestsEmpty')}
+            items={overrides.requests}
+            mode="request"
+            locale={locale}
+          />
+          <OverridesCard
+            title={t('activeTitle')}
+            empty={t('activeEmpty')}
+            items={overrides.active}
+            mode="active"
+            locale={locale}
+          />
+          <OverridesCard
+            title={t('recentTitle')}
+            empty={t('recentEmpty')}
+            items={overrides.recent}
+            mode="recent"
+            locale={locale}
+          />
+        </>
+      ) : (
+        <Alert variant="destructive">{t('loadError')}</Alert>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Settings › Permissions' overrides (`docs/schema-m9-permission-overrides.md`):
+ * requests waiting for a Super Admin, overrides running now, and the rest of
+ * the last 30 days.
+ */
+async function OverridesCard({
+  title,
+  empty,
+  items,
+  mode,
+  locale,
+}: {
+  title: string;
+  empty: string;
+  items: PermissionOverrideDto[];
+  mode: 'request' | 'active' | 'recent';
+  locale: string;
+}) {
+  const t = await getTranslations('backoffice.settings.permissions');
+  const at = (iso: string) => `${opsDate(iso, locale)} ${opsTime(iso, locale)}`;
   return (
     <Card className="min-w-0">
       <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
-        <CardDescription>{t('description')}</CardDescription>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <div className="overflow-x-auto">
-          <Table className="min-w-[680px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead scope="col">{t('capability')}</TableHead>
-                <TableHead scope="col">{t('roles.superAdmin')}</TableHead>
-                <TableHead scope="col">{t('roles.operations')}</TableHead>
-                <TableHead scope="col">{t('roles.support')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {CAPABILITIES.map((capability) => (
-                <TableRow key={capability.key}>
-                  <TableCell>
-                    <div className="font-medium">{t(`rows.${capability.key}.label`)}</div>
-                    <div className="text-caption text-muted">
-                      {t(`rows.${capability.key}.note`)}
-                    </div>
-                  </TableCell>
-                  {(['superAdmin', 'operations', 'support'] as const).map((role) => (
-                    <TableCell key={role}>
-                      <Badge variant={ACCESS_BADGE[capability[role]]}>
-                        {t(`access.${capability[role]}`)}
-                      </Badge>
-                    </TableCell>
-                  ))}
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-body-sm text-muted">{empty}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table className="min-w-[760px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead scope="col">{t('person')}</TableHead>
+                  <TableHead scope="col">{t('row')}</TableHead>
+                  <TableHead scope="col">{t('reason')}</TableHead>
+                  <TableHead scope="col">
+                    {mode === 'active' ? t('until') : t('asked')}
+                  </TableHead>
+                  <TableHead scope="col">
+                    {mode === 'recent' ? t('status') : t('act')}
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        <p className="text-caption text-muted">{t('note')}</p>
+              </TableHeader>
+              <TableBody>
+                {items.map((item) => {
+                  const name = item.userName ?? item.userEmail;
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell className="align-top">
+                        <div className="font-medium">{name}</div>
+                        <div className="text-caption text-muted">
+                          {t(
+                            `roles.${item.userRole === 'OPERATIONS_ADMIN' ? 'operations' : 'support'}`,
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="align-top">
+                        {t(`rows.${item.capability}.label`)}
+                      </TableCell>
+                      <TableCell className="align-top">{item.reason}</TableCell>
+                      <TableCell className="align-top whitespace-nowrap">
+                        {mode === 'active' && item.expiresAt ? (
+                          <>
+                            <div>{at(item.expiresAt)}</div>
+                            {item.decidedByName ? (
+                              <div className="text-caption text-muted">
+                                {t('approvedBy', { name: item.decidedByName })}
+                              </div>
+                            ) : null}
+                          </>
+                        ) : (
+                          at(item.requestedAt)
+                        )}
+                      </TableCell>
+                      <TableCell className="align-top">
+                        {mode === 'recent' ? (
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline">
+                              {t(`statuses.${item.status}`)}
+                            </Badge>
+                            {item.decidedByName || item.endedByName ? (
+                              <span className="text-caption text-muted">
+                                {t('by', {
+                                  name: (item.endedByName ?? item.decidedByName)!,
+                                })}
+                              </span>
+                            ) : null}
+                            {(item.endNote ?? item.decisionNote) ? (
+                              <span className="text-caption text-muted">
+                                {item.endNote ?? item.decisionNote}
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <OverrideDecision id={item.id} name={name} mode={mode} />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

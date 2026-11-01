@@ -18,15 +18,19 @@ const DECISIONS: Readonly<Record<string, 'approved' | 'changes_requested'>> = {
 /**
  * A-Content's approval panel actions (M7 D4): approve (and publish when the
  * rule is met), request changes back to draft, open a new version of a
- * published advisory, and lift or unschedule one.
+ * published advisory, and lift or unschedule one. Approving and requesting
+ * changes stay with the role, never a permission override
+ * (`docs/schema-m9-permission-overrides.md` O3).
  */
 export function AdvisoryActions({
   advisory,
   actorId,
+  canApprove = true,
 }: {
   advisory: AdvisoryDto;
   /** The signed-in desk member, so their own approval is not offered twice. */
   actorId: string;
+  canApprove?: boolean;
 }) {
   const t = useTranslations('advisoriesDesk');
   const why = useTranslations('backoffice.unavailable');
@@ -82,7 +86,7 @@ export function AdvisoryActions({
 
   return (
     <div className="flex flex-col gap-3">
-      {open && mode === 'idle' ? (
+      {open && canApprove && mode === 'idle' ? (
         <div className="flex flex-wrap gap-2">
           <Button
             disabled={busy}

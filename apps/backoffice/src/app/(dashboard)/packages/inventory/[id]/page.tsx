@@ -1,4 +1,3 @@
-import { UserRole } from '@ota/domain';
 import type { InventoryItemDto, PricingRuleDto } from '@ota/schemas';
 import {
   Badge,
@@ -12,14 +11,14 @@ import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { InventoryEditForm } from '@/components/inventory-edit-form';
 import { InventoryMediaManager } from '@/components/inventory-media-manager';
 import { PriceQuote } from '@/components/price-quote';
 import { PricingRulesManager } from '@/components/pricing-rules-manager';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
-
-const WRITE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 export default async function InventoryDetailPage({
   params,
@@ -29,7 +28,8 @@ export default async function InventoryDetailPage({
   const { id } = await params;
   const t = await getTranslations('backoffice.inventoryDetail');
   const session = await getServerSession();
-  const canWrite = session?.user.role ? WRITE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'catalog');
+  const canWrite = access.canManage;
 
   const item = await apiFetch<InventoryItemDto>(`/inventory/${id}`).catch(
     (error: unknown) => {
@@ -56,6 +56,8 @@ export default async function InventoryDetailPage({
           {item.active ? t('activeLabel') : t('inactive')}
         </Badge>
       </div>
+
+      <OverrideNotice capability="catalog" overrides={access.overrides} />
 
       <Card>
         <CardHeader>

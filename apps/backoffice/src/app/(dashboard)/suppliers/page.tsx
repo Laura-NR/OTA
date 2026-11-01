@@ -1,6 +1,5 @@
 import {
   SupplierCategory,
-  UserRole,
   VerificationStatus,
   canAutoDispatch,
   isCredentialExpiringSoon,
@@ -23,14 +22,14 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { SupplierFilters } from '@/components/supplier-filters';
 import { VerificationActions } from '@/components/verification-actions';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { opsDayMonth, percent } from '@/lib/ops-format';
 import { lastJobLabel, powerLabel } from '@/lib/suppliers';
-
-const VERIFY_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -86,7 +85,8 @@ export default async function SuppliersPage({
   const serviceTypeT = await getTranslations('status.serviceType');
   const locale = await getLocale();
   const session = await getServerSession();
-  const canVerify = session?.user.role ? VERIFY_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'suppliers');
+  const canVerify = access.canManage;
 
   const thresholds = await getThresholds();
   const windowDays = thresholds.credentialExpiryWindowDays;
@@ -272,6 +272,8 @@ export default async function SuppliersPage({
           {t('recruitment')}
         </Link>
       </div>
+
+      <OverrideNotice capability="suppliers" overrides={access.overrides} />
 
       {suppliers === null ? (
         <Alert variant="destructive">{t('loadError')}</Alert>

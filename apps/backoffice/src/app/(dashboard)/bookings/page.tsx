@@ -1,7 +1,6 @@
 import {
   RESERVATION_STATUSES,
   TRAVEL_WINDOWS,
-  UserRole,
   bookingMix,
   compareUrgency,
   inTravelWindow,
@@ -29,14 +28,14 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { BookingFilters } from '@/components/booking-filters';
 import { StatusBadge } from '@/components/status-badge';
 import { WhoActsLegend } from '@/components/who-acts-legend';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { bookingDates, countdown, money, opsTime } from '@/lib/ops-format';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /** A-Bookings' saved views that today's data can answer. */
 const VIEWS = ['all', 'attention', 'arriving', 'ofac', 'payment'] as const;
@@ -138,7 +137,8 @@ export default async function BookingsPage({
   const traveler = await getTranslations('status.traveler');
   const locale = await getLocale();
   const session = await getServerSession();
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'bookings');
+  const canManage = access.canManage;
 
   const view: View = VIEWS.find((candidate) => candidate === params.view) ?? 'all';
   const state = RESERVATION_STATUSES.find((candidate) => candidate === params.state);
@@ -278,6 +278,8 @@ export default async function BookingsPage({
           </Link>
         ) : null}
       </div>
+
+      <OverrideNotice capability="bookings" overrides={access.overrides} />
 
       {loadError ? <Alert variant="destructive">{loadError}</Alert> : null}
 

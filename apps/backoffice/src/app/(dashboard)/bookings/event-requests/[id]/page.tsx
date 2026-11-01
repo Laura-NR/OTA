@@ -1,10 +1,11 @@
-import { UserRole } from '@ota/domain';
 import type { EventRequestDetailDto } from '@ota/schemas';
 import { Alert, Badge, Card, CardContent, CardHeader, CardTitle } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { EventRequestActions } from '@/components/event-request-actions';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -12,8 +13,6 @@ import { ApiError } from '@/lib/errors';
 import { EVENT_REQUEST_BADGE, eventDates } from '@/lib/events';
 import { getThresholds } from '@/lib/operating';
 import { calendarDate, moneyExact, opsDate, opsTime } from '@/lib/ops-format';
-
-const MANAGE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 /**
  * One event request (M10 D3–D6): what the traveler asked for, where the
@@ -44,7 +43,8 @@ export default async function EventRequestPage({
   if (!request) {
     notFound();
   }
-  const canManage = session?.user.role ? MANAGE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'bookings');
+  const canManage = access.canManage;
   const when = (value: string) => `${opsDate(value, locale)} ${opsTime(value, locale)}`;
   const amount = (value: number) => moneyExact(value, request.currency, locale);
 
@@ -64,6 +64,7 @@ export default async function EventRequestPage({
           </Badge>
         </div>
       </PageHeader>
+      <OverrideNotice capability="bookings" overrides={access.overrides} />
       {request.overdue ? (
         <Alert variant="warning">
           {t('overdueAlert', { hours: thresholds.conciergeAnswerHours })}

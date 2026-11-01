@@ -1,4 +1,3 @@
-import { UserRole } from '@ota/domain';
 import type { SupplierApplicationDto } from '@ota/schemas';
 import {
   Alert,
@@ -17,13 +16,13 @@ import {
 } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
 import { ApplicationActions } from '@/components/application-actions';
 import { FeatureOffNotice } from '@/components/feature-off-notice';
 import { PageHeader } from '@/components/page-header';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { getThresholds } from '@/lib/operating';
-
-const WRITE_ROLES: readonly string[] = [UserRole.OperationsAdmin, UserRole.SuperAdmin];
 
 function statusVariant(status: string) {
   if (status === 'APPROVED') return 'success' as const;
@@ -37,7 +36,8 @@ export default async function ApplicationsPage() {
     getServerSession(),
     getThresholds(),
   ]);
-  const canReview = session?.user.role ? WRITE_ROLES.includes(session.user.role) : false;
+  const access = await deskAccess(session?.user.role, 'suppliers');
+  const canReview = access.canManage;
 
   let applications: SupplierApplicationDto[] = [];
   let loadError: string | null = null;
@@ -50,6 +50,7 @@ export default async function ApplicationsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')} />
+      <OverrideNotice capability="suppliers" overrides={access.overrides} />
       {thresholds.recruitmentPortal ? null : (
         <FeatureOffNotice feature="recruitmentPortal" />
       )}
@@ -100,6 +101,7 @@ export default async function ApplicationsPage() {
                         applicationId={application.id}
                         status={application.status}
                         canReview={canReview}
+                        canApprove={access.byRole}
                       />
                     </TableCell>
                   </TableRow>

@@ -64,6 +64,7 @@ export const THRESHOLD_GROUPS: readonly {
       { key: 'staffPasskeysRequired', unit: 'switch' },
       { key: 'staffIdleLockMinutes', unit: 'min', min: 5, max: 240 },
       { key: 'staffNewDeviceEmail', unit: 'switch' },
+      { key: 'overrideExpiryHours', unit: 'h', min: 1, max: 24 },
     ],
   },
   {
