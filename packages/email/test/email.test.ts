@@ -673,6 +673,23 @@ describe('passkeyChangeEmail (docs/schema-m9-passkeys.md P4, P5)', () => {
     expect(reset.subject).toMatch(/^Se restablecieron sus llaves de acceso/);
     expect(reset.text).toContain('Dayana Rodríguez quitó todas las llaves');
   });
+
+  it('names who issued a recovery code, and reports its use (docs/schema-m9-recovery-codes.md)', () => {
+    const issued = passkeyChangeEmail({
+      ...base,
+      change: 'recovery_issued',
+      actorName: 'Dayana Rodríguez',
+    });
+    expect(issued.subject).toBe(
+      'A recovery code was issued for your Authentic Cuba Expeditions desk account',
+    );
+    expect(issued.text).toContain('Dayana Rodríguez issued a one-time recovery code');
+    expect(issued.text).toContain('15 minutes');
+    expect(issued.text).toContain('tell a Super Admin at once');
+    const used = passkeyChangeEmail({ ...base, change: 'recovery_used', locale: 'fr' });
+    expect(used.subject).toMatch(/^Votre code de récupération .* a été utilisé$/);
+    expect(used.text).toContain('26 October 2026, 14:05 UTC');
+  });
 });
 
 describe('eventRequestEmail (M10)', () => {
