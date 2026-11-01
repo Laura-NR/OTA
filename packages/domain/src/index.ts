@@ -476,6 +476,13 @@ export {
   type RecoveryCodeState,
 } from './settings/recovery-codes';
 export {
+  KNOWN_DEVICE_STALE_DAYS,
+  deviceLabel,
+  knownDeviceCutoff,
+  newDeviceEmailDue,
+  recordsSignInDevice,
+} from './settings/new-device';
+export {
   DEFAULT_FEATURE_FLAGS,
   FEATURE_FLAGS,
   featureFlagsOf,

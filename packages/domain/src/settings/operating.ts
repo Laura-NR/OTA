@@ -50,6 +50,8 @@ export interface OperatingThresholds extends FeatureFlagValues {
   staffPasskeysRequired: boolean;
   /** Minutes with no input before a staff desk session locks (`docs/schema-m9-idle-lock.md` L6). */
   staffIdleLockMinutes: number;
+  /** Email staff on a sign-in from a device not seen before (`docs/schema-m9-new-device-email.md` N5). */
+  staffNewDeviceEmail: boolean;
 }
 
 export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
@@ -70,6 +72,7 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   conciergeAnswerHours: 48,
   staffPasskeysRequired: false,
   staffIdleLockMinutes: STAFF_IDLE_LOCK_MINUTES,
+  staffNewDeviceEmail: true,
   ...DEFAULT_FEATURE_FLAGS,
 };
 

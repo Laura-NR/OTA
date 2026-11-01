@@ -39,6 +39,7 @@ export const operatingThresholdsSchema = z.object({
   conciergeAnswerHours: whole(1, 168),
   staffPasskeysRequired: z.boolean(),
   staffIdleLockMinutes: whole(5, 240),
+  staffNewDeviceEmail: z.boolean(),
   // Runtime feature flags (M9 D8b); the manifest's values are the defaults.
   interactiveSvgMap: z.boolean(),
   culturalEventsBanner: z.boolean(),
