@@ -55,7 +55,10 @@ function setup(redeem: RecoveryCodeCheck['redeem']) {
 describe('the recovery-code sign-in (docs/schema-m9-recovery-codes.md R3, R4)', () => {
   it('creates the session the API names and sets its cookie', async () => {
     const { db, calls, signIn } = setup(async () => 'staff-1');
-    const response = await signIn({ email: ' Ana@Example.test ', code: 'ABCD-2345-WXYZ' });
+    const response = await signIn({
+      email: ' Ana@Example.test ',
+      code: 'ABCD-2345-WXYZ',
+    });
     expect(response.status).toBe(200);
     expect(response.headers.get('set-cookie')).toContain('better-auth.session_token=');
     expect(db.session).toHaveLength(1);

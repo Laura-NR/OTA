@@ -43,7 +43,8 @@ export function recoveryCodePlugin(check: RecoveryCodeCheck) {
         { method: 'POST' },
         async (ctx) => {
           const body = (ctx.body ?? {}) as { email?: unknown; code?: unknown };
-          const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+          const email =
+            typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
           const code = typeof body.code === 'string' ? body.code : '';
           if (!email || !code || email.length > MAX_EMAIL || code.length > MAX_CODE) {
             throw invalid();

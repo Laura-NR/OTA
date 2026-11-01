@@ -4,12 +4,7 @@
  * passkey rule, so any route not listed here records `other` and fails closed.
  */
 export type SignInMethod =
-  | 'passkey'
-  | 'magic_link'
-  | 'password'
-  | 'oauth'
-  | 'recovery_code'
-  | 'other';
+  'passkey' | 'magic_link' | 'password' | 'oauth' | 'recovery_code' | 'other';
 
 export function signInMethodForPath(path: string | null | undefined): SignInMethod {
   // Registration can also create a session (`createSession`), but adding a

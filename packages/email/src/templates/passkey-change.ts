@@ -9,11 +9,7 @@ import { emailShell } from './shell';
  * (`docs/schema-m9-recovery-codes.md`); the others the person did.
  */
 export type PasskeyChangeKind =
-  | 'added'
-  | 'removed'
-  | 'reset'
-  | 'recovery_issued'
-  | 'recovery_used';
+  'added' | 'removed' | 'reset' | 'recovery_issued' | 'recovery_used';
 
 export interface PasskeyChangeEmailInput {
   to: string;
@@ -67,8 +63,7 @@ const COPY = {
       reset: (agency: string) => `Se restablecieron sus llaves de acceso de ${agency}`,
       recovery_issued: (agency: string) =>
         `Se emitió un código de recuperación para su cuenta de ${agency}`,
-      recovery_used: (agency: string) =>
-        `Se usó su código de recuperación de ${agency}`,
+      recovery_used: (agency: string) => `Se usó su código de recuperación de ${agency}`,
     },
     greeting: 'Hola:',
     body: {

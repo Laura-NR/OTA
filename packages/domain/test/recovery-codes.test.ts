@@ -56,7 +56,11 @@ describe('a recovery code (docs/schema-m9-recovery-codes.md R4)', () => {
 });
 
 describe('when a recovery code works (R1, R4)', () => {
-  const open = { expiresAt: recoveryCodeExpiresAt(ISSUED), usedAt: null, withdrawnAt: null };
+  const open = {
+    expiresAt: recoveryCodeExpiresAt(ISSUED),
+    usedAt: null,
+    withdrawnAt: null,
+  };
 
   it('works for 15 minutes from issue', () => {
     expect(recoveryCodeExpiresAt(ISSUED)).toEqual(minutes(15));
@@ -121,7 +125,9 @@ describe('the session a recovery code opens (R3)', () => {
       required: false,
       signInMethod: RECOVERY_CODE_SIGN_IN_METHOD,
     };
-    expect(passkeyChangeRefusal({ ...base, passkeyCount: 0, change: 'register' })).toBeNull();
+    expect(
+      passkeyChangeRefusal({ ...base, passkeyCount: 0, change: 'register' }),
+    ).toBeNull();
     expect(passkeyChangeRefusal({ ...base, passkeyCount: 1, change: 'register' })).toBe(
       'PASSKEY_SESSION_REQUIRED',
     );
