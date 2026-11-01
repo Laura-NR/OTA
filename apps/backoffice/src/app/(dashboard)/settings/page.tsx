@@ -435,7 +435,7 @@ async function OverridesCard({
                       </TableCell>
                       <TableCell className="align-top">
                         {mode === 'recent' ? (
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col items-start gap-1">
                             <Badge variant="outline">
                               {t(`statuses.${item.status}`)}
                             </Badge>
