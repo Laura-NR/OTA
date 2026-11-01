@@ -1,10 +1,14 @@
 import {
   ADVISORY_DUAL_APPROVAL_LEVELS,
   INVITE_STATES,
+  OVERRIDE_EXPIRY_HOURS,
+  PERMISSION_CAPABILITIES,
   SETTINGS_VERSION_STATUSES,
   UserRole,
   type AdvisoryDualApprovalLevel,
   type InviteState,
+  type OverrideStatus,
+  type PermissionCapability,
   type SettingsVersionStatus,
 } from '@ota/domain';
 import { z } from 'zod';
@@ -40,6 +44,7 @@ export const operatingThresholdsSchema = z.object({
   staffPasskeysRequired: z.boolean(),
   staffIdleLockMinutes: whole(5, 240),
   staffNewDeviceEmail: z.boolean(),
+  overrideExpiryHours: whole(OVERRIDE_EXPIRY_HOURS.min, OVERRIDE_EXPIRY_HOURS.max),
   // Runtime feature flags (M9 D8b); the manifest's values are the defaults.
   interactiveSvgMap: z.boolean(),
   culturalEventsBanner: z.boolean(),
@@ -265,3 +270,79 @@ export const recoveryCodeIssuedSchema = z.object({
 });
 
 export type RecoveryCodeIssuedDto = z.infer<typeof recoveryCodeIssuedSchema>;
+
+export const permissionCapabilitySchema = z.enum([...PERMISSION_CAPABILITIES] as [
+  PermissionCapability,
+  ...PermissionCapability[],
+]);
+
+/**
+ * A staff member asks to override one permission-matrix row, with a reason
+ * (`docs/schema-m9-permission-overrides.md` O1, O4).
+ */
+export const requestOverrideSchema = z.object({
+  capability: permissionCapabilitySchema,
+  reason: z.string().trim().min(3).max(500),
+});
+
+export type RequestOverrideRequest = z.infer<typeof requestOverrideSchema>;
+
+/** Approving, declining or ending an override, with an optional note. */
+export const overrideNoteSchema = z.object({
+  note: z.string().trim().max(500).optional(),
+});
+
+export type OverrideNoteRequest = z.infer<typeof overrideNoteSchema>;
+
+export const overrideStatusSchema = z.enum([
+  'REQUESTED',
+  'LAPSED',
+  'ACTIVE',
+  'EXPIRED',
+  'DECLINED',
+  'ENDED',
+] as [OverrideStatus, ...OverrideStatus[]]);
+
+export const permissionOverrideSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  userName: z.string().nullable(),
+  userEmail: z.string(),
+  userRole: staffRoleSchema,
+  capability: permissionCapabilitySchema,
+  reason: z.string(),
+  /** The stored state read against the clock (O4, O5). */
+  status: overrideStatusSchema,
+  requestedAt: z.string(),
+  decidedByName: z.string().nullable(),
+  decidedAt: z.string().nullable(),
+  decisionNote: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+  endedByName: z.string().nullable(),
+  endedAt: z.string().nullable(),
+  endNote: z.string().nullable(),
+});
+
+export type PermissionOverrideDto = z.infer<typeof permissionOverrideSchema>;
+
+/** Settings › Permissions for Super Admins: pending requests, running overrides, the last 30 days. */
+export const permissionOverridesSchema = z.object({
+  requests: z.array(permissionOverrideSchema),
+  active: z.array(permissionOverrideSchema),
+  recent: z.array(permissionOverrideSchema),
+});
+
+export type PermissionOverridesDto = z.infer<typeof permissionOverridesSchema>;
+
+/**
+ * The signed-in staff member's overrides as a view-only page reads them: the
+ * rows they may ask for, and their overrides of the last two days plus any
+ * still open.
+ */
+export const myOverridesSchema = z.object({
+  overridable: z.array(permissionCapabilitySchema),
+  expiryHours: z.number().int(),
+  overrides: z.array(permissionOverrideSchema),
+});
+
+export type MyOverridesDto = z.infer<typeof myOverridesSchema>;
