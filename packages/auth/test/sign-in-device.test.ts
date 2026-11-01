@@ -73,9 +73,9 @@ describe('the sign-in device (docs/schema-m9-new-device-email.md N1)', () => {
     const response = await signInByLink({ cookie: `${DEVICE_COOKIE}=old-token` });
     expect(response.status).toBe(302);
     const cookies = response.headers.getSetCookie();
-    expect(cookies.some((cookie) => cookie.startsWith('better-auth.session_token='))).toBe(
-      true,
-    );
+    expect(
+      cookies.some((cookie) => cookie.startsWith('better-auth.session_token=')),
+    ).toBe(true);
     const device = cookies.find((cookie) => cookie.startsWith(`${DEVICE_COOKIE}=`));
     expect(device).toContain(`${DEVICE_COOKIE}=fresh-device-token`);
     expect(device).toMatch(/HttpOnly/i);

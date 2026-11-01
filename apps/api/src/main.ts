@@ -12,6 +12,7 @@ import { AppModule } from './app.module';
 import { setAuthRuntime } from './auth/auth.runtime';
 import { RecoveryCodesService } from './auth/recovery-codes.service';
 import { SessionPolicy } from './auth/session-policy';
+import { SignInDevicesService } from './auth/sign-in-devices.service';
 import {
   DEFAULT_SHUTDOWN_TIMEOUT_MS,
   enableGracefulShutdown,
@@ -47,11 +48,13 @@ async function bootstrap(): Promise<void> {
     .filter(Boolean);
 
   // Better Auth's session, passkey and recovery-code routes ask the Nest
-  // session policy (idle lock L5, passkeys P4) and recovery codes; requests
-  // arrive only after `listen`, by which time both are resolved below.
+  // session policy (idle lock L5, passkeys P4) and recovery codes, and every
+  // new session reports its device; requests arrive only after `listen`, by
+  // which time all three are resolved below.
   const resolved: {
     sessionPolicy?: SessionPolicy;
     recoveryCodes?: RecoveryCodesService;
+    signInDevices?: SignInDevicesService;
   } = {};
   const policy = (): SessionPolicy => {
     if (!resolved.sessionPolicy) throw new Error('The session policy is not ready');
@@ -60,6 +63,10 @@ async function bootstrap(): Promise<void> {
   const recoveryCodes = (): RecoveryCodesService => {
     if (!resolved.recoveryCodes) throw new Error('Recovery codes are not ready');
     return resolved.recoveryCodes;
+  };
+  const signInDevices = (): SignInDevicesService => {
+    if (!resolved.signInDevices) throw new Error('Sign-in devices are not ready');
+    return resolved.signInDevices;
   };
 
   const { createAuth, createAuthMiddleware, toWebHeaders } = await import('@ota/auth');
@@ -85,6 +92,7 @@ async function bootstrap(): Promise<void> {
     },
     sessionGate: { refusal: (session) => policy().gateRefusal(session) },
     recoveryCode: { redeem: (input) => recoveryCodes().redeem(input) },
+    signInDevice: { signedIn: (input) => signInDevices().signedIn(input) },
   });
   setAuthRuntime({ auth, toWebHeaders });
   const authHandler = createAuthMiddleware(auth);
@@ -95,6 +103,7 @@ async function bootstrap(): Promise<void> {
   });
   resolved.sessionPolicy = app.get(SessionPolicy);
   resolved.recoveryCodes = app.get(RecoveryCodesService);
+  resolved.signInDevices = app.get(SignInDevicesService);
   if (process.env.STAFF_PASSKEYS_OVERRIDE?.trim().toLowerCase() === 'off') {
     new NestLogger('Bootstrap').warn(
       'STAFF_PASSKEYS_OVERRIDE=off: the staff passkey rule is suspended (break-glass)',

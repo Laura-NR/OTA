@@ -385,8 +385,9 @@ export class StaffService {
   }
 
   /**
-   * A lost device (P5): another Super Admin deletes the user's passkeys and
-   * sessions, with a reason; the user signs in by link and sets one up again.
+   * A lost device (P5): another Super Admin deletes the user's passkeys,
+   * sessions and known devices (`docs/schema-m9-new-device-email.md` N6), with
+   * a reason; the user signs in by link and sets one up again.
    */
   async resetPasskeys(
     actor: AuthUser,
@@ -397,10 +398,12 @@ export class StaffService {
     const email = await this.prisma.$transaction(async (tx) => {
       const passkeys = await tx.passkey.deleteMany({ where: { userId: id } });
       const sessions = await tx.session.deleteMany({ where: { userId: id } });
+      const devices = await tx.staffKnownDevice.deleteMany({ where: { userId: id } });
       await this.audit(tx, actor, 'staff.passkeys_reset', ENTITY_USER, id, {
         reason: input.reason,
         passkeys: passkeys.count,
         sessions: sessions.count,
+        devices: devices.count,
       });
       const target = await tx.user.findUniqueOrThrow({
         where: { id },
@@ -420,7 +423,8 @@ export class StaffService {
    * Lost access (`docs/schema-m9-recovery-codes.md` R1, R3, R5): another
    * Super Admin issues a one-time code, returned once and stored only as a
    * hash. It replaces an open one, and the person's passkeys and sessions go,
-   * since the code's session may add only a first passkey. Audited with both
+   * since the code's session may add only a first passkey, as do their known
+   * devices (N6), so the code's sign-in is announced. Audited with both
    * names and the reason; the person is told.
    */
   async issueRecoveryCode(
@@ -444,6 +448,7 @@ export class StaffService {
       });
       const passkeys = await tx.passkey.deleteMany({ where: { userId: id } });
       const sessions = await tx.session.deleteMany({ where: { userId: id } });
+      const devices = await tx.staffKnownDevice.deleteMany({ where: { userId: id } });
       const row = await tx.staffRecoveryCode.create({
         data: {
           userId: id,
@@ -459,6 +464,7 @@ export class StaffService {
         replaced: replaced.count,
         passkeys: passkeys.count,
         sessions: sessions.count,
+        devices: devices.count,
       });
       const person = await tx.user.findUniqueOrThrow({
         where: { id },
@@ -506,7 +512,7 @@ export class StaffService {
     return this.one(id);
   }
 
-  /** The guard refuses a deactivated user; their sessions end at once. */
+  /** The guard refuses a deactivated user; their sessions and known devices go at once. */
   async deactivate(actor: AuthUser, id: string): Promise<StaffUserDto> {
     const target = await this.loadStaff(actor, id);
     if (target.deactivatedAt) {
@@ -518,6 +524,7 @@ export class StaffService {
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({ where: { id }, data: { deactivatedAt: new Date() } });
       await tx.session.deleteMany({ where: { userId: id } });
+      await tx.staffKnownDevice.deleteMany({ where: { userId: id } });
       await this.audit(tx, actor, 'staff.deactivated', ENTITY_USER, id, {});
     });
     return this.one(id);

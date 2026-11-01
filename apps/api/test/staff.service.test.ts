@@ -88,6 +88,7 @@ function fakePrisma() {
     [FOUNDER.id, 1],
   ]);
   const passkeys = new Map<string, number>([['u-ana', 2]]);
+  const devices = new Map<string, number>([['u-ana', 1]]);
   const audits: Record<string, unknown>[] = [];
   const codes: RecoveryCode[] = [];
   const isOpen = (code: RecoveryCode, now = new Date()) =>
@@ -131,6 +132,7 @@ function fakePrisma() {
     invites,
     sessions,
     passkeys,
+    devices,
     audits,
     codes,
     user: {
@@ -234,6 +236,13 @@ function fakePrisma() {
       deleteMany: async ({ where }: { where: { userId: string } }) => {
         const count = passkeys.get(where.userId) ?? 0;
         passkeys.delete(where.userId);
+        return { count };
+      },
+    },
+    staffKnownDevice: {
+      deleteMany: async ({ where }: { where: { userId: string } }) => {
+        const count = devices.get(where.userId) ?? 0;
+        devices.delete(where.userId);
         return { count };
       },
     },
@@ -431,10 +440,11 @@ describe('StaffService (M9 D4, D5)', () => {
     expect(invite.state).toBe('SENT');
   });
 
-  it('deactivates a user, ending their sessions, but never the last Super Admin or oneself', async () => {
+  it('deactivates a user, ending their sessions and forgetting their devices, but never the last Super Admin or oneself', async () => {
     const ana = await service.deactivate(DAYANA, 'u-ana');
     expect(ana.deactivatedAt).not.toBeNull();
     expect(prisma.sessions.has('u-ana')).toBe(false);
+    expect(prisma.devices.has('u-ana')).toBe(false);
     await expect(service.deactivate(DAYANA, DAYANA.id)).rejects.toBeInstanceOf(
       UnprocessableEntityException,
     );
@@ -452,15 +462,17 @@ describe('StaffService (M9 D4, D5)', () => {
     expect(prisma.audits.map((entry) => entry.action)).toContain('staff.deactivated');
   });
 
-  it('resets a lost device: passkeys and sessions go, audited with the reason, and the user is told', async () => {
+  it('resets a lost device: passkeys, sessions and known devices go, audited with the reason, and the user is told', async () => {
     const ana = await service.resetPasskeys(DAYANA, 'u-ana', { reason: 'Phone stolen' });
     expect(ana.passkeys).toBe(0);
     expect(prisma.passkeys.has('u-ana')).toBe(false);
     expect(prisma.sessions.has('u-ana')).toBe(false);
+    // N6: the next sign-in from any browser is announced.
+    expect(prisma.devices.has('u-ana')).toBe(false);
     expect(prisma.audits.at(-1)).toMatchObject({
       action: 'staff.passkeys_reset',
       entityId: 'u-ana',
-      metadata: { reason: 'Phone stolen', passkeys: 2, sessions: 2 },
+      metadata: { reason: 'Phone stolen', passkeys: 2, sessions: 2, devices: 1 },
     });
     const email = mailer.sent.at(-1)!;
     expect(email.to).toBe('ana@vereda.travel');
@@ -539,7 +551,13 @@ describe('staff recovery codes (docs/schema-m9-recovery-codes.md)', () => {
       actorUserId: DAYANA.id,
       action: 'staff.recovery_code_issued',
       entityId: 'u-ana',
-      metadata: { reason: 'Mailbox locked', passkeys: 2, sessions: 2, replaced: 0 },
+      metadata: {
+        reason: 'Mailbox locked',
+        passkeys: 2,
+        sessions: 2,
+        devices: 1,
+        replaced: 0,
+      },
     });
     const email = mailer.sent.at(-1)!;
     expect(email.to).toBe('ana@vereda.travel');
