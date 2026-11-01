@@ -11,6 +11,7 @@ import { magicLink } from 'better-auth/plugins';
 import type { IncomingHttpHeaders } from 'node:http';
 
 import { recoveryCodePlugin, type RecoveryCodeCheck } from './recovery-code.js';
+import { signInDevicePlugin, type SignInDeviceCheck } from './sign-in-device.js';
 import {
   passkeyChangeForPath,
   routeOpenToRefusedSession,
@@ -23,6 +24,7 @@ export {
   RECOVERY_CODE_SIGN_IN_PATH,
   type RecoveryCodeCheck,
 } from './recovery-code.js';
+export { DEVICE_COOKIE, type SignInDeviceCheck } from './sign-in-device.js';
 export {
   passkeyChangeForPath,
   routeOpenToRefusedSession,
@@ -59,6 +61,8 @@ export interface CreateAuthOptions {
   sessionGate?: SessionGate;
   /** Staff recovery codes (`docs/schema-m9-recovery-codes.md`); no route without it. */
   recoveryCode?: RecoveryCodeCheck;
+  /** The new-device email (`docs/schema-m9-new-device-email.md`); no device cookie without it. */
+  signInDevice?: SignInDeviceCheck;
 }
 
 /**
@@ -158,7 +162,8 @@ export type NodeAuthHandler = (
  * route that acts on a session asks it first, so a refused session (for
  * instance an idle-locked desk) can only read itself, sign out or sign in.
  * With a `recoveryCode` check, a staff member can sign in with a code a Super
- * Admin issued.
+ * Admin issued. With a `signInDevice` check, every new session tells the API
+ * which browser it came from.
  */
 export function createAuth(options: CreateAuthOptions): AuthInstance {
   const passkeySettings = options.passkey ?? {};
@@ -326,6 +331,7 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
         },
       }),
       ...(options.recoveryCode ? [recoveryCodePlugin(options.recoveryCode)] : []),
+      ...(options.signInDevice ? [signInDevicePlugin(options.signInDevice)] : []),
     ],
     advanced: {
       database: {
