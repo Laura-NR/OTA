@@ -20,16 +20,22 @@ export interface PasskeyRow {
 export interface PasskeyManagerProps {
   state: PasskeyStatusDto['state'];
   passkeys: PasskeyRow[];
+  /** The session came from a recovery code (`docs/schema-m9-recovery-codes.md` R3). */
+  recovery?: boolean;
 }
 
 /**
  * The desk's passkey page (`docs/schema-m9-passkeys.md` P3, P4). A staff
  * member with no passkey sets one up and then signs in with it; one who used
- * a link signs in with theirs; anyone else lists, adds, renames and removes
- * them. Better Auth runs the ceremonies, and the API refuses a change the
+ * a link (or a recovery code) signs in with theirs; anyone else lists, adds,
+ * renames and removes them. Better Auth runs the ceremonies, and the API refuses a change the
  * staff rule does not allow, so its message is shown as is.
  */
-export function PasskeyManager({ state, passkeys }: PasskeyManagerProps) {
+export function PasskeyManager({
+  state,
+  passkeys,
+  recovery = false,
+}: PasskeyManagerProps) {
   const t = useTranslations('backoffice.passkeys');
   const router = useRouter();
   const id = useId();
@@ -126,7 +132,13 @@ export function PasskeyManager({ state, passkeys }: PasskeyManagerProps) {
         <h2 className="text-h4">
           {state === 'enroll' ? t('setupTitle') : t('useTitle')}
         </h2>
-        <p>{state === 'enroll' ? t('setupDescription') : t('useDescription')}</p>
+        <p>
+          {state === 'enroll'
+            ? t('setupDescription')
+            : recovery
+              ? t('useDescriptionRecovery')
+              : t('useDescription')}
+        </p>
         {added ? <Alert variant="success">{t('added')}</Alert> : null}
         {error ? <Alert variant="destructive">{error}</Alert> : null}
         {ready ? (

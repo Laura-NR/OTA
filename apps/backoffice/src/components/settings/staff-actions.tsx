@@ -1,12 +1,13 @@
 'use client';
 
-import type { StaffInviteDto, StaffUserDto } from '@ota/schemas';
-import { Alert, Button, Field, Input, Select } from '@ota/ui';
-import { useTranslations } from 'next-intl';
+import type { RecoveryCodeIssuedDto, StaffInviteDto, StaffUserDto } from '@ota/schemas';
+import { Alert, Button, Dialog, Field, Input, Select } from '@ota/ui';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import { opsTime } from '@/lib/ops-format';
 
 /** Run one staff action, then refresh the page; the error stays beside it. */
 function useStaffAction() {
@@ -34,13 +35,16 @@ function useStaffAction() {
 /**
  * A staff row's actions (M9 D5): move between Operations Admin and
  * Administrative Support, sign out everywhere, reset a lost device's passkeys
- * with a reason (`docs/schema-m9-passkeys.md` P5), deactivate or reactivate.
- * Promotion to Super Admin is an invitation; nobody acts on themselves.
+ * with a reason (`docs/schema-m9-passkeys.md` P5), issue or withdraw a
+ * recovery code (`docs/schema-m9-recovery-codes.md`), deactivate or
+ * reactivate. Promotion to Super Admin is an invitation; nobody acts on
+ * themselves.
  */
 export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boolean }) {
   const t = useTranslations('backoffice.settings.users');
   const why = useTranslations('backoffice.unavailable');
   const id = useId();
+  const locale = useLocale();
   const { run, busy, error } = useStaffAction();
   const [resetting, setResetting] = useState(false);
   const [reason, setReason] = useState('');
@@ -94,6 +98,7 @@ export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boo
             {t('resetPasskeys')}
           </Button>
         ) : null}
+        {!user.deactivatedAt ? <RecoveryCodeAction user={user} /> : null}
         {user.deactivatedAt ? (
           <Button
             size="sm"
@@ -156,8 +161,135 @@ export function StaffActions({ user, isSelf }: { user: StaffUserDto; isSelf: boo
           </div>
         </form>
       ) : null}
+      {user.recoveryCodeOpenUntil && !user.deactivatedAt ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-caption text-secondary">
+            {t('recoveryOpen', { time: opsTime(user.recoveryCodeOpenUntil, locale) })}
+          </span>
+          <Button
+            size="sm"
+            variant="tertiary"
+            disabled={busy}
+            aria-label={t('recoveryWithdrawFor', { name })}
+            onClick={() => void run(`/staff/${user.id}/recovery-code/withdraw`, 'POST')}
+          >
+            {t('recoveryWithdraw')}
+          </Button>
+        </div>
+      ) : null}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
     </div>
+  );
+}
+
+/**
+ * "Issue recovery code…" (A-Settings): a reason, a warning that the person's
+ * passkeys and sessions go, then the code, shown once, to read out by phone
+ * or in person. Closing the dialog forgets it.
+ */
+function RecoveryCodeAction({ user }: { user: StaffUserDto }) {
+  const t = useTranslations('backoffice.settings.users');
+  const why = useTranslations('backoffice.unavailable');
+  const locale = useLocale();
+  const router = useRouter();
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [issued, setIssued] = useState<RecoveryCodeIssuedDto | null>(null);
+  const name = user.fullName ?? user.email;
+
+  function close() {
+    setOpen(false);
+    setReason('');
+    setError(null);
+    setIssued(null);
+  }
+
+  async function issue(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      setIssued(
+        await apiRequest<RecoveryCodeIssuedDto>(`/staff/${user.id}/recovery-code`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        }),
+      );
+      router.refresh();
+    } catch (issueError) {
+      setError(issueError instanceof Error ? issueError.message : t('failed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+        {t('issueRecovery')}
+      </Button>
+      <Dialog
+        open={open}
+        onClose={close}
+        title={t('recoveryTitle', { name })}
+        description={issued ? undefined : t('recoveryDescription')}
+        closeLabel={t('recoveryClose')}
+      >
+        {issued ? (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1 rounded-md border bg-page p-4">
+              <span className="text-caption text-secondary">
+                {t('recoveryCodeLabel')}
+              </span>
+              <code className="font-mono text-h3 tracking-wider text-default">
+                {issued.code}
+              </code>
+            </div>
+            <p>{t('recoveryRead', { name, time: opsTime(issued.expiresAt, locale) })}</p>
+            <div className="flex justify-end">
+              <Button onClick={close}>{t('recoveryDone')}</Button>
+            </div>
+          </div>
+        ) : (
+          <form className="flex flex-col gap-4" onSubmit={issue}>
+            <Alert variant="warning">
+              {t('recoveryWarning', { name, count: user.passkeys })}
+            </Alert>
+            <Field id={`${id}-recovery`} label={t('resetReason')} required>
+              {(control) => (
+                <Input
+                  {...control}
+                  maxLength={500}
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                />
+              )}
+            </Field>
+            {error ? <Alert variant="destructive">{error}</Alert> : null}
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={close}>
+                {t('resetCancel')}
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                disabled={busy}
+                unavailableReason={
+                  reason.trim().length < 3
+                    ? why('minLength', { min: 3, field: t('resetReason') })
+                    : undefined
+                }
+              >
+                {t('recoveryIssue')}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Dialog>
+    </>
   );
 }
 

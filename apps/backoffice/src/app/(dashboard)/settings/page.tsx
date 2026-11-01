@@ -691,11 +691,18 @@ async function SecurityTab({ locale }: { locale: string }) {
                         ] as [string, string],
                       ]
                     : []),
+                  [t('recovery'), t('recoveryValue')],
                 ]}
               />
             ) : (
               <Alert variant="destructive">{t('loadError')}</Alert>
             )}
+            <p className="text-caption text-muted">
+              {t('recoveryNote')}{' '}
+              <Link href="/settings?tab=users" className="text-link underline">
+                {t('recoveryLink')}
+              </Link>
+            </p>
             <p className="text-caption text-muted">{t('deferred')}</p>
           </CardContent>
         </Card>

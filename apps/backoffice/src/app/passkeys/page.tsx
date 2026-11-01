@@ -1,5 +1,5 @@
 import type { PasskeyStatusDto } from '@ota/schemas';
-import { Card, CardContent, CardDescription, CardHeader } from '@ota/ui';
+import { Alert, Card, CardContent, CardDescription, CardHeader } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
@@ -11,7 +11,8 @@ import { opsDate } from '@/lib/ops-format';
 /**
  * The signed-in person's passkeys (`docs/schema-m9-passkeys.md` P3, P4).
  * Outside the desk shell, because a staff member the passkey rule holds back
- * (no passkey yet, or a link sign-in) lands here before the desk opens.
+ * (no passkey yet, a link sign-in, or a recovery code,
+ * `docs/schema-m9-recovery-codes.md` R3) lands here before the desk opens.
  */
 export default async function PasskeysPage() {
   const [t, locale, session] = await Promise.all([
@@ -43,9 +44,11 @@ export default async function PasskeysPage() {
             {status.required ? ` ${t('required')}` : ''}
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-body-sm">
+        <CardContent className="flex flex-col gap-4 text-body-sm">
+          {status.recoverySession ? <Alert>{t('recoverySession')}</Alert> : null}
           <PasskeyManager
             state={status.state}
+            recovery={status.recoverySession}
             passkeys={status.passkeys.map((passkey) => ({
               id: passkey.id,
               name: passkey.name,

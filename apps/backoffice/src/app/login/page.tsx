@@ -28,6 +28,10 @@ export default function LoginPage() {
   const [passkeyRequired, setPasskeyRequired] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [ownDevice, setOwnDevice] = useState(false);
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [recoveryBusy, setRecoveryBusy] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
 
   // `?passkey=required`: the desk sent back someone who used a link but has a
   // passkey (docs/schema-m9-passkeys.md P3). Read after hydration.
@@ -63,6 +67,32 @@ export default function LoginPage() {
       return;
     }
     window.location.assign(nextPath());
+  }
+
+  // A one-time code a Super Admin read out (docs/schema-m9-recovery-codes.md):
+  // its session may only set up a passkey, so it always goes to /passkeys.
+  async function signInWithRecoveryCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRecoveryBusy(true);
+    setRecoveryError(null);
+    try {
+      const response = await fetch('/api/auth/sign-in/recovery-code', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, code: recoveryCode }),
+      });
+      if (response.ok) {
+        window.location.assign('/passkeys');
+        return;
+      }
+      setRecoveryError(
+        response.status === 401 ? t('recoveryInvalid') : t('recoveryFailed'),
+      );
+    } catch {
+      setRecoveryError(t('recoveryFailed'));
+    }
+    setRecoveryBusy(false);
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -133,6 +163,54 @@ export default function LoginPage() {
                   {status === 'sending' ? t('sending') : t('send')}
                 </Button>
               </form>
+              <div className="space-y-3 border-t pt-4">
+                <p className="text-caption text-muted">{t('lostEmail')}</p>
+                {recovering ? (
+                  <form className="space-y-4" onSubmit={signInWithRecoveryCode}>
+                    <div className="space-y-2">
+                      <Label htmlFor="recovery-code">{t('recoveryCode')}</Label>
+                      <Input
+                        id="recovery-code"
+                        autoComplete="one-time-code"
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                        required
+                        maxLength={64}
+                        className="font-mono"
+                        aria-describedby="recovery-code-hint"
+                        value={recoveryCode}
+                        onChange={(event) => setRecoveryCode(event.target.value)}
+                      />
+                      <p id="recovery-code-hint" className="text-caption text-muted">
+                        {t('recoveryHint')}
+                      </p>
+                    </div>
+                    <Button
+                      type="submit"
+                      variant="secondary"
+                      className="w-full"
+                      disabled={recoveryBusy}
+                      unavailableReason={
+                        email.trim() === '' ? t('recoveryEmailFirst') : undefined
+                      }
+                    >
+                      {t('recoverySubmit')}
+                    </Button>
+                    {recoveryError ? (
+                      <Alert variant="destructive">{recoveryError}</Alert>
+                    ) : null}
+                  </form>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    size="sm"
+                    onClick={() => setRecovering(true)}
+                  >
+                    {t('recoveryOpen')}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
