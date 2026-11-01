@@ -461,6 +461,21 @@ export {
   type PasskeyRefusal,
 } from './settings/passkeys';
 export {
+  RECOVERY_CODE_LENGTH,
+  RECOVERY_CODE_MAX_FAILURES,
+  RECOVERY_CODE_MINUTES,
+  RECOVERY_CODE_SIGN_IN_METHOD,
+  RECOVERY_SESSION_MINUTES,
+  formatRecoveryCode,
+  isRecoverySessionOver,
+  normalizeRecoveryCode,
+  recoveryCodeExpiresAt,
+  recoveryCodeFromBytes,
+  recoveryCodeState,
+  recoveryFailureWithdraws,
+  type RecoveryCodeState,
+} from './settings/recovery-codes';
+export {
   DEFAULT_FEATURE_FLAGS,
   FEATURE_FLAGS,
   featureFlagsOf,

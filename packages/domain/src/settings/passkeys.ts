@@ -1,3 +1,4 @@
+import { RECOVERY_CODE_SIGN_IN_METHOD } from './recovery-codes';
 import { isStaffRole } from './staff';
 
 /**
@@ -14,7 +15,9 @@ export const PASSKEY_SIGN_IN_METHOD = 'passkey';
  * yet, so the session may only set one up, P3) or `use_passkey` (one exists,
  * so sign in with it). Travelers, suppliers and every session while the rule
  * is off pass, as does a staff session that came from a passkey. A session
- * with no recorded method (from before P2) is not a passkey session.
+ * with no recorded method (from before P2) is not a passkey session. A staff
+ * session a recovery code opened may only set up a passkey, whether the rule
+ * is on or off (`docs/schema-m9-recovery-codes.md` R3).
  */
 export type PasskeyRefusal = 'enroll' | 'use_passkey';
 
@@ -24,8 +27,9 @@ export function passkeyRefusal(input: {
   signInMethod: string | null | undefined;
   passkeyCount: number;
 }): PasskeyRefusal | null {
-  if (!input.required || !isStaffRole(input.role)) return null;
+  if (!isStaffRole(input.role)) return null;
   if (input.signInMethod === PASSKEY_SIGN_IN_METHOD) return null;
+  if (!input.required && input.signInMethod !== RECOVERY_CODE_SIGN_IN_METHOD) return null;
   return input.passkeyCount === 0 ? 'enroll' : 'use_passkey';
 }
 
