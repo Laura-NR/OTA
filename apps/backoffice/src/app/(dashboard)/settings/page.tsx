@@ -1,6 +1,7 @@
 import { SUPPORTED_LOCALES, loadMessages } from '@ota/i18n';
 import { PERMISSION_MATRIX, UserRole, type PermissionAccess } from '@ota/domain';
 import type {
+  CurrencySettingsDto,
   OperatingSettingsDto,
   PasskeyStatusDto,
   PermissionOverrideDto,
@@ -40,7 +41,7 @@ import {
 } from '@/components/settings/staff-actions';
 import { ThresholdsProposal } from '@/components/settings/thresholds-proposal';
 import { apiFetch, getServerSession } from '@/lib/api';
-import { opsDate, opsTime } from '@/lib/ops-format';
+import { calendarDate, opsDate, opsTime } from '@/lib/ops-format';
 import { getThresholds } from '@/lib/operating';
 import { THRESHOLD_GROUPS, thresholdText } from '@/lib/threshold-fields';
 import { getTenantConfig } from '@/lib/tenant';
@@ -468,21 +469,119 @@ async function OverridesCard({
   );
 }
 
+/**
+ * A-Settings › Currencies (`docs/schema-m9-display-currencies.md` C7a): the
+ * base and each display currency with today's rate, its default regions and
+ * whether it is on. The switches, spread and lock point change on Thresholds.
+ */
+async function CurrenciesCard() {
+  const t = await getTranslations('backoffice.settings.languages');
+  const locale = await getLocale();
+  const view = await apiFetch<CurrencySettingsDto>('/settings/currencies').catch(
+    () => null,
+  );
+  const rate = (value: number) =>
+    new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    }).format(value);
+  return (
+    <Card className="min-w-0">
+      <CardHeader>
+        <CardTitle>{t('currenciesTitle')}</CardTitle>
+        <CardDescription>
+          {t('currencies', { lockAt: view?.lockAt ?? 'DEPOSIT' })}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 text-body-sm">
+        {view === null ? (
+          <Alert variant="destructive">{t('currenciesLoadError')}</Alert>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[560px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">{t('currency')}</TableHead>
+                    <TableHead scope="col">{t('role')}</TableHead>
+                    <TableHead scope="col">{t('rateToday')}</TableHead>
+                    <TableHead scope="col">{t('shownTo')}</TableHead>
+                    <TableHead scope="col">{t('on')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-mono">EUR</TableCell>
+                    <TableCell>{t('roleBase')}</TableCell>
+                    <TableCell className="font-mono">{rate(1)}</TableCell>
+                    <TableCell>{t('regions.EUR')}</TableCell>
+                    <TableCell>
+                      <Badge variant="success">{t('always')}</Badge>
+                    </TableCell>
+                  </TableRow>
+                  {view.currencies.map((currency) => (
+                    <TableRow key={currency.code}>
+                      <TableCell className="font-mono">{currency.code}</TableCell>
+                      <TableCell>{t('roleDisplay')}</TableCell>
+                      <TableCell className="font-mono">
+                        {currency.rate === null || currency.referenceRate === null
+                          ? '—'
+                          : t('rateWithSpread', {
+                              rate: rate(currency.rate),
+                              reference: rate(currency.referenceRate),
+                            })}
+                      </TableCell>
+                      <TableCell>{t(`regions.${currency.code}`)}</TableCell>
+                      <TableCell>
+                        <Badge variant={currency.enabled ? 'success' : 'outline'}>
+                          {currency.enabled ? t('live') : t('off')}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {view.stale ? <Alert variant="warning">{t('ratesStale')}</Alert> : null}
+            <Facts
+              rows={[
+                [
+                  t('source'),
+                  view.source === 'ecb' ? t('sources.ecb') : t('sources.mock'),
+                ],
+                [
+                  t('ratesOf'),
+                  view.rateDate
+                    ? calendarDate(`${view.rateDate}T00:00:00Z`, locale)
+                    : '—',
+                ],
+                [t('spread'), `${view.spreadPercent} %`],
+                [t('lockAt'), t(`lockPoints.${view.lockAt}`)],
+              ]}
+            />
+            <p className="text-caption text-muted">
+              {t('currenciesNote')}{' '}
+              <Link
+                href="/settings?tab=thresholds"
+                className="font-semibold text-primary-600 underline underline-offset-[3px]"
+              >
+                {t('changeOnThresholds')}
+              </Link>
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 async function LocalesTab() {
   const t = await getTranslations('backoffice.settings.languages');
   const tenant = getTenantConfig();
   const reference = leaves(loadMessages('en'));
   return (
     <div className="flex flex-col gap-6">
-      <Card className="min-w-0">
-        <CardHeader>
-          <CardTitle>{t('currenciesTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2 text-body-sm">
-          <p>{t('currencies')}</p>
-          <p className="text-caption text-muted">{t('currenciesNote')}</p>
-        </CardContent>
-      </Card>
+      <CurrenciesCard />
       <Card className="min-w-0">
         <CardHeader>
           <CardTitle>{t('title')}</CardTitle>

@@ -1,15 +1,32 @@
-import { FEATURE_FLAGS, type OperatingThresholds } from '@ota/domain';
+import {
+  DISPLAY_CURRENCIES,
+  FEATURE_FLAGS,
+  FX_SPREAD_PERCENT,
+  displayCurrencySwitchKey,
+  type OperatingThresholds,
+} from '@ota/domain';
 
 // Client-safe: the thresholds form and the server table share it.
 
 export type ThresholdUnit =
-  'min' | 'h' | 'pct' | 'eur' | 'days' | 'months' | 'count' | 'level' | 'switch';
+  | 'min'
+  | 'h'
+  | 'pct'
+  | 'eur'
+  | 'days'
+  | 'months'
+  | 'count'
+  | 'level'
+  | 'switch'
+  | 'lockPoint';
 
 export interface ThresholdField {
   key: keyof OperatingThresholds;
   unit: ThresholdUnit;
   min?: number;
   max?: number;
+  /** The input's step; whole numbers when omitted. */
+  step?: number;
 }
 
 /** The thresholds in the board's groups, then the flags; bounds match the API's schema. */
@@ -52,6 +69,24 @@ export const THRESHOLD_GROUPS: readonly {
     fields: [{ key: 'advisoryDualApprovalFrom', unit: 'level' }],
   },
   {
+    // docs/schema-m9-display-currencies.md C2, C5, C6.
+    key: 'currencies',
+    fields: [
+      ...DISPLAY_CURRENCIES.map((code) => ({
+        key: displayCurrencySwitchKey(code),
+        unit: 'switch' as const,
+      })),
+      {
+        key: 'fxSpreadPercent',
+        unit: 'pct',
+        min: FX_SPREAD_PERCENT.min,
+        max: FX_SPREAD_PERCENT.max,
+        step: 0.1,
+      },
+      { key: 'fxLockAt', unit: 'lockPoint' },
+    ],
+  },
+  {
     key: 'customers',
     fields: [
       { key: 'retentionTriggerMonths', unit: 'months', min: 1, max: 24 },
@@ -77,8 +112,9 @@ export const THRESHOLD_GROUPS: readonly {
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /**
- * A threshold as the desk reads it ("120 min", "€ 500", "CRITICAL", "On").
- * `units` reads `backoffice.settings.thresholds.units`; `level` names a severity.
+ * A threshold as the desk reads it ("120 min", "€ 500", "CRITICAL", "On",
+ * "Deposit payment"). `units` reads `backoffice.settings.thresholds.units`;
+ * `level` names a severity.
  */
 export function thresholdText(
   field: ThresholdField,
@@ -89,6 +125,7 @@ export function thresholdText(
 ): string {
   if (field.unit === 'level') return level(String(value));
   if (field.unit === 'switch') return units(value ? 'on' : 'off');
+  if (field.unit === 'lockPoint') return units(String(value));
   if (field.unit === 'eur') {
     // Plain spaces: server and browser ICU differ on the space before "€".
     return new Intl.NumberFormat(locale, {

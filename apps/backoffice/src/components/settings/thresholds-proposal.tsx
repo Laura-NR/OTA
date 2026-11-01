@@ -2,6 +2,7 @@
 
 import {
   ADVISORY_DUAL_APPROVAL_LEVELS,
+  FX_LOCK_POINTS,
   changedThresholds,
   type OperatingThresholds,
 } from '@ota/domain';
@@ -179,7 +180,9 @@ export function ThresholdsProposal({
                 id={`${id}-${field.key}`}
                 label={t(`labels.${field.key}`)}
                 hint={
-                  field.unit === 'level' || field.unit === 'switch'
+                  field.unit === 'level' ||
+                  field.unit === 'switch' ||
+                  field.unit === 'lockPoint'
                     ? undefined
                     : t('bounds', { min: field.min ?? 0, max: field.max ?? 0 })
                 }
@@ -210,14 +213,28 @@ export function ThresholdsProposal({
                         </option>
                       ))}
                     </Select>
+                  ) : field.unit === 'lockPoint' ? (
+                    <Select
+                      {...control}
+                      value={String(values[field.key])}
+                      onChange={(event) =>
+                        setValues({ ...values, [field.key]: event.target.value })
+                      }
+                    >
+                      {FX_LOCK_POINTS.map((point) => (
+                        <option key={point} value={point}>
+                          {units(point)}
+                        </option>
+                      ))}
+                    </Select>
                   ) : (
                     <Input
                       {...control}
                       type="number"
-                      inputMode="numeric"
+                      inputMode={field.step && field.step < 1 ? 'decimal' : 'numeric'}
                       min={field.min}
                       max={field.max}
-                      step="1"
+                      step={String(field.step ?? 1)}
                       className="font-mono"
                       value={String(values[field.key])}
                       onChange={(event) =>

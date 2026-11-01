@@ -187,6 +187,15 @@ export function PaymentPanel({
               );
             })}
           </ul>
+          {schedule.rateLock ? (
+            <p className="text-caption text-muted">
+              {t('rateLocked', {
+                date: opsDate(schedule.rateLock.lockedAt, locale),
+                rate: schedule.rateLock.rate,
+                currency: schedule.rateLock.currency,
+              })}
+            </p>
+          ) : null}
         </section>
       ) : null}
 
