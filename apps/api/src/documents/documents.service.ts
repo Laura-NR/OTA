@@ -25,7 +25,7 @@ import {
   type DocumentBranding,
   type ReservationDocumentInput,
 } from '@ota/documents';
-import { DocumentType, UserRole } from '@ota/domain';
+import { DocumentType, UserRole, referenceAmount } from '@ota/domain';
 import type { DocumentDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
@@ -113,6 +113,20 @@ function toDocumentInput(reservation: ReservationForDocuments): ReservationDocum
           venue: night.venue,
         })),
     })),
+    displayReference:
+      reservation.displayCurrency &&
+      reservation.displayRate !== null &&
+      reservation.displayRateDate
+        ? {
+            currency: reservation.displayCurrency,
+            rate: reservation.displayRate.toString(),
+            rateDate: reservation.displayRateDate.toISOString().slice(0, 10),
+            amount: referenceAmount(
+              Number(reservation.totalAmount),
+              Number(reservation.displayRate),
+            ).toFixed(2),
+          }
+        : null,
   };
 }
 

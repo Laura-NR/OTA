@@ -44,6 +44,19 @@ export interface ReservationDocumentInput {
   serviceItems: DocumentServiceItem[];
   priceLines?: DocumentPriceLine[];
   eventTickets?: DocumentEventTickets[];
+  /** M9 display currencies C6/C7: the booking's locked rate and the total at it. */
+  displayReference?: DocumentDisplayReference | null;
+}
+
+/** The invoice's reference line (D-Invoice): indicative, every amount stays in EUR. */
+export interface DocumentDisplayReference {
+  currency: string;
+  /** The locked rate, spread included. */
+  rate: string;
+  /** The rate's day, YYYY-MM-DD. */
+  rateDate: string;
+  /** The total at that rate, to the cent. */
+  amount: string;
 }
 
 export interface VoucherModel {
@@ -95,6 +108,7 @@ export interface InvoiceModel {
   services: InvoiceServiceLine[];
   priceLines: DocumentPriceLine[];
   total: string;
+  displayReference: DocumentDisplayReference | null;
 }
 
 function travelerName(input: ReservationDocumentInput): string {
@@ -154,5 +168,6 @@ export function buildInvoiceModel(input: ReservationDocumentInput): InvoiceModel
     })),
     priceLines: input.priceLines ?? [],
     total: input.totalAmount,
+    displayReference: input.displayReference ?? null,
   };
 }

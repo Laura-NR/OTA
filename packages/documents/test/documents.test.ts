@@ -130,6 +130,27 @@ describe('document templates', () => {
     expect(html).toContain('2550.00 EUR');
   });
 
+  it('prints the locked display rate as a reference under the EUR total, and nothing without one (M9)', () => {
+    const html = renderInvoiceHtml(
+      buildInvoiceModel({
+        ...input,
+        displayReference: {
+          currency: 'CAD',
+          rate: '1.489081',
+          rateDate: '2026-10-12',
+          amount: '4616.15',
+        },
+      }),
+      branding,
+    );
+    expect(html).toContain(
+      'Reference in CAD at the rate locked on 2026-10-12 (1.489081): 4616.15 CAD',
+    );
+    expect(renderInvoiceHtml(buildInvoiceModel(input), branding)).not.toContain(
+      'Reference in',
+    );
+  });
+
   it('renders the invoice total and itemised services', () => {
     const html = renderInvoiceHtml(buildInvoiceModel(input), branding);
 

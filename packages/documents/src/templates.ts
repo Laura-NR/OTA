@@ -233,6 +233,11 @@ export function renderInvoiceHtml(
     ? `Services marked Included are part of the package price${model.priceLines.length > 0 ? ', itemised in the price breakdown' : ''}. `
     : '';
 
+  // D-Invoice: the locked display rate as a reference, never as the amount due.
+  const reference = model.displayReference
+    ? `<p class="muted">Prices in ${currency}. Reference in ${escapeHtml(model.displayReference.currency)} at the rate locked on ${escapeHtml(model.displayReference.rateDate)} (${escapeHtml(model.displayReference.rate)}): ${escapeHtml(model.displayReference.amount)} ${escapeHtml(model.displayReference.currency)}. The rate stays the same for the whole payment schedule; your bank sets the rate it charges.</p>`
+    : '';
+
   const body = `
 <h2>Invoice</h2>
 <p class="muted">Booking ${escapeHtml(model.bookingCode)} · Billed to ${escapeHtml(model.travelerName)}</p>
@@ -240,7 +245,7 @@ export function renderInvoiceHtml(
   <thead><tr><th>Included service</th><th>Dates</th><th>Provider</th><th class="amount">Amount</th></tr></thead>
   <tbody>${rows || '<tr><td colspan="4" class="muted">Curated travel package.</td></tr>'}</tbody>
 </table>${breakdown}
-<p class="total">Total due: ${escapeHtml(model.total)} ${currency}</p>
+<p class="total">Total due: ${escapeHtml(model.total)} ${currency}</p>${reference}
 <p class="muted">${bundledNote}See the voucher for rendezvous points and emergency contacts.</p>`;
 
   return page(`Invoice ${model.bookingCode}`, body, branding);
