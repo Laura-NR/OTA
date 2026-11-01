@@ -231,8 +231,9 @@ export function BookingServices({
                           const row = event.currentTarget.closest('[data-shortcut-row]');
                           if (document.activeElement === event.currentTarget) {
                             (
-                              row?.querySelector<HTMLElement>('[data-shortcut-redispatch]') ??
-                              document.getElementById('main')
+                              row?.querySelector<HTMLElement>(
+                                '[data-shortcut-redispatch]',
+                              ) ?? document.getElementById('main')
                             )?.focus();
                           }
                           alerts.acknowledge(boardRow, item.id);
