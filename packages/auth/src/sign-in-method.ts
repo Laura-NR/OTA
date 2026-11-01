@@ -3,13 +3,20 @@
  * (`docs/schema-m9-passkeys.md` P2). Only `passkey` satisfies the staff
  * passkey rule, so any route not listed here records `other` and fails closed.
  */
-export type SignInMethod = 'passkey' | 'magic_link' | 'password' | 'oauth' | 'other';
+export type SignInMethod =
+  | 'passkey'
+  | 'magic_link'
+  | 'password'
+  | 'oauth'
+  | 'recovery_code'
+  | 'other';
 
 export function signInMethodForPath(path: string | null | undefined): SignInMethod {
   // Registration can also create a session (`createSession`), but adding a
   // passkey proves only the session it was added from, so it stays `other`.
   if (path === '/passkey/verify-authentication') return 'passkey';
   if (path === '/magic-link/verify') return 'magic_link';
+  if (path === '/sign-in/recovery-code') return 'recovery_code';
   if (path === '/sign-in/email' || path === '/sign-up/email') return 'password';
   if (path?.startsWith('/callback/') || path?.startsWith('/oauth2/callback/')) {
     return 'oauth';

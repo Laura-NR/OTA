@@ -10,6 +10,7 @@ import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { magicLink } from 'better-auth/plugins';
 import type { IncomingHttpHeaders } from 'node:http';
 
+import { recoveryCodePlugin, type RecoveryCodeCheck } from './recovery-code.js';
 import {
   passkeyChangeForPath,
   routeOpenToRefusedSession,
@@ -17,6 +18,11 @@ import {
   type PasskeyChange,
 } from './sign-in-method.js';
 
+export {
+  RECOVERY_CODE_INVALID,
+  RECOVERY_CODE_SIGN_IN_PATH,
+  type RecoveryCodeCheck,
+} from './recovery-code.js';
 export {
   passkeyChangeForPath,
   routeOpenToRefusedSession,
@@ -51,6 +57,8 @@ export interface CreateAuthOptions {
   passkey?: PasskeySettings;
   /** The API's session rules for Better Auth's own routes (`docs/schema-m9-idle-lock.md` L5). */
   sessionGate?: SessionGate;
+  /** Staff recovery codes (`docs/schema-m9-recovery-codes.md`); no route without it. */
+  recoveryCode?: RecoveryCodeCheck;
 }
 
 /**
@@ -149,6 +157,8 @@ export type NodeAuthHandler = (
  * user (PIN or biometric) to register or sign in. With a `sessionGate`, a
  * route that acts on a session asks it first, so a refused session (for
  * instance an idle-locked desk) can only read itself, sign out or sign in.
+ * With a `recoveryCode` check, a staff member can sign in with a code a Super
+ * Admin issued.
  */
 export function createAuth(options: CreateAuthOptions): AuthInstance {
   const passkeySettings = options.passkey ?? {};
@@ -315,6 +325,7 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
           },
         },
       }),
+      ...(options.recoveryCode ? [recoveryCodePlugin(options.recoveryCode)] : []),
     ],
     advanced: {
       database: {

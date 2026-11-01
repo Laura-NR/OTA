@@ -23,6 +23,11 @@ describe('the sign-in method a session records (docs/schema-m9-passkeys.md P2)',
     expect(signInMethodForPath('/callback/google')).toBe('oauth');
   });
 
+  it('names a staff recovery-code sign-in (docs/schema-m9-recovery-codes.md R3)', () => {
+    expect(signInMethodForPath('/sign-in/recovery-code')).toBe('recovery_code');
+    expect(routeOpenToRefusedSession('/sign-in/recovery-code')).toBe(true);
+  });
+
   it('fails closed for any other route, or none', () => {
     for (const path of ['/sign-in/anonymous', '/passkey', '', null, undefined]) {
       expect(signInMethodForPath(path)).toBe('other');
