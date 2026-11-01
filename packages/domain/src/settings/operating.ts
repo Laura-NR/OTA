@@ -2,6 +2,7 @@ import type { DispatchTimers } from '../dispatch/policy';
 import { UserRole } from '../reservation/status';
 import { DEFAULT_FEATURE_FLAGS, type FeatureFlagValues } from './features';
 import { STAFF_IDLE_LOCK_MINUTES } from './idle-lock';
+import { OVERRIDE_EXPIRY_HOURS } from './overrides';
 
 /**
  * M9 operating thresholds (`docs/schema-m9-settings.md` D1–D3, Q13). The
@@ -52,6 +53,8 @@ export interface OperatingThresholds extends FeatureFlagValues {
   staffIdleLockMinutes: number;
   /** Email staff on a sign-in from a device not seen before (`docs/schema-m9-new-device-email.md` N5). */
   staffNewDeviceEmail: boolean;
+  /** Hours a permission override lasts once approved (`docs/schema-m9-permission-overrides.md` O5). */
+  overrideExpiryHours: number;
 }
 
 export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
@@ -73,6 +76,7 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   staffPasskeysRequired: false,
   staffIdleLockMinutes: STAFF_IDLE_LOCK_MINUTES,
   staffNewDeviceEmail: true,
+  overrideExpiryHours: OVERRIDE_EXPIRY_HOURS.default,
   ...DEFAULT_FEATURE_FLAGS,
 };
 
