@@ -13,10 +13,15 @@ export type DisplayCurrencyCode = (typeof DISPLAY_CURRENCIES)[number];
 
 /** EUR or one of the display currencies: what a visitor can pick. */
 export type ShownCurrency = typeof BASE_CURRENCY | DisplayCurrencyCode;
-export const SHOWN_CURRENCIES: readonly ShownCurrency[] = [BASE_CURRENCY, ...DISPLAY_CURRENCIES];
+export const SHOWN_CURRENCIES: readonly ShownCurrency[] = [
+  BASE_CURRENCY,
+  ...DISPLAY_CURRENCIES,
+];
 
 export function isShownCurrency(value: unknown): value is ShownCurrency {
-  return typeof value === 'string' && (SHOWN_CURRENCIES as readonly string[]).includes(value);
+  return (
+    typeof value === 'string' && (SHOWN_CURRENCIES as readonly string[]).includes(value)
+  );
 }
 
 /**
@@ -94,7 +99,12 @@ function preferredRegions(acceptLanguage: string): string[] {
     })
     .filter((entry) => entry.weight > 0)
     .sort((a, b) => b.weight - a.weight || a.index - b.index)
-    .map((entry) => entry.tag.split('-').slice(1).find((sub) => /^[A-Za-z]{2}$/.test(sub)))
+    .map((entry) =>
+      entry.tag
+        .split('-')
+        .slice(1)
+        .find((sub) => /^[A-Za-z]{2}$/.test(sub)),
+    )
     .filter((region): region is string => region !== undefined)
     .map((region) => region.toUpperCase());
 }
@@ -126,8 +136,7 @@ export function resolveDisplayCurrency(input: {
   enabled: readonly DisplayCurrencyCode[];
 }): ShownCurrency {
   const allowed = (value: string | null | undefined): value is ShownCurrency =>
-    value === BASE_CURRENCY ||
-    (input.enabled as readonly string[]).includes(value ?? '');
+    value === BASE_CURRENCY || (input.enabled as readonly string[]).includes(value ?? '');
   if (allowed(input.saved)) return input.saved;
   if (allowed(input.cookie)) return input.cookie;
   return defaultDisplayCurrency(input.acceptLanguage, input.enabled);

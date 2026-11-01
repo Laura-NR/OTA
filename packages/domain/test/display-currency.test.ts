@@ -81,27 +81,37 @@ describe('the default display currency (C2a)', () => {
 describe('choosing the currency to show (C4a)', () => {
   it('prefers the saved choice, then the cookie, then the default', () => {
     expect(
-      resolveDisplayCurrency({ saved: 'GBP', cookie: 'CAD', acceptLanguage: 'en-US', enabled: ALL }),
+      resolveDisplayCurrency({
+        saved: 'GBP',
+        cookie: 'CAD',
+        acceptLanguage: 'en-US',
+        enabled: ALL,
+      }),
     ).toBe('GBP');
     expect(
-      resolveDisplayCurrency({ saved: null, cookie: 'CAD', acceptLanguage: 'en-US', enabled: ALL }),
+      resolveDisplayCurrency({
+        saved: null,
+        cookie: 'CAD',
+        acceptLanguage: 'en-US',
+        enabled: ALL,
+      }),
     ).toBe('CAD');
     expect(resolveDisplayCurrency({ acceptLanguage: 'en-US', enabled: ALL })).toBe('USD');
   });
 
   it('keeps an explicit EUR choice over a regional default', () => {
-    expect(resolveDisplayCurrency({ cookie: 'EUR', acceptLanguage: 'en-US', enabled: ALL })).toBe(
-      'EUR',
-    );
+    expect(
+      resolveDisplayCurrency({ cookie: 'EUR', acceptLanguage: 'en-US', enabled: ALL }),
+    ).toBe('EUR');
   });
 
   it('falls through a choice of a currency since switched off, or not offered', () => {
     expect(
       resolveDisplayCurrency({ saved: 'CHF', cookie: 'CAD', enabled: ['USD', 'CAD'] }),
     ).toBe('CAD');
-    expect(resolveDisplayCurrency({ cookie: 'JPY', acceptLanguage: 'en-GB', enabled: ALL })).toBe(
-      'GBP',
-    );
+    expect(
+      resolveDisplayCurrency({ cookie: 'JPY', acceptLanguage: 'en-GB', enabled: ALL }),
+    ).toBe('GBP');
   });
 });
 
