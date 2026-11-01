@@ -1304,13 +1304,16 @@
           "months": "{value, plural, one {# mes} other {# meses}}",
           "count": "{value}",
           "on": "Sí",
-          "off": "No"
+          "off": "No",
+          "DEPOSIT": "Pago del depósito",
+          "INVOICE": "Factura"
         },
         "groups": {
           "dispatch": "Despacho",
           "suppliers": "Proveedores",
           "payments": "Pagos",
           "content": "Contenido",
+          "currencies": "Monedas",
           "customers": "Clientes",
           "bookings": "Reservas",
           "security": "Seguridad",
@@ -1362,7 +1365,13 @@
           "instantBooking": "Etiqueta de reserva inmediata",
           "directBankTransferRail": "Carril de transferencia bancaria",
           "creditCardGatewayRail": "Carril de tarjeta",
-          "overrideExpiryHours": "Duración de una excepción"
+          "overrideExpiryHours": "Duración de una excepción",
+          "displayCurrencyUSD": "Mostrar precios en USD",
+          "displayCurrencyCAD": "Mostrar precios en CAD",
+          "displayCurrencyGBP": "Mostrar precios en GBP",
+          "displayCurrencyCHF": "Mostrar precios en CHF",
+          "fxSpreadPercent": "Margen de la tasa de visualización",
+          "fxLockAt": "Fijar la tasa de visualización en"
         },
         "used": {
           "dispatchTimeoutMinutes": "Despacho, Panel, Reserva",
@@ -1390,7 +1399,13 @@
           "instantBooking": "La etiqueta «Inmediata» o «Solicitud de reserva» en los viajes",
           "directBankTransferRail": "Nuevos enlaces de transferencia, mesa y viajero",
           "creditCardGatewayRail": "Nuevos enlaces de tarjeta en la mesa",
-          "overrideExpiryHours": "Cada excepción de permisos, desde su aprobación"
+          "overrideExpiryHours": "Cada excepción de permisos, desde su aprobación",
+          "displayCurrencyUSD": "El menú de monedas de la tienda y sus precios",
+          "displayCurrencyCAD": "El menú de monedas de la tienda y sus precios",
+          "displayCurrencyGBP": "El menú de monedas de la tienda y sus precios",
+          "displayCurrencyCHF": "El menú de monedas de la tienda y sus precios",
+          "fxSpreadPercent": "Cada tasa de visualización, sobre la referencia del día",
+          "fxLockAt": "La tasa de visualización de una reserva, para todo su calendario de pagos"
         },
         "passkeyWarning": "{count, plural, =0 {Todo el personal activo tiene una llave de acceso.} one {# persona del personal activo aún no tiene llave de acceso y deberá configurarla en su próximo acceso.} other {# personas del personal activo aún no tienen llave de acceso y deberán configurarla en su próximo acceso.}}"
       },
@@ -1446,8 +1461,39 @@
       "emergency": "Contactos de emergencia",
       "languages": {
         "currenciesTitle": "Monedas",
-        "currencies": "Solo EUR: precios, facturas y libro contable en euros.",
-        "currenciesNote": "Las monedas de visualización con tasa diaria y tasa fijada en el depósito son una fase posterior; cambian el calendario de pagos y requieren una decisión financiera.",
+        "currencies": "{lockAt, select, INVOICE {Base EUR (facturación, facturas, libro contable). Las monedas de visualización convierten a la tasa de referencia del día más el margen; la tasa se fija con la factura para todo el calendario de pagos.} other {Base EUR (facturación, facturas, libro contable). Las monedas de visualización convierten a la tasa de referencia del día más el margen; la tasa se fija en el depósito para todo el calendario de pagos.}}",
+        "currenciesNote": "Todo importe cobrado sigue en EUR; una moneda de visualización es orientativa. Los interruptores, el margen y el momento de fijación son umbrales que cambian dos Super Admins.",
+        "currenciesLoadError": "No se pudieron cargar las monedas.",
+        "currency": "Moneda",
+        "role": "Función",
+        "rateToday": "Tasa de hoy",
+        "shownTo": "Se muestra a",
+        "on": "Activa",
+        "roleBase": "Base · fija",
+        "roleDisplay": "Visualización",
+        "always": "Siempre",
+        "rateWithSpread": "{rate} ({reference} + margen)",
+        "regions": {
+          "EUR": "Zona euro y cualquier otra región",
+          "USD": "Estados Unidos",
+          "CAD": "Canadá",
+          "GBP": "Reino Unido",
+          "CHF": "Sin región por defecto"
+        },
+        "ratesStale": "La última tasa tiene más de 5 días, así que la tienda muestra solo EUR.",
+        "source": "Fuente de la tasa",
+        "sources": {
+          "mock": "Tasas de muestra (simuladas) hasta elegir una fuente",
+          "ecb": "Referencia del BCE · diaria, 16:00 CET"
+        },
+        "ratesOf": "Tasas del",
+        "spread": "Margen",
+        "lockAt": "Fijar la tasa en",
+        "lockPoints": {
+          "DEPOSIT": "Pago del depósito (BR-CU-02)",
+          "INVOICE": "Factura"
+        },
+        "changeOnThresholds": "Cambiar en Umbrales",
         "title": "Idiomas",
         "description": "Los textos de la plataforma por idioma; las páginas de la agencia se revisan al publicarse.",
         "locale": "Idioma",
@@ -1937,7 +1983,8 @@
         "CARD": "Tarjeta",
         "OTHER": "Otro"
       },
-      "noRail": "No hay ningún carril de pago activado. Un Super Admin puede activarlo en Ajustes › Aprobaciones y umbrales."
+      "noRail": "No hay ningún carril de pago activado. Un Super Admin puede activarlo en Ajustes › Aprobaciones y umbrales.",
+      "rateLocked": "Tasa de visualización fijada el {date}: 1 EUR = {rate} {currency}. Todo cobro sigue en EUR."
     },
     "dispatchControls": {
       "dispatching": "Despachando…",

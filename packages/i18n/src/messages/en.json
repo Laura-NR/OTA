@@ -1304,13 +1304,16 @@
           "months": "{value, plural, one {# month} other {# months}}",
           "count": "{value}",
           "on": "On",
-          "off": "Off"
+          "off": "Off",
+          "DEPOSIT": "Deposit payment",
+          "INVOICE": "Invoice"
         },
         "groups": {
           "dispatch": "Dispatch",
           "suppliers": "Suppliers",
           "payments": "Payments",
           "content": "Content",
+          "currencies": "Currencies",
           "customers": "Customers",
           "bookings": "Bookings",
           "security": "Security",
@@ -1362,7 +1365,13 @@
           "instantBooking": "Instant booking label",
           "directBankTransferRail": "Bank transfer rail",
           "creditCardGatewayRail": "Card rail",
-          "overrideExpiryHours": "Override expiry"
+          "overrideExpiryHours": "Override expiry",
+          "displayCurrencyUSD": "Show prices in USD",
+          "displayCurrencyCAD": "Show prices in CAD",
+          "displayCurrencyGBP": "Show prices in GBP",
+          "displayCurrencyCHF": "Show prices in CHF",
+          "fxSpreadPercent": "Display-rate spread",
+          "fxLockAt": "Lock the display rate at"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Dashboard, Booking",
@@ -1390,7 +1399,13 @@
           "instantBooking": "The \"Instant\" or \"Request to book\" label on trips",
           "directBankTransferRail": "New transfer links, desk and traveler",
           "creditCardGatewayRail": "New card links on the desk",
-          "overrideExpiryHours": "Every permission override, from its approval"
+          "overrideExpiryHours": "Every permission override, from its approval",
+          "displayCurrencyUSD": "The storefront's currency menu and its prices",
+          "displayCurrencyCAD": "The storefront's currency menu and its prices",
+          "displayCurrencyGBP": "The storefront's currency menu and its prices",
+          "displayCurrencyCHF": "The storefront's currency menu and its prices",
+          "fxSpreadPercent": "Every display rate, over the day's reference",
+          "fxLockAt": "A booking's display rate, for its whole payment schedule"
         },
         "passkeyWarning": "{count, plural, =0 {Every active staff member has a passkey.} one {# active staff member has no passkey yet and will be asked to set one up at the next sign-in.} other {# active staff members have no passkey yet and will be asked to set one up at the next sign-in.}}"
       },
@@ -1446,8 +1461,39 @@
       "emergency": "Emergency contacts",
       "languages": {
         "currenciesTitle": "Currencies",
-        "currencies": "EUR only: prices, invoices and the ledger are in euros.",
-        "currenciesNote": "Display currencies with a daily rate and a rate locked at the deposit are a later batch; they change the payment schedule and need a finance decision.",
+        "currencies": "{lockAt, select, INVOICE {Base EUR (billing, invoices, ledger). Display currencies convert at the day's reference rate plus the spread; the rate locks with the invoice for the whole payment schedule.} other {Base EUR (billing, invoices, ledger). Display currencies convert at the day's reference rate plus the spread; the rate locks at the deposit for the whole payment schedule.}}",
+        "currenciesNote": "Every amount charged stays in EUR; a display currency is a guide. The switches, the spread and the lock point are thresholds that two Super Admins change.",
+        "currenciesLoadError": "The currencies could not be loaded.",
+        "currency": "Currency",
+        "role": "Role",
+        "rateToday": "Rate today",
+        "shownTo": "Shown to",
+        "on": "On",
+        "roleBase": "Base · locked",
+        "roleDisplay": "Display",
+        "always": "Always",
+        "rateWithSpread": "{rate} ({reference} + spread)",
+        "regions": {
+          "EUR": "Euro area and every other region",
+          "USD": "United States",
+          "CAD": "Canada",
+          "GBP": "United Kingdom",
+          "CHF": "No default region"
+        },
+        "ratesStale": "The latest rate is more than 5 days old, so the storefront shows EUR only.",
+        "source": "Rate source",
+        "sources": {
+          "mock": "Sample rates (mock) until a source is chosen",
+          "ecb": "ECB reference · daily, 16:00 CET"
+        },
+        "ratesOf": "Rates of",
+        "spread": "Spread",
+        "lockAt": "Lock rate at",
+        "lockPoints": {
+          "DEPOSIT": "Deposit payment (BR-CU-02)",
+          "INVOICE": "Invoice"
+        },
+        "changeOnThresholds": "Change on Thresholds",
         "title": "Languages",
         "description": "The platform's texts per language; the agency's pages are checked when they are published.",
         "locale": "Language",
@@ -1937,7 +1983,8 @@
         "CARD": "Card",
         "OTHER": "Other"
       },
-      "noRail": "No payment rail is switched on. A Super Admin can switch one on under Settings › Approvals & thresholds."
+      "noRail": "No payment rail is switched on. A Super Admin can switch one on under Settings › Approvals & thresholds.",
+      "rateLocked": "Display rate locked on {date}: 1 EUR = {rate} {currency}. Every charge stays in EUR."
     },
     "dispatchControls": {
       "dispatching": "Dispatching…",

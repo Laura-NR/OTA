@@ -1304,13 +1304,16 @@
           "months": "{value, plural, one {# mois} other {# mois}}",
           "count": "{value}",
           "on": "Oui",
-          "off": "Non"
+          "off": "Non",
+          "DEPOSIT": "Paiement de l'acompte",
+          "INVOICE": "Facture"
         },
         "groups": {
           "dispatch": "Dispatch",
           "suppliers": "Fournisseurs",
           "payments": "Paiements",
           "content": "Contenu",
+          "currencies": "Devises",
           "customers": "Clients",
           "bookings": "Réservations",
           "security": "Sécurité",
@@ -1362,7 +1365,13 @@
           "instantBooking": "Mention de réservation immédiate",
           "directBankTransferRail": "Rail de virement bancaire",
           "creditCardGatewayRail": "Rail carte",
-          "overrideExpiryHours": "Durée d'une dérogation"
+          "overrideExpiryHours": "Durée d'une dérogation",
+          "displayCurrencyUSD": "Afficher les prix en USD",
+          "displayCurrencyCAD": "Afficher les prix en CAD",
+          "displayCurrencyGBP": "Afficher les prix en GBP",
+          "displayCurrencyCHF": "Afficher les prix en CHF",
+          "fxSpreadPercent": "Marge du taux d'affichage",
+          "fxLockAt": "Figer le taux d'affichage à"
         },
         "used": {
           "dispatchTimeoutMinutes": "Dispatch, Tableau de bord, Réservation",
@@ -1390,7 +1399,13 @@
           "instantBooking": "La mention « Immédiat » ou « Demande de réservation » sur les voyages",
           "directBankTransferRail": "Nouveaux liens de virement, bureau et voyageur",
           "creditCardGatewayRail": "Nouveaux liens carte au bureau",
-          "overrideExpiryHours": "Chaque dérogation, à partir de son approbation"
+          "overrideExpiryHours": "Chaque dérogation, à partir de son approbation",
+          "displayCurrencyUSD": "Le menu des devises du site et ses prix",
+          "displayCurrencyCAD": "Le menu des devises du site et ses prix",
+          "displayCurrencyGBP": "Le menu des devises du site et ses prix",
+          "displayCurrencyCHF": "Le menu des devises du site et ses prix",
+          "fxSpreadPercent": "Chaque taux d'affichage, sur la référence du jour",
+          "fxLockAt": "Le taux d'affichage d'une réservation, pour tout son échéancier"
         },
         "passkeyWarning": "{count, plural, =0 {Tout le personnel actif a une clé d'accès.} one {# membre actif du personnel n'a pas encore de clé d'accès et devra en configurer une à la prochaine connexion.} other {# membres actifs du personnel n'ont pas encore de clé d'accès et devront en configurer une à la prochaine connexion.}}"
       },
@@ -1446,8 +1461,39 @@
       "emergency": "Contacts d'urgence",
       "languages": {
         "currenciesTitle": "Devises",
-        "currencies": "EUR uniquement : prix, factures et grand livre sont en euros.",
-        "currenciesNote": "Les devises d'affichage avec un taux quotidien et un taux figé à l'acompte viendront plus tard ; elles changent l'échéancier et demandent une décision financière.",
+        "currencies": "{lockAt, select, INVOICE {Base EUR (facturation, factures, grand livre). Les devises d'affichage convertissent au taux de référence du jour plus la marge ; le taux est figé à la facture pour tout l'échéancier.} other {Base EUR (facturation, factures, grand livre). Les devises d'affichage convertissent au taux de référence du jour plus la marge ; le taux est figé à l'acompte pour tout l'échéancier.}}",
+        "currenciesNote": "Tout montant facturé reste en EUR ; une devise d'affichage est indicative. Les interrupteurs, la marge et le moment du blocage sont des seuils que deux Super Admins modifient.",
+        "currenciesLoadError": "Les devises n'ont pas pu être chargées.",
+        "currency": "Devise",
+        "role": "Rôle",
+        "rateToday": "Taux du jour",
+        "shownTo": "Affichée pour",
+        "on": "Active",
+        "roleBase": "Base · fixe",
+        "roleDisplay": "Affichage",
+        "always": "Toujours",
+        "rateWithSpread": "{rate} ({reference} + marge)",
+        "regions": {
+          "EUR": "Zone euro et toute autre région",
+          "USD": "États-Unis",
+          "CAD": "Canada",
+          "GBP": "Royaume-Uni",
+          "CHF": "Aucune région par défaut"
+        },
+        "ratesStale": "Le dernier taux date de plus de 5 jours ; le site affiche donc uniquement des EUR.",
+        "source": "Source du taux",
+        "sources": {
+          "mock": "Taux d'exemple (simulés) en attendant le choix d'une source",
+          "ecb": "Référence BCE · quotidienne, 16 h CET"
+        },
+        "ratesOf": "Taux du",
+        "spread": "Marge",
+        "lockAt": "Figer le taux à",
+        "lockPoints": {
+          "DEPOSIT": "Paiement de l'acompte (BR-CU-02)",
+          "INVOICE": "Facture"
+        },
+        "changeOnThresholds": "Modifier dans Seuils",
         "title": "Langues",
         "description": "Les textes de la plateforme par langue ; les pages de l'agence sont vérifiées à leur publication.",
         "locale": "Langue",
@@ -1937,7 +1983,8 @@
         "CARD": "Carte",
         "OTHER": "Autre"
       },
-      "noRail": "Aucun rail de paiement n'est activé. Un Super Admin peut en activer un sous Paramètres › Approbations et seuils."
+      "noRail": "Aucun rail de paiement n'est activé. Un Super Admin peut en activer un sous Paramètres › Approbations et seuils.",
+      "rateLocked": "Taux d'affichage figé le {date} : 1 EUR = {rate} {currency}. Tout paiement reste en EUR."
     },
     "dispatchControls": {
       "dispatching": "Répartition…",
