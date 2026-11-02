@@ -1517,3 +1517,50 @@ existing components and tokens:
 - **Approvals stay with the role**: an override holder sees a row's actions but not its refund
   votes, advisory approvals or supplier approvals (O3), so no button offers what the API would
   refuse.
+
+## Amendment, 2026-11-01: display currencies
+
+The owner chose display currencies next (M9 D7) and approved
+`docs/schema-m9-display-currencies.md` as recommended (C1a–C7a, migration
+`20261101221301_display_currencies`; the ECB reader built but off). The boards draw A-Settings ›
+Currencies (a table and the rate source, spread, rounding and lock controls), the currency menu
+in DS-Actions-Forms and DS-Handoff, the drawer's currency row in DS-Mobile-Patterns, Account's
+"Language & money", and "≈ CA$" lines on Payment, M-Payment, D-Invoice and the emails. The build
+resolved them with existing components and tokens:
+
+- **The currency menu** sits right of the header's language links from md to lg, styled as
+  they are (12 px uppercase muted, 32 px tall, the code and a chevron). From lg the six links
+  leave it no room (measured at 1024 and 1280: Spanish 38–61 px and signed-in English 21 px of
+  sideways scroll), so DS-Mobile-Patterns' desktop header loses it and the same menu sits in
+  the footer's bottom row, in the footer's link tone, opening upward. It opens DS-Handoff's
+  listbox: a 260 px
+  `surface` panel with a border, `shadow-md` and `rounded-md`, each option "CAD · Canadian
+  Dollar" over "1 € = 1.4891" (the base reads "Prices are set in EUR"), the selected one in
+  primary-100 / primary-700 at the board's 10 × 12 px padding, and the note at its foot ("Prices
+  are set and charged in EUR; … Your rate is locked when you pay the deposit"). Arrow keys,
+  Home/End, Enter and Esc as DS-Handoff lists. Below md the header stays as it is and the
+  drawer holds the same choice as a radio group under a "Currency" overline, like its Display
+  section.
+- **Analytics** sends T-Events' `locale_changed` with `kind: currency`, not DS-Handoff's
+  `currency_changed`: the taxonomy already names the language and currency menus together.
+- **Account › Preferences** gains a "Display currency" section (h4, a one-line lede, the radio
+  group) between the notifications and the display settings; the board's single "Language &
+  money" block is split because the language links stay in the header.
+- **"Prices set in EUR"** is a caption under the Packages result count, under the Package
+  page's price and under the builder's estimate, shown only while another currency is.
+- **The "≈" line** is a caption under a payable total: "≈ CA$918 · the rate locks when you pay
+  the deposit", or "· rate locked on 14 Oct 2026" once the booking has one. It replaces the
+  boards' "about CA$ …" and "Charged in EUR (≈ CA$ …)", so every payable surface reads the same.
+- **Settings › Currencies** keeps the board's columns (Currency, Role, Rate today, Shown to,
+  On); "Rate today" reads "1.4891 (1.4802 + spread)" and "On" is a badge, with the rate source,
+  the rates' day, the spread and the lock point below as facts and a link to Thresholds. The
+  switches, the spread and the lock point are a Currencies group on Thresholds with the same
+  two-Super-Admin save, as the new-device switch went to Thresholds rather than its own tab.
+  USD's "Shown to" is the United States only (C2a); CHF's is "No default region".
+- **Not drawn on the desk:** the "Gateway rate" source (no live gateway) and "Absorb rounding
+  under € 0.50" (a reconciliation tolerance with nothing to decide until real rails); both stay
+  in the doc's §4.
+- **The invoice** prints "Prices in EUR. Reference in CAD at the rate locked on 2026-10-12
+  (1.489081): 4616.15 CAD. The rate stays the same for the whole payment schedule; your bank sets
+  the rate it charges." under the total, rather than D-Invoice's "at the ECB rate", because the
+  locked rate includes the spread and the source may be the mock.

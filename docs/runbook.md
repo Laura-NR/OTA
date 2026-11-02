@@ -52,6 +52,7 @@ these stop; synchronous API traffic continues but readiness fails.
 | `payment-window-reminders` | every 15 min | email 24 h and 2 h before a deposit or full payment window closes (`POST /payments/reminders/window-scan`) |
 | `traveler-notifications` | daily 08:00 | trip review request a day after completion (one reminder after 5 days) and the reconfirmation 7 days before departure (`POST /notifications/scan`) |
 | `analytics-digest` | Monday 07:00 | email the weekly XLSX + PDF BI digest to `ANALYTICS_DIGEST_EMAIL`/`OPS_NOTIFY_EMAIL` |
+| `fx-rates` | daily 16:30 Europe/Madrid | store the day's display-currency reference rates from `FX_RATE_PROVIDER` (see Display currencies) |
 | `dispatch` | on dispatch | delayed job that fires the offer timeout (2h standard / 30min under 48h) |
 
 Inspect/drain from the Redis CLI:
@@ -140,6 +141,27 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
   `FEATURE_OFF`, desk and traveler; a transfer already started keeps its details and
   proof. The other flags there (recruitment portal, builder, map, events strip,
   instant label) work the same way; the manifest's values are only the defaults.
+
+## Display currencies
+
+- Every amount charged, invoiced or refunded is EUR. A display currency (USD, CAD,
+  GBP, CHF; `docs/schema-m9-display-currencies.md`) is indicative: browsing prices
+  convert and round up, payable amounts show "≈" beside the euros.
+- Rates: `exchange_rates`, one reference row per day and currency, written by the
+  `fx-rates` job and by the first read of a day that has none (at most one try an
+  hour per API process). `FX_RATE_PROVIDER` is `mock` (the board's sample rates)
+  unless set to `ecb`. Check what the storefront gets with
+  `curl -s localhost:3001/catalog/currencies`; the desk shows the same under
+  Settings › Currencies & languages.
+- **A stale rate hides the currencies.** When the latest row is more than 5 days
+  old, the public read returns no currency and the storefront shows EUR only; the
+  desk says "stale". With `ecb`, a failed fetch is logged as
+  `Display rates not refreshed` and the older day keeps serving until it goes stale.
+- The switches, the spread (default 0.6 %) and the lock point (default the
+  deposit) are thresholds: two Super Admins, Settings › Approvals & thresholds ›
+  Currencies.
+- A booking's rate locks once (`reservation.display_rate_locked` in the audit log)
+  and is never changed; a booking paid before display currencies shows EUR only.
 
 ## Rate limiting
 

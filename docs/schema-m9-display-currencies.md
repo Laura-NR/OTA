@@ -201,6 +201,48 @@ model Reservation {
 
 Migration name: `display_currencies`. Additive and nullable; no backfill, no data change.
 
-## 7. As built
+## 7. As built (2026-11-01)
 
-(Filled in after the build.)
+- **Migration** `20261101221301_display_currencies` (`eb66939`): the table and columns of §6.
+- **Domain** (`298ae0d`, `4cf5d85`): `packages/domain/src/money/display-currency.ts` holds the
+  currencies, their default regions, the board's sample rates, `defaultDisplayCurrency`,
+  `resolveDisplayCurrency`, `displayRate`, `convertForDisplay` (rounded up), `referenceAmount`
+  (to the cent), `isRateStale` (5 days), `lockDue` and `CURRENCY_COOKIE`; the six thresholds
+  (`displayCurrencyUSD/CAD/GBP/CHF`, `fxSpreadPercent`, `fxLockAt`) with their schema bounds
+  (`d812945`).
+- **API** (`caee93c`): `apps/api/src/currencies/` with `FxRateProvider` (mock, and the ECB
+  reader selected by `FX_RATE_PROVIDER=ecb`), the daily `fx-rates` job (16:30 Europe/Madrid),
+  `GET /catalog/currencies` (public), `GET /settings/currencies` (every desk role) and
+  `PUT /me/display-currency` (audited), all in the RBAC matrix. The payment confirmation locks
+  the rate in its transaction, and the first link does under `INVOICE`; the schedule DTO
+  carries `rateLock`. The invoice prints the reference line (`4178763`).
+- **Storefront** (`d3847c5`, `0add042`, `c7d3536`): the menu in the header from md to lg and
+  in the footer from lg, and the drawer's and
+  Account's radio groups, converted browsing prices with "Prices set in EUR", and "≈" on
+  payable totals; telemetry's `currency` is the visitor's. en/es/fr (`44e6206`).
+- **Desk** (`487a888`, `2697162`): Settings › Currencies & languages' table, the Currencies
+  group on Thresholds, and the locked rate on a booking's payment panel. en/es/fr (`2a0d2d0`).
+  Support no longer sees a customer's certification reminder without an override (`b5cae6c`).
+- **e2e** (`ff63b39`, `e2e/display-currencies.spec.ts`): a visitor picks CAD in the header and
+  sees a card's price convert, "Prices set in EUR", the cookie and the listbox keys; a traveler
+  saves GBP in Account, sees "≈" on the trip and the wire page, the desk marks the transfer
+  paid, and the lock shows on the booking, the desk and the trip. `e2e/customers.spec.ts` adds
+  Support's profile without the reminder.
+
+**Differences from §2–§5:**
+- `POST /me/reservations/:id/payments` takes an optional `displayCurrency` (additive): a
+  traveler who never saved one keeps the currency they were shown when they ask for a link,
+  since a region default or a cookie never reaches the desk's confirmation.
+- Only the first PAID receipt locks, so a booking paid before this batch keeps showing EUR. No
+  lock is taken while the rate is stale or the traveler's currency is switched off.
+- The invoice line reads "at the rate locked on 2026-10-12 (1.489081)", not the board's "ECB
+  rate": the locked rate includes the spread, and the source may be the mock.
+- Payable line items (instalment lists, price lines, departure labels, the account's trip list,
+  event requests) stay EUR; the "≈" sits on the totals and on each instalment still due. The
+  packages price filter stays in EUR, matching its inputs. The builder's budget field stays in
+  EUR (T-Forms asks for the selected currency; deferred).
+- A browsing breakdown rounds each line up, so its lines may not add up to its rounded total.
+- The header has no room for the menu from lg (the full e2e run caught 21 px of sideways
+  scroll at 1024), so from lg it is in the footer.
+- The public read is cached 60 s per API process; every e2e spec starts on EUR (an
+  `ota_currency` cookie in `playwright.config.ts`), since Playwright's en-US defaults to USD.

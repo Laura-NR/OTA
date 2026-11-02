@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-01 23:05
+# Handoff — vereda — updated 2026-11-02 01:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -9,20 +9,45 @@ reduce motion, high contrast, the axe audit, Phase 8 item 1, T-Events, its follo
 server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausible CE sink
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
-page, on 2026-11-01 the staff recovery codes, the new-device email and permission overrides) and
+page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
+display currencies) and
 ADR 0007 (worker
 app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
 `docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
 `docs/schema-m9-new-device-email.md` (approved N1a–N6a, §7 as built). Permission overrides:
-`docs/schema-m9-permission-overrides.md` (approved O1a–O8a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
+`docs/schema-m9-permission-overrides.md` (approved O1a–O8a, §7 as built). Display currencies:
+`docs/schema-m9-display-currencies.md` (approved C1a–C7a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-01 (late night): display currencies** (M9 D7), the owner's pick, approved C1a–C7a
+  on migration `20261101221301_display_currencies` (`7dc5ae0`…`ff63b39`; ADR 0006 amendment
+  of that day). No dependency or spend; rates are the mock's (the board's samples).
+  - Rules `packages/domain/src/money/display-currency.ts`: USD/CAD/GBP on, CHF off (four
+    threshold switches), default from the browser language's region (en-US → USD, en-CA/fr-CA
+    → CAD, en-GB → GBP, else EUR), saved choice > `ota_currency` cookie > default, rate =
+    reference × (1 + `fxSpreadPercent`, default 0.6), browsing prices round up to the unit, a
+    rate older than 5 days is not shown, `fxLockAt` DEPOSIT (default) or INVOICE.
+  - API `apps/api/src/currencies/`: `FxRateProvider` (mock; the ECB reader only with
+    `FX_RATE_PROVIDER=ecb`), daily `fx-rates` job 16:30 Europe/Madrid plus the first read of a
+    day, `GET /catalog/currencies` (public, 60 s cache), `GET /settings/currencies` (desk),
+    `PUT /me/display-currency` (audited). The first PAID receipt locks the booking's currency
+    and rate (`reservation.display_rate_locked`), or the first link under INVOICE; the traveler's
+    payment link sends the currency shown, kept when none is saved. Schedule DTO `rateLock`;
+    the invoice prints the reference line.
+  - Storefront: the listbox in the header from md to lg and in the footer from lg (no room
+    in the header there: es and signed-in en scrolled sideways), drawer and Account › Preferences radios,
+    converted browsing prices + "Prices set in EUR", "≈" captions on payable totals (locked rate
+    once there is one); telemetry `currency` is the visitor's. Desk: Settings › Currencies
+    table, Thresholds › Currencies, the locked rate on a booking's payment panel. en/es/fr.
+    e2e `e2e/display-currencies.spec.ts`.
+  - Also `b5cae6c`: Support no longer sees a customer's certification reminder (the API
+    refuses it) unless a `customers` override runs; the profile shows the override notice.
 - **2026-11-01 (night): permission overrides** (M9), the owner's pick, approved O1a–O8a on
   migration `20261101202627_permission_overrides` (`39575ad`…`b99a875`; ADR 0006 amendment of
   that day). No dependency or spend.
@@ -300,8 +325,9 @@ events (T-Events)".
   (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
-  deferred items (permission overrides, display currencies, manifest editing
-  beyond the flags, the IP allowlist, new-device email); changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
+  deferred items (manifest editing beyond the flags, the IP allowlist); display currencies'
+  "about CA$" email lines, rounding tolerance, gateway rate source and a budget field in the
+  chosen currency; changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
   desk's `/` (no desk search); self-service backup codes and a no-deploy recovery for the
   last Super Admin; Ops Lite;
   a real screen-reader run; the custom date-range picker (owner: native fields).
@@ -311,35 +337,42 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-01, permission overrides, dev stack stopped for the build)
-- `pnpm lint` and `pnpm format:check` green.
-- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1148 passed / 30 skipped**, 30/30 tasks (new: domain override
-  rules, the request email in en/es/fr, `PermissionOverridesService` with a fake, the audit
-  interceptor, the RBAC matrix's new routes and override cases, the resets ending overrides).
+## Verified (2026-11-02, display currencies, dev stack stopped for the build)
+- `pnpm lint` and `pnpm format:check` green (also re-run after the footer fix).
+- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached (re-run after the footer fix).
+- `TURBO_FORCE=true pnpm test` **1183 passed / 30 skipped**, 30/30 tasks (new: domain
+  display-currency rules, the spread's schema bounds, the invoice line, the currencies API
+  with a fixed provider and the ECB parser on a saved sample, the lock in the payments and
+  schedule tests, the RBAC matrix's three routes).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **152 passed, 2 failed, 3 skipped** in 51.2 min, including
-  `permission-overrides.spec.ts` **4/4**. Not this batch's (storefront pages; the storefront
-  `next-server` had restarted mid-run, a later PID than the others): `responsive.spec.ts:118`
-  at ds07-414 (the 404 page's body read 16 px instead of 18) and `responsive.spec.ts:130` at
-  ds07-768 (`page.goto` 180 s timeout). On fresh servers (killed by PID, `.next` deleted) both
-  tests at both widths **4/4**. Skips: the desk at 320/375/414.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **29/29**, 12 files: the 11
-  listed before (`apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,
-  proposals,advisories,disruptions,events}.integration.test.ts`,
-  `{dispatch,compliance}.bullmq.integration.test.ts`) plus
-  `permission-overrides.integration.test.ts`.
-- Migration `20261101202627_permission_overrides` applied to the dev DB; `prisma migrate dev`
-  reports no drift and `prisma migrate status` is up to date.
-- Browser (the owner's restarted stack, a scratch script with its own Super Admin and Support
-  user, cleaned up; no override rows left) at 390, 1024 and 1280: Settings › Permissions with a
-  request, an active and a declined override; the running (success tone), pending (info) and
-  offer-with-decline (neutral) notices; the request dialog at 390; the Spanish pending notice.
-  No sideways scroll on any of the 15 page checks; the notice is the `Alert` (8 px radius,
-  14/16 px padding) with a 32 px small button; body 14 px. The recent card's status badge
-  stretched across its cell; fixed (`b154289`) and rechecked. At 390 the override tables
-  scroll inside their boxes like the matrix.
-- Not run: a real screen reader.
+- `pnpm e2e` (`.next` deleted first): **153 passed, 4 failed, 3 skipped** in 1.0 h, including
+  `display-currencies.spec.ts` 2/2 and `customers.spec.ts` 3/3. Two failures were this batch's
+  and are fixed: `storefront-display.spec.ts:156` (the "Display" heading also matched "Display
+  currency"; now exact) and `responsive.spec.ts:130` at ds07-1024 (signed-in header 21 px wide
+  with the currency button; it moved to the footer from lg, `c7d3536`). The other two were
+  last session's pattern after the storefront `next-server` restarted mid-run (a later PID):
+  `responsive.spec.ts:118` at ds07-320 (404 body 16 px) and `:110` at ds07-768 (`page.goto`
+  240 s timeout). Reruns on fresh servers: `display-currencies` + `storefront-display` **9/9**;
+  `responsive.spec.ts` at all six widths **21 passed, 3 skipped** (desk at 320/375/414), PIDs
+  unchanged.
+- One `customers.spec.ts` reminder run failed earlier in development on a cold dev server
+  (`GET /customers` 401 right after the admin's sign-in); not reproduced in 4 later runs
+  including the full suite. Cause not found.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **29/29**, 12 files:
+  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
+  advisories,disruptions,events,permission-overrides}.integration.test.ts` and
+  `{dispatch,compliance}.bullmq.integration.test.ts`; payment-schedule now locks CAD at
+  1.489081 on Postgres. The first live run failed 4 tests: hand-built `MeService`/
+  `PaymentsService` lacked the new constructor argument (fixed, `4ffe435`).
+- Migration `20261101221301_display_currencies` applied to the dev DB; `prisma migrate status`
+  up to date.
+- Browser (dev stack, scratch scripts) at 390, 768, 1024 and 1280: the header listbox at 768
+  (260 px panel, `shadow-md`, primary-100 selected row, 10/12 px padding), the footer listbox at
+  1024/1280 opening upward, the drawer radios at 390 (legend computed equal to the drawer's
+  overline), Account's section, a package page in CAD ("CA$358", "Prices set in EUR"), the
+  desk's currency table (scrolls inside its box at 390) and Thresholds › Currencies (step
+  0.1). No sideways scroll anywhere except French headers at 1024/1280 (pre-existing).
+- Not run: a real screen reader; the ECB reader against the live feed (deliberately).
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -348,11 +381,17 @@ events (T-Events)".
   `PASSKEY_RP_ID` binds every passkey, so it belongs to the deploy-topology decision (still
   open; `docs/deployment-plan.md` D6 recommends the apex domain): the desk's origin must be
   that domain or under it, and in `TRUSTED_ORIGINS`.
+- **Display currencies (2026-11-01):** the 0.6 % spread, the deposit lock point, showing USD at
+  all and the sample rates are placeholders for finance and counsel (all changeable on
+  Thresholds, no deploy). Switching to the ECB (`FX_RATE_PROVIDER=ecb`) is the owner's Q10 call;
+  the reader is tested against a saved XML sample, never against the live feed. The rate
+  cache and the hourly retry are per API process. A traveler whose region default is USD but
+  who never opens the menu has USD saved when they ask for a payment link. Region detection is
+  the browser language only (no geo-IP).
 - **Permission overrides:** any one Super Admin approves (O4a), so one Super Admin can give
   Support a row for up to 24 h. Reasons and notes are staff free text kept with the override
-  (not traveler PII; outside the retention purge). The customers pages still show their actions
-  to every role (pre-existing; the API refuses Support); the notice is on the customers list
-  only. Two requests sent at the same instant for the same row are not locked against each
+  (not traveler PII; outside the retention purge). The customer profile's reminder now follows
+  `deskAccess` (`b5cae6c`); the list's only link is to the read-only retention desk. Two requests sent at the same instant for the same row are not locked against each
   other; both would be listed and either can be decided.
 - **New-device email:** on by default, so after a deploy every staff browser emails once. The
   `ota_device` cookie is "essential" (a security function), assumed to fall under the cookie
@@ -416,6 +455,22 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Display currencies (2026-11-01):** Playwright's en-US defaults to USD, so
+  `playwright.config.ts` seeds `ota_currency=EUR` beside `ota_consent`; a spec that clears all
+  cookies loses it (`storefront-display.spec.ts` does, but asserts no price). A new storefront
+  price is `browsingPrice`/`<BrowsingPrice>` while browsing and EUR plus `<ApproxPrice>` when
+  payable; the helpers take the amount's own currency and convert only EUR. Next-intl formats a
+  number placeholder to 3 decimals, so the desk passes the locked rate pre-formatted. Do not
+  run `prisma format`: it re-aligns ~380 unrelated lines of `schema.prisma`. A fake Prisma used
+  by a payment confirmation needs `paymentReceipt.count`, `reservation.findUnique` with
+  `select` (the lock's) and `exchangeRate`. The header row has no slack at lg–xl: anything
+  added there must be measured signed in and in es/fr at 1024 and 1280 (the DS 07 spec checks
+  `/en` only). French already scrolls 30–34 px at 1024 and 3–7 px at 1280 without the currency
+  (pre-existing, not fixed). During long e2e runs the storefront's `next-server` restarts (a
+  newer PID than the API's) and later storefront pages time out; rerun those on a fresh stack.
+  The live tests build `MeService`, `PaymentsService` and others by hand with positional
+  arguments and are skipped by `pnpm test`; a new constructor argument breaks them only under
+  `RUN_DB_INTEGRATION=1`, so run the live list after changing a service's constructor.
 - **Permission overrides (2026-11-01):** a new staff controller needs `@Capability(row)` or
   no override ever reaches it; a new approval or vote route needs `@NotOverridable()`. Desk
   pages decide actions with `deskAccess(role, row)` and pass `byRole` to approval buttons,
@@ -712,6 +767,13 @@ events (T-Events)".
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-01: display currencies (migration 20261101221301_display_currencies) are
+    indicative: every amount charged, invoiced or refunded stays EUR. Rates live in
+    `exchange_rates` (one reference row per day and currency) from `FX_RATE_PROVIDER` (mock
+    unless `ecb`); the shown rate adds the `fxSpreadPercent` threshold. The first PAID receipt
+    locks a booking's `display_currency`/`display_rate`, never changed after. Storefront
+    browsing prices use `browsingPrice`/`<BrowsingPrice>`, payable totals EUR plus
+    `<ApproxPrice>`; e2e starts on an `ota_currency=EUR` cookie."
   - "2026-11-01: staff recovery codes (migration 20261101114418_staff_recovery_codes) are
     issued by a Super Admin at `POST /staff/:id/recovery-code` and redeemed by Better Auth's
     `POST /api/auth/sign-in/recovery-code` (a plugin in `packages/auth` asking
@@ -820,13 +882,13 @@ events (T-Events)".
     routes and add them to the RBAC matrix."
 
 ## Next
-1. Owner: choose the next batch. An M9 deferred item: the IP allowlist (a policy doc first; its
-   use depends on the deploy topology's proxy) or display currencies (the ECB feed is a Q10
-   third party). M10's room holds/event photos need a migration doc first. Small, no
-   migration: hide the customers pages' actions from Support unless a customers override runs
-   (they show today and the API refuses). A real screen-reader run (desk and storefront) needs
-   a machine with NVDA or VoiceOver. Optional: the desktop cookie banner still covers about
-   61 % of a 1280 × 844 window (the board's layout; focus is now kept clear of it).
+1. Owner: choose the next batch. The last M9 deferred item is the IP allowlist (a policy doc
+   first; its use depends on the deploy topology's proxy). M10's room holds/event photos need a
+   migration doc first. Small, no migration: the display-currency "about CA$" lines in the
+   invoice and received emails (C7b), once their copy is acceptable. A real screen-reader run
+   (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
+   banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
+   kept clear of it).
 2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
    answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
    plan recommends renting the server only when the agency's legal entity exists (D1).
@@ -840,7 +902,9 @@ events (T-Events)".
    raster app icons from Vereda, the AGENTS.md §C lines above. Then SMS once a provider is
    chosen. Also open: whether the M4 cancellation scale keeps a share of what was paid or of
    the total; the M5 sample terms (planning fee, validity, response hours); the pricing
-   samples (child bands, fees); the M10 concierge fee and events copy.
+   samples (child bands, fees); the M10 concierge fee and events copy. Finance: the
+   display-currency spread (0.6 %) and lock point (deposit); counsel: whether to show USD; the
+   owner: when to switch `FX_RATE_PROVIDER` to `ecb` (Q10).
 4. Decision gates that stay with the owner (ask, never assume): schema migrations, new
    dependencies, the SMS provider and anything needing the agency's legal entity, a real LLM
    vendor, PII purge Tiers 2–3, load tests (plan D24), the deployment topology (plan D1–D24,
@@ -1318,3 +1382,15 @@ events (T-Events)".
   (they are votes), required the route to admit an Operations Admin, put the request on each
   view-only page instead of a blocked page and the lists on Permissions, and gave the booking
   page's cards their own rows.
+- 2026-11-01 — the owner chose display currencies next (over the IP allowlist, M10's room holds
+  and event photos; the deployment plan is unanswered and Plausible CE is not installed), with
+  the small fix hiding Support's refused customer actions, and approved
+  `docs/schema-m9-display-currencies.md` as recommended: C1a browsing converts, payable stays
+  EUR with "≈", C2a USD/CAD/GBP on and CHF off with a browser-region default else EUR, C3a a
+  mock provider with the ECB reader built but off, C4a a cookie plus a saved choice, C5a a
+  daily `exchange_rates` table, 0.6 % spread, EUR only past 5 days, C6a the lock at the first
+  payment as a threshold (DEPOSIT or INVOICE), C7a storefront, desk and invoice (emails
+  deferred). The build let the traveler's payment link save the shown currency when none is
+  saved, locked only on the first PAID receipt, worded the invoice line "at the rate locked
+  on" (not "ECB rate"), kept payable line items and the price filter in EUR, put the controls
+  on Thresholds, and seeded e2e with an EUR cookie.
