@@ -3,10 +3,14 @@ import {
   FX_LOCK_POINTS,
   FX_SPREAD_PERCENT,
   INVITE_STATES,
+  IP_ALLOWLIST_LABEL_MAX,
+  IP_ALLOWLIST_MAX_ENTRIES,
   OVERRIDE_EXPIRY_HOURS,
   PERMISSION_CAPABILITIES,
   SETTINGS_VERSION_STATUSES,
   UserRole,
+  ipRangeIssue,
+  parseIpRange,
   type AdvisoryDualApprovalLevel,
   type FxLockPoint,
   type InviteState,
@@ -19,6 +23,30 @@ import { z } from 'zod';
 /** M9 settings (`docs/schema-m9-settings.md`). */
 
 const whole = (min: number, max: number) => z.number().int().min(min).max(max);
+
+const IP_RANGE_MESSAGES = {
+  INVALID: 'Use an IPv4 or IPv6 address, or a range such as 203.0.113.0/24',
+  IPV6_TOO_NARROW: 'An IPv6 range must be a /64 or wider',
+} as const;
+
+/** One Super Admin IP allowlist entry (`docs/schema-m9-ip-allowlist.md` I2, I5). */
+export const ipAllowlistEntrySchema = z.object({
+  label: z.string().trim().min(1).max(IP_ALLOWLIST_LABEL_MAX),
+  cidr: z
+    .string()
+    .trim()
+    .max(64)
+    .superRefine((cidr, ctx) => {
+      const issue = ipRangeIssue(cidr);
+      if (issue) ctx.addIssue({ code: 'custom', message: IP_RANGE_MESSAGES[issue] });
+    }),
+});
+
+/** The same network twice is a typo, so the list refuses it. */
+function rangeKey(cidr: string): string | null {
+  const range = parseIpRange(cidr);
+  return range ? `${range.bytes.join('.')}/${range.prefix}` : null;
+}
 
 /**
  * The operating thresholds document. Each value's bounds are here; the
@@ -47,6 +75,25 @@ export const operatingThresholdsSchema = z.object({
   staffPasskeysRequired: z.boolean(),
   staffIdleLockMinutes: whole(5, 240),
   staffNewDeviceEmail: z.boolean(),
+  superAdminIpAllowlistOn: z.boolean(),
+  superAdminIpAllowlist: z
+    .array(ipAllowlistEntrySchema)
+    .max(IP_ALLOWLIST_MAX_ENTRIES)
+    .superRefine((entries, ctx) => {
+      const seen = new Set<string>();
+      entries.forEach((entry, index) => {
+        const key = rangeKey(entry.cidr);
+        if (key === null) return;
+        if (seen.has(key)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [index, 'cidr'],
+            message: 'This address is already on the list',
+          });
+        }
+        seen.add(key);
+      });
+    }),
   overrideExpiryHours: whole(OVERRIDE_EXPIRY_HOURS.min, OVERRIDE_EXPIRY_HOURS.max),
   // Display currencies (`docs/schema-m9-display-currencies.md` C2, C5, C6).
   displayCurrencyUSD: z.boolean(),
@@ -112,6 +159,11 @@ export const operatingSettingsSchema = z.object({
   appliedAt: z.string().nullable(),
   appliedByName: z.string().nullable(),
   pending: settingsVersionSchema.nullable(),
+  /**
+   * The address the caller's session signed in from, as the IP allowlist
+   * reads it (`docs/schema-m9-ip-allowlist.md` I4, I8); null when unknown.
+   */
+  signInAddress: z.string().nullable().optional(),
 });
 
 export type OperatingSettingsDto = z.infer<typeof operatingSettingsSchema>;

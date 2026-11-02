@@ -41,6 +41,48 @@ describe('M9 settings DTOs', () => {
     expect(ok({ fxLockAt: 'BALANCE' })).toBe(false);
   });
 
+  it('takes the Super Admin IP allowlist as labelled addresses and ranges (docs/schema-m9-ip-allowlist.md I2, I5)', () => {
+    const list = (superAdminIpAllowlist: unknown) =>
+      operatingThresholdsSchema.safeParse({
+        ...DEFAULT_OPERATING_THRESHOLDS,
+        superAdminIpAllowlistOn: true,
+        superAdminIpAllowlist,
+      });
+    const parsed = list([
+      { label: ' Havana office ', cidr: ' 203.0.113.0/24 ' },
+      { label: 'VPN', cidr: '2001:db8:4::/48' },
+      { label: 'Spain office', cidr: '192.0.2.7' },
+    ]);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.superAdminIpAllowlist[0]).toEqual({
+      label: 'Havana office',
+      cidr: '203.0.113.0/24',
+    });
+    const message = (entries: unknown) =>
+      list(entries).error?.issues.map((issue) => issue.message);
+    expect(message([{ label: 'Office', cidr: 'havana' }])).toEqual([
+      'Use an IPv4 or IPv6 address, or a range such as 203.0.113.0/24',
+    ]);
+    expect(message([{ label: 'Office', cidr: '2001:db8::1' }])).toEqual([
+      'An IPv6 range must be a /64 or wider',
+    ]);
+    expect(
+      message([
+        { label: 'Office', cidr: '203.0.113.0/24' },
+        { label: 'Office again', cidr: '203.0.113.0/24' },
+      ]),
+    ).toEqual(['This address is already on the list']);
+    expect(list([{ label: '', cidr: '203.0.113.0/24' }]).success).toBe(false);
+    expect(
+      list(
+        Array.from({ length: 21 }, (_, index) => ({
+          label: `Office ${index}`,
+          cidr: `192.0.2.${index}`,
+        })),
+      ).success,
+    ).toBe(false);
+  });
+
   it('asks a reason for a passkey reset (docs/schema-m9-passkeys.md P5)', () => {
     expect(resetPasskeysSchema.safeParse({ reason: '  ' }).success).toBe(false);
     expect(resetPasskeysSchema.parse({ reason: ' Phone stolen ' })).toEqual({

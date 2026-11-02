@@ -615,6 +615,7 @@ export {
   issueRecoveryCodeSchema,
   myOverridesSchema,
   operatingSettingsSchema,
+  ipAllowlistEntrySchema,
   operatingThresholdsSchema,
   overrideNoteSchema,
   overrideStatusSchema,
