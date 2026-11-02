@@ -486,6 +486,7 @@ export {
   IPV6_ALLOWLIST_MAX_PREFIX,
   IP_ALLOWLIST_LABEL_MAX,
   IP_ALLOWLIST_MAX_ENTRIES,
+  ipAddressText,
   ipInRanges,
   ipRangeIssue,
   parseIpRange,

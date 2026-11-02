@@ -4,6 +4,7 @@ import {
   DEFAULT_OPERATING_THRESHOLDS,
   UserRole,
   changedThresholds,
+  ipAddressText,
   ipInRanges,
   ipRangeIssue,
   parseIpRange,
@@ -109,6 +110,29 @@ describe('matching an address to the list', () => {
     expect(ipInRanges('unknown', ['0.0.0.0/0'])).toBe(false);
     expect(ipInRanges('203.0.113.9', ['not a range'])).toBe(false);
     expect(ipInRanges('203.0.113.9', [])).toBe(false);
+  });
+});
+
+describe('showing a sign-in address', () => {
+  it('shows an IPv6 one as the /64 Better Auth keeps, in short form, and that admits it', () => {
+    expect(ipAddressText('2001:0db8:0004:0001:0000:0000:0000:0000')).toBe(
+      '2001:db8:4:1::/64',
+    );
+    expect(ipAddressText('0000:0000:0000:0000:0000:0000:0000:0000')).toBe('::/64');
+    expect(ipAddressText('2001:0db8:0000:0000:0000:0000:0000:0000')).toBe(
+      '2001:db8::/64',
+    );
+    expect(ipAddressText('2001:0db8:0000:0001:0000:0000:0000:0000')).toBe(
+      '2001:db8:0:1::/64',
+    );
+    const shown = ipAddressText('2001:0db8:0004:0001:0000:0000:0000:0000');
+    expect(ipRangeIssue(shown)).toBeNull();
+    expect(ipInRanges('2001:0db8:0004:0001:0000:0000:0000:0000', [shown])).toBe(true);
+  });
+
+  it('leaves an IPv4 address, or anything unreadable, as given', () => {
+    expect(ipAddressText('203.0.113.9')).toBe('203.0.113.9');
+    expect(ipAddressText('unknown')).toBe('unknown');
   });
 });
 

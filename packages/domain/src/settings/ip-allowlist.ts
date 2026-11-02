@@ -162,6 +162,42 @@ export function ipInRanges(
 }
 
 /**
+ * An address as people read it. Better Auth keeps an IPv6 sign-in address cut
+ * to its /64 and written in full, so an IPv6 one is shown as that network in
+ * short form (`2001:db8:4:1::/64`), which is also the entry that admits it.
+ * An IPv4 address, or anything unreadable, is returned as given.
+ */
+export function ipAddressText(address: string): string {
+  const bytes = address.includes(':') ? ipBytes(address.trim()) : null;
+  if (!bytes || bytes.length !== 16) return address;
+  const groups = Array.from({ length: 8 }, (_, index) =>
+    ((bytes[index * 2]! << 8) | bytes[index * 2 + 1]!).toString(16),
+  ).slice(0, 4);
+  return `${shortIpv6([...groups, '0', '0', '0', '0'])}/${IPV6_ALLOWLIST_MAX_PREFIX}`;
+}
+
+/** RFC 5952: the longest run of two or more zero groups becomes "::". */
+function shortIpv6(groups: string[]): string {
+  let start = -1;
+  let length = 0;
+  for (let index = 0; index < groups.length;) {
+    if (groups[index] !== '0') {
+      index += 1;
+      continue;
+    }
+    let end = index;
+    while (end < groups.length && groups[end] === '0') end += 1;
+    if (end - index > length && end - index >= 2) {
+      start = index;
+      length = end - index;
+    }
+    index = end;
+  }
+  if (start === -1) return groups.join(':');
+  return `${groups.slice(0, start).join(':')}::${groups.slice(start + length).join(':')}`;
+}
+
+/**
  * Whether the rule is in force: the applied switch, unless the deploy set
  * the break-glass `SUPER_ADMIN_IP_ALLOWLIST_OVERRIDE=off` (I4).
  */
