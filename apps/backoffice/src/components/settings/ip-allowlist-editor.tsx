@@ -95,7 +95,7 @@ export function IpAllowlistEditor({
               <Button
                 type="button"
                 variant="tertiary"
-                className="sm:mt-6"
+                className="justify-self-start sm:mt-6"
                 aria-label={t('ipAllowlist.remove', {
                   label: entry.label || entry.cidr || String(index + 1),
                 })}
