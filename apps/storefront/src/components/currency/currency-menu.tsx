@@ -32,31 +32,40 @@ function useNote(): string {
 
 /**
  * The display-currency choice (`docs/schema-m9-display-currencies.md` C7a,
- * DS-Actions-Forms "Currency & language switchers"). The header's `menu` is a
- * button that opens a listbox (DS-Handoff: aria-haspopup="listbox", arrow
- * keys, Esc closes and returns focus); the drawer and Account show the same
- * choice as a radio group (`list`); `compact` names it as the drawer names its
- * sections. Nothing renders while only EUR is offered.
+ * DS-Actions-Forms "Currency & language switchers"). The `menu` is a button
+ * that opens a listbox (DS-Handoff: aria-haspopup="listbox", arrow keys, Esc
+ * closes and returns focus): below the header's trigger, or above the dark
+ * footer's (`placement`). The drawer and Account show the same choice as a
+ * radio group (`list`); `compact` names it as the drawer names its sections.
+ * Nothing renders while only EUR is offered.
  */
 export function CurrencyMenu({
   variant = 'menu',
+  placement = 'header',
   compact = false,
   className,
 }: {
   variant?: 'menu' | 'list';
+  placement?: 'header' | 'footer';
   compact?: boolean;
   className?: string;
 }) {
   const { display } = useCurrency();
   if (display.options.length < 2) return null;
   return variant === 'menu' ? (
-    <CurrencyListbox className={className} />
+    <CurrencyListbox placement={placement} className={className} />
   ) : (
     <CurrencyRadios compact={compact} className={className} />
   );
 }
 
-function CurrencyListbox({ className }: { className?: string }) {
+function CurrencyListbox({
+  placement,
+  className,
+}: {
+  placement: 'header' | 'footer';
+  className?: string;
+}) {
   const t = useTranslations('currency');
   const locale = useLocale();
   const { display, pending, choose } = useCurrency();
@@ -138,13 +147,23 @@ function CurrencyListbox({ className }: { className?: string }) {
         aria-busy={pending || undefined}
         onClick={() => (open ? close() : openAt(current))}
         onKeyDown={onButtonKey}
-        className="relative flex h-8 items-center gap-1 rounded px-1.5 text-caption uppercase text-muted transition-colors hover:text-default pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-1.5 pointer-coarse:after:content-['']"
+        className={cn(
+          "relative flex h-8 items-center gap-1 rounded px-1.5 transition-colors pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-1.5 pointer-coarse:after:content-['']",
+          placement === 'header'
+            ? 'text-caption uppercase text-muted hover:text-default'
+            : 'text-label font-normal text-primary-200 hover:text-neutral-0 focus-visible:outline-accent-500',
+        )}
       >
         {display.code}
         <Icon name="chevron-down" className="h-4 w-4" />
       </button>
       {open ? (
-        <div className="absolute right-0 top-full z-40 mt-2 w-[260px] rounded-md border bg-surface shadow-md">
+        <div
+          className={cn(
+            'absolute z-40 w-[260px] rounded-md border bg-surface shadow-md',
+            placement === 'header' ? 'right-0 top-full mt-2' : 'bottom-full left-0 mb-2',
+          )}
+        >
           <ul
             ref={list}
             id={listId}

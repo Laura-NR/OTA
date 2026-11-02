@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import type { ComponentProps } from 'react';
 
+import { CurrencyMenu } from '@/components/currency/currency-menu';
 import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
 import { TOUCH_ROW } from '@/lib/button';
@@ -226,6 +227,8 @@ export async function SiteFooter({ tenant }: { tenant: TenantConfig }) {
               )}
             />
           ))}
+          {/* From lg the header has no room for the currency (es/fr labels). */}
+          <CurrencyMenu placement="footer" className="hidden lg:block" />
         </div>
       </div>
     </footer>

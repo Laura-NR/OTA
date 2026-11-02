@@ -46,8 +46,9 @@ export async function SiteHeader({
         <PrimaryNav />
         <div className="ml-auto flex items-center gap-2">
           <LocaleSwitcher />
-          {/* Below md the currency is in the drawer, so the header stays clean (DS-Mobile-Patterns). */}
-          <CurrencyMenu className="hidden md:block" />
+          {/* The currency fits here only while the links are in the drawer: below md it is
+              in the drawer (DS-Mobile-Patterns), from lg in the footer. */}
+          <CurrencyMenu className="hidden md:block lg:hidden" />
           <Link
             href={signedIn ? '/account' : '/login'}
             className={cn(
