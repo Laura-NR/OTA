@@ -158,7 +158,9 @@ test.describe('storefront display preferences', () => {
         origin: STOREFRONT_URL,
         callbackPath: '/en/account?tab=preferences',
       });
-      await expect(page.getByRole('heading', { name: 'Display' })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Display', exact: true }),
+      ).toBeVisible();
       await page.getByRole('switch', { name: 'Low-bandwidth mode' }).click();
       await expect(
         page.getByText('Text-only mode on · photos load on tap'),

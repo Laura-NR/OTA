@@ -46,8 +46,11 @@ async function cleanup(): Promise<void> {
   });
 }
 
-/** Open the header's currency menu and pick `code`, retried until hydrated. */
-async function pickInHeader(page: Page, from: string, code: string): Promise<void> {
+/**
+ * Open the currency menu and pick `code`, retried until hydrated. At the
+ * default 1280 px it is the footer's (the header has it only from md to lg).
+ */
+async function pickInMenu(page: Page, from: string, code: string): Promise<void> {
   await expect(async () => {
     await page.getByRole('button', { name: `Currency: ${from}` }).click();
     await expect(page.getByRole('listbox', { name: 'Currency' })).toBeVisible({
@@ -60,7 +63,7 @@ async function pickInHeader(page: Page, from: string, code: string): Promise<voi
 
 /**
  * docs/schema-m9-display-currencies.md end to end: a visitor browses in CAD
- * from the header, a traveler saves GBP on Account, sees "≈" on the trip and
+ * from the currency menu, a traveler saves GBP on Account, sees "≈" on the trip and
  * the wire page, and the deposit locks the rate on the booking and the desk.
  * The config's `ota_currency=EUR` cookie is where every page starts.
  */
@@ -90,7 +93,7 @@ test.describe('display currencies (M9)', () => {
     await prisma.$disconnect();
   });
 
-  test('a visitor picks CAD in the header and browses packages in it', async ({
+  test('a visitor picks CAD in the currency menu and browses packages in it', async ({
     page,
   }) => {
     const pkg = await prisma.package.findUniqueOrThrow({
@@ -101,7 +104,7 @@ test.describe('display currencies (M9)', () => {
     await expect(card()).toContainText(whole(Number(pkg.basePrice), 'EUR'));
     await expect(page.getByText('Prices set in EUR')).toHaveCount(0);
 
-    await pickInHeader(page, 'EUR', 'CAD');
+    await pickInMenu(page, 'EUR', 'CAD');
 
     const cad = convertForDisplay(Number(pkg.basePrice), await rateOf('CAD'));
     await expect(card()).toContainText(whole(cad, 'CAD'));
