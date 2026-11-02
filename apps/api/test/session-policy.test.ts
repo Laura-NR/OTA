@@ -1,6 +1,7 @@
 import type { TenantConfig } from '@ota/config';
+import type { OperatingThresholds } from '@ota/domain';
 import type { EmailMessage, Mailer } from '@ota/email';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SessionPolicy } from '../src/auth/session-policy';
 import type { PrismaService } from '../src/prisma/prisma.service';
@@ -18,7 +19,12 @@ class FakeMailer implements Mailer {
   }
 }
 
-function setup(options: { role: string; passkeys: number; required?: boolean }) {
+function setup(options: {
+  role: string;
+  passkeys: number;
+  required?: boolean;
+  thresholds?: Partial<OperatingThresholds>;
+}) {
   const audits: Record<string, unknown>[] = [];
   const prisma = {
     user: {
@@ -35,7 +41,10 @@ function setup(options: { role: string; passkeys: number; required?: boolean }) 
   const mailer = new FakeMailer();
   const policy = new SessionPolicy(
     prisma as unknown as PrismaService,
-    fakeOperatingSettings({ staffPasskeysRequired: options.required ?? true }),
+    fakeOperatingSettings({
+      staffPasskeysRequired: options.required ?? true,
+      ...options.thresholds,
+    }),
     mailer,
     TENANT,
   );
@@ -179,5 +188,73 @@ describe('SessionPolicy: a recovery-code session (docs/schema-m9-recovery-codes.
     expect(await policy.gateRefusal(session('recovery_code'), at(15))).toMatchObject({
       code: 'SESSION_REFUSED',
     });
+  });
+});
+
+describe('SessionPolicy: the Super Admin IP allowlist (docs/schema-m9-ip-allowlist.md I1, I3, I4)', () => {
+  const SIGNED_IN = new Date('2026-11-02T10:00:00Z');
+  const ALLOWLIST = {
+    superAdminIpAllowlistOn: true,
+    superAdminIpAllowlist: [{ label: 'Havana office', cidr: '203.0.113.0/24' }],
+  };
+  const session = (role: string, ipAddress: string | null) =>
+    ({
+      user: { id: 'u-yanet', email: 'yanet@vereda.travel', role },
+      session: {
+        id: 's-1',
+        userId: 'u-yanet',
+        expiresAt: new Date('2026-11-09T10:00:00Z'),
+        createdAt: SIGNED_IN,
+        lastActiveAt: SIGNED_IN,
+        ownDevice: true,
+        signInMethod: 'passkey',
+        ipAddress,
+      },
+    }) as Parameters<SessionPolicy['refusal']>[0];
+  const at = new Date(SIGNED_IN.getTime() + 60_000);
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('refuses a Super Admin session signed in from outside the list, naming the address', async () => {
+    const { policy } = setup({ role: 'SUPER_ADMIN', passkeys: 1, thresholds: ALLOWLIST });
+    expect(await policy.refusal(session('SUPER_ADMIN', '198.51.100.7'), at)).toEqual({
+      kind: 'ip_not_allowed',
+      message:
+        "Super Admin sign-ins are only accepted from the agency's listed addresses; this one came from 198.51.100.7",
+      ipAddress: '198.51.100.7',
+    });
+    // Better Auth's own routes (passkeys among them) refuse it too.
+    expect(await policy.gateRefusal(session('SUPER_ADMIN', '198.51.100.7'), at)).toMatchObject({
+      code: 'IP_NOT_ALLOWED',
+    });
+  });
+
+  it('refuses a Super Admin session with no recorded address', async () => {
+    const { policy } = setup({ role: 'SUPER_ADMIN', passkeys: 1, thresholds: ALLOWLIST });
+    expect(await policy.refusal(session('SUPER_ADMIN', null), at)).toMatchObject({
+      kind: 'ip_not_allowed',
+      ipAddress: null,
+    });
+  });
+
+  it('lets a listed address through, and never touches another role', async () => {
+    const { policy } = setup({ role: 'SUPER_ADMIN', passkeys: 1, thresholds: ALLOWLIST });
+    expect(await policy.refusal(session('SUPER_ADMIN', '203.0.113.9'), at)).toBeNull();
+    expect(await policy.gateRefusal(session('SUPER_ADMIN', '203.0.113.9'), at)).toBeNull();
+    expect(await policy.refusal(session('OPERATIONS_ADMIN', '198.51.100.7'), at)).toBeNull();
+  });
+
+  it('refuses nobody while switched off or suspended by the break-glass', async () => {
+    const off = setup({
+      role: 'SUPER_ADMIN',
+      passkeys: 1,
+      thresholds: { ...ALLOWLIST, superAdminIpAllowlistOn: false },
+    });
+    expect(await off.policy.refusal(session('SUPER_ADMIN', '198.51.100.7'), at)).toBeNull();
+    vi.stubEnv('SUPER_ADMIN_IP_ALLOWLIST_OVERRIDE', 'off');
+    const suspended = setup({ role: 'SUPER_ADMIN', passkeys: 1, thresholds: ALLOWLIST });
+    expect(
+      await suspended.policy.refusal(session('SUPER_ADMIN', '198.51.100.7'), at),
+    ).toBeNull();
   });
 });

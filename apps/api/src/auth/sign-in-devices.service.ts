@@ -15,6 +15,7 @@ import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { SessionPolicy } from './session-policy';
 
 /** 32 random bytes, base64url: what this service issues as a device cookie. */
 const DEVICE_TOKEN = /^[A-Za-z0-9_-]{43}$/;
@@ -45,6 +46,7 @@ export class SignInDevicesService {
     private readonly settings: OperatingSettingsService,
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    private readonly policy: SessionPolicy,
   ) {}
 
   /**
@@ -52,6 +54,9 @@ export class SignInDevicesService {
    * cookie to set; null for anyone else (N4). A device not on file (or
    * forgotten after 180 days, N2) is audited and, while the switch is on,
    * emailed about (N3, N5). The email is sent without holding up the sign-in.
+   * A Super Admin sign-in from outside the IP allowlist is audited here, once
+   * per session; the session policy refuses the session itself
+   * (`docs/schema-m9-ip-allowlist.md` I3).
    */
   async signedIn(
     input: {
@@ -68,6 +73,18 @@ export class SignInDevicesService {
       select: { id: true, email: true, role: true, deactivatedAt: true },
     });
     if (!user || user.deactivatedAt || !recordsSignInDevice(user.role)) return null;
+
+    if (await this.policy.ipRefused(user.role, input.ipAddress)) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorUserId: user.id,
+          action: 'auth.sign_in_outside_allowlist',
+          entityType: 'User',
+          entityId: user.id,
+          metadata: { ipAddress: input.ipAddress, signInMethod: input.signInMethod },
+        },
+      });
+    }
 
     await this.prisma.staffKnownDevice.deleteMany({
       where: { userId: user.id, lastSeenAt: { lt: knownDeviceCutoff(now) } },

@@ -11,6 +11,9 @@ import {
   passkeyChangeRefusal,
   passkeyRefusal,
   staffPasskeysEnforced,
+  superAdminIpAllowlistEnforced,
+  superAdminIpRefused,
+  UserRole,
   type PasskeyChangeRefusal,
   type PasskeyRefusal,
 } from '@ota/domain';
@@ -84,18 +87,29 @@ export async function sessionMayConnect(
 }
 
 /**
- * `session`: deactivated or past the staff limit; `locked`: the desk's idle
- * lock (`docs/schema-m9-idle-lock.md`); the others are the passkey rule.
+ * `session`: deactivated or past the staff limit; `ip_not_allowed`: a Super
+ * Admin signed in from outside the IP allowlist
+ * (`docs/schema-m9-ip-allowlist.md`); `locked`: the desk's idle lock
+ * (`docs/schema-m9-idle-lock.md`); the others are the passkey rule.
  */
 export type SessionRefusal = {
-  kind: 'session' | 'locked' | PasskeyRefusal;
+  kind: 'session' | 'ip_not_allowed' | 'locked' | PasskeyRefusal;
   message: string;
   /** For `locked`: the applied limit, which the lock screen names. */
   idleLockMinutes?: number;
+  /** For `ip_not_allowed`: the address the session signed in from. */
+  ipAddress?: string | null;
 };
 
 /** The error code of a refusal for an idle-locked desk session (L5). */
 export const SESSION_LOCKED_CODE = 'SESSION_LOCKED';
+
+/** The error code of a Super Admin session from outside the IP allowlist (I3). */
+export const IP_NOT_ALLOWED_CODE = 'IP_NOT_ALLOWED';
+
+function ipNotAllowedMessage(address: string | null | undefined): string {
+  return `Super Admin sign-ins are only accepted from the agency's listed addresses; this one came from ${address ?? 'an unknown address'}`;
+}
 
 const LOCKED_MESSAGE = 'The desk locked after a period with no input; unlock it';
 
@@ -111,8 +125,9 @@ const CHANGE_MESSAGES: Record<PasskeyChangeRefusal, string> = {
 
 /**
  * Who may use a session (`docs/schema-m9-passkeys.md`,
- * `docs/schema-m9-idle-lock.md`): the account and staff-session rules, the
- * idle lock, then the staff passkey rule. The guard, the `/ops` and
+ * `docs/schema-m9-idle-lock.md`, `docs/schema-m9-ip-allowlist.md`): the
+ * account and staff-session rules, the Super Admin IP allowlist, the idle
+ * lock, then the staff passkey rule. The guard, the `/ops` and
  * `/conversations` gateways and the T-Events intake share it; Better Auth's
  * session routes ask `gateRefusal`, and its passkey routes ask
  * `changeRefusal` before a staff member's passkeys change.
@@ -137,12 +152,44 @@ export class SessionPolicy {
     );
   }
 
+  /**
+   * Whether the Super Admin IP allowlist refuses a session of this role
+   * signed in from this address (I1, I6): the applied switch and list,
+   * unless the deploy's break-glass (I4).
+   */
+  async ipRefused(
+    role: string | null | undefined,
+    address: string | null | undefined,
+  ): Promise<boolean> {
+    // Only a Super Admin's session reads the setting.
+    if (role !== UserRole.SuperAdmin) return false;
+    const { superAdminIpAllowlistOn, superAdminIpAllowlist } =
+      await this.settings.thresholds();
+    return superAdminIpRefused({
+      role,
+      enforced: superAdminIpAllowlistEnforced(
+        superAdminIpAllowlistOn,
+        process.env.SUPER_ADMIN_IP_ALLOWLIST_OVERRIDE,
+      ),
+      entries: superAdminIpAllowlist,
+      address,
+    });
+  }
+
   async refusal(
     session: AuthSession,
     now: Date = new Date(),
   ): Promise<SessionRefusal | null> {
     const message = sessionRefusal(session, now);
     if (message) return { kind: 'session', message };
+    const address = session.session.ipAddress ?? null;
+    if (await this.ipRefused(session.user.role, address)) {
+      return {
+        kind: 'ip_not_allowed',
+        message: ipNotAllowedMessage(address),
+        ipAddress: address,
+      };
+    }
     const lockedAfter = await this.idleLockedAfter(session, now);
     if (lockedAfter !== null) {
       return { kind: 'locked', message: LOCKED_MESSAGE, idleLockMinutes: lockedAfter };
@@ -182,8 +229,8 @@ export class SessionPolicy {
 
   /**
    * Better Auth's routes ask this before acting on a session (L5): the
-   * account, staff-limit and idle rules. The passkey rule is left out, since
-   * a setup-only session enrolls through those routes (P3).
+   * account, staff-limit, IP allowlist and idle rules. The passkey rule is
+   * left out, since a setup-only session enrolls through those routes (P3).
    */
   async gateRefusal(
     session: AuthSession,
@@ -191,6 +238,10 @@ export class SessionPolicy {
   ): Promise<{ code: string; message: string } | null> {
     const message = sessionRefusal(session, now);
     if (message) return { code: 'SESSION_REFUSED', message };
+    const address = session.session.ipAddress ?? null;
+    if (await this.ipRefused(session.user.role, address)) {
+      return { code: IP_NOT_ALLOWED_CODE, message: ipNotAllowedMessage(address) };
+    }
     if ((await this.idleLockedAfter(session, now)) !== null) {
       return { code: SESSION_LOCKED_CODE, message: LOCKED_MESSAGE };
     }

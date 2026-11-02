@@ -195,6 +195,85 @@ describe('OperatingSettingsService (M9 D1–D3)', () => {
   });
 });
 
+describe('switching the Super Admin IP allowlist on (docs/schema-m9-ip-allowlist.md I4, I8)', () => {
+  let prisma: ReturnType<typeof fakePrisma>;
+  let service: OperatingSettingsService;
+  const HAVANA = { label: 'Havana office', cidr: '203.0.113.0/24' };
+
+  beforeEach(() => {
+    prisma = fakePrisma();
+    service = new OperatingSettingsService(prisma as unknown as PrismaService, tenant);
+  });
+
+  const propose = async (cidr: string) =>
+    service.propose(DAYANA, {
+      values: {
+        ...(await service.thresholds()),
+        superAdminIpAllowlistOn: true,
+        superAdminIpAllowlist: [{ ...HAVANA, cidr }],
+      },
+      reason: 'Office only',
+    });
+
+  it("refuses an apply whose list would refuse the applier's own sign-in, naming the address", async () => {
+    const proposal = await propose('192.0.2.0/24');
+    const applier = { ...FOUNDER, signInAddress: '203.0.113.9' };
+    const refused = await service.decide(applier, proposal.id, 'APPLY').catch((e) => e);
+    expect(refused).toBeInstanceOf(UnprocessableEntityException);
+    expect((refused as UnprocessableEntityException).getResponse()).toMatchObject({
+      code: 'IP_ALLOWLIST_EXCLUDES_YOU',
+      ipAddress: '203.0.113.9',
+      message:
+        'This IP allowlist would refuse your own sign-in from 203.0.113.9; add it before applying',
+    });
+    expect(prisma.rows[0]).toMatchObject({ status: 'PROPOSED' });
+    expect((await service.thresholds()).superAdminIpAllowlistOn).toBe(false);
+  });
+
+  it('refuses it when the applier has no recorded address', async () => {
+    const proposal = await propose('203.0.113.0/24');
+    await expect(
+      service.decide({ ...FOUNDER, signInAddress: null }, proposal.id, 'APPLY'),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it("applies a list holding the applier's address, and tells the caller their address", async () => {
+    const proposal = await propose('203.0.113.0/24');
+    const applier = { ...FOUNDER, signInAddress: '203.0.113.9' };
+    const applied = await service.decide(applier, proposal.id, 'APPLY');
+    expect(applied.values).toMatchObject({
+      superAdminIpAllowlistOn: true,
+      superAdminIpAllowlist: [HAVANA],
+    });
+    expect(applied.signInAddress).toBe('203.0.113.9');
+    expect(prisma.audits.at(-1)).toMatchObject({
+      action: 'settings.applied',
+      metadata: { changes: ['superAdminIpAllowlistOn', 'superAdminIpAllowlist'] },
+    });
+  });
+
+  it('cannot be proposed on with an empty list', async () => {
+    await expect(
+      service.propose(DAYANA, {
+        values: { ...(await service.thresholds()), superAdminIpAllowlistOn: true },
+        reason: 'Empty',
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('lets a rejection or a switched-off list through wherever the decider is', async () => {
+    const proposal = await propose('192.0.2.0/24');
+    await service.decide({ ...FOUNDER, signInAddress: '203.0.113.9' }, proposal.id, 'REJECT');
+    expect(prisma.rows[0]).toMatchObject({ status: 'REJECTED' });
+    const off = await service.propose(DAYANA, {
+      values: { ...(await service.thresholds()), superAdminIpAllowlist: [HAVANA] },
+      reason: 'Prepare the list',
+    });
+    await service.decide({ ...FOUNDER, signInAddress: '198.51.100.7' }, off.id, 'APPLY');
+    expect((await service.thresholds()).superAdminIpAllowlist).toEqual([HAVANA]);
+  });
+});
+
 describe('runtime feature flags on the settings (M9 D8b)', () => {
   const portalOff = parseTenantConfig({
     tenantId: 'vereda',

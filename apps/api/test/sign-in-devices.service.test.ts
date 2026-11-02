@@ -1,7 +1,9 @@
 import { parseTenantConfig } from '@ota/config';
 import type { EmailMessage, Mailer } from '@ota/email';
+import type { OperatingThresholds } from '@ota/domain';
 import { describe, expect, it } from 'vitest';
 
+import { SessionPolicy } from '../src/auth/session-policy';
 import {
   SignInDevicesService,
   hashDeviceToken,
@@ -109,26 +111,28 @@ class FakeMailer implements Mailer {
   }
 }
 
-function setup(enabled = true) {
+function setup(enabled = true, thresholds: Partial<OperatingThresholds> = {}) {
   const prisma = fakePrisma();
   const mailer = new FakeMailer();
+  const settings = fakeOperatingSettings({ staffNewDeviceEmail: enabled, ...thresholds });
   const service = new SignInDevicesService(
     prisma as unknown as PrismaService,
-    fakeOperatingSettings({ staffNewDeviceEmail: enabled }),
+    settings,
     mailer,
     tenant,
+    new SessionPolicy(prisma as unknown as PrismaService, settings, mailer, tenant),
   );
   const signIn = (
     userId: string,
     deviceToken: string | null,
-    options: { userAgent?: string; at?: Date } = {},
+    options: { userAgent?: string; at?: Date; ipAddress?: string } = {},
   ) =>
     service.signedIn(
       {
         userId,
         deviceToken,
         userAgent: options.userAgent ?? FIREFOX,
-        ipAddress: '203.0.113.7',
+        ipAddress: options.ipAddress ?? '203.0.113.7',
         signInMethod: 'magic_link',
       },
       options.at ?? NOW,
@@ -239,5 +243,41 @@ describe('the new-device email (docs/schema-m9-new-device-email.md)', () => {
     expect(prisma.devices).toHaveLength(0);
     expect(prisma.audits).toHaveLength(0);
     expect(mailer.sent).toHaveLength(0);
+  });
+});
+
+describe('a Super Admin sign-in outside the IP allowlist (docs/schema-m9-ip-allowlist.md I3)', () => {
+  const allowlist = {
+    superAdminIpAllowlistOn: true,
+    superAdminIpAllowlist: [{ label: 'Havana office', cidr: '203.0.113.0/24' }],
+  };
+  const actions = (audits: Record<string, unknown>[]) =>
+    audits.map((audit) => audit.action);
+
+  it('is audited with its address and method, and still reported as a new device', async () => {
+    const { prisma, signIn } = setup(true, allowlist);
+    await signIn('u-yanet', null, { ipAddress: '198.51.100.7' });
+    expect(prisma.audits[0]).toMatchObject({
+      actorUserId: 'u-yanet',
+      action: 'auth.sign_in_outside_allowlist',
+      entityId: 'u-yanet',
+      metadata: { ipAddress: '198.51.100.7', signInMethod: 'magic_link' },
+    });
+    expect(actions(prisma.audits)).toEqual([
+      'auth.sign_in_outside_allowlist',
+      'auth.new_device_sign_in',
+    ]);
+  });
+
+  it('is not audited from a listed address, for another role, or with the rule off', async () => {
+    const listed = setup(true, allowlist);
+    await listed.signIn('u-yanet', null, { ipAddress: '203.0.113.9' });
+    const otherRole = setup(true, allowlist);
+    await otherRole.signIn('u-ana', null, { ipAddress: '198.51.100.7' });
+    const off = setup(true, { ...allowlist, superAdminIpAllowlistOn: false });
+    await off.signIn('u-yanet', null, { ipAddress: '198.51.100.7' });
+    for (const run of [listed, otherRole, off]) {
+      expect(actions(run.prisma.audits)).toEqual(['auth.new_device_sign_in']);
+    }
   });
 });

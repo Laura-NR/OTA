@@ -16,7 +16,11 @@ import { PermissionOverridesService } from '../overrides/permission-overrides.se
 import { ALLOW_WITHOUT_PASSKEY_KEY } from './allow-without-passkey.decorator';
 import { AuthService } from './auth.service';
 import { IS_PUBLIC_KEY } from './public.decorator';
-import { SESSION_LOCKED_CODE, SessionPolicy } from './session-policy';
+import {
+  IP_NOT_ALLOWED_CODE,
+  SESSION_LOCKED_CODE,
+  SessionPolicy,
+} from './session-policy';
 
 interface RequestWithAuth extends RequestWithUser {
   headers: IncomingHttpHeaders;
@@ -26,8 +30,11 @@ interface RequestWithAuth extends RequestWithUser {
  * Global auth guard. Secure by default: every route requires a valid session
  * unless marked `@Public()`. A deactivated user is refused, and a staff
  * session ends 12 hours after sign-in (M9 D5, D9); travelers keep Better
- * Auth's session. An idle-locked staff session is refused with 401
- * `SESSION_LOCKED` (`docs/schema-m9-idle-lock.md`). With the staff passkey rule on, a staff session that did
+ * Auth's session. A Super Admin session signed in from outside the IP
+ * allowlist is refused with 403 `IP_NOT_ALLOWED`
+ * (`docs/schema-m9-ip-allowlist.md` I3). An idle-locked staff session is
+ * refused with 401 `SESSION_LOCKED` (`docs/schema-m9-idle-lock.md`). With
+ * the staff passkey rule on, a staff session that did
  * not come from a passkey is refused: 403 `PASSKEY_SETUP_REQUIRED` when the
  * person has none yet, 401 `PASSKEY_SIGN_IN_REQUIRED` otherwise, except on
  * `@AllowWithoutPasskey()` routes. A route with `@Roles(...)` also requires
@@ -82,6 +89,14 @@ export class AuthGuard implements CanActivate {
             message: refusal.message,
           });
         }
+        if (refusal.kind === 'ip_not_allowed') {
+          throw new ForbiddenException({
+            statusCode: 403,
+            code: IP_NOT_ALLOWED_CODE,
+            message: refusal.message,
+            ipAddress: refusal.ipAddress ?? null,
+          });
+        }
         if (refusal.kind === 'locked') {
           throw new UnauthorizedException({
             statusCode: 401,
@@ -100,6 +115,7 @@ export class AuthGuard implements CanActivate {
       role: (session.user.role ?? UserRole.Traveler) as UserRole,
       signInMethod: session.session.signInMethod ?? null,
       sessionId: session.session.id,
+      signInAddress: session.session.ipAddress ?? null,
     };
     request.user = user;
 

@@ -47,8 +47,8 @@ export class SettingsController {
 
   @Get('settings/operating')
   @Roles(...READ_ROLES)
-  operating(): Promise<OperatingSettingsDto> {
-    return this.settings.overview();
+  operating(@CurrentUser() user: AuthUser): Promise<OperatingSettingsDto> {
+    return this.settings.overview(user);
   }
 
   @Get('settings/operating/versions')

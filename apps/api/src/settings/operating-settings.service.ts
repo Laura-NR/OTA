@@ -14,6 +14,7 @@ import {
   dispatchTimerPolicy,
   featureFlagsOf,
   settingsDecisionRefusal,
+  superAdminIpRefused,
   thresholdsIssues,
   type DispatchTimers,
   type FeatureFlag,
@@ -43,6 +44,13 @@ const ENTITY = 'OperatingSettings';
 
 /** The 409 code of a request refused because its feature is switched off (D8b). */
 export const FEATURE_OFF_CODE = 'FEATURE_OFF';
+
+/**
+ * The 422 code of an apply refused because the IP allowlist it switches on
+ * would refuse the applying Super Admin's own session
+ * (`docs/schema-m9-ip-allowlist.md` I4).
+ */
+export const IP_ALLOWLIST_EXCLUDES_YOU_CODE = 'IP_ALLOWLIST_EXCLUDES_YOU';
 
 const PERSON = { select: { fullName: true, email: true } } as const;
 
@@ -136,7 +144,8 @@ export class OperatingSettingsService {
     };
   }
 
-  async overview(): Promise<OperatingSettingsDto> {
+  /** With `actor`, also the address their session signed in from (I8). */
+  async overview(actor?: AuthUser): Promise<OperatingSettingsDto> {
     const [current, pending] = await Promise.all([
       this.current(true),
       this.prisma.operatingSettings.findFirst({
@@ -151,6 +160,7 @@ export class OperatingSettingsService {
       appliedAt: current.appliedAt ? current.appliedAt.toISOString() : null,
       appliedByName: current.appliedByName,
       pending: pending ? this.toVersion(pending, current.values) : null,
+      ...(actor ? { signInAddress: actor.signInAddress ?? null } : {}),
     };
   }
 
@@ -220,7 +230,11 @@ export class OperatingSettingsService {
     }
   }
 
-  /** Apply, reject or withdraw the pending proposal (D3). */
+  /**
+   * Apply, reject or withdraw the pending proposal (D3). An apply that
+   * switches on an IP allowlist which leaves out the applying Super Admin's
+   * own sign-in address is refused, so a typo cannot lock the desk out (I4).
+   */
   async decide(
     actor: AuthUser,
     id: string,
@@ -257,6 +271,22 @@ export class OperatingSettingsService {
           issues,
         });
       }
+      const address = actor.signInAddress ?? null;
+      if (
+        superAdminIpRefused({
+          role: actor.role,
+          enforced: values.superAdminIpAllowlistOn,
+          entries: values.superAdminIpAllowlist,
+          address,
+        })
+      ) {
+        throw new UnprocessableEntityException({
+          statusCode: 422,
+          code: IP_ALLOWLIST_EXCLUDES_YOU_CODE,
+          message: `This IP allowlist would refuse your own sign-in from ${address ?? 'an unknown address'}; add it before applying`,
+          ipAddress: address,
+        });
+      }
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -285,7 +315,7 @@ export class OperatingSettingsService {
       });
     });
     this.cache = null;
-    return this.overview();
+    return this.overview(actor);
   }
 
   private async current(fresh = false): Promise<Current> {
