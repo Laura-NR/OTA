@@ -191,7 +191,10 @@ export function PaymentPanel({
             <p className="text-caption text-muted">
               {t('rateLocked', {
                 date: opsDate(schedule.rateLock.lockedAt, locale),
-                rate: schedule.rateLock.rate,
+                // The locked rate to its six places, not ICU's default three.
+                rate: new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(
+                  schedule.rateLock.rate,
+                ),
                 currency: schedule.rateLock.currency,
               })}
             </p>
