@@ -3,6 +3,7 @@
 import {
   IP_ALLOWLIST_LABEL_MAX,
   IP_ALLOWLIST_MAX_ENTRIES,
+  ipAddressText,
   ipInRanges,
   ipRangeIssue,
   type IpAllowlistEntry,
@@ -10,14 +11,6 @@ import {
 import { Alert, Button, Field, Input } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useId } from 'react';
-
-/**
- * The entry that admits the person's own sign-in address: the address
- * itself, or for IPv6 its /64, which is all Better Auth keeps of it.
- */
-function ownRange(address: string): string {
-  return address.includes(':') ? `${address}/64` : address;
-}
 
 export interface IpAllowlistEditorProps {
   entries: IpAllowlistEntry[];
@@ -135,7 +128,7 @@ export function IpAllowlistEditor({
             onClick={() =>
               onChange([
                 ...entries,
-                { label: t('ipAllowlist.yourLabel'), cidr: ownRange(signInAddress) },
+                { label: t('ipAllowlist.yourLabel'), cidr: ipAddressText(signInAddress) },
               ])
             }
             unavailableReason={
@@ -153,7 +146,8 @@ export function IpAllowlistEditor({
       <p className="text-body-sm">
         {signInAddress !== null ? (
           <>
-            {t('ipAllowlist.yours')} <span className="font-mono">{signInAddress}</span>
+            {t('ipAllowlist.yours')}{' '}
+            <span className="font-mono">{ipAddressText(signInAddress)}</span>
           </>
         ) : (
           t('ipAllowlist.yoursUnknown')
@@ -162,7 +156,7 @@ export function IpAllowlistEditor({
       {on && !yoursListed ? (
         <Alert variant="warning">
           {signInAddress !== null
-            ? t('ipAllowlist.excludesYou', { address: signInAddress })
+            ? t('ipAllowlist.excludesYou', { address: ipAddressText(signInAddress) })
             : t('ipAllowlist.excludesUnknown')}
         </Alert>
       ) : null}

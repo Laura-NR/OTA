@@ -1,5 +1,6 @@
 'use client';
 
+import { ipAddressText } from '@ota/domain';
 import {
   Alert,
   Button,
@@ -143,7 +144,7 @@ export default function LoginPage() {
               {ipRefusedFrom !== undefined ? (
                 <Alert variant="destructive">
                   {ipRefusedFrom
-                    ? t('ipRefused', { address: ipRefusedFrom })
+                    ? t('ipRefused', { address: ipAddressText(ipRefusedFrom) })
                     : t('ipRefusedUnknown')}
                 </Alert>
               ) : null}

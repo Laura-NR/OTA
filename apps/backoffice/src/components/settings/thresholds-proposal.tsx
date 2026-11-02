@@ -4,6 +4,7 @@ import {
   ADVISORY_DUAL_APPROVAL_LEVELS,
   FX_LOCK_POINTS,
   changedThresholds,
+  ipAddressText,
   ipInRanges,
   type OperatingThresholds,
 } from '@ota/domain';
@@ -96,7 +97,9 @@ export function ThresholdsProposal({
       setError(
         details?.code === IP_ALLOWLIST_EXCLUDES_YOU_CODE
           ? typeof details.ipAddress === 'string'
-            ? t('ipAllowlist.applyRefused', { address: details.ipAddress })
+            ? t('ipAllowlist.applyRefused', {
+                address: ipAddressText(details.ipAddress),
+              })
             : t('ipAllowlist.excludesUnknown')
           : actionError instanceof Error
             ? actionError.message
@@ -124,7 +127,7 @@ export function ThresholdsProposal({
     ) ? (
       <Alert variant="warning">
         {signInAddress !== null
-          ? t('ipAllowlist.excludesYou', { address: signInAddress })
+          ? t('ipAllowlist.excludesYou', { address: ipAddressText(signInAddress) })
           : t('ipAllowlist.excludesUnknown')}
       </Alert>
     ) : null;
