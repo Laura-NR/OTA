@@ -263,7 +263,11 @@ describe('switching the Super Admin IP allowlist on (docs/schema-m9-ip-allowlist
 
   it('lets a rejection or a switched-off list through wherever the decider is', async () => {
     const proposal = await propose('192.0.2.0/24');
-    await service.decide({ ...FOUNDER, signInAddress: '203.0.113.9' }, proposal.id, 'REJECT');
+    await service.decide(
+      { ...FOUNDER, signInAddress: '203.0.113.9' },
+      proposal.id,
+      'REJECT',
+    );
     expect(prisma.rows[0]).toMatchObject({ status: 'REJECTED' });
     const off = await service.propose(DAYANA, {
       values: { ...(await service.thresholds()), superAdminIpAllowlist: [HAVANA] },

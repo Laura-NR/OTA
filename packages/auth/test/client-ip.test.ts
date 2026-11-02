@@ -43,9 +43,12 @@ describe("a session's address (docs/schema-m9-ip-allowlist.md I2)", () => {
     expect(db.session.at(-1)?.ipAddress).toBe('203.0.113.9');
   });
 
-  it("never from an X-Forwarded-For the client wrote", async () => {
+  it('never from an X-Forwarded-For the client wrote', async () => {
     const { db, signUp } = setup();
-    await signUp({ 'x-forwarded-for': '203.0.113.9', [CLIENT_IP_HEADER]: '198.51.100.7' });
+    await signUp({
+      'x-forwarded-for': '203.0.113.9',
+      [CLIENT_IP_HEADER]: '198.51.100.7',
+    });
     expect(db.session.at(-1)?.ipAddress).toBe('198.51.100.7');
     await signUp({ 'x-forwarded-for': '203.0.113.9' });
     expect(db.session.at(-1)?.ipAddress).not.toBe('203.0.113.9');

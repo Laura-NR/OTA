@@ -224,7 +224,9 @@ describe('SessionPolicy: the Super Admin IP allowlist (docs/schema-m9-ip-allowli
       ipAddress: '198.51.100.7',
     });
     // Better Auth's own routes (passkeys among them) refuse it too.
-    expect(await policy.gateRefusal(session('SUPER_ADMIN', '198.51.100.7'), at)).toMatchObject({
+    expect(
+      await policy.gateRefusal(session('SUPER_ADMIN', '198.51.100.7'), at),
+    ).toMatchObject({
       code: 'IP_NOT_ALLOWED',
     });
   });
@@ -240,8 +242,12 @@ describe('SessionPolicy: the Super Admin IP allowlist (docs/schema-m9-ip-allowli
   it('lets a listed address through, and never touches another role', async () => {
     const { policy } = setup({ role: 'SUPER_ADMIN', passkeys: 1, thresholds: ALLOWLIST });
     expect(await policy.refusal(session('SUPER_ADMIN', '203.0.113.9'), at)).toBeNull();
-    expect(await policy.gateRefusal(session('SUPER_ADMIN', '203.0.113.9'), at)).toBeNull();
-    expect(await policy.refusal(session('OPERATIONS_ADMIN', '198.51.100.7'), at)).toBeNull();
+    expect(
+      await policy.gateRefusal(session('SUPER_ADMIN', '203.0.113.9'), at),
+    ).toBeNull();
+    expect(
+      await policy.refusal(session('OPERATIONS_ADMIN', '198.51.100.7'), at),
+    ).toBeNull();
   });
 
   it('refuses nobody while switched off or suspended by the break-glass', async () => {
@@ -250,7 +256,9 @@ describe('SessionPolicy: the Super Admin IP allowlist (docs/schema-m9-ip-allowli
       passkeys: 1,
       thresholds: { ...ALLOWLIST, superAdminIpAllowlistOn: false },
     });
-    expect(await off.policy.refusal(session('SUPER_ADMIN', '198.51.100.7'), at)).toBeNull();
+    expect(
+      await off.policy.refusal(session('SUPER_ADMIN', '198.51.100.7'), at),
+    ).toBeNull();
     vi.stubEnv('SUPER_ADMIN_IP_ALLOWLIST_OVERRIDE', 'off');
     const suspended = setup({ role: 'SUPER_ADMIN', passkeys: 1, thresholds: ALLOWLIST });
     expect(

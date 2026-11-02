@@ -93,9 +93,12 @@ describe('matching an address to the list', () => {
   });
 
   it('matches an IPv6 address as Better Auth stores it (cut to /64)', () => {
-    expect(ipInRanges('2001:0db8:0004:0001:0000:0000:0000:0000', OFFICES.map((e) => e.cidr))).toBe(
-      true,
-    );
+    expect(
+      ipInRanges(
+        '2001:0db8:0004:0001:0000:0000:0000:0000',
+        OFFICES.map((e) => e.cidr),
+      ),
+    ).toBe(true);
     expect(ipInRanges('2001:db8:5::', ['2001:db8:4::/48'])).toBe(false);
   });
 
@@ -172,13 +175,19 @@ describe('the allowlist in the thresholds document (I5, I7)', () => {
     expect(
       changedThresholds(before, {
         ...before,
-        superAdminIpAllowlist: OFFICES.map((entry) => ({ cidr: entry.cidr, label: entry.label })),
+        superAdminIpAllowlist: OFFICES.map((entry) => ({
+          cidr: entry.cidr,
+          label: entry.label,
+        })),
       }),
     ).toEqual([]);
     expect(
       changedThresholds(before, {
         ...before,
-        superAdminIpAllowlist: [...OFFICES, { label: 'Spain office', cidr: '192.0.2.0/24' }],
+        superAdminIpAllowlist: [
+          ...OFFICES,
+          { label: 'Spain office', cidr: '192.0.2.0/24' },
+        ],
       }),
     ).toEqual(['superAdminIpAllowlist']);
     expect(
