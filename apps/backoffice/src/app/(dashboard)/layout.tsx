@@ -17,6 +17,7 @@ import { deskAccess } from '@/lib/overrides';
 import { deskClock } from '@/lib/desk-clock';
 import { ApiError } from '@/lib/errors';
 import { lockedRefusal } from '@/lib/idle-lock';
+import { ipRefusal, ipRefusedLoginPath } from '@/lib/ip-allowlist';
 import { getThresholds } from '@/lib/operating';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -43,6 +44,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   let deskSession: DeskSessionDto | null = null;
   if (isStaffRole(session.user.role)) {
     let locked: { minutes: number | null } | null = null;
+    let ipRefused: { address: string | null } | null = null;
     try {
       deskSession = await apiFetch<DeskSessionDto>('/me/session');
     } catch (error) {
@@ -53,7 +55,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         throw error;
       }
       locked = lockedRefusal(error.details);
+      ipRefused = ipRefusal(error.details);
     }
+    // A Super Admin signed in from outside the IP allowlist
+    // (docs/schema-m9-ip-allowlist.md I3): the login page signs the session
+    // out and names the address.
+    if (ipRefused) redirect(ipRefusedLoginPath(ipRefused.address));
     // Any other refusal is the passkey rule's below (setup, sign in with the
     // passkey); a passkey session refused here is deactivated or expired.
     if (!deskSession && !locked && passkeySession) redirect('/login');

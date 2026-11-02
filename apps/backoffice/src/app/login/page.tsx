@@ -17,6 +17,7 @@ import type { FormEvent } from 'react';
 
 import { authClient } from '@/lib/auth-client';
 import { IDLE_KEYS, ownDeviceChosen, writeStored } from '@/lib/idle-lock';
+import { refusedAddress } from '@/lib/ip-allowlist';
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
@@ -26,6 +27,9 @@ export default function LoginPage() {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
   const [passkeyRequired, setPasskeyRequired] = useState(false);
+  const [ipRefusedFrom, setIpRefusedFrom] = useState<string | null | undefined>(
+    undefined,
+  );
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [ownDevice, setOwnDevice] = useState(false);
   const [recovering, setRecovering] = useState(false);
@@ -39,6 +43,15 @@ export default function LoginPage() {
     setPasskeyRequired(
       new URLSearchParams(window.location.search).get('passkey') === 'required',
     );
+  }, []);
+
+  // `?refused=ip`: the desk refused a Super Admin session signed in from
+  // outside the IP allowlist (docs/schema-m9-ip-allowlist.md I3). Its cookie
+  // would only be refused again, so it is signed out here.
+  useEffect(() => {
+    const address = refusedAddress(window.location.search);
+    setIpRefusedFrom(address);
+    if (address !== undefined) void authClient.signOut().catch(() => undefined);
   }, []);
 
   // "This is my own device" is remembered on this browser only, so the shared
@@ -127,6 +140,13 @@ export default function LoginPage() {
           ) : (
             <div className="space-y-4">
               {passkeyRequired ? <Alert>{t('passkeyRequired')}</Alert> : null}
+              {ipRefusedFrom !== undefined ? (
+                <Alert variant="destructive">
+                  {ipRefusedFrom
+                    ? t('ipRefused', { address: ipRefusedFrom })
+                    : t('ipRefusedUnknown')}
+                </Alert>
+              ) : null}
               <Checkbox
                 label={t('ownDevice')}
                 description={t('ownDeviceHint')}

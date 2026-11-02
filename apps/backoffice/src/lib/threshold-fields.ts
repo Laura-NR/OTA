@@ -3,6 +3,7 @@ import {
   FEATURE_FLAGS,
   FX_SPREAD_PERCENT,
   displayCurrencySwitchKey,
+  type IpAllowlistEntry,
   type OperatingThresholds,
 } from '@ota/domain';
 
@@ -18,7 +19,8 @@ export type ThresholdUnit =
   | 'count'
   | 'level'
   | 'switch'
-  | 'lockPoint';
+  | 'lockPoint'
+  | 'ipList';
 
 export interface ThresholdField {
   key: keyof OperatingThresholds;
@@ -99,6 +101,9 @@ export const THRESHOLD_GROUPS: readonly {
       { key: 'staffPasskeysRequired', unit: 'switch' },
       { key: 'staffIdleLockMinutes', unit: 'min', min: 5, max: 240 },
       { key: 'staffNewDeviceEmail', unit: 'switch' },
+      // docs/schema-m9-ip-allowlist.md I5.
+      { key: 'superAdminIpAllowlistOn', unit: 'switch' },
+      { key: 'superAdminIpAllowlist', unit: 'ipList' },
       { key: 'overrideExpiryHours', unit: 'h', min: 1, max: 24 },
     ],
   },
@@ -113,16 +118,17 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
 
 /**
  * A threshold as the desk reads it ("120 min", "€ 500", "CRITICAL", "On",
- * "Deposit payment"). `units` reads `backoffice.settings.thresholds.units`;
- * `level` names a severity.
+ * "Deposit payment", "Havana office · 203.0.113.0/24"). `units` reads
+ * `backoffice.settings.thresholds.units`; `level` names a severity.
  */
 export function thresholdText(
   field: ThresholdField,
-  value: number | string | boolean,
+  value: OperatingThresholds[keyof OperatingThresholds],
   locale: string,
   units: Translate,
   level: Translate,
 ): string {
+  if (Array.isArray(value)) return ipListText(value, units);
   if (field.unit === 'level') return level(String(value));
   if (field.unit === 'switch') return units(value ? 'on' : 'off');
   if (field.unit === 'lockPoint') return units(String(value));
@@ -137,6 +143,11 @@ export function thresholdText(
       .replace(/[\u00a0\u2009\u202f]/g, ' ');
   }
   return units(field.unit, { value: Number(value) });
+}
+
+function ipListText(entries: readonly IpAllowlistEntry[], units: Translate): string {
+  if (entries.length === 0) return units('none');
+  return entries.map((entry) => `${entry.label} · ${entry.cidr}`).join(', ');
 }
 
 export const THRESHOLD_FIELDS: readonly ThresholdField[] = THRESHOLD_GROUPS.flatMap(

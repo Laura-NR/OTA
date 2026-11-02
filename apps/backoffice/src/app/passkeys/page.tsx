@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { PasskeyManager } from '@/components/passkey-manager';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
+import { ipRefusal, ipRefusedLoginPath } from '@/lib/ip-allowlist';
 import { opsDate } from '@/lib/ops-format';
 
 /**
@@ -27,6 +28,10 @@ export default async function PasskeysPage() {
   try {
     status = await apiFetch<PasskeyStatusDto>('/me/passkeys');
   } catch (error) {
+    // A Super Admin signed in from outside the IP allowlist: the login page
+    // signs the session out and names the address.
+    const ipRefused = error instanceof ApiError ? ipRefusal(error.details) : null;
+    if (ipRefused) redirect(ipRefusedLoginPath(ipRefused.address));
     // A deactivated account or an ended staff session: sign in again.
     if (!(error instanceof ApiError && error.status === 401)) throw error;
   }

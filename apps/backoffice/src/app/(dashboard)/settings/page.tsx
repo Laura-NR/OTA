@@ -1,5 +1,10 @@
 import { SUPPORTED_LOCALES, loadMessages } from '@ota/i18n';
-import { PERMISSION_MATRIX, UserRole, type PermissionAccess } from '@ota/domain';
+import {
+  PERMISSION_MATRIX,
+  UserRole,
+  changedThresholds,
+  type PermissionAccess,
+} from '@ota/domain';
 import type {
   CurrencySettingsDto,
   OperatingSettingsDto,
@@ -776,6 +781,7 @@ async function ThresholdsTab({
     return <Alert variant="destructive">{t('loadError')}</Alert>;
   }
   const when = (value: string) => `${opsDate(value, locale)} ${opsTime(value, locale)}`;
+  const changedFromDefaults = changedThresholds(settings.values, settings.defaults);
 
   return (
     <div className="flex flex-col gap-6">
@@ -808,6 +814,7 @@ async function ThresholdsTab({
                   group.fields.map((field) => {
                     const value = settings.values[field.key];
                     const fallback = settings.defaults[field.key];
+                    const isDefault = !changedFromDefaults.includes(field.key);
                     return (
                       <TableRow key={field.key}>
                         <TableCell className="font-medium">
@@ -816,9 +823,7 @@ async function ThresholdsTab({
                         <TableCell className="font-mono">
                           {thresholdText(field, value, locale, units, levels)}
                         </TableCell>
-                        <TableCell
-                          className={cn('font-mono', value === fallback && 'text-muted')}
-                        >
+                        <TableCell className={cn('font-mono', isDefault && 'text-muted')}>
                           {thresholdText(field, fallback, locale, units, levels)}
                         </TableCell>
                         <TableCell className="text-body-sm text-secondary">
@@ -848,6 +853,7 @@ async function ThresholdsTab({
               defaults={settings.defaults}
               pending={settings.pending}
               actorId={actorId}
+              signInAddress={settings.signInAddress ?? null}
               staffWithoutPasskey={
                 staff
                   ? staff.filter((user) => !user.deactivatedAt && user.passkeys === 0)
@@ -943,6 +949,14 @@ async function SecurityTab({ locale }: { locale: string }) {
                       ? t('newDeviceEmailOn')
                       : t('newDeviceEmailOff'),
                   ],
+                  [
+                    t('ipAllowlist'),
+                    thresholds.superAdminIpAllowlistOn
+                      ? t('ipAllowlistOn', {
+                          count: thresholds.superAdminIpAllowlist.length,
+                        })
+                      : t('ipAllowlistOff'),
+                  ],
                 ]}
               />
             ) : (
@@ -960,7 +974,12 @@ async function SecurityTab({ locale }: { locale: string }) {
                 {t('newDeviceLink')}
               </Link>
             </p>
-            <p className="text-caption text-muted">{t('deferred')}</p>
+            <p className="text-caption text-muted">
+              {t('ipAllowlistNote')}{' '}
+              <Link href="/settings?tab=thresholds" className="text-link underline">
+                {t('ipAllowlistLink')}
+              </Link>
+            </p>
           </CardContent>
         </Card>
         <Card className="min-w-0">

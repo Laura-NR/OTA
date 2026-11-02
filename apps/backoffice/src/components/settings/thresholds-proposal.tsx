@@ -4,6 +4,7 @@ import {
   ADVISORY_DUAL_APPROVAL_LEVELS,
   FX_LOCK_POINTS,
   changedThresholds,
+  ipInRanges,
   type OperatingThresholds,
 } from '@ota/domain';
 import type { SettingsVersionDto } from '@ota/schemas';
@@ -13,11 +14,14 @@ import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import { ApiError } from '@/lib/errors';
 import {
   THRESHOLD_FIELDS,
   THRESHOLD_GROUPS,
   thresholdText,
 } from '@/lib/threshold-fields';
+
+import { IpAllowlistEditor } from './ip-allowlist-editor';
 
 export interface ThresholdsProposalProps {
   current: OperatingThresholds;
@@ -26,15 +30,22 @@ export interface ThresholdsProposalProps {
   actorId: string;
   /** Active staff with no passkey yet, shown before the passkey rule is switched on. */
   staffWithoutPasskey: number | null;
+  /** The address the signed-in Super Admin's session came from (`docs/schema-m9-ip-allowlist.md` I8). */
+  signInAddress: string | null;
 }
+
+/** The API's 422 code when an apply would refuse the applier (I4). */
+const IP_ALLOWLIST_EXCLUDES_YOU_CODE = 'IP_ALLOWLIST_EXCLUDES_YOU';
 
 /**
  * A-Settings' "Approvals & thresholds" changes (M9 D1–D3), for Super Admins.
  * With a proposal waiting, it shows what changes and lets the other Super
  * Admins apply or reject it and its author withdraw it; otherwise it is the
  * proposal form, with "Reset to spec defaults". Switching the staff passkey
- * rule on says how many staff have no passkey yet. The page keys it by the
- * version in force and the pending proposal, so a refresh resets it.
+ * rule on says how many staff have no passkey yet; a Super Admin IP allowlist
+ * that would refuse the person's own sign-in address is flagged before it is
+ * proposed or applied. The page keys it by the version in force and the
+ * pending proposal, so a refresh resets it.
  */
 export function ThresholdsProposal({
   current,
@@ -42,6 +53,7 @@ export function ThresholdsProposal({
   pending,
   actorId,
   staffWithoutPasskey,
+  signInAddress,
 }: ThresholdsProposalProps) {
   const t = useTranslations('backoffice.settings.thresholds');
   const why = useTranslations('backoffice.unavailable');
@@ -55,7 +67,10 @@ export function ThresholdsProposal({
   const [pendingAction, setPendingAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const text = (key: keyof OperatingThresholds, value: number | string | boolean) =>
+  const text = (
+    key: keyof OperatingThresholds,
+    value: OperatingThresholds[keyof OperatingThresholds],
+  ) =>
     thresholdText(
       THRESHOLD_FIELDS.find((field) => field.key === key)!,
       value,
@@ -74,7 +89,19 @@ export function ThresholdsProposal({
       });
       router.refresh();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : t('failed'));
+      const details =
+        actionError instanceof ApiError
+          ? (actionError.details as { code?: unknown; ipAddress?: unknown } | undefined)
+          : undefined;
+      setError(
+        details?.code === IP_ALLOWLIST_EXCLUDES_YOU_CODE
+          ? typeof details.ipAddress === 'string'
+            ? t('ipAllowlist.applyRefused', { address: details.ipAddress })
+            : t('ipAllowlist.excludesUnknown')
+          : actionError instanceof Error
+            ? actionError.message
+            : t('failed'),
+      );
     } finally {
       setPendingAction(false);
     }
@@ -86,6 +113,20 @@ export function ThresholdsProposal({
     !current.staffPasskeysRequired &&
     staffWithoutPasskey !== null ? (
       <Alert>{t('passkeyWarning', { count: staffWithoutPasskey })}</Alert>
+    ) : null;
+
+  // Applying a list that leaves out the applier's own sign-in is refused (I4).
+  const ipWarning = (next: OperatingThresholds) =>
+    next.superAdminIpAllowlistOn &&
+    !ipInRanges(
+      signInAddress,
+      next.superAdminIpAllowlist.map((entry) => entry.cidr),
+    ) ? (
+      <Alert variant="warning">
+        {signInAddress !== null
+          ? t('ipAllowlist.excludesYou', { address: signInAddress })
+          : t('ipAllowlist.excludesUnknown')}
+      </Alert>
     ) : null;
 
   if (pending) {
@@ -118,6 +159,7 @@ export function ThresholdsProposal({
           })}
         </ul>
         {passkeyWarning(pending.values)}
+        {ipWarning(pending.values)}
         {error ? <Alert variant="destructive">{error}</Alert> : null}
         <div className="flex flex-wrap gap-2">
           {mine ? (
@@ -174,81 +216,96 @@ export function ThresholdsProposal({
             {t(`groups.${group.key}`)}
           </legend>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {group.fields.map((field) => (
-              <Field
-                key={field.key}
-                id={`${id}-${field.key}`}
-                label={t(`labels.${field.key}`)}
-                hint={
-                  field.unit === 'level' ||
-                  field.unit === 'switch' ||
-                  field.unit === 'lockPoint'
-                    ? undefined
-                    : t('bounds', { min: field.min ?? 0, max: field.max ?? 0 })
-                }
-              >
-                {(control) =>
-                  field.unit === 'switch' ? (
-                    <Select
-                      {...control}
-                      value={values[field.key] ? 'on' : 'off'}
-                      onChange={(event) =>
-                        setValues({ ...values, [field.key]: event.target.value === 'on' })
-                      }
-                    >
-                      <option value="off">{units('off')}</option>
-                      <option value="on">{units('on')}</option>
-                    </Select>
-                  ) : field.unit === 'level' ? (
-                    <Select
-                      {...control}
-                      value={String(values[field.key])}
-                      onChange={(event) =>
-                        setValues({ ...values, [field.key]: event.target.value })
-                      }
-                    >
-                      {ADVISORY_DUAL_APPROVAL_LEVELS.map((level) => (
-                        <option key={level} value={level}>
-                          {t(`levels.${level}`)}
-                        </option>
-                      ))}
-                    </Select>
-                  ) : field.unit === 'lockPoint' ? (
-                    <Select
-                      {...control}
-                      value={String(values[field.key])}
-                      onChange={(event) =>
-                        setValues({ ...values, [field.key]: event.target.value })
-                      }
-                    >
-                      {FX_LOCK_POINTS.map((point) => (
-                        <option key={point} value={point}>
-                          {units(point)}
-                        </option>
-                      ))}
-                    </Select>
-                  ) : (
-                    <Input
-                      {...control}
-                      type="number"
-                      inputMode={field.step && field.step < 1 ? 'decimal' : 'numeric'}
-                      min={field.min}
-                      max={field.max}
-                      step={String(field.step ?? 1)}
-                      className="font-mono"
-                      value={String(values[field.key])}
-                      onChange={(event) =>
-                        setValues({
-                          ...values,
-                          [field.key]:
-                            event.target.value === '' ? 0 : Number(event.target.value),
-                        })
-                      }
-                    />
-                  )
-                }
-              </Field>
-            ))}
+            {group.fields.map((field) =>
+              field.unit === 'ipList' ? (
+                <IpAllowlistEditor
+                  key={field.key}
+                  entries={values.superAdminIpAllowlist}
+                  onChange={(entries) =>
+                    setValues({ ...values, superAdminIpAllowlist: entries })
+                  }
+                  on={values.superAdminIpAllowlistOn}
+                  signInAddress={signInAddress}
+                />
+              ) : (
+                <Field
+                  key={field.key}
+                  id={`${id}-${field.key}`}
+                  label={t(`labels.${field.key}`)}
+                  hint={
+                    field.unit === 'level' ||
+                    field.unit === 'switch' ||
+                    field.unit === 'lockPoint'
+                      ? undefined
+                      : t('bounds', { min: field.min ?? 0, max: field.max ?? 0 })
+                  }
+                >
+                  {(control) =>
+                    field.unit === 'switch' ? (
+                      <Select
+                        {...control}
+                        value={values[field.key] ? 'on' : 'off'}
+                        onChange={(event) =>
+                          setValues({
+                            ...values,
+                            [field.key]: event.target.value === 'on',
+                          })
+                        }
+                      >
+                        <option value="off">{units('off')}</option>
+                        <option value="on">{units('on')}</option>
+                      </Select>
+                    ) : field.unit === 'level' ? (
+                      <Select
+                        {...control}
+                        value={String(values[field.key])}
+                        onChange={(event) =>
+                          setValues({ ...values, [field.key]: event.target.value })
+                        }
+                      >
+                        {ADVISORY_DUAL_APPROVAL_LEVELS.map((level) => (
+                          <option key={level} value={level}>
+                            {t(`levels.${level}`)}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : field.unit === 'lockPoint' ? (
+                      <Select
+                        {...control}
+                        value={String(values[field.key])}
+                        onChange={(event) =>
+                          setValues({ ...values, [field.key]: event.target.value })
+                        }
+                      >
+                        {FX_LOCK_POINTS.map((point) => (
+                          <option key={point} value={point}>
+                            {units(point)}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : (
+                      <Input
+                        {...control}
+                        type="number"
+                        inputMode={field.step && field.step < 1 ? 'decimal' : 'numeric'}
+                        min={field.min}
+                        max={field.max}
+                        step={String(field.step ?? 1)}
+                        className="font-mono"
+                        value={String(values[field.key])}
+                        onChange={(event) =>
+                          setValues({
+                            ...values,
+                            [field.key]:
+                              event.target.value === '' ? 0 : Number(event.target.value),
+                          })
+                        }
+                      />
+                    )
+                  }
+                </Field>
+              ),
+            )}
           </div>
         </fieldset>
       ))}
