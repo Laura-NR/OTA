@@ -5,6 +5,9 @@ import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
+import { CurrenciesService } from '../src/currencies/currencies.service';
+import { MockFxRateProvider } from '../src/currencies/fx-rate.provider';
+import { NoopFxRateScheduler } from '../src/currencies/fx-rate.scheduler';
 import type { DocumentsService } from '../src/documents/documents.service';
 import type { NotificationsService } from '../src/notifications/notifications.service';
 import { PaymentsService } from '../src/payments/payments.service';
@@ -90,6 +93,13 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
       tenant,
       fakeOperatingSettings(),
       telemetry,
+      // M9 display currencies: the mock's rates, written to the live table on first read.
+      new CurrenciesService(
+        db,
+        fakeOperatingSettings(),
+        new MockFxRateProvider(),
+        new NoopFxRateScheduler(),
+      ),
     );
     schedule = new ScheduleService(db, tenant, fakeOperatingSettings());
     proofs = new ProofsService(db, new InMemoryObjectStorage());
@@ -104,6 +114,7 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
       user('OPERATIONS_ADMIN', 'ops2'),
       user('TRAVELER', 'owner'),
     ]);
+    await prisma.user.update({ where: { id: c.id }, data: { displayCurrency: 'CAD' } });
     ops = { id: a.id, email: a.email, role: 'OPERATIONS_ADMIN' } as AuthUser;
     ops2 = { id: b.id, email: b.email, role: 'OPERATIONS_ADMIN' } as AuthUser;
     owner = { id: c.id, email: c.email, role: 'TRAVELER' } as AuthUser;
@@ -168,6 +179,12 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
 
     const confirmed = await payments.confirm(reservationId, deposit.id, ops);
     expect(confirmed.status).toBe('CONFIRMED');
+    // The deposit locks the owner's CAD at the mock's 1.4802 plus 0.6 % (M9 C6).
+    const locked = await prisma.reservation.findUniqueOrThrow({
+      where: { id: reservationId },
+    });
+    expect(locked.displayCurrency).toBe('CAD');
+    expect(Number(locked.displayRate)).toBe(1.489081);
 
     const balance = await payments.createIntent(
       reservationId,
@@ -176,6 +193,10 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
     );
     expect(balance.amount).toBe('2480');
     await payments.confirm(reservationId, balance.id, ops);
+    const after = await prisma.reservation.findUniqueOrThrow({
+      where: { id: reservationId },
+    });
+    expect(after.displayRateLockedAt).toEqual(locked.displayRateLockedAt);
 
     const refund = await refunds.create(
       reservationId,

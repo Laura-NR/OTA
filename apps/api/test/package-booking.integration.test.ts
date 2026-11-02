@@ -12,6 +12,7 @@ import type { AuthUser } from '../src/common/auth/auth-user';
 import { AffidavitsService } from '../src/compliance/affidavits.service';
 import { ConsentsService } from '../src/compliance/consents.service';
 import { LegalTextsService } from '../src/compliance/legal-texts.service';
+import type { CurrenciesService } from '../src/currencies/currencies.service';
 import { MeService } from '../src/me/me.service';
 import { PackageBookingService } from '../src/me/package-booking.service';
 import type { PaymentsService } from '../src/payments/payments.service';
@@ -74,6 +75,7 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
     me = new MeService(
       db,
       {} as PaymentsService,
+      {} as CurrenciesService,
       new PackageBookingService(db, affidavits, consents, tenant, key),
       { send: async () => undefined },
       tenant,
