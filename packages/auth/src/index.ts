@@ -10,6 +10,7 @@ import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { magicLink } from 'better-auth/plugins';
 import type { IncomingHttpHeaders } from 'node:http';
 
+import { CLIENT_IP_ADDRESS_OPTIONS } from './client-ip.js';
 import { recoveryCodePlugin, type RecoveryCodeCheck } from './recovery-code.js';
 import { signInDevicePlugin, type SignInDeviceCheck } from './sign-in-device.js';
 import {
@@ -19,6 +20,7 @@ import {
   type PasskeyChange,
 } from './sign-in-method.js';
 
+export { CLIENT_IP_ADDRESS_OPTIONS, CLIENT_IP_HEADER } from './client-ip.js';
 export {
   RECOVERY_CODE_INVALID,
   RECOVERY_CODE_SIGN_IN_PATH,
@@ -130,6 +132,11 @@ export interface AuthSession {
     lastActiveAt?: Date | null;
     /** Marked at sign-in as the person's own device: no idle lock (L1). */
     ownDevice?: boolean | null;
+    /**
+     * The address the session signed in from, as the API resolved it
+     * (`CLIENT_IP_HEADER`); Better Auth keeps an IPv6 one cut to its /64.
+     */
+    ipAddress?: string | null;
   };
 }
 
@@ -163,7 +170,8 @@ export type NodeAuthHandler = (
  * instance an idle-locked desk) can only read itself, sign out or sign in.
  * With a `recoveryCode` check, a staff member can sign in with a code a Super
  * Admin issued. With a `signInDevice` check, every new session tells the API
- * which browser it came from.
+ * which browser it came from. A session's address is read only from the
+ * header the API writes (`CLIENT_IP_HEADER`).
  */
 export function createAuth(options: CreateAuthOptions): AuthInstance {
   const passkeySettings = options.passkey ?? {};
@@ -337,6 +345,7 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
       database: {
         generateId: () => globalThis.crypto.randomUUID(),
       },
+      ipAddress: CLIENT_IP_ADDRESS_OPTIONS,
     },
   });
 
