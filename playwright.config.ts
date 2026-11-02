@@ -31,12 +31,25 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     // Every spec starts with the cookie choice made (analytics refused), so
     // the storefront's DS 04 banner does not cover the pages under test;
-    // storefront-telemetry.spec.ts clears it to drive the banner.
+    // storefront-telemetry.spec.ts clears it to drive the banner. EUR is the
+    // display currency too: Playwright's en-US would otherwise default to USD
+    // (docs/schema-m9-display-currencies.md C2); display-currencies.spec.ts
+    // picks its own.
     storageState: {
       cookies: [
         {
           name: 'ota_consent',
           value: consentCookieValue(false),
+          domain: 'localhost',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+        {
+          name: 'ota_currency',
+          value: 'EUR',
           domain: 'localhost',
           path: '/',
           expires: -1,

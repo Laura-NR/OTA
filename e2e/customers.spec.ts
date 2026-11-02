@@ -115,3 +115,69 @@ test.describe('customer accounts', () => {
     }
   });
 });
+
+/**
+ * Support views customers but the API refuses the reminder, so the profile
+ * shows it no button, and says how to ask for an override (M9 overrides).
+ */
+test.describe('customer accounts for Administrative Support', () => {
+  const SUPPORT = 'customers-e2e-support@example.test';
+
+  async function cleanupSupport(): Promise<void> {
+    await prisma.user.deleteMany({ where: { email: SUPPORT } });
+  }
+
+  test.beforeAll(async () => {
+    await cleanupSupport();
+    await prisma.user.create({
+      data: {
+        email: SUPPORT,
+        fullName: 'E2E Customers Support',
+        role: 'ADMINISTRATIVE_SUPPORT',
+      },
+    });
+  });
+
+  test.afterAll(async () => {
+    await deleteFixture();
+    await cleanupSupport();
+    await prisma.$disconnect();
+  });
+
+  test('shows a trip awaiting certification without the reminder', async ({ page }) => {
+    await deleteFixture();
+    const traveler = await prisma.user.findUniqueOrThrow({
+      where: { email: 'traveler@example.test' },
+    });
+    await prisma.reservation.create({
+      data: {
+        userId: traveler.id,
+        bookingCode: REMINDER_CODE,
+        startDate: new Date('2027-06-10T00:00:00Z'),
+        endDate: new Date('2027-06-14T00:00:00Z'),
+        status: 'CONFIRMED',
+        totalCurrency: 'EUR',
+        totalAmount: '1800.00',
+        travelers: {
+          create: {
+            position: 0,
+            isLead: true,
+            fullName: 'Margaret Chen',
+            nationality: 'US',
+            usPerson: true,
+          },
+        },
+      },
+    });
+
+    await signIn(page, SUPPORT, { callbackPath: `/customers/${traveler.id}` });
+    const row = page.getByRole('row').filter({ hasText: REMINDER_CODE });
+    await expect(row.getByText('1 missing')).toBeVisible();
+    await expect(
+      row.getByRole('button', { name: 'Send certification reminder' }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText(/^Your role can view .* but not act on it here\./),
+    ).toBeVisible();
+  });
+});
