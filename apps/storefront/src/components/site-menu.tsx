@@ -98,7 +98,7 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
                   );
                 })}
               </ul>
-              <CurrencyMenu variant="list" className="mt-6" />
+              <CurrencyMenu variant="list" compact className="mt-6" />
               <section aria-labelledby={displayTitleId} className="mt-6 flex flex-col">
                 <h2 id={displayTitleId} className="text-overline uppercase text-muted">
                   {display('title')}

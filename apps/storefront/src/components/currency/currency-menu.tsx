@@ -35,13 +35,16 @@ function useNote(): string {
  * DS-Actions-Forms "Currency & language switchers"). The header's `menu` is a
  * button that opens a listbox (DS-Handoff: aria-haspopup="listbox", arrow
  * keys, Esc closes and returns focus); the drawer and Account show the same
- * choice as a radio group (`list`). Nothing renders while only EUR is offered.
+ * choice as a radio group (`list`); `compact` names it as the drawer names its
+ * sections. Nothing renders while only EUR is offered.
  */
 export function CurrencyMenu({
   variant = 'menu',
+  compact = false,
   className,
 }: {
   variant?: 'menu' | 'list';
+  compact?: boolean;
   className?: string;
 }) {
   const { display } = useCurrency();
@@ -49,7 +52,7 @@ export function CurrencyMenu({
   return variant === 'menu' ? (
     <CurrencyListbox className={className} />
   ) : (
-    <CurrencyRadios className={className} />
+    <CurrencyRadios compact={compact} className={className} />
   );
 }
 
@@ -197,7 +200,13 @@ function CurrencyListbox({ className }: { className?: string }) {
   );
 }
 
-function CurrencyRadios({ className }: { className?: string }) {
+function CurrencyRadios({
+  compact,
+  className,
+}: {
+  compact: boolean;
+  className?: string;
+}) {
   const t = useTranslations('currency');
   const locale = useLocale();
   const { display, pending, choose } = useCurrency();
@@ -206,7 +215,13 @@ function CurrencyRadios({ className }: { className?: string }) {
 
   return (
     <RadioGroup
-      legend={t('label')}
+      legend={
+        compact ? (
+          <span className="text-overline uppercase text-muted">{t('label')}</span>
+        ) : (
+          t('label')
+        )
+      }
       className={className}
       aria-busy={pending || undefined}
     >
