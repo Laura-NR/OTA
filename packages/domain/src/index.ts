@@ -483,6 +483,18 @@ export {
   recordsSignInDevice,
 } from './settings/new-device';
 export {
+  IPV6_ALLOWLIST_MAX_PREFIX,
+  IP_ALLOWLIST_LABEL_MAX,
+  IP_ALLOWLIST_MAX_ENTRIES,
+  ipInRanges,
+  ipRangeIssue,
+  parseIpRange,
+  superAdminIpAllowlistEnforced,
+  superAdminIpRefused,
+  type IpAllowlistEntry,
+  type IpRangeIssue,
+} from './settings/ip-allowlist';
+export {
   OVERRIDE_EXPIRY_HOURS,
   OVERRIDE_REQUEST_LAPSE_HOURS,
   OVERRIDE_STATES,

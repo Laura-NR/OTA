@@ -8,6 +8,7 @@ import {
 import { UserRole } from '../reservation/status';
 import { DEFAULT_FEATURE_FLAGS, type FeatureFlagValues } from './features';
 import { STAFF_IDLE_LOCK_MINUTES } from './idle-lock';
+import type { IpAllowlistEntry } from './ip-allowlist';
 import { OVERRIDE_EXPIRY_HOURS } from './overrides';
 
 /**
@@ -59,6 +60,10 @@ export interface OperatingThresholds extends FeatureFlagValues, DisplayCurrencyS
   staffIdleLockMinutes: number;
   /** Email staff on a sign-in from a device not seen before (`docs/schema-m9-new-device-email.md` N5). */
   staffNewDeviceEmail: boolean;
+  /** Super Admins sign in only from the list below (`docs/schema-m9-ip-allowlist.md` I5, I7). */
+  superAdminIpAllowlistOn: boolean;
+  /** The addresses and ranges a Super Admin may sign in from (I5). */
+  superAdminIpAllowlist: IpAllowlistEntry[];
   /** Hours a permission override lasts once approved (`docs/schema-m9-permission-overrides.md` O5). */
   overrideExpiryHours: number;
   /** Percent added to the reference rate for display currencies (`docs/schema-m9-display-currencies.md` C5). */
@@ -86,6 +91,8 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   staffPasskeysRequired: false,
   staffIdleLockMinutes: STAFF_IDLE_LOCK_MINUTES,
   staffNewDeviceEmail: true,
+  superAdminIpAllowlistOn: false,
+  superAdminIpAllowlist: [],
   overrideExpiryHours: OVERRIDE_EXPIRY_HOURS.default,
   ...DEFAULT_DISPLAY_CURRENCY_SWITCHES,
   fxSpreadPercent: FX_SPREAD_PERCENT.default,
@@ -98,12 +105,16 @@ export const OPERATING_THRESHOLD_KEYS = Object.keys(
 ) as (keyof OperatingThresholds)[];
 
 export type ThresholdsIssue =
-  'REFUND_DUAL_BELOW_SINGLE' | 'SHORT_NOTICE_NOT_SHORTER' | 'NOTHING_CHANGED';
+  | 'REFUND_DUAL_BELOW_SINGLE'
+  | 'SHORT_NOTICE_NOT_SHORTER'
+  | 'IP_ALLOWLIST_EMPTY'
+  | 'NOTHING_CHANGED';
 
 /**
  * Why a proposed document cannot be applied, beyond each value's own bounds
  * (those are the schema's): the refund limits rise, the short-notice timer is
- * the shorter one, and a proposal changes something.
+ * the shorter one, the IP allowlist is not on without an entry, and a
+ * proposal changes something.
  */
 export function thresholdsIssues(
   next: OperatingThresholds,
@@ -115,16 +126,41 @@ export function thresholdsIssues(
   if (next.shortNoticeTimeoutMinutes >= next.dispatchTimeoutMinutes) {
     issues.push('SHORT_NOTICE_NOT_SHORTER');
   }
+  if (next.superAdminIpAllowlistOn && next.superAdminIpAllowlist.length === 0) {
+    issues.push('IP_ALLOWLIST_EMPTY');
+  }
   if (changedThresholds(current, next).length === 0) issues.push('NOTHING_CHANGED');
   return issues;
 }
 
-/** The keys whose value differs between two documents, in document order. */
+/**
+ * The keys whose value differs between two documents, in document order. A
+ * list (the IP allowlist) differs when any entry or their order does.
+ */
 export function changedThresholds(
   before: OperatingThresholds,
   after: OperatingThresholds,
 ): (keyof OperatingThresholds)[] {
-  return OPERATING_THRESHOLD_KEYS.filter((key) => before[key] !== after[key]);
+  return OPERATING_THRESHOLD_KEYS.filter((key) => !sameValue(before[key], after[key]));
+}
+
+function sameValue(a: unknown, b: unknown): boolean {
+  if (!Array.isArray(a) || !Array.isArray(b)) return a === b;
+  return a.length === b.length && a.every((item, index) => sameEntry(item, b[index]));
+}
+
+/** Entries of a list are flat objects; compared by their fields, not key order. */
+function sameEntry(a: unknown, b: unknown): boolean {
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
+    return a === b;
+  }
+  const left = a as Record<string, unknown>;
+  const right = b as Record<string, unknown>;
+  const keys = Object.keys(left);
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every((key) => left[key] === right[key])
+  );
 }
 
 export const SETTINGS_VERSION_STATUSES = [
