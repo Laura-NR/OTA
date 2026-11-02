@@ -8,6 +8,7 @@ import {
   isStaffRole,
   isStaffSessionExpired,
   isStaffSessionLocked,
+  ipAddressText,
   passkeyChangeRefusal,
   passkeyRefusal,
   staffPasskeysEnforced,
@@ -108,7 +109,7 @@ export const SESSION_LOCKED_CODE = 'SESSION_LOCKED';
 export const IP_NOT_ALLOWED_CODE = 'IP_NOT_ALLOWED';
 
 function ipNotAllowedMessage(address: string | null | undefined): string {
-  return `Super Admin sign-ins are only accepted from the agency's listed addresses; this one came from ${address ?? 'an unknown address'}`;
+  return `Super Admin sign-ins are only accepted from the agency's listed addresses; this one came from ${address ? ipAddressText(address) : 'an unknown address'}`;
 }
 
 const LOCKED_MESSAGE = 'The desk locked after a period with no input; unlock it';

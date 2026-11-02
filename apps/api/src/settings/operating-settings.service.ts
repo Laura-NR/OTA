@@ -13,6 +13,7 @@ import {
   changedThresholds,
   dispatchTimerPolicy,
   featureFlagsOf,
+  ipAddressText,
   settingsDecisionRefusal,
   superAdminIpRefused,
   thresholdsIssues,
@@ -283,7 +284,7 @@ export class OperatingSettingsService {
         throw new UnprocessableEntityException({
           statusCode: 422,
           code: IP_ALLOWLIST_EXCLUDES_YOU_CODE,
-          message: `This IP allowlist would refuse your own sign-in from ${address ?? 'an unknown address'}; add it before applying`,
+          message: `This IP allowlist would refuse your own sign-in from ${address ? ipAddressText(address) : 'an unknown address'}; add it before applying`,
           ipAddress: address,
         });
       }
