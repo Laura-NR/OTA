@@ -191,7 +191,9 @@ test.describe('M9 new-device email', () => {
     await expect(
       page.getByText('Emailed on every sign-in from a new device'),
     ).toBeVisible();
-    await expect(page.getByText('An IP allowlist is not built yet.')).toBeVisible();
+    await expect(
+      page.getByText('Super Admin IP allowlist', { exact: true }),
+    ).toBeVisible();
     const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA).analyze();
     expect(results.violations).toEqual([]);
 
