@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-02 01:30
+# Handoff — vereda — updated 2026-11-04 15:50
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -10,7 +10,7 @@ server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausi
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
 page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
-display currencies) and
+display currencies, on 2026-11-02 the Super Admin IP allowlist) and
 ADR 0007 (worker
 app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
@@ -18,13 +18,32 @@ app). Staff passkeys:
 `docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
 `docs/schema-m9-new-device-email.md` (approved N1a–N6a, §7 as built). Permission overrides:
 `docs/schema-m9-permission-overrides.md` (approved O1a–O8a, §7 as built). Display currencies:
-`docs/schema-m9-display-currencies.md` (approved C1a–C7a, §7 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
+`docs/schema-m9-display-currencies.md` (approved C1a–C7a, §7 as built). The IP allowlist:
+`docs/schema-m9-ip-allowlist.md` (approved I1a–I7a, no migration, §6 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
 
 ## State
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-02: the Super Admin IP allowlist** (M9), the owner's pick, approved I1a–I7a with no
+  migration or dependency (`4aa90fc`…`ae43155`; ADR 0006 amendment of that day). Off by default.
+  - Rules `packages/domain/src/settings/ip-allowlist.ts`: IPv4/IPv6/IPv4-mapped ranges without
+    a library, `superAdminIpRefused` (Super Admins only; an unknown address is refused),
+    `ipAddressText` (an IPv6 sign-in address shown as its /64), and two keys in the thresholds
+    document (`superAdminIpAllowlistOn`, `superAdminIpAllowlist`, ≤ 20 labelled entries, IPv6
+    /64 or wider); `changedThresholds` now compares a list by its entries.
+  - Address source: the API writes `req.ip` (under `TRUST_PROXY`) into `X-OTA-Client-IP` for
+    `/api/auth` and Better Auth reads only that header (`packages/auth/src/client-ip.ts`), so
+    `session.ipAddress` (also the new-device email's IP) can no longer be set by a client's
+    `X-Forwarded-For`.
+  - API: `SessionPolicy.ipRefused` in `refusal`/`gateRefusal` (guard 403 `IP_NOT_ALLOWED`,
+    sockets and Better Auth's routes too), the apply check (422 `IP_ALLOWLIST_EXCLUDES_YOU`),
+    `signInAddress` on `GET /settings/operating`, the sign-in audit
+    `auth.sign_in_outside_allowlist`, the break-glass `SUPER_ADMIN_IP_ALLOWLIST_OVERRIDE=off`.
+  - Desk: Thresholds › Security's list editor ("Add my sign-in address", warnings), the
+    Security fact, and a refused session sent to `/login?refused=ip&address=…`, which signs it
+    out and names the address. en/es/fr. e2e `e2e/ip-allowlist.spec.ts`.
 - **2026-11-01 (late night): display currencies** (M9 D7), the owner's pick, approved C1a–C7a
   on migration `20261101221301_display_currencies` (`7dc5ae0`…`ff63b39`; ADR 0006 amendment
   of that day). No dependency or spend; rates are the mock's (the board's samples).
@@ -325,7 +344,8 @@ events (T-Events)".
   (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
-  deferred items (manifest editing beyond the flags, the IP allowlist); display currencies'
+  deferred items (manifest editing beyond the flags); checking each request's address against
+  the IP allowlist, or other roles; display currencies'
   "about CA$" email lines, rounding tolerance, gateway rate source and a budget field in the
   chosen currency; changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
   desk's `/` (no desk search); self-service backup codes and a no-deploy recovery for the
@@ -337,42 +357,38 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-02, display currencies, dev stack stopped for the build)
-- `pnpm lint` and `pnpm format:check` green (also re-run after the footer fix).
-- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached (re-run after the footer fix).
-- `TURBO_FORCE=true pnpm test` **1183 passed / 30 skipped**, 30/30 tasks (new: domain
-  display-currency rules, the spread's schema bounds, the invoice line, the currencies API
-  with a fixed provider and the ECB parser on a saved sample, the lock in the payments and
-  schedule tests, the RBAC matrix's three routes).
+## Verified (2026-11-04, the Super Admin IP allowlist, dev stack stopped for the build)
+- `pnpm lint` and `pnpm format:check` green.
+- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
+- `TURBO_FORCE=true pnpm test` **1223 passed / 30 skipped**, 30/30 tasks (new: domain
+  `ip-allowlist.test.ts` 20, the allowlist schema, `packages/auth/test/client-ip.test.ts` 3
+  against Better Auth's memory adapter, API `client-ip`, `session-policy`, `sign-in-devices`,
+  `settings.service` and `auth-guard.e2e` cases; no new route, so the RBAC matrix is as was).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e` (`.next` deleted first): **153 passed, 4 failed, 3 skipped** in 1.0 h, including
-  `display-currencies.spec.ts` 2/2 and `customers.spec.ts` 3/3. Two failures were this batch's
-  and are fixed: `storefront-display.spec.ts:156` (the "Display" heading also matched "Display
-  currency"; now exact) and `responsive.spec.ts:130` at ds07-1024 (signed-in header 21 px wide
-  with the currency button; it moved to the footer from lg, `c7d3536`). The other two were
-  last session's pattern after the storefront `next-server` restarted mid-run (a later PID):
-  `responsive.spec.ts:118` at ds07-320 (404 body 16 px) and `:110` at ds07-768 (`page.goto`
-  240 s timeout). Reruns on fresh servers: `display-currencies` + `storefront-display` **9/9**;
-  `responsive.spec.ts` at all six widths **21 passed, 3 skipped** (desk at 320/375/414), PIDs
-  unchanged.
-- One `customers.spec.ts` reminder run failed earlier in development on a cold dev server
-  (`GET /customers` 401 right after the admin's sign-in); not reproduced in 4 later runs
-  including the full suite. Cause not found.
+- `pnpm e2e`: the first run (2026-11-02) stalled for ~36 h on test 2 with no browser process
+  left (most likely the machine slept); killed by PID. `accessibility.spec.ts` alone then
+  **7/7**. The full rerun: **160 passed, 3 failed, 3 skipped** in 1.3 h, including
+  `ip-allowlist.spec.ts` 6/6 and `new-device-email.spec.ts`. The three failures were
+  storefront pages that never loaded (`storefront-keyboard.spec.ts:89`,
+  `supplier-resources.spec.ts:156`, `responsive.spec.ts:130` at ds07-414) after the
+  storefront `next-server` restarted mid-run (started 14:31, the rest 12:27). On fresh
+  servers: those three spec files passed every test that ran before a 30-minute cap, the three
+  failures included; `responsive.spec.ts:118` at ds07-768 timed out once in `page.evaluate`
+  (240 s) and then passed in a run of ds07-768/1024/1440, **12/12**, with no server restart.
+- Before the suite, on the dev stack: `ip-allowlist.spec.ts` **6/6** and
+  `new-device-email`/`settings`/`passkeys`/`feature-flags` **16/16**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **29/29**, 12 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events,permission-overrides}.integration.test.ts` and
-  `{dispatch,compliance}.bullmq.integration.test.ts`; payment-schedule now locks CAD at
-  1.489081 on Postgres. The first live run failed 4 tests: hand-built `MeService`/
-  `PaymentsService` lacked the new constructor argument (fixed, `4ffe435`).
-- Migration `20261101221301_display_currencies` applied to the dev DB; `prisma migrate status`
-  up to date.
-- Browser (dev stack, scratch scripts) at 390, 768, 1024 and 1280: the header listbox at 768
-  (260 px panel, `shadow-md`, primary-100 selected row, 10/12 px padding), the footer listbox at
-  1024/1280 opening upward, the drawer radios at 390 (legend computed equal to the drawer's
-  overline), Account's section, a package page in CAD ("CA$358", "Prices set in EUR"), the
-  desk's currency table (scrolls inside its box at 390) and Thresholds › Currencies (step
-  0.1). No sideways scroll anywhere except French headers at 1024/1280 (pre-existing).
-- Not run: a real screen reader; the ECB reader against the live feed (deliberately).
+  `{dispatch,compliance}.bullmq.integration.test.ts`.
+- Dev sign-ins record `0000:0000:0000:0000:0000:0000:0000:0000` (Chromium over `::1`, cut to
+  /64 by Better Auth); the desk shows `::/64` (scratch probe, then the e2e).
+- Browser (dev stack, scratch scripts) at 390, 1024 and 1280: Thresholds › Security's list
+  editor (legend 14/20 500, inputs 40 px, tertiary Remove 40 px; rows stack below sm and Remove
+  keeps its own width after `ae43155`; a typo shows the field error), Security's
+  "Super Admin IP allowlist" fact and note, and the login refusal naming `2001:db8:4:1::/64`.
+  No sideways scroll on any of them.
+- Not run: a deploy behind a real proxy (`TRUST_PROXY=1`, plan B10); a real screen reader.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -381,6 +397,14 @@ events (T-Events)".
   `PASSKEY_RP_ID` binds every passkey, so it belongs to the deploy-topology decision (still
   open; `docs/deployment-plan.md` D6 recommends the apex domain): the desk's origin must be
   that domain or under it, and in `TRUSTED_ORIGINS`.
+- **IP allowlist (2026-11-02):** only as good as `TRUST_PROXY`: behind the planned Caddy → Next
+  → API chain it is `TRUST_PROXY=1` (plan D8), not verified live (B10). Without it every
+  sign-in records the proxy's address. The check is on the sign-in address, so a session runs
+  its 12 h wherever the laptop goes (I1a). Sessions from before the switch are judged on the
+  address now recorded; ones created before this build recorded Better Auth's own reading
+  (`X-Forwarded-For` or 127.0.0.1 in dev). Better Auth's own rate limiter (production only)
+  now keys on the same header. A Super Admin on a mobile network has no fixed address: the
+  agency needs a VPN with a fixed exit before switching it on (plan D18 says not yet).
 - **Display currencies (2026-11-01):** the 0.6 % spread, the deposit lock point, showing USD at
   all and the sample rates are placeholders for finance and counsel (all changeable on
   Thresholds, no deploy). Switching to the ECB (`FX_RATE_PROVIDER=ecb`) is the owner's Q10 call;
@@ -455,6 +479,22 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Shell (2026-11-04):** `pgrep -f`/`pkill -f '@turbo/linux-64/bin/turbo run dev'` inside a
+  Bash call matches that call's own shell, which then signals itself and stops mid-command
+  (twice this session). Find turbo with `ps -eo pid,comm | awk '$2=="turbo"'` and free ports
+  by the PID `ss -ltnpH "sport = :3000"` prints. The DS 07 projects are ds07-320, 375, 414,
+  768, 1024 and 1440 (there is no ds07-1280).
+- **IP allowlist (2026-11-02):** Better Auth 1.7 trusts a single `X-Forwarded-For` value as
+  sent (and, in dev/test, falls back to 127.0.0.1); never point it back at that header. Next's
+  rewrites pass `X-Forwarded-For` through unchanged and add none; the desk's server-side
+  fetches carry no client address at all, which is why the rule judges the sign-in address,
+  not each request's. Chromium reaches `localhost` over `::1`, so dev and e2e sign-ins record
+  `0000:…:0000` (IPv6 cut to /64), shown as `::/64`. A threshold whose value is a list breaks
+  any `a !== b` comparison (use `changedThresholds`), and jsonb reorders object keys, so never
+  compare entries by `JSON.stringify`. `@ota/auth` is ESM: the API takes `CLIENT_IP_HEADER`
+  from the dynamic import in `main.ts`, never a static import. e2e moves a session "outside"
+  by rewriting `session.ip_address` in the DB; getSession has no cookie cache, so that takes
+  effect at once. `SignInDevicesService` now takes `SessionPolicy` (5th argument).
 - **Display currencies (2026-11-01):** Playwright's en-US defaults to USD, so
   `playwright.config.ts` seeds `ota_currency=EUR` beside `ota_consent`; a spec that clears all
   cookies loses it (`storefront-display.spec.ts` does, but asserts no price). A new storefront
@@ -767,6 +807,12 @@ events (T-Events)".
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-02: a session's address comes only from `X-OTA-Client-IP`, which `main.ts` sets
+    from Express's `req.ip` (`TRUST_PROXY`) on every `/api/auth` request; Better Auth ignores
+    `X-Forwarded-For`. The Super Admin IP allowlist (`docs/schema-m9-ip-allowlist.md`) is two
+    threshold keys, judged on that sign-in address in `SessionPolicy` (403 `IP_NOT_ALLOWED`);
+    the break-glass is `SUPER_ADMIN_IP_ALLOWLIST_OVERRIDE=off`. Threshold values may be lists:
+    compare documents with `changedThresholds`."
   - "2026-11-01: display currencies (migration 20261101221301_display_currencies) are
     indicative: every amount charged, invoiced or refunded stays EUR. Rates live in
     `exchange_rates` (one reference row per day and currency) from `FX_RATE_PROVIDER` (mock
@@ -882,9 +928,8 @@ events (T-Events)".
     routes and add them to the RBAC matrix."
 
 ## Next
-1. Owner: choose the next batch. The last M9 deferred item is the IP allowlist (a policy doc
-   first; its use depends on the deploy topology's proxy). M10's room holds/event photos need a
-   migration doc first. Small, no migration: the display-currency "about CA$" lines in the
+1. Owner: choose the next batch. M9's board items are all built (manifest editing beyond the
+   flags stays deferred). M10's room holds/event photos need a migration doc first. Small, no migration: the display-currency "about CA$" lines in the
    invoice and received emails (C7b), once their copy is acceptable. A real screen-reader run
    (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
    banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
@@ -1394,3 +1439,13 @@ events (T-Events)".
   saved, locked only on the first PAID receipt, worded the invoice line "at the rate locked
   on" (not "ECB rate"), kept payable line items and the price filter in EUR, put the controls
   on Thresholds, and seeded e2e with an EUR cookie.
+- 2026-11-02 — the owner chose the IP allowlist next (over the display-currency email lines,
+  M10's room holds and event photos, and answering the deployment plan; the plan is unanswered
+  and Plausible CE is not installed) and approved `docs/schema-m9-ip-allowlist.md` as
+  recommended: I1a judge the sign-in address, not each request's; I2a take it from Express's
+  `req.ip` under `TRUST_PROXY` through a header the API writes; I3a refuse the session
+  everywhere like the passkey rule; I4a refuse an apply that leaves out the applier, show
+  "your sign-in address", break-glass by env; I5a two keys in the settings document (no
+  migration); I6a Super Admins only; I7a off by default. The build showed an IPv6 address as its
+  /64 (`ipAddressText`), audited the refusal at sign-in in the new-device hook, and ran the
+  apply check whatever the break-glass says.

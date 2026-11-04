@@ -1564,3 +1564,32 @@ resolved them with existing components and tokens:
   (1.489081): 4616.15 CAD. The rate stays the same for the whole payment schedule; your bank sets
   the rate it charges." under the total, rather than D-Invoice's "at the ECB rate", because the
   locked rate includes the spread and the source may be the mock.
+
+## Amendment, 2026-11-02: the Super Admin IP allowlist
+
+The owner chose the IP allowlist next (the last M9 Security control the board draws) and
+approved `docs/schema-m9-ip-allowlist.md` as recommended (I1a–I7a; no migration, no
+dependency). The board draws one ticked checkbox in A-Settings › Security, "Super Admin sign-ins
+only from the allowlisted IPs (Havana office, Spain office, VPN)", and nowhere to edit the
+list, the refusal or the login. The build resolved them with existing components and tokens:
+
+- **The switch and the list** are thresholds, as the passkey rule and the new-device email
+  are: Thresholds › Security gains "Super Admin sign-ins only from the allowlisted IPs" (an
+  On/Off select) and "Allowlisted IPs", a nested fieldset spanning the group's grid (legend in
+  the field-label style, 14/20 medium). Each row is two DS 02 fields, "Label" and "Address or
+  range" (mono), and a tertiary "Remove" (named "Remove <label>"); rows stack below sm, where
+  "Remove" keeps its own width. Below them: the hint caption, a secondary "Add an address" and
+  "Add my sign-in address" (with the unavailable reason when the address is listed or the list
+  is full), then "Your sign-in address:" in mono. A typo shows the field's error before
+  anything is sent. While the proposal switches it on and leaves the person's address out, a
+  warning Alert says it would refuse them; the pending version shows the same warning to the
+  approver, and the apply's 422 reads as a translated destructive Alert.
+- **The thresholds table** reads the list as "Havana office · 203.0.113.0/24, …" or "None".
+- **Security** gains a "Super Admin IP allowlist" fact ("On · 2 addresses" / "Off") and a
+  caption with a "Thresholds › Security" link in the link style of the notes above it; the
+  "not built yet" caption is gone.
+- **A refused session** goes to the login page, which signs it out and shows a destructive
+  Alert above the form naming the address ("… This one came from 198.51.100.7. Sign in from an
+  office or the VPN, or ask another Super Admin to add this address.").
+- **IPv6** is shown as the /64 network Better Auth keeps (`2001:db8:4:1::/64`), the same text
+  "Add my sign-in address" puts in the list.

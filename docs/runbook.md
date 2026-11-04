@@ -180,7 +180,10 @@ The API mounts a dependency-free fixed-window limiter as Express middleware
   use a shared store (e.g. Redis) or each pod limits independently. Single-instance
   deploys are unaffected.
 - Behind a reverse proxy set `TRUST_PROXY=1` (hop count) or `TRUST_PROXY=true`,
-  otherwise every request keys on the proxy IP and shares one bucket.
+  otherwise every request keys on the proxy IP and shares one bucket. The same
+  address is what Better Auth records for a sign-in (the API writes it into
+  `X-OTA-Client-IP` and Better Auth reads only that header), so the new-device
+  email's IP and the Super Admin IP allowlist depend on this setting too.
 
 ## Analytics events (T-Events)
 
@@ -363,6 +366,20 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
 - Last Super Admin with no passkey left: set `STAFF_PASSKEYS_OVERRIDE=off` on the
   API and restart. The rule is suspended (the API warns at every start), the
   Super Admin signs in by link and enrolls, then remove the variable and restart.
+- Super Admin IP allowlist (`docs/schema-m9-ip-allowlist.md`): "Super Admin
+  sign-ins only from the allowlisted IPs" and its list (Thresholds › Security, two
+  Super Admins, off by default). With it on, a Super Admin session whose sign-in
+  address is outside the list is refused everywhere (403 `IP_NOT_ALLOWED`); the
+  desk signs it out and names the address. Other roles are never affected. Before
+  switching it on, confirm `TRUST_PROXY` is right: "Your sign-in address" on the
+  form must show the real public address, not the proxy's or a private one. An
+  IPv6 address is kept as its /64, so IPv6 entries are /64 or wider. The apply is
+  refused if the list leaves out the applying Super Admin's own sign-in address.
+  Refused sign-ins are audited as `auth.sign_in_outside_allowlist`.
+- Every Super Admin locked out by the allowlist (an office address changed, the VPN
+  moved): set `SUPER_ADMIN_IP_ALLOWLIST_OVERRIDE=off` on the API and restart. The rule
+  is suspended (the API warns at every start); a Super Admin signs in, two of them
+  apply a corrected list, then remove the variable and restart.
 - `PASSKEY_RP_ID` binds every passkey. Decide it with the deploy topology (the
   desk's origin must be that domain or a subdomain of it, and listed in
   `TRUSTED_ORIGINS`); changing it later means everyone enrolls again.

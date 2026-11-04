@@ -1,6 +1,7 @@
 # M9 Super Admin IP allowlist: policy for review (no schema change)
 
-**Status:** **Approved 2026-11-02 as recommended (I1a–I7a, with I8's screens).**
+**Status:** **Approved 2026-11-02 as recommended (I1a–I7a, with I8's screens) and built the same
+day** (§6).
 **Date:** 2026-11-02
 **Scope:** the IP allowlist deferred under D9 in `docs/schema-m9-settings.md` and again in the
 passkey, idle-lock and new-device docs; the last control on the board's A-Settings › Security
@@ -147,3 +148,43 @@ address on the form is the check that the API sees the right one.
   and the login page names the address; an Operations Admin from the same address is
   unaffected; switching it off restores the session. axe on Thresholds › Security.
 - Docs: the runbook's lost-access entry and break-glass, ADR 0006's amendment, the handoff.
+
+## 6. As built (2026-11-02)
+
+- **Domain** (`b784144`, `aaa2790`): `packages/domain/src/settings/ip-allowlist.ts`
+  (`parseIpRange`, `ipRangeIssue`, `ipInRanges`, `superAdminIpAllowlistEnforced`,
+  `superAdminIpRefused`, `ipAddressText`; no library), the two keys in the thresholds document,
+  the `IP_ALLOWLIST_EMPTY` issue, and `changedThresholds` comparing a list by its entries.
+- **Schemas** (`152c721`): `ipAllowlistEntrySchema` (label 1–60, a valid range, IPv6 /64 or
+  wider, no duplicate network, at most 20) and the optional `signInAddress` on the settings read.
+- **Auth** (`4745d80`): `packages/auth/src/client-ip.ts`, `CLIENT_IP_HEADER`
+  (`x-ota-client-ip`), set as Better Auth's only `ipAddressHeaders`; `AuthSession` carries
+  `ipAddress`. Tested against Better Auth's memory adapter: the header wins, a client's
+  `X-Forwarded-For` is ignored, IPv6 is kept as its /64.
+- **API** (`136d851`, `5ba3e58`): `main.ts` writes `req.ip` into the header for `/api/auth`
+  (`apps/api/src/common/client-ip.ts`) and warns at boot under the break-glass;
+  `SessionPolicy.ipRefused` feeds `refusal` (kind `ip_not_allowed`) and `gateRefusal`; the guard
+  answers 403 `IP_NOT_ALLOWED` with `ipAddress`; `AuthUser.signInAddress`; the apply check
+  (422 `IP_ALLOWLIST_EXCLUDES_YOU`); `SignInDevicesService` audits
+  `auth.sign_in_outside_allowlist` at sign-in. No new route; the RBAC matrix is unchanged.
+- **Desk** (`09058d6`, `0e82c84`, `ae43155`): the list editor on Thresholds › Security, the
+  warnings and the translated apply refusal, the table's list text, the Security fact and
+  note, and the redirect from the dashboard layout and `/passkeys` to
+  `/login?refused=ip&address=…`, which signs the session out. en/es/fr (`c348912`).
+- **e2e** (`401f59e`, `e2e/ip-allowlist.spec.ts`): propose with "Add my sign-in address" (the
+  warning appears when the address is removed; a typo shows the field error), a second Super
+  Admin applies, Security reads "On · 2 addresses", a Super Admin session moved outside (the
+  fixture rewrites the session's address) lands on the login page signed out with the address
+  named, an Operations Admin from there is untouched, an apply leaving out the applier is
+  refused with the translated message, and switching it off restores the outside session. axe
+  on Thresholds, Security and the login page.
+
+**Differences from §3–§5:**
+- An IPv6 sign-in address is shown, and added by "Add my sign-in address", as the /64 Better
+  Auth keeps in short form (`2001:db8:4:1::/64`), not as the stored
+  `2001:0db8:0004:0001:0000:0000:0000:0000`. In dev the browser reaches the API over `::1`, so
+  the address reads `::/64`.
+- The refusal is audited at sign-in by the new-device hook (which already receives the address
+  and method), not by the policy, so it is written once per sign-in rather than per request.
+- The apply check runs on the switch in the proposal, whatever the break-glass says, so a list
+  applied during a break-glass still admits its applier when the variable is removed.
