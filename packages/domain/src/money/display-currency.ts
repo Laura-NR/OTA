@@ -189,3 +189,29 @@ export type FxLockEvent = 'PAYMENT_LINK' | 'FIRST_PAYMENT';
 export function lockDue(lockAt: FxLockPoint, event: FxLockEvent): boolean {
   return event === 'FIRST_PAYMENT' || lockAt === 'INVOICE';
 }
+
+/** A display rate an email's "about CA$ …" amounts are converted at (C7b). */
+export interface ReferenceRate {
+  currency: DisplayCurrencyCode;
+  rate: number;
+  /** Whether it is the booking's locked rate rather than today's. */
+  locked: boolean;
+}
+
+/**
+ * The rate an email's "about" amounts use (C7b): the booking's locked rate
+ * when it has one, whatever is offered today; else today's rate for the
+ * traveler's currency when it is offered. Null for EUR, no currency, or one
+ * that is switched off or has no fresh rate (absent from `offered`).
+ */
+export function referenceRate(input: {
+  lock: { currency: DisplayCurrencyCode; rate: number } | null;
+  currency: string | null | undefined;
+  offered: readonly { code: DisplayCurrencyCode; rate: number }[];
+}): ReferenceRate | null {
+  if (input.lock) {
+    return { currency: input.lock.currency, rate: input.lock.rate, locked: true };
+  }
+  const today = input.offered.find((option) => option.code === input.currency);
+  return today ? { currency: today.code, rate: today.rate, locked: false } : null;
+}

@@ -688,10 +688,12 @@ export {
   isShownCurrency,
   lockDue,
   referenceAmount,
+  referenceRate,
   resolveDisplayCurrency,
   type DisplayCurrencyCode,
   type DisplayCurrencySwitches,
   type FxLockEvent,
   type FxLockPoint,
+  type ReferenceRate,
   type ShownCurrency,
 } from './money/display-currency';

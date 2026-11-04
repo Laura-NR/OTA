@@ -10,6 +10,7 @@ import {
   isShownCurrency,
   lockDue,
   referenceAmount,
+  referenceRate,
   resolveDisplayCurrency,
 } from '../src';
 
@@ -159,5 +160,37 @@ describe('when a booking locks its rate (C6a, BR-CU-02)', () => {
   it('locks at the payment link under INVOICE, and still at the first payment', () => {
     expect(lockDue('INVOICE', 'PAYMENT_LINK')).toBe(true);
     expect(lockDue('INVOICE', 'FIRST_PAYMENT')).toBe(true);
+  });
+});
+
+describe('an email\'s "about" rate (C7b)', () => {
+  const offered = [
+    { code: 'CAD' as const, rate: 1.489081 },
+    { code: 'GBP' as const, rate: 0.848159 },
+  ];
+
+  it("converts at today's rate for the traveler's currency while nothing is locked", () => {
+    expect(referenceRate({ lock: null, currency: 'CAD', offered })).toEqual({
+      currency: 'CAD',
+      rate: 1.489081,
+      locked: false,
+    });
+  });
+
+  it("keeps the booking's locked rate, even for a currency switched off since", () => {
+    expect(
+      referenceRate({
+        lock: { currency: 'USD', rate: 1.093522 },
+        currency: 'CAD',
+        offered,
+      }),
+    ).toEqual({ currency: 'USD', rate: 1.093522, locked: true });
+  });
+
+  it('adds nothing for EUR, no currency, or one not offered today', () => {
+    expect(referenceRate({ lock: null, currency: 'EUR', offered })).toBeNull();
+    expect(referenceRate({ lock: null, currency: null, offered })).toBeNull();
+    expect(referenceRate({ lock: null, currency: 'USD', offered })).toBeNull();
+    expect(referenceRate({ lock: null, currency: 'CAD', offered: [] })).toBeNull();
   });
 });
