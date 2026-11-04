@@ -37,6 +37,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { useDisplayMoney } from '@/components/currency/currency-provider';
 import { ApproxPrice } from '@/components/currency/price';
 import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { Link } from '@/i18n/navigation';
@@ -178,6 +179,7 @@ export function BookingFlow({
 
   const [step, setStep] = useState<Step>(1);
   const { track } = useTelemetry();
+  const display = useDisplayMoney();
   const stepStarted = useRef(0);
   const started = useRef(false);
   useEffect(() => {
@@ -452,6 +454,8 @@ export function BookingFlow({
           ],
           locale,
           expectedTotal: price.total,
+          // Kept when none is saved, so E-Received and the deposit read it (M9 C4, C7b).
+          displayCurrency: display.code,
         }),
       });
       if (!response.ok) {
