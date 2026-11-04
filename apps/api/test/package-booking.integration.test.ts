@@ -12,11 +12,14 @@ import type { AuthUser } from '../src/common/auth/auth-user';
 import { AffidavitsService } from '../src/compliance/affidavits.service';
 import { ConsentsService } from '../src/compliance/consents.service';
 import { LegalTextsService } from '../src/compliance/legal-texts.service';
-import type { CurrenciesService } from '../src/currencies/currencies.service';
+import { CurrenciesService } from '../src/currencies/currencies.service';
+import { MockFxRateProvider } from '../src/currencies/fx-rate.provider';
+import { NoopFxRateScheduler } from '../src/currencies/fx-rate.scheduler';
 import { MeService } from '../src/me/me.service';
 import { PackageBookingService } from '../src/me/package-booking.service';
 import type { PaymentsService } from '../src/payments/payments.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so require an explicit opt-in.
 const runIntegration = process.env.RUN_DB_INTEGRATION === '1';
@@ -75,7 +78,13 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
     me = new MeService(
       db,
       {} as PaymentsService,
-      {} as CurrenciesService,
+      // M9: the Booking form keeps the shown currency; E-Received reads the mock's rates.
+      new CurrenciesService(
+        db,
+        fakeOperatingSettings(),
+        new MockFxRateProvider(),
+        new NoopFxRateScheduler(),
+      ),
       new PackageBookingService(db, affidavits, consents, tenant, key),
       { send: async () => undefined },
       tenant,
