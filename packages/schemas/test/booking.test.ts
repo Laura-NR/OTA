@@ -120,4 +120,14 @@ describe('bookPackageSchema', () => {
 
     expect(result.success).toBe(false);
   });
+
+  it('takes the currency the storefront showed, only one it can show (M9 C7b)', () => {
+    expect(bookPackageSchema.parse(booking({ displayCurrency: 'CAD' }))).toMatchObject({
+      displayCurrency: 'CAD',
+    });
+    expect(bookPackageSchema.parse(booking())).not.toHaveProperty('displayCurrency');
+    expect(bookPackageSchema.safeParse(booking({ displayCurrency: 'JPY' })).success).toBe(
+      false,
+    );
+  });
 });

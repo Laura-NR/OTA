@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { consentPurposeSchema, ofacCategorySchema } from './compliance';
+import { shownCurrencySchema } from './currency';
 import { nationalitySchema } from './regulatory';
 import { passportNumberSchema } from './travelers';
 
@@ -87,6 +88,12 @@ export const bookPackageSchema = z
     locale: z.string().trim().min(2).max(5).optional(),
     /** The total the traveler was shown; a different server price is refused (409). */
     expectedTotal: z.coerce.number().nonnegative().optional(),
+    /**
+     * M9 C4: the currency the storefront showed; kept as the traveler's choice
+     * when they have none, so the request's email and the deposit read what
+     * they saw.
+     */
+    displayCurrency: shownCurrencySchema.optional(),
   })
   .superRefine((booking, context) => {
     const extras = booking.extras.map((extra) => extra.packageExtraId);
