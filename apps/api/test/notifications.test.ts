@@ -2,6 +2,7 @@ import { parseTenantConfig } from '@ota/config';
 import type { EmailMessage } from '@ota/email';
 import { describe, expect, it } from 'vitest';
 
+import type { CurrenciesService } from '../src/currencies/currencies.service';
 import type { DocumentsService } from '../src/documents/documents.service';
 import { NotificationsService } from '../src/notifications/notifications.service';
 import { NoopReminderScheduler } from '../src/payments/reminders.scheduler';
@@ -107,6 +108,7 @@ function setup(trips: Trip[]) {
     tenant,
     new NoopReminderScheduler(),
     fakeOperatingSettings(),
+    { emailReference: async () => null } as unknown as CurrenciesService,
   );
   const scanAt = (at: Date) => {
     clock = at;
@@ -175,5 +177,104 @@ describe('traveler notification scan', () => {
     expect(await scanAt(NOW)).toEqual({ reviewRequests: 0, reconfirmations: 1 });
     expect(sent[0]!.subject).toBe('One week to go · Eco-Tourism in Viñales · SOON0001');
     expect((await scanAt(new Date(NOW.getTime() + 3_600_000))).reconfirmations).toBe(0);
+  });
+});
+
+describe('E-Invoice with a display currency (M9 C7b)', () => {
+  const depositTenant = parseTenantConfig({
+    tenantId: 'test-agency',
+    branding: { agencyName: 'Test Agency', licenseNumber: 'MINTUR-TEST-1234' },
+    policies: {
+      deposit: {
+        standard: {
+          percent: 20,
+          minDaysBeforeDeparture: 60,
+          balanceDaysBeforeDeparture: 30,
+        },
+      },
+    },
+  });
+
+  function secured(lock: { rate: number; lockedAt: Date } | null) {
+    const sent: EmailMessage[] = [];
+    const asked: unknown[][] = [];
+    const start = new Date(Date.UTC(2030, 0, 15));
+    const reservation = {
+      id: 'r-secured',
+      bookingCode: 'FX000001',
+      startDate: start,
+      endDate: new Date(start.getTime() + 7 * DAY_MS),
+      totalAmount: '1000.00',
+      totalCurrency: 'EUR',
+      displayCurrency: lock ? 'GBP' : null,
+      displayRate: lock?.rate ?? null,
+      displayRateDate: lock ? new Date('2026-10-14T00:00:00Z') : null,
+      displayRateLockedAt: lock?.lockedAt ?? null,
+      user: { ...user, displayCurrency: 'CAD' },
+      package: { name: 'Eco-Tourism in Viñales', depositPolicy: 'standard' },
+    };
+    const service = new NotificationsService(
+      {
+        reservation: { findUnique: async () => reservation },
+      } as unknown as PrismaService,
+      {} as DocumentsService,
+      {
+        send: async (message) => {
+          sent.push(message);
+        },
+      },
+      depositTenant,
+      new NoopReminderScheduler(),
+      fakeOperatingSettings(),
+      {
+        emailReference: async (...args: unknown[]) => {
+          asked.push(args);
+          return lock
+            ? {
+                currency: 'GBP',
+                rate: lock.rate,
+                lockedAt: lock.lockedAt,
+                lockAt: 'DEPOSIT',
+              }
+            : { currency: 'CAD', rate: 1.489081, lockedAt: null, lockAt: 'DEPOSIT' };
+        },
+      } as unknown as CurrenciesService,
+    );
+    return { service, sent, asked };
+  }
+
+  it("guides the deposit and the full amount at today's rate for the traveler's currency", async () => {
+    const { service, sent, asked } = secured(null);
+
+    await service.bookingSecured('r-secured');
+
+    expect(asked).toEqual([['CAD', null]]);
+    // 200 × 1.489081 = 297.82 and 1000 × 1.489081 = 1,489.08, rounded up.
+    expect(sent[0]!.text).toContain('a 20 % deposit of €200.00 (about CA$298) now');
+    expect(sent[0]!.text).toContain('- or the full €1,000.00 (about CA$1,490) now.');
+    expect(sent[0]!.text).toContain(
+      'the CAD amounts are a guide, and the rate locks when you pay.',
+    );
+  });
+
+  it("guides at the booking's locked rate once there is one", async () => {
+    const lockedAt = new Date('2026-10-14T09:30:00Z');
+    const { service, sent, asked } = secured({ rate: 0.85, lockedAt });
+
+    await service.bookingSecured('r-secured');
+
+    expect(asked).toEqual([
+      [
+        'CAD',
+        {
+          currency: 'GBP',
+          rate: 0.85,
+          rateDate: '2026-10-14',
+          lockedAt: lockedAt.toISOString(),
+        },
+      ],
+    ]);
+    expect(sent[0]!.text).toContain('- or the full €1,000.00 (about £850) now.');
+    expect(sent[0]!.text).toContain('and the rate was locked on October 14, 2026.');
   });
 });

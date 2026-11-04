@@ -6,7 +6,12 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
-import { DocumentType, buildSchedule } from '@ota/domain';
+import {
+  BASE_CURRENCY,
+  DocumentType,
+  buildSchedule,
+  convertForDisplay,
+} from '@ota/domain';
 import {
   bookingConfirmedEmail,
   bookingSecuredEmail,
@@ -22,6 +27,7 @@ import {
   storefrontPageUrl,
 } from '../common/storefront-url';
 import { loadOfacGate } from '../compliance/ofac-gate';
+import { CurrenciesService, rateLockOf } from '../currencies/currencies.service';
 import { DocumentsService } from '../documents/documents.service';
 import { MAILER } from '../email/email.module';
 import { depositPolicyFor } from '../payments/payment-terms';
@@ -72,6 +78,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     @Inject(NOTIFICATION_SCHEDULER) private readonly scheduler: ReminderScheduler,
     private readonly settings: OperatingSettingsService,
+    private readonly currencies: CurrenciesService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -86,14 +93,15 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * E-Invoice: every host has confirmed. Offers the deposit or the full
-   * amount as the first payment link would build them now (M4).
+   * amount as the first payment link would build them now (M4), each with
+   * its "about" guide in the traveler's display currency (M9 C7b).
    */
   async bookingSecured(reservationId: string): Promise<void> {
     try {
       const reservation = await this.prisma.reservation.findUnique({
         where: { id: reservationId },
         include: {
-          user: { select: RECIPIENT },
+          user: { select: { ...RECIPIENT, displayCurrency: true } },
           package: { select: { name: true, depositPolicy: true } },
         },
       });
@@ -112,6 +120,13 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
             windowHours: (await this.settings.thresholds()).paymentWindowHours,
           })
         : null;
+      const rate =
+        reservation.totalCurrency === BASE_CURRENCY
+          ? await this.currencies.emailReference(
+              reservation.user.displayCurrency,
+              rateLockOf(reservation),
+            )
+          : null;
       await this.mailer.send(
         bookingSecuredEmail({
           to: reservation.user.email,
@@ -131,6 +146,15 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
                   balanceDueAt: plan[1]!.dueAt,
                 }
               : null,
+          reference: rate
+            ? {
+                currency: rate.currency,
+                total: convertForDisplay(total, rate.rate),
+                deposit: plan ? convertForDisplay(plan[0]!.amount, rate.rate) : null,
+                lockedAt: rate.lockedAt,
+                lockAt: rate.lockAt,
+              }
+            : null,
           windowHours: (await this.settings.thresholds()).paymentWindowHours,
           portalUrl: accountReservationUrl(
             this.tenant,

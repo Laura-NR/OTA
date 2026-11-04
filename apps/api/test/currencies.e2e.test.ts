@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
+import { CurrenciesService } from '../src/currencies/currencies.service';
 import {
   EcbFxRateProvider,
   MockFxRateProvider,
@@ -183,6 +184,57 @@ describe('display currencies API (docs/schema-m9-display-currencies.md)', () => 
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({ rateDate: null, currencies: [] });
+    });
+  });
+
+  describe('an email\'s "about" rate (C7b)', () => {
+    const lock = {
+      currency: 'GBP' as const,
+      rate: 0.85,
+      rateDate: '2026-10-14',
+      lockedAt: '2026-10-14T09:30:00.000Z',
+    };
+
+    it("uses today's rate for the traveler's currency, with the lock point", async () => {
+      await boot();
+      const currencies = app.get(CurrenciesService);
+
+      expect(await currencies.emailReference('CAD', null)).toEqual({
+        currency: 'CAD',
+        rate: 1.489081,
+        lockedAt: null,
+        lockAt: 'DEPOSIT',
+      });
+      expect(await currencies.emailReference('EUR', null)).toBeNull();
+      expect(await currencies.emailReference(null, null)).toBeNull();
+      // CHF is off by default.
+      expect(await currencies.emailReference('CHF', null)).toBeNull();
+    });
+
+    it("keeps the booking's locked rate, even when today's rates are stale", async () => {
+      await boot(new FixedProvider({ rateDate: daysAgo(6), rates: { CAD: 1.4802 } }));
+      const currencies = app.get(CurrenciesService);
+
+      expect(await currencies.emailReference('CAD', null)).toBeNull();
+      expect(await currencies.emailReference('CAD', lock)).toEqual({
+        currency: 'GBP',
+        rate: 0.85,
+        lockedAt: new Date('2026-10-14T09:30:00.000Z'),
+        lockAt: 'DEPOSIT',
+      });
+    });
+
+    it('answers null when the rates cannot be read, so the email still goes', async () => {
+      await boot();
+      const currencies = app.get(CurrenciesService);
+      const prisma = app.get(PrismaService) as unknown as {
+        exchangeRate: { findFirst: () => Promise<unknown> };
+      };
+      prisma.exchangeRate.findFirst = async () => {
+        throw new Error('database unreachable');
+      };
+
+      expect(await currencies.emailReference('CAD', null)).toBeNull();
     });
   });
 

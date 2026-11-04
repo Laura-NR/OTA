@@ -14,8 +14,10 @@ import {
   enabledDisplayCurrencies,
   isRateStale,
   lockDue,
+  referenceRate,
   type DisplayCurrencyCode,
   type FxLockEvent,
+  type FxLockPoint,
   type ShownCurrency,
 } from '@ota/domain';
 import type {
@@ -202,6 +204,40 @@ export class CurrenciesService implements OnModuleInit, OnModuleDestroy {
         };
       }),
     };
+  }
+
+  /**
+   * The rate an email's "about CA$ …" guide uses (C7b): the booking's locked
+   * rate, else today's for the traveler's currency, with the lock point for
+   * the "the rate locks when …" words. Null when the traveler sees EUR or no
+   * rate applies. A failed read is logged and returns null: the guide never
+   * costs the traveler the email it sits in.
+   */
+  async emailReference(
+    currency: string | null | undefined,
+    lock: DisplayRateLockDto | null,
+    now = new Date(),
+  ): Promise<{
+    currency: DisplayCurrencyCode;
+    rate: number;
+    lockedAt: Date | null;
+    lockAt: FxLockPoint;
+  } | null> {
+    try {
+      const today = await this.publicCurrencies(now);
+      const found = referenceRate({ lock, currency, offered: today.currencies });
+      return found
+        ? {
+            currency: found.currency,
+            rate: found.rate,
+            lockedAt: lock ? new Date(lock.lockedAt) : null,
+            lockAt: today.lockAt,
+          }
+        : null;
+    } catch (error) {
+      this.logger.warn(`Email display rate not read: ${(error as Error).message}`);
+      return null;
+    }
   }
 
   /** `PUT /me/display-currency` (C4a): save the choice and audit it. */

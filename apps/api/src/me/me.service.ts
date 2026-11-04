@@ -8,7 +8,13 @@ import {
 } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
 import type { InventoryItem, InventoryType, PackageService, Prisma } from '@ota/db';
-import { ReservationStatus, ServiceType, providerProgress } from '@ota/domain';
+import {
+  BASE_CURRENCY,
+  ReservationStatus,
+  ServiceType,
+  convertForDisplay,
+  providerProgress,
+} from '@ota/domain';
 import { bookingReceivedEmail, type Mailer } from '@ota/email';
 import type {
   BookPackageRequest,
@@ -429,14 +435,17 @@ export class MeService {
         this.bookings.write(tx, reservation, plan, input, actor.id, client),
     });
 
+    await this.currencies.adoptShown(actor.id, input.displayCurrency);
     const detail = await this.getReservation(actor.id, createdId);
     await this.sendBookingReceived(actor, plan, input, detail);
     return detail;
   }
 
   /**
-   * E-Received (Phase 6): the Booking form's first email. It is best effort —
-   * a mail failure never rolls back a request that has already been stored.
+   * E-Received (Phase 6): the Booking form's first email, with the total's
+   * "about" guide in the traveler's display currency (M9 C7b). It is best
+   * effort — a mail failure never rolls back a request that has already been
+   * stored.
    */
   private async sendBookingReceived(
     actor: AuthUser,
@@ -446,6 +455,12 @@ export class MeService {
   ): Promise<void> {
     const locale = this.travelerLocale(input.locale);
     try {
+      const traveler = await this.prisma.user.findUnique({
+        where: { id: actor.id },
+        select: { displayCurrency: true },
+      });
+      // A new request has no locked rate yet: today's rate is the guide.
+      const rate = await this.currencies.emailReference(traveler?.displayCurrency, null);
       await this.mailer.send(
         bookingReceivedEmail({
           to: actor.email,
@@ -456,6 +471,15 @@ export class MeService {
           endDate: plan.endDate,
           total: Number(detail.totalAmount),
           currency: plan.pkg.currency,
+          reference:
+            rate && plan.pkg.currency === BASE_CURRENCY
+              ? {
+                  currency: rate.currency,
+                  total: convertForDisplay(Number(detail.totalAmount), rate.rate),
+                  lockedAt: rate.lockedAt,
+                  lockAt: rate.lockAt,
+                }
+              : null,
           portalUrl: accountReservationUrl(this.tenant, locale, detail.id),
           locale,
           branding: this.tenant.branding,

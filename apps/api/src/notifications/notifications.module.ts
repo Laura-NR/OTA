@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { CurrenciesModule } from '../currencies/currencies.module';
 import { DocumentsModule } from '../documents/documents.module';
 import { BullmqReminderScheduler } from '../payments/bullmq-reminders.scheduler';
 import { NoopReminderScheduler } from '../payments/reminders.scheduler';
@@ -12,7 +13,7 @@ import { NOTIFICATION_SCHEDULER } from './notifications.tokens';
  * transitions, and the daily review-request and reconfirmation scan.
  */
 @Module({
-  imports: [DocumentsModule],
+  imports: [DocumentsModule, CurrenciesModule],
   controllers: [NotificationsController],
   providers: [
     NotificationsService,

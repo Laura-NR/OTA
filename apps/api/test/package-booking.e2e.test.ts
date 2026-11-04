@@ -4,6 +4,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { parseTenantConfig } from '@ota/config';
 import { Prisma } from '@ota/db';
+import type { EmailMessage } from '@ota/email';
 import type { LegalContent } from '@ota/schemas';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -11,9 +12,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { LEGAL_CONTENT } from '../src/compliance/compliance.tokens';
+import { MAILER } from '../src/email/email.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { TENANT_CONFIG } from '../src/tenant/tenant.tokens';
 import { PASSPORT_KEY } from '../src/travelers/travelers.tokens';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const TRAVELER = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -84,6 +87,10 @@ interface State {
   consents: Row[];
   audits: Row[];
   users: Row[];
+  /** The stored display rates (M9): none unless a test adds them. */
+  rates: Row[];
+  /** What the mailer was given. */
+  sent: EmailMessage[];
   /** Places already held on the departure by other bookings. */
   booked: number;
 }
@@ -170,7 +177,9 @@ function seed(): State {
     affidavits: [],
     consents: [],
     audits: [],
-    users: [{ id: TRAVELER.id, phone: null, nationality: null }],
+    users: [{ id: TRAVELER.id, phone: null, nationality: null, displayCurrency: null }],
+    rates: [],
+    sent: [],
     booked: 0,
   };
 }
@@ -236,6 +245,23 @@ function createFakePrisma(state: State) {
         Object.assign(user, args.data);
         return user;
       },
+      findUnique: async (args: { where: { id: string } }) =>
+        state.users.find((row) => row.id === args.where.id) ?? null,
+      updateMany: async (args: {
+        where: { id: string; displayCurrency: null };
+        data: Record<string, unknown>;
+      }) => {
+        const user = state.users.find(
+          (row) => row.id === args.where.id && row.displayCurrency === null,
+        );
+        if (user) Object.assign(user, args.data);
+        return { count: user ? 1 : 0 };
+      },
+    },
+    exchangeRate: {
+      findFirst: async () => state.rates[0] ?? null,
+      findMany: async () => state.rates,
+      createMany: async () => ({ count: 0 }),
     },
     reservationRoom: {
       createMany: async (args: { data: Record<string, unknown>[] }) => {
@@ -299,7 +325,7 @@ const fakeAuthService = {
 async function buildApp(state: State, key: Buffer | null): Promise<INestApplication> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(PrismaService)
-    .useValue(createFakePrisma(state))
+    .useValue(withNoSettingsVersion(createFakePrisma(state)))
     .overrideProvider(AuthService)
     .useValue(fakeAuthService)
     .overrideProvider(TENANT_CONFIG)
@@ -308,6 +334,12 @@ async function buildApp(state: State, key: Buffer | null): Promise<INestApplicat
     .useValue(legal)
     .overrideProvider(PASSPORT_KEY)
     .useValue(key)
+    .overrideProvider(MAILER)
+    .useValue({
+      send: async (message: EmailMessage) => {
+        state.sent.push(message);
+      },
+    })
     .compile();
   const app = moduleRef.createNestApplication();
   await app.init();
@@ -406,6 +438,33 @@ describe('Booking form API (POST /me/reservations/package-booking)', () => {
     expect(state.extras).toEqual([
       expect.objectContaining({ packageExtraId: EXTRA, quantity: 1, amount: 105 }),
     ]);
+  });
+
+  it("keeps the currency the form showed and guides E-Received's total in it (M9 C7b)", async () => {
+    const day = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
+    state.rates.push(
+      { id: 'cad', rateDate: day, currency: 'CAD', rate: 1.4802, source: 'mock' },
+      { id: 'gbp', rateDate: day, currency: 'GBP', rate: 0.8431, source: 'mock' },
+    );
+
+    expect((await book({ ...family, displayCurrency: 'CAD' })).status).toBe(201);
+    expect(state.users[0]!.displayCurrency).toBe('CAD');
+    // 3,192 × 1.489081 (1.4802 plus the 0.6 % spread) = 4,753.15, rounded up.
+    expect(state.sent.at(-1)!.text).toContain(
+      'Total: €3,192.00 (about CA$4,754; the rate locks when you pay the deposit)',
+    );
+
+    // A saved choice wins over what the form showed.
+    state.users[0]!.displayCurrency = 'GBP';
+    expect((await book({ ...family, displayCurrency: 'CAD' })).status).toBe(201);
+    expect(state.users[0]!.displayCurrency).toBe('GBP');
+    expect(state.sent.at(-1)!.text).toContain('Total: €3,192.00 (about £2,708;');
+  });
+
+  it('sends E-Received in EUR only when the traveler sees EUR', async () => {
+    expect((await book({ ...family, displayCurrency: 'EUR' })).status).toBe(201);
+    expect(state.users[0]!.displayCurrency).toBe('EUR');
+    expect(state.sent.at(-1)!.text).toContain('Total: €3,192.00\n');
   });
 
   it('reads each kind from the date of birth and shares one room for three', async () => {
