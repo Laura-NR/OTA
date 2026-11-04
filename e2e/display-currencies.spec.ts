@@ -7,6 +7,7 @@ import { signIn } from './helpers';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:3001';
+const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? 'http://localhost:8025';
 const BOOKING_CODE = 'E2EFX001';
 const TRAVELER = 'traveler@example.test';
 
@@ -30,6 +31,39 @@ const whole = (amount: number, currency: string) =>
     currency,
     maximumFractionDigits: 0,
   }).format(amount);
+
+/** The plain text of the one email to the traveler whose subject matches, waited for. */
+async function emailText(subject: RegExp): Promise<string> {
+  let id = '';
+  await expect(async () => {
+    const response = await fetch(`${MAILPIT_URL}/api/v1/messages?limit=200`);
+    const { messages } = (await response.json()) as {
+      messages: { ID: string; Subject: string; To?: { Address: string }[] }[];
+    };
+    const found = messages.filter(
+      (message) =>
+        message.To?.some((recipient) => recipient.Address === TRAVELER) &&
+        subject.test(message.Subject),
+    );
+    expect(found).toHaveLength(1);
+    id = found[0]!.ID;
+  }).toPass({ timeout: 20_000 });
+  const detail = (await (await fetch(`${MAILPIT_URL}/api/v1/message/${id}`)).json()) as {
+    Text?: string;
+  };
+  return detail.Text ?? '';
+}
+
+/** Delete a booking the Booking form made, with the records that refuse a cascade. */
+async function deleteBooking(bookingCode: string): Promise<void> {
+  const reservation = await prisma.reservation.findUnique({ where: { bookingCode } });
+  if (!reservation) return;
+  await prisma.consentRecord.deleteMany({ where: { reservationId: reservation.id } });
+  await prisma.auditLog.deleteMany({
+    where: { entityType: 'Reservation', entityId: reservation.id },
+  });
+  await prisma.reservation.delete({ where: { id: reservation.id } });
+}
 
 async function cleanup(): Promise<void> {
   const reservation = await prisma.reservation.findUnique({
@@ -64,12 +98,15 @@ async function pickInMenu(page: Page, from: string, code: string): Promise<void>
 /**
  * docs/schema-m9-display-currencies.md end to end: a visitor browses in CAD
  * from the currency menu, a traveler saves GBP on Account, sees "≈" on the trip and
- * the wire page, and the deposit locks the rate on the booking and the desk.
- * The config's `ota_currency=EUR` cookie is where every page starts.
+ * the wire page, and the deposit locks the rate on the booking and the desk; a
+ * traveler who books in CAD keeps it, and E-Received and E-Invoice guide their
+ * amounts in it (C7b). The config's `ota_currency=EUR` cookie is where every
+ * page starts.
  */
 test.describe('display currencies (M9)', () => {
   test.describe.configure({ mode: 'serial' });
   let reservationId = '';
+  let formBooking = '';
 
   test.beforeAll(async () => {
     await cleanup();
@@ -89,6 +126,7 @@ test.describe('display currencies (M9)', () => {
   });
 
   test.afterAll(async () => {
+    if (formBooking) await deleteBooking(formBooking);
     await cleanup();
     await prisma.$disconnect();
   });
@@ -186,5 +224,115 @@ test.describe('display currencies (M9)', () => {
     await expect(
       page.getByText(new RegExp(`^${approx} · rate locked on `)).first(),
     ).toBeVisible();
+  });
+
+  test('the Booking form keeps the currency shown, and E-Received and E-Invoice guide in it (C7b)', async ({
+    page,
+  }) => {
+    const original = await prisma.user.update({
+      where: { email: TRAVELER },
+      data: { displayCurrency: null },
+      select: { nationality: true, phone: true },
+    });
+    await page
+      .context()
+      .addCookies([
+        { name: 'ota_currency', value: 'CAD', domain: 'localhost', path: '/' },
+      ]);
+    try {
+      await signIn(page, TRAVELER, {
+        origin: STOREFRONT_URL,
+        callbackPath: '/en/packages/trinidad-heritage-trail/book',
+      });
+
+      // Two adults (the default) on the first departure, the default tier, no
+      // extras; a lead from Spain, so no US certification.
+      await expect(
+        page.getByRole('heading', { level: 1, name: "When, and who's coming?" }),
+      ).toBeVisible();
+      await expect(async () => {
+        await page.getByRole('button', { name: 'Continue to stay' }).click();
+        await expect(
+          page.getByRole('heading', { level: 1, name: 'Where you sleep' }),
+        ).toBeVisible({ timeout: 2_000 });
+      }).toPass();
+      await page.getByRole('button', { name: 'Continue to extras' }).click();
+      await page.getByRole('button', { name: 'Continue to traveler details' }).click();
+      const lead = page.getByRole('region', {
+        name: 'Traveler 1 · lead traveler',
+        exact: true,
+      });
+      await lead.getByLabel('First and middle names').fill('Lucía');
+      await lead.getByLabel('Last name').fill('Pérez');
+      await lead.getByLabel('Date of birth').fill('1985-03-09');
+      await lead.getByLabel('Nationality (passport)').selectOption('ES');
+      await lead.getByLabel('Mobile (with country code)').fill('+34 600 000 000');
+      await lead.getByLabel('Emergency contact at home').fill('Ana Pérez');
+      await lead.getByLabel('Their phone').fill('+34 600 000 001');
+      const second = page.getByRole('region', {
+        name: 'Traveler 2 · adult',
+        exact: true,
+      });
+      await second.getByLabel('First and middle names').fill('Jorge');
+      await second.getByLabel('Last name').fill('Pérez');
+      await second.getByLabel('Date of birth').fill('1983-07-21');
+      await second.getByLabel('Nationality (passport)').selectOption('ES');
+      await page.getByRole('button', { name: 'Review your request' }).click();
+      await page.getByRole('checkbox', { name: /read the terms/ }).check();
+      await page.getByRole('checkbox', { name: /travel insurance/ }).check();
+      await page
+        .getByRole('button', { name: 'Send request · nothing charged now' })
+        .click();
+
+      await expect(
+        page.getByRole('heading', { level: 1, name: 'Request received' }),
+      ).toBeVisible();
+      const confirmation = await page.getByText(/Booking code:/).textContent();
+      formBooking = confirmation?.match(/Booking code:\s*([A-Z0-9]{8})/)?.[1] ?? '';
+      expect(formBooking).toMatch(/^[A-Z0-9]{8}$/);
+
+      // The currency the form showed is now the traveler's choice.
+      const traveler = await prisma.user.findUniqueOrThrow({
+        where: { email: TRAVELER },
+      });
+      expect(traveler.displayCurrency).toBe('CAD');
+      const booking = await prisma.reservation.findUniqueOrThrow({
+        where: { bookingCode: formBooking },
+      });
+      const cad = await rateOf('CAD');
+      const total = Number(booking.totalAmount);
+      const received = await emailText(
+        new RegExp(`^We've got your request · ${formBooking}`),
+      );
+      expect(received).toContain(
+        `(about ${whole(convertForDisplay(total, cad), 'CAD')}; the rate locks when you pay the deposit)`,
+      );
+
+      // Every host confirms: E-Invoice guides the amounts payable now.
+      await prisma.reservation.update({
+        where: { id: booking.id },
+        data: { status: 'ASSEMBLY_AND_ESCALATION' },
+      });
+      await signIn(page, 'admin@example.test', {
+        callbackPath: `/bookings/${booking.id}`,
+      });
+      const transition = await page.request.post(
+        `/api/ota/reservations/${booking.id}/transition`,
+        { data: { to: 'SECURED_AND_INVOICED' } },
+      );
+      expect(transition.ok()).toBeTruthy();
+      const secured = await emailText(
+        new RegExp(`^Your trip is secured · choose how to pay · ${formBooking}$`),
+      );
+      expect(secured).toContain(
+        `the full €${total.toLocaleString('en', { minimumFractionDigits: 2 })} (about ${whole(convertForDisplay(total, cad), 'CAD')})`,
+      );
+      expect(secured).toMatch(/deposit of €[\d,.]+ \(about CA\$[\d,]+\) now/);
+      expect(secured).toContain(
+        'Every payment is charged in EUR; the CAD amounts are a guide, and the rate locks when you pay.',
+      );
+    } finally {
+      await prisma.user.update({ where: { email: TRAVELER }, data: original });
+    }
   });
 });

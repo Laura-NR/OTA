@@ -43,12 +43,16 @@ function section(page: Page, name: string) {
  */
 test.describe('storefront curated packages', () => {
   let bookingCode = '';
-  let original: { nationality: string | null; phone: string | null } | null = null;
+  let original: {
+    nationality: string | null;
+    phone: string | null;
+    displayCurrency: string | null;
+  } | null = null;
 
   test.beforeAll(async () => {
     original = await prisma.user.findUnique({
       where: { email: TRAVELER_EMAIL },
-      select: { nationality: true, phone: true },
+      select: { nationality: true, phone: true, displayCurrency: true },
     });
   });
 
@@ -57,7 +61,8 @@ test.describe('storefront curated packages', () => {
       await deleteBooking(bookingCode);
       bookingCode = '';
     }
-    // Booking stamps the lead's nationality and mobile on the account.
+    // Booking stamps the lead's nationality and mobile on the account, and
+    // keeps the currency shown when none was saved (M9 C7b).
     if (original) {
       await prisma.user.update({ where: { email: TRAVELER_EMAIL }, data: original });
     }
