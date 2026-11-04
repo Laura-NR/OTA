@@ -139,6 +139,41 @@ describe('bookingReceivedEmail', () => {
     expect(email.html).toContain('13 de febrero de 2027');
     expect(email.html).toContain('MINTUR-TEST-1234');
     expect(email.text).toContain('https://example.test/es/account/reservations/abc');
+    expect(email.text).toContain('Total: 3100,00 €\n');
+  });
+
+  it('adds the total\'s "about" guide in the traveler\'s currency, and when the rate locks (M9 C7b)', () => {
+    const received = (locale: string, lockAt: 'DEPOSIT' | 'INVOICE', lockedAt?: Date) =>
+      bookingReceivedEmail({
+        to: 'jane@example.test',
+        name: 'Margaret',
+        bookingCode: 'VX7K2M9Q',
+        packageName: 'Eco-Tourism in Viñales',
+        startDate: new Date('2027-02-13T00:00:00Z'),
+        endDate: new Date('2027-02-20T00:00:00Z'),
+        total: 3100,
+        currency: 'EUR',
+        reference: { currency: 'CAD', total: 4588, lockedAt: lockedAt ?? null, lockAt },
+        portalUrl: 'https://example.test/account/reservations/abc',
+        locale,
+        branding,
+      });
+
+    expect(received('en', 'DEPOSIT').text).toContain(
+      'Total: €3,100.00 (about CA$4,588; the rate locks when you pay the deposit)',
+    );
+    expect(received('en', 'INVOICE').html).toContain(
+      '€3,100.00 (about CA$4,588; the rate locks when we send the invoice)',
+    );
+    expect(received('es', 'DEPOSIT').text).toContain(
+      'Total: 3100,00 € (unos 4588 CAD; la tasa se fija al pagar el depósito)',
+    );
+    expect(received('fr', 'DEPOSIT').text).toContain(
+      "Total: 3 100,00 € (environ 4 588 $CA ; le taux est figé au paiement de l'acompte)",
+    );
+    expect(received('en', 'DEPOSIT', new Date('2026-10-14T09:30:00Z')).text).toContain(
+      '(about CA$4,588; rate locked on October 14, 2026)',
+    );
   });
 });
 
@@ -360,6 +395,78 @@ describe('bookingSecuredEmail (E-Invoice)', () => {
     });
     expect(full.text).toContain('Tu viaje a medida');
     expect(full.text).toContain('- el importe completo de 900,00 €.');
+    expect(email.text).not.toContain('a guide');
+  });
+
+  it('shows the amounts payable now as an "about" guide, and when the rate locks (M9 C7b)', () => {
+    const secured = (
+      locale: string,
+      reference: {
+        lockAt: 'DEPOSIT' | 'INVOICE';
+        deposit: number | null;
+        lockedAt?: Date;
+      },
+    ) =>
+      bookingSecuredEmail({
+        to: 'jane@example.test',
+        name: 'Margaret',
+        bookingCode: 'VX7K2M9Q',
+        tripName: 'Eco-Tourism in Viñales',
+        startDate: new Date('2027-02-13T00:00:00Z'),
+        endDate: new Date('2027-02-20T00:00:00Z'),
+        total: 3100,
+        currency: 'EUR',
+        deposit:
+          reference.deposit === null
+            ? null
+            : {
+                amount: 620,
+                percent: 20,
+                balance: 2480,
+                balanceDueAt: new Date('2026-12-15T00:00:00Z'),
+              },
+        reference: {
+          currency: 'CAD',
+          total: 4588,
+          deposit: reference.deposit,
+          lockedAt: reference.lockedAt ?? null,
+          lockAt: reference.lockAt,
+        },
+        windowHours: 48,
+        portalUrl: 'https://example.test/account/reservations/r1',
+        locale,
+        branding,
+      });
+
+    const en = secured('en', { lockAt: 'DEPOSIT', deposit: 918 }).text;
+    expect(en).toContain(
+      '- a 20 % deposit of €620.00 (about CA$918) now, and the balance of €2,480.00 by December 15, 2026;',
+    );
+    expect(en).toContain('- or the full €3,100.00 (about CA$4,588) now.');
+    expect(en).toContain(
+      'Every payment is charged in EUR; the CAD amounts are a guide, and the rate locks when you pay.',
+    );
+    // The note comes before the payment window, after the choice it explains.
+    expect(en.indexOf('a guide')).toBeLessThan(en.indexOf('48 hours'));
+    expect(secured('en', { lockAt: 'INVOICE', deposit: null }).text).toContain(
+      '- the full €3,100.00 (about CA$4,588).',
+    );
+    expect(secured('en', { lockAt: 'INVOICE', deposit: 918 }).text).toContain(
+      'and the rate locks when you choose how to pay.',
+    );
+    expect(
+      secured('en', {
+        lockAt: 'DEPOSIT',
+        deposit: 918,
+        lockedAt: new Date('2026-10-14T09:30:00Z'),
+      }).text,
+    ).toContain('and the rate was locked on October 14, 2026.');
+    expect(secured('es', { lockAt: 'DEPOSIT', deposit: 918 }).text).toContain(
+      'un abono del 20 % de 620,00 € (unos 918 CAD) ahora',
+    );
+    expect(secured('fr', { lockAt: 'DEPOSIT', deposit: 918 }).text).toContain(
+      'les montants en CAD sont indicatifs et le taux est figé au moment du paiement.',
+    );
   });
 });
 

@@ -27,6 +27,25 @@ export function emailMoney(
   );
 }
 
+/**
+ * A guide amount in a display currency (M9 C7b), already converted and
+ * rounded up to the whole unit by the caller: "CA$4,588".
+ */
+export function emailWholeMoney(
+  amount: number,
+  currency: string,
+  locale: EmailLocale,
+): string {
+  return plainSpaces(
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount),
+  );
+}
+
 /** A calendar date stored at UTC midnight ("13 February 2027"). */
 export function emailDate(value: Date | string, locale: EmailLocale): string {
   return plainSpaces(

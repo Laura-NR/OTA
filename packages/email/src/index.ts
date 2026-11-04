@@ -10,6 +10,7 @@ export { retentionNoticeEmail } from './templates/retention-notice';
 export type { RetentionNoticeEmailInput } from './templates/retention-notice';
 export { bookingReceivedEmail } from './templates/booking-received';
 export type { BookingReceivedEmailInput } from './templates/booking-received';
+export type { DisplayReference } from './templates/display-reference';
 export { ofacReminderEmail } from './templates/ofac-reminder';
 export type { OfacReminderEmailInput } from './templates/ofac-reminder';
 export { proposalSentEmail } from './templates/proposal-sent';

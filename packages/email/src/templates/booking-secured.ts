@@ -3,9 +3,11 @@ import {
   emailDateRange,
   emailLocale,
   emailMoney,
+  emailWholeMoney,
   type EmailLocale,
 } from '../locale';
 import type { EmailMessage } from '../mailer';
+import type { DisplayReference } from './display-reference';
 import type { EmailBranding } from './magic-link';
 import { emailShell } from './shell';
 
@@ -26,6 +28,11 @@ export interface BookingSecuredEmailInput {
     balance: number;
     balanceDueAt: Date;
   } | null;
+  /**
+   * M9 C7b: the amounts payable now in the traveler's display currency (the
+   * deposit is null without a deposit plan); omitted for EUR.
+   */
+  reference?: (DisplayReference & { total: number; deposit: number | null }) | null;
   /** How long the traveler has to pay once a payment is chosen. */
   windowHours: number;
   portalUrl: string;
@@ -47,6 +54,11 @@ interface Copy {
   ) => string;
   fullOption: (amount: string) => string;
   fullOnly: (amount: string) => string;
+  /** E-Invoice: "About CA$ 918 · rate locks at payment", beside each amount. */
+  about: (amount: string) => string;
+  rateNote: (currency: string, when: string) => string;
+  locks: Record<DisplayReference['lockAt'], string>;
+  locked: (date: string) => string;
   window: (hours: number) => string;
   documents: string;
   cta: string;
@@ -65,6 +77,14 @@ const COPY: Record<EmailLocale, Copy> = {
       `a ${percent} % deposit of ${amount} now, and the balance of ${balance} by ${date};`,
     fullOption: (amount) => `or the full ${amount} now.`,
     fullOnly: (amount) => `the full ${amount}.`,
+    about: (amount) => `(about ${amount})`,
+    rateNote: (currency, when) =>
+      `Every payment is charged in EUR; the ${currency} amounts are a guide, and ${when}.`,
+    locks: {
+      DEPOSIT: 'the rate locks when you pay',
+      INVOICE: 'the rate locks when you choose how to pay',
+    },
+    locked: (date) => `the rate was locked on ${date}`,
     window: (hours) =>
       `Once you choose, you have ${hours} hours to pay by bank transfer; the bank details and your reference are on your trip page.`,
     documents:
@@ -84,6 +104,14 @@ const COPY: Record<EmailLocale, Copy> = {
       `un abono del ${percent} % de ${amount} ahora y el saldo de ${balance} antes del ${date};`,
     fullOption: (amount) => `o el importe completo de ${amount} ahora.`,
     fullOnly: (amount) => `el importe completo de ${amount}.`,
+    about: (amount) => `(unos ${amount})`,
+    rateNote: (currency, when) =>
+      `Todos los pagos se cobran en EUR; los importes en ${currency} son orientativos y ${when}.`,
+    locks: {
+      DEPOSIT: 'la tasa se fija cuando pagas',
+      INVOICE: 'la tasa se fija cuando eliges cómo pagar',
+    },
+    locked: (date) => `la tasa se fijó el ${date}`,
     window: (hours) =>
       `Una vez elegido, tienes ${hours} horas para pagar por transferencia; los datos bancarios y tu referencia están en la página de tu viaje.`,
     documents: 'Tu factura y tus bonos se emiten en cuanto llega tu primer pago.',
@@ -102,6 +130,14 @@ const COPY: Record<EmailLocale, Copy> = {
       `un acompte de ${percent} % de ${amount} maintenant, puis le solde de ${balance} avant le ${date} ;`,
     fullOption: (amount) => `ou la totalité, ${amount}, maintenant.`,
     fullOnly: (amount) => `la totalité, ${amount}.`,
+    about: (amount) => `(environ ${amount})`,
+    rateNote: (currency, when) =>
+      `Tous les paiements sont facturés en EUR ; les montants en ${currency} sont indicatifs et ${when}.`,
+    locks: {
+      DEPOSIT: 'le taux est figé au moment du paiement',
+      INVOICE: 'le taux est figé quand vous choisissez comment payer',
+    },
+    locked: (date) => `le taux a été figé le ${date}`,
     window: (hours) =>
       `Une fois votre choix fait, vous avez ${hours} heures pour payer par virement ; les coordonnées bancaires et votre référence sont sur la page de votre voyage.`,
     documents:
@@ -117,7 +153,8 @@ const COPY: Record<EmailLocale, Copy> = {
  * traveler choose the deposit or the full amount, and the payment window
  * starts with that choice, so the email offers the choice rather than a
  * deadline. The invoice is issued at confirmation (spec §4.4), so nothing is
- * attached yet.
+ * attached yet. A traveler who sees another currency also reads the amounts
+ * payable now as an "about" guide, and when the rate locks (M9 C7b).
  */
 export function bookingSecuredEmail({
   to,
@@ -129,6 +166,7 @@ export function bookingSecuredEmail({
   total,
   currency,
   deposit,
+  reference,
   windowHours,
   portalUrl,
   locale: requestedLocale,
@@ -137,6 +175,10 @@ export function bookingSecuredEmail({
   const locale = emailLocale(requestedLocale);
   const copy = COPY[locale];
   const money = (value: number) => emailMoney(value, currency, locale);
+  const about = (value: number | null) =>
+    reference && value !== null
+      ? ` ${copy.about(emailWholeMoney(value, reference.currency, locale))}`
+      : '';
   const { html, text } = emailShell({
     branding,
     greeting: copy.greeting(name),
@@ -151,16 +193,31 @@ export function bookingSecuredEmail({
       ...(deposit
         ? [
             copy.depositOption(
-              money(deposit.amount),
+              `${money(deposit.amount)}${about(reference?.deposit ?? null)}`,
               deposit.percent,
               money(deposit.balance),
               emailDate(deposit.balanceDueAt, locale),
             ),
           ]
         : []),
-      deposit ? copy.fullOption(money(total)) : copy.fullOnly(money(total)),
+      deposit
+        ? copy.fullOption(`${money(total)}${about(reference?.total ?? null)}`)
+        : copy.fullOnly(`${money(total)}${about(reference?.total ?? null)}`),
     ],
-    closing: [copy.window(windowHours), copy.documents],
+    closing: [
+      ...(reference
+        ? [
+            copy.rateNote(
+              reference.currency,
+              reference.lockedAt
+                ? copy.locked(emailDate(reference.lockedAt, locale))
+                : copy.locks[reference.lockAt],
+            ),
+          ]
+        : []),
+      copy.window(windowHours),
+      copy.documents,
+    ],
     cta: { label: copy.cta, url: portalUrl },
     note: copy.note(bookingCode),
   });
