@@ -29,6 +29,7 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
   let actor: AuthUser;
   let itemId = '';
   let packageId = '';
+  let bookedPackageId = '';
   const suffix = Date.now();
 
   beforeAll(async () => {
@@ -113,7 +114,7 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
     expect(created.extras).toHaveLength(1);
     expect(created.days).toHaveLength(2);
 
-    // Replace the tiers wholesale and rename the slug.
+    // Drop an unbooked tier and rename the slug.
     const renamed = await service.update(
       packageId,
       {
@@ -189,5 +190,286 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
     expect(served.contentType).toBe('image/png');
     expect(served.data.length).toBeGreaterThan(0);
     await service.deleteMedia(packageId, media.id, actor);
+  });
+
+  describe('saving a package that has bookings', () => {
+    let booked = { reservationId: '', departureId: '', tierId: '', extraId: '' };
+    const saved = {
+      tiers: [
+        {
+          code: 'standard',
+          name: 'Standard',
+          description: 'Casas in the old town',
+          position: 0,
+          priceDelta: 0,
+          isDefault: true,
+        },
+      ],
+      departures: [
+        {
+          startDate: new Date('2027-05-01T00:00:00Z'),
+          capacity: 6,
+          status: 'OPEN' as const,
+        },
+        {
+          startDate: new Date('2027-06-05T00:00:00Z'),
+          capacity: 6,
+          status: 'CLOSED' as const,
+        },
+      ],
+      extras: [
+        {
+          code: 'horseback',
+          name: 'Horseback ride',
+          price: 35,
+          priceUnit: 'PER_PERSON' as const,
+          position: 0,
+          active: true,
+        },
+      ],
+    };
+
+    beforeAll(async () => {
+      const pkg = await service.create(
+        {
+          name: `Booked Trail ${suffix}`,
+          durationDays: 3,
+          currency: 'EUR',
+          basePrice: 200,
+          status: 'DRAFT',
+          bookingModel: 'REQUEST',
+          leadTimeDays: 2,
+          themes: [],
+          services: [{ inventoryItemId: itemId, dayOffset: 0, position: 0 }],
+          ...saved,
+        },
+        actor,
+      );
+      bookedPackageId = pkg.id;
+      const departure = pkg.departures[0]!;
+      const tier = pkg.tiers[0]!;
+      const extra = pkg.extras[0]!;
+      const reservation = await prisma.reservation.create({
+        data: {
+          userId: actor.id,
+          bookingCode: `PK${String(suffix).slice(-6)}`,
+          packageId: pkg.id,
+          status: 'ITINERARY_SUBMITTED',
+          startDate: new Date('2027-05-01T00:00:00Z'),
+          endDate: new Date('2027-05-03T00:00:00Z'),
+          totalCurrency: 'EUR',
+          totalAmount: '800.00',
+          partySize: 4,
+          departureId: departure.id,
+          tierId: tier.id,
+          extras: {
+            create: {
+              packageExtraId: extra.id,
+              label: extra.name,
+              unitAmount: '35.00',
+              amount: '140.00',
+            },
+          },
+        },
+      });
+      booked = {
+        reservationId: reservation.id,
+        departureId: departure.id,
+        tierId: tier.id,
+        extraId: extra.id,
+      };
+    });
+
+    afterAll(async () => {
+      await prisma.reservation.deleteMany({ where: { id: booked.reservationId } });
+      await prisma.package.deleteMany({ where: { id: bookedPackageId } });
+    });
+
+    const links = async () => {
+      const row = await prisma.reservation.findUniqueOrThrow({
+        where: { id: booked.reservationId },
+        select: {
+          departureId: true,
+          tierId: true,
+          extras: { select: { packageExtraId: true } },
+        },
+      });
+      return {
+        departureId: row.departureId,
+        tierId: row.tierId,
+        extraId: row.extras[0]?.packageExtraId,
+      };
+    };
+    const expectedLinks = () => ({
+      departureId: booked.departureId,
+      tierId: booked.tierId,
+      extraId: booked.extraId,
+    });
+
+    it('keeps a booking on its departure, tier and extra, and its seats counted', async () => {
+      const updated = await service.update(bookedPackageId, saved, actor);
+
+      expect(await links()).toEqual(expectedLinks());
+      expect(updated.departures.map((departure) => departure.id)).toContain(
+        booked.departureId,
+      );
+      const seats = await prisma.reservation.aggregate({
+        _sum: { partySize: true },
+        where: { departureId: booked.departureId, status: { not: 'CANCELLED' } },
+      });
+      expect(seats._sum.partySize).toBe(4);
+    });
+
+    it('updates a kept row in place, adds a new one and removes an unused one', async () => {
+      const updated = await service.update(
+        bookedPackageId,
+        {
+          departures: [
+            { ...saved.departures[0]!, capacity: 9 },
+            { startDate: new Date('2027-07-03T00:00:00Z'), capacity: 6, status: 'OPEN' },
+          ],
+        },
+        actor,
+      );
+
+      expect(updated.departures.map((row) => row.startDate.slice(0, 10))).toEqual([
+        '2027-05-01',
+        '2027-07-03',
+      ]);
+      expect(updated.departures[0]).toMatchObject({
+        id: booked.departureId,
+        capacity: 9,
+      });
+      expect(await links()).toEqual(expectedLinks());
+    });
+
+    it('refuses to remove a booked departure, tier or extra, changing nothing', async () => {
+      const refused = service.update(
+        bookedPackageId,
+        {
+          name: 'Must not be saved',
+          tiers: [{ ...saved.tiers[0]!, code: 'comfort' }],
+          departures: [
+            { startDate: new Date('2027-08-07T00:00:00Z'), capacity: 6, status: 'OPEN' },
+          ],
+          extras: [],
+        },
+        actor,
+      );
+
+      await expect(refused).rejects.toMatchObject({
+        status: 409,
+        response: {
+          error: 'PackageRowsInUse',
+          refusals: expect.arrayContaining([
+            expect.objectContaining({ kind: 'DEPARTURE_BOOKED', row: '2027-05-01' }),
+            expect.objectContaining({ kind: 'TIER_BOOKED', row: 'standard' }),
+            expect.objectContaining({ kind: 'EXTRA_BOOKED', row: 'horseback' }),
+          ]),
+        },
+      });
+      expect(await links()).toEqual(expectedLinks());
+      const after = await service.getById(bookedPackageId);
+      expect(after.name).toBe(`Booked Trail ${suffix}`);
+    });
+
+    it('refuses a capacity below the seats already booked', async () => {
+      await expect(
+        service.update(
+          bookedPackageId,
+          { departures: [{ ...saved.departures[0]!, capacity: 3 }] },
+          actor,
+        ),
+      ).rejects.toMatchObject({
+        status: 409,
+        response: {
+          refusals: [
+            expect.objectContaining({
+              kind: 'DEPARTURE_BELOW_BOOKED',
+              row: '2027-05-01',
+              capacity: 3,
+              booked: 4,
+            }),
+          ],
+        },
+      });
+    });
+
+    it('lets a departure go once its only booking is cancelled', async () => {
+      await prisma.reservation.update({
+        where: { id: booked.reservationId },
+        data: { status: 'CANCELLED' },
+      });
+
+      const updated = await service.update(
+        bookedPackageId,
+        {
+          departures: [
+            { startDate: new Date('2027-09-04T00:00:00Z'), capacity: 6, status: 'OPEN' },
+          ],
+        },
+        actor,
+      );
+
+      expect(updated.departures.map((row) => row.id)).not.toContain(booked.departureId);
+    });
+
+    it('waits for a booking still being written, then refuses to take its departure', async () => {
+      const pkg = await service.getById(bookedPackageId);
+      const departure = pkg.departures[0]!;
+      let written = () => {};
+      let release = () => {};
+      const bookingWritten = new Promise<void>((resolve) => (written = resolve));
+      const released = new Promise<void>((resolve) => (release = resolve));
+
+      const booking = prisma.$transaction(async (tx) => {
+        const reservation = await tx.reservation.create({
+          data: {
+            userId: actor.id,
+            bookingCode: `PR${String(suffix).slice(-6)}`,
+            packageId: bookedPackageId,
+            status: 'ITINERARY_SUBMITTED',
+            startDate: new Date('2027-09-04T00:00:00Z'),
+            endDate: new Date('2027-09-06T00:00:00Z'),
+            totalCurrency: 'EUR',
+            totalAmount: '200.00',
+            departureId: departure.id,
+          },
+        });
+        written();
+        await released;
+        return reservation;
+      });
+      await bookingWritten;
+
+      const save = service
+        .update(
+          bookedPackageId,
+          {
+            departures: [
+              {
+                startDate: new Date('2027-10-02T00:00:00Z'),
+                capacity: 6,
+                status: 'OPEN',
+              },
+            ],
+          },
+          actor,
+        )
+        .catch((error: unknown) => error);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      release();
+      const reservation = await booking;
+
+      expect(await save).toMatchObject({
+        status: 409,
+        response: { refusals: [expect.objectContaining({ kind: 'DEPARTURE_BOOKED' })] },
+      });
+      const stored = await prisma.reservation.findUniqueOrThrow({
+        where: { id: reservation.id },
+      });
+      expect(stored.departureId).toBe(departure.id);
+      await prisma.reservation.delete({ where: { id: reservation.id } });
+    });
   });
 });

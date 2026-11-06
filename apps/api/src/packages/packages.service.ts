@@ -9,9 +9,14 @@ import { randomUUID } from 'node:crypto';
 
 import { knownPolicyKeys, type TenantConfig } from '@ota/config';
 import {
+  collectionEditRefusals,
+  departureCapacityRefusals,
   packageHasBackupPower,
   packagePublishIssues,
+  planCollectionEdit,
   publicBackupPower,
+  type CollectionEdit,
+  type PackageEditRefusal,
   type PackagePublishInput,
 } from '@ota/domain';
 import type {
@@ -191,6 +196,7 @@ function toPackageDto(
       name: extra.name,
       description: extra.description,
       durationLabel: extra.durationLabel,
+      inventoryItemId: extra.inventoryItemId,
       dayOffset: extra.dayOffset,
       price: extra.price.toString(),
       priceUnit: extra.priceUnit,
@@ -295,6 +301,29 @@ function dayCreate(day: DayInput) {
     title: day.title,
     body: day.body ?? null,
     meals: day.meals ?? null,
+  };
+}
+
+function idsOf(rows: readonly { id: string }[]): string[] {
+  return rows.map((row) => row.id);
+}
+
+/** What identifies a departure: its package holds one per start date. */
+function dateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/** The nested write for what a save keeps and adds; removals go first. */
+function collectionWrite<Stored extends { id: string }, Submitted, Data>(
+  edit: CollectionEdit<Stored, Submitted>,
+  toData: (row: Submitted) => Data,
+) {
+  return {
+    create: edit.create.map(toData),
+    update: edit.update.map(({ stored, submitted }) => ({
+      where: { id: stored.id },
+      data: toData(submitted),
+    })),
   };
 }
 
@@ -604,19 +633,23 @@ export class PackagesService {
     const slugChanged = input.slug !== undefined && input.slug !== existing.slug;
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      // Each collection, when present, is replaced wholesale: simpler and
-      // race-free for an editor that submits the whole list at once.
+      const { tiers, departures, extras } = await this.planCollections(tx, id, input);
+
+      // The itinerary and day texts have nothing pointing at them, so they are
+      // replaced wholesale: simpler for an editor that submits the whole list.
       if (services) {
         await tx.packageService.deleteMany({ where: { packageId: id } });
       }
-      if (input.tiers) {
-        await tx.packageTier.deleteMany({ where: { packageId: id } });
+      if (tiers) {
+        await tx.packageTier.deleteMany({ where: { id: { in: idsOf(tiers.remove) } } });
       }
-      if (input.departures) {
-        await tx.packageDeparture.deleteMany({ where: { packageId: id } });
+      if (departures) {
+        await tx.packageDeparture.deleteMany({
+          where: { id: { in: idsOf(departures.remove) } },
+        });
       }
-      if (input.extras) {
-        await tx.packageExtra.deleteMany({ where: { packageId: id } });
+      if (extras) {
+        await tx.packageExtra.deleteMany({ where: { id: { in: idsOf(extras.remove) } } });
       }
       if (input.days) {
         await tx.packageDay.deleteMany({ where: { packageId: id } });
@@ -645,11 +678,11 @@ export class PackagesService {
                 },
               }
             : {}),
-          ...(input.tiers ? { tiers: { create: input.tiers.map(tierCreate) } } : {}),
-          ...(input.departures
-            ? { departures: { create: input.departures.map(departureCreate) } }
+          ...(tiers ? { tiers: collectionWrite(tiers, tierCreate) } : {}),
+          ...(departures
+            ? { departures: collectionWrite(departures, departureCreate) }
             : {}),
-          ...(input.extras ? { extras: { create: input.extras.map(extraCreate) } } : {}),
+          ...(extras ? { extras: collectionWrite(extras, extraCreate) } : {}),
           ...(input.days ? { days: { create: input.days.map(dayCreate) } } : {}),
         },
         include: INCLUDE_SERVICES,
@@ -658,6 +691,107 @@ export class PackagesService {
 
     await this.audit(actor, 'package.updated', id);
     return toPackageDto(updated, await this.staleDays());
+  }
+
+  /**
+   * Match the submitted tiers, departures and extras to the stored rows and
+   * refuse (409) a save that would take a row from under its bookings. A booking's
+   * foreign key has to wait for these row locks, so none can land between this
+   * check and the write.
+   */
+  private async planCollections(
+    tx: Prisma.TransactionClient,
+    packageId: string,
+    input: UpdatePackageRequest,
+  ) {
+    const where = { packageId };
+    const live = { not: 'CANCELLED' as const };
+    const refusals: PackageEditRefusal[] = [];
+
+    let tiers: CollectionEdit<PackageTier, TierInput> | null = null;
+    if (input.tiers) {
+      await tx.$queryRaw`SELECT id FROM package_tiers WHERE package_id = ${packageId}::uuid FOR UPDATE`;
+      tiers = planCollectionEdit(
+        await tx.packageTier.findMany({ where }),
+        input.tiers,
+        (tier) => tier.code,
+        (tier) => tier.code,
+      );
+      const bookings = await tx.reservation.findMany({
+        where: { tierId: { in: idsOf(tiers.remove) }, status: live },
+        select: { tierId: true, bookingCode: true, partySize: true },
+      });
+      refusals.push(
+        ...collectionEditRefusals(
+          'TIER_BOOKED',
+          tiers,
+          (tier) => tier.code,
+          bookings.map((row) => ({ ...row, rowId: row.tierId! })),
+        ),
+      );
+    }
+
+    let departures: CollectionEdit<PackageDeparture, DepartureInput> | null = null;
+    if (input.departures) {
+      await tx.$queryRaw`SELECT id FROM package_departures WHERE package_id = ${packageId}::uuid FOR UPDATE`;
+      const stored = await tx.packageDeparture.findMany({ where });
+      departures = planCollectionEdit(
+        stored,
+        input.departures,
+        (departure) => dateKey(departure.startDate),
+        (departure) => dateKey(departure.startDate),
+      );
+      const rows = await tx.reservation.findMany({
+        where: { departureId: { in: idsOf(stored) }, status: live },
+        select: { departureId: true, bookingCode: true, partySize: true },
+      });
+      const bookings = rows.map((row) => ({ ...row, rowId: row.departureId! }));
+      const rowName = (departure: PackageDeparture) => dateKey(departure.startDate);
+      refusals.push(
+        ...collectionEditRefusals('DEPARTURE_BOOKED', departures, rowName, bookings),
+        ...departureCapacityRefusals(departures, rowName, bookings),
+      );
+    }
+
+    let extras: CollectionEdit<PackageExtra, ExtraInput> | null = null;
+    if (input.extras) {
+      await tx.$queryRaw`SELECT id FROM package_extras WHERE package_id = ${packageId}::uuid FOR UPDATE`;
+      extras = planCollectionEdit(
+        await tx.packageExtra.findMany({ where }),
+        input.extras,
+        (extra) => extra.code,
+        (extra) => extra.code,
+      );
+      const bookings = await tx.reservationExtra.findMany({
+        where: {
+          packageExtraId: { in: idsOf(extras.remove) },
+          reservation: { status: live },
+        },
+        select: {
+          packageExtraId: true,
+          reservation: { select: { bookingCode: true, partySize: true } },
+        },
+      });
+      refusals.push(
+        ...collectionEditRefusals(
+          'EXTRA_BOOKED',
+          extras,
+          (extra) => extra.code,
+          bookings.map((row) => ({ ...row.reservation, rowId: row.packageExtraId! })),
+        ),
+      );
+    }
+
+    if (refusals.length > 0) {
+      throw new ConflictException({
+        error: 'PackageRowsInUse',
+        message: `The package cannot be saved: ${refusals
+          .map((refusal) => `${refusal.kind} ${refusal.row}`)
+          .join(', ')}`,
+        refusals,
+      });
+    }
+    return { tiers, departures, extras };
   }
 
   /** Upsert one locale's text overlay (M1, D1) and audit it. */

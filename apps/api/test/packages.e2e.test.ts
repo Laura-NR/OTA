@@ -188,7 +188,13 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
   };
 }
 
-function createFakePrisma(state: { packages: FakePackage[] }) {
+interface FakeBooking {
+  departureId: string;
+  bookingCode: string;
+  partySize: number;
+}
+
+function createFakePrisma(state: { packages: FakePackage[]; bookings: FakeBooking[] }) {
   const fake = {
     inventoryItem: {
       count: async (args: { where: { id: { in: string[] } } }) =>
@@ -286,6 +292,10 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
               price: number | null;
               status: string;
             }[];
+            update: {
+              where: { id: string };
+              data: { capacity: number; status: string };
+            }[];
           };
         };
       }) => {
@@ -294,14 +304,21 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
         const { departures, ...scalars } = args.data;
         Object.assign(pkg, scalars);
         if (departures) {
-          pkg.departures = departures.create.map((departure, index) => ({
-            id: `${pkg.id}-d${index}`,
-            packageId: pkg.id,
-            startDate: departure.startDate,
-            capacity: departure.capacity,
-            price: departure.price === null ? null : new Prisma.Decimal(departure.price),
-            status: departure.status,
-          }));
+          for (const { where, data } of departures.update) {
+            const kept = pkg.departures.find((row) => row.id === where.id);
+            if (kept) Object.assign(kept, data);
+          }
+          pkg.departures.push(
+            ...departures.create.map((departure, index) => ({
+              id: `${pkg.id}-d${index}`,
+              packageId: pkg.id,
+              startDate: departure.startDate,
+              capacity: departure.capacity,
+              price:
+                departure.price === null ? null : new Prisma.Decimal(departure.price),
+              status: departure.status,
+            })),
+          );
         }
         return pkg;
       },
@@ -310,7 +327,25 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
         if (index >= 0) state.packages.splice(index, 1);
       },
     },
-    packageDeparture: { deleteMany: async () => ({ count: 0 }) },
+    packageDeparture: {
+      findMany: async (args: { where: { packageId: string } }) =>
+        state.packages.find((pkg) => pkg.id === args.where.packageId)?.departures ?? [],
+      deleteMany: async (args: { where: { id: { in: string[] } } }) => {
+        for (const pkg of state.packages) {
+          pkg.departures = pkg.departures.filter(
+            (departure) => !args.where.id.in.includes(departure.id),
+          );
+        }
+        return { count: args.where.id.in.length };
+      },
+    },
+    reservation: {
+      findMany: async (args: { where: { departureId: { in: string[] } } }) =>
+        state.bookings.filter((booking) =>
+          args.where.departureId.in.includes(booking.departureId),
+        ),
+    },
+    $queryRaw: async () => [],
     auditLog: { create: async () => ({}) },
     packageSlugRedirect: { findUnique: async () => null },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
@@ -332,10 +367,11 @@ const fakeAuthService = {
 
 describe('packages API', () => {
   let app: INestApplication;
-  let state: { packages: FakePackage[] };
+  let state: { packages: FakePackage[]; bookings: FakeBooking[] };
 
   beforeEach(async () => {
     state = {
+      bookings: [],
       packages: [
         makePackage(),
         makePackage({
@@ -488,6 +524,50 @@ describe('packages API', () => {
     expect(published.status).toBe(200);
     expect(published.body.status).toBe('PUBLISHED');
     expect(published.body.departures).toHaveLength(1);
+  });
+
+  it('refuses a save that takes a departure from under its bookings', async () => {
+    const pkg = state.packages.find((row) => row.id === INACTIVE_ID)!;
+    const date = new Date('2027-02-13T00:00:00Z');
+    pkg.departures = [
+      {
+        id: `${INACTIVE_ID}-booked`,
+        packageId: INACTIVE_ID,
+        startDate: date,
+        capacity: 8,
+        price: null,
+        status: 'OPEN',
+      },
+    ];
+    state.bookings.push({
+      departureId: `${INACTIVE_ID}-booked`,
+      bookingCode: 'BOOKED01',
+      partySize: 3,
+    });
+
+    const refused = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ departures: [{ startDate: '2027-03-06', capacity: 8 }] });
+
+    expect(refused.status).toBe(409);
+    expect(refused.body).toMatchObject({
+      error: 'PackageRowsInUse',
+      refusals: [
+        { kind: 'DEPARTURE_BOOKED', row: '2027-02-13', bookingCodes: ['BOOKED01'] },
+      ],
+    });
+    expect(pkg.departures).toHaveLength(1);
+
+    const kept = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ departures: [{ startDate: '2027-02-13', capacity: 6, status: 'CLOSED' }] });
+
+    expect(kept.status).toBe(200);
+    expect(kept.body.departures).toMatchObject([
+      { id: `${INACTIVE_ID}-booked`, capacity: 6, status: 'CLOSED' },
+    ]);
   });
 
   it('accepts only policy keys the manifest defines', async () => {
