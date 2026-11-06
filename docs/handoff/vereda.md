@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-06 14:36
+# Handoff — vereda — updated 2026-11-06 17:20
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -28,6 +28,17 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-06: the departure seat race**, the owner's pick; no migration, dependency, route or
+  screen (`8250bcc`). Two paths took seats, not one: the Booking form and the desk's party edit
+  both counted places before their transaction with nothing held, so both bookings could take
+  the last seats (reproduced: 2 bookings on a 2-seat departure, 4 seats sold).
+  - `claimDepartureSeats` (`apps/api/src/travelers/departure-seats.ts`) runs first in each
+    writing transaction: `FOR UPDATE` on the departure, then its status, capacity and booked
+    seats. `plan()` and `assertDeparture` no longer decide any of these, only "on this package".
+  - A departure closed or removed after the form's checks is now a 409, not a booking or a
+    foreign-key 500.
+  - Lock order is departures, then tiers, then extras everywhere. `planCollections` used to lock
+    tiers first, which deadlocks against a booking holding its departure.
 - **2026-11-06: stable package rows**, the owner's pick; no migration, dependency or route
   (`c2fd8a9`…`ecd46ed`; ADR 0006 amendment of that day). This was a real bug, larger than Next
   said: every editor save deleted and recreated the package's departures, tiers and extras, so
@@ -404,36 +415,44 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-06, stable package rows, dev stack stopped for the build)
-- Gate 1, before the fix: `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest run
-  test/packages.integration.test.ts` showed all three booking links `null` after a save that
-  changed nothing; the same test passes after it.
+## Verified (2026-11-06, the departure seat race, dev stack stopped for the build)
+- Gate 1, before the fix (`RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest run
+  test/package-booking.integration.test.ts test/packages.integration.test.ts`): both bookings
+  succeeded on a 2-seat departure; a departure closed mid-flight took a booking; a removed one
+  gave a foreign-key error; a party grew past the capacity. All pass after it.
+- Removing a guard makes its test fail: without `FOR UPDATE` in the claim, 2 live tests fail;
+  with the save's old tier-first order, the save test fails and Postgres logs `deadlock
+  detected` on the departure lock.
+- Throwaway burst, not committed: 20 bookings at once on 8 seats: 4 booked, 16 refused with the
+  409, no 500, 8 seats, 207 ms. The two live test files: 14/14 five times running.
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1246 passed / 36 skipped**, 30/30 tasks (new: domain
-  `collection-edit` 9, API `packages.e2e` 1, 6 live tests that skip here). No new route, so the
-  RBAC matrix is as was.
+- `TURBO_FORCE=true pnpm test` **1247 passed / 41 skipped**, 30/30 tasks (new: `travelers.e2e`
+  1 and 5 live tests that skip here). No new route, so the RBAC matrix is as was.
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached, on free ports; `apps/*/.next` deleted.
-- `pnpm e2e` (full, 1.2 h): **162 passed, 3 failed, 3 skipped**. `storefront-compare.spec.ts:6`
-  was this session's own fixture (see Traps), fixed in the last e2e commit. The other two
-  (`supplier-resources.spec.ts:156`, `responsive.spec.ts:110` at ds07-768) are last session's
-  server stalls. On fresh servers, `packages-edit`, `storefront-compare`, `storefront-packages`,
-  `supplier-resources` and the ds07-768 `responsive` spec: **12/12**.
-- Removing a guard makes its test fail: without the `FOR UPDATE` locks the live race test fails
-  (1 of 7); without the storefront's OPEN filter its e2e test fails.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **35/35**, 12 files:
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **40/40**, 12 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events,permission-overrides}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Browser: the package editor with a refused save in Chromium at 390, 1024 and 1280: no sideways
-  scroll (scrollWidth = width), fields stacked at 390, five columns at 1024 and 1280, the Status
-  select 40 px high in the desk's font, the refusal 14 px in the destructive colour, seven
-  bookings reading "ZZWIDTH4 and 2 more".
-- Not run: the full e2e after the fixture change (the 12 above instead); the editor's row
-  between `sm` and 1024; es/fr refusals in a browser (key parity by the i18n test); a real
-  screen reader; a deploy behind a real proxy.
+- `pnpm e2e` (full, 1.2 h): **163 passed, 3 failed, 3 skipped**. The three were
+  `accessibility.spec.ts:99` (timeout at `networkidle`) and `responsive.spec.ts:118` at ds07-375
+  and ds07-414 (body 16 px, not 18). On truly fresh servers each one alone passes:
+  `responsive` 1.7 min each, the audit 2.1 min. See Traps "Storefront dev server".
+- A/B of the cold audit: `apps/api` at `c3b3014` 2.2 min, at `HEAD` 2.1 min, both pass.
+- Browser widths: nothing visual was built, so no 390/1024/1280 check.
+- Not run: a clean full e2e (the 3 above were rerun alone); a dedicated e2e of the race (it needs
+  two writers paused at one moment, so the proof is the live tests); S3 under the burst; a
+  real screen reader; a deploy behind a real proxy.
 
 ## Assumptions & unknowns
+- **Seat claim (2026-11-06):** the refusals' wording is the API's English, shown as it stands by
+  the Booking form in every locale (as before; `booking-flow.tsx` prints `body.message`). A full
+  or closed departure is now refused after the price and certification checks, so a request
+  with both problems hears about those first. Bookings on one departure queue on its row for the
+  whole transaction, including the affidavit upload; waiting counts against Prisma's 5 s
+  interactive timeout. Measured: 20 at once on 8 seats took 207 ms, in-memory storage, not S3. A
+  tier or extra deleted by a save after the form's checks is still a foreign-key 500 that
+  rolls back (not new; nothing is sold wrongly).
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
 - **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. Env from M9:
   `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`;
@@ -540,6 +559,23 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Storefront dev server (2026-11-06):** the first customer-pages audit timed out on 3 of 8
+  cold starts today, with RSS 6–8 GB within 20 minutes; once, every page then timed out, even
+  `curl` at 90 s. Cause not found. Not the pages: all 19 customer pages went idle in about 4 s each in a probe of the same list; not the
+  API: the A/B above. The body "16 px" failure is a symptom of it, not a font bug. Check `curl`
+  on :3000 before believing a storefront failure. `reuseExistingServer` reuses a wedged server,
+  so back-to-back `playwright test` runs are not fresh, and each run clears `test-results`:
+  copy the trace out before the next. A fresh server also needs the `sh -c next dev` parents
+  killed.
+- **Seat locks (2026-11-06):** call `claimDepartureSeats` before the reservation is written. The
+  row's foreign key takes a share lock on the departure, and two transactions upgrading theirs
+  deadlock. Any new lock in a package save or a booking must follow departures → tiers → extras.
+  A fake Prisma on these paths needs `$queryRaw` returning the departure's row
+  (`package-booking.e2e`, `travelers.e2e`). In `packages.integration.test.ts`, earlier tests
+  remove `booked.departureId`, so a later test must save `saved` and use what comes back; a
+  lock on the stale id matches nothing and still "works" until the insert fails. `vi.spyOn` a
+  bound method and restore in `afterEach`: a failed test that skips `mockRestore` stacks spies
+  into a stack overflow that hides the real result.
 - **Published e2e fixtures (2026-11-06):** a package published by a spec and shown on the
   storefront enters the 60 s list cache and outlives its deletion; `storefront-compare` then
   read "Showing 2 of 2 trips", and retrying `Clear all` cannot help (the filter is client-side).
@@ -893,6 +929,10 @@ events (T-Events)".
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-06: a departure's seats, status and capacity are decided only by
+    `claimDepartureSeats`, first in the transaction that writes them (`FOR UPDATE` on the
+    departure). Anything that takes seats must call it before writing the reservation, and
+    package locks go departures, tiers, extras."
   - "2026-11-06: a package save matches departures on their date and tiers/extras on their
     code and updates them in place (`planCollectionEdit`); bookings point at those rows, so never
     delete and recreate them. A row bookings use (not `CANCELLED`) cannot go and a departure
@@ -1021,10 +1061,7 @@ events (T-Events)".
 ## Next
 1. Owner: choose the next batch. M9's board items are all built (manifest editing beyond the
    flags stays deferred). M10's room holds/event photos need a migration doc first; "Keep
-   building the trip" (editing a submitted custom request) is the other M10 deferred item.
-   Small, no migration: two bookings at the same moment can still both take a departure's last
-   seats (`package-booking.service.ts` reads places before its transaction; found 2026-11-06,
-   not reproduced, not fixed). A
+   building the trip" (editing a submitted custom request) is the other M10 deferred item. A
    real screen-reader run
    (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
    banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
@@ -1562,3 +1599,9 @@ events (T-Events)".
   date is refused rather than moved), took row locks in the save, kept the fields the editor
   hides, added the departure status select the refusal's "Closed" advice needs, and filtered
   the package page to open departures. The uncached Booking page read `0b76560` stays.
+- 2026-11-06 — the owner chose the departure seat race next (over "Keep building the trip", M10's
+  room holds and event photos, and answering the deployment plan; the plan is unanswered and
+  Plausible CE is not installed). A row lock on the departure in the writing transaction, over
+  a seat counter (a migration) or SERIALIZABLE retries. The check moved there rather than being
+  repeated, so one place decides. Moved the save's departure lock ahead of its tier lock rather
+  than taking a tier lock on every booking. Fixed the desk's party edit too, as the same bug.
