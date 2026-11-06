@@ -85,6 +85,7 @@ export const packageExtraSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   durationLabel: z.string().nullable(),
+  inventoryItemId: z.string().uuid().nullable(),
   dayOffset: z.number().int().nullable(),
   price: z.string(),
   priceUnit: z.enum(['PER_PERSON', 'PER_BOOKING']),
@@ -191,7 +192,11 @@ const packageServiceInputSchema = z.object({
   position: z.coerce.number().int().min(0).max(100).default(0),
 });
 
-/** M1 sub-resource inputs; each list, when present, replaces the collection. */
+/**
+ * M1 sub-resource inputs. Each list, when present, is what the collection
+ * becomes: tiers and extras are matched on their code and departures on their
+ * date, so a row a booking uses stays the same row.
+ */
 const packageTierInputSchema = z.object({
   code: z.string().trim().min(1).max(50),
   name: z.string().trim().min(1).max(200),
@@ -274,6 +279,31 @@ export type CreatePackageRequest = z.infer<typeof createPackageSchema>;
 export const updatePackageSchema = createPackageSchema.partial();
 
 export type UpdatePackageRequest = z.infer<typeof updatePackageSchema>;
+
+/** One reason a save was refused (409 `PackageRowsInUse`); `row` is a code or a date. */
+export const packageEditRefusalSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('ROW_DUPLICATED'), row: z.string() }),
+  z.object({
+    kind: z.enum(['DEPARTURE_BOOKED', 'TIER_BOOKED', 'EXTRA_BOOKED']),
+    row: z.string(),
+    bookingCodes: z.array(z.string()),
+  }),
+  z.object({
+    kind: z.literal('DEPARTURE_BELOW_BOOKED'),
+    row: z.string(),
+    capacity: z.number().int(),
+    booked: z.number().int(),
+    bookingCodes: z.array(z.string()),
+  }),
+]);
+
+export type PackageEditRefusalDto = z.infer<typeof packageEditRefusalSchema>;
+
+export const packageRowsInUseSchema = z.object({
+  error: z.literal('PackageRowsInUse'),
+  message: z.string(),
+  refusals: z.array(packageEditRefusalSchema),
+});
 
 /** One locale's overlay of a package's words (M1, D1). */
 export const putPackageTranslationSchema = z.object({
