@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-06 11:15
+# Handoff — vereda — updated 2026-11-06 14:36
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -11,7 +11,7 @@ on 2026-10-29 the accessibility passes, the alert cue and the storefront design 
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
 page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
-"about" lines) and
+"about" lines, on 2026-11-06 the package editor's refusals) and
 ADR 0007 (worker
 app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
@@ -28,6 +28,28 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-06: stable package rows**, the owner's pick; no migration, dependency or route
+  (`c2fd8a9`…`ecd46ed`; ADR 0006 amendment of that day). This was a real bug, larger than Next
+  said: every editor save deleted and recreated the package's departures, tiers and extras, so
+  `ON DELETE SET NULL` cleared `departure_id`, `tier_id` and `package_extra_id` on every booking
+  and the departure's seats read as free (the places check sums `partySize` by `departureId`).
+  - Rules `packages/domain/src/packages/collection-edit.ts`: `planCollectionEdit` matches a
+    save to the stored rows on the natural key (departure date, tier/extra code);
+    `collectionEditRefusals` and `departureCapacityRefusals`. "Bookings" means not `CANCELLED`,
+    as the places check does.
+  - API: `PackagesService.planCollections` in the save's transaction, after `FOR UPDATE` on
+    the submitted collections (a booking's foreign key then waits, so none lands between the
+    check and the write). 409 `PackageRowsInUse` with `refusals` (`packageRowsInUseSchema`),
+    naming the rows and booking codes. Services and days are still replaced wholesale: nothing
+    points at them.
+  - Desk: the editor sends back every row field it hides (departure status, tier description,
+    an extra's duration, catalog item, day and active flag, a day's meals; each save used to
+    reopen a closed departure and wipe the rest). `PackageExtraDto` gained `inventoryItemId` for
+    that. A status select on each departure, so "Closed" is reachable; the refusal is a
+    destructive Alert listing each row, five booking codes and "and N more". en/es/fr.
+  - Storefront: the package page lists only OPEN departures, as the Booking page already did.
+  - e2e `packages-edit.spec.ts` "a package with a booking"; live tests in
+    `packages.integration.test.ts`, including a booking mid-transaction during a save.
 - **2026-11-04: the display-currency "about" lines in the emails** (M9 C7b), the owner's pick;
   no migration, dependency or route (`4eab849`…`3458fdf`; ADR 0006 amendment of that day;
   `docs/schema-m9-display-currencies.md` §8). Copy is a placeholder in en/es/fr.
@@ -45,12 +67,12 @@ events (T-Events)".
   - e2e: `display-currencies.spec.ts` books through the form with a CAD cookie and reads both
     emails in Mailpit; `storefront-packages.spec.ts` now restores the traveler's currency.
   - Fix `0b76560` (found by the new test): the Booking page reads the package uncached
-    (`getPackage(slug, { fresh: true })`). A package save in the editor deletes and recreates
-    its departures (`packages.service.ts:616`), and the 60 s fetch cache served the old ids on
+    (`getPackage(slug, { fresh: true })`). A package save in the editor then deleted and
+    recreated its departures, and the 60 s fetch cache served the old ids on
     the next visit (stale-while-revalidate), so the request was refused ("Departure … is not on
     this package"). The package page still caches 60 s, so its departure list can lag an edit
-    by one visit; the editor still replaces departure ids on every save (root cause, not
-    changed).
+    by one visit. The root cause was fixed on 2026-11-06 (stable package rows); the uncached
+    read stays because a save can still remove an unbooked departure.
 - **2026-11-02: the Super Admin IP allowlist** (M9), the owner's pick, approved I1a–I7a with no
   migration or dependency (`4aa90fc`…`ae43155`; ADR 0006 amendment of that day). Off by default.
   - Rules `packages/domain/src/settings/ip-allowlist.ts`: IPv4/IPv6/IPv4-mapped ranges without
@@ -382,36 +404,34 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-04/06, the emails' "about" lines, dev stack stopped for the build)
-- `pnpm lint` and `pnpm format:check` green (also after the storefront fix `0b76560`).
-- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached (run before and after `0b76560`).
-- `TURBO_FORCE=true pnpm test` **1236 passed / 30 skipped**, 30/30 tasks (new: domain
-  `referenceRate` 3, schemas 1, email 2, API `currencies.e2e` 3, `notifications` 2,
-  `package-booking.e2e` 2). No new route, so the RBAC matrix is as was. The storefront has no
-  unit-test task, so `0b76560` is covered by e2e only.
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (before and after `0b76560`); `apps/*/.next`
-  deleted after each.
-- `pnpm e2e` (full, 1.1 h): **160 passed, 4 failed, 3 skipped**. On fresh servers: three of the
-  four (`desk-keyboard.spec.ts:104`, `supplier-resources.spec.ts:156` and
-  `responsive.spec.ts:110` at ds07-768, the last with its whole spec, 4/4) passed; they had hit
-  page-load timeouts after the storefront `next-server` restarted mid-run. The fourth,
-  `storefront-packages.spec.ts:75`, was a real bug (stale departure ids, see State); it
-  reproduces with the C7b test → `packages-edit.spec.ts` → `storefront-packages.spec.ts` and
-  passes 4/4 after `0b76560`.
-- After `0b76560`, each on a fresh stack: `storefront-telemetry`, `display-currencies` and
-  `storefront-packages` **10/10**; `accessibility.spec.ts` **7/7**. The full suite was not rerun:
-  the machine was short of memory (10 GB in swap) and the Next dev servers stalled at 4–5 GB
-  each within minutes, twice.
-- Before the suite, on the dev stack: `display-currencies.spec.ts` **3/3** (with the new C7b
-  test), `notifications.spec.ts` and `storefront-packages.spec.ts` **5/5**.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **29/29**, 12 files:
+## Verified (2026-11-06, stable package rows, dev stack stopped for the build)
+- Gate 1, before the fix: `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest run
+  test/packages.integration.test.ts` showed all three booking links `null` after a save that
+  changed nothing; the same test passes after it.
+- `pnpm lint` and `pnpm format:check` green.
+- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
+- `TURBO_FORCE=true pnpm test` **1246 passed / 36 skipped**, 30/30 tasks (new: domain
+  `collection-edit` 9, API `packages.e2e` 1, 6 live tests that skip here). No new route, so the
+  RBAC matrix is as was.
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached, on free ports; `apps/*/.next` deleted.
+- `pnpm e2e` (full, 1.2 h): **162 passed, 3 failed, 3 skipped**. `storefront-compare.spec.ts:6`
+  was this session's own fixture (see Traps), fixed in the last e2e commit. The other two
+  (`supplier-resources.spec.ts:156`, `responsive.spec.ts:110` at ds07-768) are last session's
+  server stalls. On fresh servers, `packages-edit`, `storefront-compare`, `storefront-packages`,
+  `supplier-resources` and the ds07-768 `responsive` spec: **12/12**.
+- Removing a guard makes its test fail: without the `FOR UPDATE` locks the live race test fails
+  (1 of 7); without the storefront's OPEN filter its e2e test fails.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **35/35**, 12 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events,permission-overrides}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Browser: E-Received (fr) and E-Invoice (en) with the CAD guide rendered from the built
-  templates in Chromium at 390, 1024 and 1280: no sideways scroll (scrollWidth = width), Arial
-  as the shell sets; at 390 the received table's labels now sit at the top of a wrapped row.
-- Not run: the full e2e after `0b76560`; a real screen reader; a deploy behind a real proxy.
+- Browser: the package editor with a refused save in Chromium at 390, 1024 and 1280: no sideways
+  scroll (scrollWidth = width), fields stacked at 390, five columns at 1024 and 1280, the Status
+  select 40 px high in the desk's font, the refusal 14 px in the destructive colour, seven
+  bookings reading "ZZWIDTH4 and 2 more".
+- Not run: the full e2e after the fixture change (the 12 above instead); the editor's row
+  between `sm` and 1024; es/fr refusals in a browser (key parity by the i18n test); a real
+  screen reader; a deploy behind a real proxy.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -428,6 +448,16 @@ events (T-Events)".
   (`X-Forwarded-For` or 127.0.0.1 in dev). Better Auth's own rate limiter (production only)
   now keys on the same header. A Super Admin on a mobile network has no fixed address: the
   agency needs a VPN with a fixed exit before switching it on (plan D18 says not yet).
+- **Stable package rows (2026-11-06):** a changed date or code counts as a removal plus a new
+  row, so it is refused on a booked row rather than moved (assumed: moving a date would leave
+  the booking's service dates behind). A completed booking also holds its row, so a past
+  departure with bookings stays in the editor for good. A cancelled booking does not hold one,
+  and loses its link when the row goes (its price lines keep the record). Closing or cancelling
+  a departure only stops new bookings: nothing is sent to those already on it. A row's `id`
+  still changes if staff remove an unbooked row and add it again. The refusal words are
+  placeholders. The public package read now carries an extra's `inventoryItemId` (the same kind
+  of id services already expose). After a refusal the form keeps the person's edit, so a removed
+  row stays off the screen until they reload (nothing was saved).
 - **Email "about" lines (2026-11-04):** the words are placeholders for the email-copy review.
   E-Received under INVOICE reuses the storefront's "the rate locks when we send the invoice",
   though the payment link is what locks it (E-Invoice says "when you choose how to pay"); the
@@ -510,6 +540,20 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Published e2e fixtures (2026-11-06):** a package published by a spec and shown on the
+  storefront enters the 60 s list cache and outlives its deletion; `storefront-compare` then
+  read "Showing 2 of 2 trips", and retrying `Clear all` cannot help (the filter is client-side).
+  Keep fixtures DRAFT, or wait for a fresh read before asserting that something is absent
+  (`storefront-packages.spec.ts` "lists only the departures").
+- **Package saves (2026-11-06):** a new form field on a package row must go through the DTO and
+  back in the PATCH: an in-place update writes what the request holds, and `status`/`active`
+  default in the schema, so a field left out is reset. A `$queryRaw` lock in `planCollections`
+  means any fake Prisma that saves a collection needs `$queryRaw` and that collection's
+  `findMany` (`packages.e2e.test.ts` has them). Killing only the `next-server` PIDs that `ss`
+  prints is not enough: `next dev` restarts them in seconds, so a verify run next to them is
+  not "stack stopped" (this session's first build was thrown away for that). Kill the
+  `next dev` parents too, and check `ss -ltn` shows nothing before building. A live test that
+  fails before its cleanup leaves its rows, and `afterAll` then trips on the user's foreign key.
 - **Shell (2026-11-04):** `pgrep -f`/`pkill -f '@turbo/linux-64/bin/turbo run dev'` inside a
   Bash call matches that call's own shell, which then signals itself and stops mid-command
   (twice this session). Find turbo with `ps -eo pid,comm | awk '$2=="turbo"'` and free ports
@@ -849,6 +893,11 @@ events (T-Events)".
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-06: a package save matches departures on their date and tiers/extras on their
+    code and updates them in place (`planCollectionEdit`); bookings point at those rows, so never
+    delete and recreate them. A row bookings use (not `CANCELLED`) cannot go and a departure
+    cannot shrink below its booked seats: 409 `PackageRowsInUse`. Services and days have no
+    references and are still replaced wholesale."
   - "2026-11-02: a session's address comes only from `X-OTA-Client-IP`, which `main.ts` sets
     from Express's `req.ip` (`TRUST_PROXY`) on every `/api/auth` request; Better Auth ignores
     `X-Forwarded-For`. The Super Admin IP allowlist (`docs/schema-m9-ip-allowlist.md`) is two
@@ -973,8 +1022,9 @@ events (T-Events)".
 1. Owner: choose the next batch. M9's board items are all built (manifest editing beyond the
    flags stays deferred). M10's room holds/event photos need a migration doc first; "Keep
    building the trip" (editing a submitted custom request) is the other M10 deferred item.
-   Small, no migration: keep departure ids stable when the package editor saves (it deletes
-   and recreates them today, which open booking pages then post back). A
+   Small, no migration: two bookings at the same moment can still both take a departure's last
+   seats (`package-booking.service.ts` reads places before its transaction; found 2026-11-06,
+   not reproduced, not fixed). A
    real screen-reader run
    (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
    banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
@@ -1504,3 +1554,11 @@ events (T-Events)".
 - 2026-11-06 — the C7b e2e exposed stale departure ids on the Booking page after a package save;
   fixed narrowly by reading the package uncached there (`0b76560`) rather than keeping
   departure ids stable across editor saves (an API persistence change, left for the owner).
+- 2026-11-06 — the owner chose stable package ids next (over "Keep building the trip", M10's
+  room holds and event photos, and answering the deployment plan; the plan is unanswered and
+  Plausible CE is not installed), and chose to refuse a save that removes a row bookings use or
+  cuts a departure below its booked seats (over retiring the row, or only warning). The build
+  matched rows on their natural keys rather than sending ids (no request change, and a changed
+  date is refused rather than moved), took row locks in the save, kept the fields the editor
+  hides, added the departure status select the refusal's "Closed" advice needs, and filtered
+  the package page to open departures. The uncached Booking page read `0b76560` stays.

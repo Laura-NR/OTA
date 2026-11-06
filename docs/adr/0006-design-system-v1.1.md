@@ -1613,3 +1613,18 @@ resolved them inside the Phase 6 email shell (inline Arial, no web tokens):
   at payment" becomes "the rate locks when you pay" under DEPOSIT and "when you choose how to
   pay" under INVOICE, which is what the code does. The balance has no guide, as on the board.
 - A booking with a locked rate reads "rate locked on {date}" in both, at that rate.
+
+## Amendment, 2026-11-06: the package editor's refusals
+
+The owner chose to refuse a package save that would take a departure, tier or extra from under
+its bookings, or cut a departure below its booked seats (no migration). No board draws this.
+The build resolved it inside A-Package-Edit with existing components:
+
+- **The refusal** is the form's destructive Alert above the save button: one line saying
+  nothing was changed, then a list with a line per row, naming the row, the booking codes and
+  what to do. Five codes show, then "and N more". A date reads as the editor's own `YYYY-MM-DD`.
+- **A departure's status** is a fifth field in the row, the same `Select` as the package's
+  status (Open, Closed, Cancelled), so the advice to close a departure can be followed. The
+  row's grid gains a column; below `sm` the fields stack as before.
+- **The storefront's package page** lists only open departures, as the Booking page does; a
+  closed one drops off the list rather than gaining a label.
