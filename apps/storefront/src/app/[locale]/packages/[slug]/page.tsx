@@ -96,6 +96,9 @@ export default async function PackageDetailPage({
   if (pkg.slug !== slug) {
     permanentRedirect({ href: `/packages/${pkg.slug}`, locale });
   }
+  const openDepartures = pkg.departures.filter(
+    (departure) => departure.status === 'OPEN',
+  );
   const tenant = getTenantConfig();
   const features = await getFeatures();
   const money = await getDisplayCurrency();
@@ -238,13 +241,13 @@ export default async function PackageDetailPage({
               </ul>
             </section>
           ) : null}
-          {pkg.departures.length > 0 ? (
+          {openDepartures.length > 0 ? (
             <section aria-labelledby="departures-title" className="flex flex-col gap-3">
               <h2 id="departures-title" className="text-h3 text-default">
                 {t('detail.departures')}
               </h2>
               <ul className="flex flex-col gap-2">
-                {pkg.departures.map((departure) => (
+                {openDepartures.map((departure) => (
                   <li
                     key={departure.id}
                     className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border bg-surface px-4 py-3 text-body"

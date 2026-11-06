@@ -29,8 +29,8 @@ export async function getPackages(): Promise<PackageDto[]> {
 /**
  * Read one curated package, cached for 60s like the list. `fresh` skips the
  * cache: the Booking form posts the departure ids it was rendered with, and a
- * package save in the editor replaces them, so a cached copy can offer ids the
- * API then refuses.
+ * package save in the editor can remove an unbooked departure, so a cached copy
+ * can offer an id the API then refuses.
  */
 export async function getPackage(
   slug: string,
