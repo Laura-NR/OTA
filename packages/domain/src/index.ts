@@ -209,6 +209,15 @@ export {
   type PublishMedia,
 } from './packages/publish';
 export {
+  collectionEditRefusals,
+  departureCapacityRefusals,
+  planCollectionEdit,
+  type BookedRowKind,
+  type CollectionEdit,
+  type PackageEditRefusal,
+  type RowBooking,
+} from './packages/collection-edit';
+export {
   calculateFinance,
   calculateGeography,
   calculateOperations,
