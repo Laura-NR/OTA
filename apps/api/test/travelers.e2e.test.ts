@@ -271,6 +271,11 @@ function createFakePrisma(state: State) {
       },
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
+    // claimDepartureSeats: the departure's row, as locked.
+    $queryRaw: async (_sql: TemplateStringsArray, id: string) =>
+      state.packages
+        .flatMap((pkg) => pkg.departures)
+        .filter((departure) => departure.id === id),
   };
   return fake;
 }
@@ -624,6 +629,19 @@ describe('travelers API (M2)', () => {
     await putParty(PACKAGE_BOOKING, { ...party, departureId: SMALL_DEPARTURE }).expect(
       409,
     );
+  });
+
+  it('refuses a closed departure as a new choice but keeps a booking already on it', async () => {
+    state.packages[0]!.departures[1]!.status = 'CLOSED';
+    const solo = { travelers: [{ fullName: 'Margaret Chen', isLead: true }] };
+
+    const refused = await putParty(PACKAGE_BOOKING, {
+      ...solo,
+      departureId: SMALL_DEPARTURE,
+    }).expect(409);
+    expect(refused.body.message).toContain('not open');
+
+    await putParty(OTHER_BOOKING, { ...solo, departureId: SMALL_DEPARTURE }).expect(200);
   });
 
   it('refuses a traveler id that belongs to no one on the booking', async () => {

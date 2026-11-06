@@ -11,7 +11,6 @@ import {
 import type { TenantConfig } from '@ota/config';
 import type { Prisma } from '@ota/db';
 import {
-  departurePlacesLeft,
   isUsPerson,
   planRooms,
   signatureMatches,
@@ -50,7 +49,7 @@ interface PlannedExtra extends BookingExtraInput {
   packageExtraId: string;
 }
 
-/** Everything a booking needs, checked before anything is written. */
+/** Everything a booking needs; only the departure's seats wait for the transaction. */
 export interface PackageBookingPlan {
   pkg: BookedPackage;
   departureId: string;
@@ -86,11 +85,12 @@ function addDays(day: Date, days: number): Date {
 
 /**
  * The storefront Booking form's booking (Booking board, five steps). `plan`
- * prices the traveler's choices with the M2 rules and checks the departure,
- * the certifications and the consents without writing; `write` then stores
- * the party, rooms, extras, frozen price lines, certifications and consents
- * in the transaction that creates the booking, so they land together or not
- * at all.
+ * prices the traveler's choices with the M2 rules and checks the certifications
+ * and the consents without writing; `write` then stores the party, rooms,
+ * extras, frozen price lines, certifications and consents in the transaction
+ * that creates the booking, so they land together or not at all. Whether the
+ * departure is open and has room is decided in that transaction too
+ * (`claimDepartureSeats`), so two bookings cannot both take its last seats.
  */
 @Injectable()
 export class PackageBookingService {
@@ -118,19 +118,6 @@ export class PackageBookingService {
       throw new BadRequestException(
         `Departure ${input.departureId} is not on this package`,
       );
-    }
-    if (departure.status !== 'OPEN') {
-      throw new ConflictException('That departure is not open for booking');
-    }
-    const booked = await this.prisma.reservation.aggregate({
-      _sum: { partySize: true },
-      where: { departureId: departure.id, status: { not: 'CANCELLED' } },
-    });
-    if (
-      input.travelers.length >
-      departurePlacesLeft(departure.capacity, booked._sum.partySize ?? 0)
-    ) {
-      throw new ConflictException('The departure does not have enough places left');
     }
 
     let tier = pkg.tiers.find((candidate) => candidate.isDefault) ?? null;

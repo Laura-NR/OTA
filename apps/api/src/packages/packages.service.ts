@@ -695,9 +695,9 @@ export class PackagesService {
 
   /**
    * Match the submitted tiers, departures and extras to the stored rows and
-   * refuse (409) a save that would take a row from under its bookings. A booking's
-   * foreign key has to wait for these row locks, so none can land between this
-   * check and the write.
+   * refuse (409) a save that would take a row from under its bookings. A booking
+   * has to wait for these row locks, so none can land between this check and the
+   * write.
    */
   private async planCollections(
     tx: Prisma.TransactionClient,
@@ -707,6 +707,12 @@ export class PackagesService {
     const where = { packageId };
     const live = { not: 'CANCELLED' as const };
     const refusals: PackageEditRefusal[] = [];
+
+    // Departures first, as `claimDepartureSeats` takes them: a booking holding
+    // its departure then needs the tier, so a save the other way round deadlocks.
+    if (input.departures) {
+      await tx.$queryRaw`SELECT id FROM package_departures WHERE package_id = ${packageId}::uuid FOR UPDATE`;
+    }
 
     let tiers: CollectionEdit<PackageTier, TierInput> | null = null;
     if (input.tiers) {
@@ -733,7 +739,6 @@ export class PackagesService {
 
     let departures: CollectionEdit<PackageDeparture, DepartureInput> | null = null;
     if (input.departures) {
-      await tx.$queryRaw`SELECT id FROM package_departures WHERE package_id = ${packageId}::uuid FOR UPDATE`;
       const stored = await tx.packageDeparture.findMany({ where });
       departures = planCollectionEdit(
         stored,

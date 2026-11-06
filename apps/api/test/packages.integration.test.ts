@@ -471,5 +471,48 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
       expect(stored.departureId).toBe(departure.id);
       await prisma.reservation.delete({ where: { id: reservation.id } });
     });
+
+    it('saves past a booking that holds a departure and still needs its tier', async () => {
+      const pkg = await service.update(bookedPackageId, saved, actor);
+      const departure = pkg.departures[0]!;
+      const tier = pkg.tiers[0]!;
+      let locked = () => {};
+      let release = () => {};
+      const departureLocked = new Promise<void>((resolve) => (locked = resolve));
+      const released = new Promise<void>((resolve) => (release = resolve));
+
+      // A booking locks its departure first; inserting it then checks the tier.
+      const booking = prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM package_departures WHERE id = ${departure.id}::uuid FOR UPDATE`;
+        locked();
+        await released;
+        return tx.reservation.create({
+          data: {
+            userId: actor.id,
+            bookingCode: `PL${String(suffix).slice(-6)}`,
+            packageId: bookedPackageId,
+            status: 'ITINERARY_SUBMITTED',
+            startDate: new Date('2027-05-01T00:00:00Z'),
+            endDate: new Date('2027-05-03T00:00:00Z'),
+            totalCurrency: 'EUR',
+            totalAmount: '200.00',
+            partySize: 1,
+            departureId: departure.id,
+            tierId: tier.id,
+          },
+        });
+      });
+      await departureLocked;
+
+      const save = service.update(bookedPackageId, saved, actor);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      release();
+      const [written, updated] = await Promise.allSettled([booking, save]);
+
+      if (written.status === 'fulfilled') {
+        await prisma.reservation.delete({ where: { id: written.value.id } });
+      }
+      expect([written.status, updated.status]).toEqual(['fulfilled', 'fulfilled']);
+    });
   });
 });

@@ -39,6 +39,7 @@ import { MAILER } from '../email/email.module';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { claimDepartureSeats } from '../travelers/departure-seats';
 import {
   PackageBookingService,
   type SubmittedReservation,
@@ -174,6 +175,8 @@ interface SubmissionParams {
   tierId?: string | null;
   departureId?: string | null;
   tourismCategory?: Prisma.ReservationCreateInput['tourismCategory'];
+  /** Runs first in the booking's transaction, before its row takes a foreign key. */
+  claimSeats?: (tx: Prisma.TransactionClient) => Promise<void>;
   /** More writes that must land with the booking, in its transaction. */
   within?: (
     tx: Prisma.TransactionClient,
@@ -420,6 +423,12 @@ export class MeService {
       departureId: plan.departureId,
       tourismCategory: pkg.tourismCategory,
       serviceItems: packageServiceItems(pkg.services, plan.startDate),
+      claimSeats: (tx) =>
+        claimDepartureSeats(tx, {
+          departureId: plan.departureId,
+          partySize: input.travelers.length,
+          mustBeOpen: true,
+        }),
       // Ids and counts only: no names, dates of birth or passport numbers.
       auditMetadata: {
         packageId: pkg.id,
@@ -519,6 +528,8 @@ export class MeService {
       }
 
       return this.prisma.$transaction(async (tx) => {
+        await params.claimSeats?.(tx);
+
         if (params.nationality) {
           await tx.user.update({
             where: { id: userId },

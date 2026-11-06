@@ -4,9 +4,13 @@ import { ConflictException } from '@nestjs/common';
 import { parseTenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import { decryptPassportNumber } from '@ota/domain/passport-cipher';
-import { bookPackageSchema, type LegalContent } from '@ota/schemas';
+import {
+  bookPackageSchema,
+  updateReservationPartySchema,
+  type LegalContent,
+} from '@ota/schemas';
 import { InMemoryObjectStorage } from '@ota/storage';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
 import { AffidavitsService } from '../src/compliance/affidavits.service';
@@ -19,6 +23,7 @@ import { MeService } from '../src/me/me.service';
 import { PackageBookingService } from '../src/me/package-booking.service';
 import type { PaymentsService } from '../src/payments/payments.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { TravelersService } from '../src/travelers/travelers.service';
 import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so require an explicit opt-in.
@@ -60,6 +65,8 @@ const tenant = parseTenantConfig({
 describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
   let prisma: PrismaClient;
   let me: MeService;
+  let bookings: PackageBookingService;
+  let travelers: TravelersService;
   let actor: AuthUser;
   let itemId = '';
   let packageId = '';
@@ -75,6 +82,8 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
     const texts = new LegalTextsService(legal);
     const affidavits = new AffidavitsService(db, texts, new InMemoryObjectStorage());
     const consents = new ConsentsService(db, texts);
+    bookings = new PackageBookingService(db, affidavits, consents, tenant, key);
+    travelers = new TravelersService(db, tenant, key);
     me = new MeService(
       db,
       {} as PaymentsService,
@@ -85,7 +94,7 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
         new MockFxRateProvider(),
         new NoopFxRateScheduler(),
       ),
-      new PackageBookingService(db, affidavits, consents, tenant, key),
+      bookings,
       { send: async () => undefined },
       tenant,
     );
@@ -279,5 +288,130 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
     ).rejects.toBeInstanceOf(ConflictException);
 
     expect(await prisma.reservation.count({ where: { userId: actor.id } })).toBe(before);
+  });
+
+  describe("a departure's last places", () => {
+    const addDeparture = (startDate: string, capacity: number) =>
+      prisma.packageDeparture.create({
+        data: { packageId, startDate: new Date(`${startDate}T00:00:00Z`), capacity },
+      });
+    const seatsOn = async (id: string) => {
+      const booked = await prisma.reservation.aggregate({
+        _sum: { partySize: true },
+        where: { departureId: id, status: { not: 'CANCELLED' } },
+      });
+      return booked._sum.partySize ?? 0;
+    };
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    /** Run `between` after the form's checks and before its transaction. */
+    const afterPlanning = (between: () => Promise<void>) => {
+      const plan = bookings.plan.bind(bookings);
+      return vi.spyOn(bookings, 'plan').mockImplementation(async (input) => {
+        const planned = await plan(input);
+        await between();
+        return planned;
+      });
+    };
+
+    it('lets one of two bookings take the last places and refuses the other', async () => {
+      const last = await addDeparture('2027-03-06', 2);
+      // Both have finished their checks before either starts writing.
+      let planned = 0;
+      let bothPlanned = () => {};
+      const barrier = new Promise<void>((resolve) => (bothPlanned = resolve));
+      afterPlanning(async () => {
+        planned += 1;
+        if (planned === 2) bothPlanned();
+        await barrier;
+      });
+
+      const results = await Promise.allSettled([
+        me.bookPackage(actor, request({ departureId: last.id }), client),
+        me.bookPackage(actor, request({ departureId: last.id }), client),
+      ]);
+
+      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      const refused = results.find((result) => result.status === 'rejected');
+      expect(refused).toMatchObject({ reason: expect.any(ConflictException) });
+      expect(await seatsOn(last.id)).toBe(2);
+    });
+
+    it.each([
+      [
+        'closed',
+        (id: string) =>
+          prisma.packageDeparture.update({ where: { id }, data: { status: 'CLOSED' } }),
+      ],
+      ['removed', (id: string) => prisma.packageDeparture.delete({ where: { id } })],
+    ])('refuses a departure %s after the form was checked', async (label, change) => {
+      const departure = await addDeparture(
+        label === 'closed' ? '2027-03-20' : '2027-03-27',
+        4,
+      );
+      const before = await prisma.reservation.count({ where: { userId: actor.id } });
+      afterPlanning(async () => {
+        await change(departure.id);
+      });
+
+      await expect(
+        me.bookPackage(actor, request({ departureId: departure.id }), client),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(await prisma.reservation.count({ where: { userId: actor.id } })).toBe(
+        before,
+      );
+    });
+
+    it('waits for a booking still being written before growing a party, then refuses', async () => {
+      const departure = await addDeparture('2027-04-03', 4);
+      const edited = await me.bookPackage(
+        actor,
+        request({ departureId: departure.id }),
+        client,
+      );
+      let written = () => {};
+      let release = () => {};
+      const bookingWritten = new Promise<void>((resolve) => (written = resolve));
+      const released = new Promise<void>((resolve) => (release = resolve));
+
+      const booking = prisma.$transaction(async (tx) => {
+        await tx.reservation.create({
+          data: {
+            userId: actor.id,
+            bookingCode: `BI${String(stamp).slice(-6)}`,
+            packageId,
+            status: 'ITINERARY_SUBMITTED',
+            startDate: departure.startDate,
+            endDate: departure.startDate,
+            totalCurrency: 'EUR',
+            totalAmount: '200.00',
+            partySize: 2,
+            departureId: departure.id,
+          },
+        });
+        written();
+        await released;
+      });
+      await bookingWritten;
+
+      const grown = updateReservationPartySchema.parse({
+        tierId,
+        departureId: departure.id,
+        travelers: [{ fullName: 'Ana' }, { fullName: 'Bruno' }, { fullName: 'Carla' }],
+      });
+      const edit = travelers
+        .updateParty(edited.id, grown, actor)
+        .catch((error: unknown) => error);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      release();
+      await booking;
+
+      expect(await edit).toBeInstanceOf(ConflictException);
+      expect(await seatsOn(departure.id)).toBe(4);
+    });
   });
 });

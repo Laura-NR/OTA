@@ -308,6 +308,9 @@ function createFakePrisma(state: State) {
       },
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
+    // claimDepartureSeats: the departure's row, as locked.
+    $queryRaw: async (_sql: TemplateStringsArray, id: string) =>
+      pkg.departures.filter((departure) => departure.id === id),
   };
   return fake;
 }

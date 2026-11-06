@@ -12,7 +12,6 @@ import {
 import type { TenantConfig } from '@ota/config';
 import type { Prisma } from '@ota/db';
 import {
-  departurePlacesLeft,
   isPriceLocked,
   type BookingExtraInput,
   type BookingPrice,
@@ -36,6 +35,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { claimDepartureSeats } from './departure-seats';
 import { pricePackageChoice, priceLineRows } from './package-pricing';
 import { PASSPORT_KEY } from './travelers.tokens';
 
@@ -238,12 +238,7 @@ export class TravelersService {
       throw new BadRequestException('A custom trip has no tier or departure to choose');
     }
     if (row.package) {
-      await this.assertDeparture(
-        row,
-        row.package,
-        input.departureId,
-        input.travelers.length,
-      );
+      this.assertDeparture(row.package, input.departureId);
       if (input.tierId && !row.package.tiers.some((tier) => tier.id === input.tierId)) {
         throw new BadRequestException(`Tier ${input.tierId} is not on this package`);
       }
@@ -278,6 +273,15 @@ export class TravelersService {
     let passportsCleared = 0;
 
     await this.prisma.$transaction(async (tx) => {
+      if (input.departureId !== null) {
+        await claimDepartureSeats(tx, {
+          departureId: input.departureId,
+          partySize: input.travelers.length,
+          mustBeOpen: input.departureId !== row.departureId,
+          reservationId,
+        });
+      }
+
       // Deleting the rooms unassigns the travelers (ON DELETE SET NULL); each
       // traveler below is pointed at its new room again.
       await tx.reservationRoom.deleteMany({ where: { reservationId } });
@@ -584,30 +588,13 @@ export class TravelersService {
     return row.package;
   }
 
-  /** A chosen departure must be on the package, open when newly chosen, and have room. */
-  private async assertDeparture(
-    row: PricingRow,
-    pkg: PackageRow,
-    departureId: string | null,
-    partySize: number,
-  ): Promise<void> {
-    if (departureId === null) {
-      return;
-    }
-    const departure = pkg.departures.find((candidate) => candidate.id === departureId);
-    if (!departure) {
+  /** A chosen departure must be on the package; `claimDepartureSeats` decides the rest. */
+  private assertDeparture(pkg: PackageRow, departureId: string | null): void {
+    if (
+      departureId !== null &&
+      !pkg.departures.some((candidate) => candidate.id === departureId)
+    ) {
       throw new BadRequestException(`Departure ${departureId} is not on this package`);
-    }
-    if (departure.id !== row.departureId && departure.status !== 'OPEN') {
-      throw new ConflictException('That departure is not open for booking');
-    }
-
-    const booked = await this.prisma.reservation.aggregate({
-      _sum: { partySize: true },
-      where: { departureId, id: { not: row.id }, status: { not: 'CANCELLED' } },
-    });
-    if (partySize > departurePlacesLeft(departure.capacity, booked._sum.partySize ?? 0)) {
-      throw new ConflictException('The departure does not have enough places left');
     }
   }
 
