@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-04 15:50
+# Handoff — vereda — updated 2026-11-06 11:15
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -10,7 +10,8 @@ server-side T-Events, on 2026-10-26 the staff passkeys, on 2026-10-27 the Plausi
 on 2026-10-29 the accessibility passes, the alert cue and the storefront design changes, and
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
 page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
-display currencies, on 2026-11-02 the Super Admin IP allowlist) and
+display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
+"about" lines) and
 ADR 0007 (worker
 app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
@@ -18,7 +19,8 @@ app). Staff passkeys:
 `docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
 `docs/schema-m9-new-device-email.md` (approved N1a–N6a, §7 as built). Permission overrides:
 `docs/schema-m9-permission-overrides.md` (approved O1a–O8a, §7 as built). Display currencies:
-`docs/schema-m9-display-currencies.md` (approved C1a–C7a, §7 as built). The IP allowlist:
+`docs/schema-m9-display-currencies.md` (approved C1a–C7a, §7 as built; the emails' lines C7b
+§8, 2026-11-04). The IP allowlist:
 `docs/schema-m9-ip-allowlist.md` (approved I1a–I7a, no migration, §6 as built). The analytics sink: ADR 0006's 2026-10-27 amendment and `docs/runbook.md` "Analytics
 events (T-Events)".
 
@@ -26,6 +28,29 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-04: the display-currency "about" lines in the emails** (M9 C7b), the owner's pick;
+  no migration, dependency or route (`4eab849`…`3458fdf`; ADR 0006 amendment of that day;
+  `docs/schema-m9-display-currencies.md` §8). Copy is a placeholder in en/es/fr.
+  - Rule `referenceRate` (`packages/domain/src/money/display-currency.ts`): the booking's lock
+    wins, else today's offered rate for the traveler's currency, else nothing.
+  - E-Received's total gets "(about CA$4,588; the rate locks when you pay the deposit)";
+    E-Invoice's deposit and full amount get "(about CA$918)" plus one note on EUR charging and
+    when the rate locks (DEPOSIT "when you pay", INVOICE "when you choose how to pay"); a lock
+    reads "rate locked on {date}". Whole units, rounded up.
+  - API: `CurrenciesService.emailReference` (a failed read logs and returns null, so the email
+    still goes); the Booking form's request takes an optional `displayCurrency`, kept with
+    `adoptShown` when none is saved, as the payment link already did; E-Invoice reads the
+    traveler's saved currency and `rateLockOf(reservation)`. The storefront form sends
+    `useDisplayMoney().code`.
+  - e2e: `display-currencies.spec.ts` books through the form with a CAD cookie and reads both
+    emails in Mailpit; `storefront-packages.spec.ts` now restores the traveler's currency.
+  - Fix `0b76560` (found by the new test): the Booking page reads the package uncached
+    (`getPackage(slug, { fresh: true })`). A package save in the editor deletes and recreates
+    its departures (`packages.service.ts:616`), and the 60 s fetch cache served the old ids on
+    the next visit (stale-while-revalidate), so the request was refused ("Departure … is not on
+    this package"). The package page still caches 60 s, so its departure list can lag an edit
+    by one visit; the editor still replaces departure ids on every save (root cause, not
+    changed).
 - **2026-11-02: the Super Admin IP allowlist** (M9), the owner's pick, approved I1a–I7a with no
   migration or dependency (`4aa90fc`…`ae43155`; ADR 0006 amendment of that day). Off by default.
   - Rules `packages/domain/src/settings/ip-allowlist.ts`: IPv4/IPv6/IPv4-mapped ranges without
@@ -345,9 +370,9 @@ events (T-Events)".
   queued offline writes; the
   D-OfflineKit PDFs; A-Content's blog/FAQ/media/conditions tabs; guide specialities; M9's other
   deferred items (manifest editing beyond the flags); checking each request's address against
-  the IP allowlist, or other roles; display currencies'
-  "about CA$" email lines, rounding tolerance, gateway rate source and a budget field in the
-  chosen currency; changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
+  the IP allowlist, or other roles; display currencies' rounding tolerance, gateway rate source,
+  a budget field in the chosen currency, and the "about" line in the builder's requests (no
+  E-Received there) and in other emails; changing "own device" after sign-in; passkeys for travelers and suppliers; M10's deferred room holds, event photos and "Keep building the trip"; the
   desk's `/` (no desk search); self-service backup codes and a no-deploy recovery for the
   last Super Admin; Ops Lite;
   a real screen-reader run; the custom date-range picker (owner: native fields).
@@ -357,38 +382,36 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-04, the Super Admin IP allowlist, dev stack stopped for the build)
-- `pnpm lint` and `pnpm format:check` green.
-- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1223 passed / 30 skipped**, 30/30 tasks (new: domain
-  `ip-allowlist.test.ts` 20, the allowlist schema, `packages/auth/test/client-ip.test.ts` 3
-  against Better Auth's memory adapter, API `client-ip`, `session-policy`, `sign-in-devices`,
-  `settings.service` and `auth-guard.e2e` cases; no new route, so the RBAC matrix is as was).
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted after.
-- `pnpm e2e`: the first run (2026-11-02) stalled for ~36 h on test 2 with no browser process
-  left (most likely the machine slept); killed by PID. `accessibility.spec.ts` alone then
-  **7/7**. The full rerun: **160 passed, 3 failed, 3 skipped** in 1.3 h, including
-  `ip-allowlist.spec.ts` 6/6 and `new-device-email.spec.ts`. The three failures were
-  storefront pages that never loaded (`storefront-keyboard.spec.ts:89`,
-  `supplier-resources.spec.ts:156`, `responsive.spec.ts:130` at ds07-414) after the
-  storefront `next-server` restarted mid-run (started 14:31, the rest 12:27). On fresh
-  servers: those three spec files passed every test that ran before a 30-minute cap, the three
-  failures included; `responsive.spec.ts:118` at ds07-768 timed out once in `page.evaluate`
-  (240 s) and then passed in a run of ds07-768/1024/1440, **12/12**, with no server restart.
-- Before the suite, on the dev stack: `ip-allowlist.spec.ts` **6/6** and
-  `new-device-email`/`settings`/`passkeys`/`feature-flags` **16/16**.
+## Verified (2026-11-04/06, the emails' "about" lines, dev stack stopped for the build)
+- `pnpm lint` and `pnpm format:check` green (also after the storefront fix `0b76560`).
+- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached (run before and after `0b76560`).
+- `TURBO_FORCE=true pnpm test` **1236 passed / 30 skipped**, 30/30 tasks (new: domain
+  `referenceRate` 3, schemas 1, email 2, API `currencies.e2e` 3, `notifications` 2,
+  `package-booking.e2e` 2). No new route, so the RBAC matrix is as was. The storefront has no
+  unit-test task, so `0b76560` is covered by e2e only.
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached (before and after `0b76560`); `apps/*/.next`
+  deleted after each.
+- `pnpm e2e` (full, 1.1 h): **160 passed, 4 failed, 3 skipped**. On fresh servers: three of the
+  four (`desk-keyboard.spec.ts:104`, `supplier-resources.spec.ts:156` and
+  `responsive.spec.ts:110` at ds07-768, the last with its whole spec, 4/4) passed; they had hit
+  page-load timeouts after the storefront `next-server` restarted mid-run. The fourth,
+  `storefront-packages.spec.ts:75`, was a real bug (stale departure ids, see State); it
+  reproduces with the C7b test → `packages-edit.spec.ts` → `storefront-packages.spec.ts` and
+  passes 4/4 after `0b76560`.
+- After `0b76560`, each on a fresh stack: `storefront-telemetry`, `display-currencies` and
+  `storefront-packages` **10/10**; `accessibility.spec.ts` **7/7**. The full suite was not rerun:
+  the machine was short of memory (10 GB in swap) and the Next dev servers stalled at 4–5 GB
+  each within minutes, twice.
+- Before the suite, on the dev stack: `display-currencies.spec.ts` **3/3** (with the new C7b
+  test), `notifications.spec.ts` and `storefront-packages.spec.ts` **5/5**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **29/29**, 12 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events,permission-overrides}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- Dev sign-ins record `0000:0000:0000:0000:0000:0000:0000:0000` (Chromium over `::1`, cut to
-  /64 by Better Auth); the desk shows `::/64` (scratch probe, then the e2e).
-- Browser (dev stack, scratch scripts) at 390, 1024 and 1280: Thresholds › Security's list
-  editor (legend 14/20 500, inputs 40 px, tertiary Remove 40 px; rows stack below sm and Remove
-  keeps its own width after `ae43155`; a typo shows the field error), Security's
-  "Super Admin IP allowlist" fact and note, and the login refusal naming `2001:db8:4:1::/64`.
-  No sideways scroll on any of them.
-- Not run: a deploy behind a real proxy (`TRUST_PROXY=1`, plan B10); a real screen reader.
+- Browser: E-Received (fr) and E-Invoice (en) with the CAD guide rendered from the built
+  templates in Chromium at 390, 1024 and 1280: no sideways scroll (scrollWidth = width), Arial
+  as the shell sets; at 390 the received table's labels now sit at the top of a wrapped row.
+- Not run: the full e2e after `0b76560`; a real screen reader; a deploy behind a real proxy.
 
 ## Assumptions & unknowns
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
@@ -405,6 +428,14 @@ events (T-Events)".
   (`X-Forwarded-For` or 127.0.0.1 in dev). Better Auth's own rate limiter (production only)
   now keys on the same header. A Super Admin on a mobile network has no fixed address: the
   agency needs a VPN with a fixed exit before switching it on (plan D18 says not yet).
+- **Email "about" lines (2026-11-04):** the words are placeholders for the email-copy review.
+  E-Received under INVOICE reuses the storefront's "the rate locks when we send the invoice",
+  though the payment link is what locks it (E-Invoice says "when you choose how to pay"); the
+  storefront wording is unchanged. Booking through the form now saves the shown currency
+  (also EUR) when none was saved, so a traveler's later region default no longer applies to
+  them; the menu still changes it. A dynamic-builder request saves nothing, so its E-Invoice
+  has the line only for a traveler with a saved currency. Ops-created payment links lock
+  under INVOICE too, which "when you choose how to pay" does not describe.
 - **Display currencies (2026-11-01):** the 0.6 % spread, the deposit lock point, showing USD at
   all and the sample rates are placeholders for finance and counsel (all changeable on
   Thresholds, no deploy). Switching to the ECB (`FX_RATE_PROVIDER=ecb`) is the owner's Q10 call;
@@ -484,6 +515,17 @@ events (T-Events)".
   (twice this session). Find turbo with `ps -eo pid,comm | awk '$2=="turbo"'` and free ports
   by the PID `ss -ltnpH "sport = :3000"` prints. The DS 07 projects are ds07-320, 375, 414,
   768, 1024 and 1440 (there is no ds07-1280).
+- **Email "about" lines (2026-11-04):** `emailReference` swallows a failed read, so a fake
+  Prisma without `operatingSettings` (use `withNoSettingsVersion`) or `exchangeRate` silently
+  sends the email with no line (the first `package-booking.e2e.test.ts` case failed that way).
+  A hand-built `MeService` needs a real or faked `CurrenciesService` now that `bookPackage`
+  calls `adoptShown` (the live `package-booking.integration.test.ts` had `{}`; fixed in
+  `3458fdf`). `NotificationsService` takes `CurrenciesService` as its 7th argument. Any spec
+  that books through the form with the default EUR cookie saves EUR on the traveler; restore
+  `displayCurrency` in its cleanup. Any storefront read whose ids are posted back must not use
+  the 60 s cache: Next serves the stale copy on the first request after expiry. The machine's
+  Next dev servers grew to 4–5 GB each and stalled within minutes on 2026-11-06 (10 GB in
+  swap); kill them by PID and use short runs on fresh servers when that happens.
 - **IP allowlist (2026-11-02):** Better Auth 1.7 trusts a single `X-Forwarded-For` value as
   sent (and, in dev/test, falls back to 127.0.0.1); never point it back at that header. Next's
   rewrites pass `X-Forwarded-For` through unchanged and add none; the desk's server-side
@@ -929,8 +971,11 @@ events (T-Events)".
 
 ## Next
 1. Owner: choose the next batch. M9's board items are all built (manifest editing beyond the
-   flags stays deferred). M10's room holds/event photos need a migration doc first. Small, no migration: the display-currency "about CA$" lines in the
-   invoice and received emails (C7b), once their copy is acceptable. A real screen-reader run
+   flags stays deferred). M10's room holds/event photos need a migration doc first; "Keep
+   building the trip" (editing a submitted custom request) is the other M10 deferred item.
+   Small, no migration: keep departure ids stable when the package editor saves (it deletes
+   and recreates them today, which open booking pages then post back). A
+   real screen-reader run
    (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
    banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
    kept clear of it).
@@ -1449,3 +1494,13 @@ events (T-Events)".
   migration); I6a Super Admins only; I7a off by default. The build showed an IPv6 address as its
   /64 (`ipAddressText`), audited the refusal at sign-in in the new-device hook, and ran the
   apply check whatever the break-glass says.
+- 2026-11-04 — the owner chose the display-currency email lines next (C7b; over "Keep building
+  the trip", M10's room holds and event photos, and answering the deployment plan; the plan is
+  unanswered and Plausible CE is not installed). Built without a migration or new route. The
+  build wrote "about" (the email boards' word, not the web's "≈"), put the guide beside each
+  amount payable now in E-Invoice with one lock note, worded the lock as the code locks it,
+  had the Booking form send and keep the shown currency (as the payment link does), and let a
+  failed rate read drop the line rather than the email.
+- 2026-11-06 — the C7b e2e exposed stale departure ids on the Booking page after a package save;
+  fixed narrowly by reading the package uncached there (`0b76560`) rather than keeping
+  departure ids stable across editor saves (an API persistence change, left for the owner).

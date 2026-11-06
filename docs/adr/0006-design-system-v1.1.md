@@ -1593,3 +1593,23 @@ list, the refusal or the login. The build resolved them with existing components
   office or the VPN, or ask another Super Admin to add this address.").
 - **IPv6** is shown as the /64 network Better Auth keeps (`2001:db8:4:1::/64`), the same text
   "Add my sign-in address" puts in the list.
+
+## Amendment, 2026-11-04: the emails' "about" lines (display currencies C7b)
+
+The owner chose the display-currency email lines next (C7b, deferred on 2026-11-01; no
+migration). E-Received draws "total … (about CA$ 4,588; the rate locks when you pay the
+deposit)" and E-Invoice "About CA$ 918 · rate locks at payment" under the deposit due. The build
+resolved them inside the Phase 6 email shell (inline Arial, no web tokens):
+
+- **The emails say "about", not "≈"**: the 2026-11-01 "≈" caption is a web pattern; the email
+  boards write "about", and a plain-text part reads it better than a symbol. Amounts are whole
+  units, rounded up, as the "≈" captions are.
+- **E-Received** keeps the board's parenthesis after the total in its table, with the
+  storefront's lock words. The table's labels now sit at the top of their row, so a total that
+  wraps on a phone keeps "Total" beside its first line.
+- **E-Invoice** offers a choice rather than the board's single "Deposit due now" (M4), so the
+  guide follows each amount payable now, "(about CA$918)", and one note before the payment
+  window says the payments are charged in EUR and when the rate locks. The board's "rate locks
+  at payment" becomes "the rate locks when you pay" under DEPOSIT and "when you choose how to
+  pay" under INVOICE, which is what the code does. The balance has no guide, as on the board.
+- A booking with a locked rate reads "rate locked on {date}" in both, at that rate.

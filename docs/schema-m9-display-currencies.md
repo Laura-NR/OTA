@@ -138,7 +138,7 @@ small follow-up on the same data.
   transfers by hand today and no received amount is recorded, so there is nothing for it to
   decide yet; it belongs with real rails (ADR 0003/0005).
 - **"Gateway rate" as a source:** no live gateway (C3c).
-- **The emails' "about CA$" lines** (C7b).
+- **The emails' "about CA$" lines** (C7b): built 2026-11-04 with no migration; see §8.
 - **Charging in another currency:** never asked for; every board charges EUR.
 
 ## 5. What lands once approved
@@ -246,3 +246,35 @@ Migration name: `display_currencies`. Additive and nullable; no backfill, no dat
   scroll at 1024), so from lg it is in the footer.
 - The public read is cached 60 s per API process; every e2e spec starts on EUR (an
   `ota_currency` cookie in `playwright.config.ts`), since Playwright's en-US defaults to USD.
+
+## 8. The emails' "about" lines (C7b), as built (2026-11-04)
+
+The owner's pick on 2026-11-04. No migration, dependency or new route; the copy is a placeholder
+in en/es/fr until the boards' email copy is reviewed.
+
+- **Domain** (`4eab849`): `referenceRate` picks the booking's locked rate, else today's offered
+  rate for the traveler's currency; null for EUR, no currency, or one not offered.
+- **Schemas** (`16e5f4a`): the Booking form's request takes an optional `displayCurrency`
+  (additive), as the payment link's already does.
+- **Email** (`90e47f5`): E-Received's total reads "€3,100.00 (about CA$4,588; the rate locks
+  when you pay the deposit)"; E-Invoice adds "(about CA$918)" to the deposit and the full
+  amount, and a note: "Every payment is charged in EUR; the CAD amounts are a guide, and the
+  rate locks when you pay." A locked rate reads "rate locked on {date}" / "the rate was locked
+  on {date}". Amounts are whole units, rounded up (`convertForDisplay`).
+- **API** (`b10a435`): `CurrenciesService.emailReference`; the Booking form keeps the shown
+  currency when none is saved (`adoptShown`) and E-Received reads the saved choice;
+  `NotificationsService.bookingSecured` reads the traveler's choice and the booking's lock. A
+  failed rate read is logged and the email goes without the line.
+- **Storefront** (`26f450a`): the Booking form sends `displayCurrency`.
+- **e2e** (`84de319`): a traveler books through the form with a CAD cookie, keeps CAD, and reads
+  the guide in E-Received and, once secured, in E-Invoice.
+
+**Differences from the boards:**
+- E-Invoice's lock words follow the code, not the board's single "rate locks at payment": under
+  DEPOSIT "the rate locks when you pay" (the deposit or the full amount, whichever comes
+  first); under INVOICE "the rate locks when you choose how to pay" (the payment link locks it).
+  E-Received reuses the storefront's words, including INVOICE's "when we send the invoice".
+- The balance has no guide; the board shows one on the deposit only, and the note covers the
+  rest. Only the Booking form's E-Received exists, so the builder's requests get the line in
+  E-Invoice only when the traveler has a saved currency.
+
