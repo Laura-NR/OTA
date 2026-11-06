@@ -257,4 +257,32 @@ test.describe('storefront curated packages', () => {
     // The status badge, as the traveler reads it; the progress bar repeats the label.
     await expect(page.getByText('Request received').first()).toBeVisible();
   });
+
+  test('lists only the departures that can still be booked', async ({ page }) => {
+    const pkg = await prisma.package.findUniqueOrThrow({
+      where: { slug: 'trinidad-heritage-trail' },
+    });
+    const open = new Date('2031-03-01T00:00:00Z');
+    const closed = new Date('2031-04-05T00:00:00Z');
+    await prisma.packageDeparture.createMany({
+      data: [
+        { packageId: pkg.id, startDate: open, capacity: 8 },
+        { packageId: pkg.id, startDate: closed, capacity: 8, status: 'CLOSED' },
+      ],
+    });
+
+    try {
+      // The page caches for 60 s: the open one showing proves this read is fresh.
+      const departures = page.getByRole('region', { name: 'Departures' });
+      await expect(async () => {
+        await page.goto(`${STOREFRONT_URL}/en/packages/trinidad-heritage-trail`);
+        await expect(departures.getByText('2031')).toHaveCount(1, { timeout: 2_000 });
+      }).toPass({ timeout: 90_000, intervals: [5_000] });
+      await expect(departures.getByText(/March 2031|Mar.* 2031/)).toBeVisible();
+    } finally {
+      await prisma.packageDeparture.deleteMany({
+        where: { packageId: pkg.id, startDate: { in: [open, closed] } },
+      });
+    }
+  });
 });

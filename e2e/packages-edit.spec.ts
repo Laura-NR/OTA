@@ -4,8 +4,6 @@ import { expect, test, type Page } from '@playwright/test';
 import { deleteReservationFixture } from './fixtures';
 import { signIn } from './helpers';
 
-const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
-
 process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 
@@ -91,19 +89,17 @@ test.describe('curated package editor', () => {
   /**
    * A booking points at its package's departure, tier and extra. Saving the
    * editor keeps those rows, and everything it does not show on them; a save
-   * that would take a row from under the booking is refused and names it.
+   * that would take a row from under the booking is refused and names it. The
+   * package stays a draft: a published one enters the storefront's cached list,
+   * which outlives this test and breaks the specs that count the trips.
    */
   test.describe('a package with a booking', () => {
-    const slug = 'e2e-booked-package';
     const bookingCode = 'E2EPKG01';
     let packageId = '';
     const row = (page: Page, input: string) =>
       page.locator('div.grid', { has: page.locator(input) }).last();
 
     test.beforeEach(async () => {
-      const seeded = await prisma.package.findUniqueOrThrow({
-        where: { slug: 'trinidad-heritage-trail' },
-      });
       const item = await prisma.inventoryItem.findFirstOrThrow({
         where: { active: true },
       });
@@ -113,12 +109,9 @@ test.describe('curated package editor', () => {
       const pkg = await prisma.package.create({
         data: {
           name: 'E2E Booked Package',
-          slug,
-          status: 'PUBLISHED',
+          slug: 'e2e-booked-package',
           durationDays: 3,
           basePrice: '500.00',
-          cancellationPolicy: seeded.cancellationPolicy,
-          depositPolicy: seeded.depositPolicy,
           services: { create: { inventoryItemId: item.id } },
           days: { create: { dayOffset: 0, title: 'Arrival', meals: 'Dinner' } },
           tiers: {
@@ -263,12 +256,6 @@ test.describe('curated package editor', () => {
       const closed = await stored();
       expect(links(closed)).toEqual(links(before));
       expect(closed.departures[0]?.status).toBe('CLOSED');
-
-      // The storefront lists only what can still be booked.
-      await page.goto(`${STOREFRONT_URL}/en/packages/${slug}`);
-      await expect(
-        page.getByRole('region', { name: 'Departures' }).getByRole('listitem'),
-      ).toHaveCount(1);
     });
   });
 });
