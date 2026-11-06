@@ -2861,6 +2861,15 @@
     },
     "packageEdit": {
       "saveFailed": "Could not save package",
+      "refusals": {
+        "title": "The package was not saved. Nothing was changed.",
+        "DEPARTURE_BOOKED": "The departure on {row} has bookings: {codes}. Move them to another departure before removing it or changing its date. To stop new bookings, set it to Closed.",
+        "DEPARTURE_BELOW_BOOKED": "The departure on {row} has {booked, plural, one {# seat} other {# seats}} booked ({codes}), so its seats cannot go down to {capacity}.",
+        "TIER_BOOKED": "Tier {row} has bookings: {codes}. Move them to another tier before removing it or changing its code.",
+        "EXTRA_BOOKED": "Extra {row} is on bookings: {codes}. Take it off them before removing it or changing its code.",
+        "ROW_DUPLICATED": "{row} is listed twice. Keep one row.",
+        "more": "{codes} and {count} more"
+      },
       "details": "Details",
       "name": "Name",
       "description": "Description",
@@ -2888,6 +2897,12 @@
       "departureDate": "Date",
       "departureSeats": "Seats",
       "departurePrice": "Price",
+      "departureStatus": "Status",
+      "departureStatuses": {
+        "OPEN": "Open",
+        "CLOSED": "Closed",
+        "CANCELLED": "Cancelled"
+      },
       "addDeparture": "Add departure",
       "extras": "Optional extras",
       "extraCode": "Code",

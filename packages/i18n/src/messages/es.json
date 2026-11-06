@@ -2861,6 +2861,15 @@
     },
     "packageEdit": {
       "saveFailed": "No se pudo guardar el paquete",
+      "refusals": {
+        "title": "El paquete no se guardó. No se cambió nada.",
+        "DEPARTURE_BOOKED": "La salida del {row} tiene reservas: {codes}. Muévalas a otra salida antes de quitarla o cambiar su fecha. Para detener nuevas reservas, márquela como Cerrada.",
+        "DEPARTURE_BELOW_BOOKED": "La salida del {row} tiene {booked, plural, one {# plaza reservada} other {# plazas reservadas}} ({codes}), así que sus plazas no pueden bajar a {capacity}.",
+        "TIER_BOOKED": "La categoría {row} tiene reservas: {codes}. Muévalas a otra categoría antes de quitarla o cambiar su código.",
+        "EXTRA_BOOKED": "El extra {row} está en reservas: {codes}. Quítelo de ellas antes de eliminarlo o cambiar su código.",
+        "ROW_DUPLICATED": "{row} aparece dos veces. Deje una sola fila.",
+        "more": "{codes} y {count} más"
+      },
       "details": "Detalles",
       "name": "Nombre",
       "description": "Descripción",
@@ -2888,6 +2897,12 @@
       "departureDate": "Fecha",
       "departureSeats": "Plazas",
       "departurePrice": "Precio",
+      "departureStatus": "Estado",
+      "departureStatuses": {
+        "OPEN": "Abierta",
+        "CLOSED": "Cerrada",
+        "CANCELLED": "Cancelada"
+      },
       "addDeparture": "Añadir salida",
       "extras": "Extras opcionales",
       "extraCode": "Código",

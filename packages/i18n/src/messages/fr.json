@@ -2861,6 +2861,15 @@
     },
     "packageEdit": {
       "saveFailed": "Impossible d'enregistrer le forfait",
+      "refusals": {
+        "title": "Le forfait n'a pas été enregistré. Rien n'a changé.",
+        "DEPARTURE_BOOKED": "Le départ du {row} a des réservations : {codes}. Déplacez-les vers un autre départ avant de le retirer ou de changer sa date. Pour arrêter les nouvelles réservations, passez-le à Fermé.",
+        "DEPARTURE_BELOW_BOOKED": "Le départ du {row} a {booked, plural, one {# place réservée} other {# places réservées}} ({codes}) : ses places ne peuvent pas descendre à {capacity}.",
+        "TIER_BOOKED": "La catégorie {row} a des réservations : {codes}. Déplacez-les vers une autre catégorie avant de la retirer ou de changer son code.",
+        "EXTRA_BOOKED": "L'extra {row} figure sur des réservations : {codes}. Retirez-le de celles-ci avant de le supprimer ou de changer son code.",
+        "ROW_DUPLICATED": "{row} figure deux fois. Gardez une seule ligne.",
+        "more": "{codes} et {count} de plus"
+      },
       "details": "Détails",
       "name": "Nom",
       "description": "Description",
@@ -2888,6 +2897,12 @@
       "departureDate": "Date",
       "departureSeats": "Places",
       "departurePrice": "Prix",
+      "departureStatus": "Statut",
+      "departureStatuses": {
+        "OPEN": "Ouvert",
+        "CLOSED": "Fermé",
+        "CANCELLED": "Annulé"
+      },
       "addDeparture": "Ajouter un départ",
       "extras": "Extras en option",
       "extraCode": "Code",

@@ -1,7 +1,14 @@
 'use client';
 
 import { packagePublishIssues } from '@ota/domain';
-import type { InventoryItemDto, PackageDto, PackageStatusDto } from '@ota/schemas';
+import { packageRowsInUseSchema } from '@ota/schemas';
+import type {
+  InventoryItemDto,
+  PackageDepartureDto,
+  PackageDto,
+  PackageEditRefusalDto,
+  PackageStatusDto,
+} from '@ota/schemas';
 import {
   Alert,
   Button,
@@ -19,15 +26,18 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import { ApiError } from '@/lib/errors';
 
 interface ServiceRow {
   inventoryItemId: string;
   dayOffset: number;
 }
 
+/** The rows keep the fields this form does not show, so a save sends them back. */
 interface TierRow {
   code: string;
   name: string;
+  description: string | null;
   priceDelta: string;
   singleSupplement: string;
   isDefault: boolean;
@@ -37,20 +47,30 @@ interface DepartureRow {
   startDate: string;
   capacity: string;
   price: string;
+  status: PackageDepartureDto['status'];
 }
 
 interface ExtraRow {
   code: string;
   name: string;
+  description: string | null;
+  durationLabel: string | null;
+  inventoryItemId: string | null;
+  dayOffset: number | null;
   price: string;
   priceUnit: 'PER_PERSON' | 'PER_BOOKING';
+  active: boolean;
 }
 
 interface DayRow {
   dayOffset: number;
   title: string;
   body: string;
+  meals: string | null;
 }
+
+const DEPARTURE_STATUSES = ['OPEN', 'CLOSED', 'CANCELLED'] as const;
+const CODES_SHOWN = 5;
 
 function numberOrNull(value: string): number | null {
   return value.trim() === '' ? null : Number(value);
@@ -108,6 +128,7 @@ export function PackageEditForm({
       .map((tier) => ({
         code: tier.code,
         name: tier.name,
+        description: tier.description,
         priceDelta: tier.priceDelta,
         singleSupplement: tier.singleSupplement ?? '',
         isDefault: tier.isDefault,
@@ -118,6 +139,7 @@ export function PackageEditForm({
       startDate: departure.startDate.slice(0, 10),
       capacity: String(departure.capacity),
       price: departure.price ?? '',
+      status: departure.status,
     })),
   );
   const [extras, setExtras] = useState<ExtraRow[]>(
@@ -126,8 +148,13 @@ export function PackageEditForm({
       .map((extra) => ({
         code: extra.code,
         name: extra.name,
+        description: extra.description,
+        durationLabel: extra.durationLabel,
+        inventoryItemId: extra.inventoryItemId,
+        dayOffset: extra.dayOffset,
         price: extra.price,
         priceUnit: extra.priceUnit,
+        active: extra.active,
       })),
   );
   const [days, setDays] = useState<DayRow[]>(
@@ -137,12 +164,14 @@ export function PackageEditForm({
         dayOffset: day.dayOffset,
         title: day.title,
         body: day.body ?? '',
+        meals: day.meals,
       })),
   );
   const [newItemId, setNewItemId] = useState(items[0]?.id ?? '');
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refusals, setRefusals] = useState<PackageEditRefusalDto[]>([]);
 
   const itemName = (id: string) => items.find((item) => item.id === id)?.name ?? id;
 
@@ -156,10 +185,30 @@ export function PackageEditForm({
     );
   }
 
+  function refusalText(refusal: PackageEditRefusalDto): string {
+    if (refusal.kind === 'ROW_DUPLICATED') {
+      return t('refusals.ROW_DUPLICATED', { row: refusal.row });
+    }
+    const shown = refusal.bookingCodes.slice(0, CODES_SHOWN).join(', ');
+    const hidden = refusal.bookingCodes.length - CODES_SHOWN;
+    const codes =
+      hidden > 0 ? t('refusals.more', { codes: shown, count: hidden }) : shown;
+    if (refusal.kind === 'DEPARTURE_BELOW_BOOKED') {
+      return t('refusals.DEPARTURE_BELOW_BOOKED', {
+        row: refusal.row,
+        booked: refusal.booked,
+        capacity: refusal.capacity,
+        codes,
+      });
+    }
+    return t(`refusals.${refusal.kind}`, { row: refusal.row, codes });
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError(null);
+    setRefusals([]);
     setSaved(false);
 
     if (status === 'PUBLISHED') {
@@ -211,6 +260,7 @@ export function PackageEditForm({
           tiers: tiers.map((tier, index) => ({
             code: tier.code,
             name: tier.name,
+            description: tier.description ?? undefined,
             position: index,
             priceDelta: Number(tier.priceDelta) || 0,
             singleSupplement: numberOrNull(tier.singleSupplement),
@@ -220,25 +270,40 @@ export function PackageEditForm({
             startDate: departure.startDate,
             capacity: Number(departure.capacity),
             price: numberOrNull(departure.price),
+            status: departure.status,
           })),
           extras: extras.map((extra, index) => ({
             code: extra.code,
             name: extra.name,
+            description: extra.description ?? undefined,
+            durationLabel: extra.durationLabel ?? undefined,
+            inventoryItemId: extra.inventoryItemId ?? undefined,
+            dayOffset: extra.dayOffset ?? undefined,
             price: Number(extra.price),
             priceUnit: extra.priceUnit,
             position: index,
+            active: extra.active,
           })),
           days: days.map((day) => ({
             dayOffset: day.dayOffset,
             title: day.title,
             body: day.body || undefined,
+            meals: day.meals ?? undefined,
           })),
         }),
       });
       setSaved(true);
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : t('saveFailed'));
+      const refused =
+        saveError instanceof ApiError
+          ? packageRowsInUseSchema.safeParse(saveError.details)
+          : null;
+      if (refused?.success) {
+        setRefusals(refused.data.refusals);
+      } else {
+        setError(saveError instanceof Error ? saveError.message : t('saveFailed'));
+      }
     } finally {
       setBusy(false);
     }
@@ -570,6 +635,7 @@ export function PackageEditForm({
                 {
                   code: '',
                   name: '',
+                  description: null,
                   priceDelta: '0',
                   singleSupplement: '',
                   isDefault: false,
@@ -590,7 +656,7 @@ export function PackageEditForm({
           {departures.map((departure, index) => (
             <div
               key={index}
-              className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[auto_auto_auto_auto]"
+              className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[auto_auto_auto_auto_auto]"
             >
               <div className="space-y-1">
                 <Label htmlFor={`package-departure-date-${index}`}>
@@ -640,6 +706,26 @@ export function PackageEditForm({
                   }
                 />
               </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-departure-status-${index}`}>
+                  {t('departureStatus')}
+                </Label>
+                <Select
+                  id={`package-departure-status-${index}`}
+                  value={departure.status}
+                  onChange={(event) =>
+                    updateRow<DepartureRow>(setDepartures, index, {
+                      status: event.target.value as DepartureRow['status'],
+                    })
+                  }
+                >
+                  {DEPARTURE_STATUSES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(`departureStatuses.${value}`)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <Button
                 type="button"
                 size="sm"
@@ -658,7 +744,7 @@ export function PackageEditForm({
             onClick={() =>
               setDepartures((current) => [
                 ...current,
-                { startDate: '', capacity: '8', price: '' },
+                { startDate: '', capacity: '8', price: '', status: 'OPEN' },
               ])
             }
           >
@@ -742,7 +828,17 @@ export function PackageEditForm({
             onClick={() =>
               setExtras((current) => [
                 ...current,
-                { code: '', name: '', price: '0', priceUnit: 'PER_PERSON' },
+                {
+                  code: '',
+                  name: '',
+                  description: null,
+                  durationLabel: null,
+                  inventoryItemId: null,
+                  dayOffset: null,
+                  price: '0',
+                  priceUnit: 'PER_PERSON',
+                  active: true,
+                },
               ])
             }
           >
@@ -815,7 +911,7 @@ export function PackageEditForm({
             onClick={() =>
               setDays((current) => [
                 ...current,
-                { dayOffset: current.length, title: '', body: '' },
+                { dayOffset: current.length, title: '', body: '', meals: null },
               ])
             }
           >
@@ -825,6 +921,16 @@ export function PackageEditForm({
       </Card>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
+      {refusals.length > 0 ? (
+        <Alert variant="destructive">
+          <p>{t('refusals.title')}</p>
+          <ul className="mt-1 list-disc space-y-1 pl-4">
+            {refusals.map((refusal) => (
+              <li key={`${refusal.kind}-${refusal.row}`}>{refusalText(refusal)}</li>
+            ))}
+          </ul>
+        </Alert>
+      ) : null}
       {saved ? <Alert>{t('saved')}</Alert> : null}
 
       <div className="flex flex-wrap items-center gap-3">
