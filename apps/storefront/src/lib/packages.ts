@@ -26,12 +26,21 @@ export async function getPackages(): Promise<PackageDto[]> {
   }
 }
 
-export async function getPackage(slug: string): Promise<PackageDto | null> {
+/**
+ * Read one curated package, cached for 60s like the list. `fresh` skips the
+ * cache: the Booking form posts the departure ids it was rendered with, and a
+ * package save in the editor replaces them, so a cached copy can offer ids the
+ * API then refuses.
+ */
+export async function getPackage(
+  slug: string,
+  { fresh = false }: { fresh?: boolean } = {},
+): Promise<PackageDto | null> {
   try {
     const locale = await getLocale();
     const response = await fetch(
       `${apiBaseUrl()}/catalog/packages/${encodeURIComponent(slug)}?locale=${encodeURIComponent(locale)}`,
-      { next: { revalidate: 60 } },
+      fresh ? { cache: 'no-store' } : { next: { revalidate: 60 } },
     );
     if (!response.ok) {
       return null;

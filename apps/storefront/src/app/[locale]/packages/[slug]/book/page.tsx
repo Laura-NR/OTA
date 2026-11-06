@@ -26,7 +26,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const [pkg, t] = await Promise.all([
-    getPackage((await params).slug),
+    getPackage((await params).slug, { fresh: true }),
     getTranslations('booking'),
   ]);
   return { title: pkg ? t('metaTitle', { name: pkg.name }) : undefined };
@@ -54,7 +54,7 @@ export default async function BookPackagePage({
   }
 
   const [pkg, legal, t, nav] = await Promise.all([
-    getPackage(slug),
+    getPackage(slug, { fresh: true }),
     getPageContent('legal', legalContentSchema),
     getTranslations('packages'),
     getTranslations('nav'),
