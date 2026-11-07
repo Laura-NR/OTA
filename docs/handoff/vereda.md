@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-07 18:30
+# Handoff — vereda — updated 2026-11-07 13:40
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -29,6 +29,19 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-07: a tier or extra changed under a booking**, the owner's pick; no migration,
+  dependency, route or screen (`a775c55`). Reproduced on the live DB: a save between the Booking
+  form's checks and its transaction that removed the chosen tier or extra gave a raw Prisma FK
+  error (500); one that withdrew an extra (`active: false`) sold it. The desk's party edit had
+  the same gap for its tier.
+  - `claimPackageChoices` (`apps/api/src/travelers/departure-seats.ts`) runs after
+    `claimDepartureSeats` in both writers: `FOR SHARE` on the tier and the extras (in id order),
+    then 409 "That tier is no longer offered…" / "An extra is no longer offered…". A save that
+    comes during a booking now waits on those rows and then refuses (`TIER_BOOKED`,
+    `EXTRA_BOOKED`).
+  - The save's extras `FOR UPDATE` now goes `ORDER BY id`, as the claim does, so a booking
+    holding two extras cannot deadlock against a save. Lock order stays departures → tiers →
+    extras.
 - **2026-11-07: "Keep building the trip"** (M10's deferred builder edit), the owner's pick, editable
   until the desk sends a proposal; no migration or dependency, one route (`2629b61`…`f08cbb6`;
   `docs/schema-m10-events.md` §8, ADR 0006 amendment of that day). A desk version is created and
@@ -435,31 +448,34 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-07, "Keep building the trip", dev stack stopped for the build)
+## Verified (2026-11-07, the tier/extra hold, dev stack stopped for the build)
+- Gate 1, live DB (`RUN_DB_INTEGRATION=1`): before the fix, a tier or extra removed after the
+  Booking form's checks threw `PrismaClientKnownRequestError` (500), a withdrawn extra was
+  booked, and the desk's party edit onto a removed tier threw the same Prisma error. After:
+  409, nothing written (`package-booking.integration.test.ts`, 4 new tests).
+- Removing `FOR SHARE` from `claimPackageChoices` makes the new lock test in
+  `packages.integration.test.ts` fail (the save removes the rows, the booking hits the FK);
+  restored. Removing the party edit's claim makes its test fail; restored.
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1261 passed / 45 skipped**, 30/30 tasks (new: 14 domain tests in
-  `request-edit.test.ts`, the PUT row in the RBAC matrix, and live tests that skip here).
+- `TURBO_FORCE=true pnpm test` **1261 passed / 50 skipped**, 30/30 tasks (the five new tests are
+  live and skip here; the two unit fakes now answer the tier/extra locks).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **44/44**, 12 files:
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **49/49**, 12 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events,permission-overrides}.integration.test.ts` and
-  `{dispatch,compliance}.bullmq.integration.test.ts`. New:
-  three in `proposals.integration` (edit until sent, stale send 409 `RequestChanged`, stranger
-  404, an edit waiting on a send's lock) and one in `events.integration` (three refusals, then
-  a kept edit).
-- Removing the edit's `FOR UPDATE` makes the lock test fail; restored.
-- `pnpm e2e` (full, 1.1 h): **166 passed, 1 failed, 3 skipped**. The one was
-  `responsive.spec.ts:118` at ds07-414 (`page.goto` timeout on `/en/no-such-page`, the known
-  storefront wedge); alone on fresh servers it passes (1.7 min). The new
-  `storefront-keep-building.spec.ts` and the events refusal pass in both runs.
-- Browser widths against the dev stack (throwaway script, en-US): the storefront proposal page,
-  the builder in edit mode, the desk detail and the queue row at 390/1024/1280 — scrollWidth
-  equals innerWidth on every page; the keep-building link is a 40 px secondary button; the desk
-  note is the warning Alert (amber text on amber surface) and the compose hint the info Alert;
-  the queue badge is the 24 px warning Badge (inside the table's own scroll region at 390).
-  Its three fixture requests and their audit rows were deleted afterwards.
-- Not run: a clean full e2e (one test rerun alone); a real screen reader; a deploy.
+  `{dispatch,compliance}.bullmq.integration.test.ts`.
+- `pnpm e2e` (full, 1.2 h): **162 passed, 5 failed, 3 skipped**. Rerun alone on fresh servers,
+  `storefront-builder.spec.ts:65`, `storefront-keyboard.spec.ts:89` and `responsive.spec.ts:118`
+  (ds07-414, ds07-1440) pass. `accessibility.spec.ts:99` (customer pages) failed all three
+  times, at `networkidle` on `/en/no-such-page`; after the last run `/en/no-such-page`
+  answered in 0.3 s but `/en` hung past 90 s, the storefront `next-server` at 7.5 GB RSS and
+  79 % CPU after 9 minutes, the API answering in ms (Traps, storefront dev server). No
+  storefront, desk or package code changed this session (`git diff c6525bd..HEAD`), so this
+  is the known wedge, not the fix.
+- No browser width check: nothing on screen changed (the refusals are the API's English, shown
+  as the Booking form and the desk already show the seat-claim 409s).
+- Not run: a clean customer-pages axe audit today; a real screen reader; a deploy.
 
 ## Assumptions & unknowns
 - **Keep building (2026-11-07):** the words are placeholders for the copy review (the board has
@@ -479,8 +495,12 @@ events (T-Events)".
   with both problems hears about those first. Bookings on one departure queue on its row for the
   whole transaction, including the affidavit upload; waiting counts against Prisma's 5 s
   interactive timeout. Measured: 20 at once on 8 seats took 207 ms, in-memory storage, not S3. A
-  tier or extra deleted by a save after the form's checks is still a foreign-key 500 that
-  rolls back (not new; nothing is sold wrongly).
+  tier or extra removed or withdrawn after the form's checks is a 409 since 2026-11-07.
+- **Stale price window (2026-11-07, not fixed):** `plan()` prices from the package it read
+  before the transaction. A save that changes a kept tier's, extra's or departure's price in
+  place between the two (milliseconds) leaves the booking at the price shown, which the
+  traveler accepted; the claim checks only that the rows still exist and are offered.
+  Re-pricing under the locks would close it, if the owner wants that.
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
 - **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. Env from M9:
   `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`;
@@ -595,12 +615,15 @@ events (T-Events)".
   live event test failed on exactly that.
 - **Storefront dev server (2026-11-06):** the first customer-pages audit timed out on 3 of 8
   cold starts today, with RSS 6–8 GB within 20 minutes; once, every page then timed out, even
-  `curl` at 90 s. Cause not found. Not the pages: all 19 customer pages went idle in about 4 s each in a probe of the same list; not the
+  `curl` at 90 s. Cause not found. 2026-11-07: the customer-pages audit wedged 3 of 3 (one
+  full run, two fresh reruns) with the machine at 17/23 GB and 10 GB swap; the 404 page still
+  answered, home did not. Not the pages: all 19 customer pages went idle in about 4 s each in a probe of the same list; not the
   API: the A/B above. The body "16 px" failure is a symptom of it, not a font bug. Check `curl`
   on :3000 before believing a storefront failure. `reuseExistingServer` reuses a wedged server,
   so back-to-back `playwright test` runs are not fresh, and each run clears `test-results`:
   copy the trace out before the next. A fresh server also needs the `sh -c next dev` parents
-  killed.
+  killed. Kill by the PIDs `ss -ltnp` and `ps` show: `pgrep -f 'next dev'` inside a shell
+  command also matches that shell, and `kill` then ends the command itself (exit 144).
 - **Seat locks (2026-11-06):** call `claimDepartureSeats` before the reservation is written. The
   row's foreign key takes a share lock on the departure, and two transactions upgrading theirs
   deadlock. Any new lock in a package save or a booking must follow departures → tiers → extras.
@@ -961,6 +984,14 @@ events (T-Events)".
   `page.request` resolves relative URLs against the back-office (prefix storefront links);
   the notification scans mail every matching dev booking (filter Mailpit by booking code);
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
+- **Raw-SQL fakes (2026-11-07):** `apps/api/test/package-booking.e2e.test.ts` and
+  `travelers.e2e.test.ts` answer `$queryRaw` by the table named in the SQL text (departures,
+  tiers, extras). A new raw lock in a booking writer makes 18 of their tests fail until the fake
+  answers that table too.
+- **Proving a lock (2026-11-07):** the FOR SHARE test in `packages.integration.test.ts` fails
+  with a Prisma FK error when `FOR SHARE` is removed; the race tests in
+  `package-booking.integration.test.ts` insert the change with `afterPlanning` (Booking form)
+  or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
   - "2026-11-07: a custom request is editable only while it is OPEN and its proposal DRAFT
@@ -1098,11 +1129,17 @@ events (T-Events)".
     `@NotOverridable()`. The desk decides actions with `deskAccess(role, row)`. Tag new staff
     routes and add them to the RBAC matrix."
 
+  - "2026-11-07: a booking writer (the Booking form, the desk's party edit) holds its departure
+    `FOR UPDATE` (`claimDepartureSeats`), then its tier and extras `FOR SHARE`, extras in id
+    order (`claimPackageChoices`, `apps/api/src/travelers/departure-seats.ts`), before its
+    row is written; a package save locks departures, tiers, then extras `FOR UPDATE` in the
+    same order. Keep both orders when adding a lock."
+
 ## Next
 1. Owner: choose the next batch. M9's board items are all built (manifest editing beyond the
    flags stays deferred). M10's room holds/event photos need a migration doc first; they are
-   the last M10 deferred item. Smaller, no migration: a tier or extra deleted by a save after
-   the Booking form's checks is a foreign-key 500 (Assumptions, seat claim). A
+   the last M10 deferred item. Smaller, no migration: re-price a booking under its row locks
+   (Assumptions, stale price window), only if the owner wants it. A
    real screen-reader run
    (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
    banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
@@ -1653,3 +1690,9 @@ events (T-Events)".
   a row lock on the proposal in both the edit and the send, plus the desk's `updatedAt` stamp,
   over a request version column (a migration); the edit history lives in audit rows. An edit
   that would strand event seats is refused rather than unlinking the event request.
+- 2026-11-07 — the owner chose the tier/extra 500 next (over M10's room holds and photos, the
+  desktop cookie banner, and answering the deployment plan; the plan is unanswered and
+  Plausible CE is not installed). Chose `FOR SHARE` on the booking's tier and extras after
+  the departure claim, over re-reading the whole package under locks or re-pricing there.
+  Also refused an extra withdrawn in the window (the same check `plan()` makes) and fixed the
+  desk's party edit tier, as the same bug.
