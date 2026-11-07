@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-06 17:20
+# Handoff — vereda — updated 2026-11-07 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -11,7 +11,8 @@ on 2026-10-29 the accessibility passes, the alert cue and the storefront design 
 on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on every desk
 page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
-"about" lines, on 2026-11-06 the package editor's refusals) and
+"about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
+trip") and
 ADR 0007 (worker
 app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
@@ -28,6 +29,25 @@ events (T-Events)".
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
+- **2026-11-07: "Keep building the trip"** (M10's deferred builder edit), the owner's pick, editable
+  until the desk sends a proposal; no migration or dependency, one route (`2629b61`…`f08cbb6`;
+  `docs/schema-m10-events.md` §8, ADR 0006 amendment of that day). A desk version is created and
+  sent in one step, so "until sent" is request `OPEN` + proposal `DRAFT` (`customRequestEditable`).
+  - Rules `packages/domain/src/proposals/request-edit.ts`: `customRequestEditable`,
+    `customRequestChanges` (which parts changed, for the desk), `eventLinkRefusals` (a live
+    event request's nights, seats and province must still fit the trip).
+  - API: `PUT /me/proposals/:id/request` (`ProposalsService.updateRequestForUser`), the whole
+    answers again, under `FOR UPDATE` on the proposal; 409 `RequestNotEditable` /
+    `RequestLinkedToEvent` (`refusals`). `createVersion` takes the same lock and an optional
+    `requestUpdatedAt`; a change since is 409 `RequestChanged`. Edits are audit rows
+    `custom_request.edited` with `changed`; the DTOs gained `request.updatedAt`,
+    `request.lastEdit`, `editable`, the queue's `editedAt` and the event result's `proposalId`.
+  - Storefront: `/custom?edit=<proposal id>` opens the builder on the request (or a "with our
+    team" card once sent); links from the proposal page while being priced and from the event
+    request's confirmation (the board's button). No funnel telemetry for an edit.
+  - Desk: the request card's "Changed by the traveler on … : dates, route." Alert, the composer's
+    "can still change" note, a kept draft on `RequestChanged`, the queue's "Changed" badge.
+  - e2e `storefront-keep-building.spec.ts`; the event-seat refusal in `events.spec.ts`.
 - **2026-11-06: the departure seat race**, the owner's pick; no migration, dependency, route or
   screen (`8250bcc`). Two paths took seats, not one: the Booking form and the desk's party edit
   both counted places before their transaction with nothing held, so both bookings could take
@@ -415,36 +435,42 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-06, the departure seat race, dev stack stopped for the build)
-- Gate 1, before the fix (`RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest run
-  test/package-booking.integration.test.ts test/packages.integration.test.ts`): both bookings
-  succeeded on a 2-seat departure; a departure closed mid-flight took a booking; a removed one
-  gave a foreign-key error; a party grew past the capacity. All pass after it.
-- Removing a guard makes its test fail: without `FOR UPDATE` in the claim, 2 live tests fail;
-  with the save's old tier-first order, the save test fails and Postgres logs `deadlock
-  detected` on the departure lock.
-- Throwaway burst, not committed: 20 bookings at once on 8 seats: 4 booked, 16 refused with the
-  409, no 500, 8 seats, 207 ms. The two live test files: 14/14 five times running.
+## Verified (2026-11-07, "Keep building the trip", dev stack stopped for the build)
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1247 passed / 41 skipped**, 30/30 tasks (new: `travelers.e2e`
-  1 and 5 live tests that skip here). No new route, so the RBAC matrix is as was.
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached, on free ports; `apps/*/.next` deleted.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **40/40**, 12 files:
-  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
-  advisories,disruptions,events,permission-overrides}.integration.test.ts` and
-  `{dispatch,compliance}.bullmq.integration.test.ts`.
-- `pnpm e2e` (full, 1.2 h): **163 passed, 3 failed, 3 skipped**. The three were
-  `accessibility.spec.ts:99` (timeout at `networkidle`) and `responsive.spec.ts:118` at ds07-375
-  and ds07-414 (body 16 px, not 18). On truly fresh servers each one alone passes:
-  `responsive` 1.7 min each, the audit 2.1 min. See Traps "Storefront dev server".
-- A/B of the cold audit: `apps/api` at `c3b3014` 2.2 min, at `HEAD` 2.1 min, both pass.
-- Browser widths: nothing visual was built, so no 390/1024/1280 check.
-- Not run: a clean full e2e (the 3 above were rerun alone); a dedicated e2e of the race (it needs
-  two writers paused at one moment, so the proof is the live tests); S3 under the burst; a
-  real screen reader; a deploy behind a real proxy.
+- `TURBO_FORCE=true pnpm test` **1261 passed / 45 skipped**, 30/30 tasks (new: 14 domain tests in
+  `request-edit.test.ts`, the PUT row in the RBAC matrix, and live tests that skip here).
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **44/44**, 12 files (same
+  list as before: the ten `apps/api/test/*.integration.test.ts` plus the two bullmq ones). New:
+  three in `proposals.integration` (edit until sent, stale send 409 `RequestChanged`, stranger
+  404, an edit waiting on a send's lock) and one in `events.integration` (three refusals, then
+  a kept edit).
+- Removing the edit's `FOR UPDATE` makes the lock test fail; restored.
+- `pnpm e2e` (full, 1.1 h): **166 passed, 1 failed, 3 skipped**. The one was
+  `responsive.spec.ts:118` at ds07-414 (`page.goto` timeout on `/en/no-such-page`, the known
+  storefront wedge); alone on fresh servers it passes (1.7 min). The new
+  `storefront-keep-building.spec.ts` and the events refusal pass in both runs.
+- Browser widths against the dev stack (throwaway script, en-US): the storefront proposal page,
+  the builder in edit mode, the desk detail and the queue row at 390/1024/1280 — scrollWidth
+  equals innerWidth on every page; the keep-building link is a 40 px secondary button; the desk
+  note is the warning Alert (amber text on amber surface) and the compose hint the info Alert;
+  the queue badge is the 24 px warning Badge (inside the table's own scroll region at 390).
+  Its three fixture requests and their audit rows were deleted afterwards.
+- Not run: a clean full e2e (one test rerun alone); a real screen reader; a deploy.
 
 ## Assumptions & unknowns
+- **Keep building (2026-11-07):** the words are placeholders for the copy review (the board has
+  only the English button; es/fr are ours). Assumed: an edit is a whole replacement (PUT), so
+  the builder sends the notes back and a cleared box clears them; an event-derived request's
+  system note ("Event request VX-E-… · name") shows in that box and the traveler can delete it
+  (the link itself is `EventRequest.customRequestId`, untouched). A stop without a stay opens on
+  the tenant's default, so saving an event-derived trip lists "stays" only if a shared stop's
+  style changes. The event fit checks only live requests (SUBMITTED/REQUESTING/CONFIRMED) and
+  only a non-empty route's province. `requestUpdatedAt` is optional, so a client that omits it
+  skips the stale check (the desk always sends it). No email tells the desk about an edit (the
+  queue badge and the card do); no funnel events for an edit (assumed, to keep the funnel's
+  counts honest).
 - **Seat claim (2026-11-06):** the refusals' wording is the API's English, shown as it stands by
   the Booking form in every locale (as before; `booking-flow.tsx` prints `body.message`). A full
   or closed departure is now refused after the price and certification checks, so a request
@@ -559,6 +585,12 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Keep building (2026-11-07):** `createVersion` now runs `$queryRaw` (the proposal lock) first in
+  its transaction, so a fake Prisma on that path needs `$queryRaw` returning `[{ updated_at }]`.
+  Prisma's `@updatedAt` moves on any client write to `custom_requests`: an e2e or fixture that
+  updates a request invalidates an open desk page's stamp (`storefront-keep-building.spec.ts`
+  does this on purpose to force `RequestChanged`). A PUT without `notes` clears them; the first
+  live event test failed on exactly that.
 - **Storefront dev server (2026-11-06):** the first customer-pages audit timed out on 3 of 8
   cold starts today, with RSS 6–8 GB within 20 minutes; once, every page then timed out, even
   `curl` at 90 s. Cause not found. Not the pages: all 19 customer pages went idle in about 4 s each in a probe of the same list; not the
@@ -929,6 +961,12 @@ events (T-Events)".
   a hand-built `ReservationsService` needs a `NotificationsService` stub.
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-07: a custom request is editable only while it is OPEN and its proposal DRAFT
+    (`customRequestEditable`). `PUT /me/proposals/:id/request` and `createVersion` both take
+    `FOR UPDATE` on the proposal first; a send carrying `requestUpdatedAt` refuses a request
+    changed since (409 `RequestChanged`). Edits are `custom_request.edited` audit rows with
+    `changed`, not a column; an edit must keep its live event requests' seats
+    (`eventLinkRefusals`)."
   - "2026-11-06: a departure's seats, status and capacity are decided only by
     `claimDepartureSeats`, first in the transaction that writes them (`FOR UPDATE` on the
     departure). Anything that takes seats must call it before writing the reservation, and
@@ -1060,8 +1098,9 @@ events (T-Events)".
 
 ## Next
 1. Owner: choose the next batch. M9's board items are all built (manifest editing beyond the
-   flags stays deferred). M10's room holds/event photos need a migration doc first; "Keep
-   building the trip" (editing a submitted custom request) is the other M10 deferred item. A
+   flags stays deferred). M10's room holds/event photos need a migration doc first; they are
+   the last M10 deferred item. Smaller, no migration: a tier or extra deleted by a save after
+   the Booking form's checks is a foreign-key 500 (Assumptions, seat claim). A
    real screen-reader run
    (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
    banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
@@ -1605,3 +1644,10 @@ events (T-Events)".
   a seat counter (a migration) or SERIALIZABLE retries. The check moved there rather than being
   repeated, so one place decides. Moved the save's departure lock ahead of its tier lock rather
   than taking a tier lock on every booking. Fixed the desk's party edit too, as the same bug.
+- 2026-11-07 — the owner chose "Keep building the trip" next (over the tier/extra 500, M10's room
+  holds and photos, and answering the deployment plan; the plan is unanswered and Plausible CE
+  is not installed), editable until a proposal is sent (over until the desk starts a draft, or
+  any time it is open). Since a version is created and sent at once, that is OPEN + DRAFT. Chose
+  a row lock on the proposal in both the edit and the send, plus the desk's `updatedAt` stamp,
+  over a request version column (a migration); the edit history lives in audit rows. An edit
+  that would strand event seats is refused rather than unlinking the event request.
