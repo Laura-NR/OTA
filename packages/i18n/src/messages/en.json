@@ -696,7 +696,24 @@
     "requestedLede": "A specialist will send your priced proposal by email.",
     "reference": "Reference",
     "requestedNote": "Nothing is charged yet.",
-    "openProposal": "Open my proposal"
+    "openProposal": "Open my proposal",
+    "edit": {
+      "title": "Keep building the trip",
+      "description": "Change request {reference}. Your specialist sees the changes before pricing it.",
+      "submit": "Save my changes",
+      "submitting": "Saving…",
+      "savedTitle": "Request updated",
+      "savedLede": "A specialist will price the updated request and email you.",
+      "error": "Could not save the changes",
+      "lockedTitle": "This request is with our team",
+      "locked": "We have sent the priced proposal for {reference}, so it can no longer be changed here. To change it, contact us.",
+      "refusedTitle": "These changes would leave out your event seats:",
+      "refusals": {
+        "EVENT_DATES": "The trip must still cover the nights of {event} ({reference}).",
+        "EVENT_PARTY": "The party must have at least as many people as the seats for {event} ({reference}).",
+        "EVENT_PLACE": "The route must still stop where {event} takes place ({reference})."
+      }
+    }
   },
   "login": {
     "title": "Sign in",
@@ -3438,7 +3455,10 @@
     "openTrip": "Open my trip",
     "declined": "You declined this proposal.",
     "expired": "This proposal has expired. Ask us for a new one.",
-    "noVersion": "We are preparing your priced proposal."
+    "noVersion": "We are preparing your priced proposal.",
+    "keepBuilding": "Keep building the trip",
+    "keepBuildingHint": "You can change your request until we send the priced proposal.",
+    "edited": "You changed this request on {date}."
   },
   "proposalsDesk": {
     "title": "Custom proposals",
@@ -3540,6 +3560,26 @@
       "PER_NIGHT": "Per night",
       "PER_DAY": "Per day",
       "PER_GROUP": "Per group"
+    },
+    "edited": "Changed by the traveler on {date}: {changes}.",
+    "editedBadge": "Changed",
+    "travelerCanEdit": "The traveler can still change this request until you publish.",
+    "requestChanged": "The traveler changed the request while you were writing. The request above now shows the changes; check your draft and publish again.",
+    "changes": {
+      "dates": "dates",
+      "party": "party",
+      "route": "route",
+      "stays": "stays",
+      "pace": "pace",
+      "interests": "interests",
+      "transport": "transport",
+      "activities": "activities",
+      "guiding": "guiding",
+      "access": "access needs",
+      "nationality": "nationality",
+      "budget": "budget",
+      "notes": "notes",
+      "language": "language"
     }
   },
   "advisoriesDesk": {
@@ -4194,7 +4234,8 @@
         "body": "Within {hours} hours a specialist confirms whether we can request these seats.",
         "confirmBy": "Seats are confirmed, or not, by {date}.",
         "trip": "Your trip request is {reference}; the proposal follows.",
-        "track": "Track it in your account"
+        "track": "Track it in your account",
+        "keepBuilding": "Keep building the trip"
       }
     },
     "mine": {

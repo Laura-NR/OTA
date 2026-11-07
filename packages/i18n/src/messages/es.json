@@ -696,7 +696,24 @@
     "requestedLede": "Un especialista te enviará tu propuesta con precio por email.",
     "reference": "Referencia",
     "requestedNote": "Aún no se cobra nada.",
-    "openProposal": "Abrir mi propuesta"
+    "openProposal": "Abrir mi propuesta",
+    "edit": {
+      "title": "Seguir armando el viaje",
+      "description": "Cambia la solicitud {reference}. Tu especialista ve los cambios antes de ponerle precio.",
+      "submit": "Guardar mis cambios",
+      "submitting": "Guardando…",
+      "savedTitle": "Solicitud actualizada",
+      "savedLede": "Un especialista pondrá precio a la solicitud actualizada y te escribirá.",
+      "error": "No se pudieron guardar los cambios",
+      "lockedTitle": "Esta solicitud ya está con nuestro equipo",
+      "locked": "Ya enviamos la propuesta con precios de {reference}, así que aquí ya no se puede cambiar. Para cambiarla, escríbenos.",
+      "refusedTitle": "Estos cambios dejarían fuera tus entradas del evento:",
+      "refusals": {
+        "EVENT_DATES": "El viaje debe seguir incluyendo las noches de {event} ({reference}).",
+        "EVENT_PARTY": "El grupo debe tener al menos tantas personas como entradas para {event} ({reference}).",
+        "EVENT_PLACE": "La ruta debe seguir pasando por donde se celebra {event} ({reference})."
+      }
+    }
   },
   "login": {
     "title": "Iniciar sesión",
@@ -3438,7 +3455,10 @@
     "openTrip": "Abrir mi viaje",
     "declined": "Has rechazado esta propuesta.",
     "expired": "Esta propuesta ha caducado. Pídenos una nueva.",
-    "noVersion": "Estamos preparando tu propuesta con precio."
+    "noVersion": "Estamos preparando tu propuesta con precio.",
+    "keepBuilding": "Seguir armando el viaje",
+    "keepBuildingHint": "Puedes cambiar tu solicitud hasta que te enviemos la propuesta con precios.",
+    "edited": "Cambiaste esta solicitud el {date}."
   },
   "proposalsDesk": {
     "title": "Propuestas a medida",
@@ -3540,6 +3560,26 @@
       "PER_NIGHT": "Por noche",
       "PER_DAY": "Por día",
       "PER_GROUP": "Por grupo"
+    },
+    "edited": "El viajero la cambió el {date}: {changes}.",
+    "editedBadge": "Cambiada",
+    "travelerCanEdit": "El viajero puede cambiar esta solicitud hasta que publiques.",
+    "requestChanged": "El viajero cambió la solicitud mientras escribías. La solicitud de arriba ya muestra los cambios; revisa tu borrador y vuelve a publicar.",
+    "changes": {
+      "dates": "fechas",
+      "party": "grupo",
+      "route": "ruta",
+      "stays": "alojamientos",
+      "pace": "ritmo",
+      "interests": "intereses",
+      "transport": "transporte",
+      "activities": "actividades",
+      "guiding": "guía",
+      "access": "accesibilidad",
+      "nationality": "nacionalidad",
+      "budget": "presupuesto",
+      "notes": "notas",
+      "language": "idioma"
     }
   },
   "advisoriesDesk": {
@@ -4194,7 +4234,8 @@
         "body": "En {hours} horas un especialista confirma si podemos pedir estas entradas.",
         "confirmBy": "Las entradas se confirman, o no, antes del {date}.",
         "trip": "Tu solicitud de viaje es {reference}; la propuesta llegará después.",
-        "track": "Seguirla en tu cuenta"
+        "track": "Seguirla en tu cuenta",
+        "keepBuilding": "Seguir armando el viaje"
       }
     },
     "mine": {

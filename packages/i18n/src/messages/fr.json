@@ -696,7 +696,24 @@
     "requestedLede": "Un spécialiste vous enverra votre proposition chiffrée par e-mail.",
     "reference": "Référence",
     "requestedNote": "Rien n'est encore débité.",
-    "openProposal": "Ouvrir ma proposition"
+    "openProposal": "Ouvrir ma proposition",
+    "edit": {
+      "title": "Continuer à construire le voyage",
+      "description": "Modifiez la demande {reference}. Votre spécialiste voit les changements avant de la chiffrer.",
+      "submit": "Enregistrer mes changements",
+      "submitting": "Enregistrement…",
+      "savedTitle": "Demande mise à jour",
+      "savedLede": "Un spécialiste chiffrera la demande mise à jour et vous écrira.",
+      "error": "Les changements n'ont pas pu être enregistrés",
+      "lockedTitle": "Cette demande est entre les mains de notre équipe",
+      "locked": "Nous avons envoyé la proposition chiffrée de {reference}, elle ne peut donc plus être modifiée ici. Pour la changer, contactez-nous.",
+      "refusedTitle": "Ces changements laisseraient de côté vos places pour l'événement :",
+      "refusals": {
+        "EVENT_DATES": "Le voyage doit toujours couvrir les soirées de {event} ({reference}).",
+        "EVENT_PARTY": "Le groupe doit compter au moins autant de personnes que de places pour {event} ({reference}).",
+        "EVENT_PLACE": "L'itinéraire doit toujours passer par le lieu de {event} ({reference})."
+      }
+    }
   },
   "login": {
     "title": "Se connecter",
@@ -3438,7 +3455,10 @@
     "openTrip": "Ouvrir mon voyage",
     "declined": "Vous avez refusé cette proposition.",
     "expired": "Cette proposition a expiré. Demandez-nous-en une nouvelle.",
-    "noVersion": "Nous préparons votre proposition chiffrée."
+    "noVersion": "Nous préparons votre proposition chiffrée.",
+    "keepBuilding": "Continuer à construire le voyage",
+    "keepBuildingHint": "Vous pouvez modifier votre demande jusqu'à l'envoi de la proposition chiffrée.",
+    "edited": "Vous avez modifié cette demande le {date}."
   },
   "proposalsDesk": {
     "title": "Propositions sur mesure",
@@ -3540,6 +3560,26 @@
       "PER_NIGHT": "Par nuit",
       "PER_DAY": "Par jour",
       "PER_GROUP": "Par groupe"
+    },
+    "edited": "Modifiée par le voyageur le {date} : {changes}.",
+    "editedBadge": "Modifiée",
+    "travelerCanEdit": "Le voyageur peut encore modifier cette demande jusqu'à ce que vous publiiez.",
+    "requestChanged": "Le voyageur a modifié la demande pendant que vous écriviez. La demande ci-dessus affiche les changements ; vérifiez votre brouillon et publiez à nouveau.",
+    "changes": {
+      "dates": "dates",
+      "party": "groupe",
+      "route": "itinéraire",
+      "stays": "hébergements",
+      "pace": "rythme",
+      "interests": "centres d’intérêt",
+      "transport": "transport",
+      "activities": "activités",
+      "guiding": "guidage",
+      "access": "accessibilité",
+      "nationality": "nationalité",
+      "budget": "budget",
+      "notes": "notes",
+      "language": "langue"
     }
   },
   "advisoriesDesk": {
@@ -4194,7 +4234,8 @@
         "body": "Sous {hours} heures, un spécialiste confirme si nous pouvons demander ces places.",
         "confirmBy": "Les places sont confirmées, ou non, avant le {date}.",
         "trip": "Votre demande de voyage est {reference} ; la proposition suit.",
-        "track": "La suivre dans votre compte"
+        "track": "La suivre dans votre compte",
+        "keepBuilding": "Continuer à construire le voyage"
       }
     },
     "mine": {
