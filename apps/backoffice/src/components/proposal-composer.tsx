@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import { ApiError } from '@/lib/errors';
 import { money } from '@/lib/ops-format';
 
 export interface ComposerItem {
@@ -118,15 +119,20 @@ function initialLines(
  * can add and the price lines. The server snapshots the terms, computes the
  * total from the lines, sends the email and marks the proposal SENT; a
  * revision is another version, and the composer starts from the current one
- * (or, for the first, from the traveler's route).
+ * (or, for the first, from the traveler's route). It sends the request stamp
+ * it was given: if the traveler changed the request since, the server refuses
+ * the version, and the draft here is kept while the page reloads the request.
  */
 export function ProposalComposer({
   proposalId,
+  requestUpdatedAt,
   payload,
   items,
   current,
 }: {
   proposalId: string;
+  /** The request's `updatedAt` the page showed. */
+  requestUpdatedAt: string;
   payload: ProposalRequestPayloadDto;
   items: ComposerItem[];
   current: ProposalVersionDto | undefined;
@@ -178,6 +184,7 @@ export function ProposalComposer({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [changed, setChanged] = useState(false);
 
   const total = lines.reduce(
     (sum, line) => sum + (Number(line.quantity) || 0) * (Number(line.unitAmount) || 0),
@@ -220,10 +227,12 @@ export function ProposalComposer({
   async function publish() {
     setBusy(true);
     setError(null);
+    setChanged(false);
     try {
       await apiRequest(`/proposals/${proposalId}/versions`, {
         method: 'POST',
         body: JSON.stringify({
+          requestUpdatedAt,
           summary: summary.trim(),
           ...(validUntil ? { validUntil } : {}),
           stops: stops.map((stop) => ({
@@ -259,6 +268,16 @@ export function ProposalComposer({
       });
       router.refresh();
     } catch (publishError) {
+      if (
+        publishError instanceof ApiError &&
+        publishError.status === 409 &&
+        (publishError.details as { error?: unknown } | undefined)?.error ===
+          'RequestChanged'
+      ) {
+        setChanged(true);
+        router.refresh();
+        return;
+      }
       setError(publishError instanceof Error ? publishError.message : t('failed'));
     } finally {
       setBusy(false);
@@ -656,6 +675,7 @@ export function ProposalComposer({
         </Button>
       </div>
 
+      {changed ? <Alert variant="warning">{t('requestChanged')}</Alert> : null}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
     </div>
   );

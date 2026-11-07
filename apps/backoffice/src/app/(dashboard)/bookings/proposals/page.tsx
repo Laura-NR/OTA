@@ -90,9 +90,19 @@ export default async function ProposalsPage() {
                         {bookingDates(proposal.startDate, proposal.endDate, locale)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={VARIANTS[proposal.status]}>
-                          {t(`statuses.${proposal.status}`)}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1.5">
+                          <Badge variant={VARIANTS[proposal.status]}>
+                            {t(`statuses.${proposal.status}`)}
+                          </Badge>
+                          {proposal.status === 'DRAFT' && proposal.editedAt ? (
+                            <Badge
+                              variant="warning"
+                              title={opsDate(proposal.editedAt, locale)}
+                            >
+                              {t('editedBadge')}
+                            </Badge>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {proposal.total && proposal.currency

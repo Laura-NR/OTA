@@ -24,7 +24,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalComposer, type ComposerItem } from '@/components/proposal-composer';
 import { apiFetch } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
-import { bookingDates, calendarDate, money } from '@/lib/ops-format';
+import { bookingDates, calendarDate, money, opsDate } from '@/lib/ops-format';
 
 const VARIANTS: Record<ProposalDto['status'], BadgeVariant> = {
   DRAFT: 'outline',
@@ -56,6 +56,7 @@ export default async function ProposalDetailPage({
   );
   const inventory = await apiFetch<InventoryItemDto[]>('/inventory').catch(() => []);
   const payload = proposal.request.payload;
+  const lastEdit = proposal.request.lastEdit;
   const current = proposal.versions[0];
   const chosen = inventory
     .filter((item) => payload.inventoryItemIds.includes(item.id))
@@ -120,6 +121,14 @@ export default async function ProposalDetailPage({
           <CardTitle>{t('requestTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          {lastEdit ? (
+            <Alert variant={proposal.editable ? 'warning' : 'info'}>
+              {t('edited', {
+                date: opsDate(lastEdit.at, locale),
+                changes: lastEdit.changed.map((key) => t(`changes.${key}`)).join(', '),
+              })}
+            </Alert>
+          ) : null}
           <dl className="grid gap-3 text-body-sm sm:grid-cols-2">
             <div>
               <dt className="text-caption uppercase text-muted">{t('customer')}</dt>
@@ -332,9 +341,11 @@ export default async function ProposalDetailPage({
           <CardHeader>
             <CardTitle>{t('composeTitle')}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col gap-4">
+            {proposal.editable ? <Alert>{t('travelerCanEdit')}</Alert> : null}
             <ProposalComposer
               proposalId={proposal.id}
+              requestUpdatedAt={proposal.request.updatedAt}
               payload={payload}
               items={chosen}
               current={current}
