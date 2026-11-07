@@ -427,7 +427,12 @@ export {
   proposalStatusSchema,
   proposalStopSchema,
   proposalVersionSchema,
+  requestChangeSchema,
+  requestEditRefusalSchema,
+  requestLastEditSchema,
+  requestLinkedToEventSchema,
   requestStopSchema,
+  updateCustomRequestSchema,
   type AcceptProposalRequest,
   type AcceptProposalResultDto,
   type CreateCustomRequestRequest,
@@ -448,6 +453,9 @@ export {
   type ProposalRequestPayloadDto,
   type ProposalStopDto,
   type ProposalVersionDto,
+  type RequestEditRefusalDto,
+  type RequestLastEditDto,
+  type UpdateCustomRequestRequest,
 } from './proposal';
 export {
   BOOKING_OPTIONAL_CONSENTS,

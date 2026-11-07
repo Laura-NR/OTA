@@ -278,6 +278,8 @@ export const createEventRequestResultSchema = z.object({
   reference: z.string(),
   /** The derived M5 request for BUILD and TICKETS_ONLY. */
   customRequestReference: z.string().nullable(),
+  /** That request's proposal, which "Keep building the trip" opens in the builder. */
+  proposalId: z.string().uuid().nullable(),
 });
 
 export type CreateEventRequestResultDto = z.infer<typeof createEventRequestResultSchema>;

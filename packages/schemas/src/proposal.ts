@@ -2,12 +2,14 @@ import {
   GUIDING_CHOICES,
   MAX_ROUTE_STOPS,
   PROPOSAL_LINE_KINDS,
+  REQUEST_CHANGES,
   PROPOSAL_LINE_UNITS,
   PROPOSAL_STATUSES,
   ServiceType,
   type ProposalLineKind,
   type ProposalLineUnit,
   type ProposalStatus,
+  type RequestChange,
 } from '@ota/domain';
 import { z } from 'zod';
 
@@ -122,6 +124,43 @@ export const createCustomRequestSchema = proposalRequestPayloadSchema.extend({
 
 export type CreateCustomRequestRequest = z.infer<typeof createCustomRequestSchema>;
 
+/**
+ * "Keep building the trip": the builder sends every answer again, so a field
+ * left out (notes, budget, nationality) is cleared, as in a new request.
+ */
+export const updateCustomRequestSchema = createCustomRequestSchema;
+
+export type UpdateCustomRequestRequest = z.infer<typeof updateCustomRequestSchema>;
+
+export const requestChangeSchema = z.enum([...REQUEST_CHANGES] as [
+  RequestChange,
+  ...RequestChange[],
+]);
+
+/** The traveler's latest edit: when, and which parts it changed. */
+export const requestLastEditSchema = z.object({
+  at: z.string(),
+  changed: z.array(requestChangeSchema),
+});
+
+export type RequestLastEditDto = z.infer<typeof requestLastEditSchema>;
+
+/** Why an edit would strand the event seats that ride on the request. */
+export const requestEditRefusalSchema = z.object({
+  kind: z.enum(['EVENT_DATES', 'EVENT_PARTY', 'EVENT_PLACE']),
+  reference: z.string(),
+  eventName: z.string(),
+});
+
+export type RequestEditRefusalDto = z.infer<typeof requestEditRefusalSchema>;
+
+/** The 409 body of an edit refused for its event seats. */
+export const requestLinkedToEventSchema = z.object({
+  error: z.literal('RequestLinkedToEvent'),
+  message: z.string(),
+  refusals: z.array(requestEditRefusalSchema),
+});
+
 export const proposalStopSchema = z.object({
   province: z.string().trim().min(1).max(80),
   nights: z.number().int().min(0).max(60),
@@ -188,6 +227,11 @@ export const createProposalVersionSchema = z.object({
   days: z.array(proposalDaySchema).max(120).default([]),
   options: z.array(proposalOptionSchema).max(30).default([]),
   notes: z.string().trim().max(2000).optional(),
+  /**
+   * The request's `updatedAt` the desk priced; a traveler edit since then
+   * refuses the version (409 `RequestChanged`) so it is not priced stale.
+   */
+  requestUpdatedAt: z.string().datetime().optional(),
 });
 
 export type CreateProposalVersionRequest = z.infer<typeof createProposalVersionSchema>;
@@ -249,6 +293,8 @@ export const proposalRequestSchema = z.object({
   notes: z.string().nullable(),
   locale: z.string().nullable(),
   createdAt: z.string(),
+  updatedAt: z.string(),
+  lastEdit: requestLastEditSchema.nullable(),
 });
 
 export type ProposalRequestDto = z.infer<typeof proposalRequestSchema>;
@@ -271,6 +317,8 @@ export const proposalSchema = z.object({
   createdAt: z.string(),
   customerEmail: z.string().nullable(),
   customerName: z.string().nullable(),
+  /** The traveler may still reopen the request in the builder. */
+  editable: z.boolean(),
   request: proposalRequestSchema,
   versions: z.array(proposalVersionSchema),
 });
@@ -293,6 +341,8 @@ export const proposalListItemSchema = z.object({
   currency: z.string().nullable(),
   validUntil: z.string().nullable(),
   createdAt: z.string(),
+  /** The traveler's latest edit of the request, if any. */
+  editedAt: z.string().nullable(),
 });
 
 export type ProposalListItemDto = z.infer<typeof proposalListItemSchema>;
