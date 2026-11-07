@@ -631,7 +631,8 @@ export class ProposalsService {
   /**
    * Price a request: create the next immutable version, snapshot the terms,
    * send it and mark the proposal SENT. A revision is another version; the
-   * previous one stays readable but cannot be accepted.
+   * previous one stays readable but cannot be accepted. Given the request's
+   * `updatedAt` the desk priced, a traveler's edit since refuses the version.
    */
   async createVersion(
     actor: AuthUser,
