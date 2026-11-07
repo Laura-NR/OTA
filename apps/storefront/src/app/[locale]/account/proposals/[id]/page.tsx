@@ -1,6 +1,6 @@
 import { DEFAULT_LOCALE } from '@ota/i18n';
 import type { ProposalDto } from '@ota/schemas';
-import { Alert, Badge, ResponsiveTable, buttonClassName, Icon } from '@ota/ui';
+import { Alert, Badge, ResponsiveTable, buttonClassName, cn, Icon } from '@ota/ui';
 import type { BadgeVariant } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
@@ -31,8 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * The traveler's priced custom proposal (M5, D-Proposal): the request, the
  * current version's summary and price lines, its validity, and accept or
- * decline. It is behind sign-in; accepting creates a booking request and
- * never charges anything.
+ * decline. Until a version is sent the traveler can keep building the trip.
+ * It is behind sign-in; accepting creates a booking request and never
+ * charges anything.
  */
 export default async function ProposalPage({
   params,
@@ -117,6 +118,23 @@ export default async function ProposalPage({
 
       {!version ? (
         <Alert>{proposal.status === 'DRAFT' ? t('draft') : t('noVersion')}</Alert>
+      ) : null}
+
+      {proposal.editable ? (
+        <section className={card}>
+          <p className="text-body text-secondary">{t('keepBuildingHint')}</p>
+          {proposal.request.lastEdit ? (
+            <p className="text-body-sm text-muted">
+              {t('edited', { date: formatDay(proposal.request.lastEdit.at, locale) })}
+            </p>
+          ) : null}
+          <Link
+            href={`/custom?edit=${proposal.id}`}
+            className={cn(buttonClassName({ variant: 'secondary' }), 'self-start')}
+          >
+            {t('keepBuilding')}
+          </Link>
+        </section>
       ) : null}
 
       {version ? (

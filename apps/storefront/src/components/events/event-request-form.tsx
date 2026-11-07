@@ -34,6 +34,7 @@ type Path = 'BUILD' | 'EXISTING' | 'TICKETS_ONLY';
 interface Sent {
   reference: string;
   customRequestReference: string | null;
+  proposalId: string | null;
 }
 
 function addDays(iso: string, days: number): string {
@@ -208,9 +209,19 @@ export function EventRequestForm({
             {t('sent.trip', { reference: sent.customRequestReference })}
           </p>
         ) : null}
-        <Link href="/account" className={buttonClassName({ variant: 'primary' })}>
-          {t('sent.track')}
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/account" className={buttonClassName({ variant: 'primary' })}>
+            {t('sent.track')}
+          </Link>
+          {sent.proposalId ? (
+            <Link
+              href={`/custom?edit=${sent.proposalId}`}
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              {t('sent.keepBuilding')}
+            </Link>
+          ) : null}
+        </div>
       </div>
     );
   }

@@ -29,6 +29,7 @@ import {
   buttonClassName,
   cn,
 } from '@ota/ui';
+import type { ProposalRequestPayloadDto, RequestEditRefusalDto } from '@ota/schemas';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -74,6 +75,15 @@ interface SentRequest {
   reference: string;
 }
 
+/** The traveler's own request, reopened by "Keep building the trip". */
+export interface EditedRequest {
+  proposalId: string;
+  reference: string;
+  payload: ProposalRequestPayloadDto;
+  notes: string | null;
+  locale: string | null;
+}
+
 /**
  * The designed custom-trip builder (Custom / M-Custom boards, M5): dates,
  * party and an ordered route of provinces with nights, pace and interests;
@@ -81,8 +91,11 @@ interface SentRequest {
  * then the summary and the traveler's details. A side panel keeps the route
  * and an estimate from the tenant's rates (a range, never a price).
  * Submitting creates a CustomRequest — not a booking — for the desk to price.
+ * With `editing` it starts from that request's answers and saves over it
+ * instead; the funnel events are not sent again for an edit.
  */
 export function CustomBuilder({
+  editing = null,
   provinces,
   activities,
   builder,
@@ -90,6 +103,7 @@ export function CustomBuilder({
   locales,
   todayIso,
 }: {
+  editing?: EditedRequest | null;
   provinces: BuilderProvince[];
   activities: BuilderActivity[];
   /** The tenant's styles and sample rates; null offers no styles or estimate. */
@@ -108,33 +122,64 @@ export function CustomBuilder({
   const stepStarted = useRef(0);
   const started = useRef(false);
   useEffect(() => {
-    if (started.current) {
+    if (started.current || editing) {
       return;
     }
     started.current = true;
     stepStarted.current = Date.now();
     track('builder_started');
-  }, [track]);
-  const [arrival, setArrival] = useState('');
-  const [nightsTotal, setNightsTotal] = useState(10);
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [route, setRoute] = useState<Stop[]>([]);
-  const [pace, setPace] = useState<(typeof BUILDER_PACES)[number]>('moderate');
-  const [interests, setInterests] = useState<string[]>([]);
-  const [transport, setTransport] = useState<string | null>(
-    builder?.transports[0]?.key ?? null,
+  }, [track, editing]);
+  const before = editing?.payload;
+  const [arrival, setArrival] = useState(before ? before.startDate.slice(0, 10) : '');
+  const [nightsTotal, setNightsTotal] = useState(() =>
+    before
+      ? Math.max(
+          1,
+          Math.round(
+            (Date.parse(before.endDate) - Date.parse(before.startDate)) / DAY_MS,
+          ),
+        )
+      : 10,
   );
-  const [stepFree, setStepFree] = useState(false);
-  const [chosen, setChosen] = useState<string[]>([]);
-  const [guiding, setGuiding] = useState<GuidingChoice>('none');
-  const [interpreter, setInterpreter] = useState(false);
-  const [nationality, setNationality] = useState('');
-  const [language, setLanguage] = useState(locale);
-  const [budget, setBudget] = useState('');
-  const [notes, setNotes] = useState('');
+  const [adults, setAdults] = useState(before?.adults ?? 2);
+  const [children, setChildren] = useState(before?.children ?? 0);
+  // A stop the tenant no longer serves drops out; the nights check then asks
+  // the traveler to place them again.
+  const [route, setRoute] = useState<Stop[]>(() =>
+    (before?.route ?? []).flatMap((stop) =>
+      provinces.some((province) => province.code === stop.province)
+        ? [
+            {
+              province: stop.province,
+              nights: stop.nights,
+              stay: stop.stay ?? builder?.defaultStayStyle ?? null,
+            },
+          ]
+        : [],
+    ),
+  );
+  const [pace, setPace] = useState<(typeof BUILDER_PACES)[number]>(
+    BUILDER_PACES.find((id) => id === before?.pace) ?? 'moderate',
+  );
+  const [interests, setInterests] = useState<string[]>(before?.interests ?? []);
+  const [transport, setTransport] = useState<string | null>(
+    before ? before.transport : (builder?.transports[0]?.key ?? null),
+  );
+  const [stepFree, setStepFree] = useState(before?.stepFree ?? false);
+  const [chosen, setChosen] = useState<string[]>(before?.inventoryItemIds ?? []);
+  const [guiding, setGuiding] = useState<GuidingChoice>(before?.guiding ?? 'none');
+  const [interpreter, setInterpreter] = useState(before?.interpreter ?? false);
+  const [nationality, setNationality] = useState(before?.nationality ?? '');
+  const [language, setLanguage] = useState(editing?.locale ?? locale);
+  const [budget, setBudget] = useState(
+    before?.budgetPerPerson === null || before?.budgetPerPerson === undefined
+      ? ''
+      : String(before.budgetPerPerson),
+  );
+  const [notes, setNotes] = useState(editing?.notes ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refusals, setRefusals] = useState<RequestEditRefusalDto[]>([]);
   const [sent, setSent] = useState<SentRequest | null>(null);
 
   const currency = builder?.currency ?? 'EUR';
@@ -209,7 +254,7 @@ export function CustomBuilder({
   const nightsLabel = t('route.stopNights', { count: nightsTotal });
 
   function go(next: number) {
-    if (next > step) {
+    if (next > step && !editing) {
       track('builder_step_completed', {
         from_step: step,
         to_step: next,
@@ -221,6 +266,7 @@ export function CustomBuilder({
     stepStarted.current = Date.now();
     setStep(next);
     setError(null);
+    setRefusals([]);
     requestAnimationFrame(() => heading.current?.focus());
   }
 
@@ -250,35 +296,61 @@ export function CustomBuilder({
   async function submit() {
     setBusy(true);
     setError(null);
+    setRefusals([]);
     try {
-      const response = await fetch('/api/ota/me/custom-requests', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          startDate: arrival,
-          endDate: endIso,
-          adults,
-          children,
-          inventoryItemIds: picked.map((activity) => activity.id),
-          ...(nationality ? { nationality } : {}),
-          ...(budget.trim() && Number(budget) >= 0
-            ? { budgetPerPerson: Number(budget) }
-            : {}),
-          interests,
-          pace,
-          route: route.map((stop) => ({
-            province: stop.province,
-            nights: stop.nights,
-            ...(stop.stay ? { stay: stop.stay } : {}),
-          })),
-          ...(transport ? { transport } : {}),
-          guiding,
-          interpreter,
-          stepFree,
-          ...(notes.trim() ? { notes: notes.trim() } : {}),
-          locale: language,
-        }),
-      });
+      const response = await fetch(
+        editing
+          ? `/api/ota/me/proposals/${editing.proposalId}/request`
+          : '/api/ota/me/custom-requests',
+        {
+          method: editing ? 'PUT' : 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            startDate: arrival,
+            endDate: endIso,
+            adults,
+            children,
+            inventoryItemIds: picked.map((activity) => activity.id),
+            ...(nationality ? { nationality } : {}),
+            ...(budget.trim() && Number(budget) >= 0
+              ? { budgetPerPerson: Number(budget) }
+              : {}),
+            interests,
+            pace,
+            route: route.map((stop) => ({
+              province: stop.province,
+              nights: stop.nights,
+              ...(stop.stay ? { stay: stop.stay } : {}),
+            })),
+            ...(transport ? { transport } : {}),
+            guiding,
+            interpreter,
+            stepFree,
+            ...(notes.trim() ? { notes: notes.trim() } : {}),
+            locale: language,
+          }),
+        },
+      );
+      if (editing) {
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as {
+            error?: string;
+            refusals?: RequestEditRefusalDto[];
+          } | null;
+          if (body?.error === 'RequestLinkedToEvent' && body.refusals) {
+            setRefusals(body.refusals);
+            return;
+          }
+          throw new Error(
+            body?.error === 'RequestNotEditable'
+              ? t('edit.locked', { reference: editing.reference })
+              : t('edit.error'),
+          );
+        }
+        setSent({ id: editing.proposalId, reference: editing.reference });
+        window.scrollTo({ top: 0 });
+        return;
+      }
       if (!response.ok) {
         throw new Error(t('summary.error'));
       }
@@ -292,7 +364,11 @@ export function CustomBuilder({
       setSent(request);
       window.scrollTo({ top: 0 });
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : t('summary.error'));
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : t(editing ? 'edit.error' : 'summary.error'),
+      );
     } finally {
       setBusy(false);
     }
@@ -304,11 +380,15 @@ export function CustomBuilder({
         aria-labelledby="requested-title"
         className="flex flex-col items-start gap-4 rounded-lg border bg-surface p-6 md:p-8"
       >
-        <Badge variant="success">{t('requestedTitle')}</Badge>
+        <Badge variant="success">
+          {editing ? t('edit.savedTitle') : t('requestedTitle')}
+        </Badge>
         <h2 id="requested-title" className="text-h3 text-default">
-          {t('requestedTitle')}
+          {editing ? t('edit.savedTitle') : t('requestedTitle')}
         </h2>
-        <p className="text-body text-secondary">{t('requestedLede')}</p>
+        <p className="text-body text-secondary">
+          {editing ? t('edit.savedLede') : t('requestedLede')}
+        </p>
         <p className="text-body-sm">
           {t('reference')}:{' '}
           <span className="font-mono font-semibold">{sent.reference}</span>
@@ -1000,6 +1080,20 @@ export function CustomBuilder({
         <div className="flex min-w-0 flex-col gap-6">
           {content}
           {error ? <Alert variant="destructive">{error}</Alert> : null}
+          {refusals.length > 0 ? (
+            <Alert variant="destructive" title={t('edit.refusedTitle')}>
+              <ul className="list-disc pl-5">
+                {refusals.map((refusal) => (
+                  <li key={`${refusal.reference}-${refusal.kind}`}>
+                    {t(`edit.refusals.${refusal.kind}`, {
+                      event: refusal.eventName,
+                      reference: refusal.reference,
+                    })}
+                  </li>
+                ))}
+              </ul>
+            </Alert>
+          ) : null}
           <div className="flex flex-wrap justify-between gap-3">
             <Button
               type="button"
@@ -1020,7 +1114,13 @@ export function CustomBuilder({
             ) : (
               <div className="flex flex-col items-end gap-1">
                 <Button type="button" disabled={!routeReady || busy} onClick={submit}>
-                  {busy ? t('summary.submitting') : t('summary.submit')}
+                  {editing
+                    ? busy
+                      ? t('edit.submitting')
+                      : t('edit.submit')
+                    : busy
+                      ? t('summary.submitting')
+                      : t('summary.submit')}
                 </Button>
                 <p className="text-caption text-muted">{t('summary.nothingCharged')}</p>
               </div>
