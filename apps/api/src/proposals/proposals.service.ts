@@ -11,6 +11,10 @@ import { Prisma } from '@ota/db';
 import {
   ReservationStatus,
   ServiceType,
+  customRequestChanges,
+  customRequestEditable,
+  eventLinkRefusals,
+  festivalWindow,
   proposalCanAccept,
   proposalEffectiveStatus,
   proposalLineAmount,
@@ -20,12 +24,15 @@ import {
   proposalTotal,
   providerProgress,
   type ProposalStatus,
+  type RequestAnswers,
+  type SeatCategoryKind,
 } from '@ota/domain';
 import { renderProposalHtml } from '@ota/documents';
 import { proposalSentEmail, type EmailAttachment, type Mailer } from '@ota/email';
 import {
   proposalDocumentSchema,
   proposalRequestPayloadDtoSchema,
+  requestChangeSchema,
   type AcceptProposalResultDto,
   type CreateCustomRequestRequest,
   type CreateCustomRequestResultDto,
@@ -36,8 +43,11 @@ import {
   type ProposalListItemDto,
   type ProposalQueueQuery,
   type ProposalRequestPayload,
+  type ProposalRequestPayloadDto,
   type ProposalRequestDto,
   type ProposalVersionDto,
+  type RequestLastEditDto,
+  type UpdateCustomRequestRequest,
 } from '@ota/schemas';
 import type { ObjectStorage } from '@ota/storage';
 
@@ -91,33 +101,52 @@ function endOfUtcDay(value: Date): Date {
   );
 }
 
-function toRequestDto(row: ProposalRow['request']): ProposalRequestDto {
-  const payload = row.payload as Record<string, unknown>;
+/** The stored payload as the API returns it, whatever older requests left out. */
+function payloadDto(stored: Prisma.JsonValue): ProposalRequestPayloadDto {
+  const payload = stored as Record<string, unknown>;
+  return proposalRequestPayloadDtoSchema.parse({
+    startDate: payload.startDate,
+    endDate: payload.endDate,
+    adults: payload.adults ?? 1,
+    children: payload.children ?? 0,
+    inventoryItemIds: Array.isArray(payload.inventoryItemIds)
+      ? payload.inventoryItemIds
+      : [],
+    nationality: payload.nationality ?? null,
+    budgetPerPerson: payload.budgetPerPerson ?? null,
+    interests: Array.isArray(payload.interests) ? payload.interests : [],
+    pace: payload.pace ?? null,
+    route: Array.isArray(payload.route) ? payload.route : [],
+    transport: payload.transport ?? null,
+    guiding: payload.guiding ?? null,
+    interpreter: payload.interpreter === true,
+    stepFree: payload.stepFree === true,
+  });
+}
+
+/** What `customRequestChanges` compares: the answers plus the notes and language. */
+function requestAnswers(
+  payload: ProposalRequestPayloadDto,
+  notes: string | null,
+  locale: string | null,
+): RequestAnswers {
+  return { ...payload, notes, locale };
+}
+
+function toRequestDto(
+  row: ProposalRow['request'],
+  lastEdit: RequestLastEditDto | null,
+): ProposalRequestDto {
   return {
     id: row.id,
     reference: row.reference,
     status: row.status,
-    payload: proposalRequestPayloadDtoSchema.parse({
-      startDate: payload.startDate,
-      endDate: payload.endDate,
-      adults: payload.adults ?? 1,
-      children: payload.children ?? 0,
-      inventoryItemIds: Array.isArray(payload.inventoryItemIds)
-        ? payload.inventoryItemIds
-        : [],
-      nationality: payload.nationality ?? null,
-      budgetPerPerson: payload.budgetPerPerson ?? null,
-      interests: Array.isArray(payload.interests) ? payload.interests : [],
-      pace: payload.pace ?? null,
-      route: Array.isArray(payload.route) ? payload.route : [],
-      transport: payload.transport ?? null,
-      guiding: payload.guiding ?? null,
-      interpreter: payload.interpreter === true,
-      stepFree: payload.stepFree === true,
-    }),
+    payload: payloadDto(row.payload),
     notes: row.notes,
     locale: row.locale,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    lastEdit,
   };
 }
 
@@ -160,7 +189,11 @@ function effectiveStatus(row: ProposalRow, now: Date): ProposalStatus {
     : (row.status as ProposalStatus);
 }
 
-function toProposalDto(row: ProposalRow, now: Date): ProposalDto {
+function toProposalDto(
+  row: ProposalRow,
+  now: Date,
+  lastEdit: RequestLastEditDto | null,
+): ProposalDto {
   return {
     id: row.id,
     requestId: row.requestId,
@@ -185,12 +218,20 @@ function toProposalDto(row: ProposalRow, now: Date): ProposalDto {
     createdAt: row.createdAt.toISOString(),
     customerEmail: row.request.user.email,
     customerName: row.request.user.fullName,
-    request: toRequestDto(row.request),
+    editable: customRequestEditable({
+      requestStatus: row.request.status,
+      proposalStatus: row.status,
+    }),
+    request: toRequestDto(row.request, lastEdit),
     versions: row.versions.map(toVersionDto),
   };
 }
 
-function toListItem(row: ProposalRow, now: Date): ProposalListItemDto {
+function toListItem(
+  row: ProposalRow,
+  now: Date,
+  editedAt: string | null,
+): ProposalListItemDto {
   const current = row.versions[0];
   return {
     id: row.id,
@@ -208,8 +249,14 @@ function toListItem(row: ProposalRow, now: Date): ProposalListItemDto {
     currency: current?.currency ?? null,
     validUntil: current ? current.validUntil.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
+    editedAt,
   };
 }
+
+const EDITED = 'custom_request.edited';
+
+/** Event requests still waiting on, or holding, seats; their trip must keep them. */
+const LIVE_EVENT_REQUEST_STATUSES = ['SUBMITTED', 'REQUESTING', 'CONFIRMED'] as const;
 
 /**
  * A custom request's stored payload (the builder's answers, dates as ISO
@@ -279,11 +326,8 @@ export class ProposalsService {
     }
   }
 
-  async createRequest(
-    actor: AuthUser,
-    input: CreateCustomRequestRequest,
-  ): Promise<CreateCustomRequestResultDto> {
-    this.assertBuilderChoices(input);
+  /** The request's catalog picks, once each; every one must still be on sale. */
+  private async activeItemIds(input: CreateCustomRequestRequest): Promise<string[]> {
     const ids = [...new Set(input.inventoryItemIds)];
     if (ids.length > 0) {
       const found = await this.prisma.inventoryItem.count({
@@ -293,7 +337,57 @@ export class ProposalsService {
         throw new NotFoundException('One or more catalog items are unavailable');
       }
     }
+    return ids;
+  }
 
+  /** The traveler's latest edit of one request, from its audit trail. */
+  private async lastEdit(requestId: string): Promise<RequestLastEditDto | null> {
+    const row = await this.prisma.auditLog.findFirst({
+      where: { entityType: 'CustomRequest', entityId: requestId, action: EDITED },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true, metadata: true },
+    });
+    if (!row) {
+      return null;
+    }
+    const changed = requestChangeSchema
+      .array()
+      .safeParse((row.metadata as { changed?: unknown } | null)?.changed);
+    return {
+      at: row.createdAt.toISOString(),
+      changed: changed.success ? changed.data : [],
+    };
+  }
+
+  /** When each request was last edited, for a queue of them. */
+  private async editedAt(requestIds: readonly string[]): Promise<Map<string, string>> {
+    if (requestIds.length === 0) {
+      return new Map();
+    }
+    const rows = await this.prisma.auditLog.groupBy({
+      by: ['entityId'],
+      where: {
+        entityType: 'CustomRequest',
+        entityId: { in: [...requestIds] },
+        action: EDITED,
+      },
+      _max: { createdAt: true },
+    });
+    return new Map(
+      rows.flatMap((row) =>
+        row.entityId && row._max.createdAt
+          ? [[row.entityId, row._max.createdAt.toISOString()] as const]
+          : [],
+      ),
+    );
+  }
+
+  async createRequest(
+    actor: AuthUser,
+    input: CreateCustomRequestRequest,
+  ): Promise<CreateCustomRequestResultDto> {
+    this.assertBuilderChoices(input);
+    const ids = await this.activeItemIds(input);
     const payload = customRequestPayload(input, ids);
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -352,6 +446,137 @@ export class ProposalsService {
     throw new ConflictException('Could not allocate a unique proposal reference');
   }
 
+  /**
+   * "Keep building the trip": replace the builder's answers while the desk
+   * has not sent a proposal. The proposal row is locked as `createVersion`
+   * locks it, so an edit and a send take turns: an edit after the send is
+   * refused, and a send after the edit is refused unless the desk saw it.
+   * Seats an event request holds on the trip must still fit it.
+   */
+  async updateRequestForUser(
+    actor: AuthUser,
+    proposalId: string,
+    input: UpdateCustomRequestRequest,
+  ): Promise<ProposalDto> {
+    const owned = await this.prisma.proposal.findFirst({
+      where: { id: proposalId, request: { userId: actor.id } },
+      select: { id: true },
+    });
+    if (!owned) {
+      throw new NotFoundException(`Proposal ${proposalId} not found`);
+    }
+    this.assertBuilderChoices(input);
+    const ids = await this.activeItemIds(input);
+    const payload = customRequestPayload(input, ids);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM proposals WHERE id = ${proposalId}::uuid FOR UPDATE`;
+      const proposal = await tx.proposal.findUniqueOrThrow({
+        where: { id: proposalId },
+        select: {
+          status: true,
+          request: {
+            select: {
+              id: true,
+              reference: true,
+              status: true,
+              payload: true,
+              notes: true,
+              locale: true,
+            },
+          },
+        },
+      });
+      const request = proposal.request;
+      if (
+        !customRequestEditable({
+          requestStatus: request.status,
+          proposalStatus: proposal.status,
+        })
+      ) {
+        throw new ConflictException({
+          error: 'RequestNotEditable',
+          message: 'A proposal has been sent for this request; write to us to change it',
+        });
+      }
+
+      const links = await tx.eventRequest.findMany({
+        where: {
+          customRequestId: request.id,
+          status: { in: [...LIVE_EVENT_REQUEST_STATUSES] },
+        },
+        select: {
+          reference: true,
+          seats: true,
+          nightIds: true,
+          category: { select: { kind: true } },
+          event: {
+            select: {
+              name: true,
+              province: true,
+              startsOn: true,
+              endsOn: true,
+              nights: { select: { id: true, date: true } },
+            },
+          },
+        },
+      });
+      const refusals = eventLinkRefusals(
+        {
+          startDate: input.startDate,
+          endDate: input.endDate,
+          partySize: proposalPartySize(input.adults, input.children),
+          provinces: input.route.map((stop) => stop.province),
+        },
+        links.map((link) => ({
+          reference: link.reference,
+          eventName: link.event.name,
+          province: link.event.province,
+          window: festivalWindow(
+            link.event,
+            link.category.kind as SeatCategoryKind,
+            link.nightIds,
+          ),
+          seats: link.seats,
+        })),
+      );
+      if (refusals.length > 0) {
+        throw new ConflictException({
+          error: 'RequestLinkedToEvent',
+          message: `The trip must keep the event seats: ${refusals
+            .map((refusal) => `${refusal.kind} ${refusal.reference}`)
+            .join(', ')}`,
+          refusals,
+        });
+      }
+
+      const notes = input.notes ?? null;
+      const locale = input.locale ?? null;
+      const changed = customRequestChanges(
+        requestAnswers(payloadDto(request.payload), request.notes, request.locale),
+        requestAnswers(payloadDto(payload as Prisma.JsonValue), notes, locale),
+      );
+      if (changed.length === 0) {
+        return;
+      }
+      await tx.customRequest.update({
+        where: { id: request.id },
+        data: { payload, notes, locale },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: EDITED,
+          entityType: 'CustomRequest',
+          entityId: request.id,
+          metadata: { reference: request.reference, changed },
+        },
+      });
+    });
+
+    return this.getForUser(actor.id, proposalId);
+  }
+
   async listForUser(userId: string): Promise<ProposalListItemDto[]> {
     const now = new Date();
     const rows = await this.prisma.proposal.findMany({
@@ -360,7 +585,8 @@ export class ProposalsService {
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
-    return rows.map((row) => toListItem(row, now));
+    const edited = await this.editedAt(rows.map((row) => row.requestId));
+    return rows.map((row) => toListItem(row, now, edited.get(row.requestId) ?? null));
   }
 
   async getForUser(userId: string, id: string): Promise<ProposalDto> {
@@ -371,7 +597,7 @@ export class ProposalsService {
     if (!row) {
       throw new NotFoundException(`Proposal ${id} not found`);
     }
-    return toProposalDto(row, new Date());
+    return toProposalDto(row, new Date(), await this.lastEdit(row.requestId));
   }
 
   async listForOps(query: ProposalQueueQuery): Promise<ProposalListItemDto[]> {
@@ -382,7 +608,10 @@ export class ProposalsService {
       orderBy: { createdAt: 'desc' },
       take: query.status === 'EXPIRED' ? 200 : query.limit,
     });
-    const items = rows.map((row) => toListItem(row, now));
+    const edited = await this.editedAt(rows.map((row) => row.requestId));
+    const items = rows.map((row) =>
+      toListItem(row, now, edited.get(row.requestId) ?? null),
+    );
     return query.status === 'EXPIRED'
       ? items.filter((item) => item.status === 'EXPIRED').slice(0, query.limit)
       : items;
@@ -396,7 +625,7 @@ export class ProposalsService {
     if (!row) {
       throw new NotFoundException(`Proposal ${id} not found`);
     }
-    return toProposalDto(row, new Date());
+    return toProposalDto(row, new Date(), await this.lastEdit(row.requestId));
   }
 
   /**
@@ -494,6 +723,21 @@ export class ProposalsService {
     };
 
     const created = await this.prisma.$transaction(async (tx) => {
+      // Taken before anything is written, as a traveler's edit takes it.
+      const [locked] = await tx.$queryRaw<{ updated_at: Date }[]>`
+        SELECT r.updated_at FROM proposals p
+        JOIN custom_requests r ON r.id = p.request_id
+        WHERE p.id = ${proposalId}::uuid FOR UPDATE OF p`;
+      if (
+        input.requestUpdatedAt &&
+        locked &&
+        locked.updated_at.getTime() !== Date.parse(input.requestUpdatedAt)
+      ) {
+        throw new ConflictException({
+          error: 'RequestChanged',
+          message: 'The traveler changed the request since this page was loaded',
+        });
+      }
       const saved = await tx.proposalVersion.create({
         data: {
           proposalId,

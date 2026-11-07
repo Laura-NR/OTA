@@ -1,6 +1,10 @@
+import { randomUUID } from 'node:crypto';
+
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { parseTenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import type { EmailMessage } from '@ota/email';
+import { createProposalVersionSchema, updateCustomRequestSchema } from '@ota/schemas';
 import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -37,7 +41,9 @@ const tenant = parseTenantConfig({
  * immutable version with its D-Proposal PDF stored and attached to the email;
  * accepting it creates the booking, its frozen price lines and its service
  * items in one transaction; a second acceptance is idempotent. A renderer
- * failure still sends the version, without a PDF.
+ * failure still sends the version, without a PDF. "Keep building the trip":
+ * the traveler changes the request until the desk sends it, under the
+ * proposal's row lock, and a send priced on stale answers is refused.
  * Run with `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest run
  * test/proposals.integration.test.ts` against a migrated dev database.
  */
@@ -400,6 +406,153 @@ describe.skipIf(!runIntegration)('custom proposals (live Postgres)', () => {
         transport: 'minivan',
       }),
     ).rejects.toThrow('Unknown stay style castle');
+  });
+
+  const keepBuilding = (overrides: Record<string, unknown> = {}) =>
+    updateCustomRequestSchema.parse({
+      startDate: '2027-06-01',
+      endDate: '2027-06-05',
+      adults: 2,
+      children: 0,
+      inventoryItemIds: [],
+      interests: [],
+      route: [{ province: 'CU07', nights: 4, stay: 'comfort' }],
+      locale: 'en',
+      ...overrides,
+    });
+  const oneLine = (requestUpdatedAt?: string) =>
+    createProposalVersionSchema.parse({
+      summary: 'Four nights in Sancti Spíritus.',
+      lines: [{ kind: 'LODGING', label: 'Casa', unitAmount: 400 }],
+      ...(requestUpdatedAt ? { requestUpdatedAt } : {}),
+    });
+  const conflictCode = async (promise: Promise<unknown>) => {
+    const error = await promise.then(
+      () => null,
+      (rejected: unknown) => rejected,
+    );
+    expect(error).toBeInstanceOf(ConflictException);
+    return ((error as ConflictException).getResponse() as { error?: string }).error;
+  };
+
+  it('lets the traveler keep building a request until the desk sends it', async () => {
+    const request = await service.createRequest(actor, keepBuilding());
+    const opened = await service.getForOps(request.id);
+    expect(opened.editable).toBe(true);
+    expect(opened.request.lastEdit).toBeNull();
+
+    const edited = await service.updateRequestForUser(
+      actor,
+      request.id,
+      keepBuilding({
+        endDate: '2027-06-08',
+        route: [
+          { province: 'CU07', nights: 4, stay: 'comfort' },
+          { province: 'CU03', nights: 3, stay: 'comfort' },
+        ],
+        notes: 'Add Havana at the end.',
+      }),
+    );
+    expect(edited.request.payload.route.map((stop) => stop.province)).toEqual([
+      'CU07',
+      'CU03',
+    ]);
+    expect(edited.request.payload.endDate).toBe('2027-06-08T00:00:00.000Z');
+    expect(edited.request.notes).toBe('Add Havana at the end.');
+    expect(edited.request.lastEdit?.changed).toEqual(['dates', 'route', 'notes']);
+    expect(edited.request.updatedAt).not.toBe(opened.request.updatedAt);
+
+    // The same answers again change nothing and leave no second edit.
+    await service.updateRequestForUser(
+      actor,
+      request.id,
+      keepBuilding({
+        endDate: '2027-06-08',
+        route: [
+          { province: 'CU07', nights: 4, stay: 'comfort' },
+          { province: 'CU03', nights: 3, stay: 'comfort' },
+        ],
+        notes: 'Add Havana at the end.',
+      }),
+    );
+    expect(
+      await prisma.auditLog.count({
+        where: { entityId: request.requestId, action: 'custom_request.edited' },
+      }),
+    ).toBe(1);
+    const queue = await service.listForOps({ limit: 200 });
+    expect(queue.find((item) => item.id === request.id)?.editedAt).toBe(
+      edited.request.lastEdit!.at,
+    );
+
+    // A version priced on the answers before the edit is refused, and the
+    // one priced on the edited answers is sent.
+    expect(
+      await conflictCode(
+        service.createVersion(actor, request.id, oneLine(opened.request.updatedAt)),
+      ),
+    ).toBe('RequestChanged');
+    const priced = await service.createVersion(
+      actor,
+      request.id,
+      oneLine(edited.request.updatedAt),
+    );
+    expect(priced.status).toBe('SENT');
+    expect(priced.editable).toBe(false);
+
+    // Once sent, the traveler writes to the desk instead.
+    expect(
+      await conflictCode(
+        service.updateRequestForUser(actor, request.id, keepBuilding({ adults: 3 })),
+      ),
+    ).toBe('RequestNotEditable');
+    const kept = await service.getForUser(actor.id, request.id);
+    expect(kept.request.payload.adults).toBe(2);
+  });
+
+  it("refuses to edit another traveler's request", async () => {
+    const request = await service.createRequest(actor, keepBuilding());
+    await expect(
+      service.updateRequestForUser(
+        { ...actor, id: randomUUID() },
+        request.id,
+        keepBuilding({ adults: 4 }),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('makes an edit wait for a send in flight, then refuses it', async () => {
+    const request = await service.createRequest(actor, keepBuilding());
+    let locked = () => {};
+    let release = () => {};
+    const proposalLocked = new Promise<void>((resolve) => (locked = resolve));
+    const released = new Promise<void>((resolve) => (release = resolve));
+
+    // A send holds the proposal's row and marks it SENT before committing.
+    const send = prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM proposals WHERE id = ${request.id}::uuid FOR UPDATE`;
+      locked();
+      await released;
+      await tx.proposal.update({
+        where: { id: request.id },
+        data: { status: 'SENT', sentAt: new Date() },
+      });
+    });
+    await proposalLocked;
+
+    const edit = service.updateRequestForUser(
+      actor,
+      request.id,
+      keepBuilding({ adults: 5 }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    release();
+    await send;
+    expect(await conflictCode(edit)).toBe('RequestNotEditable');
+    const stored = await prisma.customRequest.findUniqueOrThrow({
+      where: { id: request.requestId },
+    });
+    expect((stored.payload as { adults: number }).adults).toBe(2);
   });
 
   it('sends the version without a PDF when the renderer fails', async () => {

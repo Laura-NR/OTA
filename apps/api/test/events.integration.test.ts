@@ -2,6 +2,8 @@ import { ConflictException, UnprocessableEntityException } from '@nestjs/common'
 import { parseTenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import type { EmailMessage, Mailer } from '@ota/email';
+import { updateCustomRequestSchema } from '@ota/schemas';
+import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { AuthUser } from '../src/common/auth/auth-user';
@@ -9,6 +11,7 @@ import { DocumentsService } from '../src/documents/documents.service';
 import { EventRequestsService } from '../src/events/event-requests.service';
 import { EventsService } from '../src/events/events.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { ProposalsService } from '../src/proposals/proposals.service';
 import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so require an explicit opt-in.
@@ -241,6 +244,7 @@ describe.skipIf(!runIntegration)(
         { province: 'CU01', nights: 6 },
       ]);
       expect(custom.proposals).toHaveLength(1);
+      expect(result.proposalId).toBe(custom.proposals[0]!.id);
       expect(sent.at(-1)!.subject).toContain('Festival de Jazz IT');
 
       await expect(
@@ -270,6 +274,84 @@ describe.skipIf(!runIntegration)(
           ],
         }),
       ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('keeps the event seats when the traveler keeps building the trip', async () => {
+      const link = await prisma.eventRequest.findFirstOrThrow({
+        where: { userId: traveler.id, path: 'BUILD' },
+        select: {
+          reference: true,
+          customRequest: { select: { notes: true, proposals: true } },
+        },
+      });
+      const proposalId = link.customRequest!.proposals[0]!.id;
+      const proposals = new ProposalsService(
+        prisma as unknown as PrismaService,
+        mailer,
+        tenant,
+        { render: async () => new TextEncoder().encode('%PDF-test') },
+        new InMemoryObjectStorage(),
+      );
+      const trip = (overrides: Record<string, unknown>) =>
+        updateCustomRequestSchema.parse({
+          startDate: utcDay(58).toISOString(),
+          endDate: utcDay(68).toISOString(),
+          adults: 2,
+          route: [
+            { province: 'CU03', nights: 4 },
+            { province: 'CU01', nights: 6 },
+          ],
+          locale: 'es',
+          // The builder sends the request's notes back, as it shows them.
+          notes: link.customRequest!.notes,
+          ...overrides,
+        });
+
+      // Arriving after the first festival night, one person for two seats
+      // and no stop in La Habana each strand the seats.
+      const refused = await proposals
+        .updateRequestForUser(
+          traveler,
+          proposalId,
+          trip({
+            startDate: utcDay(61).toISOString(),
+            endDate: utcDay(68).toISOString(),
+            adults: 1,
+            route: [{ province: 'CU01', nights: 7 }],
+          }),
+        )
+        .then(
+          () => null,
+          (error: unknown) => error,
+        );
+      expect(refused).toBeInstanceOf(ConflictException);
+      const body = (refused as ConflictException).getResponse() as {
+        error: string;
+        refusals: { kind: string; reference: string }[];
+      };
+      expect(body.error).toBe('RequestLinkedToEvent');
+      expect(body.refusals.map((refusal) => refusal.kind)).toEqual([
+        'EVENT_DATES',
+        'EVENT_PARTY',
+        'EVENT_PLACE',
+      ]);
+      expect(body.refusals.every((refusal) => refusal.reference === link.reference)).toBe(
+        true,
+      );
+
+      // Two more nights in Viñales after the festival keep them.
+      const kept = await proposals.updateRequestForUser(
+        traveler,
+        proposalId,
+        trip({
+          endDate: utcDay(70).toISOString(),
+          route: [
+            { province: 'CU03', nights: 4 },
+            { province: 'CU01', nights: 8 },
+          ],
+        }),
+      );
+      expect(kept.request.lastEdit?.changed).toEqual(['dates', 'route']);
     });
 
     it("refuses another event's category and a booking the traveler cannot use", async () => {

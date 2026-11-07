@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
   Res,
   UseFilters,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import {
   acceptProposalSchema,
   createCustomRequestSchema,
   declineProposalSchema,
+  updateCustomRequestSchema,
   type AcceptProposalRequest,
   type AcceptProposalResultDto,
   type CreateCustomRequestRequest,
@@ -21,6 +23,7 @@ import {
   type DeclineProposalRequest,
   type ProposalDto,
   type ProposalListItemDto,
+  type UpdateCustomRequestRequest,
 } from '@ota/schemas';
 import type { Response } from 'express';
 
@@ -33,9 +36,10 @@ import { sendPdf } from './proposal-pdf';
 import { ProposalsService } from './proposals.service';
 
 /**
- * The traveler's custom-trip flow (M5): send a builder request, read the
- * priced proposal, accept or decline it. Every query is scoped to the caller;
- * acceptance creates a request to book, never a payment.
+ * The traveler's custom-trip flow (M5): send a builder request, change it
+ * until it is priced, read the priced proposal, accept or decline it. Every
+ * query is scoped to the caller; acceptance creates a request to book, never
+ * a payment.
  */
 @Controller('me')
 @UseFilters(DomainExceptionFilter)
@@ -68,6 +72,22 @@ export class MeProposalsController {
     @CurrentUser() actor: AuthUser,
   ): Promise<ProposalDto> {
     return this.proposals.getForUser(actor.id, id);
+  }
+
+  /**
+   * "Keep building the trip": the builder's answers again, until the desk
+   * sends a proposal (409 `RequestNotEditable` after; 409
+   * `RequestLinkedToEvent` when the trip would drop event seats).
+   */
+  @Put('proposals/:id/request')
+  async updateRequest(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(updateCustomRequestSchema))
+    body: UpdateCustomRequestRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<ProposalDto> {
+    await this.settings.requireFeature('customItineraryBuilder');
+    return this.proposals.updateRequestForUser(actor, id, body);
   }
 
   /** The version's D-Proposal PDF, only for the traveler who asked for it. */

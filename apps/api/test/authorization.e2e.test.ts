@@ -179,6 +179,8 @@ const ROUTES: Route[] = [
   { method: 'post', path: '/me/custom-requests', allowed: 'authenticated' },
   { method: 'get', path: '/me/proposals', allowed: 'authenticated' },
   { method: 'get', path: `/me/proposals/${PROPOSAL}`, allowed: 'authenticated' },
+  // "Keep building the trip": the caller's own request, until it is priced.
+  { method: 'put', path: `/me/proposals/${PROPOSAL}/request`, allowed: 'authenticated' },
   {
     method: 'get',
     path: `/me/proposals/${PROPOSAL}/versions/${PROPOSAL_VERSION}/pdf`,

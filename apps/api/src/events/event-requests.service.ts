@@ -190,6 +190,7 @@ export class EventRequestsService {
           }
 
           let customRequest: { id: string; reference: string } | null = null;
+          let proposalId: string | null = null;
           if (derived && 'trip' in derived) {
             const trip = derived.trip;
             const requestReference = `VX-C-${generateBookingCode()}`;
@@ -217,7 +218,10 @@ export class EventRequestsService {
               },
               select: { id: true, reference: true },
             });
-            await tx.proposal.create({ data: { requestId: customRequest.id } });
+            ({ id: proposalId } = await tx.proposal.create({
+              data: { requestId: customRequest.id },
+              select: { id: true },
+            }));
             await tx.auditLog.create({
               data: {
                 actorUserId: actor.id,
@@ -270,6 +274,7 @@ export class EventRequestsService {
             id: request.id,
             reference,
             customRequestReference: customRequest?.reference ?? null,
+            proposalId,
           };
         });
         await this.notify(created.id, 'RECEIVED');
