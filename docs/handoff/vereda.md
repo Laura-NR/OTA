@@ -441,8 +441,10 @@ events (T-Events)".
 - `TURBO_FORCE=true pnpm test` **1261 passed / 45 skipped**, 30/30 tasks (new: 14 domain tests in
   `request-edit.test.ts`, the PUT row in the RBAC matrix, and live tests that skip here).
 - `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **44/44**, 12 files (same
-  list as before: the ten `apps/api/test/*.integration.test.ts` plus the two bullmq ones). New:
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **44/44**, 12 files:
+  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
+  advisories,disruptions,events,permission-overrides}.integration.test.ts` and
+  `{dispatch,compliance}.bullmq.integration.test.ts`. New:
   three in `proposals.integration` (edit until sent, stale send 409 `RequestChanged`, stranger
   404, an edit waiting on a send's lock) and one in `events.integration` (three refusals, then
   a kept edit).
