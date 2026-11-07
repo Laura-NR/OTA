@@ -271,11 +271,13 @@ function createFakePrisma(state: State) {
       },
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
-    // claimDepartureSeats: the departure's row, as locked.
-    $queryRaw: async (_sql: TemplateStringsArray, id: string) =>
+    // claimDepartureSeats and claimPackageChoices: the rows, as locked.
+    $queryRaw: async (sql: TemplateStringsArray, id: string) =>
       state.packages
-        .flatMap((pkg) => pkg.departures)
-        .filter((departure) => departure.id === id),
+        .flatMap((pkg) =>
+          sql[0]!.includes('package_tiers') ? pkg.tiers : pkg.departures,
+        )
+        .filter((row) => row.id === id),
   };
   return fake;
 }

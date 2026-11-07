@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { PackagesService } from '../src/packages/packages.service';
+import { claimPackageChoices } from '../src/travelers/departure-seats';
 import { fakeOperatingSettings } from './fixtures/operating-settings';
 
 // Prisma Client auto-loads packages/db/.env, so DATABASE_URL is present; require
@@ -513,6 +514,80 @@ describe.skipIf(!runIntegration)('PackagesService (live Postgres)', () => {
         await prisma.reservation.delete({ where: { id: written.value.id } });
       }
       expect([written.status, updated.status]).toEqual(['fulfilled', 'fulfilled']);
+    });
+
+    it('waits for a booking holding a tier and extras, then refuses to remove them', async () => {
+      const pkg = await service.update(
+        bookedPackageId,
+        {
+          ...saved,
+          tiers: [
+            ...saved.tiers,
+            { ...saved.tiers[0]!, code: 'garden', name: 'Garden', isDefault: false },
+          ],
+          extras: [
+            ...saved.extras,
+            { ...saved.extras[0]!, code: 'salsa', name: 'Salsa class', position: 1 },
+            { ...saved.extras[0]!, code: 'cigar', name: 'Cigar farm', position: 2 },
+          ],
+        },
+        actor,
+      );
+      const tier = pkg.tiers.find((row) => row.code === 'garden')!;
+      const extras = pkg.extras.filter((row) => row.code !== 'horseback');
+      let claimed = () => {};
+      let release = () => {};
+      const choicesClaimed = new Promise<void>((resolve) => (claimed = resolve));
+      const released = new Promise<void>((resolve) => (release = resolve));
+
+      const booking = prisma.$transaction(async (tx) => {
+        await claimPackageChoices(tx, {
+          tierId: tier.id,
+          packageExtraIds: extras.map((extra) => extra.id),
+        });
+        claimed();
+        await released;
+        return tx.reservation.create({
+          data: {
+            userId: actor.id,
+            bookingCode: `PC${String(suffix).slice(-6)}`,
+            packageId: bookedPackageId,
+            status: 'ITINERARY_SUBMITTED',
+            startDate: new Date('2027-05-01T00:00:00Z'),
+            endDate: new Date('2027-05-03T00:00:00Z'),
+            totalCurrency: 'EUR',
+            totalAmount: '200.00',
+            partySize: 1,
+            tierId: tier.id,
+            extras: {
+              create: extras.map((extra) => ({
+                packageExtraId: extra.id,
+                label: extra.name,
+                unitAmount: '35.00',
+                amount: '35.00',
+              })),
+            },
+          },
+        });
+      });
+      await choicesClaimed;
+
+      const save = service.update(bookedPackageId, saved, actor).catch((error) => error);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      release();
+      const reservation = await booking;
+
+      expect(await save).toMatchObject({
+        status: 409,
+        response: {
+          refusals: expect.arrayContaining([
+            expect.objectContaining({ kind: 'TIER_BOOKED', row: 'garden' }),
+            expect.objectContaining({ kind: 'EXTRA_BOOKED', row: 'salsa' }),
+            expect.objectContaining({ kind: 'EXTRA_BOOKED', row: 'cigar' }),
+          ]),
+        },
+      });
+      await prisma.reservation.delete({ where: { id: reservation.id } });
     });
   });
 });

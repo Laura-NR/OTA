@@ -39,7 +39,7 @@ import { MAILER } from '../email/email.module';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
-import { claimDepartureSeats } from '../travelers/departure-seats';
+import { claimDepartureSeats, claimPackageChoices } from '../travelers/departure-seats';
 import {
   PackageBookingService,
   type SubmittedReservation,
@@ -423,12 +423,17 @@ export class MeService {
       departureId: plan.departureId,
       tourismCategory: pkg.tourismCategory,
       serviceItems: packageServiceItems(pkg.services, plan.startDate),
-      claimSeats: (tx) =>
-        claimDepartureSeats(tx, {
+      claimSeats: async (tx) => {
+        await claimDepartureSeats(tx, {
           departureId: plan.departureId,
           partySize: input.travelers.length,
           mustBeOpen: true,
-        }),
+        });
+        await claimPackageChoices(tx, {
+          tierId: plan.tierId,
+          packageExtraIds: plan.extras.map((extra) => extra.packageExtraId),
+        });
+      },
       // Ids and counts only: no names, dates of birth or passport numbers.
       auditMetadata: {
         packageId: pkg.id,

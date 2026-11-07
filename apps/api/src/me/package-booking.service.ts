@@ -49,7 +49,7 @@ interface PlannedExtra extends BookingExtraInput {
   packageExtraId: string;
 }
 
-/** Everything a booking needs; only the departure's seats wait for the transaction. */
+/** Everything a booking needs; its departure, tier and extras are held in the transaction. */
 export interface PackageBookingPlan {
   pkg: BookedPackage;
   departureId: string;
@@ -90,7 +90,9 @@ function addDays(day: Date, days: number): Date {
  * extras, frozen price lines, certifications and consents in the transaction
  * that creates the booking, so they land together or not at all. Whether the
  * departure is open and has room is decided in that transaction too
- * (`claimDepartureSeats`), so two bookings cannot both take its last seats.
+ * (`claimDepartureSeats`), so two bookings cannot both take its last seats, and
+ * the tier and extras are held there (`claimPackageChoices`), so a package save
+ * cannot remove or withdraw them under the booking.
  */
 @Injectable()
 export class PackageBookingService {

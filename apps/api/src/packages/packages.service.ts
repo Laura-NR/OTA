@@ -760,7 +760,8 @@ export class PackagesService {
 
     let extras: CollectionEdit<PackageExtra, ExtraInput> | null = null;
     if (input.extras) {
-      await tx.$queryRaw`SELECT id FROM package_extras WHERE package_id = ${packageId}::uuid FOR UPDATE`;
+      // In id order, as `claimPackageChoices` holds a booking's extras.
+      await tx.$queryRaw`SELECT id FROM package_extras WHERE package_id = ${packageId}::uuid ORDER BY id FOR UPDATE`;
       extras = planCollectionEdit(
         await tx.packageExtra.findMany({ where }),
         input.extras,

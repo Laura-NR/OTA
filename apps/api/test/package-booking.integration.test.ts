@@ -209,6 +209,20 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
     });
   const client = { ipAddress: '203.0.113.7', userAgent: 'BookingIT/1.0' };
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /** Run `between` after the form's checks and before its transaction. */
+  const afterPlanning = (between: () => Promise<void>) => {
+    const plan = bookings.plan.bind(bookings);
+    return vi.spyOn(bookings, 'plan').mockImplementation(async (input) => {
+      const planned = await plan(input);
+      await between();
+      return planned;
+    });
+  };
+
   it('stores the booking and every record in one transaction', async () => {
     const booked = await me.bookPackage(actor, request(), client);
 
@@ -301,20 +315,6 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
         where: { departureId: id, status: { not: 'CANCELLED' } },
       });
       return booked._sum.partySize ?? 0;
-    };
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
-    /** Run `between` after the form's checks and before its transaction. */
-    const afterPlanning = (between: () => Promise<void>) => {
-      const plan = bookings.plan.bind(bookings);
-      return vi.spyOn(bookings, 'plan').mockImplementation(async (input) => {
-        const planned = await plan(input);
-        await between();
-        return planned;
-      });
     };
 
     it('lets one of two bookings take the last places and refuses the other', async () => {
@@ -412,6 +412,96 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
 
       expect(await edit).toBeInstanceOf(ConflictException);
       expect(await seatsOn(departure.id)).toBe(4);
+    });
+  });
+
+  describe('a tier or extra changed after the checks', () => {
+    const addTier = (code: string) =>
+      prisma.packageTier.create({
+        data: { packageId, code, name: `Tier ${code}`, priceDelta: '0.00' },
+      });
+    const addExtra = (code: string) =>
+      prisma.packageExtra.create({
+        data: { packageId, code, name: `Extra ${code}`, price: '10.00' },
+      });
+    const bookingCount = () => prisma.reservation.count({ where: { userId: actor.id } });
+
+    it('refuses a tier removed after the form was checked', async () => {
+      const tier = await addTier(`gone-${stamp}`);
+      const before = await bookingCount();
+      afterPlanning(async () => {
+        await prisma.packageTier.delete({ where: { id: tier.id } });
+      });
+
+      await expect(
+        me.bookPackage(actor, request({ tierId: tier.id }), client),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(await bookingCount()).toBe(before);
+    });
+
+    it.each([
+      ['removed', (id: string) => prisma.packageExtra.delete({ where: { id } })],
+      [
+        'withdrawn',
+        (id: string) =>
+          prisma.packageExtra.update({ where: { id }, data: { active: false } }),
+      ],
+    ])('refuses an extra %s after the form was checked', async (label, change) => {
+      const extra = await addExtra(`${label}-${stamp}`);
+      const before = await bookingCount();
+      afterPlanning(async () => {
+        await change(extra.id);
+      });
+
+      await expect(
+        me.bookPackage(
+          actor,
+          request({ extras: [{ packageExtraId: extra.id }] }),
+          client,
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(await bookingCount()).toBe(before);
+      await prisma.packageExtra.deleteMany({ where: { id: extra.id } });
+    });
+
+    it("refuses the desk's party edit onto a tier removed after its checks", async () => {
+      const departure = await prisma.packageDeparture.create({
+        data: { packageId, startDate: new Date('2027-05-01T00:00:00Z'), capacity: 4 },
+      });
+      const booked = await me.bookPackage(
+        actor,
+        request({ departureId: departure.id }),
+        client,
+      );
+      const tier = await addTier(`desk-gone-${stamp}`);
+      // The edit has loaded the package with this tier; remove it before the write.
+      const transaction = prisma.$transaction.bind(prisma) as (
+        ...args: unknown[]
+      ) => Promise<unknown>;
+      vi.spyOn(prisma, '$transaction').mockImplementationOnce((async (
+        ...args: unknown[]
+      ) => {
+        await prisma.packageTier.delete({ where: { id: tier.id } });
+        return transaction(...args);
+      }) as never);
+
+      const edit = travelers
+        .updateParty(
+          booked.id,
+          updateReservationPartySchema.parse({
+            tierId: tier.id,
+            departureId: departure.id,
+            travelers: [{ fullName: 'Ana' }, { fullName: 'Bruno' }],
+          }),
+          actor,
+        )
+        .catch((error: unknown) => error);
+
+      expect(await edit).toBeInstanceOf(ConflictException);
+      const row = await prisma.reservation.findUniqueOrThrow({
+        where: { id: booked.id },
+      });
+      expect(row.tierId).toBe(tierId);
     });
   });
 });

@@ -20,7 +20,7 @@ export interface SeatClaim {
  * Call it before the reservation is written: the row's foreign key takes a
  * share lock on the departure, and two transactions upgrading theirs deadlock.
  * Locks go departures first, in `PackagesService.planCollections` too, because
- * a booking's foreign keys then need the tier and extras.
+ * a booking's foreign keys then need the tier and extras (`claimPackageChoices`).
  */
 export async function claimDepartureSeats(
   tx: Prisma.TransactionClient,
@@ -45,5 +45,43 @@ export async function claimDepartureSeats(
     claim.partySize > departurePlacesLeft(departure.capacity, booked._sum.partySize ?? 0)
   ) {
     throw new ConflictException('The departure does not have enough places left');
+  }
+}
+
+export interface PackageChoiceClaim {
+  tierId: string | null;
+  packageExtraIds: string[];
+}
+
+/**
+ * Hold the booking's tier and extras inside the transaction that writes it, after
+ * its departure. A package save locks these rows before it removes or withdraws
+ * one, so it either waits for the booking (and then sees it, and refuses) or has
+ * already committed, which this re-read catches as a 409 instead of a foreign-key
+ * failure or a withdrawn extra sold. Extras lock in id order, as the save takes
+ * them, so a booking with two extras cannot deadlock against a save.
+ */
+export async function claimPackageChoices(
+  tx: Prisma.TransactionClient,
+  claim: PackageChoiceClaim,
+): Promise<void> {
+  if (claim.tierId) {
+    const [tier] = await tx.$queryRaw<{ id: string }[]>`
+      SELECT id FROM package_tiers WHERE id = ${claim.tierId}::uuid FOR SHARE`;
+    if (!tier) {
+      throw new ConflictException('That tier is no longer offered on this package');
+    }
+  }
+
+  if (claim.packageExtraIds.length > 0) {
+    const extras = await tx.$queryRaw<{ id: string; active: boolean }[]>`
+      SELECT id, active FROM package_extras
+      WHERE id = ANY(${claim.packageExtraIds}::uuid[]) ORDER BY id FOR SHARE`;
+    const offered = new Set(
+      extras.filter((extra) => extra.active).map((extra) => extra.id),
+    );
+    if (claim.packageExtraIds.some((id) => !offered.has(id))) {
+      throw new ConflictException('An extra is no longer offered on this package');
+    }
   }
 }

@@ -35,7 +35,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
-import { claimDepartureSeats } from './departure-seats';
+import { claimDepartureSeats, claimPackageChoices } from './departure-seats';
 import { pricePackageChoice, priceLineRows } from './package-pricing';
 import { PASSPORT_KEY } from './travelers.tokens';
 
@@ -281,6 +281,7 @@ export class TravelersService {
           reservationId,
         });
       }
+      await claimPackageChoices(tx, { tierId: input.tierId, packageExtraIds: [] });
 
       // Deleting the rooms unassigns the travelers (ON DELETE SET NULL); each
       // traveler below is pointed at its new room again.
