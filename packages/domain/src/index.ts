@@ -342,6 +342,17 @@ export {
   type TripEstimate,
 } from './proposals/estimate';
 export {
+  REQUEST_CHANGES,
+  customRequestChanges,
+  customRequestEditable,
+  eventLinkRefusals,
+  type LinkedEventSeats,
+  type RequestAnswers,
+  type RequestChange,
+  type RequestEditRefusal,
+  type RequestEditRefusalKind,
+} from './proposals/request-edit';
+export {
   cancellationRefund,
   refundDecision,
   type CancellationBand,
