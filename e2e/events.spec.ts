@@ -157,6 +157,31 @@ test.describe('M10 events and the ticket concierge', () => {
     );
     await expect(page.getByText(/Your trip request is VX-C-/)).toBeVisible();
 
+    // Keep building the derived trip: one adult cannot carry two seats.
+    await page.getByRole('link', { name: 'Keep building the trip' }).click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Keep building the trip' }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Arrival in Cuba')).toHaveValue('2027-01-16');
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Remove one adult' }).click();
+      await expect(page.getByRole('button', { name: 'Remove one adult' })).toBeDisabled({
+        timeout: 2_000,
+      });
+    }).toPass();
+    for (let step = 1; step < 5; step += 1) {
+      await page.getByRole('button', { name: 'Continue' }).click();
+    }
+    await page.getByRole('button', { name: 'Save my changes' }).click();
+    await expect(
+      page.getByText('These changes would leave out your event seats:'),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        /^The party must have at least as many people as the seats for .+ \(VX-E-[A-Z0-9]{8}\)\.$/,
+      ),
+    ).toBeVisible();
+
     // Seats for a trip the traveler already has.
     await page.goto(eventUrl);
     await expect(async () => {
