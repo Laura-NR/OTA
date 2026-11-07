@@ -203,7 +203,8 @@ Phase 6 pattern and need no provider.
 - Room holds for festival weeks ("we hold a room at Casa Lis until [hold date]"): no hold model
   exists; the desk keeps doing it by hand.
 - Event photos and media storage (alt text only, as destinations, until photography exists).
-- "Keep building the trip" (editing an existing custom request in the builder).
+- "Keep building the trip" (editing an existing custom request in the builder). Built
+  2026-11-07, §8.
 - The board's US note ("concerts count as Support for the Cuban People…"): shown only as tenant
   copy marked for counsel; the OFAC certification stays at booking (M3).
 - Groups over 8 (the request refuses them and points at a specialist).
@@ -462,3 +463,30 @@ DTOs (`5c23774`, `c0d4eb4`); manifest `concierge` block (`de958a8`); emails (`9a
 - **Proof.** `apps/api/test/events.integration.test.ts` (live) and the acceptance case in
   `proposals.integration.test.ts`; the repricing, retention, cancellation and RBAC cases in the
   unit suite; `e2e/events.spec.ts`.
+
+## 8. Keep building the trip (2026-11-07, no migration)
+
+The owner chose the §4 deferred item, editable until the desk sends a proposal (over until the
+desk starts a draft, or while open). A desk version is created and sent in one step, so this is
+"while the request is OPEN and its proposal DRAFT" (`customRequestEditable`).
+
+- **Route.** `PUT /me/proposals/:id/request` (any signed-in role, the caller's own request, the
+  `customItineraryBuilder` flag) takes the builder's whole answers again, so a field left out
+  is cleared. It locks the proposal's row first, as the send now does, so the two take turns.
+  409 `RequestNotEditable` once sent. Seats a live event request (SUBMITTED, REQUESTING,
+  CONFIRMED) holds on the trip must still fit: the festival nights inside the dates, at least
+  as many people as seats, and the event's province on a non-empty route
+  (`eventLinkRefusals`), else 409 `RequestLinkedToEvent` with `refusals`.
+- **What changed.** `customRequestChanges` names the parts (dates, party, route, stays, …); an
+  edit that changes nothing writes nothing. Each edit is audited as `custom_request.edited`
+  with the list, which the desk reads (no column).
+- **The desk.** The send takes `requestUpdatedAt` (the request's `updatedAt` the page showed);
+  a later change refuses it with 409 `RequestChanged`. While a request is being priced only the
+  traveler's edits write it; acceptance and the retention scrub write it later.
+- **Builder.** `/custom?edit=<proposal id>`; reached from the proposal page while it is being
+  priced and from the event request's confirmation (`proposalId` on its result). Its funnel
+  events are not sent for an edit.
+- **Proof.** `packages/domain/test/request-edit.test.ts`; live `proposals.integration.test.ts`
+  (edit, no-op, stale send, refusal after the send, a stranger, an edit waiting on a send's lock)
+  and `events.integration.test.ts` (the three refusals and a kept edit); RBAC matrix;
+  `e2e/storefront-keep-building.spec.ts` and the edit refusal in `e2e/events.spec.ts`.

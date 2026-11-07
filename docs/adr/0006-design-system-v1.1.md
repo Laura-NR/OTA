@@ -1628,3 +1628,29 @@ The build resolved it inside A-Package-Edit with existing components:
   row's grid gains a column; below `sm` the fields stack as before.
 - **The storefront's package page** lists only open departures, as the Booking page does; a
   closed one drops off the list rather than gaining a label.
+
+## Amendment, 2026-11-07: "Keep building the trip"
+
+The owner chose M10's deferred builder edit, editable until the desk sends a proposal (no
+migration; `docs/schema-m10-events.md` §8). The Concierge board draws only the secondary
+"Keep building the trip" button on its confirmation; nothing else is drawn. The build resolved
+the rest with existing components and tokens:
+
+- **Entry points.** The event request's confirmation gains the board's secondary button beside
+  "Track it in your account" when the path derived a trip. The traveler's proposal page, while
+  it is being priced, gains a card under the "being priced" Alert: one line saying the request
+  can change until it is priced, "You changed this request on {date}" after an edit, and the same
+  secondary button. Nothing is added once a version is sent.
+- **The builder in edit mode** is the Custom board unchanged, opened on the request's answers:
+  the page's heading becomes "Keep building the trip" and its lede names the request; the
+  submit reads "Save my changes" and the confirmation "Request updated". A stop without a stay
+  style opens on the tenant's default style, as a new stop does.
+- **A refused edit** (event seats it would strand) is the destructive Alert above the buttons
+  with a title and a line per refusal, as the package editor's refusal is. A request already
+  priced opens a card with "This request is with our team" and "Open my proposal" instead of the
+  builder.
+- **The desk.** The request card opens with an Alert, "Changed by the traveler on {date}:
+  dates, route." (warning while it is still being priced, info after); the composer card says
+  the traveler can still change the request; a publish refused because the request changed is
+  a warning Alert above the form's error, and the draft stays. The queue adds a warning Badge,
+  "Changed", beside a request still being priced.
