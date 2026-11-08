@@ -13,6 +13,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import { CLIENT_IP_ADDRESS_OPTIONS } from './client-ip.js';
 import { recoveryCodePlugin, type RecoveryCodeCheck } from './recovery-code.js';
 import { signInDevicePlugin, type SignInDeviceCheck } from './sign-in-device.js';
+import { siteBaseURL } from './site-base-url.js';
 import {
   passkeyChangeForPath,
   routeOpenToRefusedSession,
@@ -27,6 +28,7 @@ export {
   type RecoveryCodeCheck,
 } from './recovery-code.js';
 export { DEVICE_COOKIE, type SignInDeviceCheck } from './sign-in-device.js';
+export { siteBaseURL, type SiteBaseURL, type SiteBaseURLInput } from './site-base-url.js';
 export {
   passkeyChangeForPath,
   routeOpenToRefusedSession,
@@ -51,6 +53,11 @@ export interface CreateAuthOptions {
   prisma: unknown;
   secret: string;
   baseURL: string;
+  /**
+   * Public hosts that each keep their own sessions (`siteBaseURL`); without
+   * them every link and cookie is on `baseURL`.
+   */
+  allowedHosts?: string[];
   sendMagicLink: (params: SendMagicLinkParams) => Promise<void>;
   google?: GoogleProviderConfig;
   /** Origins allowed to initiate auth (storefront, back-office). */
@@ -171,15 +178,20 @@ export type NodeAuthHandler = (
  * With a `recoveryCode` check, a staff member can sign in with a code a Super
  * Admin issued. With a `signInDevice` check, every new session tells the API
  * which browser it came from. A session's address is read only from the
- * header the API writes (`CLIENT_IP_HEADER`).
+ * header the API writes (`CLIENT_IP_HEADER`). With `allowedHosts`, each site
+ * signs in on its own host (`siteBaseURL`).
  */
 export function createAuth(options: CreateAuthOptions): AuthInstance {
   const passkeySettings = options.passkey ?? {};
   const policy = passkeySettings.policy;
   const gate = options.sessionGate;
+  const site = siteBaseURL({
+    baseURL: options.baseURL,
+    allowedHosts: options.allowedHosts,
+  });
   const instance = betterAuth({
     secret: options.secret,
-    baseURL: options.baseURL,
+    baseURL: site.baseURL,
     trustedOrigins: options.trustedOrigins,
     database: prismaAdapter(options.prisma as never, { provider: 'postgresql' }),
     emailAndPassword: {
@@ -346,6 +358,7 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
         generateId: () => globalThis.crypto.randomUUID(),
       },
       ipAddress: CLIENT_IP_ADDRESS_OPTIONS,
+      trustedProxyHeaders: site.trustedProxyHeaders,
     },
   });
 

@@ -384,6 +384,30 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   desk's origin must be that domain or a subdomain of it, and listed in
   `TRUSTED_ORIGINS`); changing it later means everyone enrolls again.
 
+## Hosts, sign-in and crawling
+
+Deployment plan D7(a), D8(a), D18; build items B6–B8.
+
+- `AUTH_ALLOWED_HOSTS` (comma-separated, e.g.
+  `veredaexpeditions.com,desk.veredaexpeditions.com`) gives each site its own
+  session. Better Auth answers each request on the host the browser used, read
+  from `X-Forwarded-Host` (set by the Next rewrites; the API has no public
+  port), so a magic link asked for on the desk opens on the desk, and its
+  host-only cookie never reaches the storefront. Unset (dev), every link and
+  cookie is on `BETTER_AUTH_URL`, and cookies on `localhost` are shared across
+  ports.
+- With `AUTH_ALLOWED_HOSTS` set, `BETTER_AUTH_URL` is the fallback for a host
+  outside the list **and sets the scheme** of every link: in production it must
+  be the public `https://` storefront origin, never the internal `http://api:3001`.
+  An `https` scheme also gives the cookie its `__Secure-` name and `Secure` flag.
+- `TRUSTED_ORIGINS` must list every allowed host with its scheme. Besides Better
+  Auth's callback check, it now decides which pages may open the `/ops` and
+  `/conversations` sockets: a handshake whose `Origin` is not listed is refused
+  (403); one with no `Origin` goes on to the session check.
+- `SITE_NOINDEX=1` makes the storefront's `/robots.txt` disallow every crawler
+  (read per request, so no rebuild). Keep it on for the trial run, with the
+  proxy's `X-Robots-Tag: noindex` header, and remove both at launch.
+
 ## Verify a deploy
 
 ```sh

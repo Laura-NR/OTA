@@ -73,6 +73,7 @@ async function bootstrap(): Promise<void> {
     secret,
     baseURL:
       process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? 3001}`,
+    allowedHosts: (process.env.AUTH_ALLOWED_HOSTS ?? '').split(','),
     trustedOrigins: origins,
     magicLinkExpiresInSeconds:
       60 * positiveInt(process.env.MAGIC_LINK_EXPIRES_MINUTES, 10),
