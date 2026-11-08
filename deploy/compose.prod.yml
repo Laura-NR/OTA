@@ -170,6 +170,57 @@ services:
         condition: service_healthy
     networks: [backend]
 
+  # Backups and restores (D11, B11), run from the host's scheduler or by hand:
+  #   docker compose -f deploy/compose.prod.yml run --rm backup backup
+  backup:
+    image: ${OTA_IMAGE_PREFIX:-ota}/backup:${OTA_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: deploy/docker/backup.Dockerfile
+    profiles: [ops]
+    logging: *logging
+    # AGE_RECIPIENTS, BACKUP_REMOTE and the off-site keys (backup.env.example).
+    env_file:
+      - path: backup.env
+        required: false
+    environment:
+      # The schema owner: it dumps everything and, for a live restore, re-creates it.
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-ota}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-ota}
+      # For the runtime role's grants after a live restore (B4).
+      POSTGRES_USER: ${POSTGRES_USER:-ota}
+      POSTGRES_DB: ${POSTGRES_DB:-ota}
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-ota_app}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}
+    volumes:
+      - documents:/data/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # backend for the database; edge, which has a way out, for the upload.
+    networks: [backend, edge]
+    mem_limit: 512m
+
+  # The restore drill's throwaway database (B11), removed after each drill.
+  restore_drill_db:
+    image: postgres:16.15-bookworm
+    profiles: [drill]
+    logging: *logging
+    environment:
+      # Throwaway, on the internal network only, and never holds live writes.
+      POSTGRES_PASSWORD: drill
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
+    mem_limit: 1g
+
   postgres:
     image: postgres:16.15-bookworm
     restart: unless-stopped

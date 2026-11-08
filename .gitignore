@@ -45,3 +45,5 @@ blob-report/
 
 # The API settings file (deploy/api.env.example).
 deploy/api.env
+# The backup settings file (deploy/backup.env.example).
+deploy/backup.env

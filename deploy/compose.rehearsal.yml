@@ -10,3 +10,7 @@ services:
   api:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
+  # Uploads to the dev MinIO on the host (http://host.docker.internal:9000).
+  backup:
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

@@ -27,3 +27,6 @@ vereda-handoff-v1.1
 *.docx
 *.pdf
 deploy
+# The backup image's two scripts (deploy/docker/backup.Dockerfile).
+!deploy/backup/ota-backup.sh
+!deploy/postgres/init/10-runtime-role.sh
