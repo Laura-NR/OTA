@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-07 13:40
+# Handoff — vereda — updated 2026-11-08 12:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -26,6 +26,16 @@ app). Staff passkeys:
 events (T-Events)".
 
 ## State
+- **2026-11-08: owner decisions, docs only; no code changed.** The owner approved the
+  deployment plan (D1–D24 as recommended, plus every §6 (approval) item: B1, B2, B6, B9, B11) and
+  asked for security patches first. The domain `veredaexpeditions.com` is registered in the
+  owner's name (D2(b) stopgap) with one mailbox `info@veredaexpeditions.com`. Supplier
+  confirmations wait for the worker app (ADR 0007 amendment). Counsel and the team come next on
+  the owner's side, and the owner will say when the legal entity exists. The owner's checklist
+  is the new `docs/production-readiness.md`; `docs/deployment-plan.md` is now Approved.
+  The owner asked for the pull request into `main`; the agent's push failed (no GitHub
+  credentials in its shell, no `gh`), so the owner pushes and opens it from the compare page.
+  `main` is an ancestor, so a merge commit makes `main` equal `vereda`.
 - **Phases 0, 1, 0b, 2, 3 and 5 are done; M1–M10 are complete with their surfaces; Phase 8 items
   1–4 are done** (item 1 also has its real sink adapter). Commits are local on `vereda`; the
   owner pushes (`git log --oneline origin/vereda..vereda`).
@@ -478,6 +488,12 @@ events (T-Events)".
 - Not run: a clean customer-pages axe audit today; a real screen reader; a deploy.
 
 ## Assumptions & unknowns
+- **Owner's answers (2026-11-08):** the owner wrote the mailbox as `info@veredqexpeditions.com`;
+  assumed a typo for `veredaexpeditions.com` (the domain they bought). The owner spoke of "six"
+  (approval) items; the plan marks five rows (B1, B2, B6, B9, B11; Caddy is B2/D9). Recorded all
+  marked items as approved. The registrar's name and Cuba terms are unknown. A6 in
+  `docs/production-readiness.md` lists the config values the domain fixes; none is set yet (they
+  belong to the deploy, and the dev seed/e2e use `example.test` addresses).
 - **Keep building (2026-11-07):** the words are placeholders for the copy review (the board has
   only the English button; es/fr are ours). Assumed: an edit is a whole replacement (PUT), so
   the builder sends the notes back and a cleared box clears them; an event-derived request's
@@ -1136,35 +1152,28 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: choose the next batch. M9's board items are all built (manifest editing beyond the
-   flags stays deferred). M10's room holds/event photos need a migration doc first; they are
-   the last M10 deferred item. Smaller, no migration: re-price a booking under its row locks
-   (Assumptions, stale price window), only if the owner wants it. A
-   real screen-reader run
-   (desk and storefront) needs a machine with NVDA or VoiceOver. Optional: the desktop cookie
-   banner still covers about 61 % of a 1280 × 844 window (the board's layout; focus is now
-   kept clear of it).
-2. Owner: answer `docs/deployment-plan.md` D1–D24 and the §6 items marked (approval). Once
-   answered, the deployment build (B1–B13, rehearsed locally, no spend) can be a batch; the
-   plan recommends renting the server only when the agency's legal entity exists (D1).
-   Counsel: the plan's §13 (sanctions first), `cookies-analytics@2026-10-28` and whether
-   Plausible's data needs a retention limit.
-3. Owner, still open: the M4/M5/builder placeholders and the crisis framework, counsel's legal
-   texts (now including the events copy, the M10 invoice question, the cookie words, the basis
-   for desk and server telemetry and the new decline/withdraw confirmations), OFAC categories,
-   card surcharge, deposit refundability and proof retention, the passport-key backup, the
-   backup-power wording, the staff email domain, `PASSKEY_RP_ID` with the deploy topology,
-   raster app icons from Vereda, the AGENTS.md §C lines above. Then SMS once a provider is
-   chosen. Also open: whether the M4 cancellation scale keeps a share of what was paid or of
-   the total; the M5 sample terms (planning fee, validity, response hours); the pricing
-   samples (child bands, fees); the M10 concierge fee and events copy. Finance: the
-   display-currency spread (0.6 %) and lock point (deposit); counsel: whether to show USD; the
-   owner: when to switch `FX_RATE_PROVIDER` to `ecb` (Q10).
-4. Decision gates that stay with the owner (ask, never assume): schema migrations, new
-   dependencies, the SMS provider and anything needing the agency's legal entity, a real LLM
-   vendor, PII purge Tiers 2–3, load tests (plan D24), the deployment topology (plan D1–D24,
-   which also settle the site domain, the analytics host, H3 and `PASSKEY_RP_ID`; D7 changes
-   how auth decides, D20 revisits the approved Plausible H1a).
+1. **Security patch upgrades** (the owner's pick for the next session). `pnpm audit --prod`
+   (2026-11-07): 33 issues, 2 critical: next 15.5.25 → ≥ 15.5.28, better-auth 1.7.5 → ≥ 1.7.7;
+   high: zod → ≥ 4.6.6, body-parser, multer, postcss, sharp, vite and other transitives. Patch
+   versions within the existing ranges (no Article 2 gate); anything needing a major goes back
+   to the owner. Then the small hardening (public `GET /catalog` returns `supplierId`; B7 socket
+   CORS; B8 noindex). Full verify; the owner pushes so the pull request's CI runs.
+2. **Deployment build B1–B13** (`docs/deployment-plan.md` §6), all approved 2026-11-08; B6
+   first. Rehearse locally with `*.localhost` (Phase B); no spend. The hosts follow the domain
+   (`veredaexpeditions.com`, `desk.`, `analytics.`), `PASSKEY_RP_ID=veredaexpeditions.com`.
+3. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
+   counsel package (now also the AI provider and sanctions question), the business values, the
+   tenant placeholders. The full list is `docs/production-readiness.md` §4; do not re-ask what
+   it records as decided.
+4. Before launch: hide the mock AI draft button or wire the owner's provider (open; suggestions
+   in `docs/production-readiness.md` §6). The worker app (Phase 7) needs the owner's yes on Expo;
+   if it is not in field test when the server is rented, build the desk "confirmed by phone"
+   fallback (ADR 0007 amendment).
+5. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
+   the desktop cookie banner, a real screen-reader run, manifest editing beyond flags, PII purge
+   Tiers 2–3, the load test (D24), SMS.
+6. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
+   decisions → ADRs/PR) and delete it in the merge; merge with a merge commit.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -1696,3 +1705,10 @@ events (T-Events)".
   the departure claim, over re-reading the whole package under locks or re-pricing there.
   Also refused an extra withdrawn in the window (the same check `plan()` makes) and fixed the
   desk's party edit tier, as the same bug.
+- 2026-11-08 — the owner approved the deployment plan as recommended with every (approval)
+  item, chose security patches as the next batch, kept supplier confirmations for the worker
+  app (over the desk "confirmed by phone" action first; that stays the fallback), and asked for
+  the pull request into `main`. Chose a merge commit over squash or rebase for that merge,
+  because `main` is an ancestor of `vereda` and the history stays reviewable. The AI provider
+  stays open: suggested Mistral (EU) if counsel flags US providers, else a trial of Mistral and
+  Claude on anonymised desk messages.

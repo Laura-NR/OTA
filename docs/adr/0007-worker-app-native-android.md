@@ -1,7 +1,8 @@
 # ADR 0007 — Worker app: native Android (Expo), sideloaded, with Cuba's SMS rules
 
 - **Date:** 2026-10-14
-- **Status:** Accepted; amended 2026-10-14 (design resolutions, see the end)
+- **Status:** Accepted; amended 2026-10-14 (design resolutions) and 2026-11-08 (supplier
+  confirmations wait for this app), see the end
 - **Deciders:** Project owner, lead engineer
 - **Context:** `docs/adr/0001-stack.md` (Mobile: Expo React Native + expo-sqlite), spec §5 and
   §7.2, `docs/design-v1.1-plan.md` Q7 and Q10, design boards W-* (`design/vereda-v1.1/project/`),
@@ -143,6 +144,16 @@ and DS components; nothing here adds a token.
   setting with M9, so the owner can trade cost for speed. Ops Lite alerts are
   browser notifications while the desk page is open, backed by the existing
   sockets and the amber/red call rules.
+
+## Amendment, 2026-11-08: supplier confirmations wait for this app
+
+Today only the worker accepts an offer (`POST /service-items/:id/accept`), and no screen calls
+it, so a service item cannot reach ACCEPTED. The owner chose to wait for this app rather than
+add a desk "confirmed by phone" action first. Phase 7 starts once the owner approves Expo (a
+new dependency) and picks two or three suppliers for the field test. If the app is not in
+field test when the trial server is rented (deployment plan D1), the desk action is the
+fallback: small, and with no new dependency. It also stays useful later for suppliers without
+a smartphone or mobile data.
 
 ## Sources (read 2026-10-14)
 

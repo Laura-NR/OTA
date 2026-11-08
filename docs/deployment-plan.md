@@ -1,8 +1,8 @@
 # Deployment plan
 
 - **Date:** 2026-10-29
-- **Status:** Proposal. Every decision below is the owner's. Nothing is bought, registered or
-  deployed, and nothing in this plan is built yet.
+- **Status:** Approved 2026-11-08 (see "Owner's answers" below). The domain and one mailbox are
+  bought; nothing else is bought or deployed, and nothing in §6 is built yet.
 - **Readers:** the owner, who decides; the agent that builds it afterwards.
 - **Related:** `docs/runbook.md` (day-2 operations, the Plausible "Going live" checklist),
   `docs/plausible-hosting-plan.md` (H1–H7), `docs/adr/0003-payments.md` and `0005-payment-rails.md`,
@@ -16,6 +16,22 @@ and the questions for counsel.
 
 Prices and provider facts were checked on 2026-10-29 where a source is given (§14). Everything
 else marked *estimate* is a judgement, so check the live price before paying.
+
+**Owner's answers (2026-11-08):**
+- D1–D24: approved as recommended.
+- §6: every item marked (approval) is approved: B1 (base images), B2 (Caddy, D9), B6 (D7(a),
+  per-site sign-in), B9 (Super Admin bootstrap), B11 (`age` and `rclone` on the server).
+- Domain (D6): `veredaexpeditions.com`, already registered, **in the owner's name**. That is
+  D2(b), the stopgap: the registrant moves to the agency once its legal entity exists, so the
+  domain heads the transfer list. With D6(a) this fixes the hosts (`veredaexpeditions.com`,
+  `desk.veredaexpeditions.com`, `analytics.veredaexpeditions.com`) and
+  `PASSKEY_RP_ID=veredaexpeditions.com`.
+- Mail (D13): one receiving mailbox, `info@veredaexpeditions.com`, bought with the domain; more
+  addresses as needed. The transactional provider for magic links is still to be opened (Phase
+  C). The domain keeps a single SPF record that covers both senders. Once
+  `staff.allowedEmailDomains` is set, every staff member needs an address on the domain.
+- Phase C waits for the agency's legal entity; the owner says when it exists. The live
+  checklist of what remains is `docs/production-readiness.md`.
 
 ---
 
@@ -658,8 +674,8 @@ production-like compose stack on your machine before any server exists.
 ## 7. Step by step
 
 ### Phase A — Decide (you, now)
-1. Answer D1–D24 (or say "as recommended" with exceptions).
-2. Approve the §6 items marked (approval).
+1. Answer D1–D24 (or say "as recommended" with exceptions). *Done 2026-11-08: as recommended.*
+2. Approve the §6 items marked (approval). *Done 2026-11-08: all approved.*
 3. Send counsel the §13 questions, the sanctions one first: it can change the provider choice.
 
 ### Phase B — Build and rehearse locally (agent, no spend)
@@ -671,7 +687,9 @@ production-like compose stack on your machine before any server exists.
 
 ### Phase C — Accounts (you; triggered by D1)
 7. Password manager with two-factor and an emergency contact.
-8. Register the domain (registrar lock, two-factor, agency as registrant).
+8. Register the domain (registrar lock, two-factor, agency as registrant). *The domain is
+   registered in the owner's name (2026-11-08): turn on the lock and two-factor now, and change
+   the registrant to the agency here.*
 9. Open the VPS provider account; do the hourly Cuba-access test (D4).
 10. Open the S3 storage account(s): one for uploads near the VM, one for backups at a different
     provider or region.
