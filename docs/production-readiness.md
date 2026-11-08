@@ -49,8 +49,8 @@
         to leave both until Prisma and exceljs update them; the audit is re-run each session.
 - [ ] **A2. Deployment build B1–B13** (`docs/deployment-plan.md` §6), all approved, rehearsed
       as a production-like stack on the dev machine before any server exists. *2026-11-08:
-      B6 (sign-in per site), B7 and B8 are built; B1–B5 and B9–B13 are next, B1/B2 first
-      (they pull the base images).*
+      B1, B2, B4–B11 and B13 are built and rehearsed on `*.localhost`; B3 (CI images on a
+      tag) waits for you to ask for the CI change; B12 is optional.*
 - [ ] **A3. Supplier confirmations.** Only a worker can accept an offer, and there is no worker
       screen yet, so no service item can reach ACCEPTED and work orders cannot name a confirmed
       supplier. The owner chose the worker app (Phase 7, Expo Android). Expo is a new

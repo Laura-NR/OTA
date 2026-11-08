@@ -274,8 +274,7 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
 - Seed: `pnpm --filter @ota/db run seed` (idempotent upserts for demo data).
 - Dev database volume: the `postgres` service volume in `docker-compose.yml`.
   Back it up with `docker exec ota-postgres pg_dump -U ota ota_dev > backup.sql`.
-  Production backup/restore is provider-specific and not yet automated — treat
-  this as an open item.
+  Production backups: "Backups and restore" below.
 - `DATABASE_URL` lives in `packages/db/.env` (gitignored). Never commit it.
 
 ## Secrets
@@ -410,8 +409,8 @@ Deployment plan D7(a), D8(a), D18; build items B6–B8.
 
 ## Production stack
 
-Deployment plan D3–D20; build items B1, B2, B4, B5, B10 (`deploy/`). Not built
-yet: CI images (B3), the first Super Admin command (B9), backups (B11).
+Deployment plan D3–D20; build items B1, B2, B4, B5, B9–B11, B13 (`deploy/`).
+Not built yet: CI images (B3). Procedures: "Production procedures" below.
 
 - **Images** (`deploy/docker/`): `api` (Node 22 slim, Chromium's headless shell
   from the repo's Playwright 1.63.0; it also runs the migrations), and one
@@ -452,9 +451,124 @@ SITE_DOMAIN=<domain> DESK_DOMAIN=desk.<domain> TRIAL_AUTH=<user>:<password> depl
 `DESK_DOMAIN=desk.localhost`, `ANALYTICS_DOMAIN=analytics.localhost`; Caddy signs
 `*.localhost` with its local CA, so `curl -k` and run the smoke test with
 `CURL_INSECURE=1 MAILPIT_URL=http://localhost:8025 COMPOSE='docker compose -f
-deploy/compose.prod.yml -f deploy/compose.rehearsal.yml'`. There is no first
-admin command yet: sign in on the desk once, then set that user's `role` to
-`SUPER_ADMIN` with `psql` in the `postgres` container.
+deploy/compose.prod.yml -f deploy/compose.rehearsal.yml'`. The first Super
+Admin is made as in production ("First Super Admins" below). Backups go to the
+dev MinIO: in `deploy/backup.env`, `BACKUP_REMOTE=offsite:ota-backups` with
+`RCLONE_CONFIG_OFFSITE_PROVIDER=Minio` and
+`RCLONE_CONFIG_OFFSITE_ENDPOINT=http://host.docker.internal:9000` (the dev
+`docker-compose.yml` keys), and mail to Mailpit with `SMTP_HOST=host.docker.internal`,
+`SMTP_PORT=1025`.
+
+## Production procedures
+
+`C='docker compose -f deploy/compose.prod.yml'` throughout, run from the
+repository checkout on the server. After any of these, run `deploy/smoke.sh`
+("Production stack").
+
+### First Super Admins (once, B9)
+
+1. Each founder requests a sign-in link at `https://desk.<domain>/login` and
+   follows it once, so their account exists. Use the staff addresses: the
+   command refuses an address outside the manifest's `staff.allowedEmailDomains`,
+   or one with bookings or a supplier profile.
+2. `$C run --rm api node dist/cli/bootstrap-super-admins.js <email> [<email>...]`
+
+It promotes all the named addresses or none, audits each as
+`staff.super_admin_bootstrapped` (no actor), and refuses for good once any
+Super Admin exists: from then on, staff are invited ("Staff access"). Name both
+founders: the two-person approvals need two Super Admins.
+
+### Deploy a release
+
+1. Before tagging: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+   pass (`pnpm e2e` too before a larger release).
+2. `$C run --rm backup backup pre-deploy` — the dump a broken migration is
+   rolled back to.
+3. Set `OTA_VERSION=<tag>` in `deploy/.env`, then `$C pull` (B3; until CI
+   builds the images, `$C build` on the machine instead).
+4. `$C run --rm migrate`, then `$C up -d`. Expect about a minute of downtime.
+5. `deploy/smoke.sh`, then sign in on both sites and open the desk dashboard.
+
+### Roll back
+
+- **The code is at fault:** set `OTA_VERSION` back to the previous tag and
+  `$C up -d`. Migrations are forward-only; this repo's add columns and tables
+  rather than drop them, so the previous image normally runs on the newer
+  schema. Check the release's migrations before relying on that.
+- **A migration broke data:** restore the release's `pre-deploy` dump
+  ("Restore over the live database"), with `OTA_VERSION` set back first.
+  Everything written since that dump is lost.
+
+### Backups and restore (B11)
+
+What runs: `$C run --rm backup backup` dumps the database (`pg_dump -Fc`) and
+tars the generated documents, encrypts both with `age` for `AGE_RECIPIENTS`,
+uploads them with `rclone` to `BACKUP_REMOTE/daily/` (the month's first also to
+`monthly/`), deletes dailies and pre-deploy dumps older than 30 days and
+monthlies older than 186 days (pending counsel, D11), and emails "Backup OK" or
+"Backup FAILED" to `BACKUP_MAIL_TO`. Settings: `deploy/backup.env` from
+`deploy/backup.env.example`. Not covered: the uploads bucket (turn on the
+provider's versioning) and Plausible's database.
+
+- **Keys:** make the pair on a trusted machine
+  (`$C run --rm --entrypoint age-keygen backup`). The public key
+  (`age1…`) goes in `AGE_RECIPIENTS`; the private key goes to the password
+  manager with an offline copy, never onto the server or next to the backups.
+  Keep it apart from `PASSPORT_ENCRYPTION_KEY`'s copy too.
+- **Schedule** (root's crontab on the server; the host clock is UTC):
+  `30 3 * * * cd /srv/ota && docker compose -f deploy/compose.prod.yml run --rm backup backup >>/var/log/ota-backup.log 2>&1`
+- **List:** `$C run --rm backup list`.
+- **Monthly drill** (the live site keeps running): copy the private key to the
+  server for the drill only, then
+  ```sh
+  $C up -d restore_drill_db
+  $C run --rm -v /root/age-key.txt:/run/age/identity:ro backup restore drill   # newest, or name a <stamp>
+  $C rm -sf restore_drill_db && shred -u /root/age-key.txt
+  ```
+  It decrypts both files, restores into the throwaway database, and checks
+  that migrations and users came back and that an active Super Admin exists;
+  it prints the restored and live row counts side by side.
+- **Restore over the live database** (disaster, or a broken migration):
+  ```sh
+  $C stop api storefront desk
+  $C run --rm -e CONFIRM_RESTORE=ota -v /root/age-key.txt:/run/age/identity:ro backup restore live <stamp>
+  $C run --rm api node dist/cli/retention-scan.js
+  $C up -d && shred -u /root/age-key.txt
+  ```
+  The restore drops and re-creates the database from the dump, re-creates the
+  API's role grants (B4), and unpacks the documents over the volume. The
+  retention pass anonymizes again the travelers anonymized since the dump; it
+  also sends any notices that are due, as the 05:00 job would. A traveler who
+  confirmed a keep-alive link after the dump has lost that confirmation: check
+  the API log for `retention/keep-alive` since the dump's time before the pass.
+
+### Rotate a secret
+
+Edit the value in `deploy/.env` or `deploy/api.env` (mode 600), then:
+
+| Secret | Then | Effect |
+|---|---|---|
+| `AUTH_SECRET` (`api.env`) | `$C up -d api` | Every session ends; keep-alive links and telemetry visitor hashes change |
+| `SMTP_*`, `S3_*` (`api.env`) | `$C up -d api` (and `backup.env`'s copy) | None |
+| `POSTGRES_APP_PASSWORD` | `$C up -d postgres`, `$C exec postgres /docker-entrypoint-initdb.d/10-runtime-role.sh`, `$C up -d api` | The API reconnects |
+| `POSTGRES_PASSWORD` (the owner) | Before editing `.env`: `$C exec postgres psql -U ota -d ota -c '\password ota'` and type the new value | The next `migrate` and `backup` runs use it |
+| `REDIS_PASSWORD` | `$C up -d redis api` | Queued jobs are kept |
+| `TRIAL_PASSWORD_HASH` | `$C run --rm caddy caddy hash-password`, then `$C up -d caddy` | Single-quote the hash |
+| The backup key | New pair; put the new public key in `AGE_RECIPIENTS` | Keep the old private key until its last backup expires (186 days) |
+| `PASSPORT_ENCRYPTION_KEY` | **Do not rotate** | No re-encrypt pass exists ("Secrets") |
+
+### Add or remove a staff member
+
+From the desk, Settings › Users & roles ("Staff access"): invite by email (a
+Super Admin invite waits for a second Super Admin); deactivate someone who
+leaves, which ends their sessions at once. Nothing on the server changes.
+
+### Certificates
+
+Caddy obtains and renews them by itself; there is nothing to renew. It needs
+ports 80 and 443 open and the DNS pointing at the server. Expiry notices go to
+`ACME_EMAIL`. Never delete the `caddy_data` volume: it holds the certificates,
+and re-issuing many at once hits Let's Encrypt's rate limits.
 
 ## Verify a deploy
 
