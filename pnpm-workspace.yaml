@@ -14,3 +14,8 @@ allowBuilds:
   msgpackr-extract: true
   prisma: true
   workerd: true
+
+# next 15 pins postcss to exactly 8.4.31, which carries the 2026 postcss
+# advisories; the patched 8.5 line is the same major.
+overrides:
+  'next>postcss': ^8.5.32

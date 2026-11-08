@@ -12,12 +12,12 @@
     "auth:generate": "auth generate"
   },
   "dependencies": {
-    "@better-auth/passkey": "^1.7.5",
-    "better-auth": "^1.7.5"
+    "@better-auth/passkey": "^1.7.18",
+    "better-auth": "^1.7.18"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.1"
+    "vitest": "^5.1.0"
   }
 }
