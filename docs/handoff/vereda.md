@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-08 19:00
+# Handoff — vereda — updated 2026-11-08 20:15
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -26,6 +26,21 @@ app). Staff passkeys:
 events (T-Events)".
 
 ## State
+- **2026-11-08 (night): B9, B11 and B13** (`29c2996`…`4eb6ae3`), handoff Next 2. No migration,
+  no new package; the backup image adds Debian's `age`, `rclone` (approved, B11) and `curl`.
+  - B9: `superAdminBootstrapRefusals` (`packages/domain/src/settings/staff.ts`, unit tests in
+    `settings.test.ts`) and `node dist/cli/bootstrap-super-admins.js <email>...`
+    (`apps/api/src/cli/`, core `apps/api/src/staff/super-admin-bootstrap.ts`): all or none in a
+    serializable transaction, audited `staff.super_admin_bootstrapped` with a null actor;
+    refuses once any Super Admin row exists. Live test
+    `super-admin-bootstrap.integration.test.ts` (rolls back).
+  - B11: compose service `backup` (profile `ops`; `deploy/docker/backup.Dockerfile`,
+    `deploy/backup/ota-backup.sh`: `backup [daily|pre-deploy]`, `list`, `restore drill|live`),
+    `restore_drill_db` (profile `drill`, tmpfs), settings `deploy/backup.env`
+    (`backup.env.example`, gitignored), the result emailed (D17), and
+    `node dist/cli/retention-scan.js` (the daily job's pass, for after a restore).
+  - B13: runbook "Production procedures" (first Super Admins, deploy, roll back, backups and
+    restore, rotate a secret, staff, certificates). Plan §6 and readiness A2 updated.
 - **2026-11-08 (evening): the storefront 404 shell, then B1, B2, B4, B5 and B10**, the owner's
   pick (`4e35bcf`…`5b21aa7`). No migration, no new package; `prisma` moved from dev to prod
   dependencies in `@ota/db` (same pin) so the image can migrate.
@@ -490,36 +505,52 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-08, 404 fix + B1/B2/B4/B5/B10, dev stack stopped for the build)
+## Verified (2026-11-08 night, B9/B11/B13, dev stack stopped for the build)
 - `pnpm audit --prod`: **2**, the same two settled advisories (deepmerge-ts, uuid; major only).
-- `pnpm lint` and `pnpm format:check` green.
-- `TURBO_FORCE=true pnpm typecheck` **33/33**; `TURBO_FORCE=true pnpm test` **1274 passed / 50
-  skipped**; `TURBO_FORCE=true pnpm build` **18/18**, the storefront lists `ƒ /_not-found`;
+- `pnpm lint` and `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **33/33**;
+  `TURBO_FORCE=true pnpm test` **1280 passed / 53 skipped** (+6 B9 domain tests, +3 skipped live);
+  `TURBO_FORCE=true pnpm build` **18/18** (storefront `ƒ /_not-found`, `ƒ /robots.txt`);
   `apps/*/.next` deleted.
-- Storefront 404 (Article 7): before, `curl /en/no-such-page` was 404 with
-  `<html id="__next_error__">` and no layout; after, 404 with `lang="en"`, `data-text-size` from
-  the cookie, `id="main"` and the heading in the first byte, in dev and `next start`. The new
-  `storefront-content.spec.ts` test asserts exactly that and passes (no recorded run against
-  the pre-fix code; the before-curl shows its first assertion would fail). Screenshots at
-  390/1024/1280, with and without JavaScript, show the full layout.
-- `pnpm e2e` (full, 1.5 h): **168 passed, 1 failed, 3 skipped**. The failure is
-  `responsive.spec.ts:110` [ds07-414], a `page.goto` timeout: the storefront next-server had
-  restarted mid-run and sat at 7.4 GB RSS and 200% CPU, not answering. Killed by PID, `.next`
-  deleted, rerun alone: **passed** (2.1 min). Last session's ds07-375/768 404 failures are gone.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **49/49**, 12 files (the
-  `*.integration.test.ts` and `*.bullmq.integration.test.ts` in `apps/api/test`).
-- Production stack rehearsal (`compose.prod.yml` + `compose.rehearsal.yml`, `*.localhost`, Caddy's
-  local CA): images build (API 2.3 GB, storefront 1.42 GB); `deploy/smoke.sh` **18/18**
-  (per-site magic links in Mailpit, HSTS/nosniff/frame headers, http→https 308, an unknown path
-  404, socket 200 from the desk and 403 from another origin, a client's `X-Forwarded-For`
-  replaced by the edge); a host-only `__Secure-` session cookie on the desk; a PDF renders inside
-  the API image; `TZ=America/Havana` in the API container; `ota_app` can read/write but
-  `CREATE TABLE` fails (permission denied). Desk dashboard with a live wss socket at 390 and 1280.
-  The rehearsal stack is down, volumes kept.
-- Not run: a deploy to a real server or real DNS/ACME; Plausible behind Caddy (the override was
-  not started); B3, B9, B11, B13 are not built.
+- `pnpm e2e` (full, 1.2 h): **168 passed, 1 failed, 3 skipped**. The failure is
+  `responsive.spec.ts:118` [ds07-414], a `page.goto` timeout while both next-servers sat at
+  6–7 GB RSS (same pattern as the previous run; no web code changed this session). Killed by
+  PID, `.next` deleted, rerun alone: **passed** (2.1 min).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files (the
+  `*.integration.test.ts` and `*.bullmq.integration.test.ts` in `apps/api/test`, now with
+  `super-admin-bootstrap.integration.test.ts`). The dev DB's 8 seeded Super Admins unchanged.
+- Rehearsal (`-p ota-b11`, `compose.prod.yml` + `compose.rehearsal.yml`, fresh volumes):
+  - B9: before any sign-in the command refused (`NOT_FOUND` ×2, exit 1); after two founders
+    followed desk links, `Dayana@…` (case) and `ernesto@…` were promoted (exit 0), two audit rows
+    with a null actor and `via: bootstrap-command`; a re-run refused (`SUPER_ADMIN_EXISTS`); the
+    founder's existing session got `GET /staff` 200 and `/settings` 200. On dev the command
+    refused (seeded Super Admins); no arguments gave usage and exit 2.
+  - B11: `backup` uploaded the dump and documents to MinIO and kept the month's monthly;
+    "Backup OK" and, with a dead endpoint, "Backup FAILED" (exit 1) reached Mailpit;
+    `pre-deploy` went to its own folder and made no monthly; a 30 s keep pruned the old daily
+    but kept the new one and the monthly. `restore drill` restored into `restore_drill_db`
+    (2 users restored vs 3 live, documents archive listed). Refusals: wrong key (age error,
+    live DB untouched), no `CONFIRM_RESTORE`, no key mounted, unknown stamp, usage (exit 2).
+    `restore live` (apps stopped) dropped the user made after the dump, put the document marker
+    back, left tables owned by the owner and `ota_app` with INSERT/DELETE but no CREATE;
+    `retention-scan.js` ran in the API image (all zero on fresh data); `up -d` healthy;
+    `deploy/smoke.sh` **all checks passed**. Stack down, volumes kept.
+- Not run: a real off-site provider or host cron, B3, a browser check (no UI changed).
 
 ## Assumptions & unknowns
+- **B9 (2026-11-08):** "any Super Admin exists" counts deactivated ones too (the stricter
+  reading of plan B9), so the command is never a recovery path; a lost last Super Admin stays
+  the runbook's hand `psql` fix. It applies the invite's eligibility (fresh traveler or staff)
+  and `staff.allowedEmailDomains`. One address is accepted (a one-person agency) with a printed
+  reminder that two-person approvals need a second.
+- **B11 (2026-11-08):** not built: a copy of the uploads bucket (the provider's versioning is
+  the runbook's answer) and Plausible's database dump (D11 lists both). Retention 30 d / 186 d is
+  pending counsel. The result email uses the API's SMTP settings with opportunistic STARTTLS
+  (`curl --ssl`), as the API's mailer does (`secure: false`). A live restore unpacks documents
+  over the volume (files made since the dump stay). A keep-alive confirmed after the dump is
+  lost by a restore; the runbook says to check the API log first. The retention command was
+  run in the image on fresh data only (nothing due); its anonymizing is
+  `retention.integration.test.ts`'s proof of `RetentionService.scan`. Not run: a real
+  off-site provider, a host cron, a dump larger than a few hundred KB.
 - **Data-driven 404s (2026-11-08, settled: leave as is, Decisions):** a page's own `notFound()`
   stays on Next's error document (status 404, the page after hydration). Not verified: whether
   Next 16 renders a thrown `notFound()` on the server; weigh it if a Next 16 upgrade comes up.
@@ -707,6 +738,18 @@ events (T-Events)".
   regenerate the hash (`caddy hash-password`) next time. Better Auth's routes are mounted before
   Nest, so they never appear in the API's request log: check forwarded headers on an
   `/api/ota/*` route. The rehearsal holds host ports 80/443 while up; `down` after.
+- **Rehearsal projects (2026-11-08, night):** the B9/B11 rehearsal ran as `-p ota-b11` (fresh
+  volumes, Super Admins made by the command, `ota-backups` bucket in the dev MinIO); the older
+  `ota-rehearsal` volumes hold a hand-promoted Super Admin, so B9 refuses there. Both are down
+  with volumes kept. `deploy/backup.env` holds rehearsal values; the age key and trial password
+  are in that session's scratchpad only (regenerate: `age-keygen` in the backup image,
+  `caddy hash-password`).
+- **Backup script (2026-11-08):** `.dockerignore` excludes `deploy/`; a file an image needs is
+  re-included by name (`!deploy/backup/ota-backup.sh`). `pg_dump -Fc` into a pipe writes no data
+  offsets, so `pg_restore` reads a decrypted file, never stdin. `set -e` is off inside an `if`
+  condition, so `backup` runs itself as a child (`_backup`) to email the result. Mailpit's JSON
+  escapes `&` as `&`: read links from the parsed `Text`, not by grepping the JSON.
+  `RCLONE_CONFIG=/dev/null` silences rclone's "config file not found" notice.
 - **New env vars and `pnpm dev` (2026-11-08):** turbo runs `dev` in strict env mode, so a
   variable set in the shell reaches the apps only if it is in `turbo.json` `passThroughEnv`
   (`AUTH_ALLOWED_HOSTS`, `TRUSTED_ORIGINS`, `SITE_NOINDEX` were added). Values in
@@ -1130,6 +1173,14 @@ events (T-Events)".
     call because the decorators run before `main.ts` loads `.env`."
   - "2026-11-08: the public `GET /catalog` answers `CatalogItemDto` (the inventory item without
     `supplierId`); a public read must never carry a supplier or worker id."
+  - "2026-11-08: one-off commands ship in the API image as `apps/api/src/cli/*.ts` (plain
+    `PrismaClient`, no Nest context): `bootstrap-super-admins.js` (B9, refuses once any Super
+    Admin exists) and `retention-scan.js` (after a restore). Run them with
+    `docker compose -f deploy/compose.prod.yml run --rm api node dist/cli/<name>.js`."
+  - "2026-11-08: backups are the compose service `backup` (`deploy/backup/ota-backup.sh`):
+    age-encrypted for public keys only, uploaded by rclone from `RCLONE_CONFIG_*` variables;
+    the private key is mounted at `/run/age/identity` for a restore only. Settings in
+    `deploy/backup.env` (gitignored)."
   - "2026-11-08: `SITE_NOINDEX=1` makes the storefront's `/robots.txt` (`force-dynamic`) disallow
     everything; `next 15` pins postcss 8.4.31, overridden to the patched 8.5 line in
     `pnpm-workspace.yaml` `overrides` (drop it once Next's own pin is patched)."
@@ -1276,11 +1327,9 @@ events (T-Events)".
 
 ## Next
 1. Owner: push `vereda` (CI runs on the pull request).
-2. **Deployment build, rest** (`docs/deployment-plan.md` §6, all approved): B9 (first Super
-   Admin command, audited, refuses when one exists; domain rule + unit tests + a live test),
-   B11 (backup/restore with `age` + upload, restore drill), B13 (runbook rollback, restore,
-   rotate a secret, add staff), then B3 (CI images on a tag, when the owner asks for the CI
-   change). Rehearse each on `*.localhost` (runbook "Production stack").
+2. **Deployment build, last item:** B3 (CI builds the three images, and `backup`, on a tag
+   and pushes them; a `deploy.sh` running the runbook's "Deploy a release"), when the owner
+   asks for the CI change. Rehearse on `*.localhost`. B12 (S3 documents) stays optional.
 3. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (now also the AI provider and sanctions question), the business values, the
    tenant placeholders. The full list is `docs/production-readiness.md` §4; do not re-ask what
@@ -1856,3 +1905,12 @@ events (T-Events)".
 - 2026-11-08 — the owner chose to leave a page's own `notFound()` on Next's error document
   (status 404, the page after hydration) rather than a 200 soft 404 or a Next 16 upgrade;
   unmatched paths already get the server-rendered 404.
+- 2026-11-08 — B9 is a command in the API image, not an HTTP route: nothing public can ever
+  promote, and it reuses the image's Prisma client and the tenant manifest. It refuses on any
+  Super Admin row, deactivated or not, and promotes all named addresses or none.
+- 2026-11-08 — B11 runs in a container built on the database's own `postgres:16.15` image
+  (matching `pg_dump`), so `age`/`rclone` are never installed on the host; only public keys
+  live on the server. A live restore drops and re-creates the database (not `--clean`) so a
+  failed migration's leftovers go too, restores with `--no-owner --no-privileges`, then
+  re-runs the B4 role script. "Re-run anonymisation" is a command running the daily job's own
+  pass, not a desk button (no UI change). The month's first good daily is its monthly.
