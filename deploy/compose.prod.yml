@@ -1,6 +1,6 @@
 # Production stack (docs/deployment-plan.md D3, D8–D12, D19; B1/B2).
 # Settings come from deploy/.env (gitignored), which Compose reads for the
-# ${...} values below and which the API loads (env_file).
+# ${...} values below, and deploy/api.env, which only the API loads (B5).
 #   docker compose -f deploy/compose.prod.yml build
 #   docker compose -f deploy/compose.prod.yml run --rm migrate
 #   docker compose -f deploy/compose.prod.yml up -d
@@ -119,9 +119,11 @@ services:
     build:
       context: ..
       dockerfile: deploy/docker/api.Dockerfile
-    env_file: .env
+    # The API's own settings; never the database owner's password (B4).
+    env_file: api.env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-ota}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ota}
+      # The runtime role: data only, no DDL (deploy/postgres/init, B4).
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER:-ota_app}:${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-ota}
       REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
       DOCUMENTS_DIR: /data/documents
       # Scheduled jobs run on Cuban time (D19); timestamps stay UTC in the database.
@@ -160,6 +162,7 @@ services:
     logging: *logging
     working_dir: /app/packages/db
     command: ['node_modules/.bin/prisma', 'migrate', 'deploy']
+    # The schema owner: the only role that changes the schema.
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-ota}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ota}
     depends_on:
@@ -175,8 +178,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-ota}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-ota}
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-ota_app}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Creates the API's runtime role on an empty volume (B4).
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 5s

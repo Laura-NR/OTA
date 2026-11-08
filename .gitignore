@@ -42,3 +42,6 @@ blob-report/
 # Design team deliveries (imported selectively into design/)
 /vereda-handoff-v*/
 /vereda-handoff-v*.zip
+
+# The API settings file (deploy/api.env.example).
+deploy/api.env
