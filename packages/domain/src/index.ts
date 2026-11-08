@@ -466,10 +466,14 @@ export {
   isStaffRole,
   isStaffSessionExpired,
   leavesNoSuperAdmin,
+  normalizeEmails,
+  superAdminBootstrapRefusals,
+  type BootstrapCandidate,
   type InviteAcceptRefusal,
   type InviteConfirmRefusal,
   type InviteFacts,
   type InviteState,
+  type SuperAdminBootstrapRefusal,
 } from './settings/staff';
 export {
   PASSKEY_SIGN_IN_METHOD,

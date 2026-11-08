@@ -129,6 +129,70 @@ export function leavesNoSuperAdmin(
   return activeSuperAdminIds.filter((id) => id !== targetId).length === 0;
 }
 
+/** Trimmed, lower-cased, de-duplicated; blanks dropped. */
+export function normalizeEmails(emails: readonly string[]): string[] {
+  return [...new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean))];
+}
+
+export interface BootstrapCandidate {
+  email: string;
+  role: string;
+  deactivatedAt: Date | null;
+  reservationCount: number;
+  hasSupplierProfile: boolean;
+}
+
+export type SuperAdminBootstrapRefusal =
+  | { code: 'NO_EMAILS' }
+  | { code: 'SUPER_ADMIN_EXISTS' }
+  | { code: 'NOT_FOUND'; email: string }
+  | { code: 'DOMAIN_NOT_ALLOWED'; email: string }
+  | { code: 'DEACTIVATED'; email: string }
+  | { code: 'HAS_BOOKINGS_OR_SUPPLIER'; email: string };
+
+/**
+ * Why the first Super Admins cannot be promoted (`docs/deployment-plan.md`
+ * B9, D22), or an empty list. The command runs once: any Super Admin row,
+ * active or not, refuses it, and so does any one named address, so nothing is
+ * promoted in part. Each address must already have signed in, be allowed by the
+ * staff email domains, and be a fresh traveler or staff, as an invite requires.
+ */
+export function superAdminBootstrapRefusals(input: {
+  emails: readonly string[];
+  superAdminCount: number;
+  candidates: readonly BootstrapCandidate[];
+  allowedDomains: readonly string[];
+}): SuperAdminBootstrapRefusal[] {
+  const emails = normalizeEmails(input.emails);
+  if (emails.length === 0) return [{ code: 'NO_EMAILS' }];
+  if (input.superAdminCount > 0) return [{ code: 'SUPER_ADMIN_EXISTS' }];
+  const byEmail = new Map(
+    input.candidates.map((candidate) => [
+      candidate.email.trim().toLowerCase(),
+      candidate,
+    ]),
+  );
+  const refusals: SuperAdminBootstrapRefusal[] = [];
+  for (const email of emails) {
+    const candidate = byEmail.get(email);
+    if (!candidate) {
+      refusals.push({ code: 'NOT_FOUND', email });
+    } else if (!emailDomainAllowed(email, input.allowedDomains)) {
+      refusals.push({ code: 'DOMAIN_NOT_ALLOWED', email });
+    } else if (candidate.deactivatedAt) {
+      refusals.push({ code: 'DEACTIVATED', email });
+    } else if (
+      !isStaffRole(candidate.role) &&
+      (candidate.role !== UserRole.Traveler ||
+        candidate.reservationCount > 0 ||
+        candidate.hasSupplierProfile)
+    ) {
+      refusals.push({ code: 'HAS_BOOKINGS_OR_SUPPLIER', email });
+    }
+  }
+  return refusals;
+}
+
 /** A staff session older than the limit must sign in again (D9). */
 export function isStaffSessionExpired(
   role: string | null | undefined,

@@ -19,9 +19,12 @@ import {
   isRetentionReminderDue,
   isStaffSessionExpired,
   leavesNoSuperAdmin,
+  normalizeEmails,
   resolveDispatchTimeoutMs,
   settingsDecisionRefusal,
+  superAdminBootstrapRefusals,
   thresholdsIssues,
+  type BootstrapCandidate,
   type InviteFacts,
 } from '../src';
 
@@ -214,5 +217,100 @@ describe('staff invites and users (M9 D4, D5, D9)', () => {
     expect(
       isStaffSessionExpired('SUPER_ADMIN', new Date(NOW.getTime() - 11 * HOUR), NOW),
     ).toBe(false);
+  });
+});
+
+describe('first Super Admin bootstrap (deployment plan B9, D22)', () => {
+  const candidate = (
+    email: string,
+    overrides: Partial<BootstrapCandidate> = {},
+  ): BootstrapCandidate => ({
+    email,
+    role: 'TRAVELER',
+    deactivatedAt: null,
+    reservationCount: 0,
+    hasSupplierProfile: false,
+    ...overrides,
+  });
+  const founders = [
+    candidate('dayana@vereda.travel'),
+    candidate('ernesto@vereda.travel'),
+  ];
+  const base = {
+    emails: ['dayana@vereda.travel', 'ernesto@vereda.travel'],
+    superAdminCount: 0,
+    candidates: founders,
+    allowedDomains: ['vereda.travel'],
+  };
+
+  it('promotes founders who signed in once, while no Super Admin exists', () => {
+    expect(superAdminBootstrapRefusals(base)).toEqual([]);
+  });
+
+  it('runs only once: any Super Admin, even a deactivated one, refuses it', () => {
+    expect(superAdminBootstrapRefusals({ ...base, superAdminCount: 1 })).toEqual([
+      { code: 'SUPER_ADMIN_EXISTS' },
+    ]);
+  });
+
+  it('needs at least one address', () => {
+    expect(superAdminBootstrapRefusals({ ...base, emails: [' ', ''] })).toEqual([
+      { code: 'NO_EMAILS' },
+    ]);
+  });
+
+  it('matches addresses without case or spaces and names each one once', () => {
+    expect(
+      normalizeEmails([' Dayana@Vereda.travel', 'dayana@vereda.travel', '']),
+    ).toEqual(['dayana@vereda.travel']);
+    expect(
+      superAdminBootstrapRefusals({ ...base, emails: ['DAYANA@vereda.travel '] }),
+    ).toEqual([]);
+  });
+
+  it('refuses the whole run when any one address cannot be promoted', () => {
+    expect(
+      superAdminBootstrapRefusals({
+        ...base,
+        emails: [
+          'dayana@vereda.travel',
+          'nobody@vereda.travel',
+          'founder@gmail.com',
+          'gone@vereda.travel',
+          'guest@vereda.travel',
+          'driver@vereda.travel',
+        ],
+        candidates: [
+          ...founders,
+          candidate('founder@gmail.com'),
+          candidate('gone@vereda.travel', {
+            role: 'OPERATIONS_ADMIN',
+            deactivatedAt: NOW,
+          }),
+          candidate('guest@vereda.travel', { reservationCount: 1 }),
+          candidate('driver@vereda.travel', {
+            role: 'SERVICE_WORKER',
+            hasSupplierProfile: true,
+          }),
+        ],
+      }),
+    ).toEqual([
+      { code: 'NOT_FOUND', email: 'nobody@vereda.travel' },
+      { code: 'DOMAIN_NOT_ALLOWED', email: 'founder@gmail.com' },
+      { code: 'DEACTIVATED', email: 'gone@vereda.travel' },
+      { code: 'HAS_BOOKINGS_OR_SUPPLIER', email: 'guest@vereda.travel' },
+      { code: 'HAS_BOOKINGS_OR_SUPPLIER', email: 'driver@vereda.travel' },
+    ]);
+  });
+
+  it('promotes existing staff, and any domain when none is listed', () => {
+    expect(
+      superAdminBootstrapRefusals({
+        ...base,
+        emails: ['ops@gmail.com'],
+        candidates: [candidate('ops@gmail.com', { role: 'OPERATIONS_ADMIN' })],
+        allowedDomains: [],
+      }),
+    ).toEqual([]);
   });
 });
