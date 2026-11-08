@@ -1,55 +1,20 @@
-import { buttonClassName } from '@ota/ui';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-import { ErrorReference } from '@/components/error-reference';
-import { ErrorPageEvent } from '@/components/telemetry/error-page-event';
-import { Link } from '@/i18n/navigation';
+import { NotFoundContent } from '@/components/not-found-content';
 
-/** The title in the server's HTML; the `<title>` below keeps it once hydrated. */
+/** The title in the server's HTML; the `<title>` in the content keeps it once hydrated. */
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('errors.notFound');
   return { title: t('metaTitle') };
 }
 
-/** Errors board · 404: what happened, nothing booked is affected, three ways back. */
-export default async function NotFound() {
-  const t = await getTranslations('errors.notFound');
-
-  return (
-    <div className="mx-auto flex max-w-container flex-col gap-6 px-6 py-16 md:px-8 lg:px-10">
-      {/* Hydrating a 404 restores the layout's title; React keeps this one first in <head>. */}
-      <title>{t('metaTitle')}</title>
-      <ErrorPageEvent kind="not_found" />
-      <p aria-hidden="true" className="font-display text-display-1 text-secondary-600">
-        404
-      </p>
-      <h1 className="text-h1-compact text-default md:text-h1">{t('title')}</h1>
-      <p className="max-w-prose text-body-lg text-secondary">{t('text')}</p>
-      <div className="flex flex-wrap gap-3">
-        <Link href="/" className={buttonClassName()}>
-          {t('home')}
-        </Link>
-        <Link href="/packages" className={buttonClassName({ variant: 'secondary' })}>
-          {t('browse')}
-        </Link>
-        <Link href="/account" className={buttonClassName({ variant: 'tertiary' })}>
-          {t('trips')}
-        </Link>
-      </div>
-      <p className="max-w-prose text-body-sm text-muted">
-        {t.rich('emailLink', {
-          link: (chunks) => (
-            <Link
-              href="/support"
-              className="text-primary-600 underline underline-offset-[3px]"
-            >
-              {chunks}
-            </Link>
-          ),
-        })}{' '}
-        <ErrorReference prefix="404" />
-      </p>
-    </div>
-  );
+/**
+ * A page's own `notFound()` (a missing slug, a page switched off). Next 15
+ * cannot catch it while rendering on the server, so its HTML is Next's bare
+ * error document and this renders once the client has hydrated. An unmatched
+ * path is the root `not-found.tsx`, rendered in full on the server.
+ */
+export default function NotFound() {
+  return <NotFoundContent />;
 }
