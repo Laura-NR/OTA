@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-08 15:05
+# Handoff — vereda — updated 2026-11-08 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -26,6 +26,21 @@ app). Staff passkeys:
 events (T-Events)".
 
 ## State
+- **2026-11-08 (evening): the storefront 404 shell, then B1, B2, B4, B5 and B10**, the owner's
+  pick (`4e35bcf`…`5b21aa7`). No migration, no new package; `prisma` moved from dev to prod
+  dependencies in `@ota/db` (same pin) so the image can migrate.
+  - 404 (`4e35bcf`, test `8f2bde1`): an **unmatched** path is now a server-rendered 404 with the
+    whole layout. The `[locale]/[...rest]` catch-all (which called `notFound()` while rendering)
+    is gone; a pass-through `app/layout.tsx` lets Next serve its `/_not-found` route, and
+    `app/not-found.tsx` renders `SiteDocument` (the locale layout's `<html>`, lifted into
+    `components/site-document.tsx`) with `NotFoundContent` in the middleware's locale. A page's
+    **own** `notFound()` (a missing package/destination/blog/event slug, a page switched off,
+    16 pages) still gets Next's error document: Next 15.5 cannot catch it on the server (Traps).
+  - `deploy/`: images (`docker/api.Dockerfile`, `docker/web.Dockerfile`), `compose.prod.yml`,
+    `caddy/` (gates `trial`/`open`), `plausible/compose.override.yml`, `postgres/init/`
+    (runtime role), `compose.rehearsal.yml` (`*.localhost`), `smoke.sh` (18 checks), and the two
+    settings templates `.env.production.example` (Compose) and `api.env.example` (API only).
+    Runbook "Production stack"; plan §6 rows marked built.
 - **2026-11-08 (afternoon): security patches, the small hardening and B6**, the owner's pick
   (`a902f76`…`80bce5a`). No migration or new dependency.
   - Patches (`a902f76`): `pnpm audit --prod` 33 → 2 by in-range updates (Next 15.5.29, Better
@@ -475,38 +490,47 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-08, patches + hardening + B6, dev stack stopped for the build)
-- `pnpm audit --prod`: 33 advisories before, **2** after (deepmerge-ts via `@prisma/config`,
-  uuid via exceljs; both need a major, Assumptions).
+## Verified (2026-11-08, 404 fix + B1/B2/B4/B5/B10, dev stack stopped for the build)
+- `pnpm audit --prod`: **2**, the same two settled advisories (deepmerge-ts, uuid; major only).
 - `pnpm lint` and `pnpm format:check` green.
-- `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1274 passed / 50 skipped** (api 480, domain 507, auth 25 with the
-  five per-site sign-in tests, config 37 with `siteNoindex`).
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; the storefront lists `ƒ /robots.txt`
-  (dynamic); `apps/*/.next` deleted.
-- `next start`: `/robots.txt` answers `Disallow: /` with `SITE_NOINDEX=1` and `Allow: /` without.
-- Live, `*.localhost` (B6): with `AUTH_ALLOWED_HOSTS=vereda.localhost:3000,desk.localhost:3002`
-  each site's magic link lands on its own host; verify sets host-only cookies on
-  `desk.localhost`; `get-session` answers on the desk and is null on the storefront with the
-  same jar; the desk dashboard is 200 with the cookie and 307 → `/login` without.
-- Live (B7): an untrusted Origin gets polling 403 `{"code":4,"message":"Forbidden"}` and a
-  websocket 400 on `/ops`; a trusted Origin and no Origin get 200/101.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **49/49**, 12 files:
-  `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
-  advisories,disruptions,events,permission-overrides}.integration.test.ts` and
-  `{dispatch,compliance}.bullmq.integration.test.ts`.
-- `pnpm e2e` (full, 1.2 h): **165 passed, 3 failed, 3 skipped**; the three are
-  `responsive.spec.ts:118` (larger text): ds07-375 and ds07-768 got `/en/no-such-page` body
-  16px (expected 18px), ds07-414 timed out loading a blog post (the storefront wedge). Rerun
-  alone: ds07-768 passes, ds07-375 fails again on the same 404 assertion. Cause found: every
-  storefront 404 is served as Next's error shell (`<html id="__next_error__">`, none of the
-  layout's attributes) in dev **and** `next start`, on Next 15.5.29 and on 15.5.25 (pre-upgrade
-  worktree), so it predates this session; the page is right only once the client has rendered
-  it (Traps, the storefront 404 shell). The test now races hydration.
-- No browser width check: nothing on screen changed this session.
-- Not run: a deploy; real hosts behind Caddy (B1/B2 not built).
+- `TURBO_FORCE=true pnpm typecheck` **33/33**; `TURBO_FORCE=true pnpm test` **1274 passed / 50
+  skipped**; `TURBO_FORCE=true pnpm build` **18/18**, the storefront lists `ƒ /_not-found`;
+  `apps/*/.next` deleted.
+- Storefront 404 (Article 7): before, `curl /en/no-such-page` was 404 with
+  `<html id="__next_error__">` and no layout; after, 404 with `lang="en"`, `data-text-size` from
+  the cookie, `id="main"` and the heading in the first byte, in dev and `next start`. The new
+  `storefront-content.spec.ts` test asserts exactly that and passes (no recorded run against
+  the pre-fix code; the before-curl shows its first assertion would fail). Screenshots at
+  390/1024/1280, with and without JavaScript, show the full layout.
+- `pnpm e2e` (full, 1.5 h): **168 passed, 1 failed, 3 skipped**. The failure is
+  `responsive.spec.ts:110` [ds07-414], a `page.goto` timeout: the storefront next-server had
+  restarted mid-run and sat at 7.4 GB RSS and 200% CPU, not answering. Killed by PID, `.next`
+  deleted, rerun alone: **passed** (2.1 min). Last session's ds07-375/768 404 failures are gone.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **49/49**, 12 files (the
+  `*.integration.test.ts` and `*.bullmq.integration.test.ts` in `apps/api/test`).
+- Production stack rehearsal (`compose.prod.yml` + `compose.rehearsal.yml`, `*.localhost`, Caddy's
+  local CA): images build (API 2.3 GB, storefront 1.42 GB); `deploy/smoke.sh` **18/18**
+  (per-site magic links in Mailpit, HSTS/nosniff/frame headers, http→https 308, an unknown path
+  404, socket 200 from the desk and 403 from another origin, a client's `X-Forwarded-For`
+  replaced by the edge); a host-only `__Secure-` session cookie on the desk; a PDF renders inside
+  the API image; `TZ=America/Havana` in the API container; `ota_app` can read/write but
+  `CREATE TABLE` fails (permission denied). Desk dashboard with a live wss socket at 390 and 1280.
+  The rehearsal stack is down, volumes kept.
+- Not run: a deploy to a real server or real DNS/ACME; Plausible behind Caddy (the override was
+  not started); B3, B9, B11, B13 are not built.
 
 ## Assumptions & unknowns
+- **Data-driven 404s (2026-11-08):** left on Next's error document (status 404, the page after
+  hydration). The alternatives are a 200 soft 404 (a `<Suspense>` keeps the layout but Next
+  then answers 200 with `noindex`; `storefront-content.spec.ts` pins 404) or a Next major.
+  Question for the owner (Next). Not verified: whether Next 16 renders a thrown `notFound()` on
+  the server.
+- **Images (2026-11-08):** the API image is 2.3 GB and each Next image ~1.4 GB, partly because
+  pnpm auto-installs `better-auth`'s optional peers (Next, SWC, TypeScript) into the API's
+  production tree. Shrinking (Next `output: 'standalone'`, `auto-install-peers=false`) was not
+  tried. Caddy 2.11.9 was two days old when pinned; the base images are pinned by tag, not
+  digest. Not run: an arm64 build, a build in CI (B3), Plausible itself (the override was
+  checked with `docker compose config` against the fetched upstream v3.2.1 file only).
 - **B6 (2026-11-08):** the host is trusted from `X-Forwarded-Host` because a Next rewrite
   replaces any client value with the incoming `Host` (`next/dist/server/lib/router-utils/
   proxy-request.js`) and Caddy routes by `Host`; this holds only while the API has no public port
@@ -654,15 +678,37 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
-- **The storefront 404 shell (2026-11-08):** every storefront 404 (the `[...rest]` catch-all,
-  `/en/packages/<missing>`, `/en/destinations/<missing>`, `/en/blog/<missing>`, an unknown
-  locale) is served as Next's error document, `<html id="__next_error__">`, in dev and in
-  `next start`, on Next 15.5.25 and 15.5.29. The localized `not-found.tsx` arrives only in the
-  RSC payload and renders after hydration, so until then the page has no `lang`, fonts, tokens
-  or `data-text-size`. This is why `responsive.spec.ts:118` (larger text) and
-  `accessibility.spec.ts:99` fail on `/en/no-such-page` some runs and pass others. Not yet
-  diagnosed: why the not-found boundary under the `[locale]` root layout does not catch it on
-  the server. Probe: `curl -s localhost:3000/en/no-such-page | grep -o '<html[^>]*>'`.
+- **The storefront 404 shell (2026-11-08, fixed for unmatched paths):** Next 15.5 renders any
+  `notFound()` thrown while rendering as its bare error document (`<html id="__next_error__">`,
+  the real page after hydration), because React's server renderer has no error boundaries;
+  even a bare Next app does this, nested or not, dev or `next start`. Only an **unmatched** URL
+  is rendered in full (Next's `/_not-found` route under the root `app/layout`). So never add a
+  catch-all page that calls `notFound()`; unknown paths must stay unmatched. Wrapping pages in
+  `<Suspense>` keeps the layout but turns the status into 200. Probe:
+  `curl -s localhost:3000/en/no-such-page | grep -o '<html[^>]*>'` (now `lang="en"`); a slug
+  page (`/en/packages/nope`) still shows the error document.
+- **The root layout is a pass-through (2026-11-08):** `app/layout.tsx` returns its children and
+  both `[locale]/layout.tsx` and `app/not-found.tsx` render `<html>` through `SiteDocument`.
+  Change the site's `<html>`, providers or chrome in `components/site-document.tsx`, never in
+  one of the two callers. Following a link from the root 404 swaps the whole document on the
+  client (checked: one `html`/`body`/`main`, no console errors).
+- **Docker builds (2026-11-08):** no `buildx` here, so Compose falls back to the classic
+  builder; keep the Dockerfiles free of BuildKit-only syntax (`RUN --mount`). pnpm 12's `fetch`
+  has no `--frozen-lockfile` (install does). Turbo runs `build` in strict env mode, so the
+  Dockerfiles pass `--env-mode=loose` or Next would build without `API_URL`. Next fixes its
+  rewrites and `NEXT_PUBLIC_*` at build: a changed `DESK_DOMAIN` needs a desk rebuild. No
+  package declares `files`, so `pnpm deploy` would drop the gitignored `dist/`; the images do a
+  filtered `pnpm install --prod` and copy `dist/` in. `@prisma/client` is `@ota/db`'s, not the
+  API's: probe it from `/app/packages/db`.
+- **Compose settings (2026-11-08):** `KEY=` in an env file is an empty string, not unset, and
+  `AI_PROVIDER ?? 'mock'`, `S3_REGION ?? …`, `API_PUBLIC_URL ?? BETTER_AUTH_URL` then take the
+  empty value: optional settings stay commented out in the templates. Single-quote values with
+  `$` (Caddy's bcrypt hash). Postgres runs `deploy/postgres/init` only on an empty volume.
+- **Rehearsal (2026-11-08):** `deploy/.env` and `deploy/api.env` on this machine hold throwaway
+  rehearsal values (gitignored); the basic-auth password is in the session scratchpad only, so
+  regenerate the hash (`caddy hash-password`) next time. Better Auth's routes are mounted before
+  Nest, so they never appear in the API's request log: check forwarded headers on an
+  `/api/ota/*` route. The rehearsal holds host ports 80/443 while up; `down` after.
 - **New env vars and `pnpm dev` (2026-11-08):** turbo runs `dev` in strict env mode, so a
   variable set in the shell reaches the apps only if it is in `turbo.json` `passThroughEnv`
   (`AUTH_ALLOWED_HOSTS`, `TRUSTED_ORIGINS`, `SITE_NOINDEX` were added). Values in
@@ -896,7 +942,9 @@ events (T-Events)".
   `ERR_NETWORK_IO_SUSPENDED` or long timeouts, `timeout N` does not count suspended time (a
   rerun hung for hours), and next-servers left behind ignore SIGTERM, so Playwright reuses them
   and fails with `ERR_ABORTED`: `kill -9` the PIDs on 3000–3002, check `ss -ltnp`, delete
-  `apps/*/.next`, rerun the failed specs alone.
+  `apps/*/.next`, rerun the failed specs alone. Same remedy (2026-11-08, 1.5 h run, no suspend):
+  the storefront next-server restarted itself mid-run, then sat at 7.4 GB RSS and 200% CPU
+  answering nothing, so a late `page.goto` timed out at 240 s.
 - **Staff passkeys (2026-10-26):** Prisma `create` data with an unknown field passes `tsc` in
   `apps/api` (TS 6 + Prisma 6: no excess-property error), so a misspelt column (`actorId` for
   `actorUserId`) fails only at runtime, and a fake-Prisma unit test copies the mistake; read the
@@ -1062,6 +1110,17 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-08: storefront paths no route serves must stay unmatched (never a catch-all page
+    calling `notFound()`): Next 15.5 serves a `notFound()` thrown while rendering as its bare
+    error document, and only Next's `/_not-found` route renders a 404 with the layout on the
+    server. `app/layout.tsx` is a pass-through; `components/site-document.tsx` is the site's
+    `<html>` for both `[locale]/layout.tsx` and the root `not-found.tsx`."
+  - "2026-11-08: `deploy/` is the production stack (images, `compose.prod.yml`, Caddy, the
+    Plausible override, the runtime-role init script, `smoke.sh`). Settings live in
+    `deploy/.env` (Compose) and `deploy/api.env` (the API only; it connects as the runtime
+    role, never the owner), both gitignored; an optional setting stays commented out, never
+    `KEY=`. Dockerfiles avoid BuildKit-only syntax (no buildx on the dev machine), and Next
+    images take `API_URL`/`NEXT_PUBLIC_API_ORIGIN` as build arguments."
   - "2026-11-08: with `AUTH_ALLOWED_HOSTS` set, Better Auth answers each request on the host
     in `X-Forwarded-Host` (`siteBaseURL`, `packages/auth`; `advanced.trustedProxyHeaders`),
     so each site keeps its own host-only session cookie; `BETTER_AUTH_URL` is the fallback and
@@ -1218,16 +1277,15 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. **The storefront 404 shell (Traps), approved 2026-11-08, before B1/B2.** Diagnose why the
-   server renders Next's error document, fix it so a 404 carries the layout from its first
-   byte, and keep `responsive.spec.ts:118` as the test (it fails on the shell when it measures
-   before hydration). Article 7 gates apply; Gate 1 is the curl probe in Traps. Owner: push
-   `vereda` so the pull request's CI runs on the patched versions.
-2. **Deployment build, rest of B1–B13** (`docs/deployment-plan.md` §6), all approved; B6–B8
-   are built. B1/B2 next (Dockerfiles, `deploy/compose.prod.yml`, Caddyfile with the
-   `X-Robots-Tag` header); building them pulls the Playwright, Node and Caddy images (slow
-   first run). Rehearse with `*.localhost` (Phase B; Traps). Then B5 (env template, from D8's
-   list), B9, B10 (smoke script; the socket probe in Verified is its start), B4, B11, B13.
+1. **Owner's call: data-driven 404s** (Assumptions). (a) Leave them on Next's error document
+   (status 404, page after hydration; recommended until Next 16 is weighed), (b) a 200 soft 404
+   with the layout (`<Suspense>`; the e2e that pins 404 changes), or (c) evaluate the Next 16
+   major (Article 2). Owner: push `vereda` (CI runs on the pull request).
+2. **Deployment build, rest** (`docs/deployment-plan.md` §6, all approved): B9 (first Super
+   Admin command, audited, refuses when one exists; domain rule + unit tests + a live test),
+   B11 (backup/restore with `age` + upload, restore drill), B13 (runbook rollback, restore,
+   rotate a secret, add staff), then B3 (CI images on a tag, when the owner asks for the CI
+   change). Rehearse each on `*.localhost` (runbook "Production stack").
 3. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (now also the AI provider and sanctions question), the business values, the
    tenant placeholders. The full list is `docs/production-readiness.md` §4; do not re-ask what
@@ -1790,3 +1848,13 @@ events (T-Events)".
 - 2026-11-08 — the owner took the agent's recommendations: leave the two major-only audit fixes
   (`deepmerge-ts`, `uuid`) until Prisma and exceljs update them, and fix the storefront 404
   shell before B1/B2.
+- 2026-11-08 — the 404 fix makes unknown paths unmatched (Next's `/_not-found` under a
+  pass-through root layout) rather than wrapping pages in `<Suspense>`, because only the former
+  keeps status 404; a page's own `notFound()` stays on Next's error document until the owner
+  decides (Next 1). The API image is Node 22 slim plus Playwright's own Chromium install rather
+  than the Playwright image, to keep Node 22 (the image ships 24) and drop two browsers. The
+  images prune with a filtered `pnpm install --prod` (`pnpm deploy` would drop `dist/`), and
+  `prisma` became a production dependency so the same image runs `migrate deploy`. The desk gets
+  `X-Frame-Options: SAMEORIGIN` (it frames a credential from its own origin) where the plan said
+  DENY. B4 split the settings into `deploy/.env` (Compose) and `deploy/api.env` (API only) so
+  the API never holds the owner's password.
