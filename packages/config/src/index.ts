@@ -1,4 +1,4 @@
-export { envSchema, parseEnv } from './env';
+export { envSchema, parseEnv, siteNoindex } from './env';
 export { loadTenantMessages } from './messages';
 export type { Env } from './env';
 export {

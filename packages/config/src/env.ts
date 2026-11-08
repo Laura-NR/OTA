@@ -44,3 +44,13 @@ export type Env = z.infer<typeof envSchema>;
 export function parseEnv(source: NodeJS.ProcessEnv = process.env): Env {
   return envSchema.parse(source);
 }
+
+/**
+ * Whether `SITE_NOINDEX` asks search engines to keep out of the storefront,
+ * as during the trial run on the real domain (deployment plan D18, B8).
+ */
+export function siteNoindex(
+  value: string | undefined = process.env.SITE_NOINDEX,
+): boolean {
+  return ['1', 'true', 'yes', 'on'].includes((value ?? '').trim().toLowerCase());
+}

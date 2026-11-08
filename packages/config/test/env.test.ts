@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseEnv } from '../src/env';
+import { parseEnv, siteNoindex } from '../src/env';
 
 const validEnv = {
   NODE_ENV: 'test',
@@ -28,5 +28,16 @@ describe('parseEnv', () => {
     expect(() => parseEnv({ ...validEnv, DATABASE_URL: 'not-a-url' })).toThrowError(
       /DATABASE_URL/,
     );
+  });
+});
+
+describe('siteNoindex', () => {
+  it('is on only when the flag says so', () => {
+    for (const value of ['1', 'true', 'TRUE', ' yes ', 'on']) {
+      expect(siteNoindex(value)).toBe(true);
+    }
+    for (const value of [undefined, '', '0', 'false', 'off', 'no', 'noindex']) {
+      expect(siteNoindex(value)).toBe(false);
+    }
   });
 });

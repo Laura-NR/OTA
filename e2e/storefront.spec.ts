@@ -70,3 +70,15 @@ test.describe('storefront destinations', () => {
     ).toBeVisible();
   });
 });
+
+test.describe('storefront crawling', () => {
+  test('robots.txt lets crawlers in while SITE_NOINDEX is off', async ({ request }) => {
+    // The trial run switches SITE_NOINDEX on (plan B8); dev and e2e leave it off.
+    const response = await request.get(`${STOREFRONT_URL}/robots.txt`);
+    expect(response.status()).toBe(200);
+    const body = await response.text();
+    expect(body).toMatch(/User-Agent: \*/i);
+    expect(body).toMatch(/^Allow: \/$/m);
+    expect(body).not.toMatch(/^Disallow:/m);
+  });
+});
