@@ -408,6 +408,54 @@ Deployment plan D7(a), D8(a), D18; build items B6–B8.
   (read per request, so no rebuild). Keep it on for the trial run, with the
   proxy's `X-Robots-Tag: noindex` header, and remove both at launch.
 
+## Production stack
+
+Deployment plan D3–D20; build items B1, B2, B4, B5, B10 (`deploy/`). Not built
+yet: CI images (B3), the first Super Admin command (B9), backups (B11).
+
+- **Images** (`deploy/docker/`): `api` (Node 22 slim, Chromium's headless shell
+  from the repo's Playwright 1.63.0; it also runs the migrations), and one
+  `web.Dockerfile` for `storefront` and `desk` (`next start`). All run as
+  `node` with production dependencies only. Next fixes its rewrites and
+  `NEXT_PUBLIC_*` at build, so `API_URL` and the desk's `NEXT_PUBLIC_API_ORIGIN`
+  (`https://desk.<domain>`) are build arguments.
+- **Settings:** `deploy/.env` (Compose: hosts, image tag, database and Redis
+  passwords) and `deploy/api.env` (only the API loads it), from
+  `deploy/.env.production.example` and `deploy/api.env.example`. Both are
+  gitignored. An optional setting stays commented out: `KEY=` is an empty value,
+  not unset. Without the `S3_*` keys uploads live in memory and vanish on
+  restart; without `SMTP_HOST` and `MAIL_FROM` mail is only logged.
+- **Database roles:** the owner (`POSTGRES_USER`) runs `migrate` only; the API
+  connects as `POSTGRES_APP_USER` (default `ota_app`): data, no DDL.
+  `deploy/postgres/init/10-runtime-role.sh` creates it on an empty volume; on an
+  existing one, `exec postgres /docker-entrypoint-initdb.d/10-runtime-role.sh`.
+- **Edge:** only Caddy publishes ports (80, 443). `SITE_GATE=trial` puts basic
+  auth (`TRIAL_USER`, `TRIAL_PASSWORD_HASH` from `caddy hash-password`) and
+  `X-Robots-Tag: noindex` on all three sites; `SITE_GATE=open` at launch, with
+  `SITE_NOINDEX` emptied. The desk's `/socket.io/*` goes to the API through the
+  desk's host.
+- **Plausible CE:** its own compose project from the upstream repo at v3.2.1,
+  plus `deploy/plausible/compose.override.yml` (joins `ota_edge`, memory caps,
+  log rotation). Start the platform first: it creates `ota_edge`.
+
+```sh
+C='docker compose -f deploy/compose.prod.yml'
+$C build                 # or pull the release tag (B3)
+$C up -d postgres redis
+$C run --rm migrate      # prisma migrate deploy, as the owner
+$C up -d
+SITE_DOMAIN=<domain> DESK_DOMAIN=desk.<domain> TRIAL_AUTH=<user>:<password> deploy/smoke.sh
+```
+
+**Rehearsal on this machine:** add `-f deploy/compose.rehearsal.yml` (project
+`ota-rehearsal`, mail into the dev Mailpit) with `SITE_DOMAIN=vereda.localhost`,
+`DESK_DOMAIN=desk.localhost`, `ANALYTICS_DOMAIN=analytics.localhost`; Caddy signs
+`*.localhost` with its local CA, so `curl -k` and run the smoke test with
+`CURL_INSECURE=1 MAILPIT_URL=http://localhost:8025 COMPOSE='docker compose -f
+deploy/compose.prod.yml -f deploy/compose.rehearsal.yml'`. There is no first
+admin command yet: sign in on the desk once, then set that user's `role` to
+`SUPER_ADMIN` with `psql` in the `postgres` container.
+
 ## Verify a deploy
 
 ```sh
