@@ -2,7 +2,8 @@
 
 - **Date:** 2026-10-29
 - **Status:** Approved 2026-11-08 (see "Owner's answers" below). The domain and one mailbox are
-  bought; nothing else is bought or deployed, and nothing in §6 is built yet.
+  bought; nothing else is bought or deployed. §6: B6, B7 and B8 are built (2026-11-08); the
+  rest is not.
 - **Readers:** the owner, who decides; the agent that builds it afterwards.
 - **Related:** `docs/runbook.md` (day-2 operations, the Plausible "Going live" checklist),
   `docs/plausible-hosting-plan.md` (H1–H7), `docs/adr/0003-payments.md` and `0005-payment-rails.md`,
@@ -309,6 +310,10 @@ env template):
 - `NEXT_PUBLIC_API_ORIGIN=https://desk.<domain>` (desk build time)
 - `API_URL=http://api:3001` (both Next apps, internal network)
 - `TRUSTED_ORIGINS=https://<domain>,https://desk.<domain>`
+- `AUTH_ALLOWED_HOSTS=<domain>,desk.<domain>` (B6)
+- `BETTER_AUTH_URL=https://<domain>` (the fallback; it also sets every link's scheme, so never
+  the internal `http://api:3001`)
+- `SITE_NOINDEX=1` during the trial run only (B8)
 - `TRUST_PROXY=1`
 - `STOREFRONT_PUBLIC_URL`/`PORTAL_URL=https://<domain>`
 - `BACKOFFICE_PUBLIC_URL=https://desk.<domain>`
@@ -657,9 +662,9 @@ The agent can do all of this before any spend. Items marked **(approval)** need 
 | B3 | CI workflow: on a tag, build and push the three images to the registry; a `deploy.sh` for the server (pre-deploy dump → pull → migrate → up → health check) | A CI change is its own task, so it is fine once you ask for it |
 | B4 | Database roles: a migration-owner role and a least-privilege runtime role, created by an init script for production (not the dev `ota_ro`) | Production setup, not a schema migration |
 | B5 | `deploy/.env.production.example`: every variable from §4 with comments, no values | |
-| B6 | **D7(a): Better Auth dynamic base URL** from an env list (e.g. `AUTH_ALLOWED_HOSTS`), `BETTER_AUTH_URL` as the fallback, tests that a desk-host request yields a desk-host magic link and cookie; the runbook updated | **(approval)** changes how authentication decides (D7) |
-| B7 | Restrict the two Socket.IO gateways' CORS to `TRUSTED_ORIGINS` (F11), plus the authorization tests | Hardening |
-| B8 | A `noindex` switch for the trial (Caddy header, plus a `robots.txt` on the storefront that follows an env flag) | |
+| B6 | **D7(a): Better Auth dynamic base URL** from an env list (e.g. `AUTH_ALLOWED_HOSTS`), `BETTER_AUTH_URL` as the fallback, tests that a desk-host request yields a desk-host magic link and cookie; the runbook updated | **(approval)** changes how authentication decides (D7). *Built 2026-11-08: `AUTH_ALLOWED_HOSTS`, `siteBaseURL` in `packages/auth`; runbook "Hosts, sign-in and crawling".* |
+| B7 | Restrict the two Socket.IO gateways' CORS to `TRUSTED_ORIGINS` (F11), plus the authorization tests | Hardening. *Built 2026-11-08: CORS and the handshake's `Origin` (`allowRequest`), since CORS does not cover a WebSocket upgrade.* |
+| B8 | A `noindex` switch for the trial (Caddy header, plus a `robots.txt` on the storefront that follows an env flag) | *The storefront half is built 2026-11-08 (`SITE_NOINDEX`, read per request); the Caddy header comes with B2.* |
 | B9 | A one-off, audited bootstrap command to promote named emails to Super Admin, refusing to run when any Super Admin exists | **(approval)**: it writes production data when you run it |
 | B10 | A deploy smoke script: `/health/ready`, magic-link round trip on both hosts, socket handshake on `desk.<domain>/socket.io`, the forwarded-IP check (runbook "Going live" step 4) | |
 | B11 | Backup and restore scripts: `pg_dump` + `age` encryption + upload; a restore-into-a-throwaway-container drill; the "re-run anonymisation after restore" step | **(approval)** `age` and the upload tool (e.g. `rclone`) are new tools on the server |

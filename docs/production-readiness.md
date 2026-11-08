@@ -38,19 +38,20 @@
 
 ### A. Agent work, no spend (in order)
 
-- [ ] **A1. Security patch upgrades.** `pnpm audit --prod` on 2026-11-07 found 33 issues, 2
-      critical and 11 high:
-      - Next.js 15.5.25 → ≥ 15.5.28: remote code execution in image optimisation.
-      - Better Auth 1.7.5 → ≥ 1.7.7: an OAuth state usable as a magic link.
-      - Zod 4.6.5 → ≥ 4.6.6.
-      - High-severity transitives: body-parser, multer, postcss, sharp, vite and others.
-
-      All are patch versions inside existing ranges, so no Article 2 gate. Re-run the audit
-      afterwards; anything that needs a major version comes back to the owner.
+- [x] **A1. Security patch upgrades.** *Done 2026-11-08.* `pnpm audit --prod` went from 33
+      issues (2 critical, 11 high) to 2: Next.js 15.5.29, Better Auth 1.7.18, Zod 4.6.7, Nest
+      12.4.0 and the patched transitives, all inside the existing ranges (Next's own pin on
+      postcss is overridden to 8.5.32, the same major).
+      - **Your call:** the 2 left are fixed only in new major versions, both deep inside other
+        packages: `deepmerge-ts` 7 → 8 (high, used only by Prisma's command-line config loader)
+        and `uuid` 8 → 11 (moderate, used by the spreadsheet library, which calls only the
+        unaffected `v4()`). Neither is reachable from a web request. The agent recommends
+        leaving both until Prisma and exceljs update them, and re-running the audit each
+        session.
 - [ ] **A2. Deployment build B1–B13** (`docs/deployment-plan.md` §6), all approved, rehearsed
-      as a production-like stack on the dev machine before any server exists. B6 (sign-in per
-      site) first: today sign-in breaks once the storefront and the desk are on different
-      hostnames.
+      as a production-like stack on the dev machine before any server exists. *2026-11-08:
+      B6 (sign-in per site), B7 and B8 are built; B1–B5 and B9–B13 are next, B1/B2 first
+      (they pull the base images).*
 - [ ] **A3. Supplier confirmations.** Only a worker can accept an offer, and there is no worker
       screen yet, so no service item can reach ACCEPTED and work orders cannot name a confirmed
       supplier. The owner chose the worker app (Phase 7, Expo Android). Expo is a new
@@ -59,10 +60,11 @@
       rented: the small desk "confirmed by phone" action (no dependency).
 - [ ] **A4. Mock AI.** The desk's "draft reply" returns canned text from the mock model. Before
       launch, either hide it or wire the provider the owner picks (§6).
-- [ ] **A5. Small hardening:**
-      - public `GET /catalog` still returns supplier ids;
-      - the Socket.IO gateways accept any origin (B7);
-      - there is no noindex switch for the trial (B8).
+- [x] **A5. Small hardening.** *Done 2026-11-08:*
+      - public `GET /catalog` no longer returns supplier ids;
+      - the Socket.IO gateways accept only `TRUSTED_ORIGINS` (B7);
+      - `SITE_NOINDEX=1` makes the storefront's `robots.txt` turn crawlers away (B8; the proxy
+        header comes with the deploy files).
 - [ ] **A6. Domain values in config** once deploying:
       - `PASSKEY_RP_ID=veredaexpeditions.com` (plan D6(a); permanent);
       - `staff.allowedEmailDomains=["veredaexpeditions.com"]`;
@@ -107,7 +109,7 @@
 **Owner technical choices:**
 - raster app icons from Vereda;
 - an SMS provider;
-- the 25 AGENTS.md §C lines proposed in the handoff (only the owner edits AGENTS.md).
+- the 29 AGENTS.md §C lines proposed in the handoff (only the owner edits AGENTS.md).
 
 The domain answers the staff email domain and `PASSKEY_RP_ID` (A6).
 
@@ -202,10 +204,10 @@ test. It is dev only, but production `next start` memory has not been measured; 
 1. Push: `git push origin vereda` from your own terminal, then open
    `https://github.com/Laura-NR/OTA/compare/main...vereda?expand=1` and paste the description
    the agent prepared.
-2. Wait until the security patches (A1) are on the branch and CI is green. CI runs on every
-   pull request.
+2. The security patches (A1) are on the branch since 2026-11-08; wait until CI is green. CI
+   runs on every pull request.
 3. Review it yourself; Article 9 needs a named human.
-4. Add the 25 §C lines from the handoff to AGENTS.md.
+4. Add the 29 §C lines from the handoff to AGENTS.md.
 5. Merge with **"Create a merge commit"**: `main` then equals `vereda` and keeps its history.
    Squash would fold 487 commits into one; "rebase and merge" rewrites them.
 6. Before the merge, the agent graduates the handoff: facts go to AGENTS.md §C (via you),
@@ -252,9 +254,9 @@ Until then, the mock stays in dev and the draft button must be hidden for launch
 
 ## 7. Suggested order
 
-1. **Next session:** security patches (A1) and the small hardening (A5). The owner pushes,
-   so the pull request's CI runs.
-2. **Then:** the deployment build (A2), rehearsed locally, about two to three sessions.
+1. *Done 2026-11-08:* security patches (A1), the small hardening (A5) and B6. **Owner:**
+   push `vereda`, so the pull request's CI runs on the patched versions.
+2. **Next:** the rest of the deployment build (A2), rehearsed locally, about two sessions.
 3. **Owner, in parallel:** counsel, business terms, the key backup, the domain steps, the PR
    review.
 4. **When the legal entity exists:** accounts, the trial server, real data, the rehearsal;

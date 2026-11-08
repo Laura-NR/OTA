@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-08 12:00
+# Handoff — vereda — updated 2026-11-08 14:51
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -26,6 +26,23 @@ app). Staff passkeys:
 events (T-Events)".
 
 ## State
+- **2026-11-08 (afternoon): security patches, the small hardening and B6**, the owner's pick
+  (`a902f76`…`80bce5a`). No migration or new dependency.
+  - Patches (`a902f76`): `pnpm audit --prod` 33 → 2 by in-range updates (Next 15.5.29, Better
+    Auth/passkey 1.7.18, Zod 4.6.7, Nodemailer 10.3.1, Nest 12.4.0 → express 5.3.0, body-parser
+    2.4.0, multer 2.5.0, qs 6.17.1; Vitest 5.1.0 → vite 8.3.6; sharp 0.35.5, source-map-js
+    1.2.2) and `overrides: 'next>postcss': ^8.5.32` in `pnpm-workspace.yaml` (Next pins 8.4.31).
+    Left: `deepmerge-ts` 7 (high; Prisma's CLI config merge) and `uuid` 8 (moderate; exceljs
+    calls only `v4()`), both fixed only in a major (owner's call, Next).
+  - `GET /catalog` answers `CatalogItemDto` (no `supplierId`; `3d9abec`).
+  - B7 (`6927b54`): `SOCKET_ORIGIN_OPTIONS` (`apps/api/src/common/trusted-origins.ts`) on both
+    gateways: CORS plus `allowRequest` on the handshake's `Origin`; `main.ts` reads the same
+    `trustedOrigins()`.
+  - B8 (`0418ff1`): `apps/storefront/src/app/robots.ts` (dynamic) follows `SITE_NOINDEX`
+    (`siteNoindex`, `packages/config`). The Caddy `X-Robots-Tag` half belongs to B2.
+  - B6 (`80bce5a`): `siteBaseURL` (`packages/auth/src/site-base-url.ts`); `createAuth` takes
+    `allowedHosts` from `AUTH_ALLOWED_HOSTS`. Runbook "Hosts, sign-in and crawling"; plan D8's
+    settings list gained `AUTH_ALLOWED_HOSTS`, `BETTER_AUTH_URL`, `SITE_NOINDEX`.
 - **2026-11-08: owner decisions, docs only; no code changed.** The owner approved the
   deployment plan (D1–D24 as recommended, plus every §6 (approval) item: B1, B2, B6, B9, B11) and
   asked for security patches first. The domain `veredaexpeditions.com` is registered in the
@@ -458,36 +475,50 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-07, the tier/extra hold, dev stack stopped for the build)
-- Gate 1, live DB (`RUN_DB_INTEGRATION=1`): before the fix, a tier or extra removed after the
-  Booking form's checks threw `PrismaClientKnownRequestError` (500), a withdrawn extra was
-  booked, and the desk's party edit onto a removed tier threw the same Prisma error. After:
-  409, nothing written (`package-booking.integration.test.ts`, 4 new tests).
-- Removing `FOR SHARE` from `claimPackageChoices` makes the new lock test in
-  `packages.integration.test.ts` fail (the save removes the rows, the booking hits the FK);
-  restored. Removing the party edit's claim makes its test fail; restored.
+## Verified (2026-11-08, patches + hardening + B6, dev stack stopped for the build)
+- `pnpm audit --prod`: 33 advisories before, **2** after (deepmerge-ts via `@prisma/config`,
+  uuid via exceljs; both need a major, Assumptions).
 - `pnpm lint` and `pnpm format:check` green.
 - `TURBO_FORCE=true pnpm typecheck` **33/33**, 0 cached.
-- `TURBO_FORCE=true pnpm test` **1261 passed / 50 skipped**, 30/30 tasks (the five new tests are
-  live and skip here; the two unit fakes now answer the tier/extra locks).
-- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; `apps/*/.next` deleted.
+- `TURBO_FORCE=true pnpm test` **1274 passed / 50 skipped** (api 480, domain 507, auth 25 with the
+  five per-site sign-in tests, config 37 with `siteNoindex`).
+- `TURBO_FORCE=true pnpm build` **18/18**, 0 cached; the storefront lists `ƒ /robots.txt`
+  (dynamic); `apps/*/.next` deleted.
+- `next start`: `/robots.txt` answers `Disallow: /` with `SITE_NOINDEX=1` and `Allow: /` without.
+- Live, `*.localhost` (B6): with `AUTH_ALLOWED_HOSTS=vereda.localhost:3000,desk.localhost:3002`
+  each site's magic link lands on its own host; verify sets host-only cookies on
+  `desk.localhost`; `get-session` answers on the desk and is null on the storefront with the
+  same jar; the desk dashboard is 200 with the cookie and 307 → `/login` without.
+- Live (B7): an untrusted Origin gets polling 403 `{"code":4,"message":"Forbidden"}` and a
+  websocket 400 on `/ops`; a trusted Origin and no Origin get 200/101.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **49/49**, 12 files:
   `apps/api/test/{retention,packages,affidavits,package-booking,payment-schedule,proposals,
   advisories,disruptions,events,permission-overrides}.integration.test.ts` and
   `{dispatch,compliance}.bullmq.integration.test.ts`.
-- `pnpm e2e` (full, 1.2 h): **162 passed, 5 failed, 3 skipped**. Rerun alone on fresh servers,
-  `storefront-builder.spec.ts:65`, `storefront-keyboard.spec.ts:89` and `responsive.spec.ts:118`
-  (ds07-414, ds07-1440) pass. `accessibility.spec.ts:99` (customer pages) failed all three
-  times, at `networkidle` on `/en/no-such-page`; after the last run `/en/no-such-page`
-  answered in 0.3 s but `/en` hung past 90 s, the storefront `next-server` at 7.5 GB RSS and
-  79 % CPU after 9 minutes, the API answering in ms (Traps, storefront dev server). No
-  storefront, desk or package code changed this session (`git diff c6525bd..HEAD`), so this
-  is the known wedge, not the fix.
-- No browser width check: nothing on screen changed (the refusals are the API's English, shown
-  as the Booking form and the desk already show the seat-claim 409s).
-- Not run: a clean customer-pages axe audit today; a real screen reader; a deploy.
+- `pnpm e2e` (full, 1.2 h): **165 passed, 3 failed, 3 skipped**; the three are
+  `responsive.spec.ts:118` (larger text): ds07-375 and ds07-768 got `/en/no-such-page` body
+  16px (expected 18px), ds07-414 timed out loading a blog post (the storefront wedge). Rerun
+  alone: ds07-768 passes, ds07-375 fails again on the same 404 assertion. Cause found: every
+  storefront 404 is served as Next's error shell (`<html id="__next_error__">`, none of the
+  layout's attributes) in dev **and** `next start`, on Next 15.5.29 and on 15.5.25 (pre-upgrade
+  worktree), so it predates this session; the page is right only once the client has rendered
+  it (Traps, the storefront 404 shell). The test now races hydration.
+- No browser width check: nothing on screen changed this session.
+- Not run: a deploy; real hosts behind Caddy (B1/B2 not built).
 
 ## Assumptions & unknowns
+- **B6 (2026-11-08):** the host is trusted from `X-Forwarded-Host` because a Next rewrite
+  replaces any client value with the incoming `Host` (`next/dist/server/lib/router-utils/
+  proxy-request.js`) and Caddy routes by `Host`; this holds only while the API has no public port
+  (D8a). The storefront's and desk's server-side session reads go straight to `API_URL` without
+  that header and land on the fallback, which is fine because the cookie name depends only on the
+  scheme. With a dynamic base and no `PASSKEY_RP_ID`, the passkey rpID would follow each host;
+  production sets it (A6). Proven live on `*.localhost` only, not behind Caddy (Phase B).
+- **B7:** a handshake without `Origin` is allowed (a same-origin poll may omit it; non-browser
+  clients carry no victim cookie). Better Auth's wildcard origins are not honoured for sockets
+  (exact origins only); none are configured.
+- **Audit leftovers:** recommended leaving `deepmerge-ts` and `uuid` (unreachable from a
+  request) rather than forcing majors under Prisma 6 and exceljs 4; the owner decides.
 - **Owner's answers (2026-11-08):** the owner wrote the mailbox as `info@veredqexpeditions.com`;
   assumed a typo for `veredaexpeditions.com` (the domain they bought). The owner spoke of "six"
   (approval) items; the plan marks five rows (B1, B2, B6, B9, B11; Caddy is B2/D9). Recorded all
@@ -623,6 +654,27 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **The storefront 404 shell (2026-11-08):** every storefront 404 (the `[...rest]` catch-all,
+  `/en/packages/<missing>`, `/en/destinations/<missing>`, `/en/blog/<missing>`, an unknown
+  locale) is served as Next's error document, `<html id="__next_error__">`, in dev and in
+  `next start`, on Next 15.5.25 and 15.5.29. The localized `not-found.tsx` arrives only in the
+  RSC payload and renders after hydration, so until then the page has no `lang`, fonts, tokens
+  or `data-text-size`. This is why `responsive.spec.ts:118` (larger text) and
+  `accessibility.spec.ts:99` fail on `/en/no-such-page` some runs and pass others. Not yet
+  diagnosed: why the not-found boundary under the `[locale]` root layout does not catch it on
+  the server. Probe: `curl -s localhost:3000/en/no-such-page | grep -o '<html[^>]*>'`.
+- **New env vars and `pnpm dev` (2026-11-08):** turbo runs `dev` in strict env mode, so a
+  variable set in the shell reaches the apps only if it is in `turbo.json` `passThroughEnv`
+  (`AUTH_ALLOWED_HOSTS`, `TRUSTED_ORIGINS`, `SITE_NOINDEX` were added). Values in
+  `apps/api/.env` still load, and `process.loadEnvFile` does not override the shell.
+- **Rehearsing per-site sign-in (2026-11-08):** on plain `localhost` cookies are shared across
+  ports, so separation cannot show. Use `vereda.localhost:3000` and `desk.localhost:3002` with
+  `AUTH_ALLOWED_HOSTS` and `TRUSTED_ORIGINS` listing both (curl and Chromium resolve
+  `*.localhost` to loopback). The desk dashboard is then Spanish for curl (no Accept-Language).
+- **`robots.ts` is prerendered by default:** without `dynamic = 'force-dynamic'` the build bakes
+  `SITE_NOINDEX` in. The build table must show `ƒ /robots.txt`.
+- **`pkill -f` with a pattern from your own command line kills your shell** (exit 144); kill by
+  the PID from `ss -ltnp` instead.
 - **Keep building (2026-11-07):** `createVersion` now runs `$queryRaw` (the proposal lock) first in
   its transaction, so a fake Prisma on that path needs `$queryRaw` returning `[{ updated_at }]`.
   Prisma's `@updatedAt` moves on any client write to `custom_requests`: an e2e or fixture that
@@ -1010,6 +1062,20 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-08: with `AUTH_ALLOWED_HOSTS` set, Better Auth answers each request on the host
+    in `X-Forwarded-Host` (`siteBaseURL`, `packages/auth`; `advanced.trustedProxyHeaders`),
+    so each site keeps its own host-only session cookie; `BETTER_AUTH_URL` is the fallback and
+    sets every link's scheme. Unset (dev), everything stays on `BETTER_AUTH_URL`."
+  - "2026-11-08: the `/ops` and `/conversations` gateways take `SOCKET_ORIGIN_OPTIONS`
+    (`apps/api/src/common/trusted-origins.ts`): a handshake whose `Origin` is not in
+    `TRUSTED_ORIGINS` is refused in CORS and in `allowRequest` (CORS does not cover a
+    WebSocket upgrade); no `Origin` goes on to the session check. The list is read on each
+    call because the decorators run before `main.ts` loads `.env`."
+  - "2026-11-08: the public `GET /catalog` answers `CatalogItemDto` (the inventory item without
+    `supplierId`); a public read must never carry a supplier or worker id."
+  - "2026-11-08: `SITE_NOINDEX=1` makes the storefront's `/robots.txt` (`force-dynamic`) disallow
+    everything; `next 15` pins postcss 8.4.31, overridden to the patched 8.5 line in
+    `pnpm-workspace.yaml` `overrides` (drop it once Next's own pin is patched)."
   - "2026-11-07: a custom request is editable only while it is OPEN and its proposal DRAFT
     (`customRequestEditable`). `PUT /me/proposals/:id/request` and `createVersion` both take
     `FOR UPDATE` on the proposal first; a send carrying `requestUpdatedAt` refuses a request
@@ -1152,15 +1218,14 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. **Security patch upgrades** (the owner's pick for the next session). `pnpm audit --prod`
-   (2026-11-07): 33 issues, 2 critical: next 15.5.25 → ≥ 15.5.28, better-auth 1.7.5 → ≥ 1.7.7;
-   high: zod → ≥ 4.6.6, body-parser, multer, postcss, sharp, vite and other transitives. Patch
-   versions within the existing ranges (no Article 2 gate); anything needing a major goes back
-   to the owner. Then the small hardening (public `GET /catalog` returns `supplierId`; B7 socket
-   CORS; B8 noindex). Full verify; the owner pushes so the pull request's CI runs.
-2. **Deployment build B1–B13** (`docs/deployment-plan.md` §6), all approved 2026-11-08; B6
-   first. Rehearse locally with `*.localhost` (Phase B); no spend. The hosts follow the domain
-   (`veredaexpeditions.com`, `desk.`, `analytics.`), `PASSKEY_RP_ID=veredaexpeditions.com`.
+1. **Owner:** push `vereda` so the pull request's CI runs on the patched versions; answer the
+   audit leftovers (`deepmerge-ts` 8 and `uuid` 11 are majors deep in Prisma/exceljs; the agent
+   recommends waiting for upstream; `docs/production-readiness.md` A1).
+2. **Deployment build, rest of B1–B13** (`docs/deployment-plan.md` §6), all approved; B6–B8
+   are built. B1/B2 next (Dockerfiles, `deploy/compose.prod.yml`, Caddyfile with the
+   `X-Robots-Tag` header); building them pulls the Playwright, Node and Caddy images (slow
+   first run). Rehearse with `*.localhost` (Phase B; Traps). Then B5 (env template, from D8's
+   list), B9, B10 (smoke script; the socket probe in Verified is its start), B4, B11, B13.
 3. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (now also the AI provider and sanctions question), the business values, the
    tenant placeholders. The full list is `docs/production-readiness.md` §4; do not re-ask what
@@ -1172,7 +1237,11 @@ events (T-Events)".
 5. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
    the desktop cookie banner, a real screen-reader run, manifest editing beyond flags, PII purge
    Tiers 2–3, the load test (D24), SMS.
-6. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
+6. Proposed (owner's yes): the storefront 404 shell (Traps). Diagnose why the server renders
+   Next's error document, fix it so a 404 carries the layout from its first byte, and keep
+   `responsive.spec.ts:118` as the test (it fails on the shell when it measures before
+   hydration). Article 7 gates apply; Gate 1 is the curl probe in Traps.
+7. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
    decisions → ADRs/PR) and delete it in the merge; merge with a merge commit.
 
 ## Decisions (append-only)
@@ -1712,3 +1781,11 @@ events (T-Events)".
   because `main` is an ancestor of `vereda` and the history stays reviewable. The AI provider
   stays open: suggested Mistral (EU) if counsel flags US providers, else a trial of Mistral and
   Claude on anonymised desk messages.
+- 2026-11-08 — security patches by in-range updates plus a same-major override of Next's
+  postcss pin, over forcing majors: the two majors left (`deepmerge-ts`, `uuid`) are
+  unreachable from a request and go to the owner. The public catalog drops `supplierId` with a
+  separate DTO rather than changing the desk's. B7 checks the handshake's `Origin` as well as
+  CORS, because CORS alone does not stop a cross-origin WebSocket. B8's flag is read per request
+  so one image serves the trial and launch. B6 takes the links' scheme from `BETTER_AUTH_URL`
+  rather than a new variable or `X-Forwarded-Proto`, since behind the proxy the API is reached
+  over http.
