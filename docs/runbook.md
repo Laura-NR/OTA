@@ -409,8 +409,8 @@ Deployment plan D7(a), D8(a), D18; build items B6–B8.
 
 ## Production stack
 
-Deployment plan D3–D20; build items B1, B2, B4, B5, B9–B11, B13 (`deploy/`).
-Not built yet: CI images (B3). Procedures: "Production procedures" below.
+Deployment plan D3–D20; build items B1–B5, B9–B11, B13 (`deploy/`,
+`.github/workflows/release.yml`). Procedures: "Production procedures" below.
 
 - **Images** (`deploy/docker/`): `api` (Node 22 slim, Chromium's headless shell
   from the repo's Playwright 1.63.0; it also runs the migrations), and one
@@ -439,7 +439,7 @@ Not built yet: CI images (B3). Procedures: "Production procedures" below.
 
 ```sh
 C='docker compose -f deploy/compose.prod.yml'
-$C build                 # or pull the release tag (B3)
+$C pull                  # OTA_IMAGE_PREFIX and OTA_VERSION in deploy/.env ("Release images")
 $C up -d postgres redis
 $C run --rm migrate      # prisma migrate deploy, as the owner
 $C up -d
@@ -478,26 +478,57 @@ It promotes all the named addresses or none, audits each as
 Super Admin exists: from then on, staff are invited ("Staff access"). Name both
 founders: the two-person approvals need two Super Admins.
 
+### Release images (B3)
+
+Pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`: the CI checks
+(`ci.yml`), then one job per image runs `deploy/build-images.sh` and pushes
+`ghcr.io/<owner>/ota/{api,storefront,desk,backup}:vX.Y.Z`. A failed check
+pushes nothing. A package starts private on its first push; check each one's
+visibility on GitHub after the first release.
+
+- **Once, on GitHub:** the repository variable `DESK_DOMAIN` (Settings →
+  Secrets and variables → Actions → Variables) set to `desk.<domain>`; the
+  desk image bakes it in, so changing it needs a new tag.
+- **Once, on the server:** `docker login ghcr.io -u <github user>` with a
+  classic personal access token that has only `read:packages` (the registry
+  takes no fine-grained token), and in `deploy/.env`
+  `OTA_IMAGE_PREFIX=ghcr.io/<owner, lower case>/ota`.
+- Tags are never moved or reused: the server pulls a tag only when it does not
+  have it yet.
+- **Build on a machine instead** (no CI, or a rehearsal):
+  `OTA_IMAGE_PREFIX=… DESK_DOMAIN=… deploy/build-images.sh <tag>` builds all
+  four locally (`PUSH=1` pushes them). To rehearse a deploy here, put a local
+  `git tag` on the commit, set `OTA_IMAGE_PREFIX` in the rehearsal
+  `deploy/.env`, build with `DESK_DOMAIN=desk.localhost`, and run
+  `COMPOSE='docker compose -f deploy/compose.prod.yml -f deploy/compose.rehearsal.yml' deploy/deploy.sh <tag>`;
+  the images are found locally, so nothing is pulled. Delete the tag after.
+
 ### Deploy a release
 
 1. Before tagging: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
-   pass (`pnpm e2e` too before a larger release).
-2. `$C run --rm backup backup pre-deploy` — the dump a broken migration is
-   rolled back to.
-3. Set `OTA_VERSION=<tag>` in `deploy/.env`, then `$C pull` (B3; until CI
-   builds the images, `$C build` on the machine instead).
-4. `$C run --rm migrate`, then `$C up -d`. Expect about a minute of downtime.
-5. `deploy/smoke.sh`, then sign in on both sites and open the desk dashboard.
+   pass (`pnpm e2e` too before a larger release). Tag, push the tag, and wait
+   for the Release workflow to pass.
+2. On the server: `git fetch --tags && git checkout <tag> && deploy/deploy.sh <tag>`.
+   It refuses unless the checkout is at that tag with no local changes, then
+   pulls the images (missing one: it stops, nothing changed), takes the
+   `pre-deploy` dump (failed: it stops, nothing changed), migrates as the
+   owner, starts the stack and waits up to 5 minutes for every health check,
+   and only then records `OTA_VERSION=<tag>` in `deploy/.env`. Expect about a
+   minute of downtime.
+3. `deploy/smoke.sh`, then sign in on both sites and open the desk dashboard.
 
 ### Roll back
 
-- **The code is at fault:** set `OTA_VERSION` back to the previous tag and
-  `$C up -d`. Migrations are forward-only; this repo's add columns and tables
-  rather than drop them, so the previous image normally runs on the newer
-  schema. Check the release's migrations before relying on that.
+- **The code is at fault:**
+  `git checkout <previous tag> && deploy/deploy.sh --rollback <previous tag>`
+  (no dump, no migration). Migrations are forward-only; this repo's add
+  columns and tables rather than drop them, so the previous image normally
+  runs on the newer schema. Check the release's migrations before relying on
+  that.
 - **A migration broke data:** restore the release's `pre-deploy` dump
-  ("Restore over the live database"), with `OTA_VERSION` set back first.
-  Everything written since that dump is lost.
+  ("Restore over the live database") with `OTA_VERSION` set back to the
+  previous tag first (in `deploy/.env`, the checkout at that tag). Everything
+  written since that dump is lost.
 
 ### Backups and restore (B11)
 

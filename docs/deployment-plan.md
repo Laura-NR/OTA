@@ -481,13 +481,14 @@ second trusted person with emergency access.
 | (b) The server pulls git and builds | No registry | Next builds need a lot of memory and slow the live site; the build toolchain lives on production |
 | (c) The owner's machine builds and pushes | No CI | Depends on one laptop; harder to repeat |
 
-**Release procedure (to be scripted, B3):**
+**Release procedure (scripted, B3: `.github/workflows/release.yml`, `deploy/build-images.sh`,
+`deploy/deploy.sh`; runbook "Deploy a release"):**
 1. `pnpm lint && pnpm typecheck && pnpm test && pnpm build` pass (and `pnpm e2e` before larger
    releases).
-2. Tag `vX.Y.Z` → CI builds `api`, `storefront`, `desk` images. `NEXT_PUBLIC_API_ORIGIN` is passed
-   at desk build time.
-3. On the server: take a pre-deploy database dump, then
-   `docker compose pull`,
+2. Tag `vX.Y.Z` → CI builds `api`, `storefront`, `desk` and `backup` images. `NEXT_PUBLIC_API_ORIGIN` is
+   passed at desk build time.
+3. On the server: `docker compose pull` (a missing image stops here), take a pre-deploy
+   database dump, then
    `docker compose run --rm migrate` (`prisma migrate deploy` as the owner role), and
    `docker compose up -d`.
 4. Check `/health/ready`, sign in on both sites, open the desk dashboard (live socket).
@@ -659,7 +660,7 @@ The agent can do all of this before any spend. Items marked **(approval)** need 
 |---|---|---|
 | B1 | Production Dockerfiles: `api` (on the Playwright image matching 1.63.x, so Chromium and its libraries are included), `storefront`, `desk` (Node 22 slim, `next start`); multi-stage, non-root user, pnpm deploy pruning | **(approval)** the base images are new third-party components. Next's `output: 'standalone'` would shrink the images, a small config change *Built 2026-11-08: `deploy/docker/`. The API image is Node 22 slim plus Chromium's headless shell from the repo's Playwright 1.63.0, not the Playwright image (it ships Node 24 and three browsers, 3.55 GB); `next start`, not standalone.* |
 | B2 | `deploy/compose.prod.yml` + `deploy/Caddyfile` + a Plausible compose override, with healthchecks (`/health`, `/health/ready`), `stop_grace_period: 30s` (F15), memory limits, log rotation, internal networks, Redis with `appendonly yes`, a password and `maxmemory-policy noeviction` (BullMQ requires it) | **(approval)** Caddy image (D9) *Built 2026-11-08: `deploy/compose.prod.yml`, `deploy/caddy/` (`SITE_GATE` trial/open; `X-Frame-Options: SAMEORIGIN` on the desk, which frames a credential from its own origin), `deploy/plausible/compose.override.yml` (v3.2.1), `deploy/compose.rehearsal.yml` for `*.localhost`.* |
-| B3 | CI workflow: on a tag, build and push the three images to the registry; a `deploy.sh` for the server (pre-deploy dump → pull → migrate → up → health check) | A CI change is its own task, so it is fine once you ask for it |
+| B3 | CI workflow: on a tag, build and push the three images to the registry; a `deploy.sh` for the server (pre-deploy dump → pull → migrate → up → health check) | A CI change is its own task, so it is fine once you ask for it *Built 2026-11-08: `.github/workflows/release.yml` (gated on `ci.yml`, one job per image, plain `docker`, GHCR; the four images including `backup`), `deploy/build-images.sh`, `deploy/deploy.sh` (pull before the dump, so a missing image changes nothing; `--rollback` skips the dump and migration); runbook "Release images". Rehearsed on `*.localhost` with locally built images; the workflow first runs on a real tag.* |
 | B4 | Database roles: a migration-owner role and a least-privilege runtime role, created by an init script for production (not the dev `ota_ro`) | Production setup, not a schema migration *Built 2026-11-08: `deploy/postgres/init/10-runtime-role.sh`; the API's settings moved to their own `deploy/api.env` so it never holds the owner's password.* |
 | B5 | `deploy/.env.production.example`: every variable from §4 with comments, no values | *Built 2026-11-08, as two files: `deploy/.env.production.example` (Compose) and `deploy/api.env.example` (the API).* |
 | B6 | **D7(a): Better Auth dynamic base URL** from an env list (e.g. `AUTH_ALLOWED_HOSTS`), `BETTER_AUTH_URL` as the fallback, tests that a desk-host request yields a desk-host magic link and cookie; the runbook updated | **(approval)** changes how authentication decides (D7). *Built 2026-11-08: `AUTH_ALLOWED_HOSTS`, `siteBaseURL` in `packages/auth`; runbook "Hosts, sign-in and crawling".* |
