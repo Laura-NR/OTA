@@ -89,4 +89,19 @@ test.describe('storefront content pages', () => {
     ).toBeVisible();
     await expect(page.getByText('404 · /en/no-such-page')).toBeVisible();
   });
+
+  test('serves an unknown path with the site layout in its first byte', async ({
+    request,
+  }) => {
+    // The server's HTML, before any script runs: not Next's bare error document.
+    const response = await request.get(`${STOREFRONT_URL}/en/no-such-page/deeper`, {
+      headers: { cookie: 'ota_display=large-text' },
+    });
+    expect(response.status()).toBe(404);
+    const html = await response.text();
+    expect(html).not.toContain('__next_error__');
+    expect(html).toMatch(/<html[^>]* lang="en"[^>]* data-text-size="large"/);
+    expect(html).toContain('This page took a wrong turn.');
+    expect(html).toContain('id="main"');
+  });
 });
