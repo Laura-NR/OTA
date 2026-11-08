@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-08 18:30
+# Handoff — vereda — updated 2026-11-08 19:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -520,11 +520,9 @@ events (T-Events)".
   not started); B3, B9, B11, B13 are not built.
 
 ## Assumptions & unknowns
-- **Data-driven 404s (2026-11-08):** left on Next's error document (status 404, the page after
-  hydration). The alternatives are a 200 soft 404 (a `<Suspense>` keeps the layout but Next
-  then answers 200 with `noindex`; `storefront-content.spec.ts` pins 404) or a Next major.
-  Question for the owner (Next). Not verified: whether Next 16 renders a thrown `notFound()` on
-  the server.
+- **Data-driven 404s (2026-11-08, settled: leave as is, Decisions):** a page's own `notFound()`
+  stays on Next's error document (status 404, the page after hydration). Not verified: whether
+  Next 16 renders a thrown `notFound()` on the server; weigh it if a Next 16 upgrade comes up.
 - **Images (2026-11-08):** the API image is 2.3 GB and each Next image ~1.4 GB, partly because
   pnpm auto-installs `better-auth`'s optional peers (Next, SWC, TypeScript) into the API's
   production tree. Shrinking (Next `output: 'standalone'`, `auto-install-peers=false`) was not
@@ -1277,10 +1275,7 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. **Owner's call: data-driven 404s** (Assumptions). (a) Leave them on Next's error document
-   (status 404, page after hydration; recommended until Next 16 is weighed), (b) a 200 soft 404
-   with the layout (`<Suspense>`; the e2e that pins 404 changes), or (c) evaluate the Next 16
-   major (Article 2). Owner: push `vereda` (CI runs on the pull request).
+1. Owner: push `vereda` (CI runs on the pull request).
 2. **Deployment build, rest** (`docs/deployment-plan.md` §6, all approved): B9 (first Super
    Admin command, audited, refuses when one exists; domain rule + unit tests + a live test),
    B11 (backup/restore with `age` + upload, restore drill), B13 (runbook rollback, restore,
@@ -1858,3 +1853,6 @@ events (T-Events)".
   `X-Frame-Options: SAMEORIGIN` (it frames a credential from its own origin) where the plan said
   DENY. B4 split the settings into `deploy/.env` (Compose) and `deploy/api.env` (API only) so
   the API never holds the owner's password.
+- 2026-11-08 — the owner chose to leave a page's own `notFound()` on Next's error document
+  (status 404, the page after hydration) rather than a 200 soft 404 or a Next 16 upgrade;
+  unmatched paths already get the server-rendered 404.

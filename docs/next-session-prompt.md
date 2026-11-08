@@ -23,10 +23,10 @@ TASK 0 — The owner's dev stack is running (started with RATE_LIMIT_MAX=100000
 RATE_LIMIT_AUTH_MAX=100000 TELEMETRY_SINK_FILE=$PWD/.telemetry/e2e-events.jsonl). Stop it by
 signalling turbo (`@turbo/linux-64/bin/turbo run dev`) before any verify.
 
-TASK 1 — Ask the owner handoff Next 1 (a page's own 404) unless its Decisions record an
-answer; meanwhile build the rest of the deployment build (handoff Next 2; all approved, B9, B11
-and B13 next). Do not ask which batch. The two major-only audit fixes stay deferred
-(settled); re-run `pnpm audit --prod` and ask only about a new advisory.
+TASK 1 — Build the rest of the deployment build (handoff Next 2; all approved: B9, B11 and
+B13, then B3 when the owner asks for the CI change), rehearsing each on *.localhost. Do not ask
+which batch. A page's own 404 is settled (leave as is). The two major-only audit fixes stay
+deferred (settled); re-run `pnpm audit --prod` and ask only about a new advisory.
 
 TASK 2 — Build what the owner approves: domain rules with unit tests, DTOs, routes in the
 authorization matrix, desk surfaces in en/es/fr, an e2e. Write a migration doc and get it
