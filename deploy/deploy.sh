@@ -51,10 +51,6 @@ images=(api storefront desk backup)
 echo "Pulling $tag"
 $COMPOSE pull --policy missing "${images[@]}" ||
   die "pulling $tag failed (is it pushed, and is this server logged in to the registry?); nothing was changed"
-for image in "${images[@]}"; do
-  ref=$($COMPOSE config --images "$image")
-  docker image inspect "$ref" >/dev/null 2>&1 || die "image $ref is missing; nothing was changed"
-done
 
 if [ -z "$rollback" ]; then
   echo 'Taking the pre-deploy dump'
