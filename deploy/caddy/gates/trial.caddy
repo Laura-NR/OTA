@@ -1,0 +1,6 @@
+# The trial run (SITE_GATE=trial): strangers and search engines see nothing.
+# TRIAL_PASSWORD_HASH: `docker compose -f deploy/compose.prod.yml run --rm caddy caddy hash-password`.
+basic_auth {
+	{$TRIAL_USER} {$TRIAL_PASSWORD_HASH}
+}
+header X-Robots-Tag "noindex, nofollow"

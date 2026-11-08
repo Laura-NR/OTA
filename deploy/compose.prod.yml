@@ -1,0 +1,224 @@
+# Production stack (docs/deployment-plan.md D3, D8–D12, D19; B1/B2).
+# Settings come from deploy/.env (gitignored), which Compose reads for the
+# ${...} values below and which the API loads (env_file).
+#   docker compose -f deploy/compose.prod.yml build
+#   docker compose -f deploy/compose.prod.yml run --rm migrate
+#   docker compose -f deploy/compose.prod.yml up -d
+# Only Caddy publishes ports: Docker's published ports bypass the host firewall.
+name: ota
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '5'
+
+x-app: &app
+  restart: unless-stopped
+  logging: *logging
+  init: true
+
+services:
+  caddy:
+    image: caddy:2.11.9-alpine
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN}
+      DESK_DOMAIN: ${DESK_DOMAIN:?set DESK_DOMAIN}
+      ANALYTICS_DOMAIN: ${ANALYTICS_DOMAIN:?set ANALYTICS_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+      SITE_GATE: ${SITE_GATE:-trial}
+      TRIAL_USER: ${TRIAL_USER:-}
+      TRIAL_PASSWORD_HASH: ${TRIAL_PASSWORD_HASH:-}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/gates:/etc/caddy/gates:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - storefront
+      - desk
+      - api
+    networks: [edge]
+    mem_limit: 128m
+
+  storefront:
+    <<: *app
+    image: ${OTA_IMAGE_PREFIX:-ota}/storefront:${OTA_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: deploy/docker/web.Dockerfile
+      args:
+        APP: storefront
+        PORT: '3000'
+    # Only what the app reads; deploy/.env (secrets) goes to the API alone.
+    environment:
+      API_URL: http://api:3001
+      SITE_NOINDEX: ${SITE_NOINDEX:-}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/robots.txt').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    stop_grace_period: 30s
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [edge]
+    mem_limit: 768m
+
+  desk:
+    <<: *app
+    image: ${OTA_IMAGE_PREFIX:-ota}/desk:${OTA_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: deploy/docker/web.Dockerfile
+      args:
+        APP: backoffice
+        PORT: '3002'
+        # The desk's live socket goes through its own host (D8a).
+        NEXT_PUBLIC_API_ORIGIN: https://${DESK_DOMAIN:?set DESK_DOMAIN}
+    # Only what the app reads; deploy/.env (secrets) goes to the API alone.
+    environment:
+      API_URL: http://api:3001
+      SITE_NOINDEX: ${SITE_NOINDEX:-}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/login').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    stop_grace_period: 30s
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [edge]
+    mem_limit: 768m
+
+  api:
+    <<: *app
+    image: ${OTA_IMAGE_PREFIX:-ota}/api:${OTA_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: deploy/docker/api.Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ota}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ota}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+      DOCUMENTS_DIR: /data/documents
+      # Scheduled jobs run on Cuban time (D19); timestamps stay UTC in the database.
+      TZ: America/Havana
+      TRUST_PROXY: '1'
+    volumes:
+      - documents:/data/documents
+    # Chromium renders PDFs; the default 64 MB /dev/shm is too small for it.
+    shm_size: 256m
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    # Above the API's own SHUTDOWN_TIMEOUT_MS (10 s), so a drain is never cut (F15).
+    stop_grace_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [edge, backend]
+    mem_limit: 1536m
+
+  # One-off: docker compose -f deploy/compose.prod.yml run --rm migrate
+  migrate:
+    image: ${OTA_IMAGE_PREFIX:-ota}/api:${OTA_VERSION:-local}
+    profiles: [migrate]
+    logging: *logging
+    working_dir: /app/packages/db
+    command: ['node_modules/.bin/prisma', 'migrate', 'deploy']
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ota}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ota}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+
+  postgres:
+    image: postgres:16.15-bookworm
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ota}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-ota}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    stop_grace_period: 30s
+    networks: [backend]
+    mem_limit: 1g
+
+  redis:
+    image: redis:7.4.12-bookworm
+    restart: unless-stopped
+    logging: *logging
+    # BullMQ needs noeviction; appendonly keeps the delayed jobs across restarts.
+    command:
+      - sh
+      - -c
+      - exec redis-server --appendonly yes --maxmemory-policy noeviction --requirepass "$$REDIS_PASSWORD"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
+    mem_limit: 256m
+
+networks:
+  # Caddy, the apps and (from its own compose project) Plausible.
+  edge:
+    name: ota_edge
+  # Postgres and Redis: reachable from the API only, with no way out.
+  backend:
+    internal: true
+
+volumes:
+  pgdata:
+  redisdata:
+  documents:
+  caddy_data:
+  caddy_config:

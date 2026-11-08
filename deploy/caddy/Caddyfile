@@ -1,0 +1,56 @@
+# The edge proxy (docs/deployment-plan.md D9): automatic HTTPS, security
+# headers, and the visitor's address in X-Forwarded-For (Caddy replaces any
+# value a client sends). Names come from deploy/.env through compose.prod.yml.
+# A `*.localhost` name gets a certificate from Caddy's own local CA, so the
+# same file serves the local rehearsal.
+{
+	email {$ACME_EMAIL}
+}
+
+(headers) {
+	header {
+		# No preload until every subdomain is HTTPS for good.
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+		-Server
+	}
+}
+
+# trial: basic auth and noindex on all three sites; open: neither (D18).
+(gate) {
+	import gates/{$SITE_GATE}.caddy
+}
+
+{$SITE_DOMAIN} {
+	import headers
+	import gate
+	header X-Frame-Options "DENY"
+	encode zstd gzip
+	reverse_proxy storefront:3000
+}
+
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$DESK_DOMAIN} {
+	import headers
+	import gate
+	# The desk frames a supplier's credential from its own origin.
+	header X-Frame-Options "SAMEORIGIN"
+	encode zstd gzip
+	# Live updates reach the API through the desk's own host, so they carry the
+	# desk's cookie (D7a, D8a).
+	reverse_proxy /socket.io/* api:3001
+	reverse_proxy desk:3002
+}
+
+{$ANALYTICS_DOMAIN} {
+	import headers
+	import gate
+	header X-Frame-Options "DENY"
+	encode zstd gzip
+	reverse_proxy plausible:8000
+}
