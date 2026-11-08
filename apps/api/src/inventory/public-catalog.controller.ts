@@ -1,7 +1,7 @@
 import { Controller, Get, Param, ParseUUIDPipe, Query, Res } from '@nestjs/common';
 import {
   listCatalogQuerySchema,
-  type InventoryItemDto,
+  type CatalogItemDto,
   type ListCatalogQuery,
 } from '@ota/schemas';
 import type { Response } from 'express';
@@ -12,8 +12,9 @@ import { InventoryService } from './inventory.service';
 
 /**
  * The storefront's read-only catalog. Deliberately `@Public()` and hard-wired
- * to active items only — the operations `GET /inventory` view stays
- * authenticated. Supports type/province filters (spec §4.6 storefront control).
+ * to active items only, and without the supplier link — the operations
+ * `GET /inventory` view stays authenticated. Supports type/province filters
+ * (spec §4.6 storefront control).
  */
 @Controller('catalog')
 export class PublicCatalogController {
@@ -23,8 +24,8 @@ export class PublicCatalogController {
   @Public()
   list(
     @Query(new ZodValidationPipe(listCatalogQuerySchema)) query: ListCatalogQuery,
-  ): Promise<InventoryItemDto[]> {
-    return this.inventory.list({ ...query, active: true });
+  ): Promise<CatalogItemDto[]> {
+    return this.inventory.listCatalog(query);
   }
 
   // Images of inactive items must not be world-readable, so the public stream

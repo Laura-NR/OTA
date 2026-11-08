@@ -204,6 +204,7 @@ export {
   type ReassignServiceItemRequest,
 } from './dispatch';
 export {
+  catalogItemSchema,
   createInventoryItemSchema,
   createPricingRuleSchema,
   inventoryItemSchema,
@@ -219,6 +220,7 @@ export {
   updateInventoryItemSchema,
   updatePricingRuleSchema,
   uploadInventoryMediaSchema,
+  type CatalogItemDto,
   type CreateInventoryItemRequest,
   type CreatePricingRuleRequest,
   type InventoryItemDto,

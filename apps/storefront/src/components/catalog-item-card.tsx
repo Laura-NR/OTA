@@ -1,4 +1,4 @@
-import type { InventoryItemDto } from '@ota/schemas';
+import type { CatalogItemDto } from '@ota/schemas';
 import { buttonClassName, Icon } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 
@@ -16,7 +16,7 @@ export function CatalogItemCard({
   item,
   builder,
 }: {
-  item: InventoryItemDto;
+  item: CatalogItemDto;
   builder: boolean;
 }) {
   const t = useTranslations('destinations.detail');

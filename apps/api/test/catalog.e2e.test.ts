@@ -60,6 +60,7 @@ describe('GET /catalog', () => {
         name: 'Classic Car',
         type: 'TRANSPORT',
         province: 'Matanzas',
+        supplierId: '44444444-4444-4444-8444-444444444444',
       }),
     ];
 
@@ -88,6 +89,17 @@ describe('GET /catalog', () => {
       'Classic Car',
     ]);
     expect(response.body[0].media).toEqual([]);
+  });
+
+  it('never tells the public which supplier provides an item', async () => {
+    const response = await request(app.getHttpServer()).get('/catalog?type=TRANSPORT');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0]).not.toHaveProperty('supplierId');
+    expect(JSON.stringify(response.body)).not.toContain(
+      '44444444-4444-4444-8444-444444444444',
+    );
   });
 
   it('filters the public catalog by type', async () => {
