@@ -42,12 +42,11 @@
       issues (2 critical, 11 high) to 2: Next.js 15.5.29, Better Auth 1.7.18, Zod 4.6.7, Nest
       12.4.0 and the patched transitives, all inside the existing ranges (Next's own pin on
       postcss is overridden to 8.5.32, the same major).
-      - **Your call:** the 2 left are fixed only in new major versions, both deep inside other
-        packages: `deepmerge-ts` 7 → 8 (high, used only by Prisma's command-line config loader)
-        and `uuid` 8 → 11 (moderate, used by the spreadsheet library, which calls only the
-        unaffected `v4()`). Neither is reachable from a web request. The agent recommends
-        leaving both until Prisma and exceljs update them, and re-running the audit each
-        session.
+      - **Decided 2026-11-08:** the 2 left are fixed only in new major versions, both deep
+        inside other packages: `deepmerge-ts` 7 → 8 (high, used only by Prisma's command-line
+        config loader) and `uuid` 8 → 11 (moderate, used by the spreadsheet library, which
+        calls only the unaffected `v4()`). Neither is reachable from a web request. You chose
+        to leave both until Prisma and exceljs update them; the audit is re-run each session.
 - [ ] **A2. Deployment build B1–B13** (`docs/deployment-plan.md` §6), all approved, rehearsed
       as a production-like stack on the dev machine before any server exists. *2026-11-08:
       B6 (sign-in per site), B7 and B8 are built; B1–B5 and B9–B13 are next, B1/B2 first
@@ -256,7 +255,9 @@ Until then, the mock stays in dev and the draft button must be hidden for launch
 
 1. *Done 2026-11-08:* security patches (A1), the small hardening (A5) and B6. **Owner:**
    push `vereda`, so the pull request's CI runs on the patched versions.
-2. **Next:** the rest of the deployment build (A2), rehearsed locally, about two sessions.
+2. **Next:** fix the storefront 404 page (every "page not found" is sent without the site's
+   layout until the browser renders it; found 2026-11-08), then the rest of the deployment
+   build (A2), rehearsed locally, about two sessions.
 3. **Owner, in parallel:** counsel, business terms, the key backup, the domain steps, the PR
    review.
 4. **When the legal entity exists:** accounts, the trial server, real data, the rehearsal;

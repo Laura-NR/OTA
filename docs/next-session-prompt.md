@@ -23,9 +23,10 @@ TASK 0 — The owner's dev stack is running (started with RATE_LIMIT_MAX=100000
 RATE_LIMIT_AUTH_MAX=100000 TELEMETRY_SINK_FILE=$PWD/.telemetry/e2e-events.jsonl). Stop it by
 signalling turbo (`@turbo/linux-64/bin/turbo run dev`) before any verify.
 
-TASK 1 — The owner already chose: the rest of the deployment build (handoff Next 2; all
-approved, B1/B2 next). Do not ask which batch. If the owner has answered the audit leftovers or
-the 404 shell proposal (handoff Next 1 and 6), do what they chose first.
+TASK 1 — The owner already chose: fix the storefront 404 shell first (handoff Next 1; Article
+7 gates), then the rest of the deployment build (handoff Next 2; all approved, B1/B2 next). Do
+not ask which batch. The two major-only audit fixes stay deferred (settled); re-run
+`pnpm audit --prod` and ask only about a new advisory.
 
 TASK 2 — Build what the owner approves: domain rules with unit tests, DTOs, routes in the
 authorization matrix, desk surfaces in en/es/fr, an e2e. Write a migration doc and get it

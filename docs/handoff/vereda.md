@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-08 14:51
+# Handoff — vereda — updated 2026-11-08 15:05
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -517,8 +517,8 @@ events (T-Events)".
 - **B7:** a handshake without `Origin` is allowed (a same-origin poll may omit it; non-browser
   clients carry no victim cookie). Better Auth's wildcard origins are not honoured for sockets
   (exact origins only); none are configured.
-- **Audit leftovers:** recommended leaving `deepmerge-ts` and `uuid` (unreachable from a
-  request) rather than forcing majors under Prisma 6 and exceljs 4; the owner decides.
+- **Audit leftovers:** the owner chose to leave `deepmerge-ts` and `uuid` (unreachable from a
+  request) until Prisma and exceljs update them; re-run `pnpm audit --prod` each session.
 - **Owner's answers (2026-11-08):** the owner wrote the mailbox as `info@veredqexpeditions.com`;
   assumed a typo for `veredaexpeditions.com` (the domain they bought). The owner spoke of "six"
   (approval) items; the plan marks five rows (B1, B2, B6, B9, B11; Caddy is B2/D9). Recorded all
@@ -1218,9 +1218,11 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. **Owner:** push `vereda` so the pull request's CI runs on the patched versions; answer the
-   audit leftovers (`deepmerge-ts` 8 and `uuid` 11 are majors deep in Prisma/exceljs; the agent
-   recommends waiting for upstream; `docs/production-readiness.md` A1).
+1. **The storefront 404 shell (Traps), approved 2026-11-08, before B1/B2.** Diagnose why the
+   server renders Next's error document, fix it so a 404 carries the layout from its first
+   byte, and keep `responsive.spec.ts:118` as the test (it fails on the shell when it measures
+   before hydration). Article 7 gates apply; Gate 1 is the curl probe in Traps. Owner: push
+   `vereda` so the pull request's CI runs on the patched versions.
 2. **Deployment build, rest of B1–B13** (`docs/deployment-plan.md` §6), all approved; B6–B8
    are built. B1/B2 next (Dockerfiles, `deploy/compose.prod.yml`, Caddyfile with the
    `X-Robots-Tag` header); building them pulls the Playwright, Node and Caddy images (slow
@@ -1237,11 +1239,7 @@ events (T-Events)".
 5. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
    the desktop cookie banner, a real screen-reader run, manifest editing beyond flags, PII purge
    Tiers 2–3, the load test (D24), SMS.
-6. Proposed (owner's yes): the storefront 404 shell (Traps). Diagnose why the server renders
-   Next's error document, fix it so a 404 carries the layout from its first byte, and keep
-   `responsive.spec.ts:118` as the test (it fails on the shell when it measures before
-   hydration). Article 7 gates apply; Gate 1 is the curl probe in Traps.
-7. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
+6. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
    decisions → ADRs/PR) and delete it in the merge; merge with a merge commit.
 
 ## Decisions (append-only)
@@ -1789,3 +1787,6 @@ events (T-Events)".
   so one image serves the trial and launch. B6 takes the links' scheme from `BETTER_AUTH_URL`
   rather than a new variable or `X-Forwarded-Proto`, since behind the proxy the API is reached
   over http.
+- 2026-11-08 — the owner took the agent's recommendations: leave the two major-only audit fixes
+  (`deepmerge-ts`, `uuid`) until Prisma and exceljs update them, and fix the storefront 404
+  shell before B1/B2.
