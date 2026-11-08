@@ -1,0 +1,52 @@
+name: Release
+
+# A release tag (vX.Y.Z) builds the four production images and pushes them to
+# the GitHub Container Registry as ghcr.io/<owner>/ota/<image>:<tag>, the
+# OTA_IMAGE_PREFIX and OTA_VERSION the server pulls (docs/deployment-plan.md
+# D15, B3; runbook "Deploy a release"). The repository variable DESK_DOMAIN
+# (desk.<domain>) is baked into the desk image.
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  images:
+    name: Image ${{ matrix.image }}
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        image: [api, storefront, desk, backup]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to the GitHub Container Registry
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        # The registry wants a lower-case path; the owner's name may not be.
+        run: |
+          owner=${GITHUB_REPOSITORY_OWNER,,}
+          OTA_IMAGE_PREFIX=ghcr.io/$owner/ota deploy/build-images.sh "$GITHUB_REF_NAME" "$IMAGE"
+        env:
+          IMAGE: ${{ matrix.image }}
+          PUSH: '1'
+          DESK_DOMAIN: ${{ vars.DESK_DOMAIN }}
+          OTA_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}
