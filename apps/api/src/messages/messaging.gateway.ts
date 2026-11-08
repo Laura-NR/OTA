@@ -12,6 +12,7 @@ import type { Server, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import { SessionPolicy, sessionMayConnect } from '../auth/session-policy';
 import { startSocketRecheck } from '../auth/socket-recheck';
+import { SOCKET_ORIGIN_OPTIONS } from '../common/trusted-origins';
 import { PrismaService } from '../prisma/prisma.service';
 import type { MessageEvent, MessagePublisher } from './message.publisher';
 
@@ -27,15 +28,15 @@ function reservationRoom(reservationId: string): string {
 
 /**
  * Real-time channel for traveler↔operations messaging. Clients connect to the
- * `conversations` namespace with `?reservationId=...`; only the reservation's
- * owner or an operations role may join, with a session the guard would accept
- * (`SessionPolicy`, passkey rule included); a socket whose session is
+ * `conversations` namespace with `?reservationId=...` from a trusted origin;
+ * only the reservation's owner or an operations role may join, with a session
+ * the guard would accept (`SessionPolicy`, passkey rule included); a socket whose session is
  * refused later (idle lock, deactivation) is dropped within a minute. If nobody is connected, the message is
  * still delivered by email (see MessagesService).
  */
 @WebSocketGateway({
   namespace: 'conversations',
-  cors: { origin: true, credentials: true },
+  ...SOCKET_ORIGIN_OPTIONS,
 })
 export class MessagingGateway
   implements MessagePublisher, OnGatewayConnection, OnGatewayInit, OnModuleDestroy

@@ -12,6 +12,7 @@ import type { Server, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import { SessionPolicy, sessionMayConnect } from '../auth/session-policy';
 import { startSocketRecheck } from '../auth/socket-recheck';
+import { SOCKET_ORIGIN_OPTIONS } from '../common/trusted-origins';
 import type {
   DeskAlertEvent,
   EscalationEvent,
@@ -27,15 +28,15 @@ const OPS_ROLES: readonly string[] = [
 
 /**
  * Real-time escalation channel for the operations desk. Clients connect to the
- * `ops` namespace; the handshake is authenticated with the Better Auth session
- * cookie, and only operations roles whose session the guard would accept
+ * `ops` namespace from a trusted origin; the handshake is authenticated with
+ * the Better Auth session cookie, and only operations roles whose session the guard would accept
  * (`SessionPolicy`, passkey rule included) may join, and a socket whose
  * session is refused later (idle lock, deactivation) is dropped within a
  * minute. Events mirror dispatch activity so
  * the dashboard can raise amber/red cues and offer click-to-call, and the desk's
  * acknowledgements and mutes so every open desk stops or resumes its cue.
  */
-@WebSocketGateway({ namespace: 'ops', cors: { origin: true, credentials: true } })
+@WebSocketGateway({ namespace: 'ops', ...SOCKET_ORIGIN_OPTIONS })
 export class EscalationGateway
   implements EscalationPublisher, OnGatewayConnection, OnGatewayInit, OnModuleDestroy
 {

@@ -20,6 +20,7 @@ import {
 import { writeClientIp } from './common/client-ip';
 import { registerJsonParsers } from './common/json-body';
 import { createRateLimiter } from './common/rate-limit';
+import { trustedOrigins } from './common/trusted-origins';
 import { resolveTenantConfigPath } from './tenant/tenant.path';
 
 function positiveInt(value: string | undefined, fallback: number): number {
@@ -41,12 +42,7 @@ async function bootstrap(): Promise<void> {
 
   const tenant = loadTenantConfig(resolveTenantConfigPath());
   const mailer = createMailer();
-  const trustedOrigins = (
-    process.env.TRUSTED_ORIGINS ?? 'http://localhost:3000,http://localhost:3002'
-  )
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const origins = trustedOrigins();
 
   // Better Auth's session, passkey and recovery-code routes ask the Nest
   // session policy (idle lock L5, passkeys P4) and recovery codes, and every
@@ -77,7 +73,7 @@ async function bootstrap(): Promise<void> {
     secret,
     baseURL:
       process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? 3001}`,
-    trustedOrigins,
+    trustedOrigins: origins,
     magicLinkExpiresInSeconds:
       60 * positiveInt(process.env.MAGIC_LINK_EXPIRES_MINUTES, 10),
     sendMagicLink: async ({ email, url }) => {
@@ -86,7 +82,7 @@ async function bootstrap(): Promise<void> {
     passkey: {
       rpID: process.env.PASSKEY_RP_ID?.trim() || undefined,
       rpName: tenant.branding.agencyName,
-      origins: trustedOrigins,
+      origins,
       policy: {
         changeRefusal: (input) => policy().changeRefusal(input),
         changed: (input) => policy().passkeyChanged(input),
