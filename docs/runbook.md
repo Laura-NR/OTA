@@ -389,6 +389,28 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   desk's origin must be that domain or a subdomain of it, and listed in
   `TRUSTED_ORIGINS`); changing it later means everyone enrolls again.
 
+## Worker app sign-in
+
+`docs/worker-app-plan.md` W1–W6; ADR 0007.
+
+- A worker signs in on the app with their supplier phone number and a six-digit code (10
+  minutes, five tries; the fifth wrong one voids it). The number is the supplier profile's
+  primary phone, so correct it there first if the worker changed numbers.
+- **No SMS arrives** (there is no SMS provider yet, so in production none ever does): an
+  Operations Admin or Super Admin checks the worker's ID card, then Suppliers → the worker →
+  "Worker app sign-in" → "Issue sign-in code…", and reads the code out. It replaces any open
+  code; a "Reenviar" tap on the phone does not replace it.
+- `SMS_PROVIDER`: unset logs the message (with the code) in development and sends nothing in
+  production; `none` sends nothing anywhere; `console` logs anywhere (never in production: the
+  log would hold sign-in codes).
+- A phone stays signed in for 30 days; the app's "Salir" ends that phone's session. There is no
+  desk action yet to end a worker's sessions (Settings → Users covers staff only): for a lost
+  phone, delete the worker's rows from the `session` table by hand, as for other hand fixes.
+- The app's session token works only as the worker app's: a staff session's token sent as a
+  bearer token is refused (401).
+- Answers given with no signal are kept on the phone and sent when it reconnects; an answer
+  that arrives after the offer timed out is refused and the worker is told.
+
 ## Hosts, sign-in and crawling
 
 Deployment plan D7(a), D8(a), D18; build items B6–B8.

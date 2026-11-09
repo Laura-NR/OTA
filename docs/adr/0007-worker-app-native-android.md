@@ -1,8 +1,8 @@
 # ADR 0007 — Worker app: native Android (Expo), sideloaded, with Cuba's SMS rules
 
 - **Date:** 2026-10-14
-- **Status:** Accepted; amended 2026-10-14 (design resolutions) and 2026-11-08 (supplier
-  confirmations wait for this app), see the end
+- **Status:** Accepted; amended 2026-10-14 (design resolutions), 2026-11-08 (supplier
+  confirmations wait for this app) and 2026-11-09 (first slice built), see the end
 - **Deciders:** Project owner, lead engineer
 - **Context:** `docs/adr/0001-stack.md` (Mobile: Expo React Native + expo-sqlite), spec §5 and
   §7.2, `docs/design-v1.1-plan.md` Q7 and Q10, design boards W-* (`design/vereda-v1.1/project/`),
@@ -154,6 +154,20 @@ new dependency) and picks two or three suppliers for the field test. If the app 
 field test when the trial server is rented (deployment plan D1), the desk action is the
 fallback: small, and with no new dependency. It also stays useful later for suppliers without
 a smartphone or mobile data.
+
+## Amendment, 2026-11-09: the first slice
+
+The owner approved Expo on 2026-11-09, with three choices (`docs/worker-app-plan.md` W1, W3,
+W7): sign-in by phone and a six-digit code sent by SMS or read out by the desk; Better Auth's
+bearer conversion for the app, limited to sessions the worker code opened; and Expo's web
+target for screenshots and the e2e only. Expo SDK 58.0.19 is pinned (2026-10-23).
+
+Built: `apps/worker-app` (sign-in, home, offer accept/decline, answers saved on the phone and
+resent), `GET /worker/home`, `POST /worker/sign-out`, the desk's `POST /suppliers/:id/sign-in-code`,
+and an SMS channel that logs in development and sends nothing in production until a provider
+exists. No migration. Not built yet: the APK and the field test, background resend, W-Calendar,
+W-Credentials, W-Earnings, W-Job and its SMS SOS, distribution. Until the field test, the desk
+"confirmed by phone" fallback of the 2026-11-08 amendment stays unbuilt.
 
 ## Sources (read 2026-10-14)
 

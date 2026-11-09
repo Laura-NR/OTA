@@ -58,6 +58,11 @@
       dependency, so it needs the owner's yes before the build starts, then a field test with
       two or three suppliers. Fallback if the app is not in field test when the server is
       rented: the small desk "confirmed by phone" action (no dependency).
+      *Started 2026-11-09:* you approved Expo; the first slice is built (`docs/worker-app-plan.md`):
+      a worker signs in with a code (by SMS once a provider exists, or read out by the desk from
+      the supplier page), sees offers and jobs, and accepts or declines, also with no signal.
+      Still to come: the APK on a machine with the Android SDK and the field test with two or
+      three suppliers.
 - [x] **A4. Mock AI.** *Done 2026-11-09:* the desk's AI ("Draft with AI" in Messages, the AI
       summary on Reports, translation) now has its own switch, "AI assistant" (Settings ›
       Thresholds › Features, two Super Admins like the other flags). Production also holds it off

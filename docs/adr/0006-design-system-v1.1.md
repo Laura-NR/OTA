@@ -1672,3 +1672,24 @@ existing components and tokens:
   from there; the input and Send keep their places.
 - **Reports.** The "AI operations summary" panel is left out, as it already was when the summary
   could not load.
+
+## Amendment, 2026-11-09: the worker app's first screens
+
+Phase 7 started (`docs/worker-app-plan.md`): W-Login, W-Home and W-Offer in the Expo app, and
+the desk's "Issue sign-in code…" on the supplier page. The build resolved the gaps with existing
+tokens, without asking the design team:
+
+- **Type.** The app uses the system font; the brand face is not bundled, to keep the APK small
+  for Cuban mobile data. Colours come from the tenant's resolved primitives (`themePrimitives`),
+  radii are the DS 4/10/20, and every action is at least 48 dp tall.
+- **W-Offer's warning.** "Queda menos de un cuarto del tiempo" became "Queda poco tiempo …",
+  shown from the desk's amber threshold (a runtime setting, 75 % by default) rather than a
+  fixed quarter; the countdown turns `warning-700` with it.
+- **W-Home.** The licence line names "Credencial vigente · vence …" (one credential date per
+  profile); the sync chip says "Sincronizado" / "Sin conexión · n pendiente" in words. The
+  W-Offer route, flight and pickup notes are not in the data yet, so the offer shows the
+  service, province, start and end, travelers, payout and booking code.
+- **Desk.** "Worker app sign-in" is a panel like the supplier page's others, shown to Operations
+  Admin and Super Admin; its dialog follows the staff recovery-code dialog (a warning, then the
+  code once in mono).
+
