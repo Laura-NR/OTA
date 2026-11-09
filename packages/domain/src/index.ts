@@ -724,3 +724,29 @@ export {
   type ReferenceRate,
   type ShownCurrency,
 } from './money/display-currency';
+export {
+  WORKER_CODE_LENGTH,
+  WORKER_CODE_MAX_FAILURES,
+  WORKER_CODE_MINUTES,
+  WORKER_CODE_RESEND_SECONDS,
+  WORKER_CODE_SIGN_IN_METHOD,
+  WORKER_SESSION_DAYS,
+  maskWorkerPhone,
+  normalizeWorkerCode,
+  normalizeWorkerPhone,
+  workerCodeExpiresAt,
+  workerCodeFailureVoids,
+  workerCodeFromBytes,
+  workerCodeMayResend,
+  workerCodeSms,
+  workerSessionExpiresAt,
+} from './worker/sign-in';
+export { SMS_SEGMENT_CHARACTERS, fitsOneSmsSegment } from './worker/sms';
+export {
+  queueWorkerAnswer,
+  workerAnswerOutcome,
+  workerAnswerRetryDelayMs,
+  type WorkerAnswer,
+  type WorkerAnswerKind,
+  type WorkerAnswerOutcome,
+} from './worker/answers';
