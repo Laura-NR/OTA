@@ -1,6 +1,6 @@
 # Next session prompt
 
-Prepared 2026-11-08, after B3. Paste the block
+Prepared 2026-11-09, after B3. Paste the block
 below to start the next session. It holds only what starts a session; everything about the work
 itself is in `docs/handoff/vereda.md`, so do not copy handoff content here.
 
