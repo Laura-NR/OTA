@@ -756,6 +756,9 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Stopping servers (2026-11-09):** `pkill -f "<pattern>"` run through the agent's shell also
+  matches that shell's own command line (it contains the pattern) and kills it (exit 144),
+  leaving the servers up. Find PIDs with `ss -ltnp | grep -E ':300[0-2]'` and `kill <pid>`.
 - **A4 hold (2026-11-09):** `OperatingSettingsService`'s third constructor parameter
   (`heldOff`) defaults to `[]`, so services built by hand (tests, `cli/retention-scan.ts`)
   never hold anything; only the Nest module reads the environment. A stored settings version
