@@ -1,6 +1,8 @@
 import {
   DEFAULT_OPERATING_THRESHOLDS,
   featureFlagsOf,
+  featuresInForce,
+  type FeatureFlagValues,
   type OperatingThresholds,
 } from '@ota/domain';
 import type { OperatingSettingsDto } from '@ota/schemas';
@@ -19,7 +21,21 @@ export async function getOperatingSettings(): Promise<OperatingSettingsDto | nul
 
 export async function getThresholds(): Promise<OperatingThresholds> {
   const settings = await getOperatingSettings();
-  if (settings) return settings.values;
+  return settings ? settings.values : manifestThresholds();
+}
+
+/**
+ * The feature flags in force: the thresholds' flags less what the deployment
+ * holds off, such as the AI assistant in production on the mock (A4).
+ */
+export async function getFeaturesInForce(): Promise<FeatureFlagValues> {
+  const settings = await getOperatingSettings();
+  return settings
+    ? featuresInForce(featureFlagsOf(settings.values), settings.heldOff)
+    : featureFlagsOf(manifestThresholds());
+}
+
+function manifestThresholds(): OperatingThresholds {
   const { payments, features } = getTenantConfig();
   return {
     ...DEFAULT_OPERATING_THRESHOLDS,

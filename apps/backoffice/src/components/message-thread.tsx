@@ -15,9 +15,16 @@ import { connectConversation, type MessageSocketEvent } from '@/lib/socket';
 /**
  * Traveler↔operations thread (spec §3.5). Loads history over HTTP, follows the
  * `/conversations` socket for realtime, and posts through the same endpoint the
- * email fallback hangs off.
+ * email fallback hangs off. "Draft with AI" shows only while the AI assistant
+ * is in force (A4).
  */
-export function MessageThread({ reservationId }: { reservationId: string }) {
+export function MessageThread({
+  reservationId,
+  aiAssistant,
+}: {
+  reservationId: string;
+  aiAssistant: boolean;
+}) {
   const t = useTranslations('backoffice.messageThread');
   const why = useTranslations('backoffice.unavailable');
   const [messages, setMessages] = useState<MessageDto[]>([]);
@@ -164,14 +171,16 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
           placeholder={t('placeholder')}
           aria-label={t('message')}
         />
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={drafting || busy}
-          onClick={draftWithAi}
-        >
-          {drafting ? t('drafting') : t('draftWithAi')}
-        </Button>
+        {aiAssistant ? (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={drafting || busy}
+            onClick={draftWithAi}
+          >
+            {drafting ? t('drafting') : t('draftWithAi')}
+          </Button>
+        ) : null}
         <Button
           type="submit"
           disabled={busy}

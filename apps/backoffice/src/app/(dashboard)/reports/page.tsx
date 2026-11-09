@@ -28,6 +28,7 @@ import { BarList } from '@/components/bar-list';
 import { IncidentResolveButton } from '@/components/incident-resolve-button';
 import { KpiCard } from '@/components/kpi-card';
 import { apiFetch } from '@/lib/api';
+import { getFeaturesInForce } from '@/lib/operating';
 import { money, percent } from '@/lib/ops-format';
 
 const PERIODS = ['mtd', 'lastMonth', 'ytd', 'all'] as const;
@@ -167,18 +168,22 @@ export default async function ReportsPage({
     ? `?from=${range.from.toISOString()}&to=${range.to.toISOString()}`
     : '';
 
-  const [overview, regulatory, incidents, reliability, reviews] = await Promise.all([
-    apiFetch<AnalyticsOverviewDto>(`/analytics/overview${query}`).catch(() => null),
-    apiFetch<RegulatorySummaryDto>(`/analytics/regulatory${query}`).catch(() => null),
-    apiFetch<IncidentDto[]>('/incidents?limit=100').catch(() => []),
-    apiFetch<SupplierReliabilityDto[]>('/quality/supplier-reliability').catch(() => []),
-    apiFetch<ReviewDto[]>('/reviews?limit=20').catch(() => []),
-  ]);
-  const assistant = overview
-    ? await apiFetch<AssistantSummaryDto>(`/assistant/ops-summary${query}`).catch(
-        () => null,
-      )
-    : null;
+  const [overview, regulatory, incidents, reliability, reviews, features] =
+    await Promise.all([
+      apiFetch<AnalyticsOverviewDto>(`/analytics/overview${query}`).catch(() => null),
+      apiFetch<RegulatorySummaryDto>(`/analytics/regulatory${query}`).catch(() => null),
+      apiFetch<IncidentDto[]>('/incidents?limit=100').catch(() => []),
+      apiFetch<SupplierReliabilityDto[]>('/quality/supplier-reliability').catch(() => []),
+      apiFetch<ReviewDto[]>('/reviews?limit=20').catch(() => []),
+      getFeaturesInForce(),
+    ]);
+  // The AI summary only while the assistant is in force (A4).
+  const assistant =
+    overview && features.aiAssistant
+      ? await apiFetch<AssistantSummaryDto>(`/assistant/ops-summary${query}`).catch(
+          () => null,
+        )
+      : null;
 
   const eur = (amount: number) => money(amount, 'EUR', locale);
   const pct = (fraction: number) => percent(fraction, locale);

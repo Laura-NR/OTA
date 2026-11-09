@@ -822,6 +822,11 @@ async function ThresholdsTab({
                         </TableCell>
                         <TableCell className="font-mono">
                           {thresholdText(field, value, locale, units, levels)}
+                          {settings.heldOff.some((flag) => flag === field.key) ? (
+                            <span className="block font-sans text-caption text-warning-700">
+                              {t('heldOff')}
+                            </span>
+                          ) : null}
                         </TableCell>
                         <TableCell className={cn('font-mono', isDefault && 'text-muted')}>
                           {thresholdText(field, fallback, locale, units, levels)}

@@ -6,6 +6,7 @@ import { MessageThread } from '@/components/message-thread';
 import { PageHeader } from '@/components/page-header';
 import { ReservationPicker } from '@/components/reservation-picker';
 import { apiFetch } from '@/lib/api';
+import { getFeaturesInForce } from '@/lib/operating';
 
 export default async function MessagesPage({
   searchParams,
@@ -21,6 +22,7 @@ export default async function MessagesPage({
   } catch {
     reservations = [];
   }
+  const features = await getFeaturesInForce();
 
   return (
     <div className="space-y-6">
@@ -42,7 +44,10 @@ export default async function MessagesPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <MessageThread reservationId={reservation} />
+            <MessageThread
+              reservationId={reservation}
+              aiAssistant={features.aiAssistant}
+            />
           </CardContent>
         </Card>
       ) : null}
