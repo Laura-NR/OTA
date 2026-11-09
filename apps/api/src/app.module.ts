@@ -33,6 +33,7 @@ import { ReportsModule } from './reports/reports.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { RetentionModule } from './retention/retention.module';
 import { SettingsModule } from './settings/settings.module';
+import { SmsModule } from './sms/sms.module';
 import { StaffModule } from './staff/staff.module';
 import { StorageModule } from './storage/storage.module';
 import { SupplierApplicationsModule } from './supplier-applications/supplier-applications.module';
@@ -40,6 +41,7 @@ import { SuppliersModule } from './suppliers/suppliers.module';
 import { TelemetryModule } from './telemetry/telemetry.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TravelersModule } from './travelers/travelers.module';
+import { WorkerModule } from './worker/worker.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
@@ -102,6 +104,8 @@ export const httpLoggerOptions = {
     EventsModule,
     TelemetryModule,
     PermissionOverridesModule,
+    SmsModule,
+    WorkerModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },

@@ -22,6 +22,7 @@ import { registerJsonParsers } from './common/json-body';
 import { createRateLimiter } from './common/rate-limit';
 import { trustedOrigins } from './common/trusted-origins';
 import { resolveTenantConfigPath } from './tenant/tenant.path';
+import { WorkerCodesService } from './worker/worker-codes.service';
 
 function positiveInt(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
@@ -44,14 +45,15 @@ async function bootstrap(): Promise<void> {
   const mailer = createMailer();
   const origins = trustedOrigins();
 
-  // Better Auth's session, passkey and recovery-code routes ask the Nest
-  // session policy (idle lock L5, passkeys P4) and recovery codes, and every
-  // new session reports its device; requests arrive only after `listen`, by
-  // which time all three are resolved below.
+  // Better Auth's session, passkey, recovery-code and worker-code routes ask
+  // the Nest session policy (idle lock L5, passkeys P4), recovery codes and
+  // worker codes, and every new session reports its device; requests arrive
+  // only after `listen`, by which time all four are resolved below.
   const resolved: {
     sessionPolicy?: SessionPolicy;
     recoveryCodes?: RecoveryCodesService;
     signInDevices?: SignInDevicesService;
+    workerCodes?: WorkerCodesService;
   } = {};
   const policy = (): SessionPolicy => {
     if (!resolved.sessionPolicy) throw new Error('The session policy is not ready');
@@ -64,6 +66,10 @@ async function bootstrap(): Promise<void> {
   const signInDevices = (): SignInDevicesService => {
     if (!resolved.signInDevices) throw new Error('Sign-in devices are not ready');
     return resolved.signInDevices;
+  };
+  const workerCodes = (): WorkerCodesService => {
+    if (!resolved.workerCodes) throw new Error('Worker codes are not ready');
+    return resolved.workerCodes;
   };
 
   const { CLIENT_IP_HEADER, createAuth, createAuthMiddleware, toWebHeaders } =
@@ -92,6 +98,10 @@ async function bootstrap(): Promise<void> {
     sessionGate: { refusal: (session) => policy().gateRefusal(session) },
     recoveryCode: { redeem: (input) => recoveryCodes().redeem(input) },
     signInDevice: { signedIn: (input) => signInDevices().signedIn(input) },
+    workerCode: {
+      send: (input) => workerCodes().send(input),
+      redeem: (input) => workerCodes().redeem(input),
+    },
   });
   setAuthRuntime({ auth, toWebHeaders });
   const authHandler = createAuthMiddleware(auth);
@@ -103,6 +113,7 @@ async function bootstrap(): Promise<void> {
   resolved.sessionPolicy = app.get(SessionPolicy);
   resolved.recoveryCodes = app.get(RecoveryCodesService);
   resolved.signInDevices = app.get(SignInDevicesService);
+  resolved.workerCodes = app.get(WorkerCodesService);
   if (process.env.STAFF_PASSKEYS_OVERRIDE?.trim().toLowerCase() === 'off') {
     new NestLogger('Bootstrap').warn(
       'STAFF_PASSKEYS_OVERRIDE=off: the staff passkey rule is suspended (break-glass)',

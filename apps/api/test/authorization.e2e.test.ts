@@ -257,6 +257,9 @@ const ROUTES: Route[] = [
   },
   { method: 'post', path: `/service-items/${SERVICE_ITEM}/accept`, allowed: 'worker' },
   { method: 'post', path: `/service-items/${SERVICE_ITEM}/decline`, allowed: 'worker' },
+  // The worker app (docs/worker-app-plan.md W5).
+  { method: 'get', path: '/worker/home', allowed: 'worker' },
+  { method: 'post', path: '/worker/sign-out', allowed: 'worker' },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',
@@ -313,6 +316,8 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
   { method: 'get', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsRead' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsWrite' },
+  // The desk's worker sign-in code (W1): no permission override reaches it.
+  { method: 'post', path: `/suppliers/${SUPPLIER}/sign-in-code`, allowed: 'opsWrite' },
   // M6: support reads the resources on the inspector; only the desk writes them.
   { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/vehicle`, allowed: 'opsWrite' },

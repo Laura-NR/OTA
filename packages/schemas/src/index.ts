@@ -736,3 +736,14 @@ export {
   type PublicCurrenciesDto,
   type SetDisplayCurrencyRequest,
 } from './currency';
+export {
+  workerHomeSchema,
+  workerJobSchema,
+  workerOfferSchema,
+  workerSignInCodeSchema,
+  workerTravelerSchema,
+  type WorkerHomeDto,
+  type WorkerJobDto,
+  type WorkerOfferDto,
+  type WorkerSignInCodeDto,
+} from './worker';
