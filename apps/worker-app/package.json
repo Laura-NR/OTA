@@ -1,0 +1,37 @@
+{
+  "name": "@ota/worker-app",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "build": "expo export --platform android --output-dir dist/android",
+    "build:web": "WORKER_API_URL= expo export --platform web --output-dir dist/web",
+    "preview": "pnpm run build:web && node scripts/serve-web.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ota/domain": "workspace:*",
+    "expo": "58.0.19",
+    "expo-constants": "58.0.13",
+    "expo-secure-store": "58.0.2",
+    "expo-sqlite": "58.0.14",
+    "expo-status-bar": "58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-safe-area-context": "5.10.1"
+  },
+  "devDependencies": {
+    "@expo/metro-runtime": "58.0.15",
+    "@ota/config": "workspace:*",
+    "@ota/schemas": "workspace:*",
+    "@ota/theming": "workspace:*",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "react-dom": "19.3.0",
+    "react-native-web": "0.21.4",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  }
+}
