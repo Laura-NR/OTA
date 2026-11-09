@@ -288,6 +288,15 @@ describe('worker sign-in codes (docs/worker-app-plan.md W1)', () => {
     expect(fake.audit.at(-1)).toMatchObject({ metadata: { via: 'desk' } });
   });
 
+  it('keeps a code the desk read out when the worker asks for an SMS', async () => {
+    const issued = await fake.service.issue('supplier-reinier', OPS, NOW);
+    await fake.service.send({ phone: '52410088' }, later(120));
+    expect(fake.sent).toHaveLength(0);
+    expect(
+      await fake.service.redeem({ phone: '52410088', code: issued.code }, later(121)),
+    ).toMatchObject({ userId: 'u-reinier' });
+  });
+
   it('refuses to issue a code the worker could not use', async () => {
     await expect(fake.service.issue('missing', OPS, NOW)).rejects.toBeInstanceOf(
       NotFoundException,

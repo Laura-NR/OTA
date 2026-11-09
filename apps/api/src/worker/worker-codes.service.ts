@@ -88,8 +88,9 @@ export class WorkerCodesService {
 
   /**
    * Texts a new code when exactly one worker has this number and their last
-   * code went at least 45 seconds ago; otherwise does nothing. The caller is
-   * told nothing either way.
+   * code went at least 45 seconds ago; otherwise does nothing. A code the
+   * desk read out stands until it expires, so a tap on "Reenviar" cannot
+   * void it. The caller is told nothing either way.
    */
   async send(input: { phone: string }, now: Date = new Date()): Promise<void> {
     const phone = normalizeWorkerPhone(input.phone);
@@ -103,7 +104,12 @@ export class WorkerCodesService {
     }
     const [userId] = workers;
     const open = await this.openCode(userId!, now);
-    if (open && !workerCodeMayResend(open.createdAt ?? now, now)) return;
+    if (
+      open &&
+      (open.stored.via === 'desk' || !workerCodeMayResend(open.createdAt ?? now, now))
+    ) {
+      return;
+    }
 
     const code = await this.replaceCode(userId!, 'sms', now);
     await this.sms.send({ to: phone, body: workerCodeSms(code) });
