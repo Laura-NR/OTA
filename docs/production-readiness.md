@@ -47,6 +47,10 @@
         config loader) and `uuid` 8 → 11 (moderate, used by the spreadsheet library, which
         calls only the unaffected `v4()`). Neither is reachable from a web request. You chose
         to leave both until Prisma and exceljs update them; the audit is re-run each session.
+      - **Decided 2026-11-09:** the worker app's Expo tooling brought two more moderate ones,
+        `glob` 13 → 14 and `minimatch` 10 → 11, used only by Expo's build-time command line on
+        our own files, never in the app or a server. You chose to leave them too until Expo
+        updates them.
 - [ ] **A2. Deployment build B1–B13** (`docs/deployment-plan.md` §6), all approved, rehearsed
       as a production-like stack on the dev machine before any server exists. *2026-11-08:
       B1–B11 and B13 are built and rehearsed on `*.localhost` (B3's workflow first runs on

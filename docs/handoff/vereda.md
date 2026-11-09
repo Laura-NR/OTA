@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-09 18:00
+# Handoff — vereda — updated 2026-11-09 22:55
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -12,9 +12,10 @@ on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on ev
 page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
-trip", on 2026-11-09 the AI assistant flag) and
+trip", on 2026-11-09 the AI assistant flag and the worker app's first screens) and
 ADR 0007 (worker
-app). Staff passkeys:
+app; amended 2026-11-09 for the first slice). The worker app: `docs/worker-app-plan.md`
+(approved W1, W3, W7; §7 as built). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
 `docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
@@ -26,6 +27,30 @@ app). Staff passkeys:
 events (T-Events)".
 
 ## State
+- **2026-11-09 (evening): Phase 7 started, the worker app's first slice.** The owner approved
+  Expo and W1, W3, W7 as recommended (`664d131`…`45766de`). No migration. New dependencies: Expo
+  SDK 58.0.19 and the exact versions it pins (React Native 0.88.0, `expo-secure-store`,
+  `expo-sqlite`, `expo-status-bar`, `expo-constants`, `react-native-safe-area-context`; dev/test
+  only: `react-native-web` 0.21.4, `react-dom` 19.3.0, `@expo/metro-runtime`).
+  - Domain `packages/domain/src/worker/`: the code rules (6 digits, 10 min, 5 tries, 45 s
+    resend, 30-day session), `normalizeWorkerPhone` (8 digits → `+53`), `maskWorkerPhone`,
+    `workerCodeSms` + `fitsOneSmsSegment` (GSM-7, 160), and the answer-queue rules.
+  - Auth `packages/auth/src/worker-code.ts`: `POST /sign-in/worker-code/send` (always
+    `{status:true}`) and `/sign-in/worker-code` (answers `{token, expiresAt}`, sets no cookie;
+    the session records `worker_code`). `workerBearerPlugin`: the stock bearer conversion, only
+    on `/get-session` and only for `worker_code` sessions; any other signed token throws
+    `BEARER_NOT_ALLOWED`, which `AuthService.getSession` reads as no session (401).
+  - API: `WorkerCodesService` (hash in Better Auth's `verification` table as
+    `worker-code:<userId>`; a desk code stands against SMS resends), the SMS channel
+    (`SMS_PROVIDER`; console in dev, nothing in production), `GET /worker/home`,
+    `POST /worker/sign-out`, `POST /suppliers/:id/sign-in-code` (ops write, no override). RBAC
+    matrix +3 rows.
+  - Desk: the supplier page's "Worker app sign-in" panel and dialog (Ops Admin, Super Admin),
+    en/es/fr. `@ota/theming` exports `themePrimitives`.
+  - App `apps/worker-app`: Login, Home, Offer in one state machine; answers saved first
+    (`expo-sqlite/kv-store`) and resent with backoff; the last home cached; the API's clock
+    for countdowns. `build` = the Android JS export; `preview` = the web export on :3003 with
+    the API proxied. `e2e/worker-app.spec.ts` (2 tests); Playwright has a second webServer.
 - **2026-11-09: A4, the AI assistant flag**, the owner's pick with the "on + mock guard" default
   (`708784b`…`300fed3`). No migration, no new package, no new route (the three `/assistant/*`
   routes were already in the RBAC matrix).
@@ -535,42 +560,55 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-09, A4, dev stack stopped for the build)
-- `pnpm audit --prod`: **2**, the same two settled advisories (deepmerge-ts, uuid; major only).
-- `pnpm lint` and `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **33/33**;
-  `TURBO_FORCE=true pnpm test` **1286 passed / 53 skipped** (+6: domain 2, ai 1, API 3);
-  `TURBO_FORCE=true pnpm build` **18/18**; `apps/*/.next` deleted.
-- The new API refusal test fails with the controller's gate reverted (409 expected) and passes
-  with it.
-- `pnpm e2e` (full, 1.2 h): **168 passed, 1 failed, 3 skipped**, `feature-flags.spec.ts` (now
-  switching `aiAssistant` too) passed. The failure is `responsive.spec.ts:118` [ds07-414], a
-  `page.goto` timeout with both next-servers at about 6 GB RSS (the known pattern; no
-  storefront code changed). Killed by PID, `.next` deleted, rerun alone: **1 passed** (1.9 min).
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files
-  (`pnpm --filter @ota/api exec vitest run integration`).
-- Browser (Playwright script, admin@example.test, 390/1024/1280): with the API alone under
-  `NODE_ENV=production`, `GET /tenant/config` serves `aiAssistant: false`; Thresholds shows "AI
-  assistant On" with the caption (12 px, `display: block`, warning colour
-  `color(srgb 0.573 0.251 0.055)`); Messages has no "Draft with AI"; Reports has no AI summary;
-  no page scrolls sideways. With the API in dev mode: no caption, the button and the summary are
-  back. The owner's dev stack was restarted with Task 0's settings and left running.
-- B3 (2026-11-08, unchanged since): both workflows parse (js-yaml); `bash -n` on both scripts; every refusal of
-  `build-images.sh` (usage 2, unknown image, no `DESK_DOMAIN`, bad tag, no prefix) and
-  `deploy.sh` (usage 2, non-`v` tag, HEAD not at the tag, tracked changes, no
-  `OTA_IMAGE_PREFIX`). `build-images.sh v0.0.1-rh` built the four images as
-  `ghcr.io/laura-nr/ota/*` (version/source labels, users `node` and `1000:1000`; the desk
-  chunk carries `https://desk.localhost`). Rehearsal on `-p ota-b11` with `compose.rehearsal.yml`:
-  a tag with no images → GHCR `denied`, exit 1, "nothing was changed", nothing started;
-  deploy `v0.0.1-rh` (26 s: pre-deploy dump uploaded, 27 migrations none pending, all healthy,
-  `OTA_VERSION` written) → `deploy/smoke.sh` **all checks passed**; deploy `v0.0.2-rh`
-  (re-tagged images) → one more dump (2 → 3), apps on v0.0.2, rollback hint printed;
-  `--rollback v0.0.1-rh` → no dump (still 3), no migration, apps on v0.0.1, smoke **all
-  passed**; MinIO stopped → the dump failed, "Backup FAILED" in Mailpit, deploy exit 1, apps
-  and `OTA_VERSION` unchanged. Stack down, tags and images removed.
-- Not run: the workflow on GitHub, a real GHCR push or pull, an unhealthy `up --wait`, a
-  browser check (no UI changed).
+## Verified (2026-11-09 evening, Phase 7, dev stack stopped for the build)
+- `pnpm audit --prod`: **4**: the two settled (deepmerge-ts, uuid) and two new moderate ones,
+  `glob` 13.0.7 and `minimatch` 10.2.6, both only through Expo's build-time CLI
+  (`@expo/cli`, `@expo/fingerprint`), fixed only in new majors. The owner deferred them like
+  the first two (Decisions, 2026-11-09).
+- `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1343 passed / 53 skipped** (+57: domain 15,
+  auth 9, API 18, theming 1, worker app 14); `TURBO_FORCE=true pnpm build` **19/19** (the
+  worker app's Android export: Hermes bundle, 727 modules). `apps/*/.next` deleted.
+- Mutation check: with the worker-only rule removed, `worker-code.test.ts`'s staff-token test
+  fails; restored, it passes.
+- `pnpm e2e e2e/worker-app.spec.ts`: **2 passed** (desk code → app sign-in → accept, DB
+  ACCEPTED; offline decline kept, "Sin conexión · 1 pendiente", sent on reconnect, DB DECLINED
+  with the reason).
+- Full `pnpm e2e` (seven projects, 1.2 h): **167 passed, 4 failed, 3 skipped**.
+  - Three `dispatch.spec.ts` tests failed on the worker spec's leftover guide. Fixed in
+    `d9b2a54`: the spec now deletes its worker (Traps).
+  - `[ds07-414]` "customer pages" timed out at `page.goto` (the known late-run storefront
+    memory trap).
+  - After the fixes, on a fresh stack: `pnpm e2e e2e/worker-app.spec.ts --project default`
+    **2 passed** (with the one-sync-at-a-time fix, `e20e37f`).
+  - `pnpm e2e e2e/dispatch.spec.ts e2e/responsive.spec.ts --project default --project
+    ds07-414`: **6 passed, 1 skipped** (the desk-from-tablet test, by design).
+  - A clean full run since the fixes has not been made.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files.
+- Live API (dev stack): the SMS path (console code, wrong code 401, right code → token,
+  `/worker/home` 200 by bearer); the worker token on `/dispatch/active` 403, an unsigned token
+  401; a real staff session token 200 as a cookie, 401 as a bearer, and
+  `BEARER_NOT_ALLOWED` on `/api/auth/get-session`.
+- Browser (Playwright script, 390/1024/1280): desk panel and dialog (code in IBM Plex Mono
+  24 px), app login, code (input 48 px, 24 px, 6 px tracking), home, offer (button 48 px,
+  `#0B4F6C`, radius 10; the hurry countdown `#92400E`), decline reasons. No page scrolls
+  sideways at any width.
+- Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
+  storefront `/` 200 (:3000), desk `/login` 200 (:3002).
+- Not run: an APK or any Android device (no SDK or JDK here); the native modules
+  (`expo-secure-store`, `expo-sqlite/kv-store`) only through their web stand-ins; CI on GitHub.
 
 ## Assumptions & unknowns
+- **Phase 7 (2026-11-09):** a worker is a `SERVICE_WORKER`, not deactivated, whose supplier
+  `primaryPhone` normalises to the typed number; a pending or suspended supplier may sign in
+  (the home says so). Two workers on one number get no SMS (no unique index: a migration).
+  The desk phone in the app is `branding.supportPhone`, else the first emergency contact
+  (today the placeholder `+53 5555 0100`). The Android id `com.veredaexpeditions.worker`
+  comes from the tenant id and is permanent once installed: confirm before the first APK.
+  Nothing ran on a device: Hermes' `Intl` with `timeZone: 'America/Havana'`, the keystore and
+  SQLite are assumed. No desk action ends a worker's sessions (Settings → Users is staff
+  only); the runbook gives the hand fix. A decline is sent as the Spanish reason label. The
+  worker app is not in the Release workflow's images (it ships as an APK later).
 - **A4 (2026-11-09):** "production" is `NODE_ENV=production`, which the API image sets (B1).
   A deployment that ran the API without it would not hold the mock off; the switch still
   works. The held-off caption was seen in a browser only with the API started alone as
@@ -756,6 +794,27 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Worker app (2026-11-09):** `pnpm dev` runs every workspace's `dev` script, so the app's
+  Metro command is `start`, not `dev`. `app.config.ts` imports `@ota/config` and
+  `@ota/theming` from `dist`: build them before `expo export`. The preview (:3003) rebuilds
+  the web export on start and is left running by Playwright like the others: kill 3000–3003
+  by PID after `pnpm e2e`. A desk `next-server` once ignored SIGTERM and Playwright kept
+  reusing it (every desk `page.goto` timed out): `kill -9` it and delete `apps/*/.next`.
+- **Better Auth bearer (2026-11-09):** the stock `bearer()` plugin's after-hook puts every new
+  session's token in a readable `set-auth-token` header (staff ones too), so only its
+  before-hook is used. User hooks run before plugin hooks, so the session gate never sees a
+  bearer session: the conversion is limited to `/get-session`. Native requests carry no
+  cookie, so Better Auth's origin check skips them; the web preview's proxy drops cookies for
+  the same reason.
+- **e2e workers leak into dispatch (2026-11-09):** a spec that creates a supplier must delete
+  it in `afterAll`. `worker-app.spec.ts` once left its active La Habana guide behind, and the
+  next full suite failed three `dispatch.spec.ts` tests on the extra candidate (dispatch runs
+  first, so the leftover came from an earlier run). Now it deletes the user (the profile cascades) after `afterEach` has
+  removed the fixture's service items and offers, which do not cascade.
+- **Prisma and optional ids (2026-11-09):** `AuthUser.sessionId` is optional, and
+  `deleteMany({ where: { id: undefined } })` matches every row: guard before using it.
+- **Calendar dates (2026-11-09):** a credential expiry is midnight UTC; formatted in Havana time
+  it shows the day before. The worker app formats such dates in UTC (`calendarDate`).
 - **Stopping servers (2026-11-09):** `pkill -f "<pattern>"` run through the agent's shell also
   matches that shell's own command line (it contains the pattern) and kills it (exit 144),
   leaving the servers up. Find PIDs with `ss -ltnp | grep -E ':300[0-2]'` and `kill <pid>`.
@@ -923,7 +982,9 @@ events (T-Events)".
 - **The dev stack `pnpm e2e` leaves behind can hang:** after a single-spec run the left
   servers answered `/health` but every Next page timed out at 60 s. Kill the listening PIDs
   and their `next dev` parents (`pgrep -af "next dev|next-server|src/main.ts"`); Next needed
-  `kill -9`.
+  `kill -9`. Again on 2026-11-09: a re-run on the stack left by the worker spec failed six
+  tests at the magic-link `page.goto` (`ERR_ABORTED`). The tell was `ss -ltnp` showing a
+  Recv-Q above 0 on :3002. Never re-run on a left-behind stack; start from free ports.
 - **New-device email (2026-11-01):** every e2e staff sign-in now sends a new-device email
   (asynchronously, so it can land after the next magic link): `latestMagicLink` reads the
   newest message to the address that holds a link; a spec asserting "the newest email to a
@@ -1218,6 +1279,12 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-09: the worker app (`apps/worker-app`, Expo SDK 58, Android first) signs in with a
+    phone number and a six-digit code (`/api/auth/sign-in/worker-code`, SMS or desk-issued)
+    and sends its session as a bearer token, which the API accepts only for `worker_code`
+    sessions and only through `getSession`. `pnpm --filter @ota/worker-app run build` is the
+    Android JS export; `run preview` serves the web export on :3003 for screenshots and the e2e
+    only. The app reads tenant values at build time in `app.config.ts`, never at runtime."
   - "2026-11-09: the desk's AI (`/assistant/*`, Draft with AI, the Reports summary) follows the
     `aiAssistant` runtime flag, and the API holds it off (`HELD_OFF_FEATURES`) while
     `NODE_ENV=production` and `llmProviderName(AI_PROVIDER)` is `mock`; a real adapter added to
@@ -1404,24 +1471,28 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (CI runs on the pull request).
+1. Owner: push `vereda` (CI runs on the pull request; it has not run with the worker app yet).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
    classic `read:packages` token. The deployment build (B1–B11, B13) is complete; B12 (S3
    documents) stays optional.
-3. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
-   counsel package (now also the AI provider and sanctions question), the business values, the
-   tenant placeholders. The full list is `docs/production-readiness.md` §4; do not re-ask what
-   it records as decided.
-4. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production now holds
-   the mock off by itself (A4, built 2026-11-09), so this no longer blocks launch. The worker app (Phase 7) needs the owner's yes on Expo;
-   if it is not in field test when the server is rented, build the desk "confirmed by phone"
-   fallback (ADR 0007 amendment).
-5. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
+3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own
+   signing key, backed up twice), the Android id, and two or three suppliers for the field
+   test. Agent, in order: a desk "sign the worker out" action; background resend
+   (`expo-background-task`); availability and W-Calendar; W-Credentials; W-Earnings; W-Job
+   and its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`).
+   Ops Lite (Phase 7 item 2) not started.
+4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
+   counsel package (also the AI provider and sanctions question), the business values, the
+   tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
+   do not re-ask what it records as decided.
+5. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production holds
+   the mock off by itself (A4), so this does not block launch.
+6. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
    the desktop cookie banner, a real screen-reader run, manifest editing beyond flags, PII purge
    Tiers 2–3, the load test (D24), SMS.
-6. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
+7. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
    decisions → ADRs/PR) and delete it in the merge; merge with a merge commit.
 
 ## Decisions (append-only)
@@ -2007,3 +2078,14 @@ events (T-Events)".
   the flags in force, not a stored value, so no settings version or data changes and the
   Thresholds board still shows what the Super Admins set. The desk hides the draft button
   rather than disabling it with a reason, since nobody can switch it on from Messages.
+- 2026-11-09 — the owner approved Expo and started Phase 7 rather than the desk "confirmed by
+  phone" action, with W1 (a code by SMS or read out by the desk), W3 (bearer tokens for
+  worker-code sessions only) and W7 (Expo's web target for screenshots and the e2e only). The
+  build chose: codes in Better Auth's `verification` table (no migration); three screens in
+  one state machine rather than `expo-router`; the system font; the SMS console only outside
+  production; a desk code stands against SMS resends; the stock bearer plugin's response side
+  left out; Expo's exact pinned versions, all at least two weeks old.
+- 2026-11-09 — the owner deferred the two advisories Expo brought (`glob` 13 → 14, `minimatch`
+  10 → 11, moderate), like deepmerge-ts and uuid: they run only in Expo's build-time CLI on our
+  own files, and the fixes are new majors. The audit is re-run each session; take Expo's patch
+  once it bumps them.
