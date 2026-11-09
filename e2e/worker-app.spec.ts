@@ -133,7 +133,11 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     });
   });
 
+  // The worker is an active guide in La Habana: left behind, it would be one
+  // more eligible candidate in dispatch.spec.ts. Its offers went with the
+  // reservation in afterEach; the supplier profile cascades.
   test.afterAll(async () => {
+    await prisma.user.deleteMany({ where: { email: WORKER.email } });
     await prisma.$disconnect();
   });
 
