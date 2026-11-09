@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { createLlmProvider } from '@ota/ai';
+import { createLlmProvider, llmProviderName } from '@ota/ai';
 
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { AssistantController } from './assistant.controller';
@@ -20,7 +20,7 @@ import { LLM_PROVIDER } from './assistant.tokens';
       provide: LLM_PROVIDER,
       useFactory: () =>
         createLlmProvider({
-          provider: (process.env.AI_PROVIDER as 'mock' | undefined) ?? 'mock',
+          provider: llmProviderName(process.env.AI_PROVIDER),
         }),
     },
   ],

@@ -1,5 +1,5 @@
 export { MockLlmProvider } from './mock';
-export { createLlmProvider } from './factory';
+export { createLlmProvider, llmProviderName } from './factory';
 export type { LlmProviderName, LlmProviderOptions } from './factory';
 export type {
   DraftReplyInput,
