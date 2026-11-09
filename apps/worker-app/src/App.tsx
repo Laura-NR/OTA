@@ -60,7 +60,7 @@ export function App() {
     setScreen({ name: 'login' });
   }, []);
 
-  const sync = useCallback(
+  const runSync = useCallback(
     async (current: string) => {
       if (retry.current) clearTimeout(retry.current);
       setRefreshing(true);
@@ -108,6 +108,31 @@ export function App() {
       }
     },
     [signedOut],
+  );
+
+  const inFlight = useRef<Promise<void> | null>(null);
+  const again = useRef(false);
+
+  /**
+   * One sync at a time: two at once could send the same saved answer twice,
+   * and the API's refusal of the second would read as the offer having gone.
+   * A sync asked for meanwhile runs once the current one ends.
+   */
+  const sync = useCallback(
+    async (current: string) => {
+      if (inFlight.current) {
+        again.current = true;
+        await inFlight.current;
+        return;
+      }
+      do {
+        again.current = false;
+        inFlight.current = runSync(current);
+        await inFlight.current;
+        inFlight.current = null;
+      } while (again.current);
+    },
+    [runSync],
   );
 
   useEffect(() => {
