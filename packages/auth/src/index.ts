@@ -15,6 +15,11 @@ import { recoveryCodePlugin, type RecoveryCodeCheck } from './recovery-code.js';
 import { signInDevicePlugin, type SignInDeviceCheck } from './sign-in-device.js';
 import { siteBaseURL } from './site-base-url.js';
 import {
+  workerBearerPlugin,
+  workerCodePlugin,
+  type WorkerCodeCheck,
+} from './worker-code.js';
+import {
   passkeyChangeForPath,
   routeOpenToRefusedSession,
   signInMethodForPath,
@@ -36,6 +41,13 @@ export {
   type PasskeyChange,
   type SignInMethod,
 } from './sign-in-method.js';
+export {
+  BEARER_NOT_ALLOWED,
+  WORKER_CODE_INVALID,
+  WORKER_CODE_SEND_PATH,
+  WORKER_CODE_SIGN_IN_PATH,
+  type WorkerCodeCheck,
+} from './worker-code.js';
 
 export interface SendMagicLinkParams {
   email: string;
@@ -72,6 +84,11 @@ export interface CreateAuthOptions {
   recoveryCode?: RecoveryCodeCheck;
   /** The new-device email (`docs/schema-m9-new-device-email.md`); no device cookie without it. */
   signInDevice?: SignInDeviceCheck;
+  /**
+   * The worker app's code sign-in and bearer sessions (`docs/worker-app-plan.md`
+   * W1, W3); neither route nor bearer token works without it.
+   */
+  workerCode?: WorkerCodeCheck;
 }
 
 /**
@@ -179,7 +196,9 @@ export type NodeAuthHandler = (
  * Admin issued. With a `signInDevice` check, every new session tells the API
  * which browser it came from. A session's address is read only from the
  * header the API writes (`CLIENT_IP_HEADER`). With `allowedHosts`, each site
- * signs in on its own host (`siteBaseURL`).
+ * signs in on its own host (`siteBaseURL`). With a `workerCode` check, a
+ * worker signs in on the app with a phone number and a code, and the app's
+ * bearer token reads that session (and only such a session).
  */
 export function createAuth(options: CreateAuthOptions): AuthInstance {
   const passkeySettings = options.passkey ?? {};
@@ -352,6 +371,9 @@ export function createAuth(options: CreateAuthOptions): AuthInstance {
       }),
       ...(options.recoveryCode ? [recoveryCodePlugin(options.recoveryCode)] : []),
       ...(options.signInDevice ? [signInDevicePlugin(options.signInDevice)] : []),
+      ...(options.workerCode
+        ? [workerCodePlugin(options.workerCode), workerBearerPlugin()]
+        : []),
     ],
     advanced: {
       database: {

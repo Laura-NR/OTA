@@ -4,7 +4,13 @@
  * passkey rule, so any route not listed here records `other` and fails closed.
  */
 export type SignInMethod =
-  'passkey' | 'magic_link' | 'password' | 'oauth' | 'recovery_code' | 'other';
+  | 'passkey'
+  | 'magic_link'
+  | 'password'
+  | 'oauth'
+  | 'recovery_code'
+  | 'worker_code'
+  | 'other';
 
 export function signInMethodForPath(path: string | null | undefined): SignInMethod {
   // Registration can also create a session (`createSession`), but adding a
@@ -12,6 +18,7 @@ export function signInMethodForPath(path: string | null | undefined): SignInMeth
   if (path === '/passkey/verify-authentication') return 'passkey';
   if (path === '/magic-link/verify') return 'magic_link';
   if (path === '/sign-in/recovery-code') return 'recovery_code';
+  if (path === '/sign-in/worker-code') return 'worker_code';
   if (path === '/sign-in/email' || path === '/sign-up/email') return 'password';
   if (path?.startsWith('/callback/') || path?.startsWith('/oauth2/callback/')) {
     return 'oauth';

@@ -28,6 +28,11 @@ describe('the sign-in method a session records (docs/schema-m9-passkeys.md P2)',
     expect(routeOpenToRefusedSession('/sign-in/recovery-code')).toBe(true);
   });
 
+  it('names a worker-code sign-in, but not the request for a code (worker app W1)', () => {
+    expect(signInMethodForPath('/sign-in/worker-code')).toBe('worker_code');
+    expect(signInMethodForPath('/sign-in/worker-code/send')).toBe('other');
+  });
+
   it('fails closed for any other route, or none', () => {
     for (const path of ['/sign-in/anonymous', '/passkey', '', null, undefined]) {
       expect(signInMethodForPath(path)).toBe('other');
