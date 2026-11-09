@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-08 20:15
+# Handoff — vereda — updated 2026-11-09 11:16
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -26,6 +26,21 @@ app). Staff passkeys:
 events (T-Events)".
 
 ## State
+- **2026-11-08 (late night): B3, the last deployment build item**, the owner's pick
+  (`db65f62`…`be2f649`). No migration, no new package, no new GitHub action.
+  - `.github/workflows/release.yml`: a `v*` tag runs `ci.yml` (now also `workflow_call`), then
+    a four-job matrix (`api`, `storefront`, `desk`, `backup`) logs into GHCR with plain
+    `docker login` and runs `PUSH=1 deploy/build-images.sh <tag> <image>` →
+    `ghcr.io/<owner lower case>/ota/<image>:<tag>`. The desk bakes the repository variable
+    `DESK_DOMAIN` (the job fails without it).
+  - `deploy/build-images.sh <tag> [<image>...]` (`OTA_IMAGE_PREFIX`, `DESK_DOMAIN` for the
+    desk, `PUSH`, `OTA_SOURCE_URL` label): the same `docker build` arguments compose uses.
+  - `deploy/deploy.sh [--rollback] <tag>`: refuses unless HEAD carries the tag with no tracked
+    changes and `deploy/.env` sets `OTA_IMAGE_PREFIX`; `pull --policy missing` → pre-deploy dump
+    → `migrate` → `up -d --wait` (300 s) → writes `OTA_VERSION` to `deploy/.env`. Each failure
+    says what state it left. `--rollback` skips the dump and the migration.
+  - Runbook "Release images", "Deploy a release" and "Roll back" rewritten; plan B3 row and
+    readiness A2 marked built.
 - **2026-11-08 (night): B9, B11 and B13** (`29c2996`…`4eb6ae3`), handoff Next 2. No migration,
   no new package; the backup image adds Debian's `age`, `rclone` (approved, B11) and `curl`.
   - B9: `superAdminBootstrapRefusals` (`packages/domain/src/settings/staff.ts`, unit tests in
@@ -505,38 +520,42 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-08 night, B9/B11/B13, dev stack stopped for the build)
+## Verified (2026-11-08 late night, B3, dev stack stopped for the build)
 - `pnpm audit --prod`: **2**, the same two settled advisories (deepmerge-ts, uuid; major only).
-- `pnpm lint` and `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **33/33**;
-  `TURBO_FORCE=true pnpm test` **1280 passed / 53 skipped** (+6 B9 domain tests, +3 skipped live);
-  `TURBO_FORCE=true pnpm build` **18/18** (storefront `ƒ /_not-found`, `ƒ /robots.txt`);
-  `apps/*/.next` deleted.
-- `pnpm e2e` (full, 1.2 h): **168 passed, 1 failed, 3 skipped**. The failure is
-  `responsive.spec.ts:118` [ds07-414], a `page.goto` timeout while both next-servers sat at
-  6–7 GB RSS (same pattern as the previous run; no web code changed this session). Killed by
-  PID, `.next` deleted, rerun alone: **passed** (2.1 min).
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files (the
-  `*.integration.test.ts` and `*.bullmq.integration.test.ts` in `apps/api/test`, now with
-  `super-admin-bootstrap.integration.test.ts`). The dev DB's 8 seeded Super Admins unchanged.
-- Rehearsal (`-p ota-b11`, `compose.prod.yml` + `compose.rehearsal.yml`, fresh volumes):
-  - B9: before any sign-in the command refused (`NOT_FOUND` ×2, exit 1); after two founders
-    followed desk links, `Dayana@…` (case) and `ernesto@…` were promoted (exit 0), two audit rows
-    with a null actor and `via: bootstrap-command`; a re-run refused (`SUPER_ADMIN_EXISTS`); the
-    founder's existing session got `GET /staff` 200 and `/settings` 200. On dev the command
-    refused (seeded Super Admins); no arguments gave usage and exit 2.
-  - B11: `backup` uploaded the dump and documents to MinIO and kept the month's monthly;
-    "Backup OK" and, with a dead endpoint, "Backup FAILED" (exit 1) reached Mailpit;
-    `pre-deploy` went to its own folder and made no monthly; a 30 s keep pruned the old daily
-    but kept the new one and the monthly. `restore drill` restored into `restore_drill_db`
-    (2 users restored vs 3 live, documents archive listed). Refusals: wrong key (age error,
-    live DB untouched), no `CONFIRM_RESTORE`, no key mounted, unknown stamp, usage (exit 2).
-    `restore live` (apps stopped) dropped the user made after the dump, put the document marker
-    back, left tables owned by the owner and `ota_app` with INSERT/DELETE but no CREATE;
-    `retention-scan.js` ran in the API image (all zero on fresh data); `up -d` healthy;
-    `deploy/smoke.sh` **all checks passed**. Stack down, volumes kept.
-- Not run: a real off-site provider or host cron, B3, a browser check (no UI changed).
+- `pnpm lint` and `pnpm format:check` green (Prettier covers both workflows). `TURBO_FORCE=true
+  pnpm typecheck` **33/33**; `TURBO_FORCE=true pnpm test` **1280 passed / 53 skipped**;
+  `TURBO_FORCE=true pnpm build` **18/18**; `apps/*/.next` deleted.
+- `pnpm e2e` (full, 1.1 h): **167 passed, 2 failed, 3 skipped**. Both failures are
+  `responsive.spec.ts` (:110 [ds07-414], :151 [ds07-1440]), `page.goto` timeouts while the
+  next-servers sat at 5.8 and 7.2 GB RSS (the pattern of the last runs; no web code changed).
+  Killed by PID, `.next` deleted, the two rerun alone: **9 passed, 3 skipped** (9.4 min).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files
+  (`pnpm --filter @ota/api exec vitest run integration`).
+- B3: both workflows parse (js-yaml); `bash -n` on both scripts; every refusal of
+  `build-images.sh` (usage 2, unknown image, no `DESK_DOMAIN`, bad tag, no prefix) and
+  `deploy.sh` (usage 2, non-`v` tag, HEAD not at the tag, tracked changes, no
+  `OTA_IMAGE_PREFIX`). `build-images.sh v0.0.1-rh` built the four images as
+  `ghcr.io/laura-nr/ota/*` (version/source labels, users `node` and `1000:1000`; the desk
+  chunk carries `https://desk.localhost`). Rehearsal on `-p ota-b11` with `compose.rehearsal.yml`:
+  a tag with no images → GHCR `denied`, exit 1, "nothing was changed", nothing started;
+  deploy `v0.0.1-rh` (26 s: pre-deploy dump uploaded, 27 migrations none pending, all healthy,
+  `OTA_VERSION` written) → `deploy/smoke.sh` **all checks passed**; deploy `v0.0.2-rh`
+  (re-tagged images) → one more dump (2 → 3), apps on v0.0.2, rollback hint printed;
+  `--rollback v0.0.1-rh` → no dump (still 3), no migration, apps on v0.0.1, smoke **all
+  passed**; MinIO stopped → the dump failed, "Backup FAILED" in Mailpit, deploy exit 1, apps
+  and `OTA_VERSION` unchanged. Stack down, tags and images removed.
+- Not run: the workflow on GitHub, a real GHCR push or pull, an unhealthy `up --wait`, a
+  browser check (no UI changed).
 
 ## Assumptions & unknowns
+- **B3 (2026-11-08):** the workflow has never run: no `actionlint` here and no tag pushed, so
+  the GHCR login, the push with `GITHUB_TOKEN` (`packages: write`), the lower-cased owner
+  path and the reusable `ci.yml` call are unproven until the owner's first `v*` tag. A
+  package's first push is private by GitHub's default (repository visibility not checked: no
+  `gh` here). The server's `docker login ghcr.io` with a classic `read:packages` token and a
+  real registry pull were not rehearsed (the rehearsal used local images, so `--policy
+  missing` pulled nothing). An unhealthy `up --wait` was not provoked; its message is
+  untested. Tags are assumed never reused: the server does not re-pull a tag it has.
 - **B9 (2026-11-08):** "any Super Admin exists" counts deactivated ones too (the stricter
   reading of plan B9), so the command is never a recovery path; a lost last Super Admin stays
   the runbook's hand `psql` fix. It applies the invite's eligibility (fresh traveler or staff)
@@ -707,6 +726,15 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **B3 deploy script (2026-11-08):** `docker compose config --images <service>` also prints
+  the service's dependencies' images (postgres, redis), so do not use it to name one image;
+  a pull that cannot get an image already exits non-zero (`denied` from GHCR). `deploy.sh`
+  refuses a checkout with tracked changes: stash uncommitted docs before a rehearsal run
+  (`git stash push -- <paths>`, pop after). Rehearsal tags are local lightweight tags on HEAD
+  (`v0.0.1-rh`); delete them after so the owner never pushes them. The rehearsal ran on
+  `-p ota-b11` (now down, volumes kept; its MinIO `pre-deploy/` holds 3 dumps). `deploy/.env`
+  got a new trial password hash (the password is in this session's scratchpad only;
+  regenerate next time); the `OTA_IMAGE_PREFIX`/`OTA_VERSION` lines were removed again.
 - **The storefront 404 shell (2026-11-08, fixed for unmatched paths):** Next 15.5 renders any
   `notFound()` thrown while rendering as its bare error document (`<html id="__next_error__">`,
   the real page after hydration), because React's server renderer has no error boundaries;
@@ -1177,6 +1205,12 @@ events (T-Events)".
     `PrismaClient`, no Nest context): `bootstrap-super-admins.js` (B9, refuses once any Super
     Admin exists) and `retention-scan.js` (after a restore). Run them with
     `docker compose -f deploy/compose.prod.yml run --rm api node dist/cli/<name>.js`."
+  - "2026-11-08: releases are `v*` tags: `.github/workflows/release.yml` pushes
+    `ghcr.io/<owner>/ota/{api,storefront,desk,backup}:<tag>` via `deploy/build-images.sh`
+    (repository variable `DESK_DOMAIN` baked into the desk), and the server runs
+    `deploy/deploy.sh <tag>` from a checkout at that tag (pull, pre-deploy dump, migrate,
+    `up --wait`, then `OTA_VERSION` in `deploy/.env`); `--rollback <tag>` skips dump and
+    migration. Never move or reuse a tag: the server does not re-pull one it has."
   - "2026-11-08: backups are the compose service `backup` (`deploy/backup/ota-backup.sh`):
     age-encrypted for public keys only, uploaded by rclone from `RCLONE_CONFIG_*` variables;
     the private key is mounted at `/run/age/identity` for a restore only. Settings in
@@ -1327,9 +1361,11 @@ events (T-Events)".
 
 ## Next
 1. Owner: push `vereda` (CI runs on the pull request).
-2. **Deployment build, last item:** B3 (CI builds the three images, and `backup`, on a tag
-   and pushes them; a `deploy.sh` running the runbook's "Deploy a release"), when the owner
-   asks for the CI change. Rehearse on `*.localhost`. B12 (S3 documents) stays optional.
+2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
+   (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
+   first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
+   classic `read:packages` token. The deployment build (B1–B11, B13) is complete; B12 (S3
+   documents) stays optional.
 3. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (now also the AI provider and sanctions question), the business values, the
    tenant placeholders. The full list is `docs/production-readiness.md` §4; do not re-ask what
@@ -1914,3 +1950,10 @@ events (T-Events)".
   failed migration's leftovers go too, restores with `--no-owner --no-privileges`, then
   re-runs the B4 role script. "Re-run anonymisation" is a command running the daily job's own
   pass, not a desk button (no UI change). The month's first good daily is its monthly.
+- 2026-11-08 — B3 uses plain `docker login`/`docker build`/`docker push` in the workflow
+  rather than Docker's build/push actions (no new third-party action), through one script
+  (`deploy/build-images.sh`) that CI and a local rehearsal share. The release reruns `ci.yml`
+  as its gate instead of trusting the tagged commit's earlier run. `deploy.sh` pulls before
+  the pre-deploy dump (the plan listed the dump first) so a missing image changes nothing,
+  requires the checkout at the tag so the compose file and Caddy settings match the images,
+  and records `OTA_VERSION` only after every health check passes.
