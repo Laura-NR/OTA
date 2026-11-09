@@ -5,6 +5,8 @@ export {
   relativeLuminance,
 } from './color';
 export { themeCssVariables } from './css';
+/** The tenant's resolved primitive tier as values, for a client with no CSS (the worker app). */
+export { resolvePrimitives as themePrimitives } from './css';
 export {
   ALIAS_TOKENS,
   BREAKPOINT_TOKENS,

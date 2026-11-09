@@ -26,7 +26,7 @@ function isPrimitive(name: string): name is PrimitiveToken {
  * explicit `theme.tokens` primitive, which wins. Names outside the primitive
  * tier are ignored, because alias and component tokens never change per tenant.
  */
-function resolvePrimitives(config: TenantConfig): Record<PrimitiveToken, string> {
+export function resolvePrimitives(config: TenantConfig): Record<PrimitiveToken, string> {
   const preset = THEME_PRESETS[config.theme.palette] ?? THEME_PRESETS[DEFAULT_PALETTE]!;
   const primitives: Record<PrimitiveToken, string> = { ...preset.primitives };
 

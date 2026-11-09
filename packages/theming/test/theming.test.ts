@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { contrastRatio, derivePrimaryScale, normalizeHex } from '../src/color';
 import { themeCssVariables } from '../src/css';
+import { themePrimitives } from '../src/index';
 import { ALIAS_TOKENS, COMPONENT_TOKENS, PRIMITIVE_TOKENS } from '../src/tokens';
 
 const base = {
@@ -226,5 +227,20 @@ describe('themeCssVariables', () => {
     );
 
     expect(variables).toEqual({});
+  });
+});
+
+describe('themePrimitives', () => {
+  it('gives every primitive value, the brand colour deriving the primary scale', () => {
+    const primitives = themePrimitives(
+      parseTenantConfig({
+        ...base,
+        branding: { ...base.branding, primaryColor: '#7a1f5c' },
+      }),
+    );
+
+    expect(Object.keys(primitives).sort()).toEqual(Object.keys(PRIMITIVE_TOKENS).sort());
+    expect(primitives['color-primary-600']).toBe('#7A1F5C');
+    expect(primitives['color-neutral-900']).toBe(PRIMITIVE_TOKENS['color-neutral-900']);
   });
 });
