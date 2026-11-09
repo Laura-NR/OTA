@@ -94,7 +94,7 @@ then, the cheapest path is to **build the deployment pieces in the repo** (§6, 
 
 **Not part of this deploy:** the worker app (ADR 0007, not built), SMS (no provider), the card
 rail (TropiPay deferred; the storefront already shows card payments as "soon"), and a real LLM
-(`AI_PROVIDER` stays on the mock).
+(`AI_PROVIDER` stays on the mock, so production holds the desk's AI assistant off).
 
 ---
 

@@ -1654,3 +1654,21 @@ the rest with existing components and tokens:
   the traveler can still change the request; a publish refused because the request changed is
   a warning Alert above the form's error, and the draft stays. The queue adds a warning Badge,
   "Changed", beside a request still being priced.
+
+## Amendment, 2026-11-09: the AI assistant flag
+
+The owner chose A4 of `docs/production-readiness.md`: an `aiAssistant` runtime flag (default on)
+that production holds off while the assistant runs on the mock model, so canned drafts cannot
+reach a launch (no migration, no dependency). No board draws it; the build resolved it with
+existing components and tokens:
+
+- **Thresholds.** "AI assistant" is the last switch of the Features group, with its "Used by"
+  line; proposing and applying it is the other flags' two-Super-Admin path. While the deployment
+  holds it off, the Value cell keeps the stored value and adds one caption line under it in
+  `text-warning-700`, "Held off in production while the AI runs on the mock model"; nothing else
+  changes on the board.
+- **Messages.** While the assistant is not in force, the composer drops the secondary "Draft with
+  AI" button rather than disabling it with a reason, since no desk role can switch it back on
+  from there; the input and Send keep their places.
+- **Reports.** The "AI operations summary" panel is left out, as it already was when the summary
+  could not load.

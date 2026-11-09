@@ -1,6 +1,6 @@
 # Production readiness
 
-- **Updated:** 2026-11-08
+- **Updated:** 2026-11-09
 - **Reader:** the owner. This is the list of what stands between the platform and real bookings,
   what is still open from earlier sessions, and what only the owner can do, with steps.
 - **How to use it:** tick items as they close. The agent's working notes stay in
@@ -58,8 +58,12 @@
       dependency, so it needs the owner's yes before the build starts, then a field test with
       two or three suppliers. Fallback if the app is not in field test when the server is
       rented: the small desk "confirmed by phone" action (no dependency).
-- [ ] **A4. Mock AI.** The desk's "draft reply" returns canned text from the mock model. Before
-      launch, either hide it or wire the provider the owner picks (§6).
+- [x] **A4. Mock AI.** *Done 2026-11-09:* the desk's AI ("Draft with AI" in Messages, the AI
+      summary on Reports, translation) now has its own switch, "AI assistant" (Settings ›
+      Thresholds › Features, two Super Admins like the other flags). Production also holds it off
+      by itself while the assistant runs on the mock model, so its canned text cannot reach a
+      launch even if nobody switches it off. Wiring the provider you pick (§6) lifts that hold;
+      the switch stays yours.
 - [x] **A5. Small hardening.** *Done 2026-11-08:*
       - public `GET /catalog` no longer returns supplier ids;
       - the Socket.IO gateways accept only `TRUSTED_ORIGINS` (B7);
@@ -249,7 +253,8 @@ Either way:
 - wiring it is an approval gate: a vendor SDK is a new dependency, and plain HTTP behind the
   existing `LlmProvider` avoids one.
 
-Until then, the mock stays in dev and the draft button must be hidden for launch (A4).
+Until then, the mock stays in dev, and production holds the desk's AI off by itself (A4, built
+2026-11-09).
 *(Written by Claude, made by Anthropic; weigh the Claude row with that in mind.)*
 
 ## 7. Suggested order

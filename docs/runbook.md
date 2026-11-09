@@ -140,7 +140,13 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
   "Card rail" Off, two Super Admins. New links on that rail are refused with 409
   `FEATURE_OFF`, desk and traveler; a transfer already started keeps its details and
   proof. The other flags there (recruitment portal, builder, map, events strip,
-  instant label) work the same way; the manifest's values are only the defaults.
+  instant label, AI assistant) work the same way; the manifest's values are only the
+  defaults.
+- **The AI assistant** ("AI assistant" in the same group) covers "Draft with AI" in
+  Messages, the AI summary on Reports and `/assistant/*` (409 `FEATURE_OFF`). With
+  `NODE_ENV=production` and `AI_PROVIDER` on the mock (unset or unknown counts as the
+  mock), the API holds it off whatever the switch says, and Thresholds notes "Held off
+  in production". The hold lifts only once a real provider is wired (A4).
 
 ## Display currencies
 
