@@ -117,6 +117,7 @@ export const operatingThresholdsSchema = z.object({
   instantBooking: z.boolean(),
   directBankTransferRail: z.boolean(),
   creditCardGatewayRail: z.boolean(),
+  aiAssistant: z.boolean(),
 });
 
 export type OperatingThresholdsDto = z.infer<typeof operatingThresholdsSchema>;

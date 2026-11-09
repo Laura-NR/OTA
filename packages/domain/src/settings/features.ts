@@ -15,6 +15,7 @@ export const FEATURE_FLAGS = [
   'instantBooking',
   'directBankTransferRail',
   'creditCardGatewayRail',
+  'aiAssistant',
 ] as const;
 
 export type FeatureFlag = (typeof FEATURE_FLAGS)[number];
@@ -30,12 +31,39 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlagValues = {
   instantBooking: false,
   directBankTransferRail: true,
   creditCardGatewayRail: true,
+  aiAssistant: true,
 };
 
 /** Only the flags, from a settings document that carries them among other values. */
 export function featureFlagsOf(values: FeatureFlagValues): FeatureFlagValues {
   return Object.fromEntries(
     FEATURE_FLAGS.map((flag) => [flag, values[flag]]),
+  ) as FeatureFlagValues;
+}
+
+/** What the deployment, not the settings, says about a flag (A4, 2026-11-09). */
+export interface FeatureDeployment {
+  production: boolean;
+  /** The assistant runs on the mock model, which only returns canned text. */
+  aiProviderIsMock: boolean;
+}
+
+/**
+ * The flags a deployment holds off whatever the settings say: the AI
+ * assistant in production while its provider is the mock, so canned drafts
+ * never reach a launch even if nobody switches the flag off.
+ */
+export function heldOffFeatures(deployment: FeatureDeployment): FeatureFlag[] {
+  return deployment.production && deployment.aiProviderIsMock ? ['aiAssistant'] : [];
+}
+
+/** The flags in force: the settings' values, less what the deployment holds off. */
+export function featuresInForce(
+  flags: FeatureFlagValues,
+  heldOff: readonly FeatureFlag[],
+): FeatureFlagValues {
+  return Object.fromEntries(
+    FEATURE_FLAGS.map((flag) => [flag, flags[flag] && !heldOff.includes(flag)]),
   ) as FeatureFlagValues;
 }
 

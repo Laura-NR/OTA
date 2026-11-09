@@ -9,6 +9,7 @@ export const featureFlagsSchema = z.object({
   instantBooking: z.boolean().default(false),
   directBankTransferRail: z.boolean().default(true),
   creditCardGatewayRail: z.boolean().default(true),
+  aiAssistant: z.boolean().default(true),
 });
 
 export type FeatureFlags = z.infer<typeof featureFlagsSchema>;

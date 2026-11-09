@@ -7,6 +7,8 @@ import {
   OPERATING_THRESHOLD_KEYS,
   changedThresholds,
   featureFlagsOf,
+  featuresInForce,
+  heldOffFeatures,
   railEnabled,
   railFeature,
   thresholdsIssues,
@@ -55,5 +57,24 @@ describe('runtime feature flags (M9 D8b)', () => {
     const cardOff = { ...DEFAULT_FEATURE_FLAGS, creditCardGatewayRail: false };
     expect(railEnabled(cardOff, 'CARD')).toBe(false);
     expect(railEnabled(cardOff, 'OPEN_BANKING_SEPA')).toBe(true);
+  });
+
+  it('holds the AI assistant off in production while its provider is the mock', () => {
+    expect(heldOffFeatures({ production: true, aiProviderIsMock: true })).toEqual([
+      'aiAssistant',
+    ]);
+    // Dev and e2e keep the mock; a real provider in production follows the flag.
+    expect(heldOffFeatures({ production: false, aiProviderIsMock: true })).toEqual([]);
+    expect(heldOffFeatures({ production: true, aiProviderIsMock: false })).toEqual([]);
+  });
+
+  it('switches a held-off flag off in force but never switches an off flag on', () => {
+    const inForce = featuresInForce(DEFAULT_FEATURE_FLAGS, ['aiAssistant']);
+    expect(inForce.aiAssistant).toBe(false);
+    expect(inForce.recruitmentPortal).toBe(true);
+    expect(featuresInForce(DEFAULT_FEATURE_FLAGS, [])).toEqual(DEFAULT_FEATURE_FLAGS);
+
+    const portalOff = { ...DEFAULT_FEATURE_FLAGS, recruitmentPortal: false };
+    expect(featuresInForce(portalOff, ['aiAssistant']).recruitmentPortal).toBe(false);
   });
 });
