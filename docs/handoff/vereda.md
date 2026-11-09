@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-09 11:16
+# Handoff — vereda — updated 2026-11-09 18:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -12,7 +12,7 @@ on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on ev
 page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
-trip") and
+trip", on 2026-11-09 the AI assistant flag) and
 ADR 0007 (worker
 app). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
@@ -26,6 +26,21 @@ app). Staff passkeys:
 events (T-Events)".
 
 ## State
+- **2026-11-09: A4, the AI assistant flag**, the owner's pick with the "on + mock guard" default
+  (`708784b`…`300fed3`). No migration, no new package, no new route (the three `/assistant/*`
+  routes were already in the RBAC matrix).
+  - Domain `packages/domain/src/settings/features.ts`: `aiAssistant` is the eighth flag (default
+    on; manifest schema `packages/config` too). `heldOffFeatures({production, aiProviderIsMock})`
+    → `['aiAssistant']` in production on the mock; `featuresInForce(flags, heldOff)` only ever
+    switches a flag off. `@ota/ai` `llmProviderName(AI_PROVIDER)`: unset or unknown → `mock`.
+  - API: `HELD_OFF_FEATURES` (`settings.tokens.ts`; `heldOffByDeployment(env)` in
+    `settings.module.ts`). `OperatingSettingsService.features()` (so `requireFeature` and
+    `GET /tenant/config`) applies the hold; the overview DTO gains `heldOff`. Every
+    `/assistant/*` route calls `requireFeature('aiAssistant')` (409 `FEATURE_OFF`).
+  - Desk: `getFeaturesInForce()` (`lib/operating.ts`); Messages hides "Draft with AI", Reports
+    skips the AI summary fetch, Thresholds › Features has "AI assistant" and, when held off, a
+    `text-warning-700` caption under the value. en/es/fr. ADR 0006 amendment of 2026-11-09;
+    readiness A4 ticked; runbook "Switching a rail off" gains the AI bullet.
 - **2026-11-08 (late night): B3, the last deployment build item**, the owner's pick
   (`db65f62`…`be2f649`). No migration, no new package, no new GitHub action.
   - `.github/workflows/release.yml`: a `v*` tag runs `ci.yml` (now also `workflow_call`), then
@@ -520,18 +535,26 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-08 late night, B3, dev stack stopped for the build)
+## Verified (2026-11-09, A4, dev stack stopped for the build)
 - `pnpm audit --prod`: **2**, the same two settled advisories (deepmerge-ts, uuid; major only).
-- `pnpm lint` and `pnpm format:check` green (Prettier covers both workflows). `TURBO_FORCE=true
-  pnpm typecheck` **33/33**; `TURBO_FORCE=true pnpm test` **1280 passed / 53 skipped**;
+- `pnpm lint` and `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **33/33**;
+  `TURBO_FORCE=true pnpm test` **1286 passed / 53 skipped** (+6: domain 2, ai 1, API 3);
   `TURBO_FORCE=true pnpm build` **18/18**; `apps/*/.next` deleted.
-- `pnpm e2e` (full, 1.1 h): **167 passed, 2 failed, 3 skipped**. Both failures are
-  `responsive.spec.ts` (:110 [ds07-414], :151 [ds07-1440]), `page.goto` timeouts while the
-  next-servers sat at 5.8 and 7.2 GB RSS (the pattern of the last runs; no web code changed).
-  Killed by PID, `.next` deleted, the two rerun alone: **9 passed, 3 skipped** (9.4 min).
+- The new API refusal test fails with the controller's gate reverted (409 expected) and passes
+  with it.
+- `pnpm e2e` (full, 1.2 h): **168 passed, 1 failed, 3 skipped**, `feature-flags.spec.ts` (now
+  switching `aiAssistant` too) passed. The failure is `responsive.spec.ts:118` [ds07-414], a
+  `page.goto` timeout with both next-servers at about 6 GB RSS (the known pattern; no
+  storefront code changed). Killed by PID, `.next` deleted, rerun alone: **1 passed** (1.9 min).
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files
   (`pnpm --filter @ota/api exec vitest run integration`).
-- B3: both workflows parse (js-yaml); `bash -n` on both scripts; every refusal of
+- Browser (Playwright script, admin@example.test, 390/1024/1280): with the API alone under
+  `NODE_ENV=production`, `GET /tenant/config` serves `aiAssistant: false`; Thresholds shows "AI
+  assistant On" with the caption (12 px, `display: block`, warning colour
+  `color(srgb 0.573 0.251 0.055)`); Messages has no "Draft with AI"; Reports has no AI summary;
+  no page scrolls sideways. With the API in dev mode: no caption, the button and the summary are
+  back. The owner's dev stack was restarted with Task 0's settings and left running.
+- B3 (2026-11-08, unchanged since): both workflows parse (js-yaml); `bash -n` on both scripts; every refusal of
   `build-images.sh` (usage 2, unknown image, no `DESK_DOMAIN`, bad tag, no prefix) and
   `deploy.sh` (usage 2, non-`v` tag, HEAD not at the tag, tracked changes, no
   `OTA_IMAGE_PREFIX`). `build-images.sh v0.0.1-rh` built the four images as
@@ -548,6 +571,13 @@ events (T-Events)".
   browser check (no UI changed).
 
 ## Assumptions & unknowns
+- **A4 (2026-11-09):** "production" is `NODE_ENV=production`, which the API image sets (B1).
+  A deployment that ran the API without it would not hold the mock off; the switch still
+  works. The held-off caption was seen in a browser only with the API started alone as
+  `NODE_ENV=production` (dev runner, see Verified), not in the production image. Translation has
+  no desk surface; it is gated at the API only. Found, not changed (it predates A4): at 390 px
+  the Messages composer squeezes its input to about 26 px beside "Draft with AI" and Send; the
+  desk targets tablet width and up (DS 07), so it is left for the owner.
 - **B3 (2026-11-08):** the workflow has never run: no `actionlint` here and no tag pushed, so
   the GHCR login, the push with `GITHUB_TOKEN` (`packages: write`), the lower-cased owner
   path and the reusable `ci.yml` call are unproven until the owner's first `v*` tag. A
@@ -726,6 +756,12 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **A4 hold (2026-11-09):** `OperatingSettingsService`'s third constructor parameter
+  (`heldOff`) defaults to `[]`, so services built by hand (tests, `cli/retention-scan.ts`)
+  never hold anything; only the Nest module reads the environment. A stored settings version
+  without `aiAssistant` merges it from the defaults (no data change), as the D8b flags did.
+  The desk's raw `values.aiAssistant` can say On while the flag in force is off: read
+  `getFeaturesInForce()`, not `getThresholds()`, for anything the hold covers.
 - **B3 deploy script (2026-11-08):** `docker compose config --images <service>` also prints
   the service's dependencies' images (postgres, redis), so do not use it to name one image;
   a pull that cannot get an image already exits non-zero (`denied` from GHCR). `deploy.sh`
@@ -1179,6 +1215,11 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-09: the desk's AI (`/assistant/*`, Draft with AI, the Reports summary) follows the
+    `aiAssistant` runtime flag, and the API holds it off (`HELD_OFF_FEATURES`) while
+    `NODE_ENV=production` and `llmProviderName(AI_PROVIDER)` is `mock`; a real adapter added to
+    `packages/ai` lifts the hold. The desk reads the flags in force with
+    `getFeaturesInForce()`."
   - "2026-11-08: storefront paths no route serves must stay unmatched (never a catch-all page
     calling `notFound()`): Next 15.5 serves a `notFound()` thrown while rendering as its bare
     error document, and only Next's `/_not-found` route renders a 404 with the layout on the
@@ -1370,8 +1411,8 @@ events (T-Events)".
    counsel package (now also the AI provider and sanctions question), the business values, the
    tenant placeholders. The full list is `docs/production-readiness.md` §4; do not re-ask what
    it records as decided.
-4. Before launch: hide the mock AI draft button or wire the owner's provider (open; suggestions
-   in `docs/production-readiness.md` §6). The worker app (Phase 7) needs the owner's yes on Expo;
+4. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production now holds
+   the mock off by itself (A4, built 2026-11-09), so this no longer blocks launch. The worker app (Phase 7) needs the owner's yes on Expo;
    if it is not in field test when the server is rented, build the desk "confirmed by phone"
    fallback (ADR 0007 amendment).
 5. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
@@ -1957,3 +1998,9 @@ events (T-Events)".
   the pre-deploy dump (the plan listed the dump first) so a missing image changes nothing,
   requires the checkout at the tag so the compose file and Caddy settings match the images,
   and records `OTA_VERSION` only after every health check passes.
+- 2026-11-09 — the owner chose A4 with the recommended default: the `aiAssistant` flag defaults
+  on (dev and e2e unchanged) and production on the mock holds it off at the API, rather than a
+  hand switch before launch or a default-off flag. The hold is a deployment fact removed from
+  the flags in force, not a stored value, so no settings version or data changes and the
+  Thresholds board still shows what the Super Admins set. The desk hides the draft button
+  rather than disabling it with a reason, since nobody can switch it on from Messages.
