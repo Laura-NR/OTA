@@ -20,6 +20,7 @@ import { SupplierCredential } from '@/components/supplier-credential';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
 import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
 import { VerificationActions } from '@/components/verification-actions';
+import { WorkerSignInCode } from '@/components/worker-sign-in-code';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
@@ -29,6 +30,12 @@ import { lastJobLabel } from '@/lib/suppliers';
 const EDIT_ROLES: readonly string[] = [
   UserRole.OperationsAdmin,
   UserRole.AdministrativeSupport,
+  UserRole.SuperAdmin,
+];
+
+/** Who may issue a worker sign-in code; no permission override reaches it (W1). */
+const SIGN_IN_CODE_ROLES: readonly string[] = [
+  UserRole.OperationsAdmin,
   UserRole.SuperAdmin,
 ];
 
@@ -62,7 +69,8 @@ function Panel({
 /**
  * The supplier inspector (A-Suppliers): the worker's profile, the credential
  * inspector (spec §4.5), the auto-dispatch state, reliability and job history,
- * a casa's backup power or a driver's vehicle and fuel reserve (M6), and the
+ * a casa's backup power or a driver's vehicle and fuel reserve (M6), the
+ * worker app sign-in code (`docs/worker-app-plan.md` W1), and the
  * availability calendar. Guide specialities wait (M6 D7), payouts for the
  * payments module.
  */
@@ -80,6 +88,7 @@ export default async function SupplierDetailPage({
   const access = await deskAccess(role, 'suppliers');
   const canVerify = access.canManage;
   const canEdit = EDIT_ROLES.includes(role);
+  const canIssueSignInCode = SIGN_IN_CODE_ROLES.includes(role);
 
   const supplier = await apiFetch<SupplierDetailDto>(`/suppliers/${id}`).catch(
     (error: unknown) => {
@@ -279,6 +288,15 @@ export default async function SupplierDetailPage({
           <p className="text-body-sm text-secondary">{auto.why}</p>
         </Panel>
       </div>
+
+      {canIssueSignInCode ? (
+        <Panel title={t('signInCode.title')} description={t('signInCode.description')}>
+          <WorkerSignInCode
+            supplierId={supplier.id}
+            name={supplier.fullName ?? supplier.email}
+          />
+        </Panel>
+      ) : null}
 
       <Panel title={t('reliabilityTitle')} description={t('reliabilityDescription')}>
         {!reliability || reliability.offers === 0 ? (

@@ -2444,7 +2444,21 @@
         "insuranceEnds": "Insurance ends in {days} d"
       },
       "autoReliability": "Paused · reliability",
-      "autoWhyReliability": "Below {floor} % acceptance over at least {min} answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list."
+      "autoWhyReliability": "Below {floor} % acceptance over at least {min} answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list.",
+      "signInCode": {
+        "title": "Worker app sign-in",
+        "description": "The worker types their phone number in the app and gets a code by SMS. If the SMS does not arrive, check their ID card, then read them a code.",
+        "issue": "Issue sign-in code…",
+        "dialogTitle": "Sign-in code for {name}",
+        "check": "Check {name}’s ID card first. The code signs this phone number in to the worker app; issuing it replaces any code sent before.",
+        "confirm": "Issue code",
+        "cancel": "Cancel",
+        "codeLabel": "Sign-in code",
+        "read": "Read it to {name}. It works with {phone} until {time}, once.",
+        "done": "Done",
+        "close": "Close",
+        "failed": "The code could not be issued"
+      }
     },
     "reports": {
       "title": "Reports",

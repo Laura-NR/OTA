@@ -2444,7 +2444,21 @@
         "insuranceEnds": "L'assurance expire dans {days} j"
       },
       "autoReliability": "En pause · fiabilité",
-      "autoWhyReliability": "Moins de {floor} % d'acceptation sur au moins {min} offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation."
+      "autoWhyReliability": "Moins de {floor} % d'acceptation sur au moins {min} offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation.",
+      "signInCode": {
+        "title": "Connexion à l’app des prestataires",
+        "description": "Le prestataire saisit son numéro dans l’app et reçoit un code par SMS. Si le SMS n’arrive pas, vérifiez sa pièce d’identité, puis dictez-lui un code.",
+        "issue": "Émettre un code de connexion…",
+        "dialogTitle": "Code de connexion pour {name}",
+        "check": "Vérifiez d’abord la pièce d’identité de {name}. Le code connecte ce numéro à l’app ; l’émettre annule tout code envoyé avant.",
+        "confirm": "Émettre le code",
+        "cancel": "Annuler",
+        "codeLabel": "Code de connexion",
+        "read": "Dictez-le à {name}. Il sert une fois avec le {phone} jusqu’à {time}.",
+        "done": "Terminé",
+        "close": "Fermer",
+        "failed": "Le code n’a pas pu être émis"
+      }
     },
     "reports": {
       "title": "Rapports",

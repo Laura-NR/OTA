@@ -2444,7 +2444,21 @@
         "insuranceEnds": "El seguro vence en {days} d"
       },
       "autoReliability": "En pausa · fiabilidad",
-      "autoWhyReliability": "Menos del {floor} % de aceptación en al menos {min} ofertas respondidas: el auto-despacho omite a este trabajador hasta que la tasa se recupere. La mesa aún puede ofrecerle un servicio desde la lista de reasignación."
+      "autoWhyReliability": "Menos del {floor} % de aceptación en al menos {min} ofertas respondidas: el auto-despacho omite a este trabajador hasta que la tasa se recupere. La mesa aún puede ofrecerle un servicio desde la lista de reasignación.",
+      "signInCode": {
+        "title": "Acceso a la app de colaboradores",
+        "description": "El colaborador escribe su teléfono en la app y recibe un código por SMS. Si el SMS no llega, comprueba su carnet de identidad y díctale un código.",
+        "issue": "Emitir código de acceso…",
+        "dialogTitle": "Código de acceso para {name}",
+        "check": "Comprueba primero el carnet de identidad de {name}. El código da acceso a la app con este teléfono; emitirlo anula cualquier código enviado antes.",
+        "confirm": "Emitir código",
+        "cancel": "Cancelar",
+        "codeLabel": "Código de acceso",
+        "read": "Díctaselo a {name}. Sirve una vez con el {phone} hasta las {time}.",
+        "done": "Hecho",
+        "close": "Cerrar",
+        "failed": "No se pudo emitir el código"
+      }
     },
     "reports": {
       "title": "Informes",
