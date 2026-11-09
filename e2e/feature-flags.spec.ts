@@ -13,23 +13,26 @@ import { signIn } from './helpers';
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
 const FOUNDER = 'flags-e2e-founder@example.test';
 const BOOKING_CODE = 'E2EFLG01';
-const REASON_OFF = 'E2E flags: close the portal, the builder, the map and the card rail';
+const REASON_OFF =
+  'E2E flags: close the portal, the builder, the map, the card rail and the AI';
 const REASON_ON = 'E2E flags: open them again';
 const SWITCHED = [
   'recruitmentPortal',
   'customItineraryBuilder',
   'interactiveSvgMap',
   'creditCardGatewayRail',
+  'aiAssistant',
 ];
 
 process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 
 /**
- * Runtime feature flags (M9 D8b), end to end: one Super Admin switches four
+ * Runtime feature flags (M9 D8b), end to end: one Super Admin switches five
  * flags off in the Features group, a second applies it, and the storefront,
  * the API and the desk follow at once (the desk's Applications and Custom
- * proposals say their queue is closed); switching them on again reopens them.
+ * proposals say their queue is closed, and Messages and Reports lose the AI);
+ * switching them on again reopens them.
  * This spec owns the address and booking above and the settings versions
  * whose reason starts with "E2E flags". `afterAll` switches the flags back on
  * with the same sessions, so no later spec sees them off.
@@ -144,9 +147,10 @@ test.describe('M9 runtime feature flags', () => {
     await features.getByLabel('Destinations map', { exact: true }).selectOption('off');
     await features.getByLabel('Custom trip builder', { exact: true }).selectOption('off');
     await features.getByLabel('Card rail', { exact: true }).selectOption('off');
+    await features.getByLabel('AI assistant', { exact: true }).selectOption('off');
     await expect(
       page.getByText(
-        'Changes: Destinations map, Recruitment portal, Custom trip builder, Card rail.',
+        'Changes: Destinations map, Recruitment portal, Custom trip builder, Card rail, AI assistant.',
       ),
     ).toBeVisible();
     await page.getByLabel('Why').fill(REASON_OFF);
@@ -243,6 +247,21 @@ test.describe('M9 runtime feature flags', () => {
         .getByRole('status')
         .filter({ hasText: 'Custom trip builder switched off' }),
     ).toContainText('Requests and proposals already here can still be worked.');
+
+    // The AI assistant (A4): no draft button or summary, and the API refuses a draft.
+    await deskPage.goto(`/bookings/messages?reservation=${reservationId}`);
+    await expect(deskPage.getByRole('button', { name: 'Send' })).toBeVisible();
+    await expect(deskPage.getByRole('button', { name: 'Draft with AI' })).toHaveCount(0);
+    await deskPage.goto('/reports');
+    await expect(
+      deskPage.getByRole('heading', { name: 'Reports', level: 1 }),
+    ).toBeVisible();
+    await expect(deskPage.getByText('AI operations summary')).toHaveCount(0);
+    const draft = await deskPage.request.post('/api/ota/assistant/draft-reply', {
+      data: { reservationId },
+    });
+    expect(draft.status()).toBe(409);
+    expect(await draft.json()).toMatchObject({ feature: 'aiAssistant' });
   });
 
   test('switching them on again reopens the portal and the map', async ({ page }) => {
@@ -262,5 +281,11 @@ test.describe('M9 runtime feature flags', () => {
     await expect(proposer.page.getByText('Recruitment portal switched off')).toHaveCount(
       0,
     );
+    await proposer.page.goto(`/bookings/messages?reservation=${reservationId}`);
+    await expect(
+      proposer.page.getByRole('button', { name: 'Draft with AI' }),
+    ).toBeVisible();
+    await proposer.page.goto('/reports');
+    await expect(proposer.page.getByText('AI operations summary')).toBeVisible();
   });
 });
