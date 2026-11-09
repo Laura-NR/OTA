@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { OperatingSettingsService } from '../src/settings/operating-settings.service';
+import { heldOffByDeployment } from '../src/settings/settings.module';
 
 const DAYANA: AuthUser = {
   id: 'u-dayana',
@@ -364,5 +365,31 @@ describe('runtime feature flags on the settings (M9 D8b)', () => {
     });
     expect((await service.thresholds()).amberPercent).toBe(80);
     expect((await service.features()).recruitmentPortal).toBe(false);
+  });
+
+  it('holds the AI assistant off in production on the mock, whatever the settings say', async () => {
+    service = new OperatingSettingsService(
+      prisma as unknown as PrismaService,
+      portalOff,
+      heldOffByDeployment({ NODE_ENV: 'production' }),
+    );
+    expect((await service.thresholds()).aiAssistant).toBe(true);
+    expect((await service.features()).aiAssistant).toBe(false);
+    expect((await service.overview()).heldOff).toEqual(['aiAssistant']);
+    expect(await refusal('aiAssistant')).toMatchObject({
+      code: 'FEATURE_OFF',
+      feature: 'aiAssistant',
+    });
+    // The hold never switches another flag on: the manifest's off portal stays off.
+    expect((await service.features()).recruitmentPortal).toBe(false);
+  });
+
+  it('follows the AI flag outside production, where dev and e2e keep the mock', async () => {
+    expect(heldOffByDeployment({ NODE_ENV: 'development' })).toEqual([]);
+    expect(
+      heldOffByDeployment({ NODE_ENV: 'production', AI_PROVIDER: 'mistral' }),
+    ).toEqual(['aiAssistant']);
+    expect(await refusal('aiAssistant')).toBeNull();
+    expect((await service.overview()).heldOff).toEqual([]);
   });
 });

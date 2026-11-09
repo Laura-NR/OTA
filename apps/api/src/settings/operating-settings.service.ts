@@ -13,6 +13,7 @@ import {
   changedThresholds,
   dispatchTimerPolicy,
   featureFlagsOf,
+  featuresInForce,
   ipAddressText,
   settingsDecisionRefusal,
   superAdminIpRefused,
@@ -35,6 +36,7 @@ import {
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { HELD_OFF_FEATURES } from './settings.tokens';
 
 /**
  * How long a process trusts its copy of the applied thresholds. The process
@@ -99,6 +101,7 @@ export class OperatingSettingsService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+    @Inject(HELD_OFF_FEATURES) private readonly heldOff: readonly FeatureFlag[] = [],
   ) {}
 
   /** The defaults: today's constants, with the tenant's payment terms and flags. */
@@ -117,9 +120,12 @@ export class OperatingSettingsService {
     return (await this.current()).values;
   }
 
-  /** The feature flags in force now (D8b). */
+  /**
+   * The feature flags in force now (D8b): the thresholds' flags, less what
+   * the deployment holds off (A4).
+   */
   async features(): Promise<FeatureFlagValues> {
-    return featureFlagsOf(await this.thresholds());
+    return featuresInForce(featureFlagsOf(await this.thresholds()), this.heldOff);
   }
 
   /** Refuse with 409 `FEATURE_OFF` while `flag` is switched off (D8b). */
@@ -161,6 +167,7 @@ export class OperatingSettingsService {
       appliedAt: current.appliedAt ? current.appliedAt.toISOString() : null,
       appliedByName: current.appliedByName,
       pending: pending ? this.toVersion(pending, current.values) : null,
+      heldOff: [...this.heldOff],
       ...(actor ? { signInAddress: actor.signInAddress ?? null } : {}),
     };
   }

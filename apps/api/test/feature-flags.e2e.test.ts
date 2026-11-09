@@ -158,4 +158,23 @@ describe('runtime feature flags (GET /tenant/config and the gated routes)', () =
     expect(other.status).toBe(409);
     expect(other.body).toMatchObject(OFF('directBankTransferRail'));
   });
+
+  it('refuses every assistant route while the AI assistant is off', async () => {
+    flags = { ...flags, aiAssistant: false };
+    role = 'OPERATIONS_ADMIN';
+    const server = app.getHttpServer();
+
+    const draft = await request(server)
+      .post('/assistant/draft-reply')
+      .send({ reservationId: RESERVATION_ID });
+    const summary = await request(server).get('/assistant/ops-summary');
+    const translation = await request(server)
+      .post('/assistant/translate')
+      .send({ text: 'Hola', targetLocale: 'en' });
+
+    for (const response of [draft, summary, translation]) {
+      expect(response.status).toBe(409);
+      expect(response.body).toMatchObject(OFF('aiAssistant'));
+    }
+  });
 });

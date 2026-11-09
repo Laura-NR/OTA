@@ -1,5 +1,6 @@
 import {
   ADVISORY_DUAL_APPROVAL_LEVELS,
+  FEATURE_FLAGS,
   FX_LOCK_POINTS,
   FX_SPREAD_PERCENT,
   INVITE_STATES,
@@ -12,6 +13,7 @@ import {
   ipRangeIssue,
   parseIpRange,
   type AdvisoryDualApprovalLevel,
+  type FeatureFlag,
   type FxLockPoint,
   type InviteState,
   type OverrideStatus,
@@ -165,6 +167,11 @@ export const operatingSettingsSchema = z.object({
    * reads it (`docs/schema-m9-ip-allowlist.md` I4, I8); null when unknown.
    */
   signInAddress: z.string().nullable().optional(),
+  /**
+   * Flags the deployment holds off whatever `values` say: the AI assistant in
+   * production on the mock provider (A4, 2026-11-09).
+   */
+  heldOff: z.array(z.enum([...FEATURE_FLAGS] as [FeatureFlag, ...FeatureFlag[]])),
 });
 
 export type OperatingSettingsDto = z.infer<typeof operatingSettingsSchema>;
