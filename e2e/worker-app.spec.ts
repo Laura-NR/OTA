@@ -205,4 +205,38 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     });
     await app.context().close();
   });
+
+  test('the desk signs a lost phone out and the app returns to sign-in', async ({
+    page,
+    browser,
+  }) => {
+    const code = await codeFromDesk(page);
+    const app = await signInOnApp(browser, code);
+
+    const dialog = page.getByRole('dialog', {
+      name: `Sign ${WORKER.fullName} out of the worker app`,
+    });
+    await page.getByRole('button', { name: 'Sign out of the worker app…' }).click();
+    await expect(
+      dialog.getByText('For a lost phone or one that changed hands.'),
+    ).toBeVisible();
+    await dialog.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await expect(
+      dialog.getByText(
+        `1 phone was signed out. ${WORKER.fullName} needs a new code to sign in again.`,
+      ),
+    ).toBeVisible();
+    await dialog.getByRole('button', { name: 'Done' }).click();
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: WORKER.email } });
+    expect(
+      await prisma.session.count({
+        where: { userId: user.id, signInMethod: 'worker_code' },
+      }),
+    ).toBe(0);
+
+    await app.getByRole('button', { name: 'Actualizar' }).click();
+    await expect(app.getByText(/^Tu sesión terminó\./)).toBeVisible();
+    await expect(app.getByLabel('Número de teléfono')).toBeVisible();
+    await app.context().close();
+  });
 });
