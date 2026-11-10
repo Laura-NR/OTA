@@ -2447,7 +2447,7 @@
       "autoWhyReliability": "Below {floor} % acceptance over at least {min} answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list.",
       "signInCode": {
         "title": "Worker app sign-in",
-        "description": "The worker types their phone number in the app and gets a code by SMS. If the SMS does not arrive, check their ID card, then read them a code.",
+        "description": "The worker types their phone number in the app and gets a code by SMS. If the SMS does not arrive, check their ID card, then read them a code. If a phone is lost, sign them out of the app.",
         "issue": "Issue sign-in code…",
         "dialogTitle": "Sign-in code for {name}",
         "check": "Check {name}’s ID card first. The code signs this phone number in to the worker app; issuing it replaces any code sent before.",
@@ -2457,7 +2457,16 @@
         "read": "Read it to {name}. It works with {phone} until {time}, once.",
         "done": "Done",
         "close": "Close",
-        "failed": "The code could not be issued"
+        "failed": "The code could not be issued",
+        "signOut": {
+          "open": "Sign out of the worker app…",
+          "dialogTitle": "Sign {name} out of the worker app",
+          "explain": "For a lost phone or one that changed hands. Every phone signed in as {name} goes back to the sign-in screen as soon as it has a connection, and any code not yet used stops working. To sign in again, {name} needs a new code.",
+          "confirm": "Sign out",
+          "ended": "{count, plural, one {# phone was signed out} other {# phones were signed out}}. {name} needs a new code to sign in again.",
+          "none": "No phone was signed in as {name}. Any code not yet used has stopped working.",
+          "failed": "The worker could not be signed out"
+        }
       }
     },
     "reports": {

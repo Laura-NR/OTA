@@ -2447,7 +2447,7 @@
       "autoWhyReliability": "Moins de {floor} % d'acceptation sur au moins {min} offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation.",
       "signInCode": {
         "title": "Connexion à l’app des prestataires",
-        "description": "Le prestataire saisit son numéro dans l’app et reçoit un code par SMS. Si le SMS n’arrive pas, vérifiez sa pièce d’identité, puis dictez-lui un code.",
+        "description": "Le prestataire saisit son numéro dans l’app et reçoit un code par SMS. Si le SMS n’arrive pas, vérifiez sa pièce d’identité, puis dictez-lui un code. Si un téléphone est perdu, déconnectez le prestataire de l’app.",
         "issue": "Émettre un code de connexion…",
         "dialogTitle": "Code de connexion pour {name}",
         "check": "Vérifiez d’abord la pièce d’identité de {name}. Le code connecte ce numéro à l’app ; l’émettre annule tout code envoyé avant.",
@@ -2457,7 +2457,16 @@
         "read": "Dictez-le à {name}. Il sert une fois avec le {phone} jusqu’à {time}.",
         "done": "Terminé",
         "close": "Fermer",
-        "failed": "Le code n’a pas pu être émis"
+        "failed": "Le code n’a pas pu être émis",
+        "signOut": {
+          "open": "Déconnecter de l’app des prestataires…",
+          "dialogTitle": "Déconnecter {name} de l’app des prestataires",
+          "explain": "Pour un téléphone perdu ou qui a changé de mains. Chaque téléphone connecté en tant que {name} revient à l’écran de connexion dès qu’il a du réseau, et tout code pas encore utilisé cesse de fonctionner. Pour se reconnecter, {name} a besoin d’un nouveau code.",
+          "confirm": "Déconnecter",
+          "ended": "{count, plural, one {# téléphone a été déconnecté} other {# téléphones ont été déconnectés}}. {name} a besoin d’un nouveau code pour se reconnecter.",
+          "none": "Aucun téléphone n’était connecté en tant que {name}. Tout code pas encore utilisé a cessé de fonctionner.",
+          "failed": "Le prestataire n’a pas pu être déconnecté"
+        }
       }
     },
     "reports": {

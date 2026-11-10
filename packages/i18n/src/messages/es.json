@@ -2447,7 +2447,7 @@
       "autoWhyReliability": "Menos del {floor} % de aceptación en al menos {min} ofertas respondidas: el auto-despacho omite a este trabajador hasta que la tasa se recupere. La mesa aún puede ofrecerle un servicio desde la lista de reasignación.",
       "signInCode": {
         "title": "Acceso a la app de colaboradores",
-        "description": "El colaborador escribe su teléfono en la app y recibe un código por SMS. Si el SMS no llega, comprueba su carnet de identidad y díctale un código.",
+        "description": "El colaborador escribe su teléfono en la app y recibe un código por SMS. Si el SMS no llega, comprueba su carnet de identidad y díctale un código. Si pierde el teléfono, cierra su sesión en la app.",
         "issue": "Emitir código de acceso…",
         "dialogTitle": "Código de acceso para {name}",
         "check": "Comprueba primero el carnet de identidad de {name}. El código da acceso a la app con este teléfono; emitirlo anula cualquier código enviado antes.",
@@ -2457,7 +2457,16 @@
         "read": "Díctaselo a {name}. Sirve una vez con el {phone} hasta las {time}.",
         "done": "Hecho",
         "close": "Cerrar",
-        "failed": "No se pudo emitir el código"
+        "failed": "No se pudo emitir el código",
+        "signOut": {
+          "open": "Cerrar sesión en la app de colaboradores…",
+          "dialogTitle": "Cerrar la sesión de {name} en la app de colaboradores",
+          "explain": "Para un teléfono perdido o que cambió de manos. Cada teléfono con la sesión de {name} vuelve a la pantalla de acceso en cuanto tenga conexión, y cualquier código aún sin usar deja de servir. Para volver a entrar, {name} necesita un código nuevo.",
+          "confirm": "Cerrar sesión",
+          "ended": "{count, plural, one {Se cerró la sesión en # teléfono} other {Se cerró la sesión en # teléfonos}}. {name} necesita un código nuevo para volver a entrar.",
+          "none": "Ningún teléfono tenía abierta la sesión de {name}. Cualquier código aún sin usar ha dejado de servir.",
+          "failed": "No se pudo cerrar la sesión del colaborador"
+        }
       }
     },
     "reports": {

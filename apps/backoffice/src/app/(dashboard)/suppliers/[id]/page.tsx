@@ -21,6 +21,7 @@ import { SupplierResourcesForm } from '@/components/supplier-resources-form';
 import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
 import { VerificationActions } from '@/components/verification-actions';
 import { WorkerSignInCode } from '@/components/worker-sign-in-code';
+import { WorkerSignOut } from '@/components/worker-sign-out';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
@@ -33,7 +34,7 @@ const EDIT_ROLES: readonly string[] = [
   UserRole.SuperAdmin,
 ];
 
-/** Who may issue a worker sign-in code; no permission override reaches it (W1). */
+/** Who may issue a worker sign-in code or sign a worker out; no permission override reaches them (W1). */
 const SIGN_IN_CODE_ROLES: readonly string[] = [
   UserRole.OperationsAdmin,
   UserRole.SuperAdmin,
@@ -291,10 +292,16 @@ export default async function SupplierDetailPage({
 
       {canIssueSignInCode ? (
         <Panel title={t('signInCode.title')} description={t('signInCode.description')}>
-          <WorkerSignInCode
-            supplierId={supplier.id}
-            name={supplier.fullName ?? supplier.email}
-          />
+          <div className="flex flex-wrap gap-2">
+            <WorkerSignInCode
+              supplierId={supplier.id}
+              name={supplier.fullName ?? supplier.email}
+            />
+            <WorkerSignOut
+              supplierId={supplier.id}
+              name={supplier.fullName ?? supplier.email}
+            />
+          </div>
         </Panel>
       ) : null}
 
