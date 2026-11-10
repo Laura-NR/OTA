@@ -36,6 +36,13 @@ open code; an SMS request does not replace a desk code while it is open. Audited
 `auth.worker_code_issued` (actor), `auth.worker_code_sent` (`via: sms`, `delivered`),
 `auth.worker_code_used` and `auth.worker_code_voided`.
 
+Beside it, "Sign out of the worker app…" (2026-11-10, same roles, `POST
+/suppliers/:id/worker-sign-out`), for a lost phone or one that changed hands: it ends every
+session a worker code opened for that worker and voids any open code, then says how many phones
+were signed out. Each phone learns it at its next request (401) and returns to sign-in with "Tu
+sesión terminó"; the worker's other sessions, if any, are left alone. Audited as
+`auth.worker_signed_out` (actor, `sessions`, `codes`).
+
 ## 4. Settings
 
 - `SMS_PROVIDER`: unset → console in development, nothing in production; `console` or `none`.
@@ -74,7 +81,9 @@ Android JavaScript (Hermes bytecode); no APK is built here.
 Domain `packages/domain/src/worker/` (sign-in, SMS segment, answers); auth
 `packages/auth/src/worker-code.ts`; API `apps/api/src/worker/`, `apps/api/src/sms/`; schemas
 `packages/schemas/src/worker.ts`; desk `worker-sign-in-code.tsx` on the supplier page (en/es/fr);
-app `apps/worker-app/` (Login, Home, Offer); e2e `e2e/worker-app.spec.ts`.
+app `apps/worker-app/` (Login, Home, Offer); e2e `e2e/worker-app.spec.ts`. The desk's sign-out
+(2026-11-10): `WorkerCodesService.signOut`, `worker-sign-out.tsx` (en/es/fr), the spec's third
+test; no migration.
 
 ## 8. Next slices
 

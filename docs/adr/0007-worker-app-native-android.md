@@ -169,6 +169,14 @@ exists. No migration. Not built yet: the APK and the field test, background rese
 W-Credentials, W-Earnings, W-Job and its SMS SOS, distribution. Until the field test, the desk
 "confirmed by phone" fallback of the 2026-11-08 amendment stays unbuilt.
 
+## Amendment, 2026-11-10: the desk signs a worker out
+
+The owner chose the desk's sign-out as the next item. "Sign out of the worker app…" on the
+supplier page (Operations Admin, Super Admin; `POST /suppliers/:id/worker-sign-out`) ends every
+session a worker code opened for that worker and voids any open code, replacing the runbook's
+hand fix for a lost phone. It ends only worker-code sessions, which are the only ones the app's
+bearer token can carry (W3). No migration, no new dependency.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

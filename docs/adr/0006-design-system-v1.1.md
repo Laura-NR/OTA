@@ -1693,3 +1693,15 @@ tokens, without asking the design team:
   Admin and Super Admin; its dialog follows the staff recovery-code dialog (a warning, then the
   code once in mono).
 
+## Amendment, 2026-11-10: the desk's worker sign-out
+
+No board shows a desk action that signs a worker out (W-Earnings has only the worker's own
+"Cerrar sesión en este teléfono"). The build resolved it with existing components, without
+asking the design team:
+
+- **Placement.** "Sign out of the worker app…" is a secondary small button beside "Issue
+  sign-in code…" in the "Worker app sign-in" panel, which gains one sentence ("If a phone is
+  lost, sign them out of the app."). Same roles as the code.
+- **Dialog.** It follows the code dialog: what the sign-out does in plain words, Cancel and a
+  primary "Sign out" (not destructive: it is undone by a new code), then a success alert that
+  says how many phones were signed out, or that none was.

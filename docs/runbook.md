@@ -403,9 +403,11 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
 - `SMS_PROVIDER`: unset logs the message (with the code) in development and sends nothing in
   production; `none` sends nothing anywhere; `console` logs anywhere (never in production: the
   log would hold sign-in codes).
-- A phone stays signed in for 30 days; the app's "Salir" ends that phone's session. There is no
-  desk action yet to end a worker's sessions (Settings → Users covers staff only): for a lost
-  phone, delete the worker's rows from the `session` table by hand, as for other hand fixes.
+- A phone stays signed in for 30 days; the app's "Salir" ends that phone's session. For a lost
+  phone or one that changed hands, an Operations Admin or Super Admin opens Suppliers → the
+  worker → "Worker app sign-in" → "Sign out of the worker app…": every phone signed in as the
+  worker returns to sign-in at its next connection, and any code not yet used stops working
+  (audited as `auth.worker_signed_out`). The worker signs in again with a new code.
 - The app's session token works only as the worker app's: a staff session's token sent as a
   bearer token is refused (401).
 - Answers given with no signal are kept on the phone and sent when it reconnects; an answer
