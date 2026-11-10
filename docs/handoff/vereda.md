@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-09 22:55
+# Handoff — vereda — updated 2026-11-10 18:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -12,9 +12,10 @@ on 2026-10-31 the desk idle lock, the runtime feature flags and the alerts on ev
 page, on 2026-11-01 the staff recovery codes, the new-device email, permission overrides and
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
-trip", on 2026-11-09 the AI assistant flag and the worker app's first screens) and
+trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
+desk's worker sign-out) and
 ADR 0007 (worker
-app; amended 2026-11-09 for the first slice). The worker app: `docs/worker-app-plan.md`
+app; amended 2026-11-09 for the first slice and 2026-11-10 for the desk's sign-out). The worker app: `docs/worker-app-plan.md`
 (approved W1, W3, W7; §7 as built). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
@@ -27,6 +28,20 @@ app; amended 2026-11-09 for the first slice). The worker app: `docs/worker-app-p
 events (T-Events)".
 
 ## State
+- **2026-11-10: the desk signs a worker out of the worker app**, the owner's pick of Next 3's
+  first agent item (`a4603e0`…`7ca870d`). No migration, no new dependency, no domain rule (the
+  filter is the existing `WORKER_CODE_SIGN_IN_METHOD`).
+  - API: `POST /suppliers/:id/worker-sign-out` (Operations Admin, Super Admin, no override;
+    RBAC matrix +1 row) → `WorkerCodesService.signOut`: deletes the worker's sessions with
+    `signInMethod = worker_code` and the `worker-code:<userId>` verification row in one
+    transaction, audits `auth.worker_signed_out` (`supplierId`, `sessions`, `codes`), answers
+    `{sessions}` (`workerSignOutSchema`). 404 for an unknown supplier; any role's account works
+    (nothing to end returns 0).
+  - Desk: `worker-sign-out.tsx` beside "Issue sign-in code…" in the "Worker app sign-in" panel;
+    copy under `backoffice.supplierDetail.signInCode.signOut` (en/es/fr), the panel description
+    gained one sentence.
+  - The app needed no change: its next request gets 401 and it returns to Login with "Tu sesión
+    terminó"; saved answers stay queued for the next sign-in (W6).
 - **2026-11-09 (evening): Phase 7 started, the worker app's first slice.** The owner approved
   Expo and W1, W3, W7 as recommended (`664d131`…`45766de`). No migration. New dependencies: Expo
   SDK 58.0.19 and the exact versions it pins (React Native 0.88.0, `expo-secure-store`,
@@ -560,45 +575,41 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-09 evening, Phase 7, dev stack stopped for the build)
-- `pnpm audit --prod`: **4**: the two settled (deepmerge-ts, uuid) and two new moderate ones,
-  `glob` 13.0.7 and `minimatch` 10.2.6, both only through Expo's build-time CLI
-  (`@expo/cli`, `@expo/fingerprint`), fixed only in new majors. The owner deferred them like
-  the first two (Decisions, 2026-11-09).
-- `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1343 passed / 53 skipped** (+57: domain 15,
-  auth 9, API 18, theming 1, worker app 14); `TURBO_FORCE=true pnpm build` **19/19** (the
-  worker app's Android export: Hermes bundle, 727 modules). `apps/*/.next` deleted.
-- Mutation check: with the worker-only rule removed, `worker-code.test.ts`'s staff-token test
-  fails; restored, it passes.
-- `pnpm e2e e2e/worker-app.spec.ts`: **2 passed** (desk code → app sign-in → accept, DB
-  ACCEPTED; offline decline kept, "Sin conexión · 1 pendiente", sent on reconnect, DB DECLINED
-  with the reason).
-- Full `pnpm e2e` (seven projects, 1.2 h): **167 passed, 4 failed, 3 skipped**.
-  - Three `dispatch.spec.ts` tests failed on the worker spec's leftover guide. Fixed in
-    `d9b2a54`: the spec now deletes its worker (Traps).
-  - `[ds07-414]` "customer pages" timed out at `page.goto` (the known late-run storefront
-    memory trap).
-  - After the fixes, on a fresh stack: `pnpm e2e e2e/worker-app.spec.ts --project default`
-    **2 passed** (with the one-sync-at-a-time fix, `e20e37f`).
-  - `pnpm e2e e2e/dispatch.spec.ts e2e/responsive.spec.ts --project default --project
-    ds07-414`: **6 passed, 1 skipped** (the desk-from-tablet test, by design).
-  - A clean full run since the fixes has not been made.
+## Verified (2026-11-10, the desk's worker sign-out, dev stack stopped for the build)
+- No `v*` tag on the remote and `origin/vereda` still at 2026-11-08 (52 local commits before
+  this session), so the Release workflow has not run: nothing to fix.
+- `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob, minimatch).
+- `pnpm lint`, `pnpm format:check` green (format re-run after the doc edits).
+  `TURBO_FORCE=true pnpm typecheck` **34/34**; `TURBO_FORCE=true pnpm test` **31/31 tasks,
+  1345 passed / 53 skipped** (+2, API); `TURBO_FORCE=true pnpm build` **19/19**.
+- Mutation check: with the `signInMethod` filter removed from `WorkerCodesService.signOut`,
+  `worker.service.test.ts`'s sign-out test fails; restored, it passes.
+- `pnpm e2e e2e/worker-app.spec.ts --project default`: **3 passed** (the new test: desk
+  sign-out → "1 phone was signed out", no `worker_code` session left in the DB, the app's
+  "Actualizar" lands on Login with "Tu sesión terminó").
+- Full `pnpm e2e` (seven projects, 1.2 h): **170 passed, 2 failed, 3 skipped**. Both failures
+  pass alone on a fresh stack: `storefront-keep-building.spec.ts` (its h1 rendered just after
+  the 15 s wait: a slow first compile) **1 passed**; `responsive.spec.ts --project ds07-414`
+  **3 passed, 1 skipped** once a hung storefront `next-server` was `kill -9`ed (Traps).
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files.
-- Live API (dev stack): the SMS path (console code, wrong code 401, right code → token,
-  `/worker/home` 200 by bearer); the worker token on `/dispatch/active` 403, an unsigned token
-  401; a real staff session token 200 as a cookie, 401 as a bearer, and
-  `BEARER_NOT_ALLOWED` on `/api/auth/get-session`.
-- Browser (Playwright script, 390/1024/1280): desk panel and dialog (code in IBM Plex Mono
-  24 px), app login, code (input 48 px, 24 px, 6 px tracking), home, offer (button 48 px,
-  `#0B4F6C`, radius 10; the hurry countdown `#92400E`), decline reasons. No page scrolls
-  sideways at any width.
+- Browser (Playwright script against the restarted dev stack, Example Guide's page, en):
+  390/1024/1280 — both buttons 32 px, 14 px/600, `primary-700` on white, radius 8 px, side by
+  side from 1024 (wrapped at 390); the dialog 640 px (a bottom sheet at 390), confirm 40 px
+  on `primary-600`; the success alert after "Sign out" ("No phone was signed in as Example
+  Guide…"); no page scrolls sideways. This wrote `auth.worker_signed_out` audit rows for the
+  seeded Example Guide in the dev DB (0 sessions ended).
 - Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
   storefront `/` 200 (:3000), desk `/login` 200 (:3002).
-- Not run: an APK or any Android device (no SDK or JDK here); the native modules
-  (`expo-secure-store`, `expo-sqlite/kv-store`) only through their web stand-ins; CI on GitHub.
+- Not run: an APK or any Android device; CI on GitHub; a clean full e2e run in one pass.
 
 ## Assumptions & unknowns
+- **Desk sign-out (2026-11-10):** only worker-code sessions end (the only ones the app's bearer
+  can carry); a worker's magic-link browser session, if any, stays. A thief holding the SIM could
+  ask for an SMS code once an SMS provider exists; today none is sent in production. Found, not
+  changed: the runbook's "Worker app sign-in" says to correct a changed number on the supplier
+  profile's primary phone, but nothing on the desk or the API edits `primaryPhone` after the
+  application's approval (a hand fix today). Answers queued on a lost phone are sent if someone
+  signs in on it again (W6, unchanged).
 - **Phase 7 (2026-11-09):** a worker is a `SERVICE_WORKER`, not deactivated, whose supplier
   `primaryPhone` normalises to the typed number; a pending or suspended supplier may sign in
   (the home says so). Two workers on one number get no SMS (no unique index: a migration).
@@ -800,6 +811,10 @@ events (T-Events)".
   the web export on start and is left running by Playwright like the others: kill 3000–3003
   by PID after `pnpm e2e`. A desk `next-server` once ignored SIGTERM and Playwright kept
   reusing it (every desk `page.goto` timed out): `kill -9` it and delete `apps/*/.next`.
+  2026-11-10: the storefront's did the same after a full run (3.4 GB RSS): a plain `kill` by
+  port PID printed "killed" but the port stayed bound, and the next isolated run of
+  `[ds07-414]` failed on the hung server. After killing, check `ss -ltnp` for 3000–3003 and
+  `kill -9` whatever is still listening before re-running anything.
 - **Better Auth bearer (2026-11-09):** the stock `bearer()` plugin's after-hook puts every new
   session's token in a readable `set-auth-token` header (staff ones too), so only its
   before-hook is used. User hooks run before plugin hooks, so the session gate never sees a
@@ -1284,7 +1299,10 @@ events (T-Events)".
     and sends its session as a bearer token, which the API accepts only for `worker_code`
     sessions and only through `getSession`. `pnpm --filter @ota/worker-app run build` is the
     Android JS export; `run preview` serves the web export on :3003 for screenshots and the e2e
-    only. The app reads tenant values at build time in `app.config.ts`, never at runtime."
+    only. The app reads tenant values at build time in `app.config.ts`, never at runtime.
+    `POST /suppliers/:id/worker-sign-out` (2026-11-10) ends a worker's `worker_code` sessions and
+    open code for a lost phone; a staff route that touches worker sessions must keep that
+    filter."
   - "2026-11-09: the desk's AI (`/assistant/*`, Draft with AI, the Reports summary) follows the
     `aiAssistant` runtime flag, and the API holds it off (`HELD_OFF_FEATURES`) while
     `NODE_ENV=production` and `llmProviderName(AI_PROVIDER)` is `mock`; a real adapter added to
@@ -1479,7 +1497,7 @@ events (T-Events)".
    documents) stays optional.
 3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own
    signing key, backed up twice), the Android id, and two or three suppliers for the field
-   test. Agent, in order: a desk "sign the worker out" action; background resend
+   test. Agent, in order (the desk sign-out landed 2026-11-10): background resend
    (`expo-background-task`); availability and W-Calendar; W-Credentials; W-Earnings; W-Job
    and its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`).
    Ops Lite (Phase 7 item 2) not started.
@@ -2089,3 +2107,8 @@ events (T-Events)".
   10 → 11, moderate), like deepmerge-ts and uuid: they run only in Expo's build-time CLI on our
   own files, and the fixes are new majors. The audit is re-run each session; take Expo's patch
   once it bumps them.
+- 2026-11-10 — the owner chose the desk's worker sign-out over availability/W-Calendar and
+  background resend. It ends only worker-code sessions rather than every session of the account
+  (the staff "Sign out everywhere" shape), because the app's bearer can carry nothing else, and
+  it also voids an open code so one read out or texted before the loss cannot sign the phone
+  back in. The confirm button is primary, not destructive: a new code undoes it.
