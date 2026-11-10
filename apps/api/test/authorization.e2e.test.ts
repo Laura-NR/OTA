@@ -316,8 +316,9 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
   { method: 'get', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsRead' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsWrite' },
-  // The desk's worker sign-in code (W1): no permission override reaches it.
+  // The desk's worker sign-in code (W1) and sign-out: no permission override reaches them.
   { method: 'post', path: `/suppliers/${SUPPLIER}/sign-in-code`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/worker-sign-out`, allowed: 'opsWrite' },
   // M6: support reads the resources on the inspector; only the desk writes them.
   { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/vehicle`, allowed: 'opsWrite' },

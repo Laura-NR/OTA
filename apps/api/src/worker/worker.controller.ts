@@ -8,7 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
-import type { WorkerHomeDto, WorkerSignInCodeDto } from '@ota/schemas';
+import type { WorkerHomeDto, WorkerSignInCodeDto, WorkerSignOutDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
@@ -36,9 +36,10 @@ export class WorkerController {
 }
 
 /**
- * The desk's "Issue sign-in code" (W1): a code an operator reads out to a
- * worker after checking their ID card. Not tied to the `suppliers`
- * capability, so no permission override reaches it.
+ * The desk's worker app actions on a supplier: "Issue sign-in code" (W1), a
+ * code an operator reads out to a worker after checking their ID card, and
+ * "Sign out of the worker app", for a lost phone. Not tied to the
+ * `suppliers` capability, so no permission override reaches them.
  */
 @Controller('suppliers')
 export class WorkerSignInCodeController {
@@ -51,5 +52,15 @@ export class WorkerSignInCodeController {
     @CurrentUser() actor: AuthUser,
   ): Promise<WorkerSignInCodeDto> {
     return this.codes.issue(id, actor);
+  }
+
+  @Post(':id/worker-sign-out')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  signOut(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<WorkerSignOutDto> {
+    return this.codes.signOut(id, actor);
   }
 }

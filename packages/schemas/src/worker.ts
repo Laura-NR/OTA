@@ -69,3 +69,11 @@ export const workerSignInCodeSchema = z.object({
 });
 
 export type WorkerSignInCodeDto = z.infer<typeof workerSignInCodeSchema>;
+
+/** What the desk's "Sign out of the worker app" ended. */
+export const workerSignOutSchema = z.object({
+  /** The phones that were signed in as this worker and now are not. */
+  sessions: z.number().int(),
+});
+
+export type WorkerSignOutDto = z.infer<typeof workerSignOutSchema>;

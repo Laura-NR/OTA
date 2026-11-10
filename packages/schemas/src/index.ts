@@ -741,9 +741,11 @@ export {
   workerJobSchema,
   workerOfferSchema,
   workerSignInCodeSchema,
+  workerSignOutSchema,
   workerTravelerSchema,
   type WorkerHomeDto,
   type WorkerJobDto,
   type WorkerOfferDto,
   type WorkerSignInCodeDto,
+  type WorkerSignOutDto,
 } from './worker';

@@ -39,7 +39,13 @@ interface Verification {
   createdAt: Date;
 }
 
-function createFake(suppliers: Supplier[]) {
+interface Session {
+  id: string;
+  userId: string;
+  signInMethod: string | null;
+}
+
+function createFake(suppliers: Supplier[], sessions: Session[] = []) {
   const verifications: Verification[] = [];
   const audit: Array<Record<string, unknown>> = [];
   const matches = (row: Verification, where: { id?: string; value?: string }) =>
@@ -115,6 +121,19 @@ function createFake(suppliers: Supplier[]) {
         return { count: 1 };
       },
     },
+    session: {
+      deleteMany: async ({
+        where,
+      }: {
+        where: { userId: string; signInMethod: string };
+      }) => {
+        const ended = sessions.filter(
+          (row) => row.userId === where.userId && row.signInMethod === where.signInMethod,
+        );
+        for (const row of ended) sessions.splice(sessions.indexOf(row), 1);
+        return { count: ended.length };
+      },
+    },
     auditLog: {
       create: async ({ data }: { data: Record<string, unknown> }) => {
         audit.push(data);
@@ -131,7 +150,7 @@ function createFake(suppliers: Supplier[]) {
     },
   };
   const service = new WorkerCodesService(prisma as unknown as PrismaService, sms);
-  return { service, verifications, audit, sent };
+  return { service, verifications, sessions, audit, sent };
 }
 
 const REINIER: Supplier = {
@@ -308,6 +327,42 @@ describe('worker sign-in codes (docs/worker-app-plan.md W1)', () => {
     await expect(fake.service.issue('supplier-reinier', OPS, NOW)).rejects.toMatchObject({
       response: { code: 'WORKER_PHONE_UNREADABLE' },
     });
+  });
+  it("lets the desk sign the worker's phones out and void their open code", async () => {
+    fake = createFake(
+      [REINIER],
+      [
+        { id: 'phone-1', userId: 'u-reinier', signInMethod: 'worker_code' },
+        { id: 'phone-2', userId: 'u-reinier', signInMethod: 'worker_code' },
+        { id: 'browser', userId: 'u-reinier', signInMethod: 'magic_link' },
+        { id: 'other-worker', userId: 'u-other', signInMethod: 'worker_code' },
+      ],
+    );
+    const issued = await fake.service.issue('supplier-reinier', OPS, NOW);
+
+    expect(await fake.service.signOut('supplier-reinier', OPS)).toEqual({ sessions: 2 });
+    expect(fake.sessions.map((row) => row.id)).toEqual(['browser', 'other-worker']);
+    expect(fake.verifications).toHaveLength(0);
+    expect(fake.audit.at(-1)).toMatchObject({
+      actorUserId: 'u-ops',
+      action: 'auth.worker_signed_out',
+      entityId: 'u-reinier',
+      metadata: { supplierId: 'supplier-reinier', sessions: 2, codes: 1 },
+    });
+    expect(
+      await fake.service.redeem({ phone: '52410088', code: issued.code }, later(5)),
+    ).toBeNull();
+  });
+
+  it('signs out a worker with no phone signed in, and refuses an unknown supplier', async () => {
+    expect(await fake.service.signOut('supplier-reinier', OPS)).toEqual({ sessions: 0 });
+    expect(fake.audit.at(-1)).toMatchObject({
+      action: 'auth.worker_signed_out',
+      metadata: { sessions: 0, codes: 0 },
+    });
+    await expect(fake.service.signOut('missing', OPS)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });
 

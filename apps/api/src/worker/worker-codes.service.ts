@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import {
   UserRole,
+  WORKER_CODE_SIGN_IN_METHOD,
   maskWorkerPhone,
   normalizeWorkerCode,
   normalizeWorkerPhone,
@@ -17,7 +18,7 @@ import {
   workerCodeSms,
   workerSessionExpiresAt,
 } from '@ota/domain';
-import type { WorkerSignInCodeDto } from '@ota/schemas';
+import type { WorkerSignInCodeDto, WorkerSignOutDto } from '@ota/schemas';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import type { AuthUser } from '../common/auth/auth-user';
@@ -73,7 +74,8 @@ function parse(value: string): StoredCode | null {
  * Worker sign-in codes (`docs/worker-app-plan.md` W1): Better Auth's
  * `/sign-in/worker-code/send` asks `send` to text one, the desk issues one to
  * read out (`issue`), and `/sign-in/worker-code` asks `redeem` whether a
- * number and a code sign someone in. A worker is a `SERVICE_WORKER` user, not
+ * number and a code sign someone in; the desk's `signOut` ends what they
+ * opened. A worker is a `SERVICE_WORKER` user, not
  * deactivated, whose supplier profile's phone matches; a code is a row in
  * Better Auth's `verification` table, so no migration was needed.
  */
@@ -170,6 +172,40 @@ export class WorkerCodesService {
       expiresAt: workerCodeExpiresAt(now).toISOString(),
       phone: maskWorkerPhone(phone),
     };
+  }
+
+  /**
+   * The desk's "Sign out of the worker app", for a lost phone or one that
+   * changed hands: ends every session a worker code opened for the
+   * supplier's worker and voids any code not yet used. Each phone finds out
+   * at its next request (401) and goes back to sign-in; other sessions of
+   * the same account are left alone.
+   */
+  async signOut(supplierId: string, actor: AuthUser): Promise<WorkerSignOutDto> {
+    const supplier = await this.prisma.supplierProfile.findUnique({
+      where: { id: supplierId },
+      select: { user: { select: { id: true } } },
+    });
+    if (!supplier) throw new NotFoundException('Supplier not found');
+    const userId = supplier.user.id;
+    const [sessions, codes] = await this.prisma.$transaction([
+      this.prisma.session.deleteMany({
+        where: { userId, signInMethod: WORKER_CODE_SIGN_IN_METHOD },
+      }),
+      this.prisma.verification.deleteMany({
+        where: { identifier: workerCodeIdentifier(userId) },
+      }),
+    ]);
+    await this.prisma.auditLog.create({
+      data: {
+        actorUserId: actor.id,
+        action: 'auth.worker_signed_out',
+        entityType: 'User',
+        entityId: userId,
+        metadata: { supplierId, sessions: sessions.count, codes: codes.count },
+      },
+    });
+    return { sessions: sessions.count };
   }
 
   /**
