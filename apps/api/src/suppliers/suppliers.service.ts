@@ -26,6 +26,7 @@ import {
   longBlockedRun,
   resourcesIssue,
   supplierPower,
+  workerEarnings,
   workerToday,
   type PowerFacts,
   type ResourceChannel,
@@ -45,6 +46,7 @@ import type {
   SupplierDetailDto,
   SupplierDto,
   SupplierLastJobDto,
+  SupplierPayoutsDto,
   SupplierResourcesDto,
   SupplierRowDto,
   UploadCredentialRequest,
@@ -56,6 +58,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { OBJECT_STORAGE } from '../storage/storage.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
+import { finishedJobsWhere, payoutCents, toPayoutsDto } from './payouts';
 
 type SupplierWithUser = SupplierProfile & {
   user: Pick<User, 'email' | 'fullName'>;
@@ -302,7 +305,10 @@ export class SuppliersService {
     return suppliers.map(toDto);
   }
 
-  /** The inspector: the register row, the confirmed resources and the jobs of 12 months. */
+  /**
+   * The inspector: the register row, the confirmed resources, the jobs of 12
+   * months and the payouts.
+   */
   async getById(id: string): Promise<SupplierDetailDto> {
     const supplier: SupplierWithResources | null =
       await this.prisma.supplierProfile.findUnique({
@@ -336,7 +342,37 @@ export class SuppliersService {
         blocked.map((row) => row.date.toISOString().slice(0, 10)),
         today,
       ),
+      payouts: await this.payouts(id, now),
     };
+  }
+
+  /**
+   * The worker's payouts over their finished jobs (W-Earnings): what the
+   * inspector shows and the worker app's totals.
+   */
+  async payouts(supplierId: string, now: Date = new Date()): Promise<SupplierPayoutsDto> {
+    const items = await this.prisma.serviceItem.findMany({
+      where: finishedJobsWhere(supplierId, now),
+      select: {
+        status: true,
+        serviceDateEnd: true,
+        payoutRate: true,
+        payoutStatus: true,
+        reservation: { select: { status: true } },
+      },
+    });
+    return toPayoutsDto(
+      workerEarnings(
+        items.map((item) => ({
+          status: item.status,
+          reservationStatus: item.reservation.status,
+          endsAt: item.serviceDateEnd,
+          payoutCents: payoutCents(item.payoutRate),
+          payoutStatus: item.payoutStatus,
+        })),
+        now,
+      ),
+    );
   }
 
   /**

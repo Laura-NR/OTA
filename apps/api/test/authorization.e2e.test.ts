@@ -264,6 +264,8 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/worker/calendar', allowed: 'worker' },
   { method: 'put', path: '/worker/availability', allowed: 'worker' },
   { method: 'put', path: '/worker/fuel', allowed: 'worker' },
+  // W-Earnings: the worker's own reliability and payouts, read-only.
+  { method: 'get', path: '/worker/earnings', allowed: 'worker' },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',

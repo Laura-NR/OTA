@@ -869,3 +869,144 @@ describe("the worker app's calendar (W-Calendar)", () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
+
+describe("the worker app's earnings (W-Earnings, read-only)", () => {
+  const WORKER: AuthUser = {
+    id: 'u-reinier',
+    email: 'driver@example.test',
+    role: 'SERVICE_WORKER',
+    sessionId: 'session-1',
+  };
+  const PROFILE = {
+    id: 'supplier-reinier',
+    category: 'PRIVATE_DRIVER',
+    provincesActive: ['La Habana', 'Pinar del Río'],
+    user: { fullName: 'Reinier  Sosa ' },
+  };
+  function item(
+    id: string,
+    endsAt: string,
+    payout: string,
+    payoutStatus: string,
+    overrides: Record<string, unknown> = {},
+  ) {
+    return {
+      id,
+      status: 'ACCEPTED',
+      serviceType: 'TRANSPORTATION',
+      province: 'La Habana',
+      serviceDateStart: new Date(new Date(endsAt).getTime() - 3 * 60 * 60 * 1000),
+      serviceDateEnd: new Date(endsAt),
+      offeredAt: null,
+      dispatchDeadline: null,
+      payoutRate: new Prisma.Decimal(payout),
+      payoutStatus,
+      reservation: {
+        bookingCode: 'VX4WQ7EB',
+        partySize: 3,
+        status: 'CONFIRMED',
+        user: { fullName: 'Hannah Weber', locale: 'de' },
+      },
+      ...overrides,
+    };
+  }
+  const reads: Array<{ where: Record<string, unknown> }> = [];
+
+  function earnings(profile: Record<string, unknown> | null, items: unknown[]) {
+    reads.length = 0;
+    const prisma = {
+      supplierProfile: { findUnique: async () => profile },
+      serviceItem: {
+        findMany: async (args: { where: Record<string, unknown> }) => {
+          reads.push(args);
+          return items;
+        },
+      },
+      dispatchOffer: {
+        findMany: async () =>
+          ['ACCEPTED', 'ACCEPTED', 'ACCEPTED', 'ACCEPTED', 'DECLINED', 'OFFERED'].map(
+            (status) => ({
+              supplierId: 'supplier-reinier',
+              status,
+              offeredAt: NOW,
+              respondedAt: NOW,
+            }),
+          ),
+      },
+    };
+    return new WorkerService(
+      prisma as unknown as PrismaService,
+      fakeOperatingSettings({ reliabilityFloorPercent: 85, reliabilityMinAnswered: 5 }),
+      {} as SuppliersService,
+    );
+  }
+
+  it('shows the worker their reliability as the floor reads it, payouts in exact cents and the newest jobs first', async () => {
+    const service = earnings(PROFILE, [
+      item('item-oct', '2026-10-03T20:00:00Z', '90.10', 'ACCRUED'),
+      item('item-nov', '2026-11-05T20:00:00Z', '25.20', 'PROCESSING'),
+      item('item-paid', '2026-09-21T20:00:00Z', '180.00', 'SETTLED'),
+      item('item-failed', '2026-11-01T20:00:00Z', '60.00', 'FAILED'),
+      // The read narrows to finished jobs; these prove the rule decides anyway.
+      item('item-coming', '2026-11-20T20:00:00Z', '500.00', 'ACCRUED'),
+      item('item-cancelled', '2026-11-02T20:00:00Z', '500.00', 'ACCRUED', {
+        reservation: {
+          bookingCode: 'VXCANCEL',
+          partySize: 1,
+          status: 'CANCELLED',
+          user: { fullName: 'Ana', locale: 'es' },
+        },
+      }),
+    ]);
+    const result = await service.earnings(WORKER, NOW);
+
+    expect(reads[0]!.where).toMatchObject({
+      supplierId: 'supplier-reinier',
+      serviceDateEnd: { lte: NOW },
+      reservation: { status: { not: 'CANCELLED' } },
+    });
+    expect(result.worker).toEqual({
+      fullName: 'Reinier  Sosa',
+      category: 'PRIVATE_DRIVER',
+      provinces: ['La Habana', 'Pinar del Río'],
+    });
+    // Four of five answers accepted; the open offer is not an answer.
+    expect(result.reliability).toEqual({
+      answered: 5,
+      score: 80,
+      acceptedPercent: 80,
+      declinedPercent: 20,
+      timedOutPercent: 0,
+      minAnswered: 5,
+      floorPercent: 85,
+      meetsFloor: false,
+    });
+    expect(result.payouts).toEqual({
+      currency: 'EUR',
+      pending: { amount: '115.30', jobs: 2 },
+      thisMonth: { amount: '85.20', jobs: 2 },
+      paidThisYear: { amount: '180.00', jobs: 1 },
+      issue: { amount: '60.00', jobs: 1 },
+      year: 2026,
+    });
+    expect(result.history.map((job) => [job.serviceItemId, job.payoutState])).toEqual([
+      ['item-nov', 'PENDING'],
+      ['item-failed', 'ISSUE'],
+      ['item-oct', 'PENDING'],
+      ['item-paid', 'PAID'],
+    ]);
+    expect(result.history[0]).toMatchObject({
+      payout: '25.20',
+      currency: 'EUR',
+      bookingCode: 'VX4WQ7EB',
+      traveler: { firstName: 'Hannah', language: 'de', partySize: 3 },
+    });
+    expect(JSON.stringify(result)).not.toMatch(/Weber|@|userId/);
+  });
+
+  it('refuses a worker account with no supplier profile', async () => {
+    await expect(earnings(null, []).earnings(WORKER, NOW)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+});

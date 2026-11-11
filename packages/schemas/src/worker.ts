@@ -1,4 +1,9 @@
-import { WORKER_DAY_STATES, type WorkerDayState } from '@ota/domain';
+import {
+  WORKER_DAY_STATES,
+  WORKER_PAYOUT_STATES,
+  type WorkerDayState,
+  type WorkerPayoutState,
+} from '@ota/domain';
 import { z } from 'zod';
 
 import { serviceTypeSchema } from './dispatch';
@@ -6,6 +11,7 @@ import {
   blockReasonSchema,
   blockedRunSchema,
   supplierCategorySchema,
+  supplierPayoutsSchema,
   verificationStatusSchema,
 } from './supplier';
 
@@ -173,3 +179,42 @@ export const declareWorkerFuelSchema = z.object({
 });
 
 export type DeclareWorkerFuelRequest = z.infer<typeof declareWorkerFuelSchema>;
+
+export const workerPayoutStateSchema = z.enum([...WORKER_PAYOUT_STATES] as [
+  WorkerPayoutState,
+  ...WorkerPayoutState[],
+]);
+
+/** A finished job in W-Earnings' "Historial", with where its payout stands. */
+export const workerEarningsJobSchema = workerJobSchema.extend({
+  payoutState: workerPayoutStateSchema,
+});
+
+export type WorkerEarningsJobDto = z.infer<typeof workerEarningsJobSchema>;
+
+/**
+ * W-Earnings, read-only: who the worker is, their reliability as the desk's
+ * floor reads it, their payouts and their latest finished jobs.
+ */
+export const workerEarningsSchema = z.object({
+  worker: z.object({
+    fullName: z.string().nullable(),
+    category: supplierCategorySchema,
+    provinces: z.array(z.string()),
+  }),
+  reliability: z.object({
+    answered: z.number().int(),
+    /** Accepted over answered, 0–100; null until `minAnswered` answers. */
+    score: z.number().int().nullable(),
+    acceptedPercent: z.number().int(),
+    declinedPercent: z.number().int(),
+    timedOutPercent: z.number().int(),
+    minAnswered: z.number().int(),
+    floorPercent: z.number(),
+    meetsFloor: z.boolean(),
+  }),
+  payouts: supplierPayoutsSchema,
+  history: z.array(workerEarningsJobSchema),
+});
+
+export type WorkerEarningsDto = z.infer<typeof workerEarningsSchema>;

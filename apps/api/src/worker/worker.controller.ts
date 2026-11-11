@@ -20,6 +20,7 @@ import {
   type WorkerCalendarDto,
   type WorkerCalendarQuery,
   type WorkerDaysResultDto,
+  type WorkerEarningsDto,
   type WorkerFuelDto,
   type WorkerHomeDto,
   type WorkerSignInCodeDto,
@@ -69,6 +70,13 @@ export class WorkerController {
     @CurrentUser() actor: AuthUser,
   ): Promise<WorkerDaysResultDto> {
     return this.worker.setDays(actor, body);
+  }
+
+  /** W-Earnings: reliability, payouts and the latest finished jobs, read-only. */
+  @Get('earnings')
+  @Roles(UserRole.ServiceWorker)
+  earnings(@CurrentUser() actor: AuthUser): Promise<WorkerEarningsDto> {
+    return this.worker.earnings(actor);
   }
 
   /** A driver's weekly fuel declaration. */

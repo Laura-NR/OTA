@@ -281,16 +281,44 @@ export const vehicleDetailsSchema = z.object({
 
 export type VehicleDetailsDto = z.infer<typeof vehicleDetailsSchema>;
 
+/** A sum of payouts, as a decimal string, and the finished jobs it covers. */
+export const payoutTotalSchema = z.object({
+  amount: z.string(),
+  jobs: z.number().int(),
+});
+
+export type PayoutTotalDto = z.infer<typeof payoutTotalSchema>;
+
 /**
- * The inspector: the row plus the confirmed resources, the 12-month count and
+ * A worker's payouts over their finished jobs (W-Earnings), the same figures
+ * on the desk's inspector and in the worker app.
+ */
+export const supplierPayoutsSchema = z.object({
+  currency: z.string(),
+  /** Finished, not yet paid. */
+  pending: payoutTotalSchema,
+  /** Finished this month in Havana, whatever the payout state. */
+  thisMonth: payoutTotalSchema,
+  /** Paid, over jobs that ended in `year`; there is no paid date yet. */
+  paidThisYear: payoutTotalSchema,
+  /** Payouts that failed. */
+  issue: payoutTotalSchema,
+  year: z.number().int(),
+});
+
+export type SupplierPayoutsDto = z.infer<typeof supplierPayoutsSchema>;
+
+/**
+ * The inspector: the row plus the confirmed resources, the 12-month count,
  * a driver's vehicle (null when none is stored or the stored JSON does not
- * match the shape).
+ * match the shape) and the worker's payouts.
  */
 export const supplierDetailSchema = supplierRowSchema.extend({
   resources: supplierResourcesSchema.nullable(),
   jobs12m: z.number().int(),
   vehicle: vehicleDetailsSchema.nullable(),
   longBlock: blockedRunSchema.nullable(),
+  payouts: supplierPayoutsSchema,
 });
 
 export type SupplierDetailDto = z.infer<typeof supplierDetailSchema>;

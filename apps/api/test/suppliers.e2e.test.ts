@@ -1,6 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { Availability, SupplierProfile, SupplierResources } from '@ota/db';
+import {
+  Prisma,
+  type Availability,
+  type SupplierProfile,
+  type SupplierResources,
+} from '@ota/db';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -53,11 +58,22 @@ interface FakeJob {
   reservation: { status: string };
 }
 
+/** A finished job as the inspector's payouts read it (W-Earnings). */
+interface FakePayoutJob {
+  supplierId: string;
+  status: string;
+  serviceDateEnd: Date;
+  payoutRate: Prisma.Decimal;
+  payoutStatus: string;
+  reservation: { status: string };
+}
+
 function createFakePrisma(
   store: Map<string, ReturnType<typeof makeSupplier>>,
   availability: Map<string, Availability>,
   resources: Map<string, SupplierResources> = new Map(),
   jobs: FakeJob[] = [],
+  payoutJobs: FakePayoutJob[] = [],
 ) {
   const availabilityKey = (supplierId: string, date: Date) =>
     `${supplierId}:${date.toISOString()}`;
@@ -68,8 +84,16 @@ function createFakePrisma(
 
   const fake = {
     serviceItem: {
-      findMany: async ({ where }: { where: { supplierId: { in: string[] } } }) =>
-        jobs.filter((job) => where.supplierId.in.includes(job.supplierId)),
+      findMany: async ({
+        where,
+      }: {
+        where: { supplierId: string | { in: string[] } };
+      }) => {
+        const { supplierId } = where;
+        return typeof supplierId === 'string'
+          ? payoutJobs.filter((job) => job.supplierId === supplierId)
+          : jobs.filter((job) => supplierId.in.includes(job.supplierId));
+      },
     },
     supplierResources: {
       upsert: async ({
@@ -221,12 +245,14 @@ describe('suppliers', () => {
   let availability: Map<string, Availability>;
   let resources: Map<string, SupplierResources>;
   let jobs: FakeJob[];
+  let payoutJobs: FakePayoutJob[];
   let fakePrisma: ReturnType<typeof createFakePrisma>;
 
   beforeEach(async () => {
     availability = new Map();
     resources = new Map();
     jobs = [];
+    payoutJobs = [];
     store = new Map([
       [
         GUIDE_ID,
@@ -247,7 +273,7 @@ describe('suppliers', () => {
       ],
     ]);
 
-    fakePrisma = createFakePrisma(store, availability, resources, jobs);
+    fakePrisma = createFakePrisma(store, availability, resources, jobs, payoutJobs);
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
@@ -281,6 +307,40 @@ describe('suppliers', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
     expect(response.body[0].verificationStatus).toBe('VERIFIED');
+  });
+
+  it("shows the worker's payouts on the inspector, as the worker app reads them", async () => {
+    const finished = (endsAt: string, rate: string, payoutStatus: string) => ({
+      supplierId: DRIVER_ID,
+      status: 'ACCEPTED',
+      serviceDateEnd: new Date(endsAt),
+      payoutRate: new Prisma.Decimal(rate),
+      payoutStatus,
+      reservation: { status: 'CONFIRMED' },
+    });
+    const ended = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    payoutJobs.push(
+      finished(ended, '90.10', 'ACCRUED'),
+      finished(ended, '25.20', 'PROCESSING'),
+      finished(ended, '60.00', 'FAILED'),
+      { ...finished(ended, '40.00', 'SETTLED'), supplierId: GUIDE_ID },
+    );
+
+    const driver = await request(app.getHttpServer())
+      .get(`/suppliers/${DRIVER_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email);
+    const guide = await request(app.getHttpServer())
+      .get(`/suppliers/${GUIDE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(driver.status).toBe(200);
+    expect(driver.body.payouts).toMatchObject({
+      currency: 'EUR',
+      pending: { amount: '115.30', jobs: 2 },
+      issue: { amount: '60.00', jobs: 1 },
+      paidThisYear: { amount: '0.00', jobs: 0 },
+    });
+    expect(guide.body.payouts.pending).toEqual({ amount: '0.00', jobs: 0 });
   });
 
   it('returns 404 for an unknown supplier', async () => {

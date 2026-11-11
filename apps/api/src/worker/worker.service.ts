@@ -20,7 +20,9 @@ import {
   workerBlockReason,
   workerDayStates,
   workerDaysRefusal,
+  workerEarnings,
   workerHorizon,
+  workerReliability,
   workerToday,
   type ServiceType,
   type VerificationStatus,
@@ -32,6 +34,7 @@ import type {
   WorkerCalendarDto,
   WorkerCalendarQuery,
   WorkerDaysResultDto,
+  WorkerEarningsDto,
   WorkerFuelDto,
   WorkerHomeDto,
   WorkerJobDto,
@@ -41,10 +44,13 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
+import {
+  PAYOUT_CURRENCY,
+  finishedJobsWhere,
+  payoutCents,
+  toPayoutsDto,
+} from '../suppliers/payouts';
 import { SuppliersService } from '../suppliers/suppliers.service';
-
-/** The base currency every payout is kept in. */
-const PAYOUT_CURRENCY = 'EUR';
 
 /** Coming jobs W-Home lists ("Hoy", "Esta semana" and on). */
 const JOBS_SHOWN = 20;
@@ -68,6 +74,14 @@ const ITEM_SELECT = {
 } satisfies Prisma.ServiceItemSelect;
 
 type WorkerItem = Prisma.ServiceItemGetPayload<{ select: typeof ITEM_SELECT }>;
+
+/** A finished job as W-Earnings reads it: the job plus its payout and booking state. */
+const EARNINGS_SELECT = {
+  ...ITEM_SELECT,
+  status: true,
+  payoutStatus: true,
+  reservation: { select: { ...ITEM_SELECT.reservation.select, status: true } },
+} satisfies Prisma.ServiceItemSelect;
 
 function firstName(fullName: string | null): string | null {
   return fullName?.trim().split(/\s+/)[0] || null;
@@ -111,7 +125,7 @@ function toFuel(
 }
 
 /**
- * The worker app's reads (W-Home, W-Offer) and calendar (W-Calendar), always
+ * The worker app's reads (W-Home, W-Offer, W-Earnings) and calendar (W-Calendar), always
  * scoped to the caller's own supplier profile. Travelers appear by first
  * name, language and party size only (W-Login: "Nunca direcciones ni pagos").
  */
@@ -183,6 +197,66 @@ export class WorkerService {
       offers: offers.flatMap((item) => this.toOffer(item, hurryShare)),
       jobs: jobs.map((item) => this.toJob(item)),
       serverTime: now.toISOString(),
+    };
+  }
+
+  /**
+   * W-Earnings, read-only: the worker's reliability as the desk's floor reads
+   * it, their payouts over finished jobs, and the latest of those jobs.
+   */
+  async earnings(actor: AuthUser, now: Date = new Date()): Promise<WorkerEarningsDto> {
+    const profile = await this.prisma.supplierProfile.findUnique({
+      where: { userId: actor.id },
+      select: {
+        id: true,
+        category: true,
+        provincesActive: true,
+        user: { select: { fullName: true } },
+      },
+    });
+    if (!profile) {
+      throw new ForbiddenException('No supplier profile is linked to this account');
+    }
+
+    const [items, ledger, thresholds] = await Promise.all([
+      this.prisma.serviceItem.findMany({
+        where: finishedJobsWhere(profile.id, now),
+        select: EARNINGS_SELECT,
+      }),
+      this.prisma.dispatchOffer.findMany({
+        where: { supplierId: profile.id },
+        select: { supplierId: true, status: true, offeredAt: true, respondedAt: true },
+      }),
+      this.settings.thresholds(),
+    ]);
+    const earnings = workerEarnings(
+      items.map((item) => ({
+        item,
+        status: item.status,
+        reservationStatus: item.reservation.status,
+        endsAt: item.serviceDateEnd,
+        payoutCents: payoutCents(item.payoutRate),
+        payoutStatus: item.payoutStatus,
+      })),
+      now,
+    );
+
+    return {
+      worker: {
+        fullName: profile.user.fullName?.trim() || null,
+        category: profile.category as SupplierCategory,
+        provinces: profile.provincesActive,
+      },
+      reliability: workerReliability(
+        ledger,
+        thresholds.reliabilityFloorPercent,
+        thresholds.reliabilityMinAnswered,
+      ),
+      payouts: toPayoutsDto(earnings),
+      history: earnings.history.map((job) => ({
+        ...this.toJob(job.item),
+        payoutState: job.payoutState,
+      })),
     };
   }
 
