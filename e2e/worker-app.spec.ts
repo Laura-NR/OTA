@@ -261,7 +261,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     await app.context().close();
   });
 
-  test('blocks days and declares fuel in the calendar, and the desk sees the long block', async ({
+  test('blocks days with a reason and declares fuel in the calendar, and the desk sees the long block and why', async ({
     page,
     browser,
   }) => {
@@ -296,31 +296,48 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
       app.getByRole('heading', { name: new RegExp(`^${monthName} `, 'i') }),
     ).toBeVisible();
 
-    // One day: block it, then free it again.
+    // One day: block it ("Otro" until a reason is picked), say why, then free it again.
+    const day20 = () =>
+      prisma.availability.findUniqueOrThrow({
+        where: { supplierId_date: { supplierId, date: key(20) } },
+      });
     await dayButton(20).click();
     await app.getByRole('button', { name: 'Bloquear este día' }).click();
     await expect(app.getByText('1 día bloqueado.')).toBeVisible();
-    await expect(dayButton(20)).toHaveAccessibleName(/, bloqueado$/);
-    expect(
-      await prisma.availability.findUniqueOrThrow({
-        where: { supplierId_date: { supplierId, date: key(20) } },
-      }),
-    ).toMatchObject({ isAvailable: false });
+    await expect(dayButton(20)).toHaveAccessibleName(/, bloqueado \(otro\)$/);
+    expect(await day20()).toMatchObject({ isAvailable: false, blockReason: 'OTHER' });
+    const dayReasons = app.getByRole('radiogroup', {
+      name: 'Motivo del bloqueo de este día',
+    });
+    await expect(
+      dayReasons.getByRole('radio', { name: 'Otro', exact: true }),
+    ).toBeChecked();
+    await dayReasons.getByRole('radio', { name: 'Familia' }).click();
+    await expect(app.getByText('Motivo guardado: Familia.')).toBeVisible();
+    await expect(dayButton(20)).toHaveAccessibleName(/, bloqueado \(familia\)$/);
+    expect(await day20()).toMatchObject({ isAvailable: false, blockReason: 'FAMILY' });
     await app.getByRole('button', { name: 'Volver a estar disponible' }).click();
     await expect(app.getByText('1 día disponible.')).toBeVisible();
     await expect(dayButton(20)).toHaveAccessibleName(/, disponible$/);
+    expect(await day20()).toMatchObject({ isAvailable: true, blockReason: null });
 
     // Several days: pick "Desde" and "Hasta" on the grid; sixteen in a row is a long block.
     await app.getByRole('button', { name: /^Desde: / }).click();
     await dayButton(1).click();
     await dayButton(16).click();
+    await app
+      .getByRole('radiogroup', { name: 'Motivo de los días' })
+      .getByRole('radio', { name: 'Carro en taller' })
+      .click();
     await app.getByRole('button', { name: 'Bloquear 16 días' }).click();
     await expect(app.getByText('16 días bloqueados.')).toBeVisible();
     await expect(
       app.getByText(/^Tienes 16 días seguidos bloqueados, del 1 /),
     ).toBeVisible();
     expect(
-      await prisma.availability.count({ where: { supplierId, isAvailable: false } }),
+      await prisma.availability.count({
+        where: { supplierId, isAvailable: false, blockReason: 'VEHICLE_REPAIR' },
+      }),
     ).toBe(16);
 
     // The driver's weekly fuel declaration.
@@ -339,6 +356,17 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
         /Dispatch skips the worker on those days; call them before high season\./,
       ),
     ).toBeVisible();
+    // The desk's calendar opens on this month (UTC) and names the worker's reason.
+    const now = new Date();
+    const steps =
+      (target().getUTCFullYear() - now.getUTCFullYear()) * 12 +
+      target().getUTCMonth() -
+      now.getUTCMonth();
+    for (let step = 0; step < steps; step += 1) {
+      await page.getByRole('button', { name: '→', exact: true }).click();
+    }
+    const deskDay = page.locator(`[data-date="${key(5).toISOString().slice(0, 10)}"]`);
+    await expect(deskDay).toHaveAttribute('title', 'Blocked · Vehicle in the garage');
     await app.context().close();
   });
 });
