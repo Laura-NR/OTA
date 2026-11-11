@@ -752,6 +752,7 @@ export {
 } from './worker/answers';
 export {
   WORKER_BLOCK_MAX_DAYS,
+  WORKER_BLOCK_REASONS,
   WORKER_CALENDAR_MONTHS_AHEAD,
   WORKER_DAY_STATES,
   WORKER_LONG_BLOCK_DAYS,
@@ -760,11 +761,13 @@ export {
   monthDays,
   planWorkerDays,
   shiftMonth,
+  workerBlockReason,
   workerDayStates,
   workerDaysRefusal,
   workerHorizon,
   workerToday,
   type BlockedRun,
+  type WorkerBlockReason,
   type WorkerCalendarService,
   type WorkerDayState,
   type WorkerDaysRefusal,

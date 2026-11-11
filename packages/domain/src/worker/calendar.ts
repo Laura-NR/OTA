@@ -25,6 +25,26 @@ export const WORKER_BLOCK_MAX_DAYS = 62;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * W-Calendar's "Motivo" chips, in the board's order: Familia, Carro en
+ * taller, Otro trabajo, Otro (`docs/schema-w-calendar-reasons.md`).
+ */
+export const WORKER_BLOCK_REASONS = ['FAMILY', 'VEHICLE_REPAIR', 'OTHER_JOB', 'OTHER'] as const;
+export type WorkerBlockReason = (typeof WORKER_BLOCK_REASONS)[number];
+
+/**
+ * The reason a day set from the app is stored with: none once it is
+ * available again, else the reason picked, `OTHER` until the worker picks one
+ * (the board's toggle stores "otro"; K2).
+ */
+export function workerBlockReason(
+  isAvailable: boolean,
+  picked?: WorkerBlockReason | null,
+): WorkerBlockReason | null {
+  if (isAvailable) return null;
+  return picked ?? 'OTHER';
+}
+
 function dayTime(day: string): number {
   return Date.parse(`${day}T00:00:00Z`);
 }

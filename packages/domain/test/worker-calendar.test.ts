@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   WORKER_BLOCK_MAX_DAYS,
+  WORKER_BLOCK_REASONS,
   WORKER_LONG_BLOCK_DAYS,
   daysBetween,
   longBlockedRun,
   monthDays,
   planWorkerDays,
   shiftMonth,
+  workerBlockReason,
   workerDayStates,
   workerDaysRefusal,
   workerHorizon,
@@ -129,5 +131,20 @@ describe('the worker calendar (W-Calendar)', () => {
     ];
     expect(longBlockedRun(gapped, today)).toBeNull();
     expect(longBlockedRun([], today)).toBeNull();
+  });
+
+  it('stores the reason picked with a blocked day, in the board’s order of chips', () => {
+    expect(WORKER_BLOCK_REASONS).toEqual(['FAMILY', 'VEHICLE_REPAIR', 'OTHER_JOB', 'OTHER']);
+    expect(workerBlockReason(false, 'VEHICLE_REPAIR')).toBe('VEHICLE_REPAIR');
+  });
+
+  it('blocks a day as "Otro" until the worker picks a reason', () => {
+    expect(workerBlockReason(false)).toBe('OTHER');
+    expect(workerBlockReason(false, null)).toBe('OTHER');
+  });
+
+  it('clears the reason when a day is available again, whatever was sent', () => {
+    expect(workerBlockReason(true)).toBeNull();
+    expect(workerBlockReason(true, 'FAMILY')).toBeNull();
   });
 });
