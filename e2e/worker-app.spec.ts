@@ -369,4 +369,82 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     await expect(deskDay).toHaveAttribute('title', 'Blocked · Vehicle in the garage');
     await app.context().close();
   });
+
+  test('shows the worker their reliability, payouts and finished jobs, and the desk the same payouts', async ({
+    page,
+    browser,
+  }) => {
+    // The offer, accepted and done an hour ago, still to be paid; a second
+    // job on the same booking, already paid.
+    const endedAt = new Date(Date.now() - 60 * 60 * 1000);
+    const startedAt = new Date(endedAt.getTime() - 3 * 60 * 60 * 1000);
+    const offered = await prisma.serviceItem.update({
+      where: { id: serviceItemId },
+      data: {
+        status: 'ACCEPTED',
+        serviceDateStart: startedAt,
+        serviceDateEnd: endedAt,
+        respondedAt: startedAt,
+        payoutStatus: 'ACCRUED',
+      },
+    });
+    await prisma.dispatchOffer.updateMany({
+      where: { serviceItemId },
+      data: { status: 'ACCEPTED', respondedAt: startedAt },
+    });
+    await prisma.serviceItem.create({
+      data: {
+        reservationId: offered.reservationId,
+        supplierId,
+        serviceType: 'TRANSPORTATION',
+        province: 'La Habana',
+        serviceDateStart: startedAt,
+        serviceDateEnd: endedAt,
+        status: 'ACCEPTED',
+        payoutRate: '30.50',
+        payoutStatus: 'SETTLED',
+      },
+    });
+
+    const code = await codeFromDesk(page);
+    const app = await signInOnApp(browser, code);
+    await app.getByRole('button', { name: 'Fiabilidad y pagos' }).click();
+    await expect(app.getByRole('heading', { name: 'Fiabilidad y pagos' })).toBeVisible();
+    await expect(app.getByText('Reinier Prueba · Guía · La Habana')).toBeVisible();
+
+    // One answer is not enough for a score; automatic offers keep coming.
+    await expect(app.getByText('Recibes ofertas automáticas')).toBeVisible();
+    await expect(
+      app.getByText('Aún no hay número: llevas 1 de 5 respuestas.'),
+    ).toBeVisible();
+
+    // € 45 is the pending total and the history row; € 30,50 the paid total and its row.
+    await expect(app.getByText('€ 45', { exact: true })).toHaveCount(2);
+    await expect(app.getByText('1 trabajo terminado')).toBeVisible();
+    const year = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Havana',
+      year: 'numeric',
+    }).format(endedAt);
+    await expect(app.getByText(`Pagado · trabajos de ${year}`)).toBeVisible();
+    await expect(app.getByText('€ 30,50', { exact: true })).toHaveCount(2);
+
+    // Both jobs in the history, each with where its payout stands.
+    await expect(
+      app.getByText(`Example +1 · inglés · ${BOOKING_CODE}`, { exact: true }),
+    ).toHaveCount(2);
+    await expect(app.getByText('Pagado', { exact: true })).toHaveCount(1);
+    await expect(app.getByText('Pendiente', { exact: true })).toHaveCount(2);
+
+    await page.reload();
+    const payouts = page
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'Payouts', exact: true }) })
+      .last();
+    await expect(payouts.getByText('Pending', { exact: true })).toBeVisible();
+    await expect(payouts.getByText('€45.00')).toBeVisible();
+    await expect(payouts.getByText(`Paid · jobs of ${year}`)).toBeVisible();
+    await expect(payouts.getByText('€30.50')).toBeVisible();
+    await expect(payouts.getByText('1 job', { exact: true })).toHaveCount(2);
+    await app.context().close();
+  });
 });
