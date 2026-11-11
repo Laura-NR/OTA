@@ -112,6 +112,72 @@ export const copy = {
     queued: 'Guardado en el teléfono · se enviará solo cuando vuelva la señal.',
     home: 'Volver al inicio',
   },
+  calendar: {
+    title: 'Calendario',
+    open: 'Calendario y disponibilidad',
+    previous: 'Mes anterior',
+    next: 'Mes siguiente',
+    weekdays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'],
+    legend: {
+      AVAILABLE: 'Disponible',
+      BLOCKED: 'Bloqueado',
+      JOB: 'Trabajo',
+      OFFER: 'Oferta pendiente',
+    },
+    state: {
+      AVAILABLE: 'Disponible',
+      BLOCKED: 'Bloqueado',
+      JOB: 'Trabajo asignado',
+      OFFER: 'Oferta pendiente',
+    },
+    stateAria: {
+      AVAILABLE: 'disponible',
+      BLOCKED: 'bloqueado',
+      JOB: 'trabajo asignado',
+      OFFER: 'oferta pendiente',
+    },
+    hint: 'Toca un día para bloquearlo o liberarlo. Los días con trabajo asignado no se pueden bloquear desde aquí: llama a la central.',
+    today: 'hoy',
+    free: 'Recibes ofertas para este día. Si no vas a estar, bloquéalo: así la central no cuenta contigo.',
+    blocked: 'No recibirás ofertas para este día.',
+    past: 'Este día ya pasó.',
+    beyond: 'Todavía no puedes cambiar un día tan lejano.',
+    block: 'Bloquear este día',
+    unblock: 'Volver a estar disponible',
+    callDesk: 'Llamar a la central para cambiarlo',
+    offer: (label: string) => `Oferta: ${label}`,
+    answerBy: (time: string) => `Responde antes de las ${time}`,
+    range: 'Bloquear varios días',
+    from: 'Desde',
+    to: 'Hasta',
+    pick: 'Ahora toca el día en el calendario.',
+    blockDays: (count: number) =>
+      count === 1 ? 'Bloquear 1 día' : `Bloquear ${count} días`,
+    tooMany: (max: number) => `Como mucho ${max} días de una vez.`,
+    longRule: (days: number) =>
+      `Si bloqueas más de ${days} días seguidos, la central te marca como inactivo y te llama antes de la temporada alta.`,
+    longBlock: (days: number, from: string, to: string) =>
+      `Tienes ${days} días seguidos bloqueados, del ${from} al ${to}: la central te marca como inactivo y te llama antes de la temporada alta.`,
+    done: (count: number, blocked: boolean) =>
+      `${count === 1 ? '1 día' : `${count} días`} ${blocked ? 'bloqueado' : 'disponible'}${count === 1 ? '' : 's'}.`,
+    kept: (count: number) =>
+      count === 1
+        ? '1 día con trabajo u oferta se queda como estaba.'
+        : `${count} días con trabajo u oferta se quedan como estaban.`,
+    fuel: 'Combustible en reserva',
+    litres: 'litros',
+    litresLabel: 'Litros en reserva',
+    update: 'Actualizar',
+    declared: (date: string) => `declarado el ${date}`,
+    declaredToday: (time: string) => `actualizado hoy ${time}`,
+    never: 'sin declarar',
+    stale: 'Ya toca declararlo de nuevo.',
+    fuelExplain:
+      'Lo usa la central para la lista de choferes de apoyo cuando hay escasez. Declara cada semana, aunque no cambie.',
+    badLitres: 'Escribe los litros en cifras, por ejemplo 40.',
+    refused: 'La central no aceptó este cambio. Inténtalo de nuevo o llama a la central.',
+    back: 'Volver al inicio',
+  },
 } as const;
 
 /** W-Offer's decline reasons, in the board's order. */

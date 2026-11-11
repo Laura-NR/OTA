@@ -23,7 +23,7 @@ import { Button, Card, Notice, colors, radius, space, type } from '../ui';
 
 /**
  * W-Home: who is signed in, whether the phone is in sync, the open offers
- * with their time left, and the coming jobs. `now` is the API's clock as the
+ * with their time left, the coming jobs, and the way to the calendar. `now` is the API's clock as the
  * app tracks it, so a phone set to the wrong time still counts down right.
  */
 export function HomeScreen({
@@ -36,6 +36,7 @@ export function HomeScreen({
   refreshing,
   onRefresh,
   onOpenOffer,
+  onOpenCalendar,
   onSignOut,
 }: {
   home: WorkerHomeDto;
@@ -48,6 +49,7 @@ export function HomeScreen({
   refreshing: boolean;
   onRefresh: () => void;
   onOpenOffer: (offer: WorkerOfferDto) => void;
+  onOpenCalendar: () => void;
   onSignOut: () => void;
 }) {
   const { worker } = home;
@@ -124,6 +126,7 @@ export function HomeScreen({
       ))}
 
       <View style={styles.footer}>
+        <Button label={copy.calendar.open} variant="secondary" onPress={onOpenCalendar} />
         {settings.deskPhone ? (
           <Button
             label={copy.home.desk(settings.deskPhone)}

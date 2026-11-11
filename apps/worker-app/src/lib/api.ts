@@ -1,5 +1,11 @@
 import type { WorkerAnswer } from '@ota/domain';
-import type { WorkerHomeDto } from '@ota/schemas';
+import type {
+  SetWorkerDaysRequest,
+  WorkerCalendarDto,
+  WorkerDaysResultDto,
+  WorkerFuelDto,
+  WorkerHomeDto,
+} from '@ota/schemas';
 
 /** A refused request; `status` is null when no response came back at all. */
 export class ApiError extends Error {
@@ -19,6 +25,10 @@ export interface WorkerApi {
   /** The HTTP status of an accept or decline, or null with no connection. */
   answer(token: string, answer: WorkerAnswer): Promise<number | null>;
   signOut(token: string): Promise<void>;
+  /** W-Calendar: a `YYYY-MM` month, or the current one in Havana. */
+  calendar(token: string, month?: string): Promise<WorkerCalendarDto>;
+  setDays(token: string, change: SetWorkerDaysRequest): Promise<WorkerDaysResultDto>;
+  declareFuel(token: string, litres: number): Promise<WorkerFuelDto>;
 }
 
 export function createWorkerApi(
@@ -89,6 +99,22 @@ export function createWorkerApi(
     },
     async signOut(token) {
       await request('/worker/sign-out', { method: 'POST', token });
+    },
+    async calendar(token, month) {
+      const query = month ? `?month=${month}` : '';
+      return (await (
+        await request(`/worker/calendar${query}`, { token })
+      ).json()) as WorkerCalendarDto;
+    },
+    async setDays(token, change) {
+      return (await (
+        await request('/worker/availability', { method: 'PUT', token, body: change })
+      ).json()) as WorkerDaysResultDto;
+    },
+    async declareFuel(token, litres) {
+      return (await (
+        await request('/worker/fuel', { method: 'PUT', token, body: { litres } })
+      ).json()) as WorkerFuelDto;
     },
   };
 }

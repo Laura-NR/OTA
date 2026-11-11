@@ -4,7 +4,11 @@ import { declineReasonText } from '../src/lib/copy';
 import {
   calendarDate,
   clock,
+  dayName,
+  dayShort,
+  dayTitle,
   money,
+  monthTitle,
   secondsLeft,
   shortDate,
   timeLeft,
@@ -49,5 +53,13 @@ describe('how the worker app says things (W-Home, W-Offer)', () => {
       'Otro motivo: boda familiar',
     );
     expect(declineReasonText('other', '')).toBe('Otro motivo');
+  });
+
+  it('names W-Calendar’s days as dates, whatever the phone’s time zone', () => {
+    expect(monthTitle('2026-10')).toBe('Octubre 2026');
+    expect(dayTitle('2026-10-06')).toBe('Martes 6 de octubre');
+    expect(dayName('2026-11-01')).toBe('domingo 1 de noviembre');
+    expect(dayShort('2026-10-25')).toBe('25 oct');
+    expect(dayShort('2026-09-03')).toBe('3 sep');
   });
 });

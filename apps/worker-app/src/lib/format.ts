@@ -97,3 +97,62 @@ export function secondsLeft(seconds: number): string {
   const whole = Math.max(0, Math.ceil(seconds));
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
+
+const MONTHS = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+const WEEKDAYS = [
+  'domingo',
+  'lunes',
+  'martes',
+  'miércoles',
+  'jueves',
+  'viernes',
+  'sábado',
+];
+
+/** A `YYYY-MM-DD` calendar day's parts; it is a date, so it is read in UTC. */
+function dayParts(day: string): { weekday: string; date: number; month: string } {
+  const value = new Date(`${day}T00:00:00Z`);
+  return {
+    weekday: WEEKDAYS[value.getUTCDay()]!,
+    date: value.getUTCDate(),
+    month: MONTHS[value.getUTCMonth()]!,
+  };
+}
+
+/** "Octubre 2026" (W-Calendar). */
+export function monthTitle(month: string): string {
+  const name = MONTHS[Number(month.slice(5, 7)) - 1]!;
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${month.slice(0, 4)}`;
+}
+
+/** "Jueves 6 de octubre" (W-Calendar's selected day). */
+export function dayTitle(day: string): string {
+  const { weekday, date, month } = dayParts(day);
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${date} de ${month}`;
+}
+
+/** "jueves 6 de octubre", for a screen reader. */
+export function dayName(day: string): string {
+  const { weekday, date, month } = dayParts(day);
+  return `${weekday} ${date} de ${month}`;
+}
+
+/** "25 oct" (W-Calendar's range fields). */
+export function dayShort(day: string): string {
+  const { date, month } = dayParts(day);
+  return `${date} ${month.slice(0, 3)}`;
+}

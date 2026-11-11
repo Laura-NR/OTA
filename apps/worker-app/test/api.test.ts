@@ -48,6 +48,33 @@ describe('the worker app API client (W1, W3, W5)', () => {
     });
   });
 
+  it('reads a month, changes days and declares fuel as the signed-in worker (W-Calendar)', async () => {
+    const { calls, fetcher } = recorder(200, {});
+    const api = createWorkerApi('', fetcher);
+    await api.calendar('t');
+    await api.calendar('t', '2026-12');
+    await api.setDays('t', { from: '2026-12-01', to: '2026-12-02', isAvailable: false });
+    await api.declareFuel('t', 40);
+
+    expect(calls.map((call) => `${call.init.method} ${call.url}`)).toEqual([
+      'GET /worker/calendar',
+      'GET /worker/calendar?month=2026-12',
+      'PUT /worker/availability',
+      'PUT /worker/fuel',
+    ]);
+    expect(JSON.parse(String(calls[2]!.init.body))).toEqual({
+      from: '2026-12-01',
+      to: '2026-12-02',
+      isAvailable: false,
+    });
+    expect(JSON.parse(String(calls[3]!.init.body))).toEqual({ litres: 40 });
+    for (const call of calls) {
+      expect((call.init.headers as Record<string, string>).authorization).toBe(
+        'Bearer t',
+      );
+    }
+  });
+
   it('reports no connection as a null status', async () => {
     const api = createWorkerApi('', (async () => {
       throw new TypeError('Network request failed');

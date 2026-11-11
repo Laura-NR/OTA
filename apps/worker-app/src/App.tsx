@@ -10,6 +10,7 @@ import { ApiError, createWorkerApi } from './lib/api';
 import { settings } from './lib/config';
 import { copy } from './lib/copy';
 import { kv, tokenStore } from './lib/storage';
+import { CalendarScreen } from './screens/CalendarScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { OfferScreen, type OfferOutcome } from './screens/OfferScreen';
@@ -27,6 +28,7 @@ type Screen =
   | { name: 'loading' }
   | { name: 'login' }
   | { name: 'home' }
+  | { name: 'calendar' }
   | {
       name: 'offer';
       offer: WorkerOfferDto;
@@ -34,7 +36,7 @@ type Screen =
 
 /**
  * The worker app (ADR 0007, Phase 7): sign in with a code, see offers and
- * jobs, answer an offer. Answers are saved on the phone first and resent
+ * jobs, answer an offer, block days in the calendar. Answers are saved on the phone first and resent
  * until the API answers (`docs/worker-app-plan.md` W6); the last home is kept
  * for when there is no signal.
  */
@@ -218,6 +220,14 @@ export function App() {
             notice={notice}
             onSignedIn={(fresh) => void signIn(fresh)}
           />
+        ) : screen.name === 'calendar' && token ? (
+          <CalendarScreen
+            api={api}
+            token={token}
+            onOpenOffer={(offer) => setScreen({ name: 'offer', offer })}
+            onBack={() => setScreen({ name: 'home' })}
+            onSignedOut={() => void signedOut(copy.home.signedOut)}
+          />
         ) : screen.name === 'offer' ? (
           <OfferScreen
             offer={screen.offer}
@@ -237,6 +247,7 @@ export function App() {
             refreshing={refreshing}
             onRefresh={() => token && void sync(token)}
             onOpenOffer={(offer) => setScreen({ name: 'offer', offer })}
+            onOpenCalendar={() => setScreen({ name: 'calendar' })}
             onSignOut={() => void signOut()}
           />
         )}
