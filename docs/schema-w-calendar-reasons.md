@@ -1,6 +1,7 @@
 # W-Calendar block reasons: schema diff for review
 
-**Status:** proposed 2026-11-11, **waiting for the owner's approval**. Nothing in §5 is built.
+**Status:** proposed 2026-11-11; **approved the same day as recommended (K1a–K6a) and built**
+(§7).
 **Date:** 2026-11-11
 **Scope:** the one part of the W-Calendar board (`design/vereda-v1.2/project/W-Calendar.dc.html`)
 that needs a migration: why a worker blocked a day ("Motivo: Familia · Carro en taller · Otro
@@ -75,3 +76,26 @@ model Availability {
 CREATE TYPE "AvailabilityBlockReason" AS ENUM ('FAMILY', 'VEHICLE_REPAIR', 'OTHER_JOB', 'OTHER');
 ALTER TABLE "availabilities" ADD COLUMN "block_reason" "AvailabilityBlockReason";
 ```
+
+## 7. As built (2026-11-11)
+
+- Migration `20261111171409_w_calendar_block_reasons` (`717e228`): the §6 SQL, unchanged.
+- Domain (`ec41083`): `WORKER_BLOCK_REASONS` (`FAMILY`, `VEHICLE_REPAIR`, `OTHER_JOB`,
+  `OTHER`, the board's order) and `workerBlockReason` (the reason picked, `OTHER` when none,
+  none once a day is free).
+- Schemas and API (`dcb3caa`): `PUT /worker/availability` takes an optional `reason`; it is
+  written with every changed day of a block (an earlier reason is replaced) and cleared on a
+  freed day, whatever was sent; the audit row's metadata gains `reason`. The calendar's days
+  carry `reason` on blocked days only (a job or offer day hides a stored one). The desk's
+  `AvailabilityDayDto` gains `blockReason`; the desk's upsert writes `NULL` whether it blocks
+  or frees (K4). No new route, so the RBAC matrix is unchanged.
+- App (`2220228`, `5340519`, `755bc3b`): the chips under a blocked day (picking one re-saves
+  that day with it: "Motivo guardado: …") and on the range card, `OTHER` picked by default and
+  again after each block; a day with no reason shows none picked. Each chip group is a radio
+  group with its own name ("Motivo del bloqueo de este día", "Motivo de los días"); a day's
+  spoken label ends with its reason, e.g. "bloqueado (familia)".
+- Desk (`7e848b1`): the supplier calendar's tooltip reads "Blocked · Vehicle in the garage"
+  (en/es/fr) on a day the worker blocked with a reason, and "Blocked" otherwise.
+- Tests: unit (domain 3, API 4 incl. the desk's K4, the app's request body and labels) and the
+  worker-app e2e's fourth test (`f88183f`: a day "Otro" → "Familia" → freed; a 16-day range as
+  "Carro en taller", read on the desk).

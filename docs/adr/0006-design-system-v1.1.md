@@ -1725,3 +1725,20 @@ tokens and components (full list: `docs/worker-app-plan.md` §6):
   `primary-600`, the offer dot `warning-700`, today and the selected day outlined in
   `primary-600` (selected on `primary-50`); the day's pill uses the success, neutral, primary
   and warning soft/strong pairs; month arrows are text chevrons in 44 dp bordered buttons.
+
+## Amendment, 2026-11-11: W-Calendar's block reasons
+
+The "Motivo" chips (approved K1a–K6a, `docs/schema-w-calendar-reasons.md`) were built without
+asking the design team, with existing tokens:
+
+- **Chips.** The board's pill (`radius-full`, 12 px side padding, 13/18 medium label, the
+  board's order) at the app's 48 dp touch size instead of 36 px (DS 07). Unpicked: `surface`
+  on a `neutral-200` border (the app's `line`, as its fields have; the board's darker border
+  has no role in the app's palette). Picked: `primary-600` with `surface` text.
+- **Behaviour.** On a blocked day, picking a chip saves it at once with a success notice
+  "Motivo guardado: …"; the range card's chips start on "Otro" and are sent with "Bloquear N
+  días". A day blocked by the desk, or before the reasons existed, shows none picked.
+- **Accessibility.** Each set is a radio group (as W-Offer's reasons are) with its own name,
+  so the day's and the range's sets are told apart; a day's spoken label ends with its reason.
+- **Desk.** No new surface: the supplier calendar's day tooltip reads "Blocked · <reason>"
+  (en/es/fr) when the worker gave one, and "Blocked" otherwise.

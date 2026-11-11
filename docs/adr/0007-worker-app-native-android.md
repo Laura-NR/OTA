@@ -189,6 +189,15 @@ written to `supplier_resources` through the desk's own write path with the `WORK
 the M6 schema already had. The block reasons ("Motivo") need a column and wait on
 `docs/schema-w-calendar-reasons.md`. No new dependency.
 
+## Amendment, 2026-11-11 (later): W-Calendar's block reasons
+
+The owner approved `docs/schema-w-calendar-reasons.md` as recommended (K1a–K6a): a nullable
+`availabilities.block_reason` enum (Familia, Carro en taller, Otro trabajo, Otro), "Otro" when
+the worker blocks without picking, the same chips on a range, no reason on a block the desk
+sets, the reason shown to the worker and on the desk's calendar, and no backfill. Migration
+`20261111171409_w_calendar_block_reasons`, additive; no new dependency. The reason does not
+change dispatch, which skips any blocked day.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

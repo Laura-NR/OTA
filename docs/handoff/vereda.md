@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-11 18:30
+# Handoff — vereda — updated 2026-11-11 19:55
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -13,12 +13,12 @@ page, on 2026-11-01 the staff recovery codes, the new-device email, permission o
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
-desk's worker sign-out, on 2026-11-11 W-Calendar) and
+desk's worker sign-out, on 2026-11-11 W-Calendar and its block reasons) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar). The worker app: `docs/worker-app-plan.md`
+for W-Calendar and again for its block reasons). The worker app: `docs/worker-app-plan.md`
 (approved W1, W3, W7; §7 as built). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
-(proposed K1–K6, **waiting for approval**, a migration). Staff passkeys:
+(approved K1a–K6a 2026-11-11, §7 as built, a migration). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
 `docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
@@ -30,6 +30,19 @@ for W-Calendar). The worker app: `docs/worker-app-plan.md`
 events (T-Events)".
 
 ## State
+- **2026-11-11 (later): W-Calendar's block reasons**, the owner's pick, approved K1a–K6a as
+  recommended (`717e228`…`f88183f`). One migration, `20261111171409_w_calendar_block_reasons`
+  (nullable enum `availabilities.block_reason`: FAMILY, VEHICLE_REPAIR, OTHER_JOB, OTHER;
+  applied to the dev DB). No new dependency, no new route.
+  - Domain `WORKER_BLOCK_REASONS`, `workerBlockReason` (picked, else `OTHER`; none when freed).
+  - API: `PUT /worker/availability` takes an optional `reason`, written on every changed day
+    and in the audit metadata (`reason`); the calendar's days carry `reason` (blocked days
+    only). The desk's `AvailabilityDayDto.blockReason`; the desk's upsert writes `NULL` (K4).
+  - App: "Motivo" chips (radio groups, 48 dp) under a blocked day (saves at once, "Motivo
+    guardado: …") and on the range card ("Otro" by default); the day's spoken label ends with
+    its reason. Desk: the supplier calendar tooltip "Blocked · Vehicle in the garage" (en/es/fr).
+  - e2e: `worker-app.spec.ts`'s fourth test picks Familia on a day and Carro en taller on a
+    range, and reads the desk tooltip.
 - **2026-11-11: CI fixed.** The pull request's CI (runs 42478297525 on 2026-11-08 and
   43009958771 on 2026-11-11) failed in Test: `apps/api/test/shutdown.test.ts` renders a real PDF
   and the runner had no Playwright browser. `c0026a9` adds "Install the PDF browser"
@@ -605,37 +618,47 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-11, the CI fix and W-Calendar, dev stack stopped for the build)
-- CI failure reproduced locally: the API shutdown test fails with `PLAYWRIGHT_BROWSERS_PATH`
-  on an empty cache under `--env-mode=loose` (strict mode hid it); after
-  `playwright install --only-shell chromium` into that cache it passes. The fix (c0026a9) has
-  **not run on GitHub** yet; it needs a push.
-- `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob, minimatch).
+## Verified (2026-11-11, W-Calendar's block reasons, dev stack stopped for the build)
+- CI: the owner has not pushed since c0026a9, so no GitHub run exists for the CI fix or for
+  anything after it. `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid,
+  glob, minimatch).
+- Migration `20261111171409_w_calendar_block_reasons` applied to the dev DB with
+  `prisma migrate dev` (additive: one enum, one nullable column, no backfill).
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1366 passed / 53 skipped** (+21);
-  `TURBO_FORCE=true pnpm build` **19/19**. After e24313d (the range button's copy) only the
-  worker app was re-run: lint, format, typecheck, **17/17** tests.
-- Mutation checks: applying a range to every day fails "leaves the days with a job or an open
-  offer"; `>=` in `longBlockedRun` fails the fourteen-day test; the old range copy fails the
-  new `blockDays(0)` test. All restored.
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1374 passed / 53 skipped** (+8: domain 3, api 3,
+  suppliers 1, worker app 1); `TURBO_FORCE=true pnpm build` **19/19**.
+- Mutation checks: dropping the `'OTHER'` default fails the domain test; leaving the desk's
+  upsert without `blockReason: null` fails the K4 suppliers test; showing a stored reason on a
+  job day fails the worker calendar test (once that day's row carried `'FAMILY'`). All
+  restored.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files.
-- Full `pnpm e2e` (seven projects, 1.1 h): **171 passed, 2 failed, 3 skipped**. The two
-  failures are the same as on 2026-11-10 and pass alone on a fresh stack (**4 passed, 1
-  skipped**): `storefront-keep-building.spec.ts` (the "Keep building" click did not navigate
-  within 15 s) and `responsive.spec.ts --project ds07-414` (a 240 s `goto` timeout on a blog
-  page). `e2e/worker-app.spec.ts --project default` **4 passed** again after e24313d.
-- Browser (scratch Playwright script against the restarted dev stack and the rebuilt preview on
-  :3003; a temporary driver with a job, an open offer and 16 blocked days, all deleted after):
-  the app at 390/1024/1280 shows the month grid (days 46 px high, radius 10 px; blocked
-  `#E8E2D9`, selected `#F1F6F8` with a `#0B4F6C` border), the job and offer markers, the
-  long-block notice, the fuel card, and the unblock button 48 px on `#0B4F6C`; nothing scrolls
-  sideways. The desk's supplier page shows the warning alert "16 days blocked in a row · From Dec
-  8, 2026 to Dec 23, 2026" (radius 8 px), with no sideways scroll at any width.
+- Full `pnpm e2e` (seven projects, 1.2 h): **170 passed, 2 failed, 3 skipped, 1 did not run**.
+  The worker-app spec (block with a reason, change it, free it, range with a reason, desk
+  tooltip) passed. Failures: `[ds07-414]` responsive's blog `goto` (the known one) and, new,
+  `display-currencies.spec.ts` "a traveler saves GBP…" (`displayCurrency` read as null right
+  after the desk's Mark paid; its serial follow-up did not run). Alone on a fresh stack:
+  display-currencies **3 passed**, `[ds07-414]` responsive **2 passed**. No code on that path
+  changed this session.
+- Browser (scratch Playwright script against the restarted dev stack and the preview on :3003;
+  a temporary worker with Dec 5 FAMILY, Dec 6 desk-set, Dec 10–11 VEHICLE_REPAIR, deleted
+  after): at 390/1024/1280 the day labels read "…, bloqueado (familia)" / "…, bloqueado" /
+  "…, bloqueado (carro en taller)"; the day card checks Familia only (`aria-checked`), a
+  desk-set day checks none, the range card checks Otro. Chips are 48 px high, radius 9999 px;
+  on `#0B4F6C` with white 13/18 500 text, off `#FFFFFF` with a 1 px `#E8E2D9` border and
+  `#1F1B17` text; the four wrap to two rows at 390. The desk's tooltips read "Blocked · Family",
+  "Blocked", "Blocked · Vehicle in the garage", "Available". No sideways scroll at any width.
 - Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
-  storefront `/` 200 (:3000), desk `/login` 200 (:3002).
-- Not run: CI on GitHub; an APK or any Android device; a clean full e2e run in one pass.
+  storefront `/` 200 (:3000), desk `/login` 200 (:3002). The preview on :3003 was stopped.
+- Not run: CI on GitHub; an APK or any Android device (the chips' TalkBack reading is
+  unverified); a clean full e2e run in one pass.
 
 ## Assumptions & unknowns
+- **Block reasons (2026-11-11):** a reason sent with `isAvailable: true` is ignored rather
+  than refused. Re-blocking an already blocked day from a range replaces its reason. A day
+  that became a job or offer between the app's read and a chip tap is kept, and the app then
+  shows the "kept" message instead of "Motivo guardado". Nothing reads the reason except the
+  app and the desk tooltip (no analytics, no dispatch effect, doc §4). Not run on a device:
+  `aria-checked` on native RN 0.88 is assumed to reach TalkBack as a checked radio.
 - **W-Calendar (2026-11-11):** build choices not on the board: the 62-day cap per change, the
   horizon (end of the twelfth month ahead), job and offer days never changed from the app, the
   long block counted from today (blocked days already past are ignored), and only the first
@@ -848,6 +871,17 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **RN-web ignores `accessibilityState` (2026-11-11):** react-native-web 0.21.4 never reads
+  `accessibilityState` on View/Pressable; it maps `aria-checked`/`aria-selected` (and the
+  legacy `accessibilityChecked`). So the web preview (e2e, screenshots) showed every reason chip
+  unchecked until they used `aria-checked` (`755bc3b`). Found, not changed: W-Offer's decline
+  reasons (`accessibilityState={{ checked }}`) and the calendar's day buttons
+  (`{ selected }`) have the same gap on the web preview only; `disabled` survives because the
+  `disabled` prop is passed too. Native RN reads both forms.
+- **Two chip groups, one name (2026-11-11):** the day card and the range card both render
+  reason chips; with one shared group name, `getByRole('radio', { name: 'Otro' })` is
+  ambiguous. They are named apart ("Motivo del bloqueo de este día", "Motivo de los días");
+  scope radios by their group.
 - **CI has no browser unless it installs one (2026-11-11):** a unit test that launches
   Chromium passes locally (the cache in `~/.cache/ms-playwright`) and fails on the runner.
   To reproduce CI here, point `PLAYWRIGHT_BROWSERS_PATH` at an empty directory, and run turbo
@@ -874,7 +908,10 @@ events (T-Events)".
 - The full `pnpm e2e` has failed the same two storefront tests on 2026-11-10 and 2026-11-11
   (`storefront-keep-building.spec.ts`'s "Keep building" click, `[ds07-414]` responsive's blog
   `goto`), both late-run dev-server slowness; both pass alone on a fresh stack. A failure
-  elsewhere, or one of these failing alone, is a real regression.
+  elsewhere, or one of these failing alone, is a real regression. 2026-11-11 (later):
+  `display-currencies.spec.ts`'s GBP deposit read `displayCurrency` as null right after Mark
+  paid in the full run and passed alone (3/3); if it fails again, look at whether the desk's
+  "CONFIRMED" text can show before the rate-locking write is visible to the spec's Prisma read.
 - **Better Auth bearer (2026-11-09):** the stock `bearer()` plugin's after-hook puts every new
   session's token in a readable `set-auth-token` header (staff ones too), so only its
   before-hook is used. User hooks run before plugin hooks, so the session gate never sees a
@@ -1354,6 +1391,11 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-11: W-Calendar's block reasons ride on migration
+    `20261111171409_w_calendar_block_reasons` (nullable `availabilities.block_reason`, additive,
+    no backfill). Only the worker app writes a reason; the desk's availability upsert writes
+    NULL. In the worker app, state for the web preview goes through `aria-*` props
+    (`aria-checked`), not `accessibilityState`, which react-native-web ignores."
   - "2026-11-09: the worker app (`apps/worker-app`, Expo SDK 58, Android first) signs in with a
     phone number and a six-digit code (`/api/auth/sign-in/worker-code`, SMS or desk-issued)
     and sends its session as a bearer token, which the API accepts only for `worker_code`
@@ -1564,14 +1606,13 @@ events (T-Events)".
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
    classic `read:packages` token. The deployment build (B1–B11, B13) is complete; B12 (S3
    documents) stays optional.
-3. Phase 7, owner: approve or change `docs/schema-w-calendar-reasons.md` (K1–K6, a migration);
-   a machine with the Android SDK and a JDK for the first APK (our own signing key, backed up
-   twice), the Android id, and two or three suppliers for the field test. Agent, in order
-   (W-Calendar landed 2026-11-11): the block reasons once approved; background resend (needs
-   the owner's yes to `expo-background-task` 58.0.11, `expo-task-manager` 58.0.12 and
+3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own signing
+   key, backed up twice), the Android id, and two or three suppliers for the field test. Agent,
+   in order (W-Calendar and its block reasons landed 2026-11-11): background resend (needs the
+   owner's yes to `expo-background-task` 58.0.11, `expo-task-manager` 58.0.12 and
    `unimodules-app-loader` 58.0.2, Expo's own SDK 58 pins; no web support, so only unit tests
-   until an APK); W-Credentials; W-Earnings; W-Job and its SMS SOS; distribution (download
-   page, update prompt, self-hosted `expo-updates`). Ops Lite (Phase 7 item 2) not started.
+   until an APK); W-Credentials; W-Earnings; W-Job and its SMS SOS; distribution (download page,
+   update prompt, self-hosted `expo-updates`). Ops Lite (Phase 7 item 2) not started.
 4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (also the AI provider and sanctions question), the business values, the
    tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
@@ -2194,3 +2235,9 @@ events (T-Events)".
   dependency), at most 62 days per change up to the end of the twelfth month ahead, job and
   offer days left as they are, the long block counted from today, the fuel written through the
   desk's resources path, and no offline queue for calendar changes.
+- 2026-11-11 — the owner approved the block reasons as recommended (K1a–K6a), over W-Earnings
+  or background resend. The build chose: the board's chips at the app's 48 dp rather than 36 px;
+  a chip on a blocked day saves at once (no separate save); the range card's reason returns to
+  "Otro" after each block; a freed day drops its reason whatever is sent (not a 400); a job or
+  offer day hides a stored reason; the two chip groups named apart; `aria-checked` over
+  `accessibilityState` so the web preview shows the picked chip.

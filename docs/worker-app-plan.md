@@ -2,9 +2,9 @@
 
 - **Date:** 2026-11-09
 - **Status:** first slice built (§7), then the desk's sign-out (2026-11-10) and W-Calendar
-  (2026-11-11, without its block reasons). W1, W3 and W7 approved by the owner on 2026-11-09 with
-  Expo itself; the rest are build decisions inside ADR 0007. The block reasons wait on
-  `docs/schema-w-calendar-reasons.md` (a migration).
+  (2026-11-11) with its block reasons (approved and built the same day,
+  `docs/schema-w-calendar-reasons.md`, a migration). W1, W3 and W7 approved by the owner on
+  2026-11-09 with Expo itself; the rest are build decisions inside ADR 0007.
 - **Context:** ADR 0007 (Expo, Android first, sideloaded, no EAS), its 2026-11-08 amendment
   (supplier confirmations wait for this app), `docs/design-v1.1-plan.md` Phase 7, boards
   `design/vereda-v1.2/project/W-*.dc.html`.
@@ -86,8 +86,13 @@ Android JavaScript (Hermes bytecode); no APK is built here.
     follows) instead of typed as "25 oct": no date-picker dependency and no free-text dates. A
     range of more than 62 days is refused with a note; job and offer days in it stay as they
     are and the result says how many.
-  - The "Motivo" chips are not shown until the block reasons are approved
-    (`docs/schema-w-calendar-reasons.md`).
+  - The "Motivo" chips (approved K1a–K6a, `docs/schema-w-calendar-reasons.md`) keep the board's
+    pill, label and order but the app's 48 dp touch size (the board's 36 px is below DS 07's),
+    with the `line` border and, when picked, `primary` with `surface` text. They are a radio
+    group, as W-Offer's reasons are; the day's and the range's groups have their own names.
+    Picking a chip on a blocked day saves it at once and says "Motivo guardado: …"; the range
+    card's chips start on "Otro" and are sent with the block. A day's spoken label ends with
+    its reason. The desk reads the reason in the supplier calendar's day tooltip.
   - A job day lists the job (time, service, province, travelers, payout, booking code) without
     the board's link to W-Job, which is not built; "Llamar a la central para cambiarlo" dials
     the tenant's desk phone. An offer day's amber card opens W-Offer.
@@ -121,14 +126,17 @@ states, refusals, ranges, the long block); API `GET /worker/calendar?month=`, `P
 through `SuppliersService.recordResources` as a `WORKER_APP` confirmation, audited as
 `supplier.resources_confirmed`); the supplier inspector's `longBlock`; app
 `CalendarScreen.tsx`; the desk's long-block alert on the supplier page (en/es/fr); the spec's
-fourth test.
+fourth test. The block reasons (2026-11-11, migration
+`20261111171409_w_calendar_block_reasons`): `workerBlockReason`, the optional `reason` on `PUT
+/worker/availability`, `reason` on the calendar's blocked days and `blockReason` on the desk's
+availability day, the chips, the desk tooltip (en/es/fr); `docs/schema-w-calendar-reasons.md`
+§7.
 
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
-2. W-Calendar's block reasons (`docs/schema-w-calendar-reasons.md`, waiting for approval),
-   background resend (`expo-background-task`, a new dependency), W-Credentials, W-Earnings.
+2. Background resend (`expo-background-task`, a new dependency), W-Credentials, W-Earnings.
 3. W-Job with the offline job screen and the SMS SOS (a custom Android module).
 4. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
 5. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).
