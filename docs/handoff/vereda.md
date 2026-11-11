@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-10 18:00
+# Handoff — vereda — updated 2026-11-11 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -13,10 +13,12 @@ page, on 2026-11-01 the staff recovery codes, the new-device email, permission o
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
-desk's worker sign-out) and
+desk's worker sign-out, on 2026-11-11 W-Calendar) and
 ADR 0007 (worker
-app; amended 2026-11-09 for the first slice and 2026-11-10 for the desk's sign-out). The worker app: `docs/worker-app-plan.md`
-(approved W1, W3, W7; §7 as built). Staff passkeys:
+app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
+for W-Calendar). The worker app: `docs/worker-app-plan.md`
+(approved W1, W3, W7; §7 as built). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
+(proposed K1–K6, **waiting for approval**, a migration). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
 `docs/schema-m9-recovery-codes.md` (approved R1a–R5a, §7 as built). The new-device email:
@@ -28,6 +30,34 @@ app; amended 2026-11-09 for the first slice and 2026-11-10 for the desk's sign-o
 events (T-Events)".
 
 ## State
+- **2026-11-11: CI fixed.** The pull request's CI (runs 42478297525 on 2026-11-08 and
+  43009958771 on 2026-11-11) failed in Test: `apps/api/test/shutdown.test.ts` renders a real PDF
+  and the runner had no Playwright browser. `c0026a9` adds "Install the PDF browser"
+  (`pnpm --filter @ota/documents exec playwright install --with-deps --only-shell chromium`)
+  before Test in `.github/workflows/ci.yml`; `release.yml`'s gate is that workflow, so the first
+  tag would have failed the same way. Not yet run on GitHub.
+- **2026-11-11: W-Calendar** (Phase 7), the owner's pick: built on the existing tables, with a
+  migration document for the block reasons (`dab1360`…`d69336f`). No migration, no new
+  dependency.
+  - Domain `packages/domain/src/worker/calendar.ts`: day states (job > offer > blocked >
+    available, Havana days), `workerDaysRefusal` (past, backwards, past the end of the twelfth
+    month ahead, more than 62 days), `planWorkerDays` (job and offer days kept),
+    `longBlockedRun` (more than 14 in a row from today). 10 unit tests.
+  - API (`SERVICE_WORKER`, own profile; RBAC matrix +3 rows): `GET /worker/calendar?month=`
+    (days, jobs ACCEPTED/FULFILLED on live bookings, open offers, `longBlock`, `fuel` for
+    drivers), `PUT /worker/availability` (`{from,to,isAvailable}`; `updateMany` + `createMany`
+    in one transaction; one `supplier.availability_set` audit row with `days` and `via:
+    WORKER_APP`), `PUT /worker/fuel` (drivers; 422 otherwise) through the new
+    `SuppliersService.recordResources` (the write `confirmResources` now calls; via
+    `WORKER_APP`, row replaced, `supplier.resources_confirmed` audited). `SuppliersModule`
+    exports its service; `WorkerModule` imports it. The supplier detail gains `longBlock`.
+  - App: `CalendarScreen.tsx` from W-Home's "Calendario y disponibilidad"; range picked on
+    the grid (the button reads "Bloquear días" until both ends are picked, `e24313d`); fuel
+    card for drivers; changes need a connection (not queued).
+  - Desk: the supplier page's Availability panel shows a warning alert for the long block
+    (`backoffice.supplierDetail.longBlockTitle`/`longBlock`, en/es/fr).
+  - e2e: `worker-app.spec.ts` gains a fourth test (block/free a day, 16-day range, 40 L as a
+    driver, the desk alert).
 - **2026-11-10: the desk signs a worker out of the worker app**, the owner's pick of Next 3's
   first agent item (`a4603e0`…`7ca870d`). No migration, no new dependency, no domain rule (the
   filter is the existing `WORKER_CODE_SIGN_IN_METHOD`).
@@ -575,34 +605,46 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-10, the desk's worker sign-out, dev stack stopped for the build)
-- No `v*` tag on the remote and `origin/vereda` still at 2026-11-08 (52 local commits before
-  this session), so the Release workflow has not run: nothing to fix.
+## Verified (2026-11-11, the CI fix and W-Calendar, dev stack stopped for the build)
+- CI failure reproduced locally: the API shutdown test fails with `PLAYWRIGHT_BROWSERS_PATH`
+  on an empty cache under `--env-mode=loose` (strict mode hid it); after
+  `playwright install --only-shell chromium` into that cache it passes. The fix (c0026a9) has
+  **not run on GitHub** yet; it needs a push.
 - `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob, minimatch).
-- `pnpm lint`, `pnpm format:check` green (format re-run after the doc edits).
-  `TURBO_FORCE=true pnpm typecheck` **34/34**; `TURBO_FORCE=true pnpm test` **31/31 tasks,
-  1345 passed / 53 skipped** (+2, API); `TURBO_FORCE=true pnpm build` **19/19**.
-- Mutation check: with the `signInMethod` filter removed from `WorkerCodesService.signOut`,
-  `worker.service.test.ts`'s sign-out test fails; restored, it passes.
-- `pnpm e2e e2e/worker-app.spec.ts --project default`: **3 passed** (the new test: desk
-  sign-out → "1 phone was signed out", no `worker_code` session left in the DB, the app's
-  "Actualizar" lands on Login with "Tu sesión terminó").
-- Full `pnpm e2e` (seven projects, 1.2 h): **170 passed, 2 failed, 3 skipped**. Both failures
-  pass alone on a fresh stack: `storefront-keep-building.spec.ts` (its h1 rendered just after
-  the 15 s wait: a slow first compile) **1 passed**; `responsive.spec.ts --project ds07-414`
-  **3 passed, 1 skipped** once a hung storefront `next-server` was `kill -9`ed (Traps).
+- `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1366 passed / 53 skipped** (+21);
+  `TURBO_FORCE=true pnpm build` **19/19**. After e24313d (the range button's copy) only the
+  worker app was re-run: lint, format, typecheck, **17/17** tests.
+- Mutation checks: applying a range to every day fails "leaves the days with a job or an open
+  offer"; `>=` in `longBlockedRun` fails the fourteen-day test; the old range copy fails the
+  new `blockDays(0)` test. All restored.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files.
-- Browser (Playwright script against the restarted dev stack, Example Guide's page, en):
-  390/1024/1280 — both buttons 32 px, 14 px/600, `primary-700` on white, radius 8 px, side by
-  side from 1024 (wrapped at 390); the dialog 640 px (a bottom sheet at 390), confirm 40 px
-  on `primary-600`; the success alert after "Sign out" ("No phone was signed in as Example
-  Guide…"); no page scrolls sideways. This wrote `auth.worker_signed_out` audit rows for the
-  seeded Example Guide in the dev DB (0 sessions ended).
+- Full `pnpm e2e` (seven projects, 1.1 h): **171 passed, 2 failed, 3 skipped**. The two
+  failures are the same as on 2026-11-10 and pass alone on a fresh stack (**4 passed, 1
+  skipped**): `storefront-keep-building.spec.ts` (the "Keep building" click did not navigate
+  within 15 s) and `responsive.spec.ts --project ds07-414` (a 240 s `goto` timeout on a blog
+  page). `e2e/worker-app.spec.ts --project default` **4 passed** again after e24313d.
+- Browser (scratch Playwright script against the restarted dev stack and the rebuilt preview on
+  :3003; a temporary driver with a job, an open offer and 16 blocked days, all deleted after):
+  the app at 390/1024/1280 shows the month grid (days 46 px high, radius 10 px; blocked
+  `#E8E2D9`, selected `#F1F6F8` with a `#0B4F6C` border), the job and offer markers, the
+  long-block notice, the fuel card, and the unblock button 48 px on `#0B4F6C`; nothing scrolls
+  sideways. The desk's supplier page shows the warning alert "16 days blocked in a row · From Dec
+  8, 2026 to Dec 23, 2026" (radius 8 px), with no sideways scroll at any width.
 - Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
   storefront `/` 200 (:3000), desk `/login` 200 (:3002).
-- Not run: an APK or any Android device; CI on GitHub; a clean full e2e run in one pass.
+- Not run: CI on GitHub; an APK or any Android device; a clean full e2e run in one pass.
 
 ## Assumptions & unknowns
+- **W-Calendar (2026-11-11):** build choices not on the board: the 62-day cap per change, the
+  horizon (end of the twelfth month ahead), job and offer days never changed from the app, the
+  long block counted from today (blocked days already past are ignored), and only the first
+  long run shown. A worker's fuel declaration is a resources confirmation, so it also resets the
+  desk's staleness for that driver; a driver's row holds only the fuel reserve, so replacing
+  it loses nothing. The worker's availability audit is one row per change with a `days` array
+  (the desk's is one row per day with `date`); nothing reads either shape. The desk alert says
+  "call them before high season" with no date for the season. Nothing ran on a device. The CI
+  fix (`c0026a9`) was reproduced and checked locally, not on GitHub's runner.
 - **Desk sign-out (2026-11-10):** only worker-code sessions end (the only ones the app's bearer
   can carry); a worker's magic-link browser session, if any, stays. A thief holding the SIM could
   ask for an SMS code once an SMS provider exists; today none is sent in production. Found, not
@@ -620,6 +662,7 @@ events (T-Events)".
   SQLite are assumed. No desk action ends a worker's sessions (Settings → Users is staff
   only); the runbook gives the hand fix. A decline is sent as the Spanish reason label. The
   worker app is not in the Release workflow's images (it ships as an APK later).
+  (Since 2026-11-10 the desk's "Sign out of the worker app…" replaces the hand fix.)
 - **A4 (2026-11-09):** "production" is `NODE_ENV=production`, which the API image sets (B1).
   A deployment that ran the API without it would not hold the mock off; the switch still
   works. The held-off caption was seen in a browser only with the API started alone as
@@ -805,6 +848,17 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **CI has no browser unless it installs one (2026-11-11):** a unit test that launches
+  Chromium passes locally (the cache in `~/.cache/ms-playwright`) and fails on the runner.
+  To reproduce CI here, point `PLAYWRIGHT_BROWSERS_PATH` at an empty directory, and run turbo
+  with `--env-mode=loose`: in its default strict mode turbo drops that variable and the run
+  stays green. `gh` is not installed; `curl https://api.github.com/repos/Laura-NR/OTA/actions/runs`
+  and `…/check-runs/<job id>/annotations` read run states and failure lines without a token
+  (job logs need one: 403).
+- **`recordResources` stamps the real clock (2026-11-11):** a test with a fixed `NOW` that
+  checks fuel staleness must measure from `Date.now()`.
+- **RN-web text matching (2026-11-11):** Playwright's `getByText('Trabajo asignado')` also
+  matches the calendar hint ("…con trabajo asignado…"): pass `{ exact: true }`.
 - **Worker app (2026-11-09):** `pnpm dev` runs every workspace's `dev` script, so the app's
   Metro command is `start`, not `dev`. `app.config.ts` imports `@ota/config` and
   `@ota/theming` from `dist`: build them before `expo export`. The preview (:3003) rebuilds
@@ -814,7 +868,13 @@ events (T-Events)".
   2026-11-10: the storefront's did the same after a full run (3.4 GB RSS): a plain `kill` by
   port PID printed "killed" but the port stayed bound, and the next isolated run of
   `[ds07-414]` failed on the hung server. After killing, check `ss -ltnp` for 3000–3003 and
-  `kill -9` whatever is still listening before re-running anything.
+  `kill -9` whatever is still listening before re-running anything. 2026-11-11: the desk's
+  hung again after only `worker-app.spec.ts` (4 tests): a later magic-link `page.goto` failed
+  with `net::ERR_ABORTED` and `curl :3002` hung until it was `kill -9`ed.
+- The full `pnpm e2e` has failed the same two storefront tests on 2026-11-10 and 2026-11-11
+  (`storefront-keep-building.spec.ts`'s "Keep building" click, `[ds07-414]` responsive's blog
+  `goto`), both late-run dev-server slowness; both pass alone on a fresh stack. A failure
+  elsewhere, or one of these failing alone, is a real regression.
 - **Better Auth bearer (2026-11-09):** the stock `bearer()` plugin's after-hook puts every new
   session's token in a readable `set-auth-token` header (staff ones too), so only its
   before-hook is used. User hooks run before plugin hooks, so the session gate never sees a
@@ -1303,6 +1363,14 @@ events (T-Events)".
     `POST /suppliers/:id/worker-sign-out` (2026-11-10) ends a worker's `worker_code` sessions and
     open code for a lost phone; a staff route that touches worker sessions must keep that
     filter."
+  - "2026-11-11: the worker's calendar is `GET /worker/calendar`, `PUT /worker/availability`
+    and `PUT /worker/fuel` (`SERVICE_WORKER`, own profile); the rules live in
+    `packages/domain/src/worker/calendar.ts`. Job and offer days are never changed from the
+    app. A driver's fuel goes through `SuppliersService.recordResources` with `via:
+    WORKER_APP`, the desk's own write; keep one write path for `supplier_resources`."
+  - "2026-11-11: CI installs Playwright's Chromium headless shell before Test (the API's
+    shutdown test renders a real PDF). A new unit test that launches a browser needs nothing
+    more; one that needs another browser must add it to that step."
   - "2026-11-09: the desk's AI (`/assistant/*`, Draft with AI, the Reports summary) follows the
     `aiAssistant` runtime flag, and the API holds it off (`HELD_OFF_FEATURES`) while
     `NODE_ENV=production` and `llmProviderName(AI_PROVIDER)` is `mock`; a real adapter added to
@@ -1489,18 +1557,21 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (CI runs on the pull request; it has not run with the worker app yet).
+1. Owner: push `vereda`. The pull request's CI failed twice on the missing PDF browser; check
+   that the run with `c0026a9` is green (it is the Release workflow's gate too).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
    classic `read:packages` token. The deployment build (B1–B11, B13) is complete; B12 (S3
    documents) stays optional.
-3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own
-   signing key, backed up twice), the Android id, and two or three suppliers for the field
-   test. Agent, in order (the desk sign-out landed 2026-11-10): background resend
-   (`expo-background-task`); availability and W-Calendar; W-Credentials; W-Earnings; W-Job
-   and its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`).
-   Ops Lite (Phase 7 item 2) not started.
+3. Phase 7, owner: approve or change `docs/schema-w-calendar-reasons.md` (K1–K6, a migration);
+   a machine with the Android SDK and a JDK for the first APK (our own signing key, backed up
+   twice), the Android id, and two or three suppliers for the field test. Agent, in order
+   (W-Calendar landed 2026-11-11): the block reasons once approved; background resend (needs
+   the owner's yes to `expo-background-task` 58.0.11, `expo-task-manager` 58.0.12 and
+   `unimodules-app-loader` 58.0.2, Expo's own SDK 58 pins; no web support, so only unit tests
+   until an APK); W-Credentials; W-Earnings; W-Job and its SMS SOS; distribution (download
+   page, update prompt, self-hosted `expo-updates`). Ops Lite (Phase 7 item 2) not started.
 4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (also the AI provider and sanctions question), the business values, the
    tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
@@ -2112,3 +2183,14 @@ events (T-Events)".
   (the staff "Sign out everywhere" shape), because the app's bearer can carry nothing else, and
   it also voids an open code so one read out or texted before the loss cannot sign the phone
   back in. The confirm button is primary, not destructive: a new code undoes it.
+- 2026-11-11 — CI installs the Chromium headless shell (with its system packages) before Test,
+  rather than skipping `shutdown.test.ts` where no browser exists: the test's point is that a
+  real Chromium is closed on SIGTERM. The install uses `packages/documents`' playwright so the
+  browser build matches.
+- 2026-11-11 — the owner chose W-Calendar now on the existing tables, with a migration document
+  for the rest, over a migration-first calendar or background resend. The build found the fuel
+  declaration needs no migration (`supplier_resources` and the `WORKER_APP` channel exist), so
+  only the block reasons wait. It chose: the range picked on the grid (no date-picker
+  dependency), at most 62 days per change up to the end of the twelfth month ahead, job and
+  offer days left as they are, the long block counted from today, the fuel written through the
+  desk's resources path, and no offline queue for calendar changes.
