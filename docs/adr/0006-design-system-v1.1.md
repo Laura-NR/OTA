@@ -1705,3 +1705,23 @@ asking the design team:
 - **Dialog.** It follows the code dialog: what the sign-out does in plain words, Cancel and a
   primary "Sign out" (not destructive: it is undone by a new code), then a success alert that
   says how many phones were signed out, or that none was.
+
+## Amendment, 2026-11-11: W-Calendar
+
+W-Calendar was built without asking the design team; the gaps were resolved with existing
+tokens and components (full list: `docs/worker-app-plan.md` §6):
+
+- **Navigation.** No bottom bar yet (W-Job and W-Earnings are not built): the calendar opens
+  from a W-Home footer button and returns to Home, like W-Offer.
+- **Range.** "Desde" and "Hasta" are picked on the month grid rather than typed, with no
+  date-picker dependency; the "Bloquear N días" button counts the days.
+- **Not shown yet.** The "Motivo" chips (a migration, `docs/schema-w-calendar-reasons.md`) and
+  the job row's link to W-Job.
+- **Long block.** The board's caption stays; a warning notice in the app and a warning alert
+  on the desk's supplier page (en/es/fr) appear once more than 14 days in a row are blocked.
+  The desk alert says dispatch already skips those days and asks the desk to call, since no
+  "inactive" switch exists.
+- **Tokens.** Day cells 46 px with `radius-md`; blocked on `neutral-200`, the job dot
+  `primary-600`, the offer dot `warning-700`, today and the selected day outlined in
+  `primary-600` (selected on `primary-50`); the day's pill uses the success, neutral, primary
+  and warning soft/strong pairs; month arrows are text chevrons in 44 dp bordered buttons.

@@ -1,8 +1,10 @@
 # Worker app (Phase 7): plan and first slice
 
 - **Date:** 2026-11-09
-- **Status:** first slice built (§7). W1, W3 and W7 approved by the owner on 2026-11-09 with
-  Expo itself; the rest are build decisions inside ADR 0007.
+- **Status:** first slice built (§7), then the desk's sign-out (2026-11-10) and W-Calendar
+  (2026-11-11, without its block reasons). W1, W3 and W7 approved by the owner on 2026-11-09 with
+  Expo itself; the rest are build decisions inside ADR 0007. The block reasons wait on
+  `docs/schema-w-calendar-reasons.md` (a migration).
 - **Context:** ADR 0007 (Expo, Android first, sideloaded, no EAS), its 2026-11-08 amendment
   (supplier confirmations wait for this app), `docs/design-v1.1-plan.md` Phase 7, boards
   `design/vereda-v1.2/project/W-*.dc.html`.
@@ -75,6 +77,33 @@ Android JavaScript (Hermes bytecode); no APK is built here.
   the offer shows the service, province, start and end, travelers, payout and booking code.
 - Offer cards, the reasons list and the outcome states use the DS radii (4/10/20), the 48 dp
   touch size and existing colour roles; the sync chip says its state in words.
+- W-Calendar (2026-11-11):
+  - The board's bottom bar needs screens not built yet (W-Job, W-Earnings), so the calendar
+    opens from a "Calendario y disponibilidad" button in W-Home's footer and returns with
+    "Volver al inicio", as W-Offer does.
+  - The month arrows are text chevrons in 44 dp bordered buttons: the app has no SVG library.
+  - "Desde" and "Hasta" are picked on the month grid (tap "Desde", then the day; "Hasta"
+    follows) instead of typed as "25 oct": no date-picker dependency and no free-text dates. A
+    range of more than 62 days is refused with a note; job and offer days in it stay as they
+    are and the result says how many.
+  - The "Motivo" chips are not shown until the block reasons are approved
+    (`docs/schema-w-calendar-reasons.md`).
+  - A job day lists the job (time, service, province, travelers, payout, booking code) without
+    the board's link to W-Job, which is not built; "Llamar a la central para cambiarlo" dials
+    the tenant's desk phone. An offer day's amber card opens W-Offer.
+  - Past days are faded and read-only; days past the twelfth month ahead say they cannot be
+    changed yet (the arrows stop there).
+  - The long block (more than 14 days in a row from today) shows as a warning notice under the
+    header; the board's caption stays on the range card. The desk has no "inactive" switch:
+    the blocked days already keep the worker out of dispatch, so the desk's supplier page shows
+    a warning alert (en/es/fr) that says so and asks the desk to call.
+  - Fuel: "declarado el …" names the calendar date with its year, as W-Home's credential line
+    does; past the desk's staleness threshold (a runtime setting, 7 days by default) the card
+    adds "Ya toca declararlo de nuevo."
+  - Calendar changes need a connection; unlike offer answers they are not queued. The chip
+    shows "Sincronizado" or "Sin conexión" from the last read.
+  - Day states use existing roles: blocked on `line`, the job dot `primary`, the offer dot
+    `warning`, today and the selected day outlined in `primary` (selected on `primarySoft`).
 
 ## 7. As built (2026-11-09)
 
@@ -85,12 +114,21 @@ app `apps/worker-app/` (Login, Home, Offer); e2e `e2e/worker-app.spec.ts`. The d
 (2026-11-10): `WorkerCodesService.signOut`, `worker-sign-out.tsx` (en/es/fr), the spec's third
 test; no migration.
 
+W-Calendar (2026-11-11, no migration): domain `packages/domain/src/worker/calendar.ts` (day
+states, refusals, ranges, the long block); API `GET /worker/calendar?month=`, `PUT
+/worker/availability` (a day or a range; job and offer days kept; audited as
+`supplier.availability_set` with `via: WORKER_APP`) and `PUT /worker/fuel` (drivers; written
+through `SuppliersService.recordResources` as a `WORKER_APP` confirmation, audited as
+`supplier.resources_confirmed`); the supplier inspector's `longBlock`; app
+`CalendarScreen.tsx`; the desk's long-block alert on the supplier page (en/es/fr); the spec's
+fourth test.
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
-2. Background resend (`expo-background-task`), availability toggle and W-Calendar,
-   W-Credentials, W-Earnings.
+2. W-Calendar's block reasons (`docs/schema-w-calendar-reasons.md`, waiting for approval),
+   background resend (`expo-background-task`, a new dependency), W-Credentials, W-Earnings.
 3. W-Job with the offline job screen and the SMS SOS (a custom Android module).
 4. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
 5. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).

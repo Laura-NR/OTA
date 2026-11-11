@@ -177,6 +177,18 @@ session a worker code opened for that worker and voids any open code, replacing 
 hand fix for a lost phone. It ends only worker-code sessions, which are the only ones the app's
 bearer token can carry (W3). No migration, no new dependency.
 
+## Amendment, 2026-11-11: W-Calendar
+
+The owner chose W-Calendar over background resend, built on what exists and with a migration
+document for the rest. A worker sees their month (jobs, open offers, blocked days), blocks or
+frees a day or a range of up to 62 days from today to the end of the twelfth month ahead, and a
+driver declares the fuel reserve weekly. Job and offer days are never changed from the app.
+More than 14 blocked days in a row from today on is shown to the worker and on the desk's
+supplier page. No migration: the availability rows already existed, and the fuel reserve is
+written to `supplier_resources` through the desk's own write path with the `WORKER_APP` channel
+the M6 schema already had. The block reasons ("Motivo") need a column and wait on
+`docs/schema-w-calendar-reasons.md`. No new dependency.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms
