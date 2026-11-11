@@ -1,7 +1,12 @@
+import { WORKER_DAY_STATES, type WorkerDayState } from '@ota/domain';
 import { z } from 'zod';
 
 import { serviceTypeSchema } from './dispatch';
-import { supplierCategorySchema, verificationStatusSchema } from './supplier';
+import {
+  blockedRunSchema,
+  supplierCategorySchema,
+  verificationStatusSchema,
+} from './supplier';
 
 /**
  * What the worker app may show about the travelers (W-Login: "Solo ves el
@@ -77,3 +82,84 @@ export const workerSignOutSchema = z.object({
 });
 
 export type WorkerSignOutDto = z.infer<typeof workerSignOutSchema>;
+
+/** A calendar day, `YYYY-MM-DD`, that exists (no 30 February). */
+const calendarDaySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(
+    (day) => new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) === day,
+    'Not a calendar day',
+  );
+
+export const workerDayStateSchema = z.enum([...WORKER_DAY_STATES] as [
+  WorkerDayState,
+  ...WorkerDayState[],
+]);
+
+/** W-Calendar's month, `YYYY-MM`; the current month in Havana when absent. */
+export const workerCalendarQuerySchema = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+    .optional(),
+});
+
+export type WorkerCalendarQuery = z.infer<typeof workerCalendarQuerySchema>;
+
+/** A driver's fuel reserve as the worker last declared it, or the desk confirmed it. */
+export const workerFuelSchema = z.object({
+  litres: z.number().int().nullable(),
+  /** When it was last declared or confirmed; null when never. */
+  declaredAt: z.string().nullable(),
+  /** Older than the desk's staleness threshold: time to declare again. */
+  stale: z.boolean(),
+});
+
+export type WorkerFuelDto = z.infer<typeof workerFuelSchema>;
+
+/** W-Calendar: one month of the worker's days and what is on them. */
+export const workerCalendarSchema = z.object({
+  month: z.string(),
+  /** Today in Havana; days before it cannot be changed. */
+  today: z.string(),
+  /** The last day the worker may change. */
+  horizon: z.string(),
+  days: z.array(z.object({ date: z.string(), state: workerDayStateSchema })),
+  /** Jobs taken (accepted or done) that touch the month. */
+  jobs: z.array(workerJobSchema),
+  /** Offers still open that touch the month. */
+  offers: z.array(workerOfferSchema),
+  longBlock: blockedRunSchema.nullable(),
+  /** Drivers only (null for other categories). */
+  fuel: workerFuelSchema.nullable(),
+});
+
+export type WorkerCalendarDto = z.infer<typeof workerCalendarSchema>;
+
+/** "Bloquear este día", "Bloquear varios días" or "Volver a estar disponible". */
+export const setWorkerDaysSchema = z.object({
+  from: calendarDaySchema,
+  to: calendarDaySchema,
+  isAvailable: z.boolean(),
+});
+
+export type SetWorkerDaysRequest = z.infer<typeof setWorkerDaysSchema>;
+
+export const workerDaysResultSchema = z.object({
+  /** The days now set as asked. */
+  changed: z.array(z.string()),
+  /** Days with a job or an open offer, left as they were. */
+  kept: z.array(z.string()),
+  longBlock: blockedRunSchema.nullable(),
+});
+
+export type WorkerDaysResultDto = z.infer<typeof workerDaysResultSchema>;
+
+/** W-Calendar's "Combustible en reserva": litres, declared by a driver. */
+export const declareWorkerFuelSchema = z.object({
+  /** The column's bound, as the desk's form has it. */
+  litres: z.number().int().min(0).max(2_147_483_647),
+});
+
+export type DeclareWorkerFuelRequest = z.infer<typeof declareWorkerFuelSchema>;

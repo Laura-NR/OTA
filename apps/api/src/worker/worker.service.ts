@@ -1,18 +1,46 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import type { Prisma } from '@ota/db';
 import {
+  JOB_STATUSES,
   RELIABILITY_MIN_ANSWERED,
+  ReservationStatus,
   ServiceItemStatus,
+  SupplierCategory,
+  WORKER_BLOCK_MAX_DAYS,
   calculateSupplierReliability,
+  daysBetween,
+  isResourcesStale,
+  longBlockedRun,
+  monthDays,
+  planWorkerDays,
+  workerDayStates,
+  workerDaysRefusal,
+  workerHorizon,
+  workerToday,
   type ServiceType,
-  type SupplierCategory,
   type VerificationStatus,
+  type WorkerDaysRefusal,
 } from '@ota/domain';
-import type { WorkerHomeDto, WorkerJobDto } from '@ota/schemas';
+import type {
+  DeclareWorkerFuelRequest,
+  SetWorkerDaysRequest,
+  WorkerCalendarDto,
+  WorkerCalendarQuery,
+  WorkerDaysResultDto,
+  WorkerFuelDto,
+  WorkerHomeDto,
+  WorkerJobDto,
+  WorkerOfferDto,
+} from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
+import { SuppliersService } from '../suppliers/suppliers.service';
 
 /** The base currency every payout is kept in. */
 const PAYOUT_CURRENCY = 'EUR';
@@ -48,16 +76,50 @@ function startOfDay(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
+/** A `YYYY-MM-DD` day as the date column stores it. */
+function dayDate(day: string): Date {
+  return new Date(`${day}T00:00:00Z`);
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const DAYS_REFUSAL_MESSAGE: Record<WorkerDaysRefusal, string> = {
+  BAD_RANGE: 'The range ends before it starts',
+  PAST: 'Days before today cannot be changed',
+  TOO_FAR: 'Days more than twelve months ahead cannot be changed yet',
+  TOO_MANY_DAYS: `At most ${WORKER_BLOCK_MAX_DAYS} days can be changed at once`,
+};
+
+function serviceSpan(item: WorkerItem): { start: Date; end: Date } {
+  return { start: item.serviceDateStart, end: item.serviceDateEnd };
+}
+
+/** The fuel reserve as last declared or confirmed; never declared reads as stale. */
+function toFuel(
+  resources: { fuelReserveLitres: number | null; confirmedAt: Date } | null,
+  now: Date,
+  staleDays: number,
+): WorkerFuelDto {
+  return resources
+    ? {
+        litres: resources.fuelReserveLitres,
+        declaredAt: resources.confirmedAt.toISOString(),
+        stale: isResourcesStale(resources.confirmedAt, now, staleDays),
+      }
+    : { litres: null, declaredAt: null, stale: true };
+}
+
 /**
- * The worker app's reads (W-Home, W-Offer), always scoped to the caller's own
- * supplier profile. Travelers appear by first name, language and party size
- * only (W-Login: "Nunca direcciones ni pagos").
+ * The worker app's reads (W-Home, W-Offer) and calendar (W-Calendar), always
+ * scoped to the caller's own supplier profile. Travelers appear by first
+ * name, language and party size only (W-Login: "Nunca direcciones ni pagos").
  */
 @Injectable()
 export class WorkerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settings: OperatingSettingsService,
+    private readonly suppliers: SuppliersService,
   ) {}
 
   async home(actor: AuthUser, now: Date = new Date()): Promise<WorkerHomeDto> {
@@ -117,23 +179,202 @@ export class WorkerService {
             ? Math.round(card.acceptanceRate * 100)
             : null,
       },
-      offers: offers.flatMap((item) => {
-        if (!item.offeredAt || !item.dispatchDeadline) return [];
-        const window = item.dispatchDeadline.getTime() - item.offeredAt.getTime();
-        return [
-          {
-            ...this.toJob(item),
-            offeredAt: item.offeredAt.toISOString(),
-            deadline: item.dispatchDeadline.toISOString(),
-            hurryFrom: new Date(
-              item.offeredAt.getTime() + window * hurryShare,
-            ).toISOString(),
-          },
-        ];
-      }),
+      offers: offers.flatMap((item) => this.toOffer(item, hurryShare)),
       jobs: jobs.map((item) => this.toJob(item)),
       serverTime: now.toISOString(),
     };
+  }
+
+  /**
+   * W-Calendar's month: each day's state, the jobs and open offers on it, the
+   * first long block ahead and, for a driver, the fuel reserve.
+   */
+  async calendar(
+    actor: AuthUser,
+    query: WorkerCalendarQuery,
+    now: Date = new Date(),
+  ): Promise<WorkerCalendarDto> {
+    const profile = await this.prisma.supplierProfile.findUnique({
+      where: { userId: actor.id },
+      select: {
+        id: true,
+        category: true,
+        resources: { select: { fuelReserveLitres: true, confirmedAt: true } },
+      },
+    });
+    if (!profile) {
+      throw new ForbiddenException('No supplier profile is linked to this account');
+    }
+
+    const today = workerToday(now);
+    const month = query.month ?? today.slice(0, 7);
+    const days = monthDays(month);
+    const first = days[0]!;
+    const last = days.at(-1)!;
+    const fromDay = first < today ? first : today;
+    const [blockedRows, { jobs, offers }, thresholds] = await Promise.all([
+      this.prisma.availability.findMany({
+        where: {
+          supplierId: profile.id,
+          isAvailable: false,
+          date: { gte: dayDate(fromDay) },
+        },
+        select: { date: true },
+      }),
+      this.services(profile.id, first, last, now),
+      this.settings.thresholds(),
+    ]);
+    const blocked = blockedRows.map((row) => row.date.toISOString().slice(0, 10));
+    const states = workerDayStates(
+      days,
+      new Set(blocked.filter((day) => day >= first && day <= last)),
+      jobs.map(serviceSpan),
+      offers.map(serviceSpan),
+    );
+    const hurryShare = thresholds.amberPercent / 100;
+
+    return {
+      month,
+      today,
+      horizon: workerHorizon(today),
+      days: days.map((date) => ({ date, state: states.get(date)! })),
+      jobs: jobs.map((item) => this.toJob(item)),
+      offers: offers.flatMap((item) => this.toOffer(item, hurryShare)),
+      longBlock: longBlockedRun(blocked, today),
+      fuel:
+        profile.category === SupplierCategory.PrivateDriver
+          ? toFuel(profile.resources, now, thresholds.resourcesStaleDays)
+          : null,
+    };
+  }
+
+  /**
+   * "Bloquear este día", "Bloquear varios días" and "Volver a estar
+   * disponible": sets each day of the range, except days with a job or an
+   * open offer, which are left as they are and reported. Audited once per
+   * change as `supplier.availability_set` with `via: WORKER_APP`.
+   */
+  async setDays(
+    actor: AuthUser,
+    input: SetWorkerDaysRequest,
+    now: Date = new Date(),
+  ): Promise<WorkerDaysResultDto> {
+    const profile = await this.prisma.supplierProfile.findUnique({
+      where: { userId: actor.id },
+      select: { id: true },
+    });
+    if (!profile) {
+      throw new ForbiddenException('No supplier profile is linked to this account');
+    }
+    const today = workerToday(now);
+    const refusal = workerDaysRefusal(input.from, input.to, today);
+    if (refusal) {
+      throw new UnprocessableEntityException(DAYS_REFUSAL_MESSAGE[refusal]);
+    }
+
+    const days = daysBetween(input.from, input.to);
+    const { jobs, offers } = await this.services(profile.id, input.from, input.to, now);
+    const { change, kept } = planWorkerDays(
+      days,
+      workerDayStates(days, new Set(), jobs.map(serviceSpan), offers.map(serviceSpan)),
+    );
+
+    if (change.length > 0) {
+      const dates = change.map(dayDate);
+      await this.prisma.$transaction(async (tx) => {
+        await tx.availability.updateMany({
+          where: { supplierId: profile.id, date: { in: dates } },
+          data: { isAvailable: input.isAvailable },
+        });
+        await tx.availability.createMany({
+          data: dates.map((date) => ({
+            supplierId: profile.id,
+            date,
+            isAvailable: input.isAvailable,
+          })),
+          skipDuplicates: true,
+        });
+        await tx.auditLog.create({
+          data: {
+            actorUserId: actor.id,
+            action: 'supplier.availability_set',
+            entityType: 'SupplierProfile',
+            entityId: profile.id,
+            metadata: {
+              from: input.from,
+              to: input.to,
+              isAvailable: input.isAvailable,
+              days: change,
+              via: 'WORKER_APP',
+            },
+          },
+        });
+      });
+    }
+
+    const blocked = await this.prisma.availability.findMany({
+      where: {
+        supplierId: profile.id,
+        isAvailable: false,
+        date: { gte: dayDate(today) },
+      },
+      select: { date: true },
+    });
+    return {
+      changed: change,
+      kept,
+      longBlock: longBlockedRun(
+        blocked.map((row) => row.date.toISOString().slice(0, 10)),
+        today,
+      ),
+    };
+  }
+
+  /**
+   * W-Calendar's "Combustible en reserva" for drivers: recorded through the
+   * desk's resources path as a `WORKER_APP` confirmation, audited as
+   * `supplier.resources_confirmed`. A driver's resources are the fuel
+   * reserve alone, so the row is replaced with it.
+   */
+  async declareFuel(
+    actor: AuthUser,
+    input: DeclareWorkerFuelRequest,
+    now: Date = new Date(),
+  ): Promise<WorkerFuelDto> {
+    const profile = await this.prisma.supplierProfile.findUnique({
+      where: { userId: actor.id },
+      select: { id: true, category: true },
+    });
+    if (!profile) {
+      throw new ForbiddenException('No supplier profile is linked to this account');
+    }
+    if (profile.category !== SupplierCategory.PrivateDriver) {
+      throw new UnprocessableEntityException('Only drivers declare a fuel reserve');
+    }
+    await this.suppliers.recordResources(
+      profile.id,
+      {
+        via: 'WORKER_APP',
+        generator: null,
+        generatorHoursPerDay: null,
+        generatorSchedule: null,
+        generatorFuelDays: null,
+        solarBatteryKwh: null,
+        waterTankLitres: null,
+        rooms: null,
+        guestCapacity: null,
+        fuelReserveLitres: input.litres,
+      },
+      actor,
+    );
+    const [resources, thresholds] = await Promise.all([
+      this.prisma.supplierResources.findUnique({
+        where: { supplierId: profile.id },
+        select: { fuelReserveLitres: true, confirmedAt: true },
+      }),
+      this.settings.thresholds(),
+    ]);
+    return toFuel(resources, now, thresholds.resourcesStaleDays);
   }
 
   /** Ends this phone's session (the worker app's "Salir"). */
@@ -143,6 +384,60 @@ export class WorkerService {
     await this.prisma.session.deleteMany({
       where: { id: actor.sessionId, userId: actor.id },
     });
+  }
+
+  /**
+   * The worker's jobs (taken, on a booking not cancelled) and open offers
+   * whose service touches `from`–`to`. A day either side is read too, since
+   * a service's Havana day can differ from its UTC date.
+   */
+  private async services(
+    supplierId: string,
+    from: string,
+    to: string,
+    now: Date,
+  ): Promise<{ jobs: WorkerItem[]; offers: WorkerItem[] }> {
+    const touches = {
+      serviceDateStart: { lt: new Date(dayDate(to).getTime() + 2 * DAY_MS) },
+      serviceDateEnd: { gte: new Date(dayDate(from).getTime() - DAY_MS) },
+    };
+    const [jobs, offers] = await Promise.all([
+      this.prisma.serviceItem.findMany({
+        where: {
+          supplierId,
+          status: { in: [...JOB_STATUSES] },
+          reservation: { status: { not: ReservationStatus.Cancelled } },
+          ...touches,
+        },
+        orderBy: { serviceDateStart: 'asc' },
+        select: ITEM_SELECT,
+      }),
+      this.prisma.serviceItem.findMany({
+        where: {
+          supplierId,
+          status: ServiceItemStatus.Offered,
+          dispatchDeadline: { gt: now },
+          ...touches,
+        },
+        orderBy: { dispatchDeadline: 'asc' },
+        select: ITEM_SELECT,
+      }),
+    ]);
+    return { jobs, offers };
+  }
+
+  /** An open offer with its answer window, or nothing when it has none. */
+  private toOffer(item: WorkerItem, hurryShare: number): WorkerOfferDto[] {
+    if (!item.offeredAt || !item.dispatchDeadline) return [];
+    const window = item.dispatchDeadline.getTime() - item.offeredAt.getTime();
+    return [
+      {
+        ...this.toJob(item),
+        offeredAt: item.offeredAt.toISOString(),
+        deadline: item.dispatchDeadline.toISOString(),
+        hurryFrom: new Date(item.offeredAt.getTime() + window * hurryShare).toISOString(),
+      },
+    ];
   }
 
   private toJob(item: WorkerItem): WorkerJobDto {

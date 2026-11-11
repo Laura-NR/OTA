@@ -23,9 +23,12 @@ import {
   isResourcesStale,
   jobsInWindow,
   lastJob,
+  longBlockedRun,
   resourcesIssue,
   supplierPower,
+  workerToday,
   type PowerFacts,
+  type ResourceChannel,
   type ResourcesIssue,
   type SupplierJob,
 } from '@ota/domain';
@@ -225,7 +228,7 @@ function storedVehicle(value: Prisma.JsonValue | null): VehicleDetailsDto | null
 
 /** The resources row's values, as the audit log records them before and after (D8). */
 function resourcesValues(
-  resources: SupplierResources | ConfirmResourcesRequest | null,
+  resources: SupplierResources | Omit<ConfirmResourcesRequest, 'via'> | null,
 ): Record<string, unknown> | null {
   if (!resources) return null;
   return {
@@ -314,11 +317,24 @@ export class SuppliersService {
     const staleDays = (await this.settings.thresholds()).resourcesStaleDays;
     const jobs = (await this.jobs([id], now)).get(id) ?? [];
     const resources = supplier.resources ?? null;
+    const today = workerToday(now);
+    const blocked = await this.prisma.availability.findMany({
+      where: {
+        supplierId: id,
+        isAvailable: false,
+        date: { gte: new Date(`${today}T00:00:00Z`) },
+      },
+      select: { date: true },
+    });
     return {
       ...toRowDto(supplier, jobs, now, staleDays),
       resources: resources ? toResourcesDto(resources, now, staleDays) : null,
       jobs12m: jobsInWindow(jobs, now),
       vehicle: storedVehicle(supplier.vehicleDetails),
+      longBlock: longBlockedRun(
+        blocked.map((row) => row.date.toISOString().slice(0, 10)),
+        today,
+      ),
     };
   }
 
@@ -383,6 +399,19 @@ export class SuppliersService {
     input: ConfirmResourcesRequest,
     actor: AuthUser,
   ): Promise<SupplierDetailDto> {
+    await this.recordResources(id, input, actor);
+    return this.getById(id);
+  }
+
+  /**
+   * The write behind `confirmResources`, also used by the worker app's fuel
+   * declaration (W-Calendar), which arrives with `via: WORKER_APP`.
+   */
+  async recordResources(
+    id: string,
+    input: Omit<ConfirmResourcesRequest, 'via'> & { via: ResourceChannel },
+    actor: AuthUser,
+  ): Promise<void> {
     const supplier = await this.prisma.supplierProfile.findUnique({
       where: { id },
       select: { category: true, resources: true },
@@ -417,8 +446,6 @@ export class SuppliersService {
         },
       });
     });
-
-    return this.getById(id);
   }
 
   /**

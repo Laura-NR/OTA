@@ -1,4 +1,9 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { Prisma } from '@ota/db';
 import { WORKER_CODE_MAX_FAILURES, workerCodeSms } from '@ota/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -6,6 +11,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import type { SmsChannel, SmsMessage } from '../src/sms/sms.channel';
+import { SuppliersService } from '../src/suppliers/suppliers.service';
+import type { ObjectStorage } from '@ota/storage';
 import {
   WorkerCodesService,
   hashWorkerCode,
@@ -424,6 +431,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
     return new WorkerService(
       prisma as unknown as PrismaService,
       fakeOperatingSettings({ amberPercent: 75 }),
+      {} as SuppliersService,
     );
   }
 
@@ -497,5 +505,307 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
     expect(deleted).toEqual([{ where: { id: 'session-1', userId: 'u-reinier' } }]);
     await service.signOut({ ...WORKER, sessionId: undefined });
     expect(deleted).toHaveLength(1);
+  });
+});
+
+describe("the worker app's calendar (W-Calendar)", () => {
+  const WORKER: AuthUser = {
+    id: 'u-reinier',
+    email: 'driver@example.test',
+    role: 'SERVICE_WORKER',
+    sessionId: 'session-1',
+  };
+  const day = (value: string) => new Date(`${value}T00:00:00Z`);
+  const ITEM = {
+    serviceType: 'TRANSPORTATION',
+    province: 'La Habana',
+    payoutRate: new Prisma.Decimal(25),
+    reservation: {
+      bookingCode: 'VX7K2M9Q',
+      partySize: 2,
+      user: { fullName: 'Ingrid Berg', locale: 'en' },
+    },
+  };
+  // 15:50 in Havana on the 13th; an offer for the 17th, open for two hours.
+  const JOB = {
+    ...ITEM,
+    id: 'item-job',
+    serviceDateStart: new Date('2026-11-13T20:50:00Z'),
+    serviceDateEnd: new Date('2026-11-13T22:00:00Z'),
+    offeredAt: null,
+    dispatchDeadline: null,
+  };
+  const OFFER = {
+    ...ITEM,
+    id: 'item-offer',
+    serviceDateStart: new Date('2026-11-17T15:00:00Z'),
+    serviceDateEnd: new Date('2026-11-17T18:00:00Z'),
+    offeredAt: new Date('2026-11-09T09:00:00Z'),
+    dispatchDeadline: new Date('2026-11-09T11:00:00Z'),
+  };
+
+  interface Row {
+    supplierId: string;
+    date: Date;
+    isAvailable: boolean;
+  }
+
+  function calendarFake(category: string | null, rows: Row[] = []) {
+    const audit: Array<Record<string, unknown>> = [];
+    const resources = new Map<string, Record<string, unknown>>();
+    const profile =
+      category === null
+        ? null
+        : { id: 'supplier-reinier', category, userId: 'u-reinier' };
+    const inDates = (row: Row, where: { date?: { in?: Date[]; gte?: Date } }) =>
+      (!where.date?.in || where.date.in.some((date) => +date === +row.date)) &&
+      (!where.date?.gte || row.date >= where.date.gte);
+    const prisma = {
+      supplierProfile: {
+        findUnique: async () =>
+          profile && {
+            ...profile,
+            resources: resources.get(profile.id) ?? null,
+          },
+      },
+      serviceItem: {
+        findMany: async ({ where }: { where: { status: unknown } }) =>
+          where.status === 'OFFERED' ? [OFFER] : [JOB],
+      },
+      availability: {
+        findMany: async ({
+          where,
+        }: {
+          where: { supplierId: string; isAvailable: boolean; date: { gte: Date } };
+        }) =>
+          rows.filter(
+            (row) =>
+              row.supplierId === where.supplierId &&
+              row.isAvailable === where.isAvailable &&
+              inDates(row, where),
+          ),
+        updateMany: async ({
+          where,
+          data,
+        }: {
+          where: { supplierId: string; date: { in: Date[] } };
+          data: { isAvailable: boolean };
+        }) => {
+          const hit = rows.filter(
+            (row) => row.supplierId === where.supplierId && inDates(row, where),
+          );
+          for (const row of hit) row.isAvailable = data.isAvailable;
+          return { count: hit.length };
+        },
+        createMany: async ({ data }: { data: Row[]; skipDuplicates: boolean }) => {
+          const fresh = data.filter(
+            (row) =>
+              !rows.some(
+                (existing) =>
+                  existing.supplierId === row.supplierId && +existing.date === +row.date,
+              ),
+          );
+          rows.push(...fresh.map((row) => ({ ...row })));
+          return { count: fresh.length };
+        },
+      },
+      supplierResources: {
+        upsert: async ({
+          where,
+          create,
+        }: {
+          where: { supplierId: string };
+          create: Record<string, unknown>;
+        }) => {
+          resources.set(where.supplierId, { ...create });
+          return create;
+        },
+        findUnique: async ({ where }: { where: { supplierId: string } }) =>
+          resources.get(where.supplierId) ?? null,
+      },
+      auditLog: {
+        create: async ({ data }: { data: Record<string, unknown> }) => {
+          audit.push(data);
+          return data;
+        },
+      },
+      $transaction: async (run: (tx: unknown) => Promise<unknown>) => run(prisma),
+    };
+    const settings = fakeOperatingSettings({ amberPercent: 75 });
+    const suppliers = new SuppliersService(
+      prisma as unknown as PrismaService,
+      {} as ObjectStorage,
+      settings,
+    );
+    const service = new WorkerService(
+      prisma as unknown as PrismaService,
+      settings,
+      suppliers,
+    );
+    return { service, rows, audit, resources };
+  }
+
+  const blocked = (value: string): Row => ({
+    supplierId: 'supplier-reinier',
+    date: day(value),
+    isAvailable: false,
+  });
+
+  it('shows the month’s days with the job, the open offer and the blocks, defaulting to this month', async () => {
+    const fake = calendarFake('TOUR_GUIDE', [
+      blocked('2026-11-11'),
+      blocked('2026-11-13'),
+      { supplierId: 'supplier-reinier', date: day('2026-11-12'), isAvailable: true },
+      { ...blocked('2026-11-11'), supplierId: 'someone-else' },
+    ]);
+    const result = await fake.service.calendar(WORKER, {}, NOW);
+
+    expect(result.month).toBe('2026-11');
+    expect(result.today).toBe('2026-11-09');
+    expect(result.horizon).toBe('2027-11-30');
+    expect(result.days).toHaveLength(30);
+    const state = (date: string) =>
+      result.days.find((entry) => entry.date === date)?.state;
+    expect(state('2026-11-11')).toBe('BLOCKED');
+    expect(state('2026-11-12')).toBe('AVAILABLE');
+    // A blocked day with a job shows the job.
+    expect(state('2026-11-13')).toBe('JOB');
+    expect(state('2026-11-17')).toBe('OFFER');
+    expect(result.jobs.map((job) => job.serviceItemId)).toEqual(['item-job']);
+    expect(result.offers[0]).toMatchObject({
+      serviceItemId: 'item-offer',
+      hurryFrom: '2026-11-09T10:30:00.000Z',
+    });
+    expect(result.longBlock).toBeNull();
+    // Only drivers declare fuel.
+    expect(result.fuel).toBeNull();
+    expect(JSON.stringify(result)).not.toMatch(/Berg|@/);
+  });
+
+  it('shows a driver their fuel reserve, stale until declared', async () => {
+    const fake = calendarFake('PRIVATE_DRIVER');
+    expect((await fake.service.calendar(WORKER, { month: '2026-12' }, NOW)).fuel).toEqual(
+      {
+        litres: null,
+        declaredAt: null,
+        stale: true,
+      },
+    );
+    await fake.service.declareFuel(WORKER, { litres: 40 }, NOW);
+    // The desk's write stamps the real clock, so a week on is read from it.
+    const later = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
+    const fuel = (await fake.service.calendar(WORKER, {}, NOW)).fuel;
+    expect(fuel).toMatchObject({ litres: 40, stale: false });
+    expect((await fake.service.calendar(WORKER, {}, later)).fuel?.stale).toBe(true);
+  });
+
+  it('blocks a range but leaves the days with a job or an open offer, audited once as the worker app', async () => {
+    const fake = calendarFake('TOUR_GUIDE', [
+      { supplierId: 'supplier-reinier', date: day('2026-11-12'), isAvailable: true },
+    ]);
+    const result = await fake.service.setDays(
+      WORKER,
+      { from: '2026-11-12', to: '2026-11-18', isAvailable: false },
+      NOW,
+    );
+
+    expect(result.kept).toEqual(['2026-11-13', '2026-11-17']);
+    expect(result.changed).toEqual([
+      '2026-11-12',
+      '2026-11-14',
+      '2026-11-15',
+      '2026-11-16',
+      '2026-11-18',
+    ]);
+    expect(fake.rows.filter((row) => !row.isAvailable)).toHaveLength(5);
+    // The existing row was updated, not duplicated.
+    expect(fake.rows).toHaveLength(5);
+    expect(fake.audit).toEqual([
+      expect.objectContaining({
+        actorUserId: 'u-reinier',
+        action: 'supplier.availability_set',
+        entityId: 'supplier-reinier',
+        metadata: {
+          from: '2026-11-12',
+          to: '2026-11-18',
+          isAvailable: false,
+          days: result.changed,
+          via: 'WORKER_APP',
+        },
+      }),
+    ]);
+  });
+
+  it('frees a blocked day again', async () => {
+    const fake = calendarFake('TOUR_GUIDE', [blocked('2026-11-20')]);
+    const result = await fake.service.setDays(
+      WORKER,
+      { from: '2026-11-20', to: '2026-11-20', isAvailable: true },
+      NOW,
+    );
+    expect(result.changed).toEqual(['2026-11-20']);
+    expect(fake.rows).toEqual([
+      { supplierId: 'supplier-reinier', date: day('2026-11-20'), isAvailable: true },
+    ]);
+  });
+
+  it('reports a block of more than fourteen days in a row', async () => {
+    const fake = calendarFake('TOUR_GUIDE');
+    const result = await fake.service.setDays(
+      WORKER,
+      { from: '2026-11-20', to: '2026-12-05', isAvailable: false },
+      NOW,
+    );
+    expect(result.longBlock).toEqual({ from: '2026-11-20', to: '2026-12-05', days: 16 });
+  });
+
+  it('refuses a past day, a range over two months and a day past the horizon, writing nothing', async () => {
+    const fake = calendarFake('TOUR_GUIDE');
+    for (const range of [
+      { from: '2026-11-08', to: '2026-11-10' },
+      { from: '2026-11-20', to: '2027-01-21' },
+      { from: '2027-11-30', to: '2027-12-01' },
+      { from: '2026-11-20', to: '2026-11-19' },
+    ]) {
+      await expect(
+        fake.service.setDays(WORKER, { ...range, isAvailable: false }, NOW),
+      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    }
+    expect(fake.rows).toEqual([]);
+    expect(fake.audit).toEqual([]);
+  });
+
+  it('records a driver’s fuel through the desk’s resources path, as the worker app', async () => {
+    const fake = calendarFake('PRIVATE_DRIVER');
+    const fuel = await fake.service.declareFuel(WORKER, { litres: 35 }, NOW);
+
+    expect(fuel).toMatchObject({ litres: 35, stale: false });
+    expect(fake.resources.get('supplier-reinier')).toMatchObject({
+      fuelReserveLitres: 35,
+      generator: null,
+      confirmedById: 'u-reinier',
+      confirmedVia: 'WORKER_APP',
+    });
+    expect(fake.audit).toEqual([
+      expect.objectContaining({
+        action: 'supplier.resources_confirmed',
+        metadata: expect.objectContaining({
+          via: 'WORKER_APP',
+          previous: null,
+          next: expect.objectContaining({ fuelReserveLitres: 35 }),
+        }),
+      }),
+    ]);
+  });
+
+  it('refuses fuel from a worker who is not a driver, and the calendar to an account with no profile', async () => {
+    const guide = calendarFake('HOMESTAY_HOST');
+    await expect(
+      guide.service.declareFuel(WORKER, { litres: 10 }, NOW),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    expect(guide.resources.size).toBe(0);
+    await expect(
+      calendarFake(null).service.calendar(WORKER, {}, NOW),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

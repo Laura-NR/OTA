@@ -260,6 +260,10 @@ const ROUTES: Route[] = [
   // The worker app (docs/worker-app-plan.md W5).
   { method: 'get', path: '/worker/home', allowed: 'worker' },
   { method: 'post', path: '/worker/sign-out', allowed: 'worker' },
+  // W-Calendar: the worker's own days and fuel declaration.
+  { method: 'get', path: '/worker/calendar', allowed: 'worker' },
+  { method: 'put', path: '/worker/availability', allowed: 'worker' },
+  { method: 'put', path: '/worker/fuel', allowed: 'worker' },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',

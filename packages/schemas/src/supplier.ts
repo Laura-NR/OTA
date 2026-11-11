@@ -111,6 +111,18 @@ export const setAvailabilitySchema = z.object({
 
 export type SetAvailabilityRequest = z.infer<typeof setAvailabilitySchema>;
 
+/**
+ * More than fourteen blocked days in a row from today on (W-Calendar): the
+ * desk marks the worker inactive and calls them before high season.
+ */
+export const blockedRunSchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  days: z.number().int(),
+});
+
+export type BlockedRunDto = z.infer<typeof blockedRunSchema>;
+
 /* M6 supplier resources (`docs/schema-m6-suppliers.md`). */
 
 export const generatorAccessSchema = z.enum([...GENERATOR_ACCESS] as [
@@ -268,6 +280,7 @@ export const supplierDetailSchema = supplierRowSchema.extend({
   resources: supplierResourcesSchema.nullable(),
   jobs12m: z.number().int(),
   vehicle: vehicleDetailsSchema.nullable(),
+  longBlock: blockedRunSchema.nullable(),
 });
 
 export type SupplierDetailDto = z.infer<typeof supplierDetailSchema>;

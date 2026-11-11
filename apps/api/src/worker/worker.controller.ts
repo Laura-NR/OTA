@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -6,13 +7,29 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
+  Query,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
-import type { WorkerHomeDto, WorkerSignInCodeDto, WorkerSignOutDto } from '@ota/schemas';
+import {
+  declareWorkerFuelSchema,
+  setWorkerDaysSchema,
+  workerCalendarQuerySchema,
+  type DeclareWorkerFuelRequest,
+  type SetWorkerDaysRequest,
+  type WorkerCalendarDto,
+  type WorkerCalendarQuery,
+  type WorkerDaysResultDto,
+  type WorkerFuelDto,
+  type WorkerHomeDto,
+  type WorkerSignInCodeDto,
+  type WorkerSignOutDto,
+} from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Roles } from '../common/auth/roles.decorator';
+import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { WorkerCodesService } from './worker-codes.service';
 import { WorkerService } from './worker.service';
 
@@ -32,6 +49,36 @@ export class WorkerController {
   @Roles(UserRole.ServiceWorker)
   async signOut(@CurrentUser() actor: AuthUser): Promise<void> {
     await this.worker.signOut(actor);
+  }
+
+  /** W-Calendar: one month of the worker's own days. */
+  @Get('calendar')
+  @Roles(UserRole.ServiceWorker)
+  calendar(
+    @Query(new ZodValidationPipe(workerCalendarQuerySchema)) query: WorkerCalendarQuery,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<WorkerCalendarDto> {
+    return this.worker.calendar(actor, query);
+  }
+
+  /** Block or free a day or a range of the worker's own calendar. */
+  @Put('availability')
+  @Roles(UserRole.ServiceWorker)
+  setDays(
+    @Body(new ZodValidationPipe(setWorkerDaysSchema)) body: SetWorkerDaysRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<WorkerDaysResultDto> {
+    return this.worker.setDays(actor, body);
+  }
+
+  /** A driver's weekly fuel declaration. */
+  @Put('fuel')
+  @Roles(UserRole.ServiceWorker)
+  declareFuel(
+    @Body(new ZodValidationPipe(declareWorkerFuelSchema)) body: DeclareWorkerFuelRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<WorkerFuelDto> {
+    return this.worker.declareFuel(actor, body);
   }
 }
 

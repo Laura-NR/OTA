@@ -93,11 +93,18 @@ function createFakePrisma(
       findMany: async ({
         where,
       }: {
-        where?: { supplierId?: string; date?: { gte?: Date; lte?: Date } };
+        where?: {
+          supplierId?: string;
+          isAvailable?: boolean;
+          date?: { gte?: Date; lte?: Date };
+        };
       }) => {
         let rows = [...availability.values()];
         if (where?.supplierId) {
           rows = rows.filter((row) => row.supplierId === where.supplierId);
+        }
+        if (where?.isAvailable !== undefined) {
+          rows = rows.filter((row) => row.isAvailable === where.isAvailable);
         }
         if (where?.date?.gte) {
           rows = rows.filter((row) => row.date >= where.date!.gte!);
@@ -426,6 +433,37 @@ describe('suppliers', () => {
       .send({ date: '2027-02-01', isAvailable: true });
 
     expect(response.status).toBe(404);
+  });
+
+  it('shows the inspector a block of more than fourteen days in a row ahead (W-Calendar)', async () => {
+    const block = (from: string, days: number, isAvailable = false) => {
+      for (let index = 0; index < days; index += 1) {
+        const date = new Date(Date.parse(`${from}T00:00:00Z`) + index * 86_400_000);
+        availability.set(`${GUIDE_ID}:${date.toISOString()}`, {
+          id: `avail-${availability.size + 1}`,
+          supplierId: GUIDE_ID,
+          date,
+          isAvailable,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    };
+    const inspect = async () =>
+      (
+        await request(app.getHttpServer())
+          .get(`/suppliers/${GUIDE_ID}`)
+          .set('x-test-user', SUPER_ADMIN.email)
+      ).body.longBlock;
+
+    // Fourteen blocked, a day freed, fourteen more: no run is long enough.
+    block('2099-03-01', 14);
+    block('2099-03-15', 1, true);
+    block('2099-03-16', 14);
+    expect(await inspect()).toBeNull();
+
+    block('2099-03-15', 1);
+    expect(await inspect()).toEqual({ from: '2099-03-01', to: '2099-03-29', days: 29 });
   });
 
   describe('M6 resources', () => {
