@@ -11,9 +11,13 @@ function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+type Day = Pick<AvailabilityDayDto, 'isAvailable' | 'blockReason'>;
+
 /**
  * Per-day worker availability (spec §5.2): single-tap toggle with granular
- * blocking. Days without a stored override are available by default.
+ * blocking. Days without a stored override are available by default. A day
+ * the worker blocked from the app names their reason in its tooltip; a day
+ * set here has none (K4).
  */
 export function AvailabilityCalendar({
   supplierId,
@@ -27,7 +31,7 @@ export function AvailabilityCalendar({
   const [cursor, setCursor] = useState(
     () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)),
   );
-  const [days, setDays] = useState<Record<string, boolean>>({});
+  const [days, setDays] = useState<Record<string, Day>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,9 +77,9 @@ export function AvailabilityCalendar({
     )
       .then((rows) => {
         if (!active) return;
-        const next: Record<string, boolean> = {};
+        const next: Record<string, Day> = {};
         for (const row of rows) {
-          next[row.date] = row.isAvailable;
+          next[row.date] = { isAvailable: row.isAvailable, blockReason: row.blockReason };
         }
         setDays(next);
       })
@@ -95,7 +99,7 @@ export function AvailabilityCalendar({
   async function toggle(day: Date) {
     if (!canEdit || busy) return;
     const key = isoDate(day);
-    const next = !(days[key] ?? true);
+    const next = !(days[key]?.isAvailable ?? true);
     setBusy(true);
     setError(null);
     try {
@@ -103,7 +107,10 @@ export function AvailabilityCalendar({
         method: 'PUT',
         body: JSON.stringify({ date: key, isAvailable: next }),
       });
-      setDays((previous) => ({ ...previous, [key]: next }));
+      setDays((previous) => ({
+        ...previous,
+        [key]: { isAvailable: next, blockReason: null },
+      }));
     } catch (toggleError) {
       setError(toggleError instanceof Error ? toggleError.message : t('updateFailed'));
     } finally {
@@ -158,7 +165,8 @@ export function AvailabilityCalendar({
         ))}
         {cells.map((day) => {
           const key = isoDate(day);
-          const available = days[key] ?? true;
+          const available = days[key]?.isAvailable ?? true;
+          const reason = days[key]?.blockReason ?? null;
           return (
             <button
               key={key}
@@ -166,7 +174,13 @@ export function AvailabilityCalendar({
               disabled={!canEdit || busy}
               onClick={() => toggle(day)}
               data-date={key}
-              title={available ? t('available') : t('blocked')}
+              title={
+                available
+                  ? t('available')
+                  : reason
+                    ? t('blockedBecause', { reason: t(`reasons.${reason}`) })
+                    : t('blocked')
+              }
               className={cn(
                 'rounded py-2 transition-colors',
                 available

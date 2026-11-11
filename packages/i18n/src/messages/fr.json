@@ -2843,6 +2843,13 @@
       "updateFailed": "Impossible de mettre à jour la disponibilité",
       "available": "Disponible",
       "blocked": "Bloqué",
+      "blockedBecause": "Bloqué · {reason}",
+      "reasons": {
+        "FAMILY": "Famille",
+        "VEHICLE_REPAIR": "Véhicule au garage",
+        "OTHER_JOB": "Autre travail",
+        "OTHER": "Autre"
+      },
       "legend": "Vert = disponible · rouge = bloqué. Un jour sans exception est disponible."
     },
     "pricingRules": {

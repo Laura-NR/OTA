@@ -2843,6 +2843,13 @@
       "updateFailed": "No se pudo actualizar la disponibilidad",
       "available": "Disponible",
       "blocked": "Bloqueado",
+      "blockedBecause": "Bloqueado · {reason}",
+      "reasons": {
+        "FAMILY": "Familia",
+        "VEHICLE_REPAIR": "Carro en taller",
+        "OTHER_JOB": "Otro trabajo",
+        "OTHER": "Otro"
+      },
       "legend": "Verde = disponible · rojo = bloqueado. Un día sin excepción está disponible."
     },
     "pricingRules": {

@@ -2843,6 +2843,13 @@
       "updateFailed": "Could not update availability",
       "available": "Available",
       "blocked": "Blocked",
+      "blockedBecause": "Blocked · {reason}",
+      "reasons": {
+        "FAMILY": "Family",
+        "VEHICLE_REPAIR": "Vehicle in the garage",
+        "OTHER_JOB": "Another job",
+        "OTHER": "Other"
+      },
       "legend": "Green = available · red = blocked. A day with no override is available."
     },
     "pricingRules": {
