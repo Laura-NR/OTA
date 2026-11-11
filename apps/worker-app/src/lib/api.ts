@@ -3,6 +3,7 @@ import type {
   SetWorkerDaysRequest,
   WorkerCalendarDto,
   WorkerDaysResultDto,
+  WorkerEarningsDto,
   WorkerFuelDto,
   WorkerHomeDto,
 } from '@ota/schemas';
@@ -17,7 +18,7 @@ export class ApiError extends Error {
   }
 }
 
-/** The API calls the worker app makes (`docs/worker-app-plan.md` W1, W3, W5). */
+/** The API calls the worker app makes (`docs/worker-app-plan.md` W1, W3, W5, §8). */
 export interface WorkerApi {
   sendCode(phone: string): Promise<void>;
   signIn(phone: string, code: string): Promise<{ token: string; expiresAt: string }>;
@@ -29,6 +30,8 @@ export interface WorkerApi {
   calendar(token: string, month?: string): Promise<WorkerCalendarDto>;
   setDays(token: string, change: SetWorkerDaysRequest): Promise<WorkerDaysResultDto>;
   declareFuel(token: string, litres: number): Promise<WorkerFuelDto>;
+  /** W-Earnings: reliability, payouts and the latest finished jobs. */
+  earnings(token: string): Promise<WorkerEarningsDto>;
 }
 
 export function createWorkerApi(
@@ -115,6 +118,11 @@ export function createWorkerApi(
       return (await (
         await request('/worker/fuel', { method: 'PUT', token, body: { litres } })
       ).json()) as WorkerFuelDto;
+    },
+    async earnings(token) {
+      return (await (
+        await request('/worker/earnings', { token })
+      ).json()) as WorkerEarningsDto;
     },
   };
 }

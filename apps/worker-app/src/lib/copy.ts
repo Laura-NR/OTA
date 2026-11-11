@@ -192,6 +192,39 @@ export const copy = {
     refused: 'La central no aceptó este cambio. Inténtalo de nuevo o llama a la central.',
     back: 'Volver al inicio',
   },
+  earnings: {
+    open: 'Fiabilidad y pagos',
+    title: 'Fiabilidad y pagos',
+    reliability: 'Tu fiabilidad',
+    basis: (answered: number) =>
+      answered === 1
+        ? 'sobre 1 oferta respondida'
+        : `sobre ${answered} ofertas respondidas`,
+    noScore: (answered: number, min: number) =>
+      `Aún no hay número: llevas ${answered} de ${min} respuestas.`,
+    meets: 'Recibes ofertas automáticas',
+    below: 'Por debajo del mínimo: sin ofertas automáticas',
+    accepted: 'Aceptados',
+    declined: 'Rechazados',
+    timedOut: 'Sin respuesta',
+    rule: (floor: number) =>
+      `Cuenta cada oferta que aceptas, rechazas o dejas sin respuesta. Por debajo de ${floor} la central te saca de las ofertas automáticas hasta hablar contigo.`,
+    payouts: 'Pagos',
+    pending: 'Pendiente',
+    jobs: (count: number) =>
+      count === 1 ? '1 trabajo terminado' : `${count} trabajos terminados`,
+    thisMonth: 'Este mes',
+    paidYear: (year: number) => `Pagado · trabajos de ${year}`,
+    count: (count: number) => (count === 1 ? '1 trabajo' : `${count} trabajos`),
+    issue: (amount: string, count: number) =>
+      `${amount} con incidencia en el pago (${count === 1 ? '1 trabajo' : `${count} trabajos`}). Llama a la central.`,
+    howPaid: 'La central te dice cuándo y dónde cobras cada trabajo.',
+    history: 'Historial',
+    noHistory: 'Aún no tienes trabajos terminados.',
+    state: { PENDING: 'Pendiente', PAID: 'Pagado', ISSUE: 'Incidencia' },
+    refused: 'No se pudo cargar. Inténtalo de nuevo o llama a la central.',
+    back: 'Volver al inicio',
+  },
 } as const;
 
 /** W-Offer's decline reasons, in the board's order. */

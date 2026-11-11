@@ -81,6 +81,18 @@ describe('the worker app API client (W1, W3, W5)', () => {
     }
   });
 
+  it('reads the worker’s earnings as the signed-in worker (W-Earnings)', async () => {
+    const { calls, fetcher } = recorder(200, {});
+    const api = createWorkerApi('http://api.test', fetcher);
+    await api.earnings('t');
+    expect(calls.map((call) => `${call.init.method} ${call.url}`)).toEqual([
+      'GET http://api.test/worker/earnings',
+    ]);
+    expect((calls[0]!.init.headers as Record<string, string>).authorization).toBe(
+      'Bearer t',
+    );
+  });
+
   it('reports no connection as a null status', async () => {
     const api = createWorkerApi('', (async () => {
       throw new TypeError('Network request failed');

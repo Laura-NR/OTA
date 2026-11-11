@@ -1,4 +1,4 @@
-import type { ServiceType } from '@ota/domain';
+import type { ServiceType, SupplierCategory } from '@ota/domain';
 
 /** Service times are shown in Cuba's time, wherever the phone thinks it is. */
 const TIME_ZONE = 'America/Havana';
@@ -18,6 +18,18 @@ const LANGUAGE_LABELS: Record<string, string> = {
   it: 'italiano',
   pt: 'portugués',
 };
+
+const CATEGORY_LABELS: Record<SupplierCategory, string> = {
+  TOUR_GUIDE: 'Guía',
+  PRIVATE_DRIVER: 'Chofer',
+  HOMESTAY_HOST: 'Casa particular',
+  TRANSLATOR: 'Traductor',
+};
+
+/** "Chofer" (W-Earnings' header). */
+export function categoryLabel(category: SupplierCategory): string {
+  return CATEGORY_LABELS[category] ?? category;
+}
 
 export function serviceLabel(type: ServiceType): string {
   return SERVICE_LABELS[type] ?? type;

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { copy, declineReasonText } from '../src/lib/copy';
 import {
   calendarDate,
+  categoryLabel,
   clock,
   dayName,
   dayShort,
@@ -78,5 +79,17 @@ describe('how the worker app says things (W-Home, W-Offer)', () => {
       'Otro',
     ]);
     expect(copy.calendar.reasonSaved('Familia')).toBe('Motivo guardado: Familia.');
+  });
+
+  it('names the worker’s category and payout states as W-Earnings does', () => {
+    expect(categoryLabel('PRIVATE_DRIVER')).toBe('Chofer');
+    expect(categoryLabel('HOMESTAY_HOST')).toBe('Casa particular');
+    expect(copy.earnings.state).toEqual({
+      PENDING: 'Pendiente',
+      PAID: 'Pagado',
+      ISSUE: 'Incidencia',
+    });
+    expect(copy.earnings.jobs(1)).toBe('1 trabajo terminado');
+    expect(copy.earnings.paidYear(2026)).toBe('Pagado · trabajos de 2026');
   });
 });
