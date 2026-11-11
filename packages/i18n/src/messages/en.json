@@ -2389,6 +2389,15 @@
       "jobs12m": "Jobs · 12 m",
       "lastJob": "Last job",
       "noJob": "None yet",
+      "payouts": {
+        "title": "Payouts",
+        "description": "What this worker is owed and has been paid for finished jobs: taken, ended, on a booking not cancelled. The worker sees the same figures in the app.",
+        "pending": "Pending",
+        "thisMonth": "Finished this month",
+        "paidYear": "Paid · jobs of {year}",
+        "issue": "Payout failed",
+        "jobs": "{count, plural, one {# job} other {# jobs}}"
+      },
       "resources": {
         "casaTitle": "Backup power & resilience",
         "casaDescription": "What the host confirmed: power, water and capacity.",

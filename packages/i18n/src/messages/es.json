@@ -2389,6 +2389,15 @@
       "jobs12m": "Servicios · 12 m",
       "lastJob": "Último servicio",
       "noJob": "Ninguno aún",
+      "payouts": {
+        "title": "Pagos",
+        "description": "Lo que se le debe y se le ha pagado a este colaborador por trabajos terminados: aceptados, ya realizados y en reservas no canceladas. El colaborador ve las mismas cifras en la app.",
+        "pending": "Pendiente",
+        "thisMonth": "Terminados este mes",
+        "paidYear": "Pagado · trabajos de {year}",
+        "issue": "Pago fallido",
+        "jobs": "{count, plural, one {# trabajo} other {# trabajos}}"
+      },
       "resources": {
         "casaTitle": "Energía de respaldo y resiliencia",
         "casaDescription": "Lo que confirmó el anfitrión: energía, agua y capacidad.",

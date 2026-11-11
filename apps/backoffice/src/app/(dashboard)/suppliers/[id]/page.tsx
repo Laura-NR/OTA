@@ -25,7 +25,7 @@ import { WorkerSignOut } from '@/components/worker-sign-out';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
-import { calendarDate, opsDate, opsTime, percent } from '@/lib/ops-format';
+import { calendarDate, moneyExact, opsDate, opsTime, percent } from '@/lib/ops-format';
 import { lastJobLabel } from '@/lib/suppliers';
 
 const EDIT_ROLES: readonly string[] = [
@@ -71,9 +71,10 @@ function Panel({
  * The supplier inspector (A-Suppliers): the worker's profile, the credential
  * inspector (spec §4.5), the auto-dispatch state, reliability and job history,
  * a casa's backup power or a driver's vehicle and fuel reserve (M6), the
- * worker app sign-in code (`docs/worker-app-plan.md` W1), and the
- * availability calendar. Guide specialities wait (M6 D7), payouts for the
- * payments module.
+ * worker app sign-in code (`docs/worker-app-plan.md` W1), the payouts the
+ * worker sees in the app (W-Earnings) and the availability calendar. Guide
+ * specialities wait (M6 D7); recording a payout waits on
+ * `docs/schema-w-earnings.md`.
  */
 export default async function SupplierDetailPage({
   params,
@@ -337,6 +338,30 @@ export default async function SupplierDetailPage({
         </div>
       </Panel>
 
+      <Panel title={t('payouts.title')} description={t('payouts.description')}>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {(
+            [
+              ['pending', t('payouts.pending'), supplier.payouts.pending],
+              ['thisMonth', t('payouts.thisMonth'), supplier.payouts.thisMonth],
+              [
+                'paidThisYear',
+                t('payouts.paidYear', { year: supplier.payouts.year }),
+                supplier.payouts.paidThisYear,
+              ],
+              ['issue', t('payouts.issue'), supplier.payouts.issue],
+            ] as const
+          ).map(([key, label, total]) => (
+            <Stat
+              key={key}
+              label={label}
+              value={moneyExact(Number(total.amount), supplier.payouts.currency, locale)}
+              note={t('payouts.jobs', { count: total.jobs })}
+            />
+          ))}
+        </div>
+      </Panel>
+
       {resourcesKind ? (
         <Panel
           title={t(`resources.${resourcesKind}Title`)}
@@ -410,16 +435,20 @@ function Stat({
   label,
   value,
   mono = true,
+  note,
 }: {
   label: string;
   value: string;
   /** Figures are set in mono; a sentence such as the last job is not. */
   mono?: boolean;
+  /** A line under the figure, such as how many jobs a sum covers. */
+  note?: string;
 }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-md bg-neutral-50 px-3 py-2">
       <span className="text-caption text-muted">{label}</span>
       <span className={cn('text-body', mono && 'font-mono')}>{value}</span>
+      {note ? <span className="text-caption text-muted">{note}</span> : null}
     </div>
   );
 }

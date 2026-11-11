@@ -2389,6 +2389,15 @@
       "jobs12m": "Missions · 12 m",
       "lastJob": "Dernière mission",
       "noJob": "Aucune pour l'instant",
+      "payouts": {
+        "title": "Paiements",
+        "description": "Ce qui est dû à ce prestataire et ce qui lui a été payé pour les missions terminées : acceptées, réalisées, sur une réservation non annulée. Le prestataire voit les mêmes chiffres dans l'application.",
+        "pending": "En attente",
+        "thisMonth": "Terminées ce mois-ci",
+        "paidYear": "Payé · missions de {year}",
+        "issue": "Paiement échoué",
+        "jobs": "{count, plural, one {# mission} other {# missions}}"
+      },
       "resources": {
         "casaTitle": "Énergie de secours et résilience",
         "casaDescription": "Ce que l'hôte a confirmé : énergie, eau et capacité.",
