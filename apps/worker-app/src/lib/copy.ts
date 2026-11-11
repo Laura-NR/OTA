@@ -141,7 +141,8 @@ export const copy = {
     free: 'Recibes ofertas para este día. Si no vas a estar, bloquéalo: así la central no cuenta contigo.',
     blocked: 'No recibirás ofertas para este día.',
     reason: 'Motivo:',
-    reasonLabel: 'Motivo del bloqueo',
+    reasonLabel: 'Motivo del bloqueo de este día',
+    rangeReasonLabel: 'Motivo de los días',
     reasons: {
       FAMILY: 'Familia',
       VEHICLE_REPAIR: 'Carro en taller',

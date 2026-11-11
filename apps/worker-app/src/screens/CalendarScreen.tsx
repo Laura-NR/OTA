@@ -325,7 +325,12 @@ export function CalendarScreen({
         {rangeDays > WORKER_BLOCK_MAX_DAYS ? (
           <Notice tone="warning">{copy.calendar.tooMany(WORKER_BLOCK_MAX_DAYS)}</Notice>
         ) : null}
-        <ReasonChips value={rangeReason} disabled={busy} onPick={setRangeReason} />
+        <ReasonChips
+          label={copy.calendar.rangeReasonLabel}
+          value={rangeReason}
+          disabled={busy}
+          onPick={setRangeReason}
+        />
         <Button
           label={copy.calendar.blockDays(rangeDays)}
           variant="secondary"
@@ -557,7 +562,12 @@ function SelectedDay({
       ) : state === 'BLOCKED' ? (
         <>
           <Text style={type.body}>{copy.calendar.blocked}</Text>
-          <ReasonChips value={reason} disabled={busy} onPick={onReason} />
+          <ReasonChips
+            label={copy.calendar.reasonLabel}
+            value={reason}
+            disabled={busy}
+            onPick={onReason}
+          />
           <Button
             label={copy.calendar.unblock}
             busy={busy}
@@ -584,20 +594,18 @@ function SelectedDay({
  * reasons existed, has none picked until the worker picks one.
  */
 function ReasonChips({
+  label,
   value,
   disabled,
   onPick,
 }: {
+  label: string;
   value: WorkerBlockReason | null;
   disabled: boolean;
   onPick: (reason: WorkerBlockReason) => void;
 }) {
   return (
-    <View
-      accessibilityRole="radiogroup"
-      accessibilityLabel={copy.calendar.reasonLabel}
-      style={styles.chips}
-    >
+    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.chips}>
       <Text style={type.caption}>{copy.calendar.reason}</Text>
       {WORKER_BLOCK_REASONS.map((reason) => {
         const on = reason === value;
