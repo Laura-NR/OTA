@@ -39,6 +39,11 @@ jobs:
       - name: Type check
         run: pnpm typecheck
 
+      # The API's shutdown test renders a real PDF, so it needs the Chromium
+      # headless shell that matches packages/documents' playwright.
+      - name: Install the PDF browser
+        run: pnpm --filter @ota/documents exec playwright install --with-deps --only-shell chromium
+
       - name: Test
         run: pnpm test
 
