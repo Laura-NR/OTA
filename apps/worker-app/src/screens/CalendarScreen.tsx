@@ -613,7 +613,10 @@ function ReasonChips({
           <Pressable
             key={reason}
             accessibilityRole="radio"
-            accessibilityState={{ checked: on, disabled }}
+            // aria-checked, not accessibilityState: react-native-web drops the
+            // latter's `checked`, and React Native reads both.
+            aria-checked={on}
+            aria-disabled={disabled}
             disabled={disabled}
             onPress={() => {
               if (!on) onPick(reason);
