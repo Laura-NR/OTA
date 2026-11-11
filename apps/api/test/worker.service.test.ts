@@ -548,6 +548,7 @@ describe("the worker app's calendar (W-Calendar)", () => {
     supplierId: string;
     date: Date;
     isAvailable: boolean;
+    blockReason?: string | null;
   }
 
   function calendarFake(category: string | null, rows: Row[] = []) {
@@ -589,12 +590,12 @@ describe("the worker app's calendar (W-Calendar)", () => {
           data,
         }: {
           where: { supplierId: string; date: { in: Date[] } };
-          data: { isAvailable: boolean };
+          data: { isAvailable: boolean; blockReason: string | null };
         }) => {
           const hit = rows.filter(
             (row) => row.supplierId === where.supplierId && inDates(row, where),
           );
-          for (const row of hit) row.isAvailable = data.isAvailable;
+          for (const row of hit) Object.assign(row, data);
           return { count: hit.length };
         },
         createMany: async ({ data }: { data: Row[]; skipDuplicates: boolean }) => {
@@ -717,7 +718,10 @@ describe("the worker app's calendar (W-Calendar)", () => {
       '2026-11-16',
       '2026-11-18',
     ]);
-    expect(fake.rows.filter((row) => !row.isAvailable)).toHaveLength(5);
+    // Blocked without a reason picked: "Otro" (K2).
+    expect(
+      fake.rows.filter((row) => !row.isAvailable && row.blockReason === 'OTHER'),
+    ).toHaveLength(5);
     // The existing row was updated, not duplicated.
     expect(fake.rows).toHaveLength(5);
     expect(fake.audit).toEqual([
@@ -729,6 +733,7 @@ describe("the worker app's calendar (W-Calendar)", () => {
           from: '2026-11-12',
           to: '2026-11-18',
           isAvailable: false,
+          reason: 'OTHER',
           days: result.changed,
           via: 'WORKER_APP',
         },
@@ -736,17 +741,67 @@ describe("the worker app's calendar (W-Calendar)", () => {
     ]);
   });
 
-  it('frees a blocked day again', async () => {
-    const fake = calendarFake('TOUR_GUIDE', [blocked('2026-11-20')]);
+  it('frees a blocked day again and forgets why it was blocked, whatever reason is sent', async () => {
+    const fake = calendarFake('TOUR_GUIDE', [
+      { ...blocked('2026-11-20'), blockReason: 'FAMILY' },
+    ]);
     const result = await fake.service.setDays(
       WORKER,
-      { from: '2026-11-20', to: '2026-11-20', isAvailable: true },
+      { from: '2026-11-20', to: '2026-11-20', isAvailable: true, reason: 'OTHER_JOB' },
       NOW,
     );
     expect(result.changed).toEqual(['2026-11-20']);
     expect(fake.rows).toEqual([
-      { supplierId: 'supplier-reinier', date: day('2026-11-20'), isAvailable: true },
+      {
+        supplierId: 'supplier-reinier',
+        date: day('2026-11-20'),
+        isAvailable: true,
+        blockReason: null,
+      },
     ]);
+    expect(fake.audit[0]?.metadata).toMatchObject({ isAvailable: true, reason: null });
+  });
+
+  it('stores the reason picked on every day of a range, changing an earlier reason, and shows it on blocked days only', async () => {
+    const fake = calendarFake('TOUR_GUIDE', [
+      { ...blocked('2026-11-12'), blockReason: 'FAMILY' },
+      // Blocked under the job's day, which shows the job and no reason.
+      { ...blocked('2026-11-13'), blockReason: 'FAMILY' },
+    ]);
+    await fake.service.setDays(
+      WORKER,
+      { from: '2026-11-12', to: '2026-11-14', isAvailable: false, reason: 'VEHICLE_REPAIR' },
+      NOW,
+    );
+    expect(fake.audit[0]?.metadata).toMatchObject({ reason: 'VEHICLE_REPAIR' });
+    expect(
+      fake.rows.map((row) => [row.date.toISOString().slice(0, 10), row.blockReason]),
+    ).toEqual([
+      ['2026-11-12', 'VEHICLE_REPAIR'],
+      // The job's day is left as it was.
+      ['2026-11-13', 'FAMILY'],
+      ['2026-11-14', 'VEHICLE_REPAIR'],
+    ]);
+
+    const calendar = await fake.service.calendar(WORKER, {}, NOW);
+    const entry = (date: string) => calendar.days.find((item) => item.date === date);
+    expect(entry('2026-11-12')).toEqual({
+      date: '2026-11-12',
+      state: 'BLOCKED',
+      reason: 'VEHICLE_REPAIR',
+    });
+    expect(entry('2026-11-13')).toMatchObject({ state: 'JOB', reason: null });
+    expect(entry('2026-11-15')).toMatchObject({ state: 'AVAILABLE', reason: null });
+  });
+
+  it('shows a day blocked with no reason (by the desk, or before the reasons) without one', async () => {
+    const fake = calendarFake('TOUR_GUIDE', [blocked('2026-11-20')]);
+    const calendar = await fake.service.calendar(WORKER, {}, NOW);
+    expect(calendar.days.find((item) => item.date === '2026-11-20')).toEqual({
+      date: '2026-11-20',
+      state: 'BLOCKED',
+      reason: null,
+    });
   });
 
   it('reports a block of more than fourteen days in a row', async () => {

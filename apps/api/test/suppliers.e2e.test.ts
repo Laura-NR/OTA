@@ -121,7 +121,7 @@ function createFakePrisma(
       }: {
         where: { supplierId_date: { supplierId: string; date: Date } };
         create: Omit<Availability, 'id' | 'createdAt' | 'updatedAt'>;
-        update: { isAvailable: boolean };
+        update: Pick<Availability, 'isAvailable' | 'blockReason'>;
       }) => {
         const key = availabilityKey(
           where.supplierId_date.supplierId,
@@ -129,11 +129,12 @@ function createFakePrisma(
         );
         const existing = availability.get(key);
         if (existing) {
-          existing.isAvailable = update.isAvailable;
+          Object.assign(existing, update);
           return existing;
         }
         const created = {
           id: `avail-${availability.size + 1}`,
+          blockReason: null,
           ...create,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -417,6 +418,40 @@ describe('suppliers', () => {
     expect(list.body[0].isAvailable).toBe(true);
   });
 
+  it('lists the reason a worker gave for a blocked day, and drops it when the desk sets the day (K4)', async () => {
+    const date = new Date('2027-02-03T00:00:00Z');
+    availability.set(`${GUIDE_ID}:${date.toISOString()}`, {
+      id: 'avail-worker',
+      supplierId: GUIDE_ID,
+      date,
+      isAvailable: false,
+      blockReason: 'VEHICLE_REPAIR',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    const list = async () =>
+      (
+        await request(app.getHttpServer())
+          .get(`/suppliers/${GUIDE_ID}/availability?from=2027-02-01&to=2027-02-28`)
+          .set('x-test-user', SUPER_ADMIN.email)
+      ).body;
+
+    expect(await list()).toEqual([
+      expect.objectContaining({
+        date: '2027-02-03',
+        isAvailable: false,
+        blockReason: 'VEHICLE_REPAIR',
+      }),
+    ]);
+
+    const set = await request(app.getHttpServer())
+      .put(`/suppliers/${GUIDE_ID}/availability`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ date: '2027-02-03', isAvailable: false });
+    expect(set.body).toMatchObject({ isAvailable: false, blockReason: null });
+    expect((await list())[0].blockReason).toBeNull();
+  });
+
   it('returns 403 when a traveler sets availability', async () => {
     const response = await request(app.getHttpServer())
       .put(`/suppliers/${GUIDE_ID}/availability`)
@@ -444,6 +479,7 @@ describe('suppliers', () => {
           supplierId: GUIDE_ID,
           date,
           isAvailable,
+          blockReason: null,
           createdAt: new Date(),
           updatedAt: new Date(),
         });

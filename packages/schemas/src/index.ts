@@ -139,6 +139,7 @@ export {
 export {
   availabilityDaySchema,
   availabilityQuerySchema,
+  blockReasonSchema,
   blockedRunSchema,
   confirmResourcesSchema,
   credentialContentTypeSchema,

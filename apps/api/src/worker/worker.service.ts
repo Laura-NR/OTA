@@ -17,6 +17,7 @@ import {
   longBlockedRun,
   monthDays,
   planWorkerDays,
+  workerBlockReason,
   workerDayStates,
   workerDaysRefusal,
   workerHorizon,
@@ -219,12 +220,15 @@ export class WorkerService {
           isAvailable: false,
           date: { gte: dayDate(fromDay) },
         },
-        select: { date: true },
+        select: { date: true, blockReason: true },
       }),
       this.services(profile.id, first, last, now),
       this.settings.thresholds(),
     ]);
     const blocked = blockedRows.map((row) => row.date.toISOString().slice(0, 10));
+    const reasons = new Map(
+      blockedRows.map((row) => [row.date.toISOString().slice(0, 10), row.blockReason]),
+    );
     const states = workerDayStates(
       days,
       new Set(blocked.filter((day) => day >= first && day <= last)),
@@ -237,7 +241,14 @@ export class WorkerService {
       month,
       today,
       horizon: workerHorizon(today),
-      days: days.map((date) => ({ date, state: states.get(date)! })),
+      days: days.map((date) => {
+        const state = states.get(date)!;
+        return {
+          date,
+          state,
+          reason: state === 'BLOCKED' ? (reasons.get(date) ?? null) : null,
+        };
+      }),
       jobs: jobs.map((item) => this.toJob(item)),
       offers: offers.flatMap((item) => this.toOffer(item, hurryShare)),
       longBlock: longBlockedRun(blocked, today),
@@ -251,8 +262,9 @@ export class WorkerService {
   /**
    * "Bloquear este día", "Bloquear varios días" and "Volver a estar
    * disponible": sets each day of the range, except days with a job or an
-   * open offer, which are left as they are and reported. Audited once per
-   * change as `supplier.availability_set` with `via: WORKER_APP`.
+   * open offer, which are left as they are and reported. A blocked day keeps
+   * the reason picked ("Otro" when none); a freed day loses it. Audited once
+   * per change as `supplier.availability_set` with `via: WORKER_APP`.
    */
   async setDays(
     actor: AuthUser,
@@ -281,16 +293,18 @@ export class WorkerService {
 
     if (change.length > 0) {
       const dates = change.map(dayDate);
+      const blockReason = workerBlockReason(input.isAvailable, input.reason);
       await this.prisma.$transaction(async (tx) => {
         await tx.availability.updateMany({
           where: { supplierId: profile.id, date: { in: dates } },
-          data: { isAvailable: input.isAvailable },
+          data: { isAvailable: input.isAvailable, blockReason },
         });
         await tx.availability.createMany({
           data: dates.map((date) => ({
             supplierId: profile.id,
             date,
             isAvailable: input.isAvailable,
+            blockReason,
           })),
           skipDuplicates: true,
         });
@@ -304,6 +318,7 @@ export class WorkerService {
               from: input.from,
               to: input.to,
               isAvailable: input.isAvailable,
+              reason: blockReason,
               days: change,
               via: 'WORKER_APP',
             },

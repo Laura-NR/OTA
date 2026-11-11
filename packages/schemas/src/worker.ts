@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { serviceTypeSchema } from './dispatch';
 import {
+  blockReasonSchema,
   blockedRunSchema,
   supplierCategorySchema,
   verificationStatusSchema,
@@ -125,7 +126,14 @@ export const workerCalendarSchema = z.object({
   today: z.string(),
   /** The last day the worker may change. */
   horizon: z.string(),
-  days: z.array(z.object({ date: z.string(), state: workerDayStateSchema })),
+  days: z.array(
+    z.object({
+      date: z.string(),
+      state: workerDayStateSchema,
+      /** A blocked day's reason; null on any other state, or when none was given. */
+      reason: blockReasonSchema.nullable(),
+    }),
+  ),
   /** Jobs taken (accepted or done) that touch the month. */
   jobs: z.array(workerJobSchema),
   /** Offers still open that touch the month. */
@@ -142,6 +150,8 @@ export const setWorkerDaysSchema = z.object({
   from: calendarDaySchema,
   to: calendarDaySchema,
   isAvailable: z.boolean(),
+  /** Blocking only: "Otro" when absent; ignored when the days are freed. */
+  reason: blockReasonSchema.optional(),
 });
 
 export type SetWorkerDaysRequest = z.infer<typeof setWorkerDaysSchema>;

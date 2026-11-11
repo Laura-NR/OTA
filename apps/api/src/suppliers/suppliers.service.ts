@@ -131,6 +131,7 @@ function toAvailabilityDto(day: Availability): AvailabilityDayDto {
     supplierId: day.supplierId,
     date: day.date.toISOString().slice(0, 10),
     isAvailable: day.isAvailable,
+    blockReason: day.blockReason,
   };
 }
 
@@ -593,6 +594,7 @@ export class SuppliersService {
   /**
    * Set one calendar day's availability (spec §5.2 single-tap toggle / granular
    * blocking). Upserts on the unique supplier+date pair and audits the change.
+   * The desk gives no reason, so a worker's reason for the day is cleared (K4).
    */
   async setAvailability(
     id: string,
@@ -606,7 +608,7 @@ export class SuppliersService {
       const result = await tx.availability.upsert({
         where: { supplierId_date: { supplierId: id, date } },
         create: { supplierId: id, date, isAvailable: input.isAvailable },
-        update: { isAvailable: input.isAvailable },
+        update: { isAvailable: input.isAvailable, blockReason: null },
       });
 
       await tx.auditLog.create({

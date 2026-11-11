@@ -6,9 +6,11 @@ import {
   ServiceType,
   SupplierCategory,
   VerificationStatus,
+  WORKER_BLOCK_REASONS,
   type GeneratorAccess,
   type PowerKind,
   type ResourceChannel,
+  type WorkerBlockReason,
 } from '@ota/domain';
 import { z } from 'zod';
 
@@ -95,11 +97,19 @@ export const availabilityQuerySchema = z.object({
 
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
 
+/** Why a worker blocked a day (W-Calendar's "Motivo" chips). */
+export const blockReasonSchema = z.enum([...WORKER_BLOCK_REASONS] as [
+  WorkerBlockReason,
+  ...WorkerBlockReason[],
+]);
+
 export const availabilityDaySchema = z.object({
   id: z.string().uuid(),
   supplierId: z.string().uuid(),
   date: z.string(),
   isAvailable: z.boolean(),
+  /** Null when available, blocked by the desk, or blocked before the reasons existed. */
+  blockReason: blockReasonSchema.nullable(),
 });
 
 export type AvailabilityDayDto = z.infer<typeof availabilityDaySchema>;
