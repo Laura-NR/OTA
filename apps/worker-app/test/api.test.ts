@@ -53,7 +53,12 @@ describe('the worker app API client (W1, W3, W5)', () => {
     const api = createWorkerApi('', fetcher);
     await api.calendar('t');
     await api.calendar('t', '2026-12');
-    await api.setDays('t', { from: '2026-12-01', to: '2026-12-02', isAvailable: false });
+    await api.setDays('t', {
+      from: '2026-12-01',
+      to: '2026-12-02',
+      isAvailable: false,
+      reason: 'VEHICLE_REPAIR',
+    });
     await api.declareFuel('t', 40);
 
     expect(calls.map((call) => `${call.init.method} ${call.url}`)).toEqual([
@@ -66,6 +71,7 @@ describe('the worker app API client (W1, W3, W5)', () => {
       from: '2026-12-01',
       to: '2026-12-02',
       isAvailable: false,
+      reason: 'VEHICLE_REPAIR',
     });
     expect(JSON.parse(String(calls[3]!.init.body))).toEqual({ litres: 40 });
     for (const call of calls) {

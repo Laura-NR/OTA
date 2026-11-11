@@ -1,10 +1,12 @@
 import {
   WORKER_BLOCK_MAX_DAYS,
+  WORKER_BLOCK_REASONS,
   WORKER_LONG_BLOCK_DAYS,
   daysBetween,
   serviceCalendarDays,
   shiftMonth,
   workerToday,
+  type WorkerBlockReason,
   type WorkerDayState,
 } from '@ota/domain';
 import type { WorkerCalendarDto, WorkerJobDto, WorkerOfferDto } from '@ota/schemas';
@@ -47,8 +49,8 @@ function covers(service: WorkerJobDto, day: string): boolean {
 }
 
 /**
- * W-Calendar: the worker's month, a day to block or free, several days to
- * block at once, and a driver's weekly fuel declaration. Changes need a
+ * W-Calendar: the worker's month, a day to block or free and why, several
+ * days to block at once, and a driver's weekly fuel declaration. Changes need a
  * connection; unlike offer answers they are not queued
  * (`docs/worker-app-plan.md` §6).
  */
@@ -74,6 +76,7 @@ export function CalendarScreen({
     to: null,
   });
   const [picking, setPicking] = useState<'from' | 'to' | null>(null);
+  const [rangeReason, setRangeReason] = useState<WorkerBlockReason>('OTHER');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [litres, setLitres] = useState('');
@@ -130,29 +133,40 @@ export function CalendarScreen({
     );
   }
 
-  const stateOf = new Map(data.days.map((day) => [day.date, day.state]));
+  const dayOf = new Map(data.days.map((day) => [day.date, day]));
   const changeable = (day: string) => day >= data.today && day <= data.horizon;
   const first = data.days[0]!.date;
   const lead = (new Date(`${first}T00:00:00Z`).getUTCDay() + 6) % 7;
   const currentMonth = data.today.slice(0, 7);
 
-  async function change(from: string, to: string, isAvailable: boolean) {
+  /** Blocks or frees `from`–`to`; with `reason` on a day already blocked, only says why. */
+  async function change(
+    from: string,
+    to: string,
+    isAvailable: boolean,
+    reason?: WorkerBlockReason,
+    reasonOnly = false,
+  ) {
     setBusy(true);
     setMessage(null);
     try {
-      const result = await api.setDays(token, { from, to, isAvailable });
+      const result = await api.setDays(token, { from, to, isAvailable, reason });
       setMessage({
         tone: 'success',
-        text: [
-          result.changed.length > 0
-            ? copy.calendar.done(result.changed.length, !isAvailable)
-            : null,
-          result.kept.length > 0 ? copy.calendar.kept(result.kept.length) : null,
-        ]
-          .filter(Boolean)
-          .join(' '),
+        text:
+          reasonOnly && result.changed.length > 0
+            ? copy.calendar.reasonSaved(copy.calendar.reasons[reason ?? 'OTHER'])
+            : [
+                result.changed.length > 0
+                  ? copy.calendar.done(result.changed.length, !isAvailable)
+                  : null,
+                result.kept.length > 0 ? copy.calendar.kept(result.kept.length) : null,
+              ]
+                .filter(Boolean)
+                .join(' '),
       });
       setRange({ from: null, to: null });
+      setRangeReason('OTHER');
       await load();
     } catch (error) {
       failed(error);
@@ -249,11 +263,12 @@ export function CalendarScreen({
           {Array.from({ length: lead }, (_, index) => (
             <View key={`lead-${index}`} style={styles.cell} />
           ))}
-          {data.days.map(({ date, state }) => (
+          {data.days.map(({ date, state, reason }) => (
             <View key={date} style={styles.cell}>
               <DayButton
                 day={date}
                 state={state}
+                reason={reason}
                 today={date === data.today}
                 past={date < data.today}
                 selected={date === selected}
@@ -280,10 +295,12 @@ export function CalendarScreen({
         <SelectedDay
           day={selected}
           data={data}
-          state={stateOf.get(selected) ?? 'AVAILABLE'}
+          state={dayOf.get(selected)?.state ?? 'AVAILABLE'}
+          reason={dayOf.get(selected)?.reason ?? null}
           changeable={changeable(selected)}
           busy={busy}
           onChange={(isAvailable) => void change(selected, selected, isAvailable)}
+          onReason={(reason) => void change(selected, selected, false, reason, true)}
           onOpenOffer={onOpenOffer}
         />
       ) : null}
@@ -308,12 +325,13 @@ export function CalendarScreen({
         {rangeDays > WORKER_BLOCK_MAX_DAYS ? (
           <Notice tone="warning">{copy.calendar.tooMany(WORKER_BLOCK_MAX_DAYS)}</Notice>
         ) : null}
+        <ReasonChips value={rangeReason} disabled={busy} onPick={setRangeReason} />
         <Button
           label={copy.calendar.blockDays(rangeDays)}
           variant="secondary"
           disabled={rangeDays === 0 || rangeDays > WORKER_BLOCK_MAX_DAYS}
           busy={busy}
-          onPress={() => void change(range.from!, range.to!, false)}
+          onPress={() => void change(range.from!, range.to!, false, rangeReason)}
         />
         <Text style={type.caption}>{copy.calendar.longRule(WORKER_LONG_BLOCK_DAYS)}</Text>
       </Card>
@@ -390,6 +408,7 @@ function IconButton({
 function DayButton({
   day,
   state,
+  reason,
   today,
   past,
   selected,
@@ -398,13 +417,14 @@ function DayButton({
 }: {
   day: string;
   state: WorkerDayState;
+  reason: WorkerBlockReason | null;
   today: boolean;
   past: boolean;
   selected: boolean;
   inRange: boolean;
   onPress: () => void;
 }) {
-  const label = `${dayName(day)}${today ? `, ${copy.calendar.today}` : ''}, ${copy.calendar.stateAria[state]}`;
+  const label = `${dayName(day)}${today ? `, ${copy.calendar.today}` : ''}, ${copy.calendar.stateAria[state]}${reason ? ` (${copy.calendar.reasons[reason].toLowerCase()})` : ''}`;
   return (
     <Pressable
       accessibilityRole="button"
@@ -444,17 +464,21 @@ function SelectedDay({
   day,
   data,
   state,
+  reason,
   changeable,
   busy,
   onChange,
+  onReason,
   onOpenOffer,
 }: {
   day: string;
   data: WorkerCalendarDto;
   state: WorkerDayState;
+  reason: WorkerBlockReason | null;
   changeable: boolean;
   busy: boolean;
   onChange: (isAvailable: boolean) => void;
+  onReason: (reason: WorkerBlockReason) => void;
   onOpenOffer: (offer: WorkerOfferDto) => void;
 }) {
   const jobs = data.jobs.filter((job) => covers(job, day));
@@ -533,6 +557,7 @@ function SelectedDay({
       ) : state === 'BLOCKED' ? (
         <>
           <Text style={type.body}>{copy.calendar.blocked}</Text>
+          <ReasonChips value={reason} disabled={busy} onPick={onReason} />
           <Button
             label={copy.calendar.unblock}
             busy={busy}
@@ -551,6 +576,49 @@ function SelectedDay({
         </>
       )}
     </Card>
+  );
+}
+
+/**
+ * The board's "Motivo" chips. A day blocked by the desk, or before the
+ * reasons existed, has none picked until the worker picks one.
+ */
+function ReasonChips({
+  value,
+  disabled,
+  onPick,
+}: {
+  value: WorkerBlockReason | null;
+  disabled: boolean;
+  onPick: (reason: WorkerBlockReason) => void;
+}) {
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      accessibilityLabel={copy.calendar.reasonLabel}
+      style={styles.chips}
+    >
+      <Text style={type.caption}>{copy.calendar.reason}</Text>
+      {WORKER_BLOCK_REASONS.map((reason) => {
+        const on = reason === value;
+        return (
+          <Pressable
+            key={reason}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on, disabled }}
+            disabled={disabled}
+            onPress={() => {
+              if (!on) onPick(reason);
+            }}
+            style={[styles.chip, on && styles.chipOn, disabled && styles.inactive]}
+          >
+            <Text style={[styles.chipLabel, on && styles.chipLabelOn]}>
+              {copy.calendar.reasons[reason]}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -691,6 +759,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.warning,
   },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  // The board's chip at the app's 48 dp touch size (its 36 px is below DS 07's).
+  chip: {
+    minHeight: 48,
+    justifyContent: 'center',
+    paddingHorizontal: space.md,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+  },
+  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipLabel: { fontSize: 13, lineHeight: 18, fontWeight: '500', color: colors.ink },
+  chipLabelOn: { color: colors.surface },
   rangeField: { flex: 1, gap: space.xs },
   rangeValue: { justifyContent: 'center' },
   rangeActive: { borderColor: colors.primary, borderWidth: 2 },

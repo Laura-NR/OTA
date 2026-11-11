@@ -1,3 +1,4 @@
+import { WORKER_BLOCK_REASONS } from '@ota/domain';
 import { describe, expect, it } from 'vitest';
 
 import { copy, declineReasonText } from '../src/lib/copy';
@@ -67,5 +68,15 @@ describe('how the worker app says things (W-Home, W-Offer)', () => {
     expect(copy.calendar.blockDays(0)).toBe('Bloquear días');
     expect(copy.calendar.blockDays(1)).toBe('Bloquear 1 día');
     expect(copy.calendar.blockDays(16)).toBe('Bloquear 16 días');
+  });
+
+  it('labels the block reasons as the board’s chips, in its order', () => {
+    expect(WORKER_BLOCK_REASONS.map((reason) => copy.calendar.reasons[reason])).toEqual([
+      'Familia',
+      'Carro en taller',
+      'Otro trabajo',
+      'Otro',
+    ]);
+    expect(copy.calendar.reasonSaved('Familia')).toBe('Motivo guardado: Familia.');
   });
 });
