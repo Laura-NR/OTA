@@ -29,7 +29,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * W-Calendar's "Motivo" chips, in the board's order: Familia, Carro en
  * taller, Otro trabajo, Otro (`docs/schema-w-calendar-reasons.md`).
  */
-export const WORKER_BLOCK_REASONS = ['FAMILY', 'VEHICLE_REPAIR', 'OTHER_JOB', 'OTHER'] as const;
+export const WORKER_BLOCK_REASONS = [
+  'FAMILY',
+  'VEHICLE_REPAIR',
+  'OTHER_JOB',
+  'OTHER',
+] as const;
 export type WorkerBlockReason = (typeof WORKER_BLOCK_REASONS)[number];
 
 /**

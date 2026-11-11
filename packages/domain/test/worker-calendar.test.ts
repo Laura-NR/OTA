@@ -134,7 +134,12 @@ describe('the worker calendar (W-Calendar)', () => {
   });
 
   it('stores the reason picked with a blocked day, in the board’s order of chips', () => {
-    expect(WORKER_BLOCK_REASONS).toEqual(['FAMILY', 'VEHICLE_REPAIR', 'OTHER_JOB', 'OTHER']);
+    expect(WORKER_BLOCK_REASONS).toEqual([
+      'FAMILY',
+      'VEHICLE_REPAIR',
+      'OTHER_JOB',
+      'OTHER',
+    ]);
     expect(workerBlockReason(false, 'VEHICLE_REPAIR')).toBe('VEHICLE_REPAIR');
   });
 

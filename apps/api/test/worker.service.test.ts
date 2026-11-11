@@ -770,7 +770,12 @@ describe("the worker app's calendar (W-Calendar)", () => {
     ]);
     await fake.service.setDays(
       WORKER,
-      { from: '2026-11-12', to: '2026-11-14', isAvailable: false, reason: 'VEHICLE_REPAIR' },
+      {
+        from: '2026-11-12',
+        to: '2026-11-14',
+        isAvailable: false,
+        reason: 'VEHICLE_REPAIR',
+      },
       NOW,
     );
     expect(fake.audit[0]?.metadata).toMatchObject({ reason: 'VEHICLE_REPAIR' });
