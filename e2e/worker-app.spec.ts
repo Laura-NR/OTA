@@ -20,6 +20,21 @@ const WORKER = {
 };
 
 let supplierId = '';
+
+const MONTHS = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
 let serviceItemId = '';
 
 /** Offers the fixture's guide item to the spec's worker, two hours to answer. */
@@ -126,6 +141,12 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
 
   test.afterEach(async () => {
     await deleteReservationFixture(prisma, BOOKING_CODE);
+    await prisma.availability.deleteMany({ where: { supplierId } });
+    await prisma.supplierResources.deleteMany({ where: { supplierId } });
+    await prisma.supplierProfile.update({
+      where: { id: supplierId },
+      data: { category: 'TOUR_GUIDE' },
+    });
     const user = await prisma.user.findUniqueOrThrow({ where: { email: WORKER.email } });
     await prisma.session.deleteMany({ where: { userId: user.id } });
     await prisma.verification.deleteMany({
@@ -237,6 +258,87 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     await app.getByRole('button', { name: 'Actualizar' }).click();
     await expect(app.getByText(/^Tu sesión terminó\./)).toBeVisible();
     await expect(app.getByLabel('Número de teléfono')).toBeVisible();
+    await app.context().close();
+  });
+
+  test('blocks days and declares fuel in the calendar, and the desk sees the long block', async ({
+    page,
+    browser,
+  }) => {
+    // A driver, so the calendar shows the fuel card.
+    await prisma.supplierProfile.update({
+      where: { id: supplierId },
+      data: { category: 'PRIVATE_DRIVER' },
+    });
+    const code = await codeFromDesk(page);
+    const app = await signInOnApp(browser, code);
+
+    // Next month in Havana, past the fixture's offer (1–5 May 2027).
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Havana' }).format(
+      new Date(),
+    );
+    const [year, month] = today.split('-').map(Number) as [number, number];
+    let ahead = 1;
+    const target = () => new Date(Date.UTC(year, month - 1 + ahead, 1));
+    if (target().toISOString().startsWith('2027-05')) ahead = 2;
+    const monthName = MONTHS[target().getUTCMonth()]!;
+    const key = (day: number) =>
+      new Date(Date.UTC(target().getUTCFullYear(), target().getUTCMonth(), day));
+    const dayButton = (day: number) =>
+      app.getByRole('button', { name: new RegExp(`^\\S+ ${day} de ${monthName}, `) });
+
+    await app.getByRole('button', { name: 'Calendario y disponibilidad' }).click();
+    await expect(app.getByRole('heading', { name: 'Calendario' })).toBeVisible();
+    for (let step = 0; step < ahead; step += 1) {
+      await app.getByRole('button', { name: 'Mes siguiente' }).click();
+    }
+    await expect(
+      app.getByRole('heading', { name: new RegExp(`^${monthName} `, 'i') }),
+    ).toBeVisible();
+
+    // One day: block it, then free it again.
+    await dayButton(20).click();
+    await app.getByRole('button', { name: 'Bloquear este día' }).click();
+    await expect(app.getByText('1 día bloqueado.')).toBeVisible();
+    await expect(dayButton(20)).toHaveAccessibleName(/, bloqueado$/);
+    expect(
+      await prisma.availability.findUniqueOrThrow({
+        where: { supplierId_date: { supplierId, date: key(20) } },
+      }),
+    ).toMatchObject({ isAvailable: false });
+    await app.getByRole('button', { name: 'Volver a estar disponible' }).click();
+    await expect(app.getByText('1 día disponible.')).toBeVisible();
+    await expect(dayButton(20)).toHaveAccessibleName(/, disponible$/);
+
+    // Several days: pick "Desde" and "Hasta" on the grid; sixteen in a row is a long block.
+    await app.getByRole('button', { name: /^Desde: / }).click();
+    await dayButton(1).click();
+    await dayButton(16).click();
+    await app.getByRole('button', { name: 'Bloquear 16 días' }).click();
+    await expect(app.getByText('16 días bloqueados.')).toBeVisible();
+    await expect(
+      app.getByText(/^Tienes 16 días seguidos bloqueados, del 1 /),
+    ).toBeVisible();
+    expect(
+      await prisma.availability.count({ where: { supplierId, isAvailable: false } }),
+    ).toBe(16);
+
+    // The driver's weekly fuel declaration.
+    await expect(app.getByText('sin declarar')).toBeVisible();
+    await app.getByLabel('Litros en reserva').fill('40');
+    await app.getByRole('button', { name: 'Actualizar' }).click();
+    await expect(app.getByText(/^actualizado hoy \d\d:\d\d$/)).toBeVisible();
+    expect(
+      await prisma.supplierResources.findUniqueOrThrow({ where: { supplierId } }),
+    ).toMatchObject({ fuelReserveLitres: 40, confirmedVia: 'WORKER_APP' });
+
+    await page.reload();
+    await expect(page.getByText('16 days blocked in a row')).toBeVisible();
+    await expect(
+      page.getByText(
+        /Dispatch skips the worker on those days; call them before high season\./,
+      ),
+    ).toBeVisible();
     await app.context().close();
   });
 });
