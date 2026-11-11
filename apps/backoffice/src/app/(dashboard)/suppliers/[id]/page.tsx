@@ -7,7 +7,7 @@ import {
   meetsReliabilityFloor,
 } from '@ota/domain';
 import type { SupplierDetailDto, SupplierReliabilityDto } from '@ota/schemas';
-import { Badge, buttonClassName, cn } from '@ota/ui';
+import { Alert, Badge, buttonClassName, cn } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -25,7 +25,7 @@ import { WorkerSignOut } from '@/components/worker-sign-out';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
-import { opsDate, opsTime, percent } from '@/lib/ops-format';
+import { calendarDate, opsDate, opsTime, percent } from '@/lib/ops-format';
 import { lastJobLabel } from '@/lib/suppliers';
 
 const EDIT_ROLES: readonly string[] = [
@@ -387,7 +387,20 @@ export default async function SupplierDetailPage({
       </Panel>
 
       <Panel title={t('availability')} description={t('availabilityDescription')}>
-        <AvailabilityCalendar supplierId={supplier.id} canEdit={canVerify} />
+        <div className="space-y-3">
+          {supplier.longBlock ? (
+            <Alert
+              variant="warning"
+              title={t('longBlockTitle', { days: supplier.longBlock.days })}
+            >
+              {t('longBlock', {
+                from: calendarDate(supplier.longBlock.from, locale),
+                to: calendarDate(supplier.longBlock.to, locale),
+              })}
+            </Alert>
+          ) : null}
+          <AvailabilityCalendar supplierId={supplier.id} canEdit={canVerify} />
+        </div>
       </Panel>
     </div>
   );

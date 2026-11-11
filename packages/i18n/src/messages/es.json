@@ -2362,6 +2362,8 @@
       "credentialDescription": "Credencial Formatur, licencia de operación de transporte o tarjeta RTN.",
       "availability": "Calendario de disponibilidad",
       "availabilityDescription": "Disponibilidad con un toque y bloqueo granular. El auto-despacho y la lista de reasignación omiten a un trabajador en un día bloqueado (spec §5.2).",
+      "longBlockTitle": "{days} días bloqueados seguidos",
+      "longBlock": "Del {from} al {to}. El despacho omite al trabajador esos días; llama antes de la temporada alta.",
       "noExpiry": "Sin vencimiento registrado",
       "expired": "Venció hace {days}d",
       "expiresIn": "Vence en {days}d",

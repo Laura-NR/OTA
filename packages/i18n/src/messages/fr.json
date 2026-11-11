@@ -2362,6 +2362,8 @@
       "credentialDescription": "Justificatif Formatur, licence d'exploitation de transport ou carte RTN.",
       "availability": "Calendrier de disponibilité",
       "availabilityDescription": "Disponibilité en un tap et blocage granulaire. La répartition automatique et la liste de réaffectation écartent un prestataire un jour bloqué (spec §5.2).",
+      "longBlockTitle": "{days} jours bloqués d’affilée",
+      "longBlock": "Du {from} au {to}. La répartition écarte le prestataire ces jours-là ; appelez avant la haute saison.",
       "noExpiry": "Aucune expiration suivie",
       "expired": "Expiré il y a {days} j",
       "expiresIn": "Expire dans {days} j",

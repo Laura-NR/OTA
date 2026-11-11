@@ -2362,6 +2362,8 @@
       "credentialDescription": "Formatur credential, transport operating licence, or RTN card.",
       "availability": "Availability calendar",
       "availabilityDescription": "Single-tap availability and granular blocking. Auto-dispatch and the re-dispatch list skip a worker on a blocked day (spec §5.2).",
+      "longBlockTitle": "{days} days blocked in a row",
+      "longBlock": "From {from} to {to}. Dispatch skips the worker on those days; call them before high season.",
       "noExpiry": "No expiry tracked",
       "expired": "Expired {days}d ago",
       "expiresIn": "Expires in {days}d",
