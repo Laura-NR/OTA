@@ -198,6 +198,17 @@ sets, the reason shown to the worker and on the desk's calendar, and no backfill
 `20261111171409_w_calendar_block_reasons`, additive; no new dependency. The reason does not
 change dispatch, which skips any blocked day.
 
+## Amendment, 2026-11-11 (evening): W-Earnings, read-only
+
+The owner chose a read-only W-Earnings on the existing tables over W-Credentials (which needs a
+migration first), background resend and W-Job. The worker sees their reliability as the desk's
+floor reads it (every offer, the live floor and minimum), what they are owed and have been paid
+for finished jobs (taken, ended, booking not cancelled), and their latest 20 finished jobs; the
+desk's supplier page shows the same payouts. No migration, no new dependency, one route (`GET
+/worker/earnings`). The build found that nothing records a payout (no code sets `SETTLED`) and
+that a review rates the booking, not a worker, so recording payouts, the paid date, method,
+receipts, the next pay day and ratings wait on `docs/schema-w-earnings.md`.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

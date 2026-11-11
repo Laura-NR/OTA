@@ -1742,3 +1742,27 @@ asking the design team, with existing tokens:
   so the day's and the range's sets are told apart; a day's spoken label ends with its reason.
 - **Desk.** No new surface: the supplier calendar's day tooltip reads "Blocked · <reason>"
   (en/es/fr) when the worker gave one, and "Blocked" otherwise.
+
+## Amendment, 2026-11-11: W-Earnings, read-only
+
+W-Earnings was built without asking the design team, with existing tokens and components (full
+list: `docs/worker-app-plan.md` §6):
+
+- **Navigation and title.** No bottom bar yet: "Fiabilidad y pagos" opens from W-Home's footer
+  and returns to Home. The title is "Fiabilidad y pagos" rather than "Perfil", since the
+  profile's settings rows are not built.
+- **Reliability.** The score is the desk floor's reading (every offer) rather than "últimos 12
+  meses"; the band "Muy buena" becomes the floor's own test (success or danger text). The
+  board's sentence that a timely decline keeps the number high is dropped: the share counts a
+  decline as it counts no answer. Score 40/46 bold, the three shares as caption + bold body
+  figures (tabular), as W-Home's figures are.
+- **Payouts.** "Pagado · trabajos de 2026" instead of "Pagado en 2026" until a paid date
+  exists; the amount 28/34 bold. A failed payout is a danger `Notice`. No method, next pay day,
+  transfer switch or receipts (`docs/schema-w-earnings.md`).
+- **History.** A card per job; the state chip on `radius-sm` with the warning, success and
+  danger pairs the app already uses (danger on `surface` with `danger` text, as its notices
+  are). No route line and no rating.
+- **Desk.** A "Payouts" panel on the supplier page with four existing `Stat` tiles (pending,
+  finished this month, paid by the jobs' year, failed), each with a caption counting the jobs
+  (en/es/fr); amounts to the cent (`moneyExact`).
+

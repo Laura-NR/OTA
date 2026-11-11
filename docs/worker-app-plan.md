@@ -109,6 +109,31 @@ Android JavaScript (Hermes bytecode); no APK is built here.
     shows "Sincronizado" or "Sin conexión" from the last read.
   - Day states use existing roles: blocked on `line`, the job dot `primary`, the offer dot
     `warning`, today and the selected day outlined in `primary` (selected on `primarySoft`).
+- W-Earnings, read-only (2026-11-11):
+  - Reached from a "Fiabilidad y pagos" button in W-Home's footer, as the calendar is; there
+    is still no bottom bar (W-Job is not built). The title is "Fiabilidad y pagos", not the
+    board's "Perfil": the profile's settings rows (credentials, notifications, language) are
+    not built.
+  - The score reads every offer in the ledger, as the desk's floor does, rather than the
+    board's "últimos 12 meses", so the number the worker sees is the one that decides
+    automatic offers (`docs/schema-w-earnings.md` E8). "Muy buena" becomes "Recibes ofertas
+    automáticas" or "Por debajo del mínimo …", the floor's own test, since no bands exist.
+    Before the minimum of answers, the score is "—" with "llevas N de 5 respuestas".
+  - The board's "Responder a tiempo, aunque sea para rechazar, mantiene el número alto" is not
+    used: a decline lowers the acceptance share as much as no answer does. The app says what
+    counts and the floor instead. The trend ("subió desde 93 en julio") and last-minute
+    cancellations are not shown (E8, W-Job).
+  - Payouts: "Pendiente" (finished, not paid), "Este mes" (finished this month), and "Pagado ·
+    trabajos de 2026" rather than "Pagado en 2026", because there is no paid date until E1.
+    The payout method, the next pay day, "Cambiar a transferencia" and the receipts wait on
+    `docs/schema-w-earnings.md`; the card says "La central te dice cuándo y dónde cobras cada
+    trabajo." A failed payout shows as a danger notice asking the worker to call.
+  - Historial: the job's end date, payout, service and province, the travelers' line and
+    booking code, and a state chip (Pendiente on `warningSoft`/`warning`, Pagado on
+    `successSoft`/`success`, Incidencia on `surface`/`danger`, `radius-sm`). No route
+    ("La Habana → Viñales") and no rating: neither is in the data.
+  - Valoraciones are not shown: a review rates the whole booking (E6).
+  - Needs a connection, like the calendar; pull to refresh.
 
 ## 7. As built (2026-11-09)
 
@@ -132,11 +157,19 @@ fourth test. The block reasons (2026-11-11, migration
 availability day, the chips, the desk tooltip (en/es/fr); `docs/schema-w-calendar-reasons.md`
 §7.
 
+W-Earnings, read-only (2026-11-11, no migration): domain `packages/domain/src/worker/earnings.ts`
+(finished jobs, payout states, totals in cents on Havana's calendar, the reliability view); API
+`GET /worker/earnings` and the supplier inspector's `payouts` (`SuppliersService.payouts`, the
+same rule); app `EarningsScreen.tsx`; the desk's Payouts panel on the supplier page (en/es/fr);
+the spec's fifth test. Recording a payout, its date, method and receipt, the next pay day and
+ratings wait on `docs/schema-w-earnings.md` (proposed, E1–E8).
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
-2. Background resend (`expo-background-task`, a new dependency), W-Credentials, W-Earnings.
+2. Background resend (`expo-background-task`, a new dependency), W-Credentials, W-Earnings'
+   payouts (`docs/schema-w-earnings.md`; the read-only screen landed 2026-11-11).
 3. W-Job with the offline job screen and the SMS SOS (a custom Android module).
 4. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
 5. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).
