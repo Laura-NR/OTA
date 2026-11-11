@@ -152,7 +152,11 @@ export const copy = {
     to: 'Hasta',
     pick: 'Ahora toca el día en el calendario.',
     blockDays: (count: number) =>
-      count === 1 ? 'Bloquear 1 día' : `Bloquear ${count} días`,
+      count === 0
+        ? 'Bloquear días'
+        : count === 1
+          ? 'Bloquear 1 día'
+          : `Bloquear ${count} días`,
     tooMany: (max: number) => `Como mucho ${max} días de una vez.`,
     longRule: (days: number) =>
       `Si bloqueas más de ${days} días seguidos, la central te marca como inactivo y te llama antes de la temporada alta.`,

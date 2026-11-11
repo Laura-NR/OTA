@@ -309,7 +309,7 @@ export function CalendarScreen({
           <Notice tone="warning">{copy.calendar.tooMany(WORKER_BLOCK_MAX_DAYS)}</Notice>
         ) : null}
         <Button
-          label={copy.calendar.blockDays(Math.max(rangeDays, 1))}
+          label={copy.calendar.blockDays(rangeDays)}
           variant="secondary"
           disabled={rangeDays === 0 || rangeDays > WORKER_BLOCK_MAX_DAYS}
           busy={busy}

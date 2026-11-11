@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { declineReasonText } from '../src/lib/copy';
+import { copy, declineReasonText } from '../src/lib/copy';
 import {
   calendarDate,
   clock,
@@ -61,5 +61,11 @@ describe('how the worker app says things (W-Home, W-Offer)', () => {
     expect(dayName('2026-11-01')).toBe('domingo 1 de noviembre');
     expect(dayShort('2026-10-25')).toBe('25 oct');
     expect(dayShort('2026-09-03')).toBe('3 sep');
+  });
+
+  it('does not count a day on the range button before both ends are picked', () => {
+    expect(copy.calendar.blockDays(0)).toBe('Bloquear días');
+    expect(copy.calendar.blockDays(1)).toBe('Bloquear 1 día');
+    expect(copy.calendar.blockDays(16)).toBe('Bloquear 16 días');
   });
 });
