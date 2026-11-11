@@ -772,3 +772,16 @@ export {
   type WorkerDayState,
   type WorkerDaysRefusal,
 } from './worker/calendar';
+export {
+  WORKER_EARNINGS_HISTORY,
+  WORKER_PAYOUT_STATES,
+  isFinishedJob,
+  workerEarnings,
+  workerPayoutState,
+  workerReliability,
+  type EarningsTotal,
+  type WorkerEarnings,
+  type WorkerEarningsJob,
+  type WorkerPayoutState,
+  type WorkerReliabilityView,
+} from './worker/earnings';
