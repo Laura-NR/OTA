@@ -1675,11 +1675,21 @@ model Message {
   @@map("messages")
 }
 
+/// W-Calendar: why a worker blocked a day.
+enum AvailabilityBlockReason {
+  FAMILY
+  VEHICLE_REPAIR
+  OTHER_JOB
+  OTHER
+}
+
 model Availability {
   id         String   @id @default(uuid()) @db.Uuid
   supplierId String   @map("supplier_id") @db.Uuid
   date       DateTime @db.Date
   isAvailable Boolean @default(true) @map("is_available")
+  /// Null when available, set by the desk, or blocked before the reasons existed.
+  blockReason AvailabilityBlockReason? @map("block_reason")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
