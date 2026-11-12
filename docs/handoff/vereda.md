@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-11 19:55
+# Handoff — vereda — updated 2026-11-12 21:45
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -13,11 +13,13 @@ page, on 2026-11-01 the staff recovery codes, the new-device email, permission o
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
-desk's worker sign-out, on 2026-11-11 W-Calendar and its block reasons) and
+desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar and again for its block reasons). The worker app: `docs/worker-app-plan.md`
-(approved W1, W3, W7; §7 as built). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
+for W-Calendar, again for its block reasons and for W-Earnings). The worker app:
+`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Earnings' payouts:
+`docs/schema-w-earnings.md` (**proposed E1–E8, awaiting the owner**, a migration; §7 is the
+read-only slice as built). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
 (approved K1a–K6a 2026-11-11, §7 as built, a migration). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
@@ -30,6 +32,30 @@ for W-Calendar and again for its block reasons). The worker app: `docs/worker-ap
 events (T-Events)".
 
 ## State
+- **2026-11-11 (evening): W-Earnings, read-only**, the owner's pick over W-Credentials,
+  background resend and W-Job (`93b7ccb`…`a5e9c39`). No migration, no new dependency, one
+  route.
+  - Domain `packages/domain/src/worker/earnings.ts`: `isFinishedJob` (taken, service ended,
+    booking not cancelled), `workerPayoutState` (ACCRUED/PROCESSING → PENDING, SETTLED → PAID,
+    FAILED → ISSUE), `workerEarnings` (cents; pending, this month and paid this year on
+    Havana's calendar; issue; the newest 20), `workerReliability` (every offer, the thresholds'
+    floor and minimum). 9 unit tests.
+  - API: `GET /worker/earnings` (`SERVICE_WORKER`, own profile; RBAC matrix +1);
+    `apps/api/src/suppliers/payouts.ts` (read filter, cents, DTO);
+    `SupplierDetailDto.payouts` through `SuppliersService.payouts` (same rule).
+  - App: `EarningsScreen.tsx` from W-Home's "Fiabilidad y pagos": score or "—" with "llevas N
+    de 5", the three shares and the floor, Pendiente / Este mes / Pagado · trabajos de <año>, a
+    failed payout notice, Historial with state chips. Needs a connection; pull to refresh.
+  - Desk: the supplier page's "Payouts" panel (four tiles with job counts, en/es/fr).
+  - e2e: `worker-app.spec.ts`'s fifth test (an accepted job ended an hour ago, unpaid, and a
+    paid one; the app and the desk panel read both).
+  - Found: nothing in the API sets `FULFILLED` or `SETTLED`, so a job is finished by its end
+    date and "Pagado" stays 0 until payouts can be recorded; reviews rate the booking, not a
+    worker. Both wait on `docs/schema-w-earnings.md` (proposed: `supplier_payouts` table,
+    `service_items.payout_id`, `supplier_profiles.payout_method`; E1–E8).
+- **2026-11-11: the pull request's CI is green.** The owner pushed `vereda`; run 43093630546 on
+  `b018609` passed every step, including "Install the PDF browser" and Test. No `v*` tag yet,
+  so the Release workflow has not run.
 - **2026-11-11 (later): W-Calendar's block reasons**, the owner's pick, approved K1a–K6a as
   recommended (`717e228`…`f88183f`). One migration, `20261111171409_w_calendar_block_reasons`
   (nullable enum `availabilities.block_reason`: FAMILY, VEHICLE_REPAIR, OTHER_JOB, OTHER;
@@ -48,7 +74,7 @@ events (T-Events)".
   and the runner had no Playwright browser. `c0026a9` adds "Install the PDF browser"
   (`pnpm --filter @ota/documents exec playwright install --with-deps --only-shell chromium`)
   before Test in `.github/workflows/ci.yml`; `release.yml`'s gate is that workflow, so the first
-  tag would have failed the same way. Not yet run on GitHub.
+  tag would have failed the same way. Green on GitHub since (run 43093630546, see above).
 - **2026-11-11: W-Calendar** (Phase 7), the owner's pick: built on the existing tables, with a
   migration document for the block reasons (`dab1360`…`d69336f`). No migration, no new
   dependency.
@@ -600,7 +626,8 @@ events (T-Events)".
 - Earlier the same day: reduce motion, high contrast and the axe audit (`5abe936`…`f1e1131`).
 - Earlier (2026-10-24): Phase 8 item 2 (rem type, larger text, low bandwidth, the PWA and the
   offline kit), the DS 07 widths and M10 (see Decisions).
-- **Not built:** SMS/push; the live Plausible hosting decision (the adapter is built);
+- **Not built:** W-Earnings' payout recording, paid dates, method, next pay day, receipts,
+  ratings, reliability trend and window choice (`docs/schema-w-earnings.md`); SMS/push; the live Plausible hosting decision (the adapter is built);
   worker events (`offer_viewed` and the rest wait for the worker app); desk page views and nav clicks
   (counsel on staff analytics); `gallery_opened` (no gallery viewer);
   queued offline writes; the
@@ -618,41 +645,49 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-11, W-Calendar's block reasons, dev stack stopped for the build)
-- CI: the owner has not pushed since c0026a9, so no GitHub run exists for the CI fix or for
-  anything after it. `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid,
-  glob, minimatch).
-- Migration `20261111171409_w_calendar_block_reasons` applied to the dev DB with
-  `prisma migrate dev` (additive: one enum, one nullable column, no backfill).
+## Verified (2026-11-12, W-Earnings read-only, dev stack stopped for the build)
+- CI: the pull request's run on GitHub is green (public API, no `gh`); nothing to fix.
+  `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob, minimatch).
+- No migration this session.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1374 passed / 53 skipped** (+8: domain 3, api 3,
-  suppliers 1, worker app 1); `TURBO_FORCE=true pnpm build` **19/19**.
-- Mutation checks: dropping the `'OTHER'` default fails the domain test; leaving the desk's
-  upsert without `blockReason: null` fails the K4 suppliers test; showing a stored reason on a
-  job day fails the worker calendar test (once that day's row carried `'FAMILY'`). All
-  restored.
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1388 passed / 53 skipped** (+14: domain 9,
+  api 3, worker app 2); `TURBO_FORCE=true pnpm build` **19/19**.
+- Mutation checks on `packages/domain/src/worker/earnings.ts`, each failing
+  `worker-earnings.test.ts`: `PROCESSING` read as paid (2 tests), the month taken in UTC (the
+  Havana boundary test), cancelled bookings counted (2), a score before `minAnswered` (1).
+  Restored byte-for-byte; 9/9.
+- Full `pnpm e2e` (seven projects, 1.2 h, run on ports `ss` showed free): **171 passed, 2
+  failed, 3 skipped, 1 did not run**. All five worker-app tests passed, the W-Earnings one
+  included. The two failures are last session's: display-currencies "a traveler saves GBP…"
+  (`displayCurrency` null after Mark paid; its serial follow-up did not run) and `[ds07-414]`
+  responsive customer pages (first-compile `goto` timeout, this time on `/join`). Alone on a
+  fresh stack: display-currencies **3 passed**, `[ds07-414]` responsive **3 passed** (1
+  skipped). An earlier full run this session was void (stale Next servers; see Traps).
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files.
-- Full `pnpm e2e` (seven projects, 1.2 h): **170 passed, 2 failed, 3 skipped, 1 did not run**.
-  The worker-app spec (block with a reason, change it, free it, range with a reason, desk
-  tooltip) passed. Failures: `[ds07-414]` responsive's blog `goto` (the known one) and, new,
-  `display-currencies.spec.ts` "a traveler saves GBP…" (`displayCurrency` read as null right
-  after the desk's Mark paid; its serial follow-up did not run). Alone on a fresh stack:
-  display-currencies **3 passed**, `[ds07-414]` responsive **2 passed**. No code on that path
-  changed this session.
-- Browser (scratch Playwright script against the restarted dev stack and the preview on :3003;
-  a temporary worker with Dec 5 FAMILY, Dec 6 desk-set, Dec 10–11 VEHICLE_REPAIR, deleted
-  after): at 390/1024/1280 the day labels read "…, bloqueado (familia)" / "…, bloqueado" /
-  "…, bloqueado (carro en taller)"; the day card checks Familia only (`aria-checked`), a
-  desk-set day checks none, the range card checks Otro. Chips are 48 px high, radius 9999 px;
-  on `#0B4F6C` with white 13/18 500 text, off `#FFFFFF` with a 1 px `#E8E2D9` border and
-  `#1F1B17` text; the four wrap to two rows at 390. The desk's tooltips read "Blocked · Family",
-  "Blocked", "Blocked · Vehicle in the garage", "Available". No sideways scroll at any width.
+- Browser (a temporary Playwright spec against the restarted dev stack and the preview on
+  :3003, deleted after with its fixture worker: 4 finished jobs ACCRUED 45, PROCESSING 60,
+  SETTLED 30.50, FAILED 12, and 6 answered offers 5/1): at 390/1024/1280 the app reads score
+  83 (40/46 700, `#1F1B17`), "Por debajo del mínimo: sin ofertas automáticas" in `#C62828`,
+  83/17/0 %, pending "€ 105" (28/34 700) with 2 jobs, "Este mes" € 147,50 (4), "Pagado ·
+  trabajos de 2026" € 30,50 (1), the issue notice "€ 12 con incidencia en el pago (1
+  trabajo)"; chips Pagado `#1B5E20` on `#E8F5E9`, Pendiente `#92400E` on `#FEF3C7`,
+  Incidencia `#C62828` on white, radius 4 px. The desk's Payouts panel shows €105.00 (2 jobs),
+  €147.50 (4), €30.50 (1), €12.00 (1) in the page's shared `Stat` tile (16 px mono), two by
+  two at 390, one row at 1024/1280. No sideways scroll anywhere.
 - Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
   storefront `/` 200 (:3000), desk `/login` 200 (:3002). The preview on :3003 was stopped.
-- Not run: CI on GitHub; an APK or any Android device (the chips' TalkBack reading is
-  unverified); a clean full e2e run in one pass.
+- Not run: an APK or any Android device; a clean full e2e run in one pass.
 
 ## Assumptions & unknowns
+- **W-Earnings (2026-11-11):** a finished job is one whose service ended (nothing sets
+  `FULFILLED`); a FAILED payout still counts in "Este mes" (work done) and shows as an issue,
+  not as pending. "Pagado · trabajos de <año>" buckets by the job's end, not a paid date. A
+  booking cancelled after a job ended drops that job from the worker's totals. The reliability
+  shown reads every offer, as the floor does, not the board's 12 months (doc E8). Home's
+  reliability still uses the constant `RELIABILITY_MIN_ANSWERED` (5), the earnings screen and
+  the desk the threshold `reliabilityMinAnswered`; they differ only if a Super Admin changes
+  it. The pay rule, office hours and payout method in the doc are the board's samples, not
+  business values. Not run on a device.
 - **Block reasons (2026-11-11):** a reason sent with `isAvailable: true` is ignored rather
   than refused. Re-blocking an already blocked day from a range replaces its reason. A day
   that became a job or offer between the app's read and a chip tap is kept, and the app then
@@ -871,6 +906,23 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **A single-spec e2e leaves Next dev servers behind (2026-11-12):** after
+  `pnpm e2e e2e/<one>.spec.ts`, `next dev -p 3000` and `-p 3002` can outlive the run. Deleting
+  `apps/*/.next` under them leaves them accepting connections but never answering, and the next
+  `pnpm e2e` reuses them (`reuseExistingServer`): all 177 tests then time out (one wasted ~23 h
+  run). **`lsof -ti tcp:<port> -sTCP:LISTEN` does not show `next-server` listeners** (it shows
+  the API's node); `ss -ltnp | grep -E ':300[0-3]\b'` does, with the pid. Before a full e2e, kill
+  every listener on 3000–3003 by the pid `ss` gives (and the `next dev` / `swc-node` parents
+  `ps` lists) and confirm `ss` shows none; only then delete `.next`. A full `pnpm e2e` leaves
+  the same set behind.
+- **Nothing marks a job done or paid (2026-11-11):** `service_items.status` never becomes
+  `FULFILLED` and `payout_status` never becomes `SETTLED` in the API (only the payment webhook
+  path writes ACCRUED/FAILED). Any "done" or "paid" read by status alone shows nothing; W-Earnings
+  uses the service's end date. Analytics' `payoutsSettled` is 0 for the same reason.
+- **The suppliers test fake branches on `supplierId` (2026-11-11):** in
+  `suppliers.e2e.test.ts`, `serviceItem.findMany` with `supplierId: {in: [...]}` answers the
+  job rows (`jobs`) and with a plain string answers the payout rows (`payoutJobs`). A new
+  inspector read of service items needs one of those shapes or the fake throws.
 - **RN-web ignores `accessibilityState` (2026-11-11):** react-native-web 0.21.4 never reads
   `accessibilityState` on View/Pressable; it maps `aria-checked`/`aria-selected` (and the
   legacy `accessibilityChecked`). So the web preview (e2e, screenshots) showed every reason chip
@@ -1391,6 +1443,12 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-11: W-Earnings is `GET /worker/earnings` (`SERVICE_WORKER`, own profile) and the
+    supplier inspector's `payouts`; both reduce through `workerEarnings` in
+    `packages/domain/src/worker/earnings.ts`. A job is finished when its service has ended (no
+    code sets `FULFILLED`), and nothing sets `payout_status = SETTLED` until the payouts
+    migration (`docs/schema-w-earnings.md`) lands. The worker's reliability reads every offer,
+    as the dispatch floor does; change both together or neither."
   - "2026-11-11: W-Calendar's block reasons ride on migration
     `20261111171409_w_calendar_block_reasons` (nullable `availabilities.block_reason`, additive,
     no backfill). Only the worker app writes a reason; the desk's availability upsert writes
@@ -1599,8 +1657,8 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda`. The pull request's CI failed twice on the missing PDF browser; check
-   that the run with `c0026a9` is green (it is the Release workflow's gate too).
+1. Owner: push `vereda` again (W-Earnings and its docs are local) and check the pull request's
+   CI; the last run (on `b018609`, with the PDF-browser fix) was green.
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -1611,8 +1669,11 @@ events (T-Events)".
    in order (W-Calendar and its block reasons landed 2026-11-11): background resend (needs the
    owner's yes to `expo-background-task` 58.0.11, `expo-task-manager` 58.0.12 and
    `unimodules-app-loader` 58.0.2, Expo's own SDK 58 pins; no web support, so only unit tests
-   until an APK); W-Credentials; W-Earnings; W-Job and its SMS SOS; distribution (download page,
-   update prompt, self-hosted `expo-updates`). Ops Lite (Phase 7 item 2) not started.
+   until an APK); W-Earnings' payouts (owner: decide E1–E8 in `docs/schema-w-earnings.md`, a
+   migration; the read-only screen landed 2026-11-11); W-Credentials (needs a migration doc
+   first: four documents per worker, a renewal under review beside the current one); W-Job and
+   its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`). Ops
+   Lite (Phase 7 item 2) not started.
 4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (also the AI provider and sanctions question), the business values, the
    tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
@@ -2241,3 +2302,11 @@ events (T-Events)".
   "Otro" after each block; a freed day drops its reason whatever is sent (not a 400); a job or
   offer day hides a stored reason; the two chip groups named apart; `aria-checked` over
   `accessibilityState` so the web preview shows the picked chip.
+- 2026-11-11 — the owner chose a read-only W-Earnings on the existing tables over W-Credentials,
+  background resend and W-Job. The build chose: a job is finished by its end date (not
+  `FULFILLED`, which nothing sets); the worker's reliability is the floor's reading (every
+  offer) rather than the board's 12 months, so the number shown is the one that decides; the
+  board's "a timely decline keeps the number high" is dropped as untrue of the rule; "Pagado"
+  by the job's year until a paid date exists; no ratings (a review rates the booking); the
+  desk gets the same payouts on the supplier page; recording payouts, method, receipts and
+  the pay rule go to `docs/schema-w-earnings.md` for approval.
