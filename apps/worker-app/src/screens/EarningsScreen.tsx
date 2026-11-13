@@ -173,7 +173,7 @@ export function EarningsScreen({
         </Text>
         <Text style={type.small}>{copy.earnings.jobs(payouts.pending.jobs)}</Text>
         {payouts.nextPayDay ? (
-          <View style={styles.stat}>
+          <View style={styles.nextPay}>
             <Text style={type.caption}>{copy.earnings.nextPay}</Text>
             <Text style={[type.body, styles.strong]}>
               {copy.earnings.nextPayLine(
@@ -340,6 +340,7 @@ const styles = StyleSheet.create({
   amount: { fontSize: 28, lineHeight: 34, fontWeight: '700', color: colors.ink },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   stat: { flexGrow: 1, flexBasis: 96, gap: 2 },
+  nextPay: { gap: 2 },
   chip: {
     borderRadius: radius.sm,
     borderWidth: 1,
