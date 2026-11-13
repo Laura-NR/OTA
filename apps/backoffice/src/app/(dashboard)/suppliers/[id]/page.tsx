@@ -6,8 +6,12 @@ import {
   isCredentialExpiringSoon,
   meetsReliabilityFloor,
 } from '@ota/domain';
-import type { SupplierDetailDto, SupplierReliabilityDto } from '@ota/schemas';
-import { Alert, Badge, buttonClassName, cn } from '@ota/ui';
+import type {
+  SupplierDetailDto,
+  SupplierPayoutLedgerDto,
+  SupplierReliabilityDto,
+} from '@ota/schemas';
+import { Alert, Badge, ResponsiveTable, buttonClassName, cn } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -17,6 +21,8 @@ import { OverrideNotice } from '@/components/override-notice';
 import { deskAccess } from '@/lib/overrides';
 import { AvailabilityCalendar } from '@/components/availability-calendar';
 import { SupplierCredential } from '@/components/supplier-credential';
+import { SupplierPayoutMethod } from '@/components/supplier-payout-method';
+import { SupplierPayoutRecord } from '@/components/supplier-payout-record';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
 import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
 import { VerificationActions } from '@/components/verification-actions';
@@ -72,9 +78,9 @@ function Panel({
  * inspector (spec §4.5), the auto-dispatch state, reliability and job history,
  * a casa's backup power or a driver's vehicle and fuel reserve (M6), the
  * worker app sign-in code (`docs/worker-app-plan.md` W1), the payouts the
- * worker sees in the app (W-Earnings) and the availability calendar. Guide
- * specialities wait (M6 D7); recording a payout waits on
- * `docs/schema-w-earnings.md`.
+ * worker sees in the app with their method, pay day, payments, receipts and
+ * "Record payout…" (W-Earnings, `docs/schema-w-earnings.md`) and the
+ * availability calendar. Guide specialities wait (M6 D7).
  */
 export default async function SupplierDetailPage({
   params,
@@ -100,6 +106,7 @@ export default async function SupplierDetailPage({
       throw error;
     },
   );
+  const ledger = await apiFetch<SupplierPayoutLedgerDto>(`/suppliers/${id}/payouts`);
   const reliability = await apiFetch<SupplierReliabilityDto[]>(
     '/quality/supplier-reliability',
   )
@@ -359,6 +366,81 @@ export default async function SupplierDetailPage({
               note={t('payouts.jobs', { count: total.jobs })}
             />
           ))}
+        </div>
+        <p className="text-body-sm text-secondary">
+          {[
+            supplier.payouts.method
+              ? t(`payouts.methods.${supplier.payouts.method}`) +
+                (supplier.payouts.method === 'CASH_OFFICE' && supplier.payouts.office
+                  ? ` · ${supplier.payouts.office}`
+                  : '')
+              : t('payouts.methodNotSet'),
+            supplier.payouts.nextPayDay
+              ? t('payouts.nextPayDay', {
+                  day: calendarDate(supplier.payouts.nextPayDay.day, locale),
+                  from: supplier.payouts.nextPayDay.from,
+                  to: supplier.payouts.nextPayDay.to,
+                })
+              : null,
+            t('payouts.rule', { days: supplier.payouts.businessDays }),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+        <SupplierPayoutMethod
+          key={supplier.payouts.method ?? 'none'}
+          supplierId={supplier.id}
+          method={supplier.payouts.method}
+          canEdit={canVerify}
+        />
+        {canVerify ? (
+          <div className="border-t pt-4">
+            <SupplierPayoutRecord
+              key={ledger.payable.map((job) => job.serviceItemId).join()}
+              supplierId={supplier.id}
+              currency={ledger.currency}
+              locale={locale}
+              payable={ledger.payable}
+              method={supplier.payouts.method}
+            />
+          </div>
+        ) : null}
+        <div className="flex flex-col gap-2 border-t pt-4">
+          <h3 className="text-body font-semibold">{t('payouts.payments')}</h3>
+          {ledger.payments.length === 0 ? (
+            <p className="text-body-sm text-muted">{t('payouts.noPayments')}</p>
+          ) : (
+            <ResponsiveTable
+              scrollRegionLabel={t('payouts.payments')}
+              columns={[
+                { label: t('payouts.paidOn') },
+                { label: t('payouts.amount'), cellClassName: 'font-mono' },
+                { label: t('payouts.paidWith') },
+                { label: t('payouts.jobsColumn') },
+                { label: t('payouts.recordedBy') },
+                { label: t('payouts.receipt') },
+              ]}
+              rows={ledger.payments.map((payment) => ({
+                key: payment.id,
+                cells: [
+                  calendarDate(payment.paidAt, locale),
+                  moneyExact(Number(payment.amount), payment.currency, locale),
+                  t(`payouts.methods.${payment.method}`),
+                  String(payment.jobs),
+                  payment.recordedBy ?? '—',
+                  <a
+                    key="receipt"
+                    href={`/api/ota/suppliers/${supplier.id}/payouts/${payment.id}/receipt`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-body-sm font-semibold text-primary-600 underline underline-offset-[3px]"
+                  >
+                    {t('payouts.receiptPdf')}
+                  </a>,
+                ],
+              }))}
+            />
+          )}
         </div>
       </Panel>
 
