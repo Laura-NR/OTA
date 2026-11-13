@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-12 21:45
+# Handoff — vereda — updated 2026-11-13 18:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -13,13 +13,15 @@ page, on 2026-11-01 the staff recovery codes, the new-device email, permission o
 display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 the emails'
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
-desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings) and
+desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
+2026-11-13 W-Earnings' payouts) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar, again for its block reasons and for W-Earnings). The worker app:
+for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts).
+The worker app:
 `docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Earnings' payouts:
-`docs/schema-w-earnings.md` (**proposed E1–E8, awaiting the owner**, a migration; §7 is the
-read-only slice as built). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
+`docs/schema-w-earnings.md` (approved E1–E8 2026-11-13, §7 the read-only slice, §8 the payouts
+as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
 (approved K1a–K6a 2026-11-11, §7 as built, a migration). Staff passkeys:
 `docs/schema-m9-passkeys.md` (approved P1a–P6a, §7 as built). The idle lock:
 `docs/schema-m9-idle-lock.md` (approved L1(b), L2a–L7a, §7 as built). Recovery codes:
@@ -32,6 +34,31 @@ read-only slice as built). W-Calendar's block reasons: `docs/schema-w-calendar-r
 events (T-Events)".
 
 ## State
+- **2026-11-13: W-Earnings' payouts**, the owner's pick, approved E1–E8 as recommended
+  (`614d290`…`fe76da1`). One migration, `20261113145009_w_earnings_payouts` (table
+  `supplier_payouts`, enum `PayoutMethod`, nullable `service_items.payout_id` and
+  `supplier_profiles.payout_method`; applied to the dev DB). No new dependency.
+  - Domain `packages/domain/src/worker/payouts.ts`: `payoutDueDay`, `nextPayDay` (first office
+    session on or after the earliest due pending job), `payoutRecordRefusal`,
+    `payoutAmountCents`; `workerEarnings` counts "Pagado en" by the paid day. Threshold
+    `payoutBusinessDays` (5); manifest `workerPayouts` (office, weekly sessions; Vereda: Sat
+    10:00–13:00, oficina Vedado, placeholders).
+  - API `apps/api/src/suppliers/supplier-payouts.service.ts`: `GET|POST
+    /suppliers/:id/payouts` (ledger; record in one transaction, amount summed server-side,
+    `payout_id IS NULL` guard → 409, audited `supplier.payout_recorded`), `PUT
+    /suppliers/:id/payout-method` (audited), receipts on demand at
+    `/suppliers/:id/payouts/:payoutId/receipt` and the worker's own
+    `/worker/payouts/:id/receipt`. `GET /worker/earnings` gains method, office, rule, next pay
+    day, paid days and payments. RBAC matrix +5. Receipt template
+    `packages/documents/src/payout-receipt.ts` (Spanish).
+  - Desk: the supplier page's Payouts panel: method line and select, next pay day and rule,
+    "Record payout", payments with "Receipt (PDF)" (en/es/fr); Settings › Suppliers gains the
+    pay rule.
+  - App: method, "Llamar a la central para cambiarla", "Próximo pago … · trae tu carnet", the
+    rule, "Pagado 28 sep" chips, a "Recibos" list. **No PDF in the app** (Next 3).
+  - e2e: `worker-app.spec.ts`'s sixth test; live `supplier-payouts.integration.test.ts`.
+- **2026-11-13: the pull request's CI is green** on `94c0910` (run 43444026337). No `v*` tag
+  yet, so the Release workflow has not run.
 - **2026-11-11 (evening): W-Earnings, read-only**, the owner's pick over W-Credentials,
   background resend and W-Job (`93b7ccb`…`a5e9c39`). No migration, no new dependency, one
   route.
@@ -645,40 +672,60 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-12, W-Earnings read-only, dev stack stopped for the build)
-- CI: the pull request's run on GitHub is green (public API, no `gh`); nothing to fix.
-  `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob, minimatch).
-- No migration this session.
+## Verified (2026-11-13, W-Earnings' payouts; dev stack stopped for the build, restarted after)
+- CI: the pull request's run 43444026337 on `94c0910` is green; nothing to fix. No `v*` tag, so
+  no Release run. `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob,
+  minimatch); nothing new.
+- Migration `20261113145009_w_earnings_payouts` applied to the dev DB (`prisma migrate dev`),
+  matching `docs/schema-w-earnings.md` §6.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1388 passed / 53 skipped** (+14: domain 9,
-  api 3, worker app 2); `TURBO_FORCE=true pnpm build` **19/19**.
-- Mutation checks on `packages/domain/src/worker/earnings.ts`, each failing
-  `worker-earnings.test.ts`: `PROCESSING` read as paid (2 tests), the month taken in UTC (the
-  Havana boundary test), cancelled bookings counted (2), a score before `minAnswered` (1).
-  Restored byte-for-byte; 9/9.
-- Full `pnpm e2e` (seven projects, 1.2 h, run on ports `ss` showed free): **171 passed, 2
-  failed, 3 skipped, 1 did not run**. All five worker-app tests passed, the W-Earnings one
-  included. The two failures are last session's: display-currencies "a traveler saves GBP…"
-  (`displayCurrency` null after Mark paid; its serial follow-up did not run) and `[ds07-414]`
-  responsive customer pages (first-compile `goto` timeout, this time on `/join`). Alone on a
-  fresh stack: display-currencies **3 passed**, `[ds07-414]` responsive **3 passed** (1
-  skipped). An earlier full run this session was void (stale Next servers; see Traps).
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **52/52**, 13 files.
-- Browser (a temporary Playwright spec against the restarted dev stack and the preview on
-  :3003, deleted after with its fixture worker: 4 finished jobs ACCRUED 45, PROCESSING 60,
-  SETTLED 30.50, FAILED 12, and 6 answered offers 5/1): at 390/1024/1280 the app reads score
-  83 (40/46 700, `#1F1B17`), "Por debajo del mínimo: sin ofertas automáticas" in `#C62828`,
-  83/17/0 %, pending "€ 105" (28/34 700) with 2 jobs, "Este mes" € 147,50 (4), "Pagado ·
-  trabajos de 2026" € 30,50 (1), the issue notice "€ 12 con incidencia en el pago (1
-  trabajo)"; chips Pagado `#1B5E20` on `#E8F5E9`, Pendiente `#92400E` on `#FEF3C7`,
-  Incidencia `#C62828` on white, radius 4 px. The desk's Payouts panel shows €105.00 (2 jobs),
-  €147.50 (4), €30.50 (1), €12.00 (1) in the page's shared `Stat` tile (16 px mono), two by
-  two at 390, one row at 1024/1280. No sideways scroll anywhere.
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1420 passed / 55 skipped** (was 1388/53);
+  `TURBO_FORCE=true pnpm build` **19/19**. After the two layout fixes (`7aadd53`, `7416bca`):
+  lint, format:check, typecheck 34/34, worker-app tests 21/21 and the worker-app build again;
+  the desk's `next build` was **not** re-run (it would overwrite the running dev server's
+  `.next`).
+- Mutation checks: dropping `payoutId: null` from the record's guard, and dropping the
+  receipt's `supplierId` scope, each fail a test. Dropping the guard's `payoutStatus` filter
+  survives (redundant with `payoutId: null`; the fake does not model it).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **54/54**, 14 files,
+  including `supplier-payouts.integration.test.ts` (two desks paying one job: one payment).
+- Full `pnpm e2e` (seven projects, 1.3 h, ports clear first): **172 passed, 3 failed, 3
+  skipped**. Then:
+  - `supplier-resources` "confirms a casa generator…": **caused by this work**. The Payouts
+    panel lists the driver's unpaid job, so `getByText('Transport · Matanzas')` matched 2.
+    Scoped to the Reliability panel (`fe76da1`); passes alone.
+  - `disruptions` "the traveler chooses…": the trace's last DOM shows "You chose option B.";
+    the `toPass` retried check + confirm after a slow refresh, when the radios were gone.
+    Now it retries until Confirm is enabled, then confirms once (`fe76da1`); passes alone on
+    a clean stack.
+  - `[ds07-414]` customer pages: first-compile `goto` timeout on `/en/about` (known); alone
+    on a clean stack **2 passed**.
+  - Then `worker-app.spec.ts` + `supplier-resources.spec.ts` against the restarted dev stack:
+    **7 passed**. The full suite was not re-run in one pass.
+- Browser (a temporary spec against the dev stack and the preview on :3003, deleted after
+  with its fixture worker; 0 fixture users left): at 390/1024/1280 the desk panel reads "Cash
+  at the office · oficina Vedado · Next pay day Nov 21, 2026, 10:00–13:00 · Paid 5 business
+  days after a job ends", controls 40 px, "Receipt (PDF)" 14 px 600 in the link token, the
+  failed badge in the destructive tokens; the payments list is a table from sm and cards at
+  390. The app reads "Efectivo EUR · oficina Vedado", "Sáb 21 nov 10:00–13:00 · trae tu
+  carnet" (16/22 700), chips Pagado `#1B5E20` on `#E8F5E9` and Pendiente `#92400E` on
+  `#FEF3C7` (12/16, radius 4 px), "Recibos" 18/24 700, one call button. No sideways scroll.
+  The first pass found the two layout bugs fixed above (the select cut to "Cash at the o" at
+  390; a 96 px gap under "Próximo pago"); the second pass shows both fixed.
 - Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
-  storefront `/` 200 (:3000), desk `/login` 200 (:3002). The preview on :3003 was stopped.
-- Not run: an APK or any Android device; a clean full e2e run in one pass.
+  desk `/login` 200 (:3002), storefront 200 (:3000). Nothing left on :3003.
+- Not run: an APK or any Android device; a clean full e2e in one pass after the fixes.
 
 ## Assumptions & unknowns
+- **W-Earnings' payouts (2026-11-13):** business days are Monday to Friday with no public
+  holidays; office sessions are Havana wall-clock times, and the session's close is counted from
+  Havana midnight (a daylight-saving change inside a session would shift it by an hour). A
+  failed payout is paid by a new payment like a pending one, and is not counted toward the next
+  pay day. A payment's day may be any day from the last picked job's end to today. Each
+  receipt line shows the job's current `payout_rate`; the total is the stored amount, so a rate
+  edited after payment would show a mismatch (nothing edits a settled rate today). No undo of a
+  recorded payment. The worker's earnings list the latest 12 payments, the desk 50. Not run on
+  a device.
 - **W-Earnings (2026-11-11):** a finished job is one whose service ended (nothing sets
   `FULFILLED`); a FAILED payout still counts in "Este mes" (work done) and shows as an issue,
   not as pending. "Pagado · trabajos de <año>" buckets by the job's end, not a paid date. A
@@ -906,6 +953,11 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **A `toPass` around a one-shot action and its result (2026-11-13):** if the action lands
+  but its result shows after the inner timeout, the retry repeats the action on a page where
+  it no longer exists, and the loop can never pass (`e2e/disruptions.spec.ts`, the choice's
+  radios vanish once confirmed). Retry only the pre-hydration part (until the submit is
+  enabled), then act once and wait for the result.
 - **A single-spec e2e leaves Next dev servers behind (2026-11-12):** after
   `pnpm e2e e2e/<one>.spec.ts`, `next dev -p 3000` and `-p 3002` can outlive the run. Deleting
   `apps/*/.next` under them leaves them accepting connections but never answering, and the next
@@ -915,10 +967,22 @@ events (T-Events)".
   every listener on 3000–3003 by the pid `ss` gives (and the `next dev` / `swc-node` parents
   `ps` lists) and confirm `ss` shows none; only then delete `.next`. A full `pnpm e2e` leaves
   the same set behind.
-- **Nothing marks a job done or paid (2026-11-11):** `service_items.status` never becomes
-  `FULFILLED` and `payout_status` never becomes `SETTLED` in the API (only the payment webhook
-  path writes ACCRUED/FAILED). Any "done" or "paid" read by status alone shows nothing; W-Earnings
-  uses the service's end date. Analytics' `payoutsSettled` is 0 for the same reason.
+- **Nothing marks a job done (2026-11-11; paid since 2026-11-13):** `service_items.status`
+  never becomes `FULFILLED`, so W-Earnings uses the service's end date. Since 2026-11-13 only
+  the desk's "Record payout" sets `payout_status = SETTLED` (with `payout_id`); a job settled
+  any other way has no paid day and "Pagado en" falls back to its end. Analytics'
+  `payoutsSettled` now counts recorded payouts.
+- **apps/api's typecheck skips its tests (2026-11-13):** `apps/api/tsconfig.json` includes only
+  `src`, and vitest (swc) strips types, so a changed constructor (here `SuppliersService` and
+  `WorkerService` gained `SupplierPayoutsService`) breaks hand-built services in tests only at
+  run time, and `pnpm typecheck` stays green. Grep `new <Service>(` under `apps/api/test` after
+  changing a constructor.
+- **`prisma format` rewrites the whole schema (2026-11-13):** it realigns columns across
+  `schema.prisma` (a ~400-line diff). Edit the schema by hand and run `prisma validate`
+  instead.
+- **Payout dates are calendar days (2026-11-13):** `supplier_payouts.paid_at` is the day at UTC
+  midnight; read it with `toISOString().slice(0, 10)` (`payoutDay`), never `workerToday`, which
+  would move it to the day before in Havana.
 - **The suppliers test fake branches on `supplierId` (2026-11-11):** in
   `suppliers.e2e.test.ts`, `serviceItem.findMany` with `supplierId: {in: [...]}` answers the
   job rows (`jobs`) and with a plain string answers the payout rows (`payoutJobs`). A new
@@ -1446,9 +1510,15 @@ events (T-Events)".
   - "2026-11-11: W-Earnings is `GET /worker/earnings` (`SERVICE_WORKER`, own profile) and the
     supplier inspector's `payouts`; both reduce through `workerEarnings` in
     `packages/domain/src/worker/earnings.ts`. A job is finished when its service has ended (no
-    code sets `FULFILLED`), and nothing sets `payout_status = SETTLED` until the payouts
-    migration (`docs/schema-w-earnings.md`) lands. The worker's reliability reads every offer,
-    as the dispatch floor does; change both together or neither."
+    code sets `FULFILLED`). The worker's reliability reads every offer, as the dispatch floor
+    does; change both together or neither."
+  - "2026-11-13: worker payouts ride on migration `20261113145009_w_earnings_payouts`
+    (`supplier_payouts`, `service_items.payout_id`, `supplier_profiles.payout_method`). Only
+    `SupplierPayoutsService.record` (`POST /suppliers/:id/payouts`, ops+super) sets
+    `payout_status = SETTLED`, in one transaction with the payment and the audit row, guarded
+    by `payout_id IS NULL`; the amount is summed server-side. `paid_at` is a calendar day at
+    UTC midnight. The pay rule is the threshold `payoutBusinessDays` plus the manifest's
+    `workerPayouts` sessions. Receipts render on demand and are never stored."
   - "2026-11-11: W-Calendar's block reasons ride on migration
     `20261111171409_w_calendar_block_reasons` (nullable `availabilities.block_reason`, additive,
     no backfill). Only the worker app writes a reason; the desk's availability upsert writes
@@ -1657,8 +1727,8 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` again (W-Earnings and its docs are local) and check the pull request's
-   CI; the last run (on `b018609`, with the PDF-browser fix) was green.
+1. Owner: push `vereda` again (W-Earnings' payouts and its docs are local) and check the pull
+   request's CI; the last run (on `94c0910`) was green.
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -1669,8 +1739,11 @@ events (T-Events)".
    in order (W-Calendar and its block reasons landed 2026-11-11): background resend (needs the
    owner's yes to `expo-background-task` 58.0.11, `expo-task-manager` 58.0.12 and
    `unimodules-app-loader` 58.0.2, Expo's own SDK 58 pins; no web support, so only unit tests
-   until an APK); W-Earnings' payouts (owner: decide E1–E8 in `docs/schema-w-earnings.md`, a
-   migration; the read-only screen landed 2026-11-11); W-Credentials (needs a migration doc
+   until an APK); opening a payout receipt in the app (owner: (a) `expo-file-system` +
+   `expo-sharing`, Expo's own SDK 58 modules, two new dependencies, the bearer stays the only
+   key; (b) a short-lived signed receipt link the phone's browser opens, no dependency but a
+   new public route deciding access by an HMAC token, like the keep-alive link; or (c) keep the
+   in-app list and the desk's printed copy; recommended (a)); W-Credentials (needs a migration doc
    first: four documents per worker, a renewal under review beside the current one); W-Job and
    its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`). Ops
    Lite (Phase 7 item 2) not started.
@@ -2310,3 +2383,12 @@ events (T-Events)".
   by the job's year until a paid date exists; no ratings (a review rates the booking); the
   desk gets the same payouts on the supplier page; recording payouts, method, receipts and
   the pay rule go to `docs/schema-w-earnings.md` for approval.
+- 2026-11-13 — the owner approved `docs/schema-w-earnings.md` E1–E8 as recommended, over
+  background resend, a W-Credentials doc and Ops Lite. The build chose: the office's sessions in
+  the manifest's `workerPayouts` and the business days as a threshold (5); business days
+  Monday to Friday without holidays; a failed payout paid by a new payment and left out of the
+  next pay day; the paid day from the last job's end to today; a 409 and rollback when a job
+  is paid meanwhile; receipts rendered on demand in Spanish and never stored, with a desk route
+  beside the worker's (the office prints it to sign); the desk's method change as its own
+  route; no undo; the app lists payments without the PDF until the owner picks how a phone
+  opens it; the board's "salvo que haya una incidencia abierta" dropped as untrue.
