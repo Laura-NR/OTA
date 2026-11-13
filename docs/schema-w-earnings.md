@@ -1,7 +1,8 @@
 # W-Earnings payouts: schema diff for review
 
-**Status:** proposed 2026-11-11, **awaiting the owner's decisions (E1–E8)**. Nothing in §6 is
-applied.
+**Status:** proposed 2026-11-11; **approved 2026-11-13, E1–E8 as recommended** (E1a, E2a, E3a,
+E4a, E5a, E6c, E7a, E8a). §6 is migration `20261113145009_w_earnings_payouts`, applied to the
+dev DB; §8 is the build.
 **Date:** 2026-11-11
 **Scope:** the parts of the W-Earnings board (`design/vereda-v1.2/project/W-Earnings.dc.html`)
 that the read-only slice could not build on the existing tables: recording a payout, its date,

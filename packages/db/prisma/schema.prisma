@@ -113,6 +113,12 @@ enum PayoutStatus {
   FAILED
 }
 
+/// W-Earnings: how a worker is paid (docs/schema-w-earnings.md E2).
+enum PayoutMethod {
+  CASH_OFFICE
+  BANK_TRANSFER
+}
+
 // M4 payment schedule (docs/schema-m4-payment-schedule.md)
 enum InstalmentKind {
   DEPOSIT
@@ -473,6 +479,8 @@ model User {
   overrides           PermissionOverride[] @relation("PermissionOverrideUser")
   overridesDecided    PermissionOverride[] @relation("PermissionOverrideDecidedBy")
   overridesEnded      PermissionOverride[] @relation("PermissionOverrideEndedBy")
+  // W-Earnings
+  payoutsRecorded     SupplierPayout[]     @relation("SupplierPayoutRecordedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -570,11 +578,14 @@ model SupplierProfile {
   credentialExpiresAt   DateTime?          @map("credential_expires_at")
   verificationStatus    VerificationStatus @default(PENDING_AUDIT) @map("verification_status")
   isAvailable           Boolean            @default(true) @map("is_available")
+  /// Null until the desk sets it (W-Earnings E2).
+  payoutMethod          PayoutMethod?      @map("payout_method")
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")
 
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceItems ServiceItem[]
+  payouts      SupplierPayout[]
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
   inventoryItems InventoryItem[]
@@ -1202,17 +1213,41 @@ model ServiceItem {
   // M2: what the traveler pays for this service (closes the invoice gap);
   // null until the booking is priced.
   travelerPrice   Decimal?          @map("traveler_price") @db.Decimal(10, 2)
+  /// The payment that settled this job; null until paid (W-Earnings E1).
+  payoutId        String?           @map("payout_id") @db.Uuid
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
   reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   supplier    SupplierProfile? @relation(fields: [supplierId], references: [id])
+  payout      SupplierPayout?  @relation(fields: [payoutId], references: [id], onDelete: SetNull)
   dispatchOffers DispatchOffer[]
 
   @@index([reservationId])
   @@index([supplierId])
   @@index([status])
   @@map("service_items")
+}
+
+/// W-Earnings: one payment to a worker, covering one or more finished jobs
+/// (docs/schema-w-earnings.md E1). Recorded after the money changed hands.
+model SupplierPayout {
+  id           String       @id @default(uuid()) @db.Uuid
+  supplierId   String       @map("supplier_id") @db.Uuid
+  method       PayoutMethod
+  currency     String       @default("EUR")
+  amount       Decimal      @db.Decimal(10, 2)
+  /// The calendar day the worker was paid, stored at UTC midnight.
+  paidAt       DateTime     @map("paid_at")
+  recordedById String?      @map("recorded_by_id") @db.Uuid
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  supplier     SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  recordedBy   User?           @relation("SupplierPayoutRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  serviceItems ServiceItem[]
+
+  @@index([supplierId, paidAt])
+  @@map("supplier_payouts")
 }
 
 // Ledger of every dispatch offer, including superseded and re-routed ones.
