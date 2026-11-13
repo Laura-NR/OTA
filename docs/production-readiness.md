@@ -114,6 +114,9 @@
   retention;
 - M5 planning fee, validity and response hours;
 - custom-builder rates and the M10 concierge fee;
+- the worker pay rule (5 business days after a job ends, Settings › Suppliers) and the office's
+  pay sessions and place (`workerPayouts` in the manifest: Saturdays 10:00–13:00, oficina
+  Vedado);
 - the currency spread (0.6 %), the lock point, whether to show USD, and when to switch
   `FX_RATE_PROVIDER` to `ecb`;
 - the crisis playbooks, the OFAC categories, and the backup-power wording (the sample banner

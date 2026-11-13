@@ -209,6 +209,20 @@ desk's supplier page shows the same payouts. No migration, no new dependency, on
 that a review rates the booking, not a worker, so recording payouts, the paid date, method,
 receipts, the next pay day and ratings wait on `docs/schema-w-earnings.md`.
 
+## Amendment, 2026-11-13: W-Earnings' payouts
+
+The owner approved `docs/schema-w-earnings.md` E1–E8 as recommended: one payment row per
+payout covering one or more jobs (`supplier_payouts`, `service_items.payout_id`), the method per
+worker and per payment (cash at the office or a bank transfer, no bank details kept), the next
+pay day computed from a business-day threshold and the office's sessions in the tenant
+manifest, a receipt PDF per payment, ratings not shown, Operations and Super Admin record, and
+the reliability window unchanged. Migration `20261113145009_w_earnings_payouts`, additive; no
+new dependency. The desk records a payment after the money changed hands; the API sums the
+amount and guards against paying a job twice. The app shows the method, the next pay day,
+paid days and its payments. It does not open the receipt PDF: on Android that needs a file or
+share module (a new dependency) or a signed link (an authentication decision), which the owner
+decides; the worker's receipt route exists for it.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

@@ -123,15 +123,21 @@ Android JavaScript (Hermes bytecode); no APK is built here.
     used: a decline lowers the acceptance share as much as no answer does. The app says what
     counts and the floor instead. The trend ("subió desde 93 en julio") and last-minute
     cancellations are not shown (E8, W-Job).
-  - Payouts: "Pendiente" (finished, not paid), "Este mes" (finished this month), and "Pagado ·
-    trabajos de 2026" rather than "Pagado en 2026", because there is no paid date until E1.
-    The payout method, the next pay day, "Cambiar a transferencia" and the receipts wait on
-    `docs/schema-w-earnings.md`; the card says "La central te dice cuándo y dónde cobras cada
-    trabajo." A failed payout shows as a danger notice asking the worker to call.
+  - Payouts (since 2026-11-13, `docs/schema-w-earnings.md` §8): the method line ("Efectivo EUR
+    · oficina Vedado", "Transferencia bancaria", or "La central aún no ha anotado cómo
+    cobras"), "Pendiente" (finished, not paid), "Próximo pago Sáb 10 oct 10:00–13:00 · trae tu
+    carnet" (the carnet only for cash), "Este mes" (finished this month), "Pagado en 2026" (by
+    the paid day), the rule ("Cada trabajo se paga 5 días hábiles después de terminarlo.
+    Firmas un recibo por cada pago."; the board's "salvo que haya una incidencia abierta" is
+    dropped, since an incident does not hold a payout) and "Llamar a la central para
+    cambiarla" in place of "Cambiar a transferencia" (E3). A failed payout shows as a danger
+    notice asking the worker to call.
   - Historial: the job's end date, payout, service and province, the travelers' line and
-    booking code, and a state chip (Pendiente on `warningSoft`/`warning`, Pagado on
+    booking code, and a state chip (Pendiente on `warningSoft`/`warning`, "Pagado 28 sep" on
     `successSoft`/`success`, Incidencia on `surface`/`danger`, `radius-sm`). No route
     ("La Habana → Viñales") and no rating: neither is in the data.
+  - Recibos: one row per payment (day, method, jobs, amount) in a card. The PDF is not opened
+    from the app yet (`docs/schema-w-earnings.md` §8).
   - Valoraciones are not shown: a review rates the whole booking (E6).
   - Needs a connection, like the calendar; pull to refresh.
 
@@ -164,12 +170,19 @@ same rule); app `EarningsScreen.tsx`; the desk's Payouts panel on the supplier p
 the spec's fifth test. Recording a payout, its date, method and receipt, the next pay day and
 ratings wait on `docs/schema-w-earnings.md` (proposed, E1–E8).
 
+W-Earnings' payouts (2026-11-13, approved E1–E8 as recommended, migration
+`20261113145009_w_earnings_payouts`): domain `packages/domain/src/worker/payouts.ts`; API
+`SupplierPayoutsService` (record, ledger, method, receipts) and the worker's
+`GET /worker/payouts/:id/receipt`; the desk's "Record payout" and payments on the supplier
+page; the app's method, next pay day, paid days and "Recibos"; the spec's sixth test.
+`docs/schema-w-earnings.md` §8.
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
-2. Background resend (`expo-background-task`, a new dependency), W-Credentials, W-Earnings'
-   payouts (`docs/schema-w-earnings.md`; the read-only screen landed 2026-11-11).
+2. Background resend (`expo-background-task`, a new dependency), W-Credentials, opening a
+   payout receipt from the app (a file/share module or a signed link; the owner's call).
 3. W-Job with the offline job screen and the SMS SOS (a custom Android module).
 4. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
 5. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).

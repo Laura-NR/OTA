@@ -413,6 +413,22 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
 - Answers given with no signal are kept on the phone and sent when it reconnects; an answer
   that arrives after the offer timed out is refused and the worker is told.
 
+## Worker payouts
+
+`docs/schema-w-earnings.md` (approved E1–E8).
+
+- A payment is recorded after the worker has been paid, never before: Suppliers → the worker →
+  Payouts → "Record payout", tick the jobs paid, the method and the day. The API sums the
+  jobs' payouts; nothing moves money. It is audited as `supplier.payout_recorded`.
+- Print "Receipt (PDF)" from the payments list for the worker to sign; the office keeps the
+  signed paper. The receipt is rendered on demand from the payment (the API's Chromium).
+- A payment recorded by mistake cannot be undone from the desk: there is no route for it yet.
+- "409 A picked job was paid meanwhile": another desk recorded it; reload the page.
+- The method (cash at the office or bank transfer) is set on the same panel; bank details are
+  not kept. The pay rule is Settings › Suppliers "Business days before a finished job is
+  paid"; the office's place and sessions are `workerPayouts` in the tenant manifest (no
+  sessions: no next pay day is shown).
+
 ## Hosts, sign-in and crawling
 
 Deployment plan D7(a), D8(a), D18; build items B6–B8.

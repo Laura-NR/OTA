@@ -1766,3 +1766,27 @@ list: `docs/worker-app-plan.md` §6):
   finished this month, paid by the jobs' year, failed), each with a caption counting the jobs
   (en/es/fr); amounts to the cent (`moneyExact`).
 
+## Amendment, 2026-11-13: W-Earnings' payouts
+
+Recording payouts (`docs/schema-w-earnings.md` E1–E8, approved) was built without asking the
+design team, with existing tokens and components:
+
+- **App.** The board's method line, "Próximo pago … · trae tu carnet" (a caption over a bold
+  body line, as the other figures), "Pagado en 2026" and "Pagado 28 sep" chips (the success
+  pair already used) now hold. "Cambiar a transferencia" becomes a secondary button "Llamar a
+  la central para cambiarla" (`tel:`, as W-Home's desk button): the desk changes the method
+  (E3). "Recibos (PDF)" becomes a "Recibos" card listing each payment (day, method, jobs,
+  amount, the history rows' type), without the PDF for now. The board's "salvo que haya una
+  incidencia abierta" and "aquí guardas la copia" are dropped as untrue of the build.
+  Valoraciones stay hidden (E6c).
+- **Desk.** No board shows recording a payout. The supplier page's Payouts panel gains, under
+  the tiles, a `text-body-sm` secondary line (method · next pay day · rule), the method as the
+  DS 02 `Select` with a secondary "Save method" button, "Record payout" as a fieldset of the
+  existing `Checkbox` rows (amount in mono, then day · service · province · booking, a
+  destructive `Badge` for a failed payout) with a method `Select`, a date `Input` capped at
+  today and a primary button naming the total ("Record €45.00 for 1 job"), and the payments
+  in the shared `ResponsiveTable` with a "Receipt (PDF)" text link styled as the proposal's
+  PDF link. Panels are split by the existing `border-t pt-4` dividers.
+- **Receipt.** The shared A4 document shell (agency header with the MINTUR licence, footer),
+  in Spanish, with the jobs table, the total and two signature lines.
+

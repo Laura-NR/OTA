@@ -154,3 +154,42 @@ against it before it is applied.
 - App (`e1d890c`): "Fiabilidad y pagos" from W-Home; reliability, payouts, history; needs a
   connection, like the calendar. Desk (`42e827e`): the supplier page's Payouts panel (en/es/fr).
 - e2e (`93baf7d`): `worker-app.spec.ts`'s fifth test.
+
+## 8. As built (2026-11-13)
+
+Migration `20261113145009_w_earnings_payouts` (§6 as generated: the same statements, in Prisma's
+order). No new dependency.
+
+- Domain `packages/domain/src/worker/payouts.ts`: `payoutDueDay` (N Monday-to-Friday days after
+  the Havana day a job ended; public holidays are not counted out), `nextPayDay` (the first
+  office session on or after the earliest due day of pending jobs, skipping one already over in
+  Havana; a failed payout waits for the desk), `payoutRecordRefusal` (§5's refusals plus an
+  empty or oversized payment and a day after today or before a job ended), `payoutAmountCents`.
+  `workerEarnings` counts "Pagado en" by the paid day (the job's end when no payment row).
+- Settings and manifest (E4): the threshold `payoutBusinessDays` (5, a placeholder; Settings ›
+  Suppliers, en/es/fr) and the manifest's `workerPayouts` (`office`, weekly `sessions`;
+  default none, so no pay day; Vereda carries the board's Saturday 10:00–13:00, oficina
+  Vedado, as a placeholder).
+- API (`SupplierPayoutsService`): `GET`/`POST /suppliers/:id/payouts` (E7: read Operations,
+  Support and Super Admin; record Operations and Super Admin); the amount is the jobs' payouts
+  summed by the API, never sent; the payment, the jobs set `SETTLED` with its id and the audit
+  row (`supplier.payout_recorded`) are one transaction, and the update's guard (`payout_id IS
+  NULL`) makes a second desk paying the same job fail with 409 and roll back. `PUT
+  /suppliers/:id/payout-method` (E2, E3; `supplier.payout_method_set`). Receipts (E5) are
+  rendered on demand, never stored: `GET /suppliers/:id/payouts/:payoutId/receipt` (desk) and
+  `GET /worker/payouts/:id/receipt` (the worker's own; another's is a 404). `GET
+  /worker/earnings` gains the method, office, rule, next pay day, each job's paid day and the
+  latest 12 payments (without who recorded them). RBAC matrix +5.
+- Desk: the supplier page's Payouts panel gains the method line and select, the next pay day
+  and rule, "Record payout" (tick finished jobs, method, day) and the payments table with each
+  "Receipt (PDF)" (en/es/fr).
+- App: the method ("Efectivo EUR · oficina Vedado"), "Llamar a la central para cambiarla" (E3),
+  "Próximo pago … · trae tu carnet", the rule, "Pagado 28 sep" chips in Historial and a
+  "Recibos" list. **The receipt PDF is not opened from the app:** on Android it needs a file
+  or share module (a new dependency) or a signed link (an authentication decision); the
+  route exists for when the owner picks one. Ratings stay hidden (E6c).
+- Tests: domain 13, config 2, schemas 3, documents 3, API 10 (record, refusals, the 409, both
+  receipts, the method) plus the earnings test, the live `supplier-payouts.integration.test.ts`
+  (the transaction and two desks paying one job at once), worker app 1, e2e
+  `worker-app.spec.ts`'s sixth test (the desk sets the method, records, prints the receipt;
+  the app reads it).
