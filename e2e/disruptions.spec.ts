@@ -153,15 +153,17 @@ test.describe('M8 disruptions', () => {
     const card = page.locator('#disruption-options');
     await expect(card).toContainText(TITLE);
     await expect(card).toContainText('If we hear nothing by');
+    // Retry the pick until the page hydrates; confirm once, since a confirmed
+    // choice replaces the radios and a retry could never find them again.
+    const confirm = card.getByRole('button', { name: 'Confirm option B' });
     await expect(async () => {
       await card.getByRole('radio', { name: /^B ·/ }).check({ timeout: 2_000 });
-      await card
-        .getByRole('button', { name: 'Confirm option B' })
-        .click({ timeout: 2_000 });
-      await expect(card.getByText('You chose option B.', { exact: false })).toBeVisible({
-        timeout: 4_000,
-      });
+      await expect(confirm).toBeEnabled({ timeout: 2_000 });
     }).toPass({ timeout: 20_000 });
+    await confirm.click();
+    await expect(card.getByText('You chose option B.', { exact: false })).toBeVisible({
+      timeout: 20_000,
+    });
 
     // The desk sees the answer on the status board and in the case log.
     await signIn(page);

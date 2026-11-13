@@ -181,7 +181,12 @@ test.describe('M6 supplier resources', () => {
     // The driver's fuel card; the transfer is the last job.
     await page.goto(`/suppliers/${driverId}`);
     await expect(page.getByRole('heading', { name: 'Vehicle & fuel' })).toBeVisible();
-    await expect(page.getByText('Transport · Matanzas')).toBeVisible();
+    await expect(
+      page
+        .locator('section')
+        .filter({ has: page.getByRole('heading', { name: 'Reliability score' }) })
+        .getByText('Transport · Matanzas'),
+    ).toBeVisible();
     // The vehicle (D7(b)); the insurance ends within 30 days, so it is flagged.
     const insuranceUntil = new Date(Date.now() + 10 * DAY_MS).toISOString().slice(0, 10);
     await expect(async () => {
