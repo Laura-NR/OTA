@@ -143,9 +143,13 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     await deleteReservationFixture(prisma, BOOKING_CODE);
     await prisma.availability.deleteMany({ where: { supplierId } });
     await prisma.supplierResources.deleteMany({ where: { supplierId } });
+    await prisma.supplierPayout.deleteMany({ where: { supplierId } });
+    await prisma.auditLog.deleteMany({
+      where: { entityId: supplierId, action: { startsWith: 'supplier.payout_' } },
+    });
     await prisma.supplierProfile.update({
       where: { id: supplierId },
-      data: { category: 'TOUR_GUIDE' },
+      data: { category: 'TOUR_GUIDE', payoutMethod: null },
     });
     const user = await prisma.user.findUniqueOrThrow({ where: { email: WORKER.email } });
     await prisma.session.deleteMany({ where: { userId: user.id } });
@@ -425,7 +429,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
       timeZone: 'America/Havana',
       year: 'numeric',
     }).format(endedAt);
-    await expect(app.getByText(`Pagado · trabajos de ${year}`)).toBeVisible();
+    await expect(app.getByText(`Pagado en ${year}`)).toBeVisible();
     await expect(app.getByText('€ 30,50', { exact: true })).toHaveCount(2);
 
     // Both jobs in the history, each with where its payout stands.
@@ -441,10 +445,99 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
       .filter({ has: page.getByRole('heading', { name: 'Payouts', exact: true }) })
       .last();
     await expect(payouts.getByText('Pending', { exact: true })).toBeVisible();
-    await expect(payouts.getByText('€45.00')).toBeVisible();
-    await expect(payouts.getByText(`Paid · jobs of ${year}`)).toBeVisible();
+    // The pending tile and the job's row under Record payout.
+    await expect(payouts.getByText('€45.00', { exact: true })).toHaveCount(2);
+    await expect(payouts.getByText(`Paid in ${year}`)).toBeVisible();
     await expect(payouts.getByText('€30.50')).toBeVisible();
     await expect(payouts.getByText('1 job', { exact: true })).toHaveCount(2);
+    await app.context().close();
+  });
+
+  test('the desk records a payout with its receipt and the worker reads it with the next pay day', async ({
+    page,
+    browser,
+  }) => {
+    // The offer, accepted and done an hour ago (€ 45), and a second job that
+    // stays pending (€ 20), so the app has a next pay day to show.
+    const endedAt = new Date(Date.now() - 60 * 60 * 1000);
+    const startedAt = new Date(endedAt.getTime() - 3 * 60 * 60 * 1000);
+    const offered = await prisma.serviceItem.update({
+      where: { id: serviceItemId },
+      data: {
+        status: 'ACCEPTED',
+        serviceDateStart: startedAt,
+        serviceDateEnd: endedAt,
+        respondedAt: startedAt,
+      },
+    });
+    await prisma.serviceItem.create({
+      data: {
+        reservationId: offered.reservationId,
+        supplierId,
+        serviceType: 'TRANSPORTATION',
+        province: 'La Habana',
+        serviceDateStart: startedAt,
+        serviceDateEnd: endedAt,
+        status: 'ACCEPTED',
+        payoutRate: '20.00',
+      },
+    });
+
+    const code = await codeFromDesk(page);
+    const payouts = page
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'Payouts', exact: true }) })
+      .last();
+    await expect(payouts.getByText(/^Method not set · /)).toBeVisible();
+    await expect(payouts.getByText('No payment recorded yet.')).toBeVisible();
+
+    // Cash at the office, then pay the € 45 job alone.
+    await expect(async () => {
+      await payouts.getByLabel('Payout method').selectOption('CASH_OFFICE');
+      await payouts.getByRole('button', { name: 'Save method' }).click();
+      await expect(payouts.getByText(/^Cash at the office · oficina Vedado/)).toBeVisible(
+        {
+          timeout: 2_000,
+        },
+      );
+    }).toPass();
+    await payouts.getByRole('checkbox', { name: /€45\.00/ }).check();
+    await payouts.getByRole('button', { name: 'Record €45.00 for 1 job' }).click();
+
+    const receipt = payouts.getByRole('link', { name: 'Receipt (PDF)' });
+    await expect(receipt).toBeVisible();
+    await expect(payouts.getByRole('checkbox', { name: /€45\.00/ })).toHaveCount(0);
+    await expect(payouts.getByRole('checkbox', { name: /€20\.00/ })).toBeVisible();
+    const pdf = await page.request.get((await receipt.getAttribute('href'))!);
+    expect(pdf.status()).toBe(200);
+    expect(pdf.headers()['content-type']).toBe('application/pdf');
+    expect((await pdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
+
+    const today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Havana',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const [year, month, day] = today.split('-').map(Number) as [number, number, number];
+    const paidOn = `${day} ${MONTHS[month - 1]!.slice(0, 3)}`;
+
+    const app = await signInOnApp(browser, code);
+    await app.getByRole('button', { name: 'Fiabilidad y pagos' }).click();
+    await expect(app.getByText('Efectivo EUR · oficina Vedado')).toHaveCount(2);
+    // The € 20 job is due five business days after it ended, paid on a Saturday.
+    await expect(app.getByText('Próximo pago')).toBeVisible();
+    await expect(
+      app.getByText(/^Sáb \d{1,2} [a-z]{3} 10:00–13:00 · trae tu carnet$/),
+    ).toBeVisible();
+    await expect(app.getByText(`Pagado en ${year}`)).toBeVisible();
+    await expect(app.getByText(`Pagado ${paidOn}`, { exact: true })).toBeVisible();
+    await expect(app.getByText('Pendiente', { exact: true })).toHaveCount(2);
+    await expect(app.getByRole('heading', { name: 'Recibos' })).toBeVisible();
+    await expect(app.getByText(paidOn, { exact: true })).toBeVisible();
+    await expect(
+      app.getByText('Efectivo EUR · oficina Vedado · 1 trabajo'),
+    ).toBeVisible();
     await app.context().close();
   });
 });
