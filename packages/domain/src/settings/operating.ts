@@ -52,6 +52,8 @@ export interface OperatingThresholds extends FeatureFlagValues, DisplayCurrencyS
   reliabilityFloorPercent: number;
   /** Answered offers before the floor applies. */
   reliabilityMinAnswered: number;
+  /** Business days after a job ends before it is paid (`docs/schema-w-earnings.md` E4). */
+  payoutBusinessDays: number;
   /** Hours the desk has to answer an event request (M10 D7). */
   conciergeAnswerHours: number;
   /** Staff must sign in with a passkey (`docs/schema-m9-passkeys.md` P1). */
@@ -87,6 +89,8 @@ export const DEFAULT_OPERATING_THRESHOLDS: OperatingThresholds = {
   resourcesStaleDays: 7,
   reliabilityFloorPercent: 85,
   reliabilityMinAnswered: 5,
+  // The W-Earnings board's sample, a placeholder until the owner gives the real one.
+  payoutBusinessDays: 5,
   conciergeAnswerHours: 48,
   staffPasskeysRequired: false,
   staffIdleLockMinutes: STAFF_IDLE_LOCK_MINUTES,
