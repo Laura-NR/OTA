@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-13 18:30
+# Handoff — vereda — updated 2026-11-13 22:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -14,10 +14,10 @@ display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 th
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
-2026-11-13 W-Earnings' payouts) and
+2026-11-13 W-Earnings' payouts and the receipt in the app) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts).
+for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app).
 The worker app:
 `docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Earnings' payouts:
 `docs/schema-w-earnings.md` (approved E1–E8 2026-11-13, §7 the read-only slice, §8 the payouts
@@ -34,6 +34,18 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-13 (evening): the receipt in the app**, the owner's pick of Next 3's option (a)
+  (`e07aefe`, `2f3ce80`). Two new dependencies, Expo's SDK 58 pins: `expo-file-system`
+  58.0.11 and `expo-sharing` 58.0.20. No migration, no route change, no desk change.
+  - App: each payment in "Recibos (PDF)" has a quiet "Abrir recibo" (screen-reader label
+    "Abrir el recibo del 13 nov"). `src/lib/open-receipt.ts` downloads `GET
+    /worker/payouts/:id/receipt` with the bearer into the cache (`File.downloadFileAsync`,
+    `idempotent`) and opens Android's share sheet; `open-receipt.web.ts` saves it in the
+    preview. A 401 signs out; no connection or another failure shows a warning under the row.
+    `src/lib/receipt.ts` (pure, tested): the status out of the native error, the file name.
+    The pay rule regains the board's "aquí guardas la copia".
+  - e2e: `worker-app.spec.ts`'s sixth test downloads the receipt (name `recibo-PG-….pdf`,
+    `%PDF-`).
 - **2026-11-13: W-Earnings' payouts**, the owner's pick, approved E1–E8 as recommended
   (`614d290`…`fe76da1`). One migration, `20261113145009_w_earnings_payouts` (table
   `supplier_payouts`, enum `PayoutMethod`, nullable `service_items.payout_id` and
@@ -672,51 +684,38 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-13, W-Earnings' payouts; dev stack stopped for the build, restarted after)
-- CI: the pull request's run 43444026337 on `94c0910` is green; nothing to fix. No `v*` tag, so
-  no Release run. `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob,
-  minimatch); nothing new.
-- Migration `20261113145009_w_earnings_payouts` applied to the dev DB (`prisma migrate dev`),
-  matching `docs/schema-w-earnings.md` §6.
-- `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1420 passed / 55 skipped** (was 1388/53);
-  `TURBO_FORCE=true pnpm build` **19/19**. After the two layout fixes (`7aadd53`, `7416bca`):
-  lint, format:check, typecheck 34/34, worker-app tests 21/21 and the worker-app build again;
-  the desk's `next build` was **not** re-run (it would overwrite the running dev server's
-  `.next`).
-- Mutation checks: dropping `payoutId: null` from the record's guard, and dropping the
-  receipt's `supplierId` scope, each fail a test. Dropping the guard's `payoutStatus` filter
-  survives (redundant with `payoutId: null`; the fake does not model it).
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`) **54/54**, 14 files,
-  including `supplier-payouts.integration.test.ts` (two desks paying one job: one payment).
-- Full `pnpm e2e` (seven projects, 1.3 h, ports clear first): **172 passed, 3 failed, 3
-  skipped**. Then:
-  - `supplier-resources` "confirms a casa generator…": **caused by this work**. The Payouts
-    panel lists the driver's unpaid job, so `getByText('Transport · Matanzas')` matched 2.
-    Scoped to the Reliability panel (`fe76da1`); passes alone.
-  - `disruptions` "the traveler chooses…": the trace's last DOM shows "You chose option B.";
-    the `toPass` retried check + confirm after a slow refresh, when the radios were gone.
-    Now it retries until Confirm is enabled, then confirms once (`fe76da1`); passes alone on
-    a clean stack.
-  - `[ds07-414]` customer pages: first-compile `goto` timeout on `/en/about` (known); alone
-    on a clean stack **2 passed**.
-  - Then `worker-app.spec.ts` + `supplier-resources.spec.ts` against the restarted dev stack:
-    **7 passed**. The full suite was not re-run in one pass.
-- Browser (a temporary spec against the dev stack and the preview on :3003, deleted after
-  with its fixture worker; 0 fixture users left): at 390/1024/1280 the desk panel reads "Cash
-  at the office · oficina Vedado · Next pay day Nov 21, 2026, 10:00–13:00 · Paid 5 business
-  days after a job ends", controls 40 px, "Receipt (PDF)" 14 px 600 in the link token, the
-  failed badge in the destructive tokens; the payments list is a table from sm and cards at
-  390. The app reads "Efectivo EUR · oficina Vedado", "Sáb 21 nov 10:00–13:00 · trae tu
-  carnet" (16/22 700), chips Pagado `#1B5E20` on `#E8F5E9` and Pendiente `#92400E` on
-  `#FEF3C7` (12/16, radius 4 px), "Recibos" 18/24 700, one call button. No sideways scroll.
-  The first pass found the two layout bugs fixed above (the select cut to "Cash at the o" at
-  390; a 96 px gap under "Próximo pago"); the second pass shows both fixed.
+## Verified (2026-11-13 evening, the receipt in the app; dev stack stopped for the build, restarted after)
+- CI: the pull request's last run (43444026337 on `94c0910`, the last pushed head) is green;
+  nothing to fix. No `v*` tag, so no Release run. `pnpm audit --prod`: the same 4 settled
+  advisories (deepmerge-ts, uuid, glob, minimatch); nothing new.
+- `pnpm lint`, `pnpm format:check` green (re-run on the final tree). `TURBO_FORCE=true pnpm
+  typecheck` **34/34**; `TURBO_FORCE=true pnpm test` **31/31 tasks, 1424 passed / 55 skipped**
+  (was 1420/55; worker app 25); `TURBO_FORCE=true pnpm build` **19/19**. The worker app's
+  Android export carries `downloadFileAsync`/`ExpoSharing`; its web export carries neither.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 14
+  `apps/api/test/*.integration.test.ts` files) **54/54**.
+- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **174
+  passed, 1 failed, 3 skipped**, including `worker-app.spec.ts`'s sixth test with the receipt
+  download. The failure: `[ds07-414]` "customer pages never scroll sideways", a first-compile
+  `goto` timeout on `/en/events` (known); alone on a clean stack **3 passed, 1 skipped**.
+- Browser (a temporary spec against fresh dev servers and the preview on :3003, deleted after
+  with its fixture worker; 0 fixture rows left): at 390/1024/1280 "Abrir recibo" is 48 px high,
+  full width (324/958/1214 px), transparent, label 16 px 600 `rgb(11, 79, 108)`, aria-label
+  "Abrir el recibo del 10 nov"; a 500 shows the warning notice under that row only (14 px
+  `rgb(146, 64, 14)` on `rgb(254, 243, 199)`), and a retry downloads `recibo-PG-….pdf` and
+  clears it. No sideways scroll.
 - Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
   desk `/login` 200 (:3002), storefront 200 (:3000). Nothing left on :3003.
-- Not run: an APK or any Android device; a clean full e2e in one pass after the fixes.
+- Not run: an APK or any Android device (the share sheet itself).
 
 ## Assumptions & unknowns
+- **The receipt in the app (2026-11-13, evening):** not run on a device. Assumed: Android's
+  share sheet lists a PDF viewer (Drive or the phone's own) for most workers' phones; there is
+  no in-app viewer and no `ACTION_VIEW` intent. The PDF stays in the app's private cache until
+  Android clears it (the same receipt overwrites itself); the desk's sign-out does not clear
+  it. Assumed `downloadFileAsync`'s rejection text keeps "status: NNN" (read in
+  `FileSystemDownload.kt` 58.0.11); if Expo changes it, a 401 shows the generic failure
+  instead of signing out.
 - **W-Earnings' payouts (2026-11-13):** business days are Monday to Friday with no public
   holidays; office sessions are Havana wall-clock times, and the session's close is counted from
   Havana midnight (a daylight-saving change inside a session would shift it by an hour). A
@@ -953,6 +952,14 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Expo native modules in the worker app (2026-11-13):** pin the exact version in
+  `expo/bundledNativeModules.json` (the `~` floor, e.g. `expo-sharing` 58.0.20), as the others
+  are. `expo-sharing` 58 ships an incoming-share config plugin: do not list it in
+  `app.config.ts` plugins unless receiving shares is wanted (it adds intent filters). A module
+  with no web support needs a `.web.ts` twin (`open-receipt.web.ts`, like `storage.web.ts`),
+  or the preview and the e2e break. `pnpm --filter @ota/worker-app add` also re-split a
+  `better-auth` peer variant in `pnpm-lock.yaml` (no new package; the original lock was in
+  sync).
 - **A `toPass` around a one-shot action and its result (2026-11-13):** if the action lands
   but its result shows after the inner timeout, the retry repeats the action on a page where
   it no longer exists, and the loop can never pass (`e2e/disruptions.spec.ts`, the choice's
@@ -966,7 +973,10 @@ events (T-Events)".
   the API's node); `ss -ltnp | grep -E ':300[0-3]\b'` does, with the pid. Before a full e2e, kill
   every listener on 3000–3003 by the pid `ss` gives (and the `next dev` / `swc-node` parents
   `ps` lists) and confirm `ss` shows none; only then delete `.next`. A full `pnpm e2e` leaves
-  the same set behind.
+  the same set behind. **Even without deleting `.next`** (2026-11-13), the desk server left by
+  `pnpm e2e --project=ds07-414 e2e/responsive.spec.ts` accepted connections and never answered
+  the next single-spec run (a 3-minute `goto` timeout on the magic link): kill and restart
+  between single-spec runs too.
 - **Nothing marks a job done (2026-11-11; paid since 2026-11-13):** `service_items.status`
   never becomes `FULFILLED`, so W-Earnings uses the service's end date. Since 2026-11-13 only
   the desk's "Record payout" sets `payout_status = SETTLED` (with `payout_id`); a job settled
@@ -1727,23 +1737,19 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` again (W-Earnings' payouts and its docs are local) and check the pull
-   request's CI; the last run (on `94c0910`) was green.
+1. Owner: push `vereda` again (W-Earnings' payouts, the receipt in the app and their docs are
+   local) and check the pull request's CI; the last run (on `94c0910`) was green.
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
    classic `read:packages` token. The deployment build (B1–B11, B13) is complete; B12 (S3
    documents) stays optional.
 3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own signing
-   key, backed up twice), the Android id, and two or three suppliers for the field test. Agent,
-   in order (W-Calendar and its block reasons landed 2026-11-11): background resend (needs the
-   owner's yes to `expo-background-task` 58.0.11, `expo-task-manager` 58.0.12 and
-   `unimodules-app-loader` 58.0.2, Expo's own SDK 58 pins; no web support, so only unit tests
-   until an APK); opening a payout receipt in the app (owner: (a) `expo-file-system` +
-   `expo-sharing`, Expo's own SDK 58 modules, two new dependencies, the bearer stays the only
-   key; (b) a short-lived signed receipt link the phone's browser opens, no dependency but a
-   new public route deciding access by an HMAC token, like the keep-alive link; or (c) keep the
-   in-app list and the desk's printed copy; recommended (a)); W-Credentials (needs a migration doc
+   key, backed up twice), the Android id, and two or three suppliers for the field test (also
+   the first real run of "Abrir recibo"'s share sheet). Agent, in order (the receipt in the app
+   landed 2026-11-13): background resend (needs the owner's yes to `expo-background-task`
+   58.0.11, `expo-task-manager` 58.0.12 and `unimodules-app-loader` 58.0.2, Expo's own SDK 58
+   pins; no web support, so only unit tests until an APK); W-Credentials (needs a migration doc
    first: four documents per worker, a renewal under review beside the current one); W-Job and
    its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`). Ops
    Lite (Phase 7 item 2) not started.
@@ -2392,3 +2398,10 @@ events (T-Events)".
   beside the worker's (the office prints it to sign); the desk's method change as its own
   route; no undo; the app lists payments without the PDF until the owner picks how a phone
   opens it; the board's "salvo que haya una incidencia abierta" dropped as untrue.
+- 2026-11-13 — the owner chose to open a payout receipt in the app with `expo-file-system` and
+  `expo-sharing` (option (a)) over a signed link or no PDF in the app, and over W-Credentials'
+  doc, background resend and Ops Lite. The build chose: a button per payment rather than the
+  board's single "Recibos (PDF)" button (it does not say which receipt); Android's share sheet
+  rather than an in-app viewer; the file in the cache, overwritten on reopening, not deleted
+  after sharing (the receiving app may still read it); the web preview saving the file so the
+  e2e can check it; no change to the API, whose worker route already scoped the receipt.
