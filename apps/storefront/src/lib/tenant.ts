@@ -1,6 +1,6 @@
-import { loadTenantConfig } from '@ota/config';
+import { loadTenantConfig, loadTenantMessages } from '@ota/config';
 import type { TenantConfig } from '@ota/config';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 /**
  * Where the fork-specific tenant manifest lives. Overridable with
@@ -17,4 +17,14 @@ export function resolveTenantConfigPath(): string {
 
 export function getTenantConfig(): TenantConfig {
   return loadTenantConfig(resolveTenantConfigPath());
+}
+
+/**
+ * The tenant's message file for a locale (`tenant/messages/<locale>.json`,
+ * next to the manifest): core copy it overrides and its own page `content`.
+ */
+export function getTenantMessages(locale: string): Record<string, unknown> {
+  return loadTenantMessages(
+    join(dirname(resolveTenantConfigPath()), 'messages', `${locale}.json`),
+  );
 }

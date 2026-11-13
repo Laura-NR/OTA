@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payments · reconciliation by rail, pending proofs, refunds within thresholds, payout liabilities per province</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:36px;padding:0 12px;font-size:13px}
+.btn:focus-visible,.inp:focus-visible,.sel:focus-visible,.tab:focus-visible,.ck:focus-visible,.ta:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.sel,.ta{padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;box-sizing:border-box}
+.inp,.sel{height:44px}.inp{width:100%}.ta{width:100%;padding:10px 12px;min-height:72px;resize:vertical}
+.inp-sm{height:36px;font-size:13px;padding:0 10px}
+.sel{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231F1B17' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.lbl{font:500 12px/16px Inter,system-ui,sans-serif;color:#4A433D}
+.fld{display:flex;flex-direction:column;gap:4px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.num{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace;white-space:nowrap}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 240px;max-width:100%;background:#083B50;color:#fff;display:flex;flex-direction:column;gap:16px;padding:20px 16px 24px;box-sizing:border-box}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:8px;color:#C9DDE6;text-decoration:none;font:500 14px/20px Inter,system-ui,sans-serif}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav a:focus-visible{outline:2px solid #F2B134;outline-offset:-2px}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:#F2B134;color:#1F1B17;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.cnt.red{background:#C62828;color:#fff}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 32px;background:#fff;border-bottom:1px solid #E8E2D9}
+.content{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.tab{height:44px;padding:0 14px;border:0;background:transparent;font:600 14px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C}
+.kpi{display:flex;flex-direction:column;gap:8px;padding:16px 18px;min-width:0}
+.kpi .v{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:500;font-size:24px;line-height:30px}
+.bar{height:8px;border-radius:9999px;background:#E8E2D9;overflow:hidden;display:flex}
+.bar span{display:block;height:100%}
+.ph{position:relative;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;border-radius:10px}
+.ph .alt{font:500 11px/14px Inter,system-ui,sans-serif;color:#4A433D;background:rgba(255,255,255,.85);padding:3px 6px;border-radius:4px}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;line-height:18px;margin:0}
+.dl dt{color:#6E665E;white-space:nowrap}.dl dd{margin:0}
+.hbar{display:flex;align-items:center;gap:10px;font-size:13px}
+.hbar .lab{width:150px;flex:none;color:#4A433D}
+.hbar .tr{flex:1;height:14px;border-radius:4px;background:#F3EEE6;overflow:hidden;display:flex}
+.hbar .tr span{display:block;height:100%}
+</style>
+</helmet>
+
+<div class="shell">
+
+  <nav class="side" aria-label="Admin">
+    <a href="A-Dashboard.dc.html" aria-label="Vereda operations desk" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; padding: 4px 12px 8px"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg><span class="cap" style="color: #C9DDE6; margin-left: 2px">Ops</span></a>
+    <div class="nav">
+      <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Dashboard<span class="cnt red">2</span></a>
+      <a href="A-Bookings.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>Bookings<span class="cnt">14</span></a>
+      <a href="A-Disruption.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Disruptions<span class="cnt">1</span></a>
+      <a href="A-Packages.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>Packages</a>
+      <a href="A-Customers.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>Customers</a>
+      <a href="A-Suppliers.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Suppliers<span class="cnt">1</span></a>
+      <a href="A-Payments.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments<span class="cnt">3</span></a>
+      <a href="A-Content.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Content</a>
+      <a href="A-Reports.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+      <a href="A-Settings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.08)">
+      <div style="display: flex; gap: 10px; align-items: center"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">AR</span><div style="display: flex; flex-direction: column; min-width: 0"><strong style="font-size: 13px; line-height: 18px">Ana Rodríguez</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">Operations Admin</span></div></div>
+      <a href="A-Login.dc.html" style="color: #C9DDE6; font-size: 12px; line-height: 16px">Sign out · session ends 02:33</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <h1 class="disp" style="font-size: 24px; line-height: 32px; margin-right: 8px">Payments</h1>
+      <span class="tag mono">October · EUR base · statement feed 14:20</span>
+      <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap">
+        <button class="btn btn-s" type="button"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Import bank statement</button>
+        <a class="btn btn-s" href="A-Reports.dc.html">ONAT fiscal export</a>
+        <button class="btn btn-p" type="button">Record a payment</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- KPIs -->
+      <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 12px">
+        <div class="card kpi"><p class="ov">Received · October</p><span class="v">€ 41,280</span><div class="bar" aria-label="By rail"><span style="width: 66%; background: #0B4F6C"></span><span style="width: 31%; background: #F2B134"></span><span style="width: 3%; background: #A83E24"></span></div><span class="cap">SEPA 66 % · card 31 % · invoice 3 %</span></div>
+        <div class="card kpi"><p class="ov">Unreconciled</p><span class="v" style="color: #92400E">€ 5,540</span><span class="cap">3 items · oldest 2 days · 2 proofs waiting</span></div>
+        <div class="card kpi"><p class="ov">Refunds this month</p><span class="v">€ 1,062</span><span class="cap">1 processed · 1 awaiting Super Admin (above threshold)</span></div>
+        <div class="card kpi"><p class="ov">Supplier payout liabilities</p><span class="v">€ 8,940</span><span class="cap">accrued, unsettled · next runs 10 Oct (cash) and 15 Oct (bank)</span></div>
+        <div class="card kpi"><p class="ov">Fees &amp; FX · month</p><span class="v">€ 418</span><span class="cap">card 2.9 % + € 0.25 · SEPA € 0.35 · FX spread 0.6 %</span></div>
+      </section>
+
+      <div role="tablist" aria-label="Payment sections" style="display: flex; gap: 2px; border-bottom: 1px solid #E8E2D9; overflow-x: auto">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4"><button class="tab {{t.cls}}" type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}<sc-if value="{{t.hasBadge}}" hint-placeholder-val="{{ false }}"><span class="pill" style="background: #F2B134; color: #1F1B17; height: 20px; padding: 0 8px">{{t.badge}}</span></sc-if></button></sc-for>
+      </div>
+
+      <!-- Reconciliation -->
+      <sc-if value="{{isRec}}" hint-placeholder-val="{{ true }}">
+        <section class="card" style="display: flex; flex-direction: column">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 20px 10px">
+            <h2 class="disp" style="font-size: 20px; line-height: 26px">Transactions · match to bookings</h2>
+            <span class="cap">auto-matched by reference, amount and payer name; exceptions below need a human</span>
+            <div style="margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end">
+              <div class="fld"><label class="lbl" for="f-rail">Rail</label><select class="sel" id="f-rail"><option>All rails</option><option>SEPA / open banking</option><option>Card (gateway)</option><option>Invoice / bank wire</option><option>Cash on arrival</option></select></div>
+              <div class="fld"><label class="lbl" for="f-st">Status</label><select class="sel" id="f-st"><option>Needs attention</option><option>All</option><option>Matched</option><option>Unmatched</option><option>Proof pending</option><option>Failed</option></select></div>
+            </div>
+          </div>
+          <div style="overflow-x: auto">
+            <table class="tbl" style="min-width: 1080px">
+              <thead><tr><th scope="col">Received</th><th scope="col">Rail</th><th scope="col">Payer · reference</th><th scope="col" style="text-align: right">Amount</th><th scope="col">Booking</th><th scope="col">Status</th><th scope="col">Act</th></tr></thead>
+              <tbody>
+                <tr style="background: #FFFBEB">
+                  <td class="mono">6 Oct 13:58</td><td><span class="pill" style="background: #E6F0F4; color: #083B50">SEPA · proof</span></td><td><div style="display: flex; flex-direction: column; gap: 2px"><span>Tomás Herrera · Caixa</span><span class="mono cap">ref "VX6TR2PW HERRERA" · proof PDF uploaded</span></div></td><td class="num">€ 3,180.00</td><td><a class="mono" href="A-Booking.dc.html">VX-6TR2PW</a><br><span class="cap">expected € 3,180.00 · window 5 h</span></td><td><span class="pill" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B">Proof pending · not in feed</span></td><td><button class="btn btn-sm btn-p" type="button" onClick="{{openProof}}">Review proof</button></td>
+                </tr>
+                <sc-if value="{{proofOpen}}" hint-placeholder-val="{{ false }}">
+                  <tr><td colspan="7" style="background: #FBF8F3; padding: 16px 20px">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px; align-items: start">
+                      <div class="ph" role="img" aria-label="Uploaded transfer receipt placeholder from CaixaBank" style="aspect-ratio: 4/3; background: #C9DDE6"><span class="alt">Receipt · CaixaBank · € 3,180.00 · 6 Oct · beneficiary Vereda Expeditions S.L.</span></div>
+                      <div style="display: flex; flex-direction: column; gap: 10px">
+                        <dl class="dl"><dt>Amount on proof</dt><dd class="mono">€ 3,180.00 · matches invoice</dd><dt>IBAN</dt><dd class="mono">ES91 **** **** **** 2219 · ours</dd><dt>Reference</dt><dd class="mono">VX6TR2PW HERRERA · matches</dd><dt>Value date</dt><dd>6 Oct · SEPA arrives next business day</dd><dt>Risk</dt><dd>Low · known payer, first booking</dd></dl>
+                        <div style="display: flex; flex-direction: column; gap: 6px">
+                          <label style="display: flex; gap: 10px; align-items: flex-start"><input class="ck" type="radio" name="pf" checked><span><strong>Accept proof, extend the window 1 business day</strong><br><span class="cap">booking moves to CONFIRMED only when the feed shows the money; vouchers wait</span></span></label>
+                          <label style="display: flex; gap: 10px; align-items: flex-start"><input class="ck" type="radio" name="pf"><span><strong>Confirm now on proof (Operations Admin override)</strong><br><span class="cap">needs a reason; reversed automatically if the feed shows nothing in 3 business days</span></span></label>
+                          <label style="display: flex; gap: 10px; align-items: flex-start"><input class="ck" type="radio" name="pf"><span><strong>Reject proof</strong><br><span class="cap">traveler is told what to fix; window keeps running</span></span></label>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-sm btn-p" type="button" onClick="{{closeProof}}">Apply and log</button><button class="btn btn-sm btn-t" type="button" onClick="{{closeProof}}">Cancel</button></div>
+                      </div>
+                    </div>
+                  </td></tr>
+                </sc-if>
+                <tr style="background: #FFFBEB">
+                  <td class="mono">5 Oct 09:12</td><td><span class="pill" style="background: #E6F0F4; color: #083B50">SEPA</span></td><td><div style="display: flex; flex-direction: column; gap: 2px"><span>H. BERG · Sparkasse</span><span class="mono cap">ref "Kuba Reise Berg" · no code</span></div></td><td class="num">€ 2,535.00</td><td><span class="cap">suggested: <a class="mono" href="A-Booking.dc.html">VX-4WQ7EB</a> balance € 2,535.00 · 1 candidate</span></td><td><span class="pill" style="background: #FEF3C7; color: #92400E">Unmatched · amount fits</span></td><td><div style="display: flex; gap: 6px"><button class="btn btn-sm btn-p" type="button">Match</button><button class="btn btn-sm btn-s" type="button">Other…</button></div></td>
+                </tr>
+                <tr style="background: #FDECEA">
+                  <td class="mono">6 Oct 11:04</td><td><span class="pill" style="background: #FEF3D6; color: #6B4A05">Card</span></td><td><div style="display: flex; flex-direction: column; gap: 2px"><span>P. Nair · Visa ••4471 · IN</span><span class="mono cap">gateway: do_not_honor · 3DS passed</span></div></td><td class="num">€ 2,360.00</td><td><a class="mono" href="A-Booking.dc.html">VX-1LK8MZ</a><br><span class="cap">window expired 14:50</span></td><td><span class="pill" style="background: #FDECEA; color: #B71C1C">Failed · 2nd attempt</span></td><td><div style="display: flex; gap: 6px"><button class="btn btn-sm btn-s" type="button">Extend 24 h + new link</button><button class="btn btn-sm btn-t" type="button">Let it cancel</button></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">6 Oct 10:31</td><td><span class="pill" style="background: #E6F0F4; color: #083B50">SEPA</span></td><td><div style="display: flex; flex-direction: column; gap: 2px"><span>Ingrid Nakamura · BBVA</span><span class="mono cap">ref "VX0YZ3NC"</span></div></td><td class="num">€ 1,050.00</td><td><a class="mono" href="A-Booking.dc.html">VX-0YZ3NC</a><br><span class="cap">balance · deposit paid 2 Sep</span></td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Matched · auto</span></td><td><button class="btn btn-sm btn-t" type="button">Receipt</button></td>
+                </tr>
+                <tr>
+                  <td class="mono">5 Oct 18:47</td><td><span class="pill" style="background: #FEF3D6; color: #6B4A05">Card</span></td><td><div style="display: flex; flex-direction: column; gap: 2px"><span>A. Okafor · Mastercard ••0921 · CA</span><span class="mono cap">CA$ 902.40 → € 590.00 · rate 1.5295 locked</span></div></td><td class="num">€ 590.00</td><td><a class="mono" href="A-Booking.dc.html">VX-7DD2KA</a></td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Matched · auto</span></td><td><button class="btn btn-sm btn-t" type="button">Receipt</button></td>
+                </tr>
+                <tr>
+                  <td class="mono">4 Oct 15:02</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Invoice · wire</span></td><td><div style="display: flex; flex-direction: column; gap: 2px"><span>Lycée Jean Moulin · group</span><span class="mono cap">invoice INV-2026-0188 · 30 days</span></div></td><td class="num">€ 6,120.00</td><td><a class="mono" href="A-Booking.dc.html">VX-G-2P7L</a><br><span class="cap">group · due 3 Nov</span></td><td><span class="pill" style="background: #E3F2FD; color: #0D47A1">Invoiced · open</span></td><td><button class="btn btn-sm btn-t" type="button">Remind</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="cap" style="padding: 10px 20px 16px">Ledger is append-only: a correction is a new entry that references the old one. Card data never touches the platform (gateway tokens only). Cash on arrival is recorded by the desk with the host's countersigned receipt photo.</p>
+        </section>
+      </sc-if>
+
+      <!-- Refunds -->
+      <sc-if value="{{isRef}}" hint-placeholder-val="{{ false }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Refund queue</h2><p class="cap">Thresholds (Settings): Operations Admin up to € 500 alone · € 500–2,000 dual approval · above € 2,000 Super Admin. Force majeure overrides the policy table but not the approvals.</p></div>
+            <div style="overflow-x: auto">
+              <table class="tbl" style="min-width: 560px">
+                <thead><tr><th scope="col">Booking</th><th scope="col">Reason · rule</th><th scope="col" style="text-align: right">Amount</th><th scope="col">Approval</th><th scope="col">Act</th></tr></thead>
+                <tbody>
+                  <tr style="background: #FFFBEB"><td><a class="mono" href="A-Booking.dc.html">VX-8TL2VN</a><br><span class="cap">Bianchi · Viñales outage</span></td><td>Disruption DC-0931 · option D early return<br><span class="cap">pro-rata unused services · force majeure</span></td><td class="num">€ 1,310.00</td><td><span class="pill" style="background: #FEF3C7; color: #92400E">Dual · 1 of 2</span><br><span class="cap">Ana R. approved 14:20</span></td><td><button class="btn btn-sm btn-s" type="button" aria-disabled="true" style="color: #6E665E">Needs 2nd approver</button></td></tr>
+                  <tr><td><a class="mono" href="A-Booking.dc.html">VX-9RE1KP</a><br><span class="cap">Fontaine · cancelled 1 Oct</span></td><td>Traveler cancellation · 30–15 days<br><span class="cap">policy: 25 % kept · same FX rate as payment (BR-CU-08)</span></td><td class="num">€ 442.50</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Within your limit</span></td><td><button class="btn btn-sm btn-p" type="button">Approve &amp; send</button></td></tr>
+                  <tr><td><a class="mono" href="A-Booking.dc.html">VX-3BB1XQ</a><br><span class="cap">O'Neil · cancelled 18 Aug</span></td><td>Traveler cancellation · 45–31 days<br><span class="cap">10 % kept · refunded to original card</span></td><td class="num">€ 1,062.00</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Done 29 Sep</span></td><td><button class="btn btn-sm btn-t" type="button">Receipt</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 18px; line-height: 24px">Refund · VX-9RE1KP</h2>
+            <dl class="dl"><dt>Paid</dt><dd class="mono">€ 1,770.00 · card · 12 Aug · rate n/a (EUR)</dd><dt>Cancelled</dt><dd>1 Oct · 22 days before arrival</dd><dt>Rule</dt><dd>30–15 days → 25 % fee · refundable 75 %</dd><dt>Supplier penalties</dt><dd class="mono">€ 0 (casa released in time)</dd><dt>Refund</dt><dd class="mono"><strong>€ 442.50</strong> of the € 590 deposit-plus-balance paid so far</dd><dt>Method</dt><dd>Original card · 5–10 business days · receipt emailed</dd></dl>
+            <div class="fld"><label class="lbl" for="rr">Reason (mandatory, goes to the audit log)</label><textarea class="ta" id="rr">Traveler cancellation 1 Oct, standard policy applied, no force majeure.</textarea></div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-p" type="button">Approve € 442.50</button><button class="btn btn-s" type="button">Offer travel credit instead (+10 %)</button></div>
+            <p class="cap">Idempotent: the gateway refund id is stored before the call, so a retry can never double-refund.</p>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- Payouts -->
+      <sc-if value="{{isPay}}" hint-placeholder-val="{{ false }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Payout liabilities · by province</h2><p class="cap">accrued to field providers for CONFIRMED and COMPLETED services, not yet settled · EUR</p></div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div class="hbar"><span class="lab">La Habana</span><span class="tr" aria-label="€ 3,420 of 8,940"><span style="width: 38%; background: #0B4F6C"></span></span><span class="mono" style="width: 70px; text-align: right">€ 3,420</span></div>
+              <div class="hbar"><span class="lab">Pinar del Río</span><span class="tr" aria-label="€ 2,610"><span style="width: 29%; background: #0B4F6C"></span></span><span class="mono" style="width: 70px; text-align: right">€ 2,610</span></div>
+              <div class="hbar"><span class="lab">Sancti Spíritus</span><span class="tr" aria-label="€ 1,180"><span style="width: 13%; background: #0B4F6C"></span></span><span class="mono" style="width: 70px; text-align: right">€ 1,180</span></div>
+              <div class="hbar"><span class="lab">Matanzas</span><span class="tr" aria-label="€ 960"><span style="width: 11%; background: #0B4F6C"></span></span><span class="mono" style="width: 70px; text-align: right">€ 960</span></div>
+              <div class="hbar"><span class="lab">Santiago · Granma</span><span class="tr" aria-label="€ 770"><span style="width: 9%; background: #0B4F6C"></span></span><span class="mono" style="width: 70px; text-align: right">€ 770</span></div>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: #4A433D; padding-top: 4px"><span class="tag">Casas € 4,310</span><span class="tag">Drivers € 2,180</span><span class="tag">Guides € 1,690</span><span class="tag">Activities &amp; meals € 760</span></div>
+            <p class="cap">Settled last 30 days: € 11,260. Liabilities feed the ONAT export (withholding figures) and the reinvestment ledger.</p>
+          </div>
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="padding: 16px 20px 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><h2 class="disp" style="font-size: 20px; line-height: 26px">Next payout runs</h2><button class="btn btn-sm btn-s" type="button" style="margin-left: auto">Prepare run</button></div>
+            <div style="overflow-x: auto">
+              <table class="tbl" style="min-width: 520px">
+                <thead><tr><th scope="col">Run</th><th scope="col">Method</th><th scope="col">Providers</th><th scope="col" style="text-align: right">Total</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">10 Oct</td><td>Cash EUR at the desk · signed receipts</td><td>Drivers 6 · guides 2</td><td class="num">€ 2,380</td><td><span class="pill" style="background: #E3F2FD; color: #0D47A1">Scheduled</span></td></tr>
+                  <tr><td class="mono">15 Oct</td><td>Bank transfer · Banco Metropolitano / BPA</td><td>Casas 14 · guides 5</td><td class="num">€ 5,320</td><td><span class="pill" style="background: #E3F2FD; color: #0D47A1">Scheduled</span></td></tr>
+                  <tr><td class="mono">31 Oct</td><td>Invoice settlement · Transtur, Gaviota</td><td>Operators 2</td><td class="num">€ 1,240</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Awaiting invoices</span></td></tr>
+                  <tr><td class="mono">28 Sep</td><td>Bank transfer</td><td>Casas 12 · guides 4</td><td class="num">€ 4,870</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Settled · 26 receipts</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="cap" style="padding: 10px 20px 16px">A payout releases 5 business days after COMPLETED unless an incident is open on the booking. Cash runs need two staff signatures; MLC/CUP conversions record the rate snapshot.</p>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- Rails & fees -->
+      <sc-if value="{{isRails}}" hint-placeholder-val="{{ false }}">
+        <section class="card" style="display: flex; flex-direction: column">
+          <div style="padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Payment rails · health, fees, success rate</h2><p class="cap">a rail that fails 3 times in 10 minutes is hidden from checkout automatically and the desk is paged</p></div>
+          <div style="overflow-x: auto">
+            <table class="tbl" style="min-width: 900px">
+              <thead><tr><th scope="col">Rail</th><th scope="col">Provider</th><th scope="col">Available to</th><th scope="col">Fee</th><th scope="col">Success · 30 d</th><th scope="col">Settles</th><th scope="col">Status</th></tr></thead>
+              <tbody>
+                <tr><td><strong>SEPA / open banking</strong><br><span class="cap">primary rail · spec §4.4</span></td><td>Open banking API · ES bank account</td><td>EU, UK, CH, NO</td><td class="mono">€ 0.35</td><td><div style="display: flex; flex-direction: column; gap: 4px"><span class="mono">97.8 %</span><span class="cap">1 proof pending</span></div></td><td>T+1 business day</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Healthy</span></td></tr>
+                <tr><td><strong>Card</strong><br><span class="cap">Visa, Mastercard, Apple/Google Pay</span></td><td>Gateway (tokenized, 3DS2)</td><td>Everyone except US-issued cards (embargo)</td><td class="mono">2.9 % + € 0.25</td><td><div style="display: flex; flex-direction: column; gap: 4px"><span class="mono">91.4 %</span><span class="cap">declines mostly IN, NG issuers</span></div></td><td>T+2</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Healthy</span></td></tr>
+                <tr><td><strong>Invoice · bank wire</strong><br><span class="cap">groups, schools, partners</span></td><td>Manual · 30-day terms</td><td>Approved accounts</td><td class="mono">€ 0</td><td><div style="display: flex; flex-direction: column; gap: 4px"><span class="mono">—</span><span class="cap">1 open · due 3 Nov</span></div></td><td>on receipt</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Manual</span></td></tr>
+                <tr><td><strong>Cash on arrival</strong><br><span class="cap">balance only · US travelers with no usable card</span></td><td>Desk + host receipt</td><td>Case by case, deposit paid by another rail</td><td class="mono">€ 0</td><td><div style="display: flex; flex-direction: column; gap: 4px"><span class="mono">—</span><span class="cap">2 this month</span></div></td><td>same day</td><td><span class="pill" style="background: #FEF3C7; color: #92400E">Restricted</span></td></tr>
+                <tr><td><strong>Digital wallet (non-SEPA)</strong><br><span class="cap">manifest flag: off</span></td><td>—</td><td>—</td><td class="mono">—</td><td class="mono">—</td><td>—</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Disabled · Settings › flags</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="cap" style="padding: 10px 20px 16px">FX: rate locked at deposit for the whole schedule (BR-CU-02); refunds reuse it or the better rate (BR-CU-08); discrepancies under € 0.50 are absorbed (EC-CU-02). Fees are a separate line on every invoice (BR-CU-07).</p>
+        </section>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'rec', proof: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const defs = [['rec', 'Reconciliation', '3'], ['ref', 'Refunds', '2'], ['pay', 'Supplier payouts', ''], ['rails', 'Rails & fees', '']];
+    const tabs = defs.map(([id, label, badge]) => ({ id, label, badge, hasBadge: !!badge, on: s.tab === id, cls: s.tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) }));
+    return { tabs, isRec: s.tab === 'rec', isRef: s.tab === 'ref', isPay: s.tab === 'pay', isRails: s.tab === 'rails', proofOpen: s.proof, openProof: () => this.setState({ proof: true }), closeProof: () => this.setState({ proof: false }) };
+  }
+}
+</script>
+</body>
+</html>

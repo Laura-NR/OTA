@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Event access · ticket concierge · mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:disabled{background:#E8E2D9;color:#6E665E;border-color:transparent}
+.btn:focus-visible,.inp:focus-visible,.ck:focus-visible,.ibtn:focus-visible,.chip:focus-visible,.tier:focus-within,.night:focus-within,.evc:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.inp{height:48px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.ibtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #D6CEC3;background:#fff;cursor:pointer;color:#083B50}
+.ibtn:disabled{color:#6E665E;background:#F3EEE6}
+.tier{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer}
+.tier.on{border:2px solid #0B4F6C;padding:13px;background:#F1F6F8}
+.night{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid #D6CEC3;border-radius:10px;background:#fff;cursor:pointer}
+.night.on{border-color:#0B4F6C;background:#F1F6F8}
+.evc{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer;text-align:left;font:inherit;color:inherit;min-width:0;flex:none;width:200px;scroll-snap-align:start}
+.evc.on{border:2px solid #0B4F6C;padding:11px;background:#F1F6F8}
+.chip{height:40px;padding:0 14px;border-radius:9999px;border:1px solid #D6CEC3;background:#fff;font:500 14px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;white-space:nowrap}
+.chip.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.ph{position:relative;background:#DCC9B6;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box}
+.ph .alt{font:500 11px/14px Inter,system-ui,sans-serif;color:#4A433D;background:rgba(255,255,255,.85);padding:3px 6px;border-radius:4px}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid;font-size:14px;line-height:20px}
+.alert p{margin:0}
+.row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 20px 8px;margin:0 -20px}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 8px; border-bottom: 1px solid #E8E2D9; background: #FBF8F3; position: sticky; top: 0; z-index: 3">
+    <a href="M-Home.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="flex: 1; min-width: 0"><p class="sm" style="font-weight: 600">Event access</p><p class="cap">Ticket concierge · request only</p></div>
+    <a class="btn btn-t btn-sm" href="https://wa.me/" aria-label="Talk to a specialist on WhatsApp"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg></a>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 16px; padding: 16px 20px 150px">
+
+    <sc-if value="{{intro}}" hint-placeholder-val="{{ true }}">
+      <div class="ph" style="height: 180px; border-radius: 12px; background: #B9CFD6; margin: 0 -4px"><span class="alt">alt: Son trio playing at Casa de la Trova</span></div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="pill" style="background: #F2B134; color: #1F1B17">Event</span><span class="pill" style="background: #E6F0F4; color: #083B50">18–24 Jan 2027 · Havana</span></div>
+      <h1 class="disp" style="font-size: 28px; line-height: 34px">Havana Jazz Festival, with a seat that is actually yours</h1>
+      <p class="p">Main-venue tickets are allocated late and sold through channels you can't reach from abroad. We request them through licensed sellers, confirm by a date you know in advance, and add them to your booking. Nothing is charged until seats are confirmed.</p>
+      <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; gap: 10px"><span class="disp" style="font-size: 22px; line-height: 24px; color: #A83E24; width: 18px">1</span><p class="sm"><strong>Nights and seats.</strong> Two minutes, below.</p></div>
+        <div style="display: flex; gap: 10px"><span class="disp" style="font-size: 22px; line-height: 24px; color: #A83E24; width: 18px">2</span><p class="sm"><strong>The desk confirms</strong> the request in 48 h and the seats by [confirmation date].</p></div>
+        <div style="display: flex; gap: 10px"><span class="disp" style="font-size: 22px; line-height: 24px; color: #A83E24; width: 18px">3</span><p class="sm"><strong>Tickets join your booking</strong>, paid with the deposit; fee [fee per seat].</p></div>
+      </div>
+      <p class="cap">If tickets fall through: [cancellation rule if tickets are not confirmed].</p>
+      <a class="btn btn-s" href="M-Custom.dc.html" data-analytics-event="cta_click" data-analytics-cta="concierge_add_to_builder">Add it to a trip I'm building</a>
+    </sc-if>
+
+    <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">Step {{stepN}} of 3 · {{stepLabel}}</span><span style="color: #6E665E">{{nextLabel}}</span></div><div style="height: 8px; border-radius: 9999px; background: #E8E2D9; overflow: hidden" role="progressbar" aria-valuenow="{{stepN}}" aria-valuemin="0" aria-valuemax="3" aria-label="Request progress"><div style="height: 100%; width: {{progress}}; background: #0B4F6C"></div></div></div>
+    </sc-if>
+
+    <!-- STEP 1 -->
+    <sc-if value="{{s1}}" hint-placeholder-val="{{ true }}">
+      <h2 class="disp" style="font-size: 24px; line-height: 30px">Which nights, how many seats</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <p class="lbl">Event</p>
+        <div class="row" role="radiogroup" aria-label="Event"><sc-for list="{{events}}" as="ev" hint-placeholder-count="5"><button class="evc {{ev.cls}}" type="button" role="radio" aria-checked="{{ev.on}}" onClick="{{ev.pick}}"><span class="pill" style="background: {{ev.bg}}; color: {{ev.fg}}; align-self: flex-start">{{ev.when}}</span><span style="font-weight: 600; font-size: 14px; line-height: 20px">{{ev.name}}</span><span class="cap">{{ev.status}}</span></button></sc-for></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <p class="lbl">Festival nights · {{nightsOn}} selected</p>
+        <sc-for list="{{nights}}" as="n" hint-placeholder-count="7"><label class="night {{n.cls}}"><input class="ck" type="checkbox" checked="{{n.on}}" onChange="{{n.toggle}}"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 600; font-size: 15px; line-height: 20px">{{n.day}}</span><span class="cap">{{n.prog}}</span></span></label></sc-for>
+        <p class="hlp">Programme by venue is published in December; galas sell out first.</p>
+      </div>
+      <div class="fld"><p class="lbl">Seats</p><div style="display: flex; align-items: center; gap: 6px"><button class="ibtn" type="button" aria-label="One seat fewer" onClick="{{decSeats}}" disabled="{{seatsMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button><span class="mono" style="width: 28px; text-align: center" aria-live="polite">{{seats}}</span><button class="ibtn" type="button" aria-label="One seat more" onClick="{{incSeats}}" disabled="{{seatsMax}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button><span class="hlp" style="margin-left: 6px">up to 8</span></div></div>
+      <div style="display: flex; flex-direction: column; gap: 8px" role="radiogroup" aria-label="Ticket category"><p class="lbl">Category</p><sc-for list="{{cats}}" as="c" hint-placeholder-count="3"><label class="tier {{c.cls}}"><input class="ck" type="radio" name="cat" checked="{{c.on}}" onChange="{{c.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-weight: 600; font-size: 15px">{{c.name}}</span><span class="mono" style="font-size: 13px; white-space: nowrap">{{c.price}}</span></span><span class="cap">{{c.desc}}</span></span></label></sc-for></div>
+      <sc-if value="{{noNights}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg><p>Pick at least one night, or the all-festival pass.</p></div></sc-if>
+    </sc-if>
+
+    <!-- STEP 2 -->
+    <sc-if value="{{s2}}" hint-placeholder-val="{{ false }}">
+      <h2 class="disp" style="font-size: 24px; line-height: 30px">Where the tickets go</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px" role="radiogroup" aria-label="Your trip"><sc-for list="{{paths}}" as="pt" hint-placeholder-count="3"><label class="tier {{pt.cls}}"><input class="ck" type="radio" name="path" checked="{{pt.on}}" onChange="{{pt.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600; font-size: 15px">{{pt.name}}</span><span class="cap">{{pt.desc}}</span></span></label></sc-for></div>
+      <sc-if value="{{pathExisting}}" hint-placeholder-val="{{ false }}"><div class="fld"><label class="lbl" for="code">Booking or proposal code</label><input class="inp mono" id="code" type="text" placeholder="VX-7K2M9Q" autocomplete="off"></div></sc-if>
+      <sc-if value="{{pathBuild}}" hint-placeholder-val="{{ true }}">
+        <div class="fld"><label class="lbl" for="arr">Arrival in Cuba</label><input class="inp" id="arr" type="text" value="Sat 16 Jan 2027"><p class="hlp">Two nights before the opening gala.</p></div>
+        <div class="fld"><p class="lbl">Nights in total</p><div style="display: flex; align-items: center; gap: 6px"><button class="ibtn" type="button" aria-label="One night fewer" onClick="{{decN}}" disabled="{{nMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button><span class="mono" style="width: 28px; text-align: center" aria-live="polite">{{nightsTotal}}</span><button class="ibtn" type="button" aria-label="One night more" onClick="{{incN}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>
+        <div class="fld"><p class="lbl">After the festival</p><div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{afters}}" as="af" hint-placeholder-count="3"><button class="chip {{af.cls}}" type="button" aria-pressed="{{af.on}}" onClick="{{af.pick}}">{{af.label}}</button></sc-for></div><p class="hlp">Havana for the festival, then {{afterCopy}}</p></div>
+        <div class="alert" role="status" style="background: #E6F0F4; border-color: #C9DDE6; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><p>Festival-week casas in Vedado fill early; we hold a room at Casa Lis for concierge requests until [hold date].</p></div>
+      </sc-if>
+      <sc-if value="{{pathOnly}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg><p>Tickets only aren't offered (licence rules). We'll propose the smallest trip that includes the concerts.</p></div></sc-if>
+    </sc-if>
+
+    <!-- STEP 3 -->
+    <sc-if value="{{s3}}" hint-placeholder-val="{{ false }}">
+      <h2 class="disp" style="font-size: 24px; line-height: 30px">Who we confirm to</h2>
+      <div class="fld"><label class="lbl" for="name">Your name</label><input class="inp" id="name" type="text" autocomplete="name"></div>
+      <div class="fld"><label class="lbl" for="email">Email</label><input class="inp" id="email" type="email" autocomplete="email"></div>
+      <div class="fld"><label class="lbl" for="tel">WhatsApp or phone</label><input class="inp" id="tel" type="tel" autocomplete="tel" placeholder="+49 151 2345678"></div>
+      <div class="fld"><label class="lbl" for="nat">Nationality</label><select class="inp" id="nat" onChange="{{pickNat}}"><option value="DE">Germany</option><option value="FR">France</option><option value="ES">Spain</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="US">United States</option></select></div>
+      <sc-if value="{{natUS}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #E6F0F4; border-color: #C9DDE6; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><p>US travelers: the OFAC affidavit comes with the booking, not now.</p></div></sc-if>
+      <div class="fld"><label class="lbl" for="notes">Anything else · optional</label><textarea class="inp" id="notes" style="height: 88px; padding: 10px 12px; resize: vertical" placeholder="Artists you'd travel for, accessibility needs…"></textarea></div>
+      <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 20px; color: #4A433D"><input class="ck" type="checkbox" checked="{{consent}}" onChange="{{toggleConsent}}"><span>Send my request to the Vereda desk and keep it for 90 days. Nothing is charged until seats are confirmed. <a href="M-Legal.dc.html">Privacy notice</a>.</span></label>
+    </sc-if>
+
+    <!-- SENT -->
+    <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 14px; border-color: #0B4F6C">
+        <div style="display: flex; gap: 12px; align-items: center"><span style="width: 40px; height: 40px; border-radius: 9999px; background: #E8F5E9; color: #1B5E20; display: inline-flex; align-items: center; justify-content: center; flex: none"><svg class="ic" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span><div><p class="sm" style="font-weight: 600">Request <span class="mono">CR-2027-0007</span> received</p><p class="cap">{{nightsOn}} nights · {{seats}} seats · {{catName}} · nothing charged</p></div></div>
+        <ol style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: #4A433D">
+          <li><strong>Within 48 h:</strong> a specialist confirms the request and sends your trip proposal.</li>
+          <li><strong>By [confirmation date]:</strong> seats confirmed or not; confirmed seats go on the invoice at [price per seat] + [fee per seat].</li>
+          <li><strong>If tickets fall through:</strong> [cancellation rule if tickets are not confirmed].</li>
+        </ol>
+        <a class="btn btn-p" href="M-Account.dc.html">Track it in your account</a>
+        <button class="btn btn-t" type="button" onClick="{{restart}}">New request</button>
+      </div>
+    </sc-if>
+
+    <!-- All events -->
+    <sc-if value="{{intro}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 8px"><p class="ov">All events this season</p>
+        <div class="row"><sc-for list="{{allEvents}}" as="ae" hint-placeholder-count="5"><article class="card" style="width: 220px; flex: none; scroll-snap-align: start; display: flex; flex-direction: column; overflow: hidden"><div class="ph" style="height: 90px; background: {{ae.tint}}"><span class="alt">alt: {{ae.alt}}</span></div><div style="padding: 12px; display: flex; flex-direction: column; gap: 4px"><span class="pill" style="background: {{ae.bg}}; color: {{ae.fg}}; align-self: flex-start">{{ae.when}}</span><h3 style="margin: 0; font: 600 14px/20px Inter, system-ui, sans-serif">{{ae.name}}</h3><p class="cap">{{ae.place}} · {{ae.status}}</p></div></article></sc-for></div>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- Sticky action bar -->
+  <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+    <div style="position: sticky; bottom: 0; background: #fff; border-top: 1px solid #E8E2D9; padding: 12px 20px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 -4px 12px rgba(31,27,23,.06); z-index: 3">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px"><div><p class="cap">Your request</p><p class="sm" style="font-weight: 600" aria-live="polite">{{nightsOn}} nights · {{seats}} seats · {{catName}}</p></div><p class="cap" style="text-align: right">[price per seat] + [fee]<br>per ticket, once confirmed</p></div>
+      <div style="display: flex; gap: 8px">
+        <sc-if value="{{notFirst}}" hint-placeholder-val="{{ false }}"><button class="btn btn-s" type="button" onClick="{{back}}" style="flex: 0.8">Back</button></sc-if>
+        <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}"><button class="btn btn-p" type="button" onClick="{{next}}" disabled="{{nextBlocked}}" style="flex: 1.2" data-analytics-event="concierge_step_completed">Continue</button></sc-if>
+        <sc-if value="{{isLast}}" hint-placeholder-val="{{ false }}"><button class="btn btn-p" type="button" onClick="{{send}}" disabled="{{sendBlocked}}" style="flex: 1.3" data-analytics-event="concierge_request_submitted">Send request</button></sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24; background: #FBF8F3; padding: 0 4px">viewport fold · 844</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2700}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 1, ev: 'jazz', nights: { n1: false, n2: true, n3: true, n4: false, n5: false, n6: true, n7: false }, seats: 2, cat: 'num', path: 'build', nightsTotal: 9, after: 'vinales', nat: 'DE', consent: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const evDefs = [
+      ['jazz', 'Havana Jazz Festival', '18–24 Jan 2027', 'Havana', 'allocations open', '#F2B134', '#1F1B17', 'Rumba at Callejón de Hamel', '#E3B9A6'],
+      ['habano', 'Festival del Habano', 'Feb 2027 · [tbc]', 'Havana · Pinar del Río', 'request only', '#E6F0F4', '#083B50', 'Tobacco drying house, Viñales', '#DCC9B6'],
+      ['romerias', 'Romerías de Mayo', 'May 2027 · [tbc]', 'Holguín', 'free events · guide only', '#E6F0F4', '#083B50', 'Street procession with drums, Holguín', '#B9CFD6'],
+      ['fuego', 'Fiesta del Fuego', 'Jul 2027 · [tbc]', 'Santiago de Cuba', 'request only', '#E6F0F4', '#083B50', 'Conga drummers in the street, Santiago', '#E3B9A6'],
+      ['cine', 'Festival del Nuevo Cine Latinoamericano', 'Dec 2027 · [tbc]', 'Havana cinemas', 'passes via concierge', '#E6F0F4', '#083B50', 'Queue outside Cine Yara at dusk', '#B9CFD6']
+    ];
+    const events = evDefs.map(([id, name, when, place, status, bg, fg]) => ({ id, name, when, place, status, bg, fg, on: s.ev === id, cls: s.ev === id ? 'on' : '', pick: () => this.setState({ ev: id }) }));
+    const allEvents = evDefs.map(([id, name, when, place, status, bg, fg, alt, tint]) => ({ id, name, when, place, status, bg, fg, alt, tint }));
+    const nightDefs = [['n1', 'Mon 18 Jan · opening gala', 'Teatro Nacional · [programme tbc]'], ['n2', 'Tue 19 Jan', 'Fábrica de Arte Cubano · late set'], ['n3', 'Wed 20 Jan', 'Jazz Café, Vedado'], ['n4', 'Thu 21 Jan', 'Casa de la Cultura de Plaza'], ['n5', 'Fri 22 Jan', 'Teatro Mella'], ['n6', 'Sat 23 Jan · headline night', 'Teatro Nacional · [programme tbc]'], ['n7', 'Sun 24 Jan · closing', 'Old Havana open-air stage']];
+    const nights = nightDefs.map(([id, day, prog]) => ({ id, day, prog, on: !!s.nights[id], cls: s.nights[id] ? 'on' : '', toggle: () => this.setState({ nights: { ...s.nights, [id]: !s.nights[id] } }) }));
+    const nightsOn = nightDefs.filter((n) => s.nights[n[0]]).length;
+    const catDefs = [['gen', 'General admission', 'Unreserved; first come at the venue', '[price per seat]'], ['num', 'Numbered seat', 'Reserved seat in the main hall', '[price per seat]'], ['pass', 'All-festival pass', 'Every night, main venues; limited', '[pass price]']];
+    const cats = catDefs.map(([id, name, desc, price]) => ({ id, name, desc, price, on: s.cat === id, cls: s.cat === id ? 'on' : '', pick: () => this.setState({ cat: id }) }));
+    const catName = catDefs.find((c) => c[0] === s.cat)[1];
+    const pathDefs = [['build', 'Build a trip around the festival', 'Havana for the concerts, then the island.'], ['existing', 'Attach to a booking or proposal I have', 'Give us the code; the desk adds the tickets.'], ['only', 'Tickets only', 'Not offered on its own; we propose the smallest trip.']];
+    const paths = pathDefs.map(([id, name, desc]) => ({ id, name, desc, on: s.path === id, cls: s.path === id ? 'on' : '', pick: () => this.setState({ path: id }) }));
+    const afterDefs = [['vinales', 'Viñales valley', '3–4 nights in the valley.'], ['trinidad', 'Trinidad', 'colonial streets and mountains.'], ['none', 'Havana only', 'a city week.']];
+    const afters = afterDefs.map(([id, label]) => ({ id, label, on: s.after === id, cls: s.after === id ? 'on' : '', pick: () => this.setState({ after: id }) }));
+    const labels = ['Event & seats', 'Your trip', 'Contact'];
+    const stepN = Math.min(s.step, 3);
+    return {
+      intro: s.step === 1, stepN, stepLabel: labels[stepN - 1], nextLabel: s.step < 3 ? 'Next: ' + labels[s.step] : 'Last step', progress: (stepN * 33.4) + '%',
+      s1: s.step === 1, s2: s.step === 2, s3: s.step === 3, sent: s.step === 4, notSent: s.step !== 4, notFirst: s.step > 1, notLast: s.step < 3, isLast: s.step === 3,
+      next: () => this.setState({ step: Math.min(3, s.step + 1) }), back: () => this.setState({ step: Math.max(1, s.step - 1) }), send: () => this.setState({ step: 4 }), restart: () => this.setState({ step: 1, consent: false }),
+      nextBlocked: s.step === 1 && nightsOn === 0 && s.cat !== 'pass',
+      events, allEvents, nights, nightsOn, noNights: nightsOn === 0 && s.cat !== 'pass',
+      seats: s.seats, seatsMin: s.seats <= 1, seatsMax: s.seats >= 8, incSeats: () => this.setState({ seats: Math.min(8, s.seats + 1) }), decSeats: () => this.setState({ seats: Math.max(1, s.seats - 1) }),
+      cats, catName, paths, pathExisting: s.path === 'existing', pathBuild: s.path === 'build', pathOnly: s.path === 'only',
+      nightsTotal: s.nightsTotal, incN: () => this.setState({ nightsTotal: s.nightsTotal + 1 }), decN: () => this.setState({ nightsTotal: Math.max(3, s.nightsTotal - 1) }), nMin: s.nightsTotal <= 3,
+      afters, afterCopy: afterDefs.find((a) => a[0] === s.after)[2],
+      natUS: s.nat === 'US', pickNat: (e) => this.setState({ nat: e.target.value }),
+      consent: s.consent, toggleConsent: () => this.setState({ consent: !s.consent }), sendBlocked: !s.consent
+    };
+  }
+}
+</script>
+</body>
+</html>

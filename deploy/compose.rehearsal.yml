@@ -1,0 +1,16 @@
+# Local rehearsal of the production stack (docs/deployment-plan.md Phase B):
+# vereda.localhost, desk.localhost and analytics.localhost (browsers and curl
+# resolve *.localhost to this machine; Caddy signs them with its local CA), and
+# mail into the dev Mailpit (http://localhost:8025) on the host.
+#   docker compose -f deploy/compose.prod.yml -f deploy/compose.rehearsal.yml up -d
+# Its own project name, so its volumes never mix with a real deploy's.
+name: ota-rehearsal
+
+services:
+  api:
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+  # Uploads to the dev MinIO on the host (http://host.docker.internal:9000).
+  backup:
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

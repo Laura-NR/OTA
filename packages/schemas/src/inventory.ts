@@ -124,6 +124,11 @@ export const inventoryItemSchema = z.object({
 
 export type InventoryItemDto = z.infer<typeof inventoryItemSchema>;
 
+// The public catalog's item: who supplies it is internal to the desk.
+export const catalogItemSchema = inventoryItemSchema.omit({ supplierId: true });
+
+export type CatalogItemDto = z.infer<typeof catalogItemSchema>;
+
 export const priceQuoteSchema = z.object({
   base: z.number(),
   seasonal: z.number(),

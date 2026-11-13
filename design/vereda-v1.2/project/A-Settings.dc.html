@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings · users and roles, permissions, currencies and languages, agency manifest and feature flags, thresholds, security</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:36px;padding:0 12px;font-size:13px}
+.btn:focus-visible,.inp:focus-visible,.sel:focus-visible,.tab:focus-visible,.ck:focus-visible,.sw:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.sel{height:44px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;box-sizing:border-box;width:100%}
+.inp-sm{height:36px;font-size:13px;padding:0 10px}
+.sel{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231F1B17' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.lbl{font:500 13px/18px Inter,system-ui,sans-serif;color:#1F1B17}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:0;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 240px;max-width:100%;background:#083B50;color:#fff;display:flex;flex-direction:column;gap:16px;padding:20px 16px 24px;box-sizing:border-box}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:8px;color:#C9DDE6;text-decoration:none;font:500 14px/20px Inter,system-ui,sans-serif}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav a:focus-visible{outline:2px solid #F2B134;outline-offset:-2px}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:#F2B134;color:#1F1B17;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.cnt.red{background:#C62828;color:#fff}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 32px;background:#fff;border-bottom:1px solid #E8E2D9}
+.content{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.tab{height:44px;padding:0 14px;border:0;background:transparent;font:600 14px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C}
+.sw{width:44px;height:24px;border-radius:9999px;border:0;position:relative;cursor:pointer;flex:none;padding:0}
+.sw span{position:absolute;top:2px;width:20px;height:20px;border-radius:9999px;background:#fff;box-shadow:0 1px 2px rgba(31,27,23,.2)}
+.yes{color:#1B5E20}.no{color:#B71C1C}
+.code{font:400 12px/18px "IBM Plex Mono",ui-monospace,monospace;background:#1F1B17;color:#F3EEE6;padding:14px 16px;border-radius:8px;white-space:pre;overflow-x:auto;margin:0}
+.frow{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid #E8E2D9}
+.frow:first-child{border-top:0;padding-top:0}
+</style>
+</helmet>
+
+<div class="shell">
+
+  <nav class="side" aria-label="Admin">
+    <a href="A-Dashboard.dc.html" aria-label="Vereda operations desk" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; padding: 4px 12px 8px"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg><span class="cap" style="color: #C9DDE6; margin-left: 2px">Ops</span></a>
+    <div class="nav">
+      <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Dashboard<span class="cnt red">2</span></a>
+      <a href="A-Bookings.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>Bookings<span class="cnt">14</span></a>
+      <a href="A-Disruption.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Disruptions<span class="cnt">1</span></a>
+      <a href="A-Packages.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>Packages</a>
+      <a href="A-Customers.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>Customers</a>
+      <a href="A-Suppliers.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Suppliers<span class="cnt">1</span></a>
+      <a href="A-Payments.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments<span class="cnt">3</span></a>
+      <a href="A-Content.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Content</a>
+      <a href="A-Reports.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+      <a href="A-Settings.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.08)">
+      <div style="display: flex; gap: 10px; align-items: center"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: #1F1B17; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">DR</span><div style="display: flex; flex-direction: column; min-width: 0"><strong style="font-size: 13px; line-height: 18px">Dayana Rodríguez</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">Super Admin</span></div></div>
+      <a href="A-Login.dc.html" style="color: #C9DDE6; font-size: 12px; line-height: 16px">Sign out · passkey session · ends 02:10</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <h1 class="disp" style="font-size: 24px; line-height: 32px; margin-right: 8px">Settings</h1>
+      <span class="pill" style="background: #1F1B17; color: #fff">Super Admin only</span>
+      <span class="cap">Every change here is a versioned, audited event; most apply instantly, manifest changes on the next build (≈ 2 min).</span>
+    </header>
+
+    <div class="content">
+      <div role="tablist" aria-label="Settings sections" style="display: flex; gap: 2px; border-bottom: 1px solid #E8E2D9; overflow-x: auto">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="6"><button class="tab {{t.cls}}" type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+      </div>
+
+      <!-- USERS & ROLES -->
+      <sc-if value="{{isUsers}}" hint-placeholder-val="{{ true }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 20px 10px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Users · 5</h2><span class="cap">three roles (spec §2) · passwordless · passkeys mandatory for Super Admins</span></div>
+            <div style="overflow-x: auto">
+              <table class="tbl" style="min-width: 640px">
+                <thead><tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Passkeys</th><th scope="col">Last sign-in</th><th scope="col">Status</th><th scope="col">Act</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Dayana Rodríguez</strong><br><span class="cap">dayana@vereda.travel · Havana</span></td><td><span class="pill" style="background: #1F1B17; color: #fff">Super Admin</span></td><td class="mono">2</td><td>today 14:05 · passkey</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Active</span></td><td><button class="btn btn-sm btn-t" type="button">Edit</button></td></tr>
+                  <tr><td><strong>[Founder name]</strong><br><span class="cap">founder@vereda.travel · Spain</span></td><td><span class="pill" style="background: #1F1B17; color: #fff">Super Admin</span></td><td class="mono">1</td><td>3 Oct · passkey</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Active</span></td><td><button class="btn btn-sm btn-t" type="button">Edit</button></td></tr>
+                  <tr><td><strong>Ana Rodríguez</strong><br><span class="cap">ana@vereda.travel · Havana · operations lead</span></td><td><span class="pill" style="background: #E6F0F4; color: #083B50">Operations Admin</span></td><td class="mono">1</td><td>today 14:33 · passkey</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Active</span></td><td><button class="btn btn-sm btn-t" type="button">Edit</button></td></tr>
+                  <tr><td><strong>Ernesto Vila</strong><br><span class="cap">ernesto@vereda.travel · Havana · shared desk PC</span></td><td><span class="pill" style="background: #FEF3D6; color: #6B4A05">Administrative Support</span></td><td class="mono">0</td><td>today 12:20 · email link</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Active</span></td><td><button class="btn btn-sm btn-t" type="button">Edit</button></td></tr>
+                  <tr style="background: #FFFBEB"><td><strong>Yanet Cabrera</strong><br><span class="cap">yanet@vereda.travel · invited 5 Oct</span></td><td><span class="pill" style="background: #FEF3D6; color: #6B4A05">Administrative Support</span></td><td class="mono">—</td><td>never</td><td><span class="pill" style="background: #FEF3C7; color: #92400E">Invited · expires 12 Oct</span></td><td><div style="display: flex; gap: 6px"><button class="btn btn-sm btn-s" type="button">Resend</button><button class="btn btn-sm btn-t" type="button">Revoke</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="cap" style="padding: 10px 20px 16px">Service workers (guides, drivers, hosts) and travelers are not users here: they live in Suppliers and Customers with their own apps.</p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+              <h2 class="disp" style="font-size: 18px; line-height: 24px">Invite a user</h2>
+              <div class="fld"><label class="lbl" for="iv-e">Work email · @vereda.travel only</label><input class="inp" id="iv-e" type="email" placeholder="name@vereda.travel"></div>
+              <div class="fld"><label class="lbl" for="iv-r">Role</label><select class="sel" id="iv-r"><option>Administrative Support</option><option>Operations Admin</option><option>Super Admin (needs a second Super Admin to confirm)</option></select></div>
+              <label style="display: flex; gap: 10px; align-items: center"><input class="ck" type="checkbox" checked>Require a passkey before first use of the desk PC</label>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-p" type="button">Send invitation · valid 7 days</button></div>
+            </div>
+            <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+              <h2 class="disp" style="font-size: 18px; line-height: 24px">Recovery</h2>
+              <p class="p">No self-service reset exists. A Super Admin issues a one-time recovery code by phone or in person; the code works for 15 minutes and is logged with both names.</p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-s" type="button">Issue recovery code…</button><button class="btn btn-t" type="button">Revoke all sessions of a user…</button></div>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- PERMISSIONS -->
+      <sc-if value="{{isPerm}}" hint-placeholder-val="{{ false }}">
+        <section class="card" style="display: flex; flex-direction: column">
+          <div style="padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Permission matrix</h2><p class="cap">Role + scope + approval limit. Fixed by the spec; overrides are requested per action with a reason and expire after 24 h.</p></div>
+          <div style="overflow-x: auto">
+            <table class="tbl" style="min-width: 760px">
+              <thead><tr><th scope="col">Capability</th><th scope="col">Super Admin</th><th scope="col">Operations Admin</th><th scope="col">Administrative Support</th></tr></thead>
+              <tbody>
+                <sc-for list="{{perms}}" as="p" hint-placeholder-count="14">
+                  <tr><td>{{p.cap}}<br><span class="cap">{{p.note}}</span></td><td class="{{p.sa.cls}}"><strong>{{p.sa.t}}</strong></td><td class="{{p.oa.cls}}"><strong>{{p.oa.t}}</strong></td><td class="{{p.as.cls}}"><strong>{{p.as.t}}</strong></td></tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <p class="cap" style="padding: 10px 20px 16px">Cross-cutting: view, create, edit, archive, publish, approve, export, impersonate (Super Admin only, with the traveler's consent on file), override. Every action records actor, time, IP, old → new value, reason and linked record.</p>
+        </section>
+      </sc-if>
+
+      <!-- CURRENCIES & LANGUAGES -->
+      <sc-if value="{{isLoc}}" hint-placeholder-val="{{ false }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Currencies</h2><p class="cap">Base EUR (billing, invoices, ledger). Display currencies convert at the ECB daily rate plus the spread; the rate locks at deposit for the whole payment schedule.</p></div>
+            <div style="overflow-x: auto">
+              <table class="tbl" style="min-width: 520px">
+                <thead><tr><th scope="col">Currency</th><th scope="col">Role</th><th scope="col">Rate today</th><th scope="col">Shown to</th><th scope="col">On</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>EUR</strong> · Euro</td><td><span class="pill" style="background: #1F1B17; color: #fff">Base · locked</span></td><td class="mono">1.0000</td><td>EU, default</td><td><span class="cap">always</span></td></tr>
+                  <tr><td><strong>USD</strong> · US dollar</td><td>Display</td><td class="mono">1.0870 · +0.6 %</td><td>US, Asia, default fallback</td><td><button class="sw" type="button" role="switch" aria-checked="true" aria-label="USD on" style="background: #0B4F6C"><span style="left: 22px"></span></button></td></tr>
+                  <tr><td><strong>CAD</strong> · Canadian dollar</td><td>Display</td><td class="mono">1.4802 · +0.6 %</td><td>Canada</td><td><button class="sw" type="button" role="switch" aria-checked="true" aria-label="CAD on" style="background: #0B4F6C"><span style="left: 22px"></span></button></td></tr>
+                  <tr><td><strong>GBP</strong> · Pound sterling</td><td>Display</td><td class="mono">0.8431 · +0.6 %</td><td>UK, Ireland (EUR)</td><td><button class="sw" type="button" role="switch" aria-checked="true" aria-label="GBP on" style="background: #0B4F6C"><span style="left: 22px"></span></button></td></tr>
+                  <tr><td><strong>CHF</strong> · Swiss franc</td><td>Display</td><td class="mono">0.9354</td><td>—</td><td><button class="sw" type="button" role="switch" aria-checked="false" aria-label="CHF off" style="background: #D6CEC3"><span style="left: 2px"></span></button></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; padding: 12px 20px 18px">
+              <div class="fld"><label class="lbl" for="fx-src">Rate source</label><select class="sel" id="fx-src"><option>ECB reference · daily 16:00 CET</option><option>Gateway rate</option></select></div>
+              <div class="fld"><label class="lbl" for="fx-sp">Spread</label><input class="inp mono" id="fx-sp" type="text" value="0.6 %"></div>
+              <div class="fld"><label class="lbl" for="fx-abs">Absorb rounding under</label><input class="inp mono" id="fx-abs" type="text" value="€ 0.50"></div>
+              <div class="fld"><label class="lbl" for="fx-lock">Lock rate at</label><select class="sel" id="fx-lock"><option>Deposit payment (BR-CU-02)</option><option>Invoice</option></select></div>
+            </div>
+          </div>
+          <div class="card" style="display: flex; flex-direction: column">
+            <div style="padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Languages</h2><p class="cap">EN is the source; ES and FR ship with it. A locale cannot go live below 95 % coverage of the public site and 100 % of legal and OFAC text.</p></div>
+            <div style="overflow-x: auto">
+              <table class="tbl" style="min-width: 520px">
+                <thead><tr><th scope="col">Locale</th><th scope="col">Coverage</th><th scope="col">Default for</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>EN</strong> · English</td><td class="mono">100 % · source</td><td>CA, UK, US, IE, fallback</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Live</span></td></tr>
+                  <tr><td><strong>ES</strong> · Español</td><td class="mono">99 %</td><td>ES, LATAM, diaspora · worker app</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Live</span></td></tr>
+                  <tr><td><strong>FR</strong> · Français</td><td class="mono">97 %</td><td>FR, BE, CH-fr, CA-fr</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Live · 3 items pending</span></td></tr>
+                  <tr><td><strong>DE</strong> · Deutsch</td><td class="mono">41 %</td><td>DE, AT, CH-de</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">In progress · Q1 2027</span></td></tr>
+                  <tr><td><strong>IT</strong> · Italiano</td><td class="mono">0 %</td><td>IT</td><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Planned</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; padding: 12px 20px 18px">
+              <div class="fld"><label class="lbl" for="l-det">Detection</label><select class="sel" id="l-det"><option>Browser language, then country</option><option>Country only</option></select></div>
+              <div class="fld"><label class="lbl" for="l-desk">Desk language</label><select class="sel" id="l-desk"><option>EN with ES toggle</option><option>ES with EN toggle</option></select></div>
+              <div class="fld"><label class="lbl" for="l-work">Worker app</label><select class="sel" id="l-work"><option>ES only</option><option>ES + EN</option></select></div>
+              <div class="fld"><label class="lbl" for="l-doc">Documents</label><select class="sel" id="l-doc"><option>Traveler locale + ES work orders</option></select></div>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- MANIFEST & FLAGS -->
+      <sc-if value="{{isFlags}}" hint-placeholder-val="{{ false }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Agency manifest · spec §10.2</h2><p class="cap">One configuration governs branding, locales, theme and modules so the platform can be re-tenanted. Branding fields apply on the next build.</p></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 12px">
+              <div class="fld"><label class="lbl" for="m-t">tenantId</label><input class="inp mono" id="m-t" type="text" value="vereda-expeditions" readonly></div>
+              <div class="fld"><label class="lbl" for="m-n">branding.agencyName</label><input class="inp" id="m-n" type="text" value="Vereda Expeditions"></div>
+              <div class="fld"><label class="lbl" for="m-l">branding.licenseNumber · injected into every PDF footer</label><input class="inp mono" id="m-l" type="text" value="[MINTUR-2026-XXXX]"><p class="cap">Placeholder until MINTUR issues the licence under Res. 68/2026.</p></div>
+              <div class="fld"><label class="lbl" for="m-tax">branding.taxId · ONAT</label><input class="inp mono" id="m-tax" type="text" value="[tax ID]"></div>
+              <div class="fld"><label class="lbl" for="m-p">branding.primaryLocale</label><select class="sel" id="m-p"><option>en</option><option>es</option><option>fr</option></select></div>
+              <div class="fld"><label class="lbl" for="m-s">branding.supportedLocales</label><input class="inp mono" id="m-s" type="text" value="en, es, fr"></div>
+              <div class="fld"><label class="lbl" for="m-th">theme.palette</label><select class="sel" id="m-th"><option>islaAbierta · teal / terracotta / ochre, warm cream</option></select></div>
+              <div class="fld"><label class="lbl" for="m-r">theme.borderRadius</label><select class="sel" id="m-r"><option>md · 8 / 12 px</option><option>sm</option><option>lg</option></select></div>
+              <div class="fld"><label class="lbl" for="m-g">destinations.geographyType</label><select class="sel" id="m-g"><option>cuba_provinces</option><option>custom_regions</option></select></div>
+              <div class="fld"><label class="lbl" for="m-sup">support.whatsappNumber · click-to-chat (non-Cuban)</label><input class="inp mono" id="m-sup" type="text" value="+34 000 000 000"></div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap"><h2 class="disp" style="font-size: 20px; line-height: 26px">Feature flags</h2><span class="cap" style="margin-left: auto">apply instantly · audited</span></div>
+              <div style="display: flex; flex-direction: column">
+                <sc-for list="{{flags}}" as="f" hint-placeholder-count="9">
+                  <div class="frow"><button class="sw" type="button" role="switch" aria-checked="{{f.on}}" aria-label="{{f.name}}" onClick="{{f.toggle}}" style="background: {{f.bg}}"><span style="left: {{f.knob}}"></span></button><div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><span class="mono" style="font-size: 13px">{{f.name}}</span><span class="cap">{{f.desc}}</span></div><span class="pill" style="background: {{f.pbg}}; color: {{f.pfg}}">{{f.state}}</span></div>
+                </sc-for>
+              </div>
+              <p class="cap">Turning off a payment rail hides it from checkout at once and keeps open invoices payable. "instantBooking" only enables the model; each package still opts in.</p>
+            </div>
+            <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+              <h2 class="disp" style="font-size: 16px; line-height: 22px">agency.config.json · preview</h2>
+              <pre class="code">{
+  "tenantId": "vereda-expeditions",
+  "branding": { "agencyName": "Vereda Expeditions",
+    "licenseNumber": "[MINTUR-2026-XXXX]",
+    "primaryLocale": "en", "supportedLocales": ["en","es","fr"] },
+  "theme": { "palette": "islaAbierta", "borderRadius": "md" },
+  "features": {{flagJson}},
+  "destinations": { "geographyType": "cuba_provinces" }
+}</pre>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-sm btn-p" type="button">Save manifest · needs 2nd Super Admin</button><button class="btn btn-sm btn-s" type="button">Diff vs live</button></div>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- THRESHOLDS -->
+      <sc-if value="{{isThr}}" hint-placeholder-val="{{ false }}">
+        <section class="card" style="display: flex; flex-direction: column">
+          <div style="padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 2px"><h2 class="disp" style="font-size: 20px; line-height: 26px">Approvals &amp; thresholds</h2><p class="cap">The numbers the rest of the desk refers to. Changing one shows where it is used before saving.</p></div>
+          <div style="overflow-x: auto">
+            <table class="tbl" style="min-width: 760px">
+              <thead><tr><th scope="col">Rule</th><th scope="col">Value</th><th scope="col">Who approves beyond it</th><th scope="col">Used by</th></tr></thead>
+              <tbody>
+                <tr><td>Dispatch timer · standard</td><td><input class="inp inp-sm mono" type="text" value="2 h" style="width: 90px" aria-label="Standard dispatch timer"></td><td>—</td><td>Dashboard, Booking, Suppliers</td></tr>
+                <tr><td>Dispatch timer · arrival under 48 h</td><td><input class="inp inp-sm mono" type="text" value="30 min" style="width: 90px" aria-label="Short dispatch timer"></td><td>—</td><td>Dashboard, Booking</td></tr>
+                <tr><td>Amber alert at</td><td><input class="inp inp-sm mono" type="text" value="75 %" style="width: 90px" aria-label="Amber threshold"></td><td>—</td><td>Dashboard matrix, worker app</td></tr>
+                <tr><td>Traveler answer SLA · maximum</td><td><input class="inp inp-sm mono" type="text" value="24 h · 72 h" style="width: 110px" aria-label="Traveler SLA"></td><td>—</td><td>Bookings legend, emails</td></tr>
+                <tr><td>Payment window after invoice</td><td><input class="inp inp-sm mono" type="text" value="48 h" style="width: 90px" aria-label="Payment window"></td><td>Operations Admin may extend once with a reason</td><td>Payments, Confirmation emails</td></tr>
+                <tr><td>Refund · alone / dual / Super Admin</td><td><input class="inp inp-sm mono" type="text" value="€ 500 · € 2,000" style="width: 130px" aria-label="Refund thresholds"></td><td>Dual approval, then Super Admin</td><td>Payments › Refunds</td></tr>
+                <tr><td>Discount needing Finance review</td><td><input class="inp inp-sm mono" type="text" value="&gt; 10 %" style="width: 90px" aria-label="Discount threshold"></td><td>Super Admin</td><td>Package editor, Booking</td></tr>
+                <tr><td>Minimum gross margin</td><td><input class="inp inp-sm mono" type="text" value="20 %" style="width: 90px" aria-label="Margin threshold"></td><td>Super Admin</td><td>Packages, Package editor</td></tr>
+                <tr><td>Credential expiry pause</td><td><input class="inp inp-sm mono" type="text" value="30 days" style="width: 90px" aria-label="Credential pause"></td><td>Manual assignment with a note</td><td>Suppliers, dispatch engine</td></tr>
+                <tr><td>Reliability floor for auto-dispatch</td><td><input class="inp inp-sm mono" type="text" value="85" style="width: 90px" aria-label="Reliability floor"></td><td>Operations Admin review</td><td>Suppliers, Reports</td></tr>
+                <tr><td>Advisory needing two approvals</td><td><input class="inp inp-sm mono" type="text" value="critical" style="width: 90px" aria-label="Advisory dual approval"></td><td>Operations Admin + Super Admin</td><td>Content, Disruption</td></tr>
+                <tr><td>Retention clock · grace</td><td><input class="inp inp-sm mono" type="text" value="6 months · 30 days" style="width: 150px" aria-label="Retention"></td><td>—</td><td>Customers, purge job</td></tr>
+                <tr><td>Override expiry</td><td><input class="inp inp-sm mono" type="text" value="24 h" style="width: 90px" aria-label="Override expiry"></td><td>—</td><td>Everywhere an override exists</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 20px 18px"><button class="btn btn-p" type="button">Save · needs 2nd Super Admin</button><button class="btn btn-t" type="button">Reset to spec defaults</button></div>
+        </section>
+      </sc-if>
+
+      <!-- SECURITY -->
+      <sc-if value="{{isSec}}" hint-placeholder-val="{{ false }}">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px; align-items: start">
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 20px; line-height: 26px">Sessions &amp; sign-in</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+              <div class="fld"><label class="lbl" for="s-1">Session · personal device</label><input class="inp mono" id="s-1" type="text" value="12 h"></div>
+              <div class="fld"><label class="lbl" for="s-2">Idle lock · shared desk PC</label><input class="inp mono" id="s-2" type="text" value="30 min"></div>
+              <div class="fld"><label class="lbl" for="s-3">Sign-in link validity</label><input class="inp mono" id="s-3" type="text" value="10 min · single use"></div>
+              <div class="fld"><label class="lbl" for="s-4">Passkeys required for</label><select class="sel" id="s-4"><option>Super Admins + shared desk PC</option><option>Everyone</option></select></div>
+            </div>
+            <label style="display: flex; gap: 10px; align-items: center"><input class="ck" type="checkbox" checked>Super Admin sign-ins only from the allowlisted IPs (Havana office, Spain office, VPN)</label>
+            <label style="display: flex; gap: 10px; align-items: center"><input class="ck" type="checkbox" checked>Email the user on every new device sign-in</label>
+          </div>
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 20px; line-height: 26px">Integrations &amp; keys</h2>
+            <div style="overflow-x: auto"><table class="tbl" style="min-width: 440px"><thead><tr><th scope="col">Key</th><th scope="col">Scope</th><th scope="col">Rotated</th><th scope="col">Act</th></tr></thead><tbody>
+              <tr><td class="mono">pay_gateway_live · ••••7f2a</td><td>Card gateway</td><td>12 Sep</td><td><button class="btn btn-sm btn-t" type="button">Rotate</button></td></tr>
+              <tr><td class="mono">openbanking_api · ••••c91d</td><td>SEPA rail</td><td>12 Sep</td><td><button class="btn btn-sm btn-t" type="button">Rotate</button></td></tr>
+              <tr><td class="mono">sms_provider · ••••0b44</td><td>SMS + push</td><td>1 Aug</td><td><button class="btn btn-sm btn-t" type="button">Rotate</button></td></tr>
+              <tr><td class="mono">maps_tiles · ••••e310</td><td>Offline kit tiles</td><td>1 Aug</td><td><button class="btn btn-sm btn-t" type="button">Rotate</button></td></tr>
+              <tr><td class="mono">webhook · worker-app</td><td>dispatch/accept, decline</td><td>—</td><td><button class="btn btn-sm btn-t" type="button">Test</button></td></tr>
+            </tbody></table></div>
+            <p class="cap">Secrets live in the isolated environment store, never in the manifest. Values are shown once at creation.</p>
+          </div>
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 20px; line-height: 26px">Audit log</h2>
+            <p class="p">Immutable, append-only. Retained 7 years. Every row: actor, role, device, IP, action, old → new, reason, linked record.</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-s" type="button">Search the log</button><button class="btn btn-s" type="button">Export · date range</button><button class="btn btn-t" type="button">Alert rules (3 active)</button></div>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 18px; padding-top: 4px">
+              <span><span class="mono cap">14:38</span> · Ana R. published advisory "Fuel queues · Pinar del Río" (caution)</span>
+              <span><span class="mono cap">14:36</span> · Ana R. committed import IMP-2026-031 (41 rows)</span>
+              <span><span class="mono cap">14:33</span> · Ana R. re-dispatched Transport on VX-7K2M9Q · reason: amber timer</span>
+              <span><span class="mono cap">14:05</span> · Dayana R. signed in · passkey · Havana office IP</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 class="disp" style="font-size: 20px; line-height: 26px">Data &amp; residency</h2>
+            <dl style="display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 13px; line-height: 18px; margin: 0"><dt class="cap">Primary region</dt><dd style="margin: 0">EU (Spain) · encrypted at rest · field-level encryption for passports</dd><dt class="cap">Backups</dt><dd style="margin: 0">Daily, 35 days · restore drill last run 20 Sep</dd><dt class="cap">OFAC records</dt><dd style="margin: 0">Sealed store · 5 years · export on legal request only</dd><dt class="cap">Processors</dt><dd style="margin: 0">Gateway, SMS, email, maps · DPAs on file (Legal › Privacy)</dd></dl>
+          </div>
+        </section>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2200}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'users', flags: { interactiveSvgMap: true, culturalEventsBanner: true, recruitmentPortal: true, customItineraryBuilder: true, instantBooking: true, directBankTransferRail: true, creditCardGatewayRail: true, digitalWalletRail: false, aiAssistantDrafts: true } };
+  }
+  renderVals() {
+    const s = this.state;
+    const tabs = [['users', 'Users & roles'], ['perm', 'Permissions'], ['loc', 'Currencies & languages'], ['flags', 'Manifest & feature flags'], ['thr', 'Approvals & thresholds'], ['sec', 'Security & audit']].map(([id, label]) => ({ id, label, on: s.tab === id, cls: s.tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) }));
+    const Y = { t: 'Yes', cls: 'yes' }, N = { t: 'No', cls: 'no' };
+    const L = (t) => ({ t, cls: '' });
+    const perms = [
+      { cap: 'Booking lifecycle & state transitions', note: 'manual confirm, cancel, modify', sa: Y, oa: Y, as: L('View only') },
+      { cap: 'Dispatch, re-dispatch, call workers', note: 'one-click fallback menu', sa: Y, oa: Y, as: N },
+      { cap: 'Message travelers and suppliers', note: 'in-app + email · AI drafts reviewed', sa: Y, oa: Y, as: L('Templates only') },
+      { cap: 'Supplier credential audit', note: 'approve, reject, pause', sa: Y, oa: Y, as: L('Review, recommend') },
+      { cap: 'Advisories · info / caution', note: 'publish', sa: Y, oa: Y, as: L('Draft') },
+      { cap: 'Advisories · critical', note: 'two approvals', sa: L('2nd approver'), oa: L('1st approver'), as: N },
+      { cap: 'Refunds', note: '≤ € 500 · € 500–2,000 · above', sa: L('Any'), oa: L('≤ € 500 alone · dual to € 2,000'), as: N },
+      { cap: 'Publish packages, edit prices', note: 'margin ≥ 20 % or Finance gate', sa: Y, oa: Y, as: N },
+      { cap: 'Bulk CSV import', note: 'staging → validate → commit', sa: Y, oa: Y, as: L('Upload & map') },
+      { cap: 'Invoice reconciliation & payment proofs', note: 'match, accept proof', sa: Y, oa: Y, as: Y },
+      { cap: 'Reports & exports (MINTUR, ONAT)', note: 'generate, export', sa: Y, oa: Y, as: Y },
+      { cap: 'Customers · anonymize / delete', note: 'reason + approval', sa: Y, oa: L('Request'), as: N },
+      { cap: 'Users, roles, recovery codes', note: '', sa: Y, oa: N, as: N },
+      { cap: 'API keys, gateway credentials, manifest, flags', note: 'second Super Admin confirms', sa: Y, oa: N, as: N },
+      { cap: 'System logs & deployment parameters', note: '', sa: Y, oa: N, as: N }
+    ];
+    const defs = [
+      ['interactiveSvgMap', 'Province vector map on the public site'], ['culturalEventsBanner', 'Event ticker on the homepage'], ['recruitmentPortal', 'Worker application form (Suppliers › applicants)'], ['customItineraryBuilder', 'Multi-stop custom builder'], ['instantBooking', 'Allow the instant model for allotment-backed packages'], ['directBankTransferRail', 'SEPA / open banking rail'], ['creditCardGatewayRail', 'Card gateway rail'], ['digitalWalletRail', 'Non-SEPA digital wallet rail (not contracted)'], ['aiAssistantDrafts', 'AI drafts for messages and daily summaries (always human-reviewed)']
+    ];
+    const flags = defs.map(([name, desc]) => { const on = !!s.flags[name]; return { name, desc, on, bg: on ? '#0B4F6C' : '#D6CEC3', knob: on ? '22px' : '2px', state: on ? 'On' : 'Off', pbg: on ? '#E8F5E9' : '#F3EEE6', pfg: on ? '#1B5E20' : '#4A433D', toggle: () => this.setState({ flags: { ...s.flags, [name]: !on } }) }; });
+    const flagJson = '{ ' + defs.map(([n]) => n + ': ' + (!!s.flags[n])).join(',\n                ') + ' }';
+    return { tabs, isUsers: s.tab === 'users', isPerm: s.tab === 'perm', isLoc: s.tab === 'loc', isFlags: s.tab === 'flags', isThr: s.tab === 'thr', isSec: s.tab === 'sec', perms, flags, flagJson };
+  }
+}
+</script>
+</body>
+</html>

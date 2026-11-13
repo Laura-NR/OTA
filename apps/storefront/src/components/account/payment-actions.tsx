@@ -1,0 +1,312 @@
+'use client';
+
+import type { ShownCurrency } from '@ota/domain';
+import { Alert, Button, Icon, cn } from '@ota/ui';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useRef, useState, type ChangeEvent } from 'react';
+
+import { useDisplayMoney } from '@/components/currency/currency-provider';
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
+
+/** Up to 10 MB, as the API accepts. */
+const MAX_PROOF_BYTES = 10 * 1024 * 1024;
+
+type Plan = 'DEPOSIT' | 'FULL';
+
+/** A refused start, with the T-Events `error_code` (`http_<status>` or `network`). */
+class TransferError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+  ) {
+    super(message);
+  }
+}
+
+async function startTransfer(
+  reservationId: string,
+  displayCurrency: ShownCurrency,
+  plan?: Plan,
+): Promise<string> {
+  let response: Response;
+  try {
+    // The currency shown is kept when none is saved, so the deposit locks it (M9 C4).
+    response = await fetch(`/api/ota/me/reservations/${reservationId}/payments`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        rail: 'OPEN_BANKING_SEPA',
+        displayCurrency,
+        ...(plan ? { plan } : {}),
+      }),
+    });
+  } catch {
+    throw new TransferError('', 'network');
+  }
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      message?: unknown;
+    } | null;
+    throw new TransferError(
+      typeof body?.message === 'string' ? body.message : '',
+      `http_${response.status}`,
+    );
+  }
+  return ((await response.json()) as { checkoutUrl: string }).checkoutUrl;
+}
+
+/**
+ * Start the transfer and report it (T-Events `payment_attempted`, then
+ * `payment_failed` when refused).
+ */
+function useStartTransfer(reservationId: string, bookingCode: string) {
+  const { track } = useTelemetry();
+  const display = useDisplayMoney();
+  return async (plan?: Plan): Promise<string> => {
+    const started = Date.now();
+    // Sent at once: on success the browser leaves for the wire page.
+    track(
+      'payment_attempted',
+      {
+        booking_code: bookingCode,
+        method: 'transfer',
+        ...(plan ? { plan: plan === 'DEPOSIT' ? 'deposit' : 'full' } : {}),
+      },
+      true,
+    );
+    try {
+      return await startTransfer(reservationId, display.code, plan);
+    } catch (error) {
+      track('payment_failed', {
+        booking_code: bookingCode,
+        method: 'transfer',
+        error_code: error instanceof TransferError ? error.code : 'network',
+        latency_ms: Date.now() - started,
+      });
+      throw error;
+    }
+  };
+}
+
+export interface PlanOption {
+  plan: Plan;
+  /** Already formatted on the server ("Deposit · 20 %", "€620 now, …"). */
+  label: string;
+  text: string;
+}
+
+/**
+ * The Payment board's "Amount" choice before the first payment: a deposit
+ * (when the package's plan allows it) or the full amount. The choice is fixed
+ * by the link it creates; card payments wait for the card gateway.
+ */
+export function PlanChooser({
+  reservationId,
+  bookingCode,
+  options,
+}: {
+  reservationId: string;
+  bookingCode: string;
+  options: PlanOption[];
+}) {
+  const t = useTranslations('account.payment');
+  const { track } = useTelemetry();
+  const start = useStartTransfer(reservationId, bookingCode);
+  const [plan, setPlan] = useState<Plan>(options[0]!.plan);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function choose(next: Plan) {
+    setPlan(next);
+    track('payment_plan_selected', {
+      booking_code: bookingCode,
+      plan: next === 'DEPOSIT' ? 'deposit' : 'full',
+    });
+  }
+
+  async function go() {
+    setBusy(true);
+    setError(null);
+    try {
+      window.location.href = await start(plan);
+    } catch (startError) {
+      setError((startError as Error).message || t('failed'));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <div
+        role="radiogroup"
+        aria-label={t('choose')}
+        className="grid gap-3 sm:grid-cols-2"
+      >
+        {options.map((option) => (
+          <label
+            key={option.plan}
+            className={cn(
+              'flex min-w-0 cursor-pointer items-start gap-3 rounded-lg border bg-surface p-4 transition-colors hover:border-primary-600',
+              plan === option.plan && 'border-2 border-primary-600 bg-primary-50',
+            )}
+          >
+            <input
+              type="radio"
+              name="plan"
+              value={option.plan}
+              checked={plan === option.plan}
+              onChange={() => choose(option.plan)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-primary-600"
+            />
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-body font-semibold text-default">{option.label}</span>
+              <span className="text-body-sm text-secondary">{option.text}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <p className="text-body-sm text-secondary">
+        {t('method')} · {t('cardSoon')}
+      </p>
+      {error ? <Alert variant="destructive">{error}</Alert> : null}
+      <Button className="self-start" loading={busy} onClick={go}>
+        {busy ? t('working') : t('continue')}
+      </Button>
+    </div>
+  );
+}
+
+/** Start the transfer for the instalment still due (the balance, after a deposit). */
+export function PayInstalmentButton({
+  reservationId,
+  bookingCode,
+  label,
+}: {
+  reservationId: string;
+  bookingCode: string;
+  label: string;
+}) {
+  const t = useTranslations('account.payment');
+  const start = useStartTransfer(reservationId, bookingCode);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function go() {
+    setBusy(true);
+    setError(null);
+    try {
+      window.location.href = await start();
+    } catch (startError) {
+      setError((startError as Error).message || t('failed'));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      {error ? <Alert variant="destructive">{error}</Alert> : null}
+      <Button loading={busy} onClick={go}>
+        {busy ? t('working') : label}
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * "Proof of transfer · optional, speeds things up" (Payment board): a PDF or a
+ * photo of the bank receipt for a pending transfer. The desk checks it by hand.
+ */
+const PROOF_TYPES: Readonly<Record<string, string>> = {
+  'application/pdf': 'pdf',
+  'image/jpeg': 'jpeg',
+  'image/png': 'png',
+};
+
+export function ProofUpload({
+  reservationId,
+  bookingCode,
+  paymentId,
+}: {
+  reservationId: string;
+  bookingCode: string;
+  paymentId: string;
+}) {
+  const t = useTranslations('account.payment');
+  const { track } = useTelemetry();
+  const router = useRouter();
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    const field = event.currentTarget;
+    if (!file) return;
+    setError(null);
+    if (file.size > MAX_PROOF_BYTES) {
+      setError(t('proofTooLarge'));
+      field.value = '';
+      return;
+    }
+    setBusy(true);
+    try {
+      const contentBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      const response = await fetch(
+        `/api/ota/me/reservations/${reservationId}/payments/${paymentId}/proof`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ contentType: file.type, contentBase64 }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error(t('proofFailed'));
+      }
+      const fileType = PROOF_TYPES[file.type];
+      track('proof_uploaded', {
+        booking_code: bookingCode,
+        ...(fileType ? { file_type: fileType } : {}),
+        size_kb: Math.ceil(file.size / 1024),
+      });
+      router.refresh();
+    } catch (uploadError) {
+      setError((uploadError as Error).message || t('proofFailed'));
+    } finally {
+      setBusy(false);
+      field.value = '';
+    }
+  }
+
+  const id = `proof-${paymentId}`;
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <label
+        htmlFor={id}
+        className={cn(
+          'inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-input bg-surface px-4 text-body-sm font-semibold text-primary-600 hover:bg-sunken',
+          busy && 'pointer-events-none opacity-60',
+        )}
+      >
+        <Icon name="upload" className="h-4 w-4" />
+        {busy ? t('uploading') : t('proofChoose')}
+      </label>
+      <input
+        ref={input}
+        id={id}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        className="sr-only"
+        disabled={busy}
+        onChange={onFile}
+      />
+      <p className="text-caption text-muted">{t('proofHint')}</p>
+      {error ? <Alert variant="destructive">{error}</Alert> : null}
+    </div>
+  );
+}

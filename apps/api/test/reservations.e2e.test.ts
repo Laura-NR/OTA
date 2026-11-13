@@ -7,6 +7,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { MockTelemetrySink } from '../src/telemetry/telemetry-sink';
+import { TELEMETRY_SINK } from '../src/telemetry/telemetry.tokens';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 interface FakeUser {
   id: string;
@@ -96,17 +99,59 @@ interface AuditCreateArgs {
   };
 }
 
+interface FakeServiceItem {
+  reservationId: string;
+  status: string;
+  province: string | null;
+}
+interface FakePayment {
+  reservationId: string;
+  amount: string;
+}
+interface FakeTraveler {
+  id: string;
+  reservationId: string;
+  usPerson: boolean | null;
+  nationality: string | null;
+}
+
+interface FakeInstalment {
+  reservationId: string;
+  kind: 'DEPOSIT' | 'BALANCE' | 'FULL';
+  amount: Prisma.Decimal;
+  dueAt: Date;
+}
+
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
   users: FakeUser[];
   audits: FakeAudit[];
   counter: { value: number };
+  serviceItems?: FakeServiceItem[];
+  payments?: FakePayment[];
+  travelers?: FakeTraveler[];
+  affidavits?: { reservationId: string; travelerId: string }[];
+  instalments?: FakeInstalment[];
 }) {
   const withRelations = (reservation: Reservation) => ({
     ...reservation,
     user: state.users.find((user) => user.id === reservation.userId) ?? null,
-    serviceItems: [],
-    _count: { serviceItems: 0 },
+    serviceItems: (state.serviceItems ?? []).filter(
+      (item) => item.reservationId === reservation.id,
+    ),
+    package: null,
+    payments: (state.payments ?? []).filter(
+      (payment) => payment.reservationId === reservation.id,
+    ),
+    travelers: (state.travelers ?? []).filter(
+      (traveler) => traveler.reservationId === reservation.id,
+    ),
+    affidavits: (state.affidavits ?? []).filter(
+      (affidavit) => affidavit.reservationId === reservation.id,
+    ),
+    instalments: (state.instalments ?? []).filter(
+      (instalment) => instalment.reservationId === reservation.id,
+    ),
   });
 
   const fake = {
@@ -210,11 +255,26 @@ function createFakePrisma(state: {
           : rows;
       },
     },
+    eventRequest: {
+      updateMany: async (args: {
+        where: Record<string, unknown>;
+        data: Record<string, unknown>;
+      }) => {
+        eventRequestUpdates.push(args);
+        return { count: 1 };
+      },
+    },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
 
   return fake;
 }
+
+/** M10: the event-request updates a transition made, newest last. */
+const eventRequestUpdates: {
+  where: Record<string, unknown>;
+  data: Record<string, unknown>;
+}[] = [];
 
 // Stands in for Better Auth: maps a test header to a session, so the guard and
 // RBAC can be exercised without a database or the real auth backend.
@@ -239,21 +299,33 @@ describe('reservations API', () => {
     users: FakeUser[];
     audits: FakeAudit[];
     counter: { value: number };
+    serviceItems: FakeServiceItem[];
+    payments: FakePayment[];
+    travelers?: FakeTraveler[];
+    affidavits?: { reservationId: string; travelerId: string }[];
+    instalments?: FakeInstalment[];
   };
 
+  let sink: MockTelemetrySink;
+
   beforeEach(async () => {
+    sink = new MockTelemetrySink();
     state = {
       reservations: new Map([[RESERVATION_ID, makeReservation()]]),
       users: [SUPER_ADMIN, TRAVELER],
       audits: [],
       counter: { value: 0 },
+      serviceItems: [],
+      payments: [],
     };
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
+      .overrideProvider(TELEMETRY_SINK)
+      .useValue(sink)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -276,6 +348,61 @@ describe('reservations API', () => {
       expect(state.reservations.get(RESERVATION_ID)?.status).toBe('ITINERARY_SUBMITTED');
     });
 
+    it('reports the transition as a server T-Event, with the actor but no typed reason', async () => {
+      await request(app.getHttpServer())
+        .post(`/reservations/${RESERVATION_ID}/transition`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ to: 'ITINERARY_SUBMITTED', reason: 'Traveler confirmed by phone' })
+        .expect(200);
+
+      expect(sink.recent()).toEqual([
+        {
+          event: 'booking_state_changed',
+          ts: expect.any(String) as string,
+          essential: true,
+          context: { app: 'server', consent: 'essential', funnel_stage: null },
+          params: {
+            booking_code: state.reservations.get(RESERVATION_ID)!.bookingCode,
+            from: 'DRAFT',
+            to: 'ITINERARY_SUBMITTED',
+            actor: 'super_admin',
+            reason: 'manual',
+          },
+          userId: null,
+          receivedAt: expect.any(String) as string,
+        },
+      ]);
+      expect(JSON.stringify(sink.recent())).not.toContain('phone');
+    });
+
+    it("cancels the booking's event requests when the booking is cancelled (M10 D3)", async () => {
+      eventRequestUpdates.length = 0;
+      await request(app.getHttpServer())
+        .post(`/reservations/${RESERVATION_ID}/transition`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ to: 'CANCELLED' })
+        .expect(200);
+
+      expect(eventRequestUpdates).toHaveLength(1);
+      expect(eventRequestUpdates[0]).toMatchObject({
+        where: {
+          reservationId: RESERVATION_ID,
+          status: { in: ['SUBMITTED', 'REQUESTING', 'CONFIRMED'] },
+        },
+        data: { status: 'CANCELLED', closedReason: 'The booking was cancelled.' },
+      });
+    });
+
+    it('leaves event requests alone on any other transition', async () => {
+      eventRequestUpdates.length = 0;
+      await request(app.getHttpServer())
+        .post(`/reservations/${RESERVATION_ID}/transition`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ to: 'ITINERARY_SUBMITTED' })
+        .expect(200);
+      expect(eventRequestUpdates).toHaveLength(0);
+    });
+
     it('rejects an illegal transition with 409', async () => {
       state.reservations.set(RESERVATION_ID, makeReservation({ status: 'COMPLETED' }));
 
@@ -286,6 +413,7 @@ describe('reservations API', () => {
 
       expect(response.status).toBe(409);
       expect(response.body.error).toBe('InvalidReservationTransitionError');
+      expect(sink.recent()).toEqual([]);
     });
 
     it('returns 404 for an unknown reservation', async () => {
@@ -349,6 +477,85 @@ describe('reservations API', () => {
       ]);
       expect(response.body[0].travelerEmail).toBe(TRAVELER.email);
       expect(response.body[0].serviceItemCount).toBe(0);
+    });
+
+    it('carries the provinces, accepted services and paid amount of each booking', async () => {
+      state.serviceItems = [
+        { reservationId: RESERVATION_ID, status: 'ACCEPTED', province: 'Pinar del Río' },
+        { reservationId: RESERVATION_ID, status: 'OFFERED', province: 'Pinar del Río' },
+        { reservationId: RESERVATION_ID, status: 'FULFILLED', province: 'La Habana' },
+        { reservationId: RESERVATION_ID, status: 'UNASSIGNED', province: null },
+      ];
+      state.payments = [
+        { reservationId: RESERVATION_ID, amount: '100.10' },
+        { reservationId: RESERVATION_ID, amount: '20.20' },
+      ];
+
+      const response = await request(app.getHttpServer())
+        .get('/reservations')
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      const row = response.body.find(
+        (candidate: { id: string }) => candidate.id === RESERVATION_ID,
+      );
+      expect(row).toMatchObject({
+        serviceItemCount: 4,
+        serviceItemsAccepted: 2,
+        provinces: ['Pinar del Río', 'La Habana'],
+        paidAmount: '120.30',
+        packageName: null,
+        ofacMissing: 0,
+      });
+    });
+
+    it('counts the US travelers still without an OFAC affidavit (M3)', async () => {
+      state.travelers = [
+        {
+          id: 't-us-1',
+          reservationId: RESERVATION_ID,
+          usPerson: null,
+          nationality: 'US',
+        },
+        {
+          id: 't-us-2',
+          reservationId: RESERVATION_ID,
+          usPerson: true,
+          nationality: 'MX',
+        },
+        { id: 't-ca', reservationId: RESERVATION_ID, usPerson: null, nationality: 'CA' },
+      ];
+      state.affidavits = [{ reservationId: RESERVATION_ID, travelerId: 't-us-1' }];
+
+      const response = await request(app.getHttpServer())
+        .get(`/reservations/${RESERVATION_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.ofacMissing).toBe(1);
+    });
+
+    it('carries the next instalment due, for the payment alerts (M4)', async () => {
+      const before = await request(app.getHttpServer())
+        .get(`/reservations/${RESERVATION_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+      expect(before.body.nextInstalment).toBeNull();
+
+      state.instalments = [
+        {
+          reservationId: RESERVATION_ID,
+          kind: 'BALANCE',
+          amount: new Prisma.Decimal('2480'),
+          dueAt: new Date('2027-01-14T00:00:00Z'),
+        },
+      ];
+      const response = await request(app.getHttpServer())
+        .get(`/reservations/${RESERVATION_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.nextInstalment).toEqual({
+        kind: 'BALANCE',
+        amount: '2480.00',
+        dueAt: '2027-01-14T00:00:00.000Z',
+      });
     });
 
     it('filters by status', async () => {

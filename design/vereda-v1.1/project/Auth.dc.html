@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in · create account · recover access · desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.p{margin:0;font-size:16px;line-height:24px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;transition:background .12s ease-out;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C;height:40px;padding:0 12px}.btn-t:hover{background:#E6F0F4}
+.btn:focus-visible,.inp:focus-visible,.tab:focus-visible,.ck:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp{height:48px;padding:0 14px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp::placeholder{color:#6E665E}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.tab{flex:1;height:44px;border:0;background:transparent;font:600 15px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:8px;border:1px solid}
+.alert p{margin:0;font-size:14px;line-height:20px}
+.ph{position:relative;display:flex;align-items:flex-end;padding:12px;box-sizing:border-box}
+.ph .alt{font:500 11px/14px Inter,system-ui,sans-serif;color:#4A433D;background:rgba(255,255,255,.85);padding:3px 6px;border-radius:4px}
+</style>
+</helmet>
+
+<div style="min-height: 100vh; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(520px, 100%), 1fr))">
+
+  <!-- Brand side -->
+  <aside style="background: #083B50; color: #fff; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; min-height: 100vh; box-sizing: border-box">
+    <a href="Home.dc.html" aria-label="Vereda Expeditions home" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff"><svg width="117.37" height="28" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg></a>
+    <div style="display: flex; flex-direction: column; gap: 24px; max-width: 480px">
+      <h1 class="disp" style="font-size: 40px; line-height: 48px; color: #fff">No passwords. A link, a passkey, or your Google or Apple account.</h1>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: #C9DDE6">We create your account the moment you send a booking request, so most travelers never "register". Signing in later takes one tap on an email link. Nothing to remember before a trip to a country with 1 Mbps.</p>
+      <div class="ph" role="img" aria-label="Photo placeholder: traveler reading a printed itinerary on a casa porch" style="aspect-ratio: 16/10; border-radius: 12px; background: #B9CFD6"><span class="alt">alt: Traveler with a printed itinerary on a casa porch</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #C9DDE6">
+      <span style="display: inline-flex; gap: 8px; align-items: center"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Sign-in links expire in 15 minutes and work once.</span>
+      <span style="display: inline-flex; gap: 8px; align-items: center"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>Passport details are encrypted and deleted 6 months after your last trip unless you keep the account.</span>
+      <span>© 2026 Vereda Expeditions S.L. · <a href="Legal.dc.html" style="color: #C9DDE6">Privacy</a><a href="About.dc.html" style="color: #C9DDE6">About Vereda</a> · <a href="Legal.dc.html" style="color: #C9DDE6">Terms</a></span>
+    </div>
+  </aside>
+
+  <!-- Form side -->
+  <main style="padding: 48px; display: flex; align-items: center; justify-content: center; box-sizing: border-box">
+    <div style="width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 24px">
+
+      <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+        <div role="tablist" aria-label="Sign in or create account" style="display: flex; border-bottom: 1px solid #E8E2D9">
+          <button class="tab {{tabIn}}" type="button" role="tab" aria-selected="{{isIn}}" onClick="{{goIn}}">Sign in</button>
+          <button class="tab {{tabUp}}" type="button" role="tab" aria-selected="{{isUp}}" onClick="{{goUp}}">Create account</button>
+          <button class="tab {{tabRec}}" type="button" role="tab" aria-selected="{{isRec}}" onClick="{{goRec}}">Can't sign in</button>
+        </div>
+      </sc-if>
+
+      <!-- SIGN IN -->
+      <sc-if value="{{showIn}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 6px"><h2 class="disp" style="font-size: 28px; line-height: 36px">Welcome back</h2><p class="p">We'll email you a one-tap link. No password.</p></div>
+        <sc-if value="{{expired}}" hint-placeholder-val="{{ false }}"><div class="alert" role="alert" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>That sign-in link has expired or was already used. Enter your email and we'll send a fresh one; links last 15 minutes.</p></div></sc-if>
+        <form style="display: flex; flex-direction: column; gap: 16px" aria-label="Sign in">
+          <div class="fld"><label class="lbl" for="em">Email</label><input class="inp" id="em" type="email" autocomplete="email" placeholder="you@example.com" value="margaret.chen@example.com"><p class="hlp">The address you booked with.</p></div>
+          <button class="btn btn-p" type="button" onClick="{{send}}" style="gap: 10px"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 7l8 6 8-6"/></svg>Email me a sign-in link</button>
+          <button class="btn btn-s" type="button" style="gap: 10px"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Use a passkey on this device</button>
+        </form>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="flex: 1; height: 1px; background: #E8E2D9"></span><span class="cap">or continue with</span><span style="flex: 1; height: 1px; background: #E8E2D9"></span></div>
+        <div style="display: flex; gap: 12px"><button class="btn btn-s" type="button" style="flex: 1">Google</button><button class="btn btn-s" type="button" style="flex: 1">Apple</button></div>
+        <p class="cap">Prefer not to sign in? You can <a href="Package.dc.html">request a trip as a guest</a>; we create the account for you and email the link.</p>
+      </sc-if>
+
+      <!-- CREATE -->
+      <sc-if value="{{showUp}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 6px"><h2 class="disp" style="font-size: 28px; line-height: 36px">Create your account</h2><p class="p">Save trips, follow host confirmations, keep your documents in one place. Still no password.</p></div>
+        <form style="display: flex; flex-direction: column; gap: 16px" aria-label="Create account">
+          <div class="fld"><label class="lbl" for="nm">Your name</label><input class="inp" id="nm" type="text" autocomplete="name"></div>
+          <div class="fld"><label class="lbl" for="em2">Email</label><input class="inp" id="em2" type="email" autocomplete="email" placeholder="you@example.com"><p class="hlp">We process this to send your sign-in link and booking emails.</p></div>
+          <div class="fld"><label class="lbl" for="lg">Language</label><div style="position: relative"><select class="inp" id="lg" style="appearance: none; -webkit-appearance: none; padding-right: 44px"><option>English</option><option>Español</option><option>Français</option></select><svg class="ic" style="position: absolute; right: 14px; top: 14px; color: #4A433D; pointer-events: none" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div></div>
+          <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer"><input class="ck" type="checkbox"><span class="sm">I accept the <a href="Legal.dc.html">terms</a> and have read the <a href="Legal.dc.html">privacy notice</a>.</span></label>
+          <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer"><input class="ck" type="checkbox"><span class="sm">Send me the monthly "Cuba right now" email. Optional; one click to stop.</span></label>
+          <button class="btn btn-p" type="button" onClick="{{send}}" style="gap: 10px"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 7l8 6 8-6"/></svg>Create account &amp; email my link</button>
+        </form>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="flex: 1; height: 1px; background: #E8E2D9"></span><span class="cap">or continue with</span><span style="flex: 1; height: 1px; background: #E8E2D9"></span></div>
+        <div style="display: flex; gap: 12px"><button class="btn btn-s" type="button" style="flex: 1">Google</button><button class="btn btn-s" type="button" style="flex: 1">Apple</button></div>
+      </sc-if>
+
+      <!-- RECOVER -->
+      <sc-if value="{{showRec}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 6px"><h2 class="disp" style="font-size: 28px; line-height: 36px">Can't sign in?</h2><p class="p">There's no password to reset. Pick what's happening.</p></div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <button class="btn btn-s" type="button" onClick="{{goInExpired}}" style="justify-content: space-between; height: auto; padding: 14px 16px; text-align: left; white-space: normal"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">The link expired or didn't arrive</span><span class="cap">Request a new one; check spam; add hola@vereda.travel to contacts</span></span><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="btn btn-s" type="button" style="justify-content: space-between; height: auto; padding: 14px 16px; text-align: left; white-space: normal"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">I no longer have that email address</span><span class="cap">We verify you with your booking code and passport name, then move the account</span></span><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="btn btn-s" type="button" style="justify-content: space-between; height: auto; padding: 14px 16px; text-align: left; white-space: normal"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">I'm in Cuba with almost no signal</span><span class="cap">Your offline kit works without signing in; for anything else, call the 24/7 line</span></span><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="btn btn-s" type="button" style="justify-content: space-between; height: auto; padding: 14px 16px; text-align: left; white-space: normal"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">I lost the device with my passkey</span><span class="cap">Sign in by email link and add a new passkey in Preferences</span></span><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+        <p class="cap">Still stuck? <a href="https://wa.me/">WhatsApp the desk</a>; we never ask for passwords or card numbers in chat.</p>
+      </sc-if>
+
+      <!-- SENT -->
+      <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 16px; align-items: flex-start">
+          <span style="width: 56px; height: 56px; border-radius: 9999px; background: #E8F5E9; color: #1B5E20; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" style="width: 28px; height: 28px" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 7l8 6 8-6"/></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 6px"><h2 class="disp" style="font-size: 28px; line-height: 36px">Check your inbox</h2><p class="p">We've sent a sign-in link to <strong style="color: #1F1B17">margaret.chen@example.com</strong>. Tap it on any device; it works once and expires in 15 minutes.</p></div>
+          <div class="alert" role="status" style="background: #F3EEE6; border-color: #E8E2D9; color: #4A433D; width: 100%; box-sizing: border-box"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><p>Nothing after a minute? Check spam, or <button type="button" onClick="{{resend}}" style="background: transparent; border: 0; padding: 0; color: #0B4F6C; font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline">send it again</button>. Wrong address? <button type="button" onClick="{{back}}" style="background: transparent; border: 0; padding: 0; color: #0B4F6C; font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline">Go back</button>.</p></div>
+          <a class="btn btn-p" href="Account.dc.html">Prototype: open the link →</a>
+        </div>
+      </sc-if>
+
+      <div style="display: flex; gap: 16px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid #E8E2D9"><button class="btn btn-t" type="button" aria-label="Language: English" style="gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>English</button><a class="btn btn-t" href="Support.dc.html">Help</a><a class="btn btn-t" href="Home.dc.html" style="margin-left: auto">← Back to the site</a></div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'in', sent: false, expired: false };
+  }
+  renderVals() {
+    const s = this.state;
+    return {
+      isIn: s.tab === 'in', isUp: s.tab === 'up', isRec: s.tab === 'rec',
+      tabIn: s.tab === 'in' ? 'on' : '', tabUp: s.tab === 'up' ? 'on' : '', tabRec: s.tab === 'rec' ? 'on' : '',
+      showIn: !s.sent && s.tab === 'in', showUp: !s.sent && s.tab === 'up', showRec: !s.sent && s.tab === 'rec', sent: s.sent, notSent: !s.sent,
+      goIn: () => this.setState({ tab: 'in', expired: false }), goUp: () => this.setState({ tab: 'up' }), goRec: () => this.setState({ tab: 'rec' }), goInExpired: () => this.setState({ tab: 'in', expired: true }),
+      expired: s.expired, send: () => this.setState({ sent: true }), resend: () => this.setState({ sent: true }), back: () => this.setState({ sent: false, expired: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

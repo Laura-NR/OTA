@@ -30,19 +30,29 @@ test.describe('supplier recruitment', () => {
   });
 
   test('a public application can be submitted and approved', async ({ page }) => {
-    await page.goto(`${STOREFRONT_URL}/en/join-our-network`);
+    await page.goto(`${STOREFRONT_URL}/en/join`);
     await expect(page.getByRole('heading', { name: 'Join our network' })).toBeVisible();
 
+    // Four steps: category, identity, credential, review with the consents.
+    await expect(async () => {
+      await page.getByRole('radio', { name: /Casa particular host/ }).check();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.getByLabel('Full name')).toBeVisible({ timeout: 1_000 });
+    }).toPass();
     await page.getByLabel('Full name').fill('E2E Applicant');
-    await page.getByLabel('Email').fill(APPLICANT_EMAIL);
-    await page.getByLabel('Phone').fill('+53 5555 9999');
-    await page.getByLabel('Provinces (comma-separated)').fill('La Habana');
+    await page.getByLabel('Email', { exact: true }).fill(APPLICANT_EMAIL);
+    await page.getByLabel('Phone', { exact: true }).fill('+53 5555 9999');
+    await page.getByRole('checkbox', { name: 'La Habana' }).check();
+    await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByLabel('RTN licence number').fill(APPLICANT_LICENSE);
-    await page.getByRole('button', { name: 'Apply to join' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('checkbox', { name: /I authorise/ }).check();
+    await page.getByRole('checkbox', { name: /I declare/ }).check();
+    await page.getByRole('button', { name: 'Send the application' }).click();
     await expect(page.getByText('your application is in')).toBeVisible();
 
     await signIn(page);
-    await page.goto('/applications');
+    await page.goto('/suppliers/applications');
     const row = page.locator('tr', { hasText: APPLICANT_EMAIL });
     await expect(row.getByText('PENDING')).toBeVisible();
     await row.getByRole('button', { name: 'Approve' }).click();

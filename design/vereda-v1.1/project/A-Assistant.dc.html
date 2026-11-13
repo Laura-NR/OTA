@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Assistant · daily summary, draft composer, translation, weekly digest · reviewed before anything leaves the desk</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:36px;padding:0 12px;font-size:13px}
+.btn:focus-visible,.inp:focus-visible,.tab:focus-visible,.ibtn:focus-visible,.ta:focus-visible,.chip:focus-visible,.sel:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.inp,.ta,.sel{padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.inp,.sel{height:44px}.ta{padding:10px 12px;min-height:120px;resize:vertical}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.chip{height:36px;padding:0 14px;border-radius:9999px;border:1px solid #D6CEC3;background:#fff;font:500 13px/18px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.num{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace;white-space:nowrap}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 240px;max-width:100%;background:#083B50;color:#fff;display:flex;flex-direction:column;gap:16px;padding:20px 16px 24px;box-sizing:border-box}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:8px;color:#C9DDE6;text-decoration:none;font:500 14px/20px Inter,system-ui,sans-serif}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav a:focus-visible{outline:2px solid #F2B134;outline-offset:-2px}
+.cnt{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:#F2B134;color:#1F1B17;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.cnt.red{background:#C62828;color:#fff}
+.cnt.new{background:transparent;border:1px solid #C9DDE6;color:#C9DDE6;font-weight:600}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 32px;background:#fff;border-bottom:1px solid #E8E2D9}
+.content{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.sum p{margin:0;font-size:15px;line-height:24px;color:#1F1B17}
+.sum a{font-weight:600}
+.fact{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:18px;color:#4A433D}
+.fact .ic{width:16px;height:16px;margin-top:1px}
+.msg{display:flex;flex-direction:column;gap:4px;padding:10px 14px;border-radius:12px;font-size:14px;line-height:20px;background:#F3EEE6}
+.msg .m{font-size:11px;line-height:14px;color:#6E665E}
+.tr{border-left:3px solid #0B4F6C;padding:6px 12px;font-size:13px;line-height:18px;color:#083B50;background:#F1F6F8;border-radius:0 8px 8px 0}
+</style>
+</helmet>
+
+<div class="shell">
+  <nav class="side" aria-label="Admin">
+    <a href="A-Dashboard.dc.html" aria-label="Vereda operations desk" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; padding: 4px 12px 8px"><svg width="108.98" height="26" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"/><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"/><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"/><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"/><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"/><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"/><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"/></svg><span class="cap" style="color: #C9DDE6; margin-left: 2px">Ops</span></a>
+    <div class="nav">
+      <a href="A-Dashboard.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>Dashboard<span class="cnt red">2</span></a>
+      <a href="A-Bookings.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>Bookings<span class="cnt">14</span></a>
+      <a href="A-Disruption.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Disruptions<span class="cnt">1</span></a>
+      <a href="A-Packages.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>Packages</a>
+      <a href="A-Customers.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>Customers</a>
+      <a href="A-Suppliers.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Suppliers<span class="cnt">1</span></a>
+      <a href="A-Payments.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments<span class="cnt">3</span></a>
+      <a href="A-Content.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Content</a>
+      <a href="A-Reports.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+      <a href="A-Assistant.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.2 2.2M16.2 16.2l2.2 2.2M5.6 18.4l2.2-2.2M16.2 7.8l2.2-2.2"/><circle cx="12" cy="12" r="3"/></svg>Assistant<span class="cnt new">flag</span></a>
+      <a href="A-Settings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.08)">
+      <div style="display: flex; gap: 10px; align-items: center"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">AR</span><div style="display: flex; flex-direction: column; min-width: 0"><strong style="font-size: 13px; line-height: 18px">Ana Rodríguez</strong><span style="font-size: 12px; line-height: 16px; color: #C9DDE6">Operations Admin</span></div></div>
+      <a href="A-Login.dc.html" style="color: #C9DDE6; font-size: 12px; line-height: 16px">Sign out · session ends 02:33</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6E665E"><span class="mono" style="color: #1F1B17">Assistant</span><span aria-hidden="true">·</span><span>Fri 10 Oct 2026 · 07:12 Havana</span></nav>
+      <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+        <span class="pill" style="background: #E8F5E9; color: #1B5E20"><svg class="ic" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>aiAssistantDrafts · on</span>
+        <span class="tag">provider: [LLM provider] · EU region</span>
+        <a class="btn btn-s" href="A-Settings.dc.html">Flag &amp; data rules</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px">
+        <h1 class="disp" style="font-size: 28px; line-height: 34px">Assistant · reviewed before anything leaves the desk</h1>
+        <p class="p">Spec §4.8 in three tools: a morning summary of operations, a draft composer for client and supplier messages, and inline translation. The model writes text; it never computes a figure, changes a state, or sends. Every output carries the reviewer's name in the audit log.</p>
+      </div>
+
+      <!-- 01 daily summary + 05 rules -->
+      <section style="display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start">
+        <div class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center"><div><p class="ov">01 · Daily operations summary</p><p class="cap">Generated 07:00 Havana from the live queues · 6 queries · reads only</p></div><div style="display: flex; gap: 8px"><button class="btn btn-s btn-sm" type="button"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Regenerate</button><button class="btn btn-p btn-sm" type="button">Post to the desk channel</button></div></div>
+          <div class="sum" style="display: flex; flex-direction: column; gap: 10px">
+            <p><strong>Good morning, Ana.</strong> Two things need you before 09:00: the guide for <a href="A-Booking.dc.html">VX-3PA8ZT</a> (Müller, Trinidad, departs Tue) timed out overnight and sits in ACTION_REQUIRED with the fallback list ready; and <a href="A-Customers.dc.html">Luis Ortega</a> on VX-2F9HQ3 still has no OFAC certification 44 hours before arrival, so his vouchers and Reinier's work order are blocked. The fourth reminder went out at 06:00; a call would be faster.</p>
+            <p>Today: 3 arrivals (Chen at HAV 15:20 with Reinier; Holm and Dubois already in Cuba), 2 departures. The Viñales outage behind <a href="A-Disruption.dc.html">DC-0931</a> is still open; the Holms chose option A yesterday and the battery pack was delivered at 16:40. Morning check-ins start at 08:30; nothing is overdue.</p>
+            <p>Dispatch: 14 bookings in flight, 2 of 4 items still waiting on VX-7K2M9Q (driver and one activity, both amber from 13:05 yesterday). Yoel Martínez stays paused (licence expires 2 Nov); <a href="A-Suppliers.dc.html">Yunier Blanco</a>'s application has waited 3 days in PENDING_AUDIT. Payments: 3 transfer proofs to match; October GBV is € 41,280, on pace with September. Weather: no advisories above caution; fuel queues in Pinar del Río continue.</p>
+          </div>
+          <details style="font-size: 13px; line-height: 18px; color: #4A433D"><summary style="cursor: pointer; font-weight: 600; color: #083B50">What it looked at (and did not)</summary>
+            <ul style="margin: 8px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px">
+              <li>Bookings in DISPATCHING and ACTION_REQUIRED with their timers; arrivals and departures for today; open disruption cases and traveler choices.</li>
+              <li>Credential expiries and applications in PENDING_AUDIT; pending transfer proofs; advisories in force; the GBV figure from Reports.</li>
+              <li>Not read: passport numbers, billing addresses, emails, phone numbers, message bodies from travelers (spec §8.2, doc 12). Names appear as first names and booking codes.</li>
+            </ul>
+          </details>
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap"><span class="cap">Was this useful?</span><button class="btn btn-t btn-sm" type="button" aria-label="Useful">👍</button><button class="btn btn-t btn-sm" type="button" aria-label="Not useful">👎</button><span class="cap">· feedback feeds <span class="mono">ai_draft_used</span> (T-Events)</span></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 20px">
+          <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+            <p class="ov">05 · Rules the assistant runs under</p>
+            <div class="fact"><svg class="ic" viewBox="0 0 24 24" style="color: #1B5E20"><path d="m5 12 5 5L20 7"/></svg><span><strong>Human sends.</strong> Drafts land in the composer or the booking thread; the Send button is the person's, and the audit log records "drafted by assistant, reviewed by Ana R.".</span></div>
+            <div class="fact"><svg class="ic" viewBox="0 0 24 24" style="color: #1B5E20"><path d="m5 12 5 5L20 7"/></svg><span><strong>Facts come from the record.</strong> Amounts, dates, names and states are inserted from the booking, shown as checkable facts under each draft; the model cannot invent a price or a time.</span></div>
+            <div class="fact"><svg class="ic" viewBox="0 0 24 24" style="color: #1B5E20"><path d="m5 12 5 5L20 7"/></svg><span><strong>Minimum data.</strong> Booking code, first names, dates, service states, amounts, locale. Never identity documents, billing addresses, contact details or free-text traveler notes.</span></div>
+            <div class="fact"><svg class="ic" viewBox="0 0 24 24" style="color: #1B5E20"><path d="m5 12 5 5L20 7"/></svg><span><strong>Logged and limited.</strong> Prompts and outputs kept 90 days in the audit log; the <span class="mono">aiAssistantDrafts</span> flag (Settings) turns every tool off at once; Operations Admins and Support can draft, Super Admins enable.</span></div>
+            <div class="fact"><svg class="ic" viewBox="0 0 24 24" style="color: #1B5E20"><path d="m5 12 5 5L20 7"/></svg><span><strong>Language-aware.</strong> Drafts in the traveler's locale, Spanish to workers; the glossary keeps <em>casa particular</em>, <em>apagón</em>, <em>almendrón</em> untranslated.</span></div>
+          </div>
+          <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+            <p class="ov">04 · Weekly financial digest · Mondays 07:00</p>
+            <p class="p" style="font-size: 13px; line-height: 18px">Figures are copied from <a href="A-Reports.dc.html">Reports</a>; only the sentences are generated.</p>
+            <div style="overflow-x: auto"><table class="tbl">
+              <tbody>
+                <tr><td>GBV week 41</td><td class="num">€ 9,840</td><td class="cap">SEPA 61 % · card 29 % · transfer 10 %</td></tr>
+                <tr><td>Take rate</td><td class="num">18.6 %</td><td class="cap">target ≥ 18 %</td></tr>
+                <tr><td>Payouts due this week</td><td class="num">€ 4,120</td><td class="cap">11 workers · 3 provinces</td></tr>
+                <tr><td>Reinvestment ledger</td><td class="num">€ 2,310</td><td class="cap">vs [Res. 193/2026 threshold]</td></tr>
+              </tbody>
+            </table></div>
+            <p class="cap">Preview: "Week 41 closed at € 9,840 GBV, 4 % above week 40, with SEPA still the main rail. Eleven payouts totalling € 4,120 go out Thursday…" · sent to Dayana and [Founder name] after Ana's review.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 composer + 03 translation -->
+      <section style="display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start">
+        <div class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+          <div><p class="ov">02 · Draft composer</p><p class="cap">Context is a booking; the same panel opens inside <a href="A-Booking.dc.html">A-Booking › Messages</a> as "AI draft"</p></div>
+          <div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 6px"><label class="cap" for="ctx">Booking</label><select class="sel" id="ctx"><option>VX-7K2M9Q · Chen · Viñales 13–20 Feb</option><option>VX-3PA8ZT · Müller · ACTION_REQUIRED</option><option>VX-2F9HQ3 · Ortega · OFAC missing</option></select></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><label class="cap" for="to">To</label><select class="sel" id="to"><option>Traveler · Margaret (EN)</option><option>Host · Yamilé (ES)</option><option>Driver · Reinier (ES)</option></select></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><p class="cap">Language</p><div style="display: flex; gap: 6px"><sc-for list="{{langs}}" as="l" hint-placeholder-count="3"><button class="chip {{l.cls}}" type="button" aria-pressed="{{l.on}}" onClick="{{l.pick}}">{{l.label}}</button></sc-for></div></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><p class="cap">Intent</p><div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{intents}}" as="it" hint-placeholder-count="5"><button class="chip {{it.cls}}" type="button" aria-pressed="{{it.on}}" onClick="{{it.pick}}">{{it.label}}</button></sc-for></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label class="cap" for="draft">Draft · {{draftMeta}}</label>
+            <textarea class="ta" id="draft" aria-describedby="facts">{{draft}}</textarea>
+          </div>
+          <div id="facts" style="display: flex; flex-direction: column; gap: 4px">
+            <p class="cap">Facts inserted from the record · tap one to open it</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{facts}}" as="f" hint-placeholder-count="4"><a href="A-Booking.dc.html" class="pill" style="background: {{f.bg}}; color: {{f.fg}}; text-decoration: none"><svg class="ic" viewBox="0 0 24 24"><path d="{{f.path}}"/></svg>{{f.label}}</a></sc-for></div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center"><button class="btn btn-p" type="button">Insert into reply</button><button class="btn btn-s" type="button">Shorter</button><button class="btn btn-s" type="button">Warmer</button><button class="btn btn-t" type="button">Discard</button><span class="cap" style="margin-left: auto">Drafts this week: 38 · sent unedited 41 % · edited 52 % · discarded 7 %</span></div>
+        </div>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <div><p class="ov">03 · Translation</p><p class="cap">Inline in worker threads (AL-Inbox, A-Booking) and on this panel</p></div>
+          <div class="msg"><span>Confirmado, cena lista a las 17:30. ¿La señora Margaret come pescado? Tengo pargo fresco del viernes.</span><span class="m">Yamilé · 13:22 · worker app · ES</span></div>
+          <div class="tr">Confirmed, dinner ready at 17:30. Does Mrs Margaret eat fish? I have fresh snapper from Friday.<br><span class="cap">translated · original kept · "pargo" → snapper (glossary)</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label class="cap" for="reply">Your reply (EN) · sent in Spanish</label><textarea class="ta" id="reply" style="min-height: 72px">Yes, she loves fish. No shellfish for David, please.</textarea></div>
+          <div class="tr">Sí, le encanta el pescado. Para David nada de mariscos, por favor.<br><span class="cap">preview · you send this text · workers never see the English</span></div>
+          <div style="display: flex; gap: 8px"><button class="btn btn-p btn-sm" type="button">Send in Spanish</button><button class="btn btn-t btn-sm" type="button">Edit Spanish</button></div>
+          <p class="cap">Dietary, medical and allergy phrases are flagged for a human check before sending (doc 12 duty of care).</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { lang: 'en', intent: 'still' };
+  }
+  renderVals() {
+    const s = this.state;
+    const langs = [['en', 'EN'], ['es', 'ES'], ['fr', 'FR']].map(([id, label]) => ({ id, label, on: s.lang === id, cls: s.lang === id ? 'on' : '', pick: () => this.setState({ lang: id }) }));
+    const intentDefs = [['still', 'Still confirming'], ['alt', 'Alternative offered'], ['adjust', 'Itinerary adjustment'], ['pay', 'Payment reminder'], ['custom', 'Free prompt']];
+    const intents = intentDefs.map(([id, label]) => ({ id, label, on: s.intent === id, cls: s.intent === id ? 'on' : '', pick: () => this.setState({ intent: id }) }));
+    const drafts = {
+      en: {
+        still: "Quick update, Margaret: your casa with Yamilé and your guide Daylin are confirmed for 13–20 February. We're still waiting on the driver and one activity and will have everything locked in within the day. Nothing is charged until all four pieces are secured.",
+        alt: "Margaret, one change to propose: Las Terrazas is affected by fuel queues this week, so Daylin suggests a horseback half day in the valley on Tuesday instead (same price, −€ 8 per person). Say yes and we book it; say no and we keep Las Terrazas with a later start.",
+        adjust: "Margaret, we've moved your Cayo Levisa day from Thursday to Friday because the ferry runs only on even days in February. Everything else stays as it is; your voucher updates automatically in Documents.",
+        pay: "Margaret, a gentle reminder: the deposit of € 620.00 for VX-7K2M9Q is due by Wed 14 Oct, 14:35 Havana (20:35 Toronto). Pay by card or transfer from your account; reply if you need a day more and we'll hold your hosts.",
+        custom: "Write the message you need; the facts below stay available to insert."
+      },
+      es: {
+        still: "Margaret, un aviso rápido: tu casa con Yamilé y tu guía Daylin están confirmados del 13 al 20 de febrero. Seguimos esperando al chofer y una actividad; lo tendremos todo cerrado hoy. No se cobra nada hasta que las cuatro piezas estén aseguradas.",
+        alt: "Margaret, un cambio que proponerte: Las Terrazas tiene colas de combustible esta semana, así que Daylin sugiere media jornada a caballo por el valle el martes (mismo precio, −8 € por persona). Si dices que sí, lo reservamos; si no, mantenemos Las Terrazas con salida más tarde.",
+        adjust: "Margaret, hemos movido tu día en Cayo Levisa del jueves al viernes porque en febrero el ferry solo sale los días pares. Todo lo demás sigue igual; tu bono se actualiza solo en Documentos.",
+        pay: "Margaret, un recordatorio: el depósito de 620,00 € de VX-7K2M9Q vence el mié 14 oct a las 14:35 (La Habana). Paga con tarjeta o transferencia desde tu cuenta; si necesitas un día más, responde y mantenemos a tus anfitriones.",
+        custom: "Escribe el mensaje que necesitas; los datos de abajo siguen disponibles."
+      },
+      fr: {
+        still: "Margaret, un point rapide : votre casa chez Yamilé et votre guide Daylin sont confirmés du 13 au 20 février. Nous attendons encore le chauffeur et une activité ; tout sera verrouillé dans la journée. Rien n'est débité tant que les quatre éléments ne sont pas assurés.",
+        alt: "Margaret, un changement à vous proposer : Las Terrazas subit des files d'attente de carburant cette semaine, Daylin suggère donc une demi-journée à cheval dans la vallée mardi (même prix, −8 € par personne). Dites oui et nous réservons ; dites non et nous gardons Las Terrazas avec un départ plus tard.",
+        adjust: "Margaret, nous avons déplacé votre journée à Cayo Levisa du jeudi au vendredi : en février, le ferry ne part que les jours pairs. Le reste ne change pas ; votre bon se met à jour dans Documents.",
+        pay: "Margaret, petit rappel : l'acompte de 620,00 € pour VX-7K2M9Q est dû le mer. 14 oct. à 14 h 35 (La Havane). Payez par carte ou virement depuis votre compte ; s'il vous faut un jour de plus, répondez et nous gardons vos hôtes.",
+        custom: "Écrivez le message dont vous avez besoin ; les faits ci-dessous restent disponibles."
+      }
+    };
+    const factDefs = [['Casa · Yamilé · ACCEPTED', true], ['Guide · Daylin · ACCEPTED', true], ['Driver · Reinier · OFFERED 13:05', false], ['Deposit € 620.00 · due 14 Oct 14:35', true]];
+    const facts = factDefs.map(([label, ok]) => ({ label, bg: ok ? '#E8F5E9' : '#FEF3C7', fg: ok ? '#1B5E20' : '#92400E', path: ok ? 'm5 12 5 5L20 7' : 'M12 7v5l3 2' }));
+    const intentLabel = intentDefs.find((i) => i[0] === s.intent)[1].toLowerCase();
+    return { langs, intents, draft: drafts[s.lang][s.intent], draftMeta: intentLabel + ' · ' + s.lang.toUpperCase() + ' · generated 07:12 · not sent', facts };
+  }
+}
+</script>
+</body>
+</html>

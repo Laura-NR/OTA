@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { parseTenantConfig } from '@ota/config';
 import { Prisma } from '@ota/db';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -7,6 +8,17 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
+import { TENANT_CONFIG } from '../src/tenant/tenant.tokens';
+
+// The publish checks read the manifest's policy keys (M4 D2).
+const tenant = parseTenantConfig({
+  tenantId: 'test-agency',
+  branding: { agencyName: 'Test Agency', licenseNumber: 'MINTUR-TEST-1234' },
+  policies: {
+    cancellation: { standard: { bands: [{ fromDays: 0, keepPercent: 100 }] } },
+  },
+});
 
 const SUPER_ADMIN = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -39,6 +51,8 @@ interface FakeInventoryItem {
   createdAt: Date;
   updatedAt: Date;
   media: never[];
+  /** The casa behind a stay (M6 D6(b)); absent means no supplier. */
+  supplier?: { category: string; resources: Record<string, unknown> | null } | null;
 }
 
 interface FakeService {
@@ -51,20 +65,54 @@ interface FakeService {
   inventoryItem: FakeInventoryItem;
 }
 
+interface FakeDeparture {
+  id: string;
+  packageId: string;
+  startDate: Date;
+  capacity: number;
+  price: Prisma.Decimal | null;
+  status: string;
+}
+
 interface FakePackage {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  summary: string | null;
   province: string | null;
   durationDays: number;
   currency: string;
   basePrice: Prisma.Decimal;
-  active: boolean;
+  status: string;
+  publishedAt: Date | null;
+  sourceLocale: string;
+  contentUpdatedAt: Date;
+  bookingModel: string;
+  groupMin: number | null;
+  groupMax: number | null;
+  leadTimeDays: number;
+  tourismCategory: string;
+  themes: string[];
+  difficulty: number | null;
+  accessibility: string[];
+  cancellationPolicy: string | null;
+  depositPolicy: string | null;
+  included: string[];
+  excluded: string[];
+  cubaNotes: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
   attributes: null;
   createdAt: Date;
   updatedAt: Date;
   services: FakeService[];
+  days: never[];
+  tiers: never[];
+  departures: FakeDeparture[];
+  extras: never[];
+  media: never[];
+  translations: never[];
 }
 
 function makeInventoryItem(id: string): FakeInventoryItem {
@@ -96,7 +144,26 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
     durationDays: 3,
     currency: 'EUR',
     basePrice: new Prisma.Decimal('180.00'),
-    active: true,
+    status: 'PUBLISHED',
+    publishedAt: new Date('2026-09-01T00:00:00Z'),
+    sourceLocale: 'en',
+    contentUpdatedAt: new Date('2026-09-01T00:00:00Z'),
+    summary: null,
+    bookingModel: 'REQUEST',
+    groupMin: null,
+    groupMax: null,
+    leadTimeDays: 2,
+    tourismCategory: 'GENERAL',
+    themes: [],
+    difficulty: null,
+    accessibility: [],
+    cancellationPolicy: null,
+    depositPolicy: null,
+    included: [],
+    excluded: [],
+    cubaNotes: null,
+    seoTitle: null,
+    seoDescription: null,
     attributes: null,
     createdAt: new Date('2026-09-01T00:00:00Z'),
     updatedAt: new Date('2026-09-01T00:00:00Z'),
@@ -111,20 +178,32 @@ function makePackage(overrides: Partial<FakePackage> = {}): FakePackage {
         inventoryItem: makeInventoryItem(ITEM_A),
       },
     ],
+    days: [],
+    tiers: [],
+    departures: [],
+    extras: [],
+    media: [],
+    translations: [],
     ...overrides,
   };
 }
 
-function createFakePrisma(state: { packages: FakePackage[] }) {
+interface FakeBooking {
+  departureId: string;
+  bookingCode: string;
+  partySize: number;
+}
+
+function createFakePrisma(state: { packages: FakePackage[]; bookings: FakeBooking[] }) {
   const fake = {
     inventoryItem: {
       count: async (args: { where: { id: { in: string[] } } }) =>
         args.where.id.in.filter((id) => id === ITEM_A).length,
     },
     package: {
-      findMany: async (args: { where?: { active?: boolean; province?: string } }) =>
+      findMany: async (args: { where?: { status?: string; province?: string } }) =>
         state.packages.filter((pkg) => {
-          if (args.where?.active !== undefined && pkg.active !== args.where.active) {
+          if (args.where?.status !== undefined && pkg.status !== args.where.status) {
             return false;
           }
           if (args.where?.province && pkg.province !== args.where.province) {
@@ -145,7 +224,8 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
           durationDays: number;
           currency: string;
           basePrice: number;
-          active: boolean;
+          status: string;
+          publishedAt: Date | null;
           services: {
             create: { inventoryItemId: string; dayOffset: number; position: number }[];
           };
@@ -160,10 +240,35 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
           durationDays: args.data.durationDays,
           currency: args.data.currency,
           basePrice: new Prisma.Decimal(args.data.basePrice),
-          active: args.data.active,
+          status: args.data.status,
+          publishedAt: args.data.publishedAt,
+          sourceLocale: 'en',
+          contentUpdatedAt: new Date(),
+          summary: null,
+          bookingModel: 'REQUEST',
+          groupMin: null,
+          groupMax: null,
+          leadTimeDays: 2,
+          tourismCategory: 'GENERAL',
+          themes: [],
+          difficulty: null,
+          accessibility: [],
+          cancellationPolicy: null,
+          depositPolicy: null,
+          included: [],
+          excluded: [],
+          cubaNotes: null,
+          seoTitle: null,
+          seoDescription: null,
           attributes: null,
           createdAt: new Date(),
           updatedAt: new Date(),
+          days: [],
+          tiers: [],
+          departures: [],
+          extras: [],
+          media: [],
+          translations: [],
           services: args.data.services.create.map((service, index) => ({
             id: `new-s${index}`,
             packageId: NEW_ID,
@@ -177,12 +282,72 @@ function createFakePrisma(state: { packages: FakePackage[] }) {
         state.packages.push(created);
         return created;
       },
+      update: async (args: {
+        where: { id: string };
+        data: Record<string, unknown> & {
+          departures?: {
+            create: {
+              startDate: Date;
+              capacity: number;
+              price: number | null;
+              status: string;
+            }[];
+            update: {
+              where: { id: string };
+              data: { capacity: number; status: string };
+            }[];
+          };
+        };
+      }) => {
+        const pkg = state.packages.find((candidate) => candidate.id === args.where.id);
+        if (!pkg) throw new Error(`No fake package ${args.where.id}`);
+        const { departures, ...scalars } = args.data;
+        Object.assign(pkg, scalars);
+        if (departures) {
+          for (const { where, data } of departures.update) {
+            const kept = pkg.departures.find((row) => row.id === where.id);
+            if (kept) Object.assign(kept, data);
+          }
+          pkg.departures.push(
+            ...departures.create.map((departure, index) => ({
+              id: `${pkg.id}-d${index}`,
+              packageId: pkg.id,
+              startDate: departure.startDate,
+              capacity: departure.capacity,
+              price:
+                departure.price === null ? null : new Prisma.Decimal(departure.price),
+              status: departure.status,
+            })),
+          );
+        }
+        return pkg;
+      },
       delete: async (args: { where: { id: string } }) => {
         const index = state.packages.findIndex((pkg) => pkg.id === args.where.id);
         if (index >= 0) state.packages.splice(index, 1);
       },
     },
+    packageDeparture: {
+      findMany: async (args: { where: { packageId: string } }) =>
+        state.packages.find((pkg) => pkg.id === args.where.packageId)?.departures ?? [],
+      deleteMany: async (args: { where: { id: { in: string[] } } }) => {
+        for (const pkg of state.packages) {
+          pkg.departures = pkg.departures.filter(
+            (departure) => !args.where.id.in.includes(departure.id),
+          );
+        }
+        return { count: args.where.id.in.length };
+      },
+    },
+    reservation: {
+      findMany: async (args: { where: { departureId: { in: string[] } } }) =>
+        state.bookings.filter((booking) =>
+          args.where.departureId.in.includes(booking.departureId),
+        ),
+    },
+    $queryRaw: async () => [],
     auditLog: { create: async () => ({}) },
+    packageSlugRedirect: { findUnique: async () => null },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
   return fake;
@@ -202,21 +367,29 @@ const fakeAuthService = {
 
 describe('packages API', () => {
   let app: INestApplication;
-  let state: { packages: FakePackage[] };
+  let state: { packages: FakePackage[]; bookings: FakeBooking[] };
 
   beforeEach(async () => {
     state = {
+      bookings: [],
       packages: [
         makePackage(),
-        makePackage({ id: INACTIVE_ID, slug: 'retired-trail', active: false }),
+        makePackage({
+          id: INACTIVE_ID,
+          slug: 'retired-trail',
+          status: 'DRAFT',
+          publishedAt: null,
+        }),
       ],
     };
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
+      .overrideProvider(TENANT_CONFIG)
+      .useValue(tenant)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -227,7 +400,7 @@ describe('packages API', () => {
     await app.close();
   });
 
-  it('serves only active packages on the public catalogue', async () => {
+  it('serves only published packages on the public catalogue', async () => {
     const response = await request(app.getHttpServer()).get('/catalog/packages');
 
     expect(response.status).toBe(200);
@@ -239,17 +412,43 @@ describe('packages API', () => {
     });
   });
 
-  it('serves a public package by slug and 404s an inactive one', async () => {
-    const active = await request(app.getHttpServer()).get(
+  it('claims backup power for a stay only from a fresh casa confirmation, without naming the casa', async () => {
+    const stay = state.packages[0]!.services[0]!.inventoryItem;
+    const resources = {
+      generator: 'OWN',
+      generatorHoursPerDay: 6,
+      solarBatteryKwh: null,
+      fuelReserveLitres: null,
+      confirmedAt: new Date(Date.now() - 2 * 24 * 3_600_000),
+    };
+    stay.supplierId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    stay.supplier = { category: 'HOMESTAY_HOST', resources };
+
+    const fresh = await request(app.getHttpServer()).get('/catalog/packages');
+    expect(fresh.body[0].backupPower).toBe(true);
+    expect(fresh.body[0].services[0].backupPower).toEqual({
+      kind: 'GENERATOR',
+      hoursPerDay: 6,
+    });
+    expect(JSON.stringify(fresh.body[0].services[0])).not.toContain('supplier');
+
+    resources.confirmedAt = new Date(Date.now() - 8 * 24 * 3_600_000);
+    const stale = await request(app.getHttpServer()).get('/catalog/packages');
+    expect(stale.body[0].backupPower).toBe(false);
+    expect(stale.body[0].services[0].backupPower).toBeNull();
+  });
+
+  it('serves a public package by slug and 404s a draft one', async () => {
+    const published = await request(app.getHttpServer()).get(
       '/catalog/packages/vinales-agro-ecology-trail',
     );
-    expect(active.status).toBe(200);
-    expect(active.body.name).toBe('Vinales Agro-Ecology Trail');
+    expect(published.status).toBe(200);
+    expect(published.body.name).toBe('Vinales Agro-Ecology Trail');
 
-    const inactive = await request(app.getHttpServer()).get(
+    const draft = await request(app.getHttpServer()).get(
       '/catalog/packages/retired-trail',
     );
-    expect(inactive.status).toBe(404);
+    expect(draft.status).toBe(404);
   });
 
   it('lists every package for an operations role', async () => {
@@ -259,6 +458,11 @@ describe('packages API', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(2);
+    // The editor's translation status reads these.
+    expect(response.body[0]).toMatchObject({
+      sourceLocale: 'en',
+      contentUpdatedAt: '2026-09-01T00:00:00.000Z',
+    });
   });
 
   it('creates a package and generates a slug when none is supplied', async () => {
@@ -278,6 +482,129 @@ describe('packages API', () => {
     expect(state.packages.some((pkg) => pkg.slug === 'trinidad-heritage-trail')).toBe(
       true,
     );
+  });
+
+  it('refuses to create a published package that fails the publish checks', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/packages')
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({
+        name: 'Undated Trail',
+        durationDays: 2,
+        basePrice: 100,
+        status: 'PUBLISHED',
+        services: [{ inventoryItemId: ITEM_A }],
+      });
+
+    expect(response.status).toBe(409);
+    expect(response.body.issues).toEqual(['DEPARTURE_REQUIRED']);
+    expect(response.body.message).toContain('DEPARTURE_REQUIRED');
+    expect(state.packages).toHaveLength(2);
+  });
+
+  it('refuses to publish a draft until it passes the checks as saved', async () => {
+    const refused = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'PUBLISHED' });
+
+    expect(refused.status).toBe(409);
+    expect(refused.body.issues).toEqual(['DEPARTURE_REQUIRED']);
+    expect(state.packages.find((pkg) => pkg.id === INACTIVE_ID)?.status).toBe('DRAFT');
+
+    // The departure sent in the same save counts towards the check.
+    const published = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({
+        status: 'PUBLISHED',
+        departures: [{ startDate: '2027-02-13', capacity: 8 }],
+      });
+
+    expect(published.status).toBe(200);
+    expect(published.body.status).toBe('PUBLISHED');
+    expect(published.body.departures).toHaveLength(1);
+  });
+
+  it('refuses a save that takes a departure from under its bookings', async () => {
+    const pkg = state.packages.find((row) => row.id === INACTIVE_ID)!;
+    const date = new Date('2027-02-13T00:00:00Z');
+    pkg.departures = [
+      {
+        id: `${INACTIVE_ID}-booked`,
+        packageId: INACTIVE_ID,
+        startDate: date,
+        capacity: 8,
+        price: null,
+        status: 'OPEN',
+      },
+    ];
+    state.bookings.push({
+      departureId: `${INACTIVE_ID}-booked`,
+      bookingCode: 'BOOKED01',
+      partySize: 3,
+    });
+
+    const refused = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ departures: [{ startDate: '2027-03-06', capacity: 8 }] });
+
+    expect(refused.status).toBe(409);
+    expect(refused.body).toMatchObject({
+      error: 'PackageRowsInUse',
+      refusals: [
+        { kind: 'DEPARTURE_BOOKED', row: '2027-02-13', bookingCodes: ['BOOKED01'] },
+      ],
+    });
+    expect(pkg.departures).toHaveLength(1);
+
+    const kept = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ departures: [{ startDate: '2027-02-13', capacity: 6, status: 'CLOSED' }] });
+
+    expect(kept.status).toBe(200);
+    expect(kept.body.departures).toMatchObject([
+      { id: `${INACTIVE_ID}-booked`, capacity: 6, status: 'CLOSED' },
+    ]);
+  });
+
+  it('accepts only policy keys the manifest defines', async () => {
+    const departures = [{ startDate: '2027-02-13', capacity: 8 }];
+    const unknown = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'PUBLISHED', departures, cancellationPolicy: 'lenient' });
+
+    expect(unknown.status).toBe(409);
+    expect(unknown.body.issues).toEqual(['UNKNOWN_POLICY']);
+
+    const known = await request(app.getHttpServer())
+      .patch(`/packages/${INACTIVE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'PUBLISHED', departures, cancellationPolicy: 'standard' });
+
+    expect(known.status).toBe(200);
+  });
+
+  it('checks an edit to a published package, but never blocks unpublishing it', async () => {
+    // The fake published package has no departure, so it no longer passes.
+    const edit = await request(app.getHttpServer())
+      .patch(`/packages/${PACKAGE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ name: 'Renamed Trail' });
+
+    expect(edit.status).toBe(409);
+    expect(edit.body.issues).toEqual(['DEPARTURE_REQUIRED']);
+
+    const unpublish = await request(app.getHttpServer())
+      .patch(`/packages/${PACKAGE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'DRAFT' });
+
+    expect(unpublish.status).toBe(200);
+    expect(unpublish.body.status).toBe('DRAFT');
   });
 
   it('rejects a package referencing an unknown catalog item', async () => {

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Form field specifications · validation, formats, error copy EN / ES / FR</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.f{font-weight:600;color:#1F1B17;white-space:nowrap}
+.tbl td.m{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:#4A433D}
+.grp td{background:#FBF8F3;font-weight:600;color:#083B50;padding:8px 12px}
+.req{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;white-space:nowrap;background:#F7E4DC;color:#7A2A16}
+.opt{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;white-space:nowrap;background:#F3EEE6;color:#4A433D}
+.cond{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;white-space:nowrap;background:#FEF3C7;color:#92400E}
+.err{font-size:12px;line-height:17px;color:#4A433D}
+.err b{font-weight:600;color:#083B50;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px}
+.demo{display:flex;flex-direction:column;gap:6px}
+.demo label{font:500 14px/20px Inter,system-ui,sans-serif}
+.demo input{height:40px;padding:0 12px;border:1px solid #C62828;border-radius:8px;font:400 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.demo .e{display:flex;gap:6px;align-items:flex-start;font-size:13px;line-height:18px;color:#B71C1C}
+.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:1px}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 960px">
+    <p class="ov">Handoff · forms · 10 Oct 2026 · six forms, every field</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">Form field specifications</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">What each field accepts, when it is checked, and exactly what the error says in the three customer languages. Rules come from the spec's data dictionaries (§6.2), the booking and payment logic (doc 8), the compliance brief (doc 12) and the flows (doc 7). Field names in <span class="mono">mono</span> are the entity attributes the value is stored in. Legend: <span class="req">required</span> <span class="opt">optional</span> <span class="cond">conditional</span>.</p>
+  </header>
+
+  <!-- 00 rules -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+      <p class="ov">00 · Rules that apply to every form</p>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: #4A433D">
+        <li><strong>When:</strong> format checks on blur, required checks on submit, server checks (duplicate slug, sanctions screening, gateway) on response. Never on each keystroke; never while the field is still empty on first visit.</li>
+        <li><strong>Where:</strong> the error sits under its field (DS sheet 02: <span class="mono">aria-describedby</span>, <span class="mono">aria-invalid="true"</span>, <span class="mono">role="alert"</span>) and, on submit with several errors, a summary above the form lists them as links to the fields. Focus moves to the first error.</li>
+        <li><strong>Never:</strong> clear what the person typed, disable the submit button without saying why, use the word "invalid", or red alone (icon + text always).</li>
+        <li><strong>Tone:</strong> say what to do, in the second person, one sentence. Example above a value when one helps.</li>
+        <li><strong>Formats stored:</strong> names as typed (Unicode letters, spaces, hyphens, apostrophes; trimmed); phones E.164 (<span class="mono">+5352413388</span>); dates ISO; money as decimal(10,2) + ISO currency; passports and identity numbers encrypted at rest (spec §8.2).</li>
+        <li><strong>Formats shown:</strong> dates "13 Feb 2027" in EN, "13 feb 2027" in ES, "13 févr. 2027" in FR; phone fields show the example for the visitor's market; <span class="mono">autocomplete</span> attributes on every identity, contact and payment field (<span class="mono">given-name</span>, <span class="mono">family-name</span>, <span class="mono">bday</span>, <span class="mono">email</span>, <span class="mono">tel</span>, <span class="mono">country</span>, <span class="mono">postal-code</span>, <span class="mono">cc-*</span>).</li>
+        <li><strong>Lengths:</strong> a counter appears at 80 % of the limit; limits are hard only where storage or a document demands it.</li>
+        <li><strong>Analytics:</strong> every error fires <span class="mono">form_field_error</span> with <span class="mono">form, field, error_type</span> (sheet <a href="T-Events.dc.html">T-Events</a>).</li>
+      </ul>
+    </div>
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 14px">
+      <p class="ov">Reference rendering · DS sheet 02 text field, error state</p>
+      <div class="demo">
+        <label for="d-email">Email</label>
+        <input id="d-email" type="email" value="margaret.chen@gmail" aria-invalid="true" aria-describedby="d-email-err" autocomplete="email">
+        <p class="e" id="d-email-err" role="alert"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>That email looks incomplete. Check it ends with a domain, like name@gmail.com.</p>
+      </div>
+      <div class="demo">
+        <label for="d-tel">Mobile (with country code)</label>
+        <input id="d-tel" type="tel" value="0151 2345678" aria-invalid="true" aria-describedby="d-tel-err" autocomplete="tel">
+        <p class="e" id="d-tel-err" role="alert"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>Add the country code, for example +49 151 2345678.</p>
+      </div>
+      <p class="cap">Border error-600, icon 16, text 13/18 error-700; the label never turns red (it stays readable); the helper text is replaced by the error, not stacked under it.</p>
+    </div>
+  </section>
+
+  <!-- 01 common error copy -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">01 · Shared error copy · EN / ES / FR</p>
+      <p class="p">One string per error type, reused by every form. <span class="mono">{field}</span> is the visible label in lower case; <span class="mono">{n}</span> a number; <span class="mono">{example}</span> the market-specific example.</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>error_type</th><th>EN</th><th>ES</th><th>FR</th></tr></thead>
+      <tbody>
+        <tr><td class="m">required</td><td>Please fill in {field}.</td><td>Rellena {field}.</td><td>Renseignez {field}.</td></tr>
+        <tr><td class="m">required_choice</td><td>Choose one option to continue.</td><td>Elige una opción para continuar.</td><td>Choisissez une option pour continuer.</td></tr>
+        <tr><td class="m">email_format</td><td>That email looks incomplete. Check it ends with a domain, like name@gmail.com.</td><td>Ese correo parece incompleto. Comprueba que termine en un dominio, como nombre@gmail.com.</td><td>Cet e-mail semble incomplet. Vérifiez qu'il se termine par un domaine, comme nom@gmail.com.</td></tr>
+        <tr><td class="m">phone_format</td><td>Add the country code, for example {example}.</td><td>Añade el prefijo del país, por ejemplo {example}.</td><td>Ajoutez l'indicatif du pays, par exemple {example}.</td></tr>
+        <tr><td class="m">date_format</td><td>Enter a day, month and year, like 13 Feb 2027.</td><td>Escribe día, mes y año, como 13 feb 2027.</td><td>Saisissez le jour, le mois et l'année, comme 13 févr. 2027.</td></tr>
+        <tr><td class="m">date_past</td><td>That date has passed. Pick a date from {date}.</td><td>Esa fecha ya pasó. Elige una a partir del {date}.</td><td>Cette date est passée. Choisissez une date à partir du {date}.</td></tr>
+        <tr><td class="m">lead_time</td><td>We need {n} days to arrange hosts and drivers. The earliest start is {date}.</td><td>Necesitamos {n} días para organizar casas y choferes. La salida más temprana es el {date}.</td><td>Il nous faut {n} jours pour organiser hôtes et chauffeurs. Le départ le plus tôt est le {date}.</td></tr>
+        <tr><td class="m">too_long</td><td>Keep this under {n} characters ({m} now).</td><td>Máximo {n} caracteres (ahora {m}).</td><td>{n} caractères maximum ({m} actuellement).</td></tr>
+        <tr><td class="m">name_chars</td><td>Use letters only, as written in the passport.</td><td>Solo letras, tal como aparece en el pasaporte.</td><td>Lettres uniquement, comme sur le passeport.</td></tr>
+        <tr><td class="m">passport_format</td><td>Passport numbers are 6 to 9 letters and digits, no spaces.</td><td>El número de pasaporte tiene de 6 a 9 letras y cifras, sin espacios.</td><td>Un numéro de passeport comporte 6 à 9 lettres et chiffres, sans espaces.</td></tr>
+        <tr><td class="m">age_band</td><td>Child fares are for ages 2 to 12 on the travel date. {name} will be {age}, so we price them as an adult.</td><td>La tarifa infantil es de 2 a 12 años en la fecha del viaje. {name} tendrá {age}; se cobra como adulto.</td><td>Le tarif enfant vaut de 2 à 12 ans à la date du voyage. {name} aura {age} ans : tarif adulte.</td></tr>
+        <tr><td class="m">consent_required</td><td>We need your agreement here to continue.</td><td>Necesitamos tu conformidad aquí para continuar.</td><td>Votre accord est nécessaire ici pour continuer.</td></tr>
+        <tr><td class="m">signature_mismatch</td><td>Type your name exactly as above: {name}.</td><td>Escribe tu nombre exactamente como arriba: {name}.</td><td>Saisissez votre nom exactement comme ci-dessus : {name}.</td></tr>
+        <tr><td class="m">file_type_size</td><td>Upload a JPG, PNG or PDF up to 10 MB.</td><td>Sube un JPG, PNG o PDF de hasta 10 MB.</td><td>Téléversez un JPG, PNG ou PDF de 10 Mo maximum.</td></tr>
+        <tr><td class="m">server_retry</td><td>We couldn't save that. Your answers are kept; try again in a moment.</td><td>No pudimos guardarlo. Tus respuestas se conservan; inténtalo de nuevo en un momento.</td><td>Impossible d'enregistrer. Vos réponses sont conservées ; réessayez dans un instant.</td></tr>
+        <tr><td class="m">offline</td><td>You're offline. We'll send this when you're back online.</td><td>Estás sin conexión. Lo enviaremos cuando vuelvas a tener red.</td><td>Vous êtes hors ligne. Nous l'enverrons dès le retour du réseau.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 02 Booking -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · <a href="Booking.dc.html">Booking</a> · 5 steps · entity Reservations + Travelers</p>
+      <p class="p">Steps 1–3 are choices (no free text beyond room requests); step 4 is identity and compliance; step 5 is review. The OFAC block appears only when a traveler's nationality is United States (doc 12).</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>Field · <span class="mono">attribute</span></th><th>Input</th><th></th><th>Accepts · validation</th><th>Error (type → copy above, or specific)</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="5">Step 1 · Dates &amp; travelers</td></tr>
+        <tr><td class="f">Departure · <span class="m">start_date</span></td><td>select (listed departures)</td><td><span class="req">required</span></td><td>One of the package's open departures; seats_left ≥ travelers; start ≥ today + minimum lead time (package setting, default 21 days)</td><td class="err"><b>required_choice</b> · seats: "Only {n} seats left on this date for {m} travelers. Pick another date or fewer travelers."</td></tr>
+        <tr><td class="f">Adults · Children · Infants</td><td>counters (DS 02)</td><td><span class="req">required</span></td><td>adults 1–12; children 0–8 (ages 2–12 at travel date); infants 0–2 (&lt; 2); total ≤ group size max; rooms derived</td><td class="err">counter floors and ceilings disable the button with an aria-label reason; no text error</td></tr>
+        <tr><td class="f">Room set-up</td><td>radio: shared double or twin · private room</td><td><span class="req">required</span></td><td>private adds the single supplement; roommate-match checkbox waives it when matched (BR-PR-05)</td><td class="err"><b>required_choice</b></td></tr>
+        <tr><td class="f">Room requests · <span class="m">custom_itinerary_payload.room_notes</span></td><td>textarea</td><td><span class="opt">optional</span></td><td>≤ 500 chars; shown to hosts in Spanish via the desk</td><td class="err"><b>too_long</b></td></tr>
+        <tr class="grp"><td colspan="5">Step 2 · Stays · Step 3 · Insurance &amp; extras</td></tr>
+        <tr><td class="f">Accommodation tier</td><td>radio</td><td><span class="req">required</span></td><td>one tier; price delta shown per person</td><td class="err"><b>required_choice</b></td></tr>
+        <tr><td class="f">Insurance plan</td><td>radiogroup</td><td><span class="req">required</span></td><td>one of the plans, or "I already have cover" which requires the insurer name (≤ 80) and policy number (≤ 40) at T−30 (doc 12: insurance is mandatory to enter Cuba)</td><td class="err"><b>required_choice</b> · own cover: "Add the insurer and policy number before {date} so we can print them on your voucher."</td></tr>
+        <tr><td class="f">Extras</td><td>checkboxes</td><td><span class="opt">optional</span></td><td>priced per person; some are per group (label says which)</td><td class="err">—</td></tr>
+        <tr class="grp"><td colspan="5">Step 4 · Travelers (repeated per traveler; lead traveler first)</td></tr>
+        <tr><td class="f">First and middle names · <span class="m">given_names</span></td><td>text · <span class="m">autocomplete=given-name</span></td><td><span class="req">required</span></td><td>1–60 Unicode letters, spaces, hyphens, apostrophes; as in the passport (prints on voucher and MINTUR summary)</td><td class="err"><b>required</b> · <b>name_chars</b> · <b>too_long</b></td></tr>
+        <tr><td class="f">Last name · <span class="m">family_name</span></td><td>text · <span class="m">family-name</span></td><td><span class="req">required</span></td><td>same rule</td><td class="err"><b>required</b> · <b>name_chars</b></td></tr>
+        <tr><td class="f">Date of birth · <span class="m">date_of_birth</span></td><td>3 fields day · month · year (no picker)</td><td><span class="req">required</span></td><td>valid calendar date; age at travel date decides the fare band (BR-PR-02); lead traveler ≥ 18; a child who turns 13 before travel re-prices (EC-PR-01)</td><td class="err"><b>date_format</b> · <b>age_band</b> · lead under 18: "The lead traveler must be 18 or over on the travel date."</td></tr>
+        <tr><td class="f">Nationality (passport) · <span class="m">nationality</span></td><td>select ISO 3166, grouped: common first</td><td><span class="req">required</span></td><td>"United States" reveals the OFAC block for that traveler and sets booking flag <span class="m">ofac_required</span></td><td class="err"><b>required_choice</b></td></tr>
+        <tr><td class="f">Passport number · <span class="m">passport_number</span></td><td>text, uppercase on blur</td><td><span class="cond">optional now · required at T−30</span></td><td>6–9 alphanumerics, no spaces; stored encrypted; expiry date asked at T−30 and must be ≥ 6 months after return</td><td class="err"><b>passport_format</b> · at T−30: "We need every passport number 30 days before departure to issue the tourist cards."</td></tr>
+        <tr><td class="f">Email (lead) · <span class="m">users.email</span></td><td>email · <span class="m">autocomplete=email</span></td><td><span class="req">required</span></td><td>RFC 5322 basic + domain has MX; lower-cased; becomes the passwordless sign-in identity (spec §3.5)</td><td class="err"><b>email_format</b> · "This email already has an account; we'll send a sign-in code to continue." (not an error: info banner)</td></tr>
+        <tr><td class="f">Mobile (lead) · <span class="m">phone_e164</span></td><td>tel · country prefix select + national number</td><td><span class="req">required</span></td><td>E.164, 8–15 digits; must receive SMS (check-ins, reminders); mobile ranges only where the country publishes them</td><td class="err"><b>phone_format</b> with the market example</td></tr>
+        <tr><td class="f">Emergency contact at home · <span class="m">emergency_contact</span></td><td>name (text) + phone (tel)</td><td><span class="req">required</span></td><td>name 1–80; phone E.164, must differ from the lead's own number</td><td class="err"><b>required</b> · same number: "Use a different number from your own so we can reach someone else."</td></tr>
+        <tr><td class="f">Your travel category · <span class="m">ofac_category</span></td><td>select, 12 general licences</td><td><span class="cond">US travelers</span></td><td>one of the 12 OFAC general licence categories; "Support for the Cuban People" preselected with its definition shown</td><td class="err"><b>required_choice</b></td></tr>
+        <tr><td class="f">Signature · <span class="m">ofac_affidavit.signature</span></td><td>text</td><td><span class="cond">US travelers</span></td><td>must equal given names + last name of this traveler (case-insensitive, accents folded); timestamp and IP stored 5 years (doc 12)</td><td class="err"><b>signature_mismatch</b></td></tr>
+        <tr><td class="f">Certification checkbox</td><td>checkbox</td><td><span class="cond">US travelers</span></td><td>unchecked blocks Continue; the full statement opens in a sheet</td><td class="err"><b>consent_required</b></td></tr>
+        <tr><td class="f">Anything your hosts should know · <span class="m">traveler_notes</span></td><td>textarea</td><td><span class="opt">optional</span></td><td>≤ 1000 chars; dietary, mobility, allergies; translated by the desk for hosts</td><td class="err"><b>too_long</b></td></tr>
+        <tr><td class="f">Briefing &amp; daily check-in opt-in</td><td>checkbox</td><td><span class="opt">optional · default on</span></td><td>stores <span class="m">comms.pretrip_briefing</span>, <span class="m">comms.daily_checkin</span></td><td class="err">—</td></tr>
+        <tr><td class="f">Terms, cancellation, privacy</td><td>checkbox</td><td><span class="req">required</span></td><td>links open the Legal page sections; version id stored with the booking</td><td class="err"><b>consent_required</b></td></tr>
+        <tr><td class="f">Insurance &amp; cash acknowledgement</td><td>checkbox</td><td><span class="req">required</span></td><td>acknowledges mandatory insurance and that cards do not work in Cuba</td><td class="err"><b>consent_required</b></td></tr>
+        <tr class="grp"><td colspan="5">Step 5 · Review &amp; send</td></tr>
+        <tr><td class="f">Send request</td><td>button</td><td>—</td><td>server: price re-check (stale price → show the new total and ask to confirm, doc 7 step 10), availability re-check, sanctions screening of names (doc 12)</td><td class="err">stale price: "The price changed while you were booking: € {old} → € {new}. Continue at the new price?" · screening: "We need a moment to review this booking; a specialist will email you within 24 hours." (not an error page)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 03 Custom + 04 Auth -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+        <p class="ov">03 · <a href="Custom.dc.html">Custom builder</a> · steps 1 and 5 carry the inputs</p>
+      </div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>Field</th><th></th><th>Accepts · validation</th><th>Error</th></tr></thead>
+        <tbody>
+          <tr><td class="f">Arrival in Cuba</td><td><span class="req">required</span></td><td>date ≥ today + 21 days (custom trips need suppliers across provinces); ≤ 18 months ahead</td><td class="err"><b>date_format</b> · <b>lead_time</b> (n = 21)</td></tr>
+          <tr><td class="f">Nights in total</td><td><span class="req">required</span></td><td>counter 3–30</td><td class="err">counter bounds only</td></tr>
+          <tr><td class="f">Adults · Children 2–12</td><td><span class="req">required</span></td><td>adults 1–12, children 0–8; over 12 travelers → "Groups over 12: talk to a specialist" link replaces Continue</td><td class="err">—</td></tr>
+          <tr><td class="f">Route (provinces in order)</td><td><span class="req">required</span></td><td>≥ 1 province; nights placed = nights total; a leg over 600 km shows the flight note (info, not an error); limited provinces allowed with the badge visible</td><td class="err">"Add at least one province." · nights: "{n} nights still to place" (amber status, blocks Continue)</td></tr>
+          <tr><td class="f">Transport · stays · activities · guide</td><td><span class="req">required</span></td><td>one radio per step; activities optional; step-free checkbox narrows stays and shows where it isn't possible</td><td class="err"><b>required_choice</b></td></tr>
+          <tr><td class="f">Your name</td><td><span class="req">required</span></td><td>1–80 letters, spaces, hyphens, apostrophes</td><td class="err"><b>required</b> · <b>name_chars</b></td></tr>
+          <tr><td class="f">Email</td><td><span class="req">required</span></td><td>as Booking; creates or matches the guest account on submit (spec §3.5)</td><td class="err"><b>email_format</b></td></tr>
+          <tr><td class="f">WhatsApp or phone</td><td><span class="req">required</span></td><td>E.164</td><td class="err"><b>phone_format</b></td></tr>
+          <tr><td class="f">Nationality</td><td><span class="req">required</span></td><td>select; US shows the OFAC note on the summary (no affidavit yet: that comes with the booking)</td><td class="err"><b>required_choice</b></td></tr>
+          <tr><td class="f">Proposal language</td><td><span class="req">required</span></td><td>en · es · fr (de · it listed as "proposal in English, trip notes translated")</td><td class="err">—</td></tr>
+          <tr><td class="f">Budget per person, land only</td><td><span class="opt">optional</span></td><td>integer ≥ 300 in the selected currency; below the estimate low end shows an info line, not an error</td><td class="err">"Enter a whole number, like 1800."</td></tr>
+          <tr><td class="f">Must-haves, no-gos</td><td><span class="opt">optional</span></td><td>≤ 1500 chars</td><td class="err"><b>too_long</b></td></tr>
+          <tr><td class="f">Keep my draft 90 days</td><td><span class="req">required</span></td><td>consent to store the draft and contact details; version id stored</td><td class="err"><b>consent_required</b></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <div class="sheet" style="display: flex; flex-direction: column">
+        <div style="padding: 24px 24px 12px"><p class="ov">04 · <a href="Auth.dc.html">Sign in</a> · passwordless</p></div>
+        <div style="overflow-x: auto"><table class="tbl">
+          <thead><tr><th>Field</th><th>Accepts · validation</th><th>Error</th></tr></thead>
+          <tbody>
+            <tr><td class="f">Email</td><td>as Booking; unknown address on sign-in still "sends" a code (no account enumeration, doc 12)</td><td class="err"><b>email_format</b></td></tr>
+            <tr><td class="f">Code</td><td>6 digits; valid 10 min; 5 attempts then a new code; one-time; paste accepted</td><td class="err">"That code didn't match. {n} tries left." · expired: "This code has expired. We've sent a new one."</td></tr>
+            <tr><td class="f">Your name (create)</td><td>1–80 letters</td><td class="err"><b>required</b></td></tr>
+            <tr><td class="f">Language</td><td>en · es · fr; sets <span class="m">users.locale</span></td><td class="err">—</td></tr>
+            <tr><td class="f">Terms &amp; privacy</td><td>required checkbox; newsletter optional, default off (GDPR)</td><td class="err"><b>consent_required</b></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <p class="ov">Market examples for phone_format</p>
+        <div style="overflow-x: auto"><table class="tbl">
+          <tbody>
+            <tr><td class="f">DE</td><td class="m">+49 151 2345678</td><td class="f">FR</td><td class="m">+33 6 12 34 56 78</td></tr>
+            <tr><td class="f">ES</td><td class="m">+34 612 345 678</td><td class="f">GB</td><td class="m">+44 7700 900123</td></tr>
+            <tr><td class="f">CA</td><td class="m">+1 416 555 0123</td><td class="f">US</td><td class="m">+1 212 555 0123</td></tr>
+            <tr><td class="f">CU</td><td class="m">+53 5 241 3388</td><td class="f">other</td><td class="m">+{code} …</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 Payment -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">05 · <a href="Payment.dc.html">Payment</a> · inside the 48-hour window · entity Payments</p>
+      <p class="p">Card fields are the gateway's hosted fields (PCI SAQ-A, spec §7.1): the page never sees a card number. Our side maps the gateway's error codes to the copy below and runs the pre-checks that keep US-nexus failures out of the gateway (doc 8 §7).</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>Field</th><th>Input</th><th></th><th>Accepts · validation</th><th>Error</th></tr></thead>
+      <tbody>
+        <tr><td class="f">Plan</td><td>radio: deposit 20 % · pay in full</td><td><span class="req">required</span></td><td>deposit allowed only if departure &gt; 60 days (BR-DP-03); otherwise full only, the deposit card is hidden with the reason</td><td class="err">—</td></tr>
+        <tr><td class="f">Method</td><td>radio: SEPA · open banking · card · bank transfer</td><td><span class="req">required</span></td><td>rails come from the feature flags; a rail turned off disappears, open invoices stay payable</td><td class="err"><b>required_choice</b></td></tr>
+        <tr><td class="f">Your bank</td><td>select (open banking)</td><td><span class="cond">open banking</span></td><td>provider list filtered by billing country</td><td class="err"><b>required_choice</b></td></tr>
+        <tr><td class="f">Proof of transfer</td><td>file</td><td><span class="opt">optional</span></td><td>JPG, PNG, PDF ≤ 10 MB; lands in <a href="A-Payments.dc.html">A-Payments</a> pending proofs</td><td class="err"><b>file_type_size</b></td></tr>
+        <tr><td class="f">Card number · expiry · security code · name</td><td>gateway hosted fields · <span class="m">cc-number cc-exp cc-csc cc-name</span></td><td><span class="cond">card</span></td><td>Luhn 13–19 digits, expiry ≥ this month, CVC 3–4; BIN check before submit: US-issued cards are refused up front (doc 8 §7); 3-D Secure always</td><td class="err">"Check the card number." · "This card has expired." · "The 3-digit code is on the back (4 on the front for Amex)." · US BIN: "Cards issued by US banks cannot pay for travel to Cuba. Use a non-US card or bank transfer; see the sanctions notice."</td></tr>
+        <tr><td class="f">Billing country · postal code</td><td>select · text · <span class="m">country postal-code</span></td><td><span class="cond">card</span></td><td>postal code format by country (DE 5 digits, FR 5, ES 5, GB alphanumeric 5–8, CA A1A 1A1); no address line is collected</td><td class="err">"Enter the postal code as written on your card statement, like 10115."</td></tr>
+        <tr><td class="f">Save this card</td><td>checkbox</td><td><span class="opt">optional</span></td><td>tokenised by the gateway for the balance on {date}; mandate text shown; reminders 7, 3, 1 day before (BR-DP-02, BR-DP-05)</td><td class="err">—</td></tr>
+        <tr><td class="f">Company name · VAT / tax ID</td><td>text · text</td><td><span class="opt">optional</span></td><td>company ≤ 120; VAT: country prefix + 8–12 alphanumerics (EU format regex, VIES check async); prints on the invoice</td><td class="err">"That doesn't look like a VAT number. Use the country prefix, like DE123456789."</td></tr>
+        <tr><td class="f">Sanctions &amp; cancellation acknowledgement</td><td>checkbox</td><td><span class="req">required</span></td><td>version id stored on the payment</td><td class="err"><b>consent_required</b></td></tr>
+        <tr><td class="f">Gateway results</td><td>—</td><td>—</td><td>declined, 3DS failed, processor unavailable, duplicate, currency mismatch (doc 7 step 12)</td><td class="err">declined: "Your bank declined the payment. Try another card or bank transfer; your hosts stay held until {time}." · 3DS: "The bank's verification didn't complete. Try again or use another method." · processor: "Our card processor is unavailable. Bank transfer works now; the window is extended by 72 h." (EC-DP-02) · duplicate: "This deposit was already paid at {time}; nothing was charged twice."</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 06 Join + 07 Package editor -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+        <p class="ov">06 · <a href="Join.dc.html">Únete a nuestra red</a> · Spanish only · entity SupplierProfiles</p>
+        <p class="p">Error copy is Spanish only; the desk reads the record in Spanish. Submission creates <span class="mono">verification_status = PENDING_AUDIT</span> (spec §3.4).</p>
+      </div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>Campo · <span class="mono">attribute</span></th><th></th><th>Acepta · validación</th><th>Error (ES)</th></tr></thead>
+        <tbody>
+          <tr><td class="f">Categoría · <span class="m">category</span></td><td><span class="req">required</span></td><td>guía · chofer (porteador privado) · arrendador · centro cultural o gastronómico; decides the credential type below</td><td class="err">"Elige la categoría que mejor describe tu actividad."</td></tr>
+          <tr><td class="f">Nombre · Apellidos</td><td><span class="req">required</span></td><td>1–60 letras; como en el carnet</td><td class="err"><b>required</b> · <b>name_chars</b></td></tr>
+          <tr><td class="f">Carnet de identidad · <span class="m">national_id</span></td><td><span class="req">required</span></td><td>11 cifras; las seis primeras son la fecha de nacimiento AAMMDD y deben formar una fecha válida; cifrado en reposo</td><td class="err">"El carnet tiene 11 cifras y empieza por tu fecha de nacimiento (AAMMDD)."</td></tr>
+          <tr><td class="f">Teléfono móvil · <span class="m">primary_phone</span></td><td><span class="req">required</span></td><td>+53 y 8 cifras (móvil empieza por 5); recibe el código de acceso y las ofertas por SMS</td><td class="err">"Escribe un móvil cubano de 8 cifras, por ejemplo +53 5 241 3388."</td></tr>
+          <tr><td class="f">WhatsApp (si es otro número)</td><td><span class="opt">optional</span></td><td>E.164, cualquier país</td><td class="err"><b>phone_format</b></td></tr>
+          <tr><td class="f">Municipios donde operas · <span class="m">provinces_active</span></td><td><span class="req">required</span></td><td>≥ 1 municipio (lista por provincia); se guarda la provincia</td><td class="err">"Marca al menos un municipio."</td></tr>
+          <tr><td class="f">Idiomas que hablas</td><td><span class="req">required</span></td><td>≥ 1; español preseleccionado</td><td class="err">"Marca al menos un idioma."</td></tr>
+          <tr><td class="f">Número de la credencial · <span class="m">rtn_license_number</span></td><td><span class="req">required</span></td><td>por categoría: credencial Formatur (guías), licencia operativa de transporte (choferes), inscripción RTN (arrendadores y centros); 6–20 caracteres; único en el sistema</td><td class="err">"Escribe el número tal como aparece en el documento." · duplicado: "Ya existe un registro con esta credencial. Si es tuyo, entra con tu móvil."</td></tr>
+          <tr><td class="f">Fecha de vencimiento · <span class="m">credential_expires_at</span></td><td><span class="req">required</span></td><td>fecha ≥ hoy; si vence en menos de 30 días se acepta con aviso (pausa automática, spec §4.5)</td><td class="err"><b>date_format</b> · vencida: "Esta credencial ya venció. Renuévala antes de registrarte." · aviso: "Vence en menos de 30 días: podrás registrarte, pero no recibirás servicios hasta renovarla."</td></tr>
+          <tr><td class="f">Credencial (foto o PDF) · <span class="m">credential_document_url</span></td><td><span class="req">required</span></td><td>JPG, PNG o PDF ≤ 10 MB; lado largo ≥ 1500 px (captura en alta resolución, §3.4); se sube cifrada; la cámara del móvil abre directo</td><td class="err"><b>file_type_size</b> · resolución: "La foto se ve pequeña o borrosa. Vuelve a tomarla con buena luz, con todo el documento dentro del cuadro."</td></tr>
+          <tr><td class="f">Datos del vehículo</td><td><span class="cond">choferes</span></td><td>marca, modelo, año (1950–hoy), chapa (6–7 caracteres), aire acondicionado, plazas 2–16 → <span class="m">vehicle_details</span></td><td class="err">"Escribe la chapa tal como está en el vehículo."</td></tr>
+          <tr><td class="f">Autorización · Declaración</td><td><span class="req">required</span></td><td>dos casillas; versión del texto guardada</td><td class="err">"Necesitamos tu conformidad para continuar."</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+        <p class="ov">07 · <a href="A-Package-Edit.dc.html">Package editor</a> · admin · EN · entity Packages</p>
+        <p class="p">Admin errors can be terse and name the rule; thresholds come from <a href="A-Settings.dc.html">Settings › Thresholds</a>.</p>
+      </div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>Field</th><th></th><th>Accepts · validation</th><th>Error</th></tr></thead>
+        <tbody>
+          <tr><td class="f">Name · EN</td><td><span class="req">required</span></td><td>3–80 chars; ES and FR names required before publish</td><td class="err">"Add the name in every supported language before publishing."</td></tr>
+          <tr><td class="f">Slug</td><td><span class="req">required</span></td><td>a–z, 0–9, hyphens; 3–60; unique; auto from the name, editable; changing a live slug creates a redirect</td><td class="err">"This slug is already used by '{package}'. Try {suggestion}."</td></tr>
+          <tr><td class="f">Type · Duration · Booking model · Group size</td><td><span class="req">required</span></td><td>type from the catalogue enum; nights 1–30; request or instant (instant only if the flag is on); group min ≤ max, 1–16</td><td class="err">"Minimum group can't exceed the maximum."</td></tr>
+          <tr><td class="f">Short description · EN</td><td><span class="req">required</span></td><td>≤ 160 chars (also the default meta description)</td><td class="err"><b>too_long</b></td></tr>
+          <tr><td class="f">Tax classification</td><td><span class="req">required</span></td><td>ecotourism / specialised (counts to the ratio) or general; change after publish needs Super Admin (§4.9.2)</td><td class="err">"Pick a classification; it drives the MINTUR ratio."</td></tr>
+          <tr><td class="f">Effective from · Minimum lead time · Capacity per week</td><td><span class="req">required</span></td><td>date; integer days ≥ 0 (default 21); integer ≥ 0</td><td class="err">"Lead time is in whole days."</td></tr>
+          <tr><td class="f">Supplier rates (per service)</td><td><span class="req">required</span></td><td>one supplier per service with a rate in EUR; supplier must be VERIFIED; computed margin ≥ 20 % or the publish button becomes "Send to Finance review"; discount &gt; 10 % needs Super Admin</td><td class="err">"Margin is {m} %, below the 20 % floor. Save as draft or send to Finance." · "{supplier} is not verified; pick another or wait for the audit."</td></tr>
+          <tr><td class="f">Seasonal pricing</td><td><span class="req">required</span></td><td>seasons must cover every departure date without overlap; a departure spanning two seasons prices each night at its season (BR-PR-03)</td><td class="err">"Dates {a}–{b} have no season price." · "Seasons overlap on {date}."</td></tr>
+          <tr><td class="f">Cancellation policy · Deposit &amp; schedule</td><td><span class="req">required</span></td><td>from the policy library (doc 8 §4); one free date change rule checkbox</td><td class="err"><b>required_choice</b></td></tr>
+          <tr><td class="f">Included · Not included</td><td><span class="req">required</span></td><td>one item per line, ≤ 20 lines each, ≤ 120 chars per line</td><td class="err">"Keep each line under 120 characters."</td></tr>
+          <tr><td class="f">Cuba-specific notes</td><td><span class="req">required</span></td><td>≤ 600 chars; shown before checkout (power, fuel, roads)</td><td class="err"><b>too_long</b></td></tr>
+          <tr><td class="f">Title tag · Meta description</td><td><span class="opt">optional</span></td><td>≤ 60 · ≤ 160; counters always visible</td><td class="err"><b>too_long</b></td></tr>
+          <tr><td class="f">Media</td><td><span class="req">required</span></td><td>≥ 3 photos with alt text in EN before publish; JPG/WebP/AVIF ≤ 4 MB; consent flag for photos with people (DS sheet 01, 07)</td><td class="err">"Every photo needs alt text before publishing." · "Mark whether the people in this photo consented."</td></tr>
+          <tr><td class="f">Publish · Schedule</td><td>—</td><td>all required fields in all locales; ops feasibility, finance and compliance checks green (editor header)</td><td class="err">blocked publish lists the failing checks with links to the tab</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

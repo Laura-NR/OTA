@@ -36,7 +36,7 @@ export function ReservationCreateForm() {
           tourismCategory: form.get('tourismCategory') || undefined,
         }),
       });
-      router.push(`/reservations/${reservation.id}`);
+      router.push(`/bookings/${reservation.id}`);
       router.refresh();
     } catch (createError) {
       setError(

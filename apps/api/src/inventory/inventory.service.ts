@@ -15,10 +15,12 @@ import type {
 import { PricingRuleKind, calculatePrice, type PricingRule } from '@ota/domain';
 import type { ObjectStorage } from '@ota/storage';
 import type {
+  CatalogItemDto,
   CreateInventoryItemRequest,
   CreatePricingRuleRequest,
   InventoryItemDto,
   InventoryMediaDto,
+  ListCatalogQuery,
   ListInventoryQuery,
   PriceQuoteDto,
   PricingRuleDto,
@@ -136,6 +138,11 @@ export class InventoryService {
       orderBy: { createdAt: 'asc' },
     });
     return items.map(toItemDto);
+  }
+
+  async listCatalog(filters: ListCatalogQuery): Promise<CatalogItemDto[]> {
+    const items = await this.list({ ...filters, active: true });
+    return items.map(({ supplierId: _supplierId, ...item }) => item);
   }
 
   async getById(id: string): Promise<InventoryItemDto> {

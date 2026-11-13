@@ -17,7 +17,7 @@ pnpm install
 pnpm build                 # @ota/config must be built for the tool to resolve
 pnpm create:tenant --name "Viñales Eco Travel" \
   --license MINTUR-2027-0001 \
-  --primary "#0f766e" --palette ecoGreen \
+  --primary "#0f766e" \
   --locales es,en,fr \
   --account-name "Viñales Eco Travel S.L." --bank "Banco X" \
   --iban "ES00 0000 0000 0000 0000 0000" --bic "XXXXES00"
@@ -39,7 +39,8 @@ Everything agency-specific belongs in `/tenant/` or `.env`:
 
 - **`tenant/agency.config.json`** — `tenantId`, branding (including the MINTUR
   `licenseNumber` injected into every generated document), `primaryLocale` /
-  `supportedLocales`, `theme` (palette + radius), `features.*` flags,
+  `supportedLocales`, `theme` (palette, radius scale and optional primitive
+  `tokens` overrides), `features.*` flags,
   `destinations.geographyType`, `emergencyContacts` (duty-of-care numbers on
   vouchers and work orders), and `payments.bankTransfer` (the agency's account
   for the primary wire-transfer rail: `accountName`, `bankName`, `iban`, `bic`,
@@ -49,9 +50,14 @@ Everything agency-specific belongs in `/tenant/` or `.env`:
 - **`tenant/assets/`** — logos, favicons, illustrations, empty-state art.
 - **`.env`** — secrets and service endpoints.
 
-`packages/theming` turns the manifest's palette into `--ota-*` CSS variables
-consumed by `packages/ui` and both web apps, so a rebrand needs no component
-edits. Copy lives in `packages/i18n` (and may be overridden per fork), never in
+`packages/theming` compiles the manifest into the design tokens (ADR 0006):
+`branding.primaryColor` becomes the action colour and derives the rest of the
+primary scale, `theme.borderRadius` scales the radii, and `theme.tokens` may
+override any primitive token by name (for example `"color-secondary-600"`).
+Alias and component tokens follow the primitives and are not overridable. The
+result is a set of CSS custom properties on `<html>`, consumed by `packages/ui`
+and both web apps, so a rebrand needs no component edits. Fonts are files in
+`tenant/assets/fonts/`. Copy lives in `packages/i18n` (and may be overridden per fork), never in
 components.
 
 ## 3. Keep up with upstream

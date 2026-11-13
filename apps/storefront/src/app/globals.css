@@ -3,11 +3,107 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-border;
+  body {
+    @apply bg-page font-body text-body text-default;
+  }
+}
+
+/*
+ * Larger text (Account board): the root goes from the browser's size to
+ * 112.5 % of it, so the 16 px body reads 18 px and every rem-sized type and
+ * space scales with it, on top of the reader's own browser setting.
+ */
+html[data-text-size='large'] {
+  font-size: 112.5%;
+}
+
+/*
+ * Low-bandwidth mode (DS 05): system faces in place of the brand fonts, which
+ * are then never downloaded. The attribute selector outranks the font
+ * loader's class on the same element.
+ */
+html[data-bandwidth='low'] {
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body: system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+}
+
+/*
+ * Reduce motion (Account board): the same override the system setting gets in
+ * `@ota/ui/styles.css`, for readers who set it here instead.
+ */
+html[data-motion='reduce'] {
+  --motion-fast: 0ms;
+  --motion-base: 0ms;
+  --motion-slow: 0ms;
+  scroll-behavior: auto;
+}
+
+html[data-motion='reduce'] *,
+html[data-motion='reduce'] ::before,
+html[data-motion='reduce'] ::after {
+  animation-duration: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0ms !important;
+}
+
+/*
+ * High contrast (Account board: "Darker text and borders"), switched here or
+ * by the system setting. Secondary and muted text go two neutral steps darker
+ * and borders reach the 3:1 non-text contrast; the tenant's palette still
+ * supplies every step. `html:root` outranks the defaults' `:root` whatever
+ * order the stylesheets load in.
+ */
+html[data-contrast='more'] {
+  --color-text-secondary: var(--color-neutral-900);
+  --color-text-muted: var(--color-neutral-700);
+  --color-border: var(--color-neutral-500);
+  --color-border-input: var(--color-neutral-700);
+}
+
+@media (prefers-contrast: more) {
+  html:root {
+    --color-text-secondary: var(--color-neutral-900);
+    --color-text-muted: var(--color-neutral-700);
+    --color-border: var(--color-neutral-500);
+    --color-border-input: var(--color-neutral-700);
+  }
+}
+
+/*
+ * A focused element (or an anchor) is never scrolled under the sticky header
+ * or, below md, the fixed bottom bar (WCAG 2.4.11): the root scroller keeps
+ * their heights clear. A section's own `scroll-mt-*` adds to this. A sticky
+ * row under the header (a destination's "On this page") marks itself with
+ * `data-sticky-subnav` and is kept clear too (48 px plus its borders); the
+ * Packages compare tray sets its measured height as `--fixed-tray`, and the
+ * cookie banner as `--cookie-banner`, which also pads the page's end so its
+ * last content can scroll clear of the banner.
+ */
+html {
+  scroll-padding-top: 4rem;
+  scroll-padding-bottom: calc(var(--fixed-tray, 0px) + var(--cookie-banner, 0px));
+  padding-bottom: var(--cookie-banner, 0px);
+}
+
+html:has([data-sticky-subnav]) {
+  scroll-padding-top: calc(7rem + 2px);
+}
+
+@media (min-width: 1024px) {
+  html {
+    scroll-padding-top: 72px;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html:has([data-sticky-subnav]) {
+    scroll-padding-top: calc(72px + 3rem + 2px);
+  }
+}
+
+@media (max-width: 767.98px) {
+  html {
+    scroll-padding-bottom: calc(
+      4rem + var(--fixed-tray, 0px) + var(--cookie-banner, 0px)
+    );
   }
 }

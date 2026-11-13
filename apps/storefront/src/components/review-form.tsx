@@ -6,28 +6,29 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
 import { useRouter } from '@/i18n/navigation';
 
 export interface ReviewFormProps {
   reservationId: string;
+  bookingCode: string;
   review: MyReviewDto | null;
 }
 
 /** Traveler CSAT review, shown once the trip is completed (spec §4.9.4). */
-export function ReviewForm({ reservationId, review }: ReviewFormProps) {
+export function ReviewForm({ reservationId, bookingCode, review }: ReviewFormProps) {
   const t = useTranslations('review');
+  const { track } = useTelemetry();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (review) {
     return (
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-body-sm">
         <p className="font-medium">{t('yourRating')}</p>
         <p>{t('stars', { count: review.rating })}</p>
-        {review.comment ? (
-          <p className="text-muted-foreground">{review.comment}</p>
-        ) : null}
+        {review.comment ? <p className="text-muted">{review.comment}</p> : null}
       </div>
     );
   }
@@ -51,6 +52,10 @@ export function ReviewForm({ reservationId, review }: ReviewFormProps) {
       if (!response.ok) {
         throw new Error(t('error'));
       }
+      track('csat_submitted', {
+        booking_code: bookingCode,
+        score: Number(form.get('rating')),
+      });
       element.reset();
       router.refresh();
     } catch (submitError) {

@@ -1,29 +1,59 @@
+import { OPS_TIME_ZONE, hasConfirmation } from '@ota/domain';
 import { DEFAULT_LOCALE } from '@ota/i18n';
-import type { MyReservationDetailDto } from '@ota/schemas';
-import {
-  Alert,
-  Badge,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@ota/ui';
-import { getLocale, getTranslations } from 'next-intl/server';
+import type {
+  MeDisruptionDto,
+  MyEventRequestDto,
+  MyReservationDetailDto,
+  PaymentScheduleDto,
+  ReservationOfacDto,
+} from '@ota/schemas';
+import { Alert, Badge, buttonClassName, Icon, ResponsiveTable } from '@ota/ui';
+import type { Metadata } from 'next';
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 
-import { CheckoutButton } from '@/components/checkout-button';
+import { AccountShell } from '@/components/account/account-shell';
+import { DisruptionChoice } from '@/components/account/disruption-choice';
+import { ApproxPrice } from '@/components/currency/price';
+import { MyEventRequests } from '@/components/events/my-event-requests';
+import { OfacCertification } from '@/components/account/ofac-certification';
+import { PaymentSchedule } from '@/components/account/payment-schedule';
+import { ProviderProgress } from '@/components/account/provider-progress';
+import { TripProgress } from '@/components/account/trip-progress';
 import { MessageThread } from '@/components/message-thread';
+import { OfflineKitCard } from '@/components/offline/offline-kit-card';
 import { ReviewForm } from '@/components/review-form';
+import { TrackEvent } from '@/components/telemetry/track-event';
+import { TravelerStatusBadge } from '@/components/traveler-status-badge';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
+import { formatMoney, plainSpaces } from '@/lib/format';
+import { getTenantConfig } from '@/lib/tenant';
 
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('account');
+  return { title: t('tripTitle') };
+}
+
+/** While the desk confirms the trip with its providers. */
+const CONFIRMING: readonly string[] = [
+  'ITINERARY_SUBMITTED',
+  'DISPATCH_IN_PROGRESS',
+  'ASSEMBLY_AND_ESCALATION',
+  'ACTION_REQUIRED',
+];
+
+/**
+ * One trip in the Account frame: its progress in the traveler's words, where
+ * the provider requests stand while the desk confirms it, the link to the
+ * confirmation once the first payment has confirmed it, the US
+ * travel-category certification when a traveler needs it (M3), the payment
+ * step when it is due (locked until every US traveler has certified), the
+ * itinerary, the documents with the offline kit that keeps them on the
+ * device, the review once completed, and the thread with
+ * operations (`#messages`). A disruption's options (M8) lead the page while the
+ * case is open (`#disruption-options`, the E-Options link).
+ */
 export default async function AccountReservationPage({
   params,
 }: {
@@ -43,140 +73,309 @@ export default async function AccountReservationPage({
     notFound();
   }
 
-  const t = await getTranslations('account');
-  const tc = await getTranslations('checkout');
-  const trv = await getTranslations('review');
-  const tr = await getTranslations('status.reservation');
-  const tsi = await getTranslations('status.serviceItem');
-  const tst = await getTranslations('status.serviceType');
-  const td = await getTranslations('status.document');
+  const [t, tc, trv, tsi, tst, td, tdo, format, locale] = await Promise.all([
+    getTranslations('account'),
+    getTranslations('pages.common'),
+    getTranslations('review'),
+    getTranslations('status.serviceItem'),
+    getTranslations('status.serviceType'),
+    getTranslations('status.document'),
+    getTranslations('disruptionOptions'),
+    getFormatter(),
+    getLocale(),
+  ]);
+  const tenant = getTenantConfig();
+  const [ofac, schedule, disruptions, eventRequests] = await Promise.all([
+    apiFetch<ReservationOfacDto>(`/me/reservations/${id}/ofac?locale=${locale}`).catch(
+      () => null,
+    ),
+    apiFetch<PaymentScheduleDto>(`/me/reservations/${id}/schedule`).catch(() => null),
+    apiFetch<MeDisruptionDto[]>(`/me/disruptions?reservationId=${id}`).catch(() => []),
+    apiFetch<MyEventRequestDto[]>('/me/event-requests').catch(() => []),
+  ]);
+  const tripEventRequests = eventRequests.filter(
+    (request) => request.reservationId === id,
+  );
+  const ofacRequired = ofac?.travelers.some((traveler) => traveler.required) ?? false;
+  const ofacLocked = (ofac?.missing ?? 0) > 0;
+  const confirmed = hasConfirmation(reservation.status, Number(schedule?.paid ?? 0));
+  const card = 'flex flex-col gap-4 rounded-lg border bg-surface p-6';
+  const when = (value: string) =>
+    format.dateTime(new Date(value), {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-12">
-      <div className="flex flex-wrap items-center gap-3">
+    <AccountShell
+      current="trips"
+      name={session.user.name ?? null}
+      email={session.user.email}
+      counts={{}}
+      emergency={tenant.emergencyContacts[0] ?? null}
+    >
+      <TrackEvent
+        event="booking_status_viewed"
+        params={{ booking_code: reservation.bookingCode, status: reservation.status }}
+      />
+      <header className="flex flex-col gap-3">
         <Link
-          href="/account"
-          className="text-sm text-muted-foreground hover:text-foreground"
+          href="/account?tab=trips"
+          className="self-start text-body-sm text-primary-600 underline underline-offset-[3px]"
         >
           ← {t('back')}
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {reservation.bookingCode}
-        </h1>
-        <Badge variant="secondary">{tr(reservation.status)}</Badge>
-      </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-mono text-h1-compact text-default">
+            {reservation.bookingCode}
+          </h1>
+          <TravelerStatusBadge status={reservation.status} />
+        </div>
+        <p className="text-body text-secondary">
+          {format.dateTimeRange(
+            new Date(reservation.startDate),
+            new Date(reservation.endDate),
+            {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            },
+          )}{' '}
+          · {formatMoney(reservation.totalAmount, reservation.totalCurrency, locale)}{' '}
+          <ApproxPrice
+            amount={reservation.totalAmount}
+            currency={reservation.totalCurrency}
+            lock={schedule?.rateLock ?? null}
+          />
+        </p>
+      </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('booking')}</CardTitle>
-          <CardDescription>
-            {new Date(reservation.startDate).toLocaleDateString()} →{' '}
-            {new Date(reservation.endDate).toLocaleDateString()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm">
-          {reservation.totalCurrency} {Number(reservation.totalAmount).toFixed(2)}
-        </CardContent>
-      </Card>
+      {disruptions.map((offer) => {
+        // The deadline in the agency's time, as E-Options words it.
+        const deadline = offer.offerDeadline
+          ? plainSpaces(
+              format.dateTime(new Date(offer.offerDeadline), {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: OPS_TIME_ZONE,
+                timeZoneName: 'short',
+              }),
+            )
+          : '';
+        const chosenKey = offer.effectiveChoice?.key ?? null;
+        return (
+          <section
+            key={offer.id}
+            id="disruption-options"
+            aria-labelledby={`disruption-${offer.id}`}
+            className="flex scroll-mt-8 flex-col gap-4 rounded-lg border border-warning-500 bg-surface p-6"
+          >
+            <div className="flex flex-col gap-1">
+              <p className="text-overline uppercase text-warning-700">
+                {tdo('overline', { reference: offer.reference })}
+              </p>
+              <h2 id={`disruption-${offer.id}`} className="text-h4 text-default">
+                {offer.title}
+              </h2>
+              <p className="text-body text-secondary">{offer.summary}</p>
+            </div>
+            {offer.offerState === 'AWAITING' ? (
+              <>
+                <p className="text-body font-semibold">{tdo('choose', { deadline })}</p>
+                <DisruptionChoice
+                  offerId={offer.id}
+                  options={offer.options}
+                  defaultKey={offer.defaultOptionKey}
+                />
+                <p className="text-body-sm text-secondary">
+                  {tdo('silence', { deadline, key: offer.defaultOptionKey ?? '' })}
+                </p>
+              </>
+            ) : (
+              <>
+                <Alert variant={offer.offerState === 'DEFAULTED' ? 'warning' : 'success'}>
+                  {offer.offerState === 'DEFAULTED'
+                    ? tdo('defaulted', { key: chosenKey ?? '' })
+                    : offer.choiceSource === 'TRAVELER'
+                      ? tdo('chosen', { key: chosenKey ?? '' })
+                      : tdo('desk', { key: chosenKey ?? '' })}
+                </Alert>
+                <ul className="flex flex-col gap-2">
+                  {offer.options.map((option) => (
+                    <li
+                      key={option.key}
+                      className={
+                        option.key === chosenKey
+                          ? 'rounded-md border border-primary-600 bg-primary-50 p-3'
+                          : 'rounded-md border p-3 text-secondary'
+                      }
+                    >
+                      <p className="font-semibold">
+                        <span className="font-mono">{option.key}</span> · {option.title}
+                      </p>
+                      <p className="text-body-sm">{option.detail}</p>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <p className="text-body-sm text-secondary">
+              {tdo('policy', { policy: offer.policy })}
+            </p>
+          </section>
+        );
+      })}
 
-      {reservation.status === 'SECURED_AND_INVOICED' ||
-      reservation.status === 'PENDING_PAYMENT' ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{tc('title')}</CardTitle>
-            <CardDescription>{tc('description')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CheckoutButton reservationId={reservation.id} />
-          </CardContent>
-        </Card>
+      <section className={card} aria-label={t('progressLabel')}>
+        <TripProgress status={reservation.status} />
+      </section>
+
+      {CONFIRMING.includes(reservation.status) && reservation.providers.services > 0 ? (
+        <ProviderProgress progress={reservation.providers} />
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('itinerary')}</CardTitle>
-          <CardDescription>
-            {t('serviceCount', { count: reservation.serviceItems.length })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {reservation.serviceItems.length === 0 ? (
-            <Alert>{t('itineraryAssembling')}</Alert>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('columns.type')}</TableHead>
-                  <TableHead>{t('columns.status')}</TableHead>
-                  <TableHead>{t('columns.province')}</TableHead>
-                  <TableHead>{t('columns.starts')}</TableHead>
-                  <TableHead>{t('columns.ends')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reservation.serviceItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{tst(item.serviceType)}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{tsi(item.status)}</Badge>
-                    </TableCell>
-                    <TableCell>{item.province ?? '—'}</TableCell>
-                    <TableCell>
-                      {new Date(item.serviceDateStart).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(item.serviceDateEnd).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {confirmed ? (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-success-200 bg-success-100 p-4">
+          <p className="flex items-center gap-2 text-body font-semibold text-success-700">
+            <Icon name="check-circle" className="h-5 w-5" />
+            {t('confirmed')}
+          </p>
+          <Link
+            href={`/account/reservations/${reservation.id}/confirmation`}
+            className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+          >
+            {t('viewConfirmation')}
+          </Link>
+        </section>
+      ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('documents')}</CardTitle>
-          <CardDescription>
+      {ofac && ofacRequired ? (
+        <section aria-labelledby="ofac-title" className={card}>
+          <h2 id="ofac-title" className="text-h4 text-default">
+            {t('ofac.title')}
+          </h2>
+          <OfacCertification reservationId={reservation.id} ofac={ofac} />
+        </section>
+      ) : null}
+
+      {schedule ? (
+        <PaymentSchedule
+          reservationId={reservation.id}
+          bookingCode={reservation.bookingCode}
+          status={reservation.status}
+          schedule={schedule}
+          locked={ofacLocked}
+        />
+      ) : null}
+
+      {tripEventRequests.length > 0 ? (
+        <div className={card}>
+          <MyEventRequests requests={tripEventRequests} />
+        </div>
+      ) : null}
+
+      <section aria-labelledby="itinerary-title" className={card}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="itinerary-title" className="text-h4 text-default">
+            {t('itinerary')}
+          </h2>
+          <p className="text-body-sm text-muted">
+            {t('serviceCount', { count: reservation.serviceItems.length })}
+          </p>
+        </div>
+        {reservation.serviceItems.length === 0 ? (
+          <Alert>{t('itineraryAssembling')}</Alert>
+        ) : (
+          <div className="overflow-x-auto">
+            <ResponsiveTable
+              scrollRegionLabel={tc('table', { name: t('itinerary') })}
+              columns={[
+                { label: t('columns.type') },
+                { label: t('columns.status') },
+                { label: t('columns.province') },
+                { label: t('columns.starts'), cellClassName: 'whitespace-nowrap' },
+                { label: t('columns.ends'), cellClassName: 'whitespace-nowrap' },
+              ]}
+              rows={reservation.serviceItems.map((item) => ({
+                key: item.id,
+                cells: [
+                  tst(item.serviceType),
+                  <Badge key="status" variant="secondary">
+                    {tsi(item.status)}
+                  </Badge>,
+                  item.province ?? '—',
+                  when(item.serviceDateStart),
+                  when(item.serviceDateEnd),
+                ],
+              }))}
+            />
+          </div>
+        )}
+      </section>
+
+      <section id="documents" aria-labelledby="documents-title" className={card}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="documents-title" className="text-h4 text-default">
+            {t('documents')}
+          </h2>
+          <p className="text-body-sm text-muted">
             {t('documentCount', { count: reservation.documents.length })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {reservation.documents.length === 0 ? (
-            <Alert>{t('documentsEmpty')}</Alert>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {reservation.documents.map((document) => (
-                <li key={document.id} className="flex items-center gap-3">
-                  <Badge variant="outline">{td(document.type)}</Badge>
-                  <a
-                    className="font-medium text-primary underline-offset-4 hover:underline"
-                    href={`/api/ota/documents/${document.id}/download`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t('download')}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+        {reservation.documents.length === 0 ? (
+          <Alert>{t('documentsEmpty')}</Alert>
+        ) : (
+          <ul className="flex flex-col gap-2 text-body-sm">
+            {reservation.documents.map((document) => (
+              <li key={document.id} className="flex flex-wrap items-center gap-3">
+                <Badge variant="outline">{td(document.type)}</Badge>
+                <a
+                  className="font-semibold text-primary-600 underline underline-offset-[3px]"
+                  href={`/api/ota/documents/${document.id}/download`}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-analytics-event="document_downloaded"
+                  data-analytics-booking-code={reservation.bookingCode}
+                  data-analytics-doc-type={document.type}
+                >
+                  {t('download')}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <OfflineKitCard
+        reservationId={reservation.id}
+        bookingCode={reservation.bookingCode}
+        documentIds={reservation.documents.map((document) => document.id)}
+      />
 
       {reservation.status === 'COMPLETED' ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{trv('title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ReviewForm reservationId={reservation.id} review={reservation.review} />
-          </CardContent>
-        </Card>
+        <section aria-labelledby="review-title" className={card}>
+          <h2 id="review-title" className="text-h4 text-default">
+            {trv('title')}
+          </h2>
+          <ReviewForm
+            reservationId={reservation.id}
+            bookingCode={reservation.bookingCode}
+            review={reservation.review}
+          />
+        </section>
       ) : null}
 
-      <MessageThread reservationId={reservation.id} />
-    </div>
+      <div id="messages" className="scroll-mt-8">
+        <MessageThread
+          reservationId={reservation.id}
+          bookingCode={reservation.bookingCode}
+        />
+      </div>
+    </AccountShell>
   );
 }

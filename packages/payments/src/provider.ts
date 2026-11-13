@@ -24,6 +24,22 @@ export interface PaymentIntent {
   rail: PaymentRail;
 }
 
+export interface RefundInput {
+  /** The gateway reference of the payment being refunded. */
+  providerReference: string;
+  amount: number;
+  currency: string;
+  /**
+   * The platform's refund id, sent as the gateway's idempotency key: a retry
+   * with the same key can never refund twice (A-Payments, M4 D7).
+   */
+  idempotencyKey: string;
+}
+
+export interface RefundResult {
+  providerRefundId: string;
+}
+
 export interface PaymentWebhookEvent {
   providerReference: string;
   status: 'PAID' | 'FAILED';
@@ -43,4 +59,10 @@ export interface PaymentProvider {
    * or malformed payload so the caller rejects it rather than trusting it.
    */
   parseWebhook(payload: unknown): PaymentWebhookEvent | null;
+  /**
+   * Return money through the gateway. Absent on rails the agency refunds by
+   * its own bank transfer (the wire rail): the desk then records the bank's
+   * reference.
+   */
+  refund?(input: RefundInput): Promise<RefundResult>;
 }

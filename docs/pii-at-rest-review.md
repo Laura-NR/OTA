@@ -38,15 +38,23 @@ supplier legal documents. Booking codes, UUIDs, and amounts are pseudonymous.
 | `SupplierProfile` | `primaryPhone`, `rtnLicenseNumber`, `vehicleDetails` | No retention path | **G5** |
 | Supplier credential object (`credentials/<supplierId>/…`) | legal ID/licence scans | Private, API-gated, expiry-scanned | **G5** |
 | `SupplierApplication` | `fullName`, `email`, `phone`, `rtnLicenseNumber`, `message` | No retention path | **G4** |
+| `StaffInvite` (M9) | invited work `email` (the token is stored only as a SHA-256 hash) | Deleted by the retention scan 90 days after it closes; the audit log keeps the event | None |
 | `ImportBatch` | `rows` JSON may embed supplier names/emails | No retention path | **G9** |
 | Email content | magic links, message bodies, retention notices | Provider-dependent; Mailpit in dev | **G6** |
-| Application logs | `ConsoleMailer` prints the full email body; expiry scan logs supplier emails; digest logs the recipient | pino, no redaction/retention | **G7** |
+| Application logs | `ConsoleMailer` prints the full email body; expiry scan logs supplier emails; digest logs the recipient | pino; the session cookie, `authorization` and `set-cookie` headers are redacted (2026-10-20), PII is not, no retention | **G7** |
 | `Account`/`Session` IP + user agent | as above | Deleted on purge | None |
+| `ReservationTraveler` (M2) | `fullName`, `dateOfBirth`, `nationality`, passport number (`passportNumberEnc`, AES-256-GCM) and expiry, emergency contact name + phone | **Scrubbed** on anonymization (name `[redacted]`, the rest null; kind, lead flag and room kept); the passport number is read only through the audited vault route | None |
+| `TravelerAffidavit` (M3) | signer name and nationality, typed signature, IP address and user agent (online), scanned paper form (`affidavits/<reservationId>/…` in object storage) | **Kept outside the traveler purge** for 5 years after the trip (OFAC record keeping, M3 D6), append-only by trigger; the daily retention scan deletes the row and its scan at `retainUntil`. Full record, scan and export are audited reads (ops+super; export Super Admin) | None (by design) |
+| `ConsentRecord` (M3) | user (or visitor) id, purpose, granted, text version, locale | On anonymization the user and visitor ids and the IP country are nulled; the versioned counts stay | None |
+| `ReservationExtra.label` / `ReservationPriceLine.label` (M2) | a manual extra's label is desk free text, copied onto its price line | Untouched (fiscal invoice line); desk guidance: no personal data in a manual extra | **G1** (residual) |
+| `PaymentProof` + its file (M4, `payment-proofs/<reservationId>/…` in object storage) | the payer's name, bank and part of an IBAN on the scanned receipt; who uploaded and reviewed it; the desk's review note | Private, read only through the audited `GET /payments/proofs/:id/file` (ops roles, no-store); untouched by the traveler purge, as payment evidence | **G2** (kept with the fiscal records; how long is a counsel question) |
+| `Refund.note`, `RefundApproval.note` (M4) | desk free text giving the reason for a refund or a vote | Untouched (financial record); desk guidance: the reason, not personal details | **G1** (residual) |
 
-Encryption at rest: there is **no field-level encryption**. Data relies on the
-Postgres/S3 provider's disk encryption. No passport or billing-address field
-exists yet, so the spec §8.2 AES-256 requirement is not yet triggered — but see
-G8.
+Encryption at rest: the passport number is the one field-level-encrypted
+column (M2 decision D1, 2026-10-16): AES-256-GCM in the API under
+`PASSPORT_ENCRYPTION_KEY`, the traveler id bound as additional data
+(`@ota/domain/passport-cipher`). Everything else relies on the Postgres/S3
+provider's disk encryption; no billing-address field exists yet (G8).
 
 ## 3. Controls that already exist
 
@@ -92,11 +100,15 @@ are retained according to the SMTP provider (Mailpit in dev, no policy).
 
 **G7 — Logs can carry PII.** `ConsoleMailer` prints the full email text (dev
 fallback); `ExpiryAlertService` logs supplier emails; the BI digest logs the
-recipient. No redaction or log retention is configured.
+recipient. No log retention is configured. Since 2026-10-20 the request logger
+redacts the session cookie, the `authorization` header and the `set-cookie`
+response header (`httpLoggerOptions` in `apps/api/src/app.module.ts`); other
+fields are not redacted.
 
-**G8 — No field-level encryption for future sensitive fields.** When passport or
-billing-address data is added (spec §8.2), it must be AES-256 at rest by design,
-not left to disk encryption.
+**G8 — Field-level encryption for sensitive fields.** Closed for the passport
+number (M2, AES-256-GCM, app-level key; key rotation needs a re-encrypt pass that
+is not built). Billing-address data, when added (spec §8.2), must follow the same
+pattern rather than rely on disk encryption.
 
 **G9 — `ImportBatch.rows` may embed supplier PII** and is kept forever.
 
@@ -126,7 +138,9 @@ supplier did not consent to retain indefinitely). **Requires legal input.**
 
 **Tier 3 — separate retention policies (not the traveler lifecycle):**
 - `SupplierApplication`: purge rejected/inactive applications after N months.
-- `SupplierProfile` + credentials: erase on verified off-boarding.
+- `SupplierProfile` + credentials: erase on verified off-boarding. The M6
+  `supplier_resources` row (equipment, not personal data) cascades with the
+  profile; its confirming desk user is set null when that user is deleted.
 - `ImportBatch`: purge batches after N months.
 
 ## 6. Recommended baseline controls (independent of the purge)

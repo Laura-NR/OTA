@@ -28,6 +28,9 @@ blob-report/
 # Generated documents
 .documents/
 
+# The mock analytics sink's optional event file (TELEMETRY_SINK_FILE)
+.telemetry/
+
 # Mobile
 .expo/
 .web-build/
@@ -35,3 +38,12 @@ blob-report/
 # Logs / OS
 *.log
 .DS_Store
+
+# Design team deliveries (imported selectively into design/)
+/vereda-handoff-v*/
+/vereda-handoff-v*.zip
+
+# The API settings file (deploy/api.env.example).
+deploy/api.env
+# The backup settings file (deploy/backup.env.example).
+deploy/backup.env

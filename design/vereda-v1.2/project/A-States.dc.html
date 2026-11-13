@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin and apps · edge states · empty, denied, locked, degraded, errors, loading, narrow widths</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 14px;border-radius:8px;font:600 14px/20px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-t{background:transparent;color:#0B4F6C}.btn-d{background:#C62828;color:#fff}
+.btn:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.demo{background:#F3EEE6;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.rule{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:20px;color:#4A433D}
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:28px 20px;background:#fff;border:1px dashed #D6CEC3;border-radius:12px}
+.sk{height:12px;border-radius:6px;background:linear-gradient(90deg,#E8E2D9,#F3EEE6,#E8E2D9)}
+.strip{display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
+.ph{width:390px;background:#FBF8F3;border:1px solid #E8E2D9;border-radius:20px;padding:14px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 880px">
+    <p class="ov">Admin &amp; apps · edge states</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">What the desk sees when nothing is normal</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Empty queues, denied actions, a locked shared PC, degraded feeds, failed imports, long operations and narrow screens. Each panel is the real markup pattern; the rules beside it are the contract for developers. The customer-side equivalents live on DS sheet 03 and the Errors artboard.</p>
+  </header>
+
+  <!-- 01 Empty -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">01 · Empty states</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Say why it is empty and what, if anything, to do</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="demo">
+        <p class="cap">Bookings queue · a state filter with no rows</p>
+        <div class="empty"><strong>Nothing in ACTION_REQUIRED</strong><span class="cap">Good news. The count updates the moment a booking transitions; you do not need to refresh.</span><button class="btn btn-t" type="button">Clear filters</button></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Dashboard · first run (no bookings yet)</p>
+        <div class="sheet" style="padding: 16px; display: flex; flex-direction: column; gap: 10px"><strong>Before the first booking, three things</strong><span class="rule" style="display: flex"><span>☐ MINTUR licence number in Settings › Manifest (it prints on every document)</span><span>☐ At least one payment rail tested with a € 1 transaction</span><span>☑ Two verified suppliers in each launch province</span></span><a class="btn btn-p" href="A-Settings.dc.html" style="align-self: flex-start">Open Settings</a></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Reports · before launch date or no data in range</p>
+        <div class="empty"><strong>No data before 2 March 2026</strong><span class="cap">The agency started trading on 2 Mar. Pick a range from then, or "Year to date".</span></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Inbox · zero threads · Suppliers · no applicants</p>
+        <div class="empty"><strong>Inbox zero</strong><span class="cap">Nothing waiting. Morning check-ins arrive from 08:30 Havana.</span></div>
+        <div class="empty"><strong>No applications yet</strong><span class="cap">Share vereda.travel/es/unete-a-nuestra-red with hosts and drivers; applications land here as PENDING_AUDIT.</span></div>
+      </div>
+    </div>
+    <ul class="rule">
+      <li>An empty state names the cause (filter, date range, not started) before the remedy. One action at most, tertiary unless it is the only way forward.</li>
+      <li>Never an illustration that implies a problem; empty queues on the desk are good news and read as such.</li>
+      <li>Counts in the sidebar stay live so an empty page never hides work waiting elsewhere.</li>
+    </ul>
+  </section>
+
+  <!-- 02 Denied / locked -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">02 · Permission denied, session locked, link expired</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Blocked is explained, and the way through is named</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="demo">
+        <p class="cap">Administrative Support opens Settings</p>
+        <div class="sheet" style="padding: 18px; display: flex; flex-direction: column; gap: 10px"><div style="display: flex; gap: 10px; align-items: center"><svg class="ic" style="color: #B71C1C" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Settings is for Super Admins</strong></div><p class="p">Your role, Administrative Support, can read the thresholds but not change them. Dayana Rodríguez and [Founder name] can.</p><div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-s" type="button">Read-only view</button><button class="btn btn-t" type="button">Request an override (reason · expires 24 h)</button></div></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Shared desk PC · idle lock after 30 min</p>
+        <div class="sheet" style="padding: 18px; display: flex; flex-direction: column; gap: 10px; background: #083B50; color: #fff; border-color: #083B50"><strong style="font-size: 16px">Locked · Ernesto Vila</strong><span style="font-size: 13px; color: #C9DDE6">No input for 30 minutes. The page you were on is kept; timers kept running on the server.</span><div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn" type="button" style="background: #F2B134; color: #1F1B17">Unlock with passkey</button><button class="btn btn-t" type="button" style="color: #C9DDE6">Not Ernesto? Sign in</button></div></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Sign-in link already used or expired</p>
+        <div class="sheet" style="padding: 18px; display: flex; flex-direction: column; gap: 10px"><strong>That link has expired</strong><p class="p">Links work once and for 10 minutes. Nothing happened to your account.</p><button class="btn btn-p" type="button" style="align-self: flex-start">Send a new link</button></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Action outside role, inline (not a page)</p>
+        <div class="sheet" style="padding: 14px; display: flex; flex-direction: column; gap: 8px"><div style="display: flex; gap: 8px; align-items: center"><button class="btn btn-s" type="button" aria-disabled="true" style="color: #6E665E">Approve refund € 1,310</button><span class="cap">Needs a second approver: dual approval above € 500.</span></div><span class="cap">Disabled controls keep their label and get a reason beside them; they stay focusable so screen readers hear why.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 Degraded -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">03 · Offline desk and degraded services</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Three strips, one place, never a modal</h2></div>
+    <div class="demo" style="gap: 10px">
+      <div class="strip" style="background: #1F1B17; color: #fff"><svg class="ic" viewBox="0 0 24 24"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M12 20h.01"/></svg><span style="flex: 1"><strong>You're offline.</strong> Showing the queue as of 14:20. Timers keep running on the server; acknowledgements and re-dispatches are queued and sent when you reconnect.</span><span class="cap" style="color: #D6CEC3">3 actions queued</span></div>
+      <div class="strip" style="background: #FEF3C7; color: #92400E"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><span style="flex: 1"><strong>Bank statement feed down since 13:20.</strong> Automatic matching is paused; proofs can still be reviewed by hand. Provider status: open banking API.</span><button class="btn btn-t" type="button" style="color: #92400E">Details</button></div>
+      <div class="strip" style="background: #FDECEA; color: #B71C1C"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><span style="flex: 1"><strong>Dispatch engine degraded.</strong> Push delivery is delayed; SMS fallback is sending immediately instead of at 60 min. Timers unaffected. Started 14:05 · engineers paged.</span><button class="btn btn-t" type="button" style="color: #B71C1C">Switch to manual dispatch</button></div>
+    </div>
+    <ul class="rule">
+      <li>Service strips stack under the top bar, most severe first, and never cover the dispatch matrix. They carry a start time and what is and is not affected.</li>
+      <li>Offline: reads stay available from cache; writes queue with a count; a queued action shows a clock icon on its row until confirmed.</li>
+      <li>Degraded dispatch offers manual dispatch, never silently waits.</li>
+    </ul>
+  </section>
+
+  <!-- 04 Errors -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">04 · Failures</p><h2 class="disp" style="font-size: 32px; line-height: 40px">What broke, what is safe, what to do</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="demo">
+        <p class="cap">Bulk import · file rejected</p>
+        <div class="sheet" style="padding: 16px; display: flex; flex-direction: column; gap: 8px; border-color: #C62828"><strong style="color: #B71C1C">We couldn't read Gaviota_rates_2027.xlsx</strong><p class="p">Sheet "Tarifas 2027" has merged header cells in row 1. Nothing was imported. Unmerge the header row or export as CSV and try again.</p><div style="display: flex; gap: 8px"><button class="btn btn-s" type="button">Choose another file</button><button class="btn btn-t" type="button">Download template</button></div></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Form · validation summary + inline</p>
+        <div class="sheet" style="padding: 16px; display: flex; flex-direction: column; gap: 10px"><div role="alert" style="padding: 10px 12px; border-radius: 8px; background: #FDECEA; color: #B71C1C; font-size: 13px"><strong>2 things to fix before publishing</strong><br><a href="#" style="color: #B71C1C">High-season price is lower than the net cost</a><br><a href="#" style="color: #B71C1C">FR translation of day 4 is missing</a></div><span class="cap">The summary links jump to each field; the field repeats the message beside it. Nothing is saved as live until both are fixed; the draft is kept.</span></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Server error · admin variant</p>
+        <div class="sheet" style="padding: 16px; display: flex; flex-direction: column; gap: 8px"><strong>Something broke on our side</strong><p class="p">Your last action (re-dispatch on VX-3PA8ZT at 14:33) <strong>was not applied</strong>. Error ref <span class="mono">ERR-7F2A-1433</span> is with engineering. Timers keep running.</p><div style="display: flex; gap: 8px"><button class="btn btn-p" type="button">Try again</button><a class="btn btn-t" href="A-Dashboard.dc.html">Back to the dashboard</a></div></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Destructive action with dual control · anonymise a customer</p>
+        <div class="sheet" style="padding: 16px; display: flex; flex-direction: column; gap: 10px"><strong>Anonymise Pierre Dubois now?</strong><p class="p">Name, contact, passports and messages are replaced with hashes; totals stay for the tax office. This cannot be undone. A Super Admin must confirm within 24 h.</p><label class="cap" for="why">Reason (required)</label><input id="why" type="text" value="Traveler request by email, 3 Apr 2027" style="height: 40px; padding: 0 12px; border: 1px solid #D6CEC3; border-radius: 8px; font: 400 14px/20px Inter, system-ui, sans-serif"><div style="display: flex; gap: 8px; justify-content: flex-end"><button class="btn btn-s" type="button">Keep</button><button class="btn btn-d" type="button">Request anonymisation</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 Loading -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">05 · Loading, long operations, undo</p><h2 class="disp" style="font-size: 32px; line-height: 40px">Skeleton for reads, progress for jobs, undo for quick acts</h2></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="demo">
+        <p class="cap">Dispatch matrix · skeleton while rows load (≤ 2 s target)</p>
+        <div class="sheet" style="padding: 14px; display: flex; flex-direction: column; gap: 10px"><div class="sk" style="width: 40%"></div><div class="sk" style="width: 90%"></div><div class="sk" style="width: 85%"></div><div class="sk" style="width: 88%"></div><span class="cap">Column headers render first so the layout does not jump; counts show "—" until known.</span></div>
+      </div>
+      <div class="demo">
+        <p class="cap">MINTUR summary generator · a job that takes 10–40 s</p>
+        <div class="sheet" style="padding: 14px; display: flex; flex-direction: column; gap: 8px"><div style="display: flex; justify-content: space-between"><strong>Generating 2026 summary</strong><span class="mono cap">step 2 of 4</span></div><span style="display: block; height: 8px; border-radius: 9999px; background: #E8E2D9; overflow: hidden"><span style="display: block; width: 45%; height: 100%; background: #0B4F6C"></span></span><span class="cap">Freezing the dataset · counting bed-nights by province · rendering PDF · writing the audit row. You can leave this page; we email the files.</span></div>
+      </div>
+      <div class="demo">
+        <p class="cap">Optimistic act with undo · acknowledging an alert</p>
+        <div role="status" style="display: flex; gap: 12px; align-items: center; padding: 12px 16px; background: #1F1B17; color: #fff; border-radius: 8px; align-self: flex-start"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span style="font-size: 14px">Alert acknowledged · audio off for VX-3PA8ZT</span><button class="btn btn-t" type="button" style="color: #F2B134; height: 32px">Undo</button></div>
+        <span class="cap">6 s to undo; the audit row is written only after the toast closes.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 Worker app -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">06 · Worker app edge states (ES)</p><h2 class="disp" style="font-size: 32px; line-height: 40px">A phone with no signal, a licence that lapsed, a number that changed</h2></div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start">
+      <div class="ph"><p class="cap">Sin ofertas</p><div class="empty" style="padding: 20px 14px"><strong>No hay ofertas ahora</strong><span class="cap">Te avisamos por notificación y SMS. Revisa que estés disponible en el calendario.</span><a class="btn btn-t" href="W-Calendar.dc.html">Ver calendario</a></div></div>
+      <div class="ph"><p class="cap">Credencial suspendida</p><div class="sheet" style="padding: 14px; display: flex; flex-direction: column; gap: 8px; border-color: #C62828"><strong style="color: #B71C1C">Licencia vencida el 2 nov</strong><span style="font-size: 14px; color: #4A433D">No recibes ofertas hasta subir la renovación. Los trabajos ya aceptados se mantienen; la central te llama si cambia algo.</span><a class="btn btn-p" href="W-Credentials.dc.html">Subir la renovación</a></div></div>
+      <div class="ph"><p class="cap">Sin señal más de 1 hora con una oferta abierta</p><div class="sheet" style="padding: 14px; display: flex; flex-direction: column; gap: 8px; background: #1F1B17; color: #fff; border-color: #1F1B17"><strong>Sin conexión desde las 13:05</strong><span style="font-size: 14px; color: #D6CEC3">Tienes una oferta que caduca a las 15:02. Si no puedes conectarte, la central te está llamando al +53 5 241 3388.</span></div></div>
+      <div class="ph"><p class="cap">Número de teléfono cambiado · app desactualizada</p><div class="sheet" style="padding: 14px; display: flex; flex-direction: column; gap: 8px"><strong>¿Cambiaste de número?</strong><span style="font-size: 14px; color: #4A433D">Llama a la central para actualizarlo; no se puede cambiar desde la app por seguridad.</span></div><div class="sheet" style="padding: 14px; display: flex; flex-direction: column; gap: 8px"><strong>Actualiza la app</strong><span style="font-size: 14px; color: #4A433D">Esta versión ya no recibe ofertas. 4 MB por datos móviles.</span><button class="btn btn-p" type="button" style="align-self: flex-start">Actualizar</button></div></div>
+    </div>
+  </section>
+
+  <!-- 07 Narrow -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><p class="ov">07 · Tablet and narrow widths</p><h2 class="disp" style="font-size: 32px; line-height: 40px">The admin pages are fluid; this is what moves</h2></div>
+    <div style="overflow-x: auto; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 18px; min-width: 720px">
+        <thead><tr style="background: #F3EEE6; color: #4A433D"><th style="text-align: left; padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Width</th><th style="text-align: left; padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Sidebar</th><th style="text-align: left; padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Dispatch matrix</th><th style="text-align: left; padding: 10px 12px; border-bottom: 1px solid #E8E2D9">KPI grids and two-column sections</th><th style="text-align: left; padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Tables</th></tr></thead>
+        <tbody>
+          <tr><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9" class="mono">≥ 1280</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">240 px, always open</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">All columns visible</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">4–5 up · side by side</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Full width</td></tr>
+          <tr><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9" class="mono">1024 · tablet landscape</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">240 px, still open (content 784 px)</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Horizontal scroll inside its box; first column sticky</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">2–3 up</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Scroll inside the card</td></tr>
+          <tr><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9" class="mono">768 · tablet portrait</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Stacks above as a wrapping row of links with counts</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Scrolls; Open and Re-dispatch stay reachable</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">2 up; list + detail sections stack (list first)</td><td style="padding: 10px 12px; border-bottom: 1px solid #E8E2D9">Scroll inside the card</td></tr>
+          <tr><td style="padding: 10px 12px" class="mono">≤ 560 · phone</td><td style="padding: 10px 12px">Use Ops Lite instead; the desk shows a one-line pointer to it</td><td style="padding: 10px 12px">Not offered; AL-Pipeline</td><td style="padding: 10px 12px">1 up</td><td style="padding: 10px 12px">Rows become stacked cards (DS 03 rule)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">Play mode on any A-* artboard at a narrower window shows the wrap behaviour; nothing is hidden by width, only re-flowed or scrolled.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2500}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

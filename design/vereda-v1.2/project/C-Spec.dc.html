@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notifications spec · triggers, subjects, plain-text fallbacks, SMS and push budgets</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.f{font-weight:600;color:#1F1B17;white-space:nowrap}
+.tbl td.m{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:#4A433D}
+.tbl td.n{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;text-align:right;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;white-space:nowrap}
+.ok{background:#E8F5E9;color:#1B5E20}.warn{background:#FEF3C7;color:#92400E}.bad{background:#FDECEA;color:#B71C1C}.info{background:#E6F0F4;color:#083B50}
+.txt{margin:0;padding:12px 14px;border-radius:8px;background:#FBF8F3;border:1px solid #E8E2D9;font:400 12px/17px "IBM Plex Mono",ui-monospace,monospace;color:#1F1B17;white-space:pre-wrap;overflow-wrap:anywhere}
+.tx{display:flex;flex-direction:column;gap:6px}
+.tx h3{margin:0;font:600 13px/18px Inter,system-ui,sans-serif;color:#083B50}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 960px">
+    <p class="ov">Notifications · spec · 10 Oct 2026</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">Triggers, subjects, plain text, SMS budgets</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">The ten emails and the phone board on this page show the rendered templates. This sheet is the table behind them: what fires each one, in which language, with which subject and attachments, the plain-text body a text-only client receives, and the character and segment budget of every SMS and push, so the copy survives a 2G connection in Viñales.</p>
+  </header>
+
+  <!-- 01 sending rules -->
+  <section class="sheet" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 20px 32px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">01 · Sender and identity</p>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 18px; color: #4A433D">
+        <li>Email from <span class="mono">Vereda Expeditions &lt;desk@vereda.travel&gt;</span>; replies land in the desk inbox on the booking thread (A-Booking › Messages). Workers: <span class="mono">colaboradores@vereda.travel</span>, Spanish.</li>
+        <li>SMS sender "Vereda" (alphanumeric; numeric fallback where the carrier requires one, e.g. US). Short links are signed: <span class="mono">vereda.travel/pay/7K2M9Q</span>.</li>
+        <li>Push: title ≤ 40 characters, body ≤ 90; tapping opens the exact screen (deep link), never the home screen.</li>
+        <li>Every email carries the MINTUR licence line and the 24/7 number in the footer; transactional emails have no unsubscribe link (contract necessity); only the monthly "Cuba right now" is marketing and has one.</li>
+      </ul>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">Language, time, quiet hours</p>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 18px; color: #4A433D">
+        <li>Traveler messages in the traveler's locale (<span class="mono">users.locale</span>: EN, ES, FR) from one template; DE / IT travelers receive EN until those locales exist.</li>
+        <li>Deadlines are stated in Havana time <em>and</em> the traveler's local time: "14:35 Havana (20:35 Berlin)". Dates per locale (T-Forms 00).</li>
+        <li>Quiet hours: no non-critical SMS or push between 22:00 and 08:00 in the traveler's local time; the morning check-in is 08:30 Havana by design. Critical advisories and disruption options ignore quiet hours.</li>
+        <li>Worker messages always Spanish; the sign-in code and offer SMS are sent any hour the worker is marked available.</li>
+      </ul>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">Retries, fallbacks, dedupe</p>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 18px; color: #4A433D">
+        <li>Email hard bounce → the same content as SMS (short form) + a desk task; SMS failure on a payment or critical message → the desk calls (A-Dashboard › On the ground).</li>
+        <li>Worker offer: push at T+0, SMS at T+60 min if unseen, desk call at amber (75 %), fallback re-dispatch at red (G-Dispatch).</li>
+        <li>Each send has an idempotency key <span class="mono">booking_code + template + occurrence</span>: a retried job never sends twice.</li>
+        <li>Everything sent is logged on the booking's communication history (A-Customers) with channel, language and delivery status.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 02 matrix -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · Email matrix · the ten drawn templates and the text-only ones they share a layout with</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>Template</th><th>Trigger</th><th>Audience · locale</th><th>Subject (EN) · preheader</th><th>Attachments · also via</th><th>Repeats</th></tr></thead>
+      <tbody>
+        <tr><td class="f"><a href="E-Received.dc.html">E-Received</a></td><td>state → ITINERARY_SUBMITTED</td><td>lead traveler · their locale</td><td>We've got your request · {code} · nothing is charged yet<br><span class="cap">Your hosts in {place} are confirming now; we answer within 24 hours.</span></td><td>— · in-app</td><td>once</td></tr>
+        <tr><td class="f"><a href="E-Invoice.dc.html">E-Invoice</a></td><td>state → SECURED_&amp;_INVOICED (all items ACCEPTED)</td><td>lead · locale</td><td>Everything is secured · pay the deposit within 48 h to lock in {place} · {code}<br><span class="cap">€ {amount} by {deadline} Havana. Card or bank transfer. Invoice attached.</span></td><td>INV-{n}.pdf · in-app, push</td><td>reminders below</td></tr>
+        <tr><td class="f"><a href="E-Reminder.dc.html">E-Reminder</a></td><td>24 h and 2 h before the payment window closes, if unpaid</td><td>lead · locale</td><td>24 hours left / 2 hours left to pay the deposit for {place} · {code}<br><span class="cap">€ {amount} by {time} Havana today, or your hosts are released. Need more time? Reply.</span></td><td>— · SMS mirror (04)</td><td>2 ×</td></tr>
+        <tr><td class="f"><a href="E-Confirmed.dc.html">E-Confirmed</a></td><td>state → CONFIRMED (deposit received)</td><td>lead + named travelers who opted in · locale</td><td>Confirmed: {place}, {dates} · your vouchers are ready · {code}<br><span class="cap">Deposit received. Voucher and receipt attached; the offline kit comes at travel-ready.</span></td><td>voucher-{code}.pdf · receipt-INV-{n}.pdf · push</td><td>once</td></tr>
+        <tr><td class="f"><a href="E-Reconfirm.dc.html">E-Reconfirm</a></td><td>T−7 days, after the document check passes</td><td>lead · locale</td><td>One week to go · let's reconfirm your flight and pickup · {code}<br><span class="cap">Your offline kit is attached. {agent} calls {day} at {time} your time; 30 seconds to confirm the flight below.</span></td><td>offline-kit-{code}.pdf · in-app</td><td>once; desk call follows</td></tr>
+        <tr><td class="f"><a href="E-Advisory.dc.html">E-Advisory</a></td><td>advisory published (A-Content) for a region</td><td>travelers with a trip in the region within 60 days · locale</td><td>Travel advisory · {topic} · what it means for your trip<br><span class="cap">{level} level. {one-line effect}. Nothing to do.</span></td><td>— · in-app; critical adds SMS + emergency contacts</td><td>per advisory</td></tr>
+        <tr><td class="f"><a href="E-Options.dc.html">E-Options</a></td><td>disruption case opened with traveler options</td><td>travelers on the affected booking · locale</td><td>{event} in {place} · choose how you'd like to continue by {deadline}<br><span class="cap">{n} options, one tap. No answer by {deadline} keeps option A and we call you.</span></td><td>— · in-app with the same buttons · SMS mirror</td><td>once + desk call</td></tr>
+        <tr><td class="f"><a href="E-OFAC.dc.html">E-OFAC</a></td><td>US traveler without a signed affidavit</td><td>that traveler · locale (shown in ES)</td><td>Your OFAC certification is missing · vouchers on hold · {code}<br><span class="cap">Two minutes. Without it we can't issue your vouchers or the driver's work order.</span></td><td>— · SMS</td><td>on submit, +3 d, +5 d, 48 h before arrival</td></tr>
+        <tr><td class="f"><a href="E-Retention.dc.html">E-Retention</a></td><td>6 months after the last COMPLETED trip</td><td>account holder · locale</td><td>Your Vereda account: keep it, or we delete it on {date}<br><span class="cap">Six months after your trip we erase your profile and passport details unless you tell us otherwise. One click either way.</span></td><td>—</td><td>reminder at day 23 of the 30-day grace</td></tr>
+        <tr><td class="f"><a href="E-NPS.dc.html">E-NPS</a></td><td>24 h after COMPLETED</td><td>lead · locale</td><td>How was {place}, {first name}? One question.<br><span class="cap">Tap a number. Then, if you like, a word for {guide}, {host} and {driver}.</span></td><td>—</td><td>one reminder after 5 days</td></tr>
+        <tr><td colspan="6" style="background: #FBF8F3; font-weight: 600; color: #083B50; padding: 8px 12px">Text-only templates on the E-Received layout (not drawn separately)</td></tr>
+        <tr><td class="f">E-Code</td><td>sign-in requested (<a href="Auth.dc.html">Auth</a>)</td><td>account · locale</td><td>Your Vereda sign-in code: {code}<br><span class="cap">Valid 10 minutes. If you didn't ask for it, ignore this email.</span></td><td>—</td><td>per request</td></tr>
+        <tr><td class="f">E-Proposal</td><td>custom proposal ready (VX-C-…)</td><td>requester · proposal locale</td><td>Your Cuba proposal is ready · {code} · valid {n} days<br><span class="cap">{nights} nights, {provinces}. Open it, change anything, or book as is.</span></td><td>proposal-{code}.pdf (<a href="D-Proposal.dc.html">D-Proposal</a>)</td><td>reminder 3 days before validity ends</td></tr>
+        <tr><td class="f">E-Balance</td><td>7, 3 and 1 day before the balance due date (BR-DP-02)</td><td>lead · locale</td><td>Balance for {place} due {date} · € {amount} · {code}<br><span class="cap">Paid automatically from your saved card, or pay now by transfer.</span></td><td>— · SMS at 1 day</td><td>3 ×</td></tr>
+        <tr><td class="f">E-Cancelled</td><td>state → CANCELLED (any actor)</td><td>lead · locale</td><td>Your booking {code} is cancelled · refund of € {amount} on its way<br><span class="cap">Same card or account, same exchange rate as your payment (BR-CU-08).</span></td><td>credit-note.pdf</td><td>once</td></tr>
+        <tr><td class="f">E-Applied · E-Verified · E-Rejected (ES)</td><td>supplier application received · audit result</td><td>applicant · ES</td><td>Recibimos tu solicitud · {id} / Tu credencial está verificada / Necesitamos otro documento<br><span class="cap">Te respondemos en 5 días hábiles.</span></td><td>— · SMS</td><td>once each</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 03 plain-text -->
+  <section class="sheet" style="display: flex; flex-direction: column; gap: 16px; padding: 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">03 · Plain-text fallbacks · the multipart/alternative text part of each drawn email</p>
+      <p class="p">Same facts, same links, no layout. Lines under 70 characters, one blank line between blocks, links on their own line. ES and FR follow the same structure; E-OFAC is shown in Spanish as on the board.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px">
+      <div class="tx"><h3>E-Received</h3><pre class="txt">VEREDA EXPEDITIONS · VX-7K2M9Q
+
+We've got your request, Margaret. Nothing is charged yet.
+
+Yamilé, Daylin, Reinier and the Viñales team are confirming
+now. We answer within 24 hours, usually sooner.
+
+Your request: Eco-Tourism in Viñales, 13–20 Feb 2027,
+2 travelers, mid-range casa.
+
+Track it here:
+https://vereda.travel/t/7K2M9Q
+
+Questions? Reply to this email or WhatsApp +34 [number].
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]
+24/7 emergency line: +53 7 204 2516</pre></div>
+      <div class="tx"><h3>E-Invoice</h3><pre class="txt">VEREDA EXPEDITIONS · VX-7K2M9Q · EVERYTHING IS SECURED
+
+Yamilé, Daylin, Reinier and Osmany all said yes.
+Your Viñales week is secured.
+
+To lock it in, pay the deposit of EUR 620.00
+by Wed 14 Oct, 14:35 Havana (20:35 Berlin).
+
+Pay by card or bank transfer:
+https://vereda.travel/pay/7K2M9Q
+
+Invoice INV-2026-0231 is attached and in your account.
+After the deadline your hosts are released; reply if you
+need more time (one 24 h extension).
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]</pre></div>
+      <div class="tx"><h3>E-Reminder (2 h)</h3><pre class="txt">VEREDA · VX-7K2M9Q · 2 HOURS LEFT
+
+Two hours left, Margaret. Your deposit of EUR 620.00 is due
+by 14:35 Havana today (Wed 14 Oct).
+
+Pay now:
+https://vereda.travel/pay/7K2M9Q
+
+Need more time? Reply HOLD to this email or to the SMS;
+we hold your hosts for 24 h more (once).
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]</pre></div>
+      <div class="tx"><h3>E-Confirmed</h3><pre class="txt">VEREDA EXPEDITIONS · VX-7K2M9Q · CONFIRMED
+
+Viñales is yours, Margaret. 13 to 20 February.
+
+We received your deposit of EUR 620.00 (card ending 4471).
+Attached: your voucher and the receipt for INV-2026-0231.
+Both are in your account and work offline:
+https://vereda.travel/t/7K2M9Q/documents
+
+Next: we check your documents at T-30 and send the offline
+kit at T-7. Balance EUR 2,480.00 due 14 Jan 2027.
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]
+24/7 emergency line: +53 7 204 2516</pre></div>
+      <div class="tx"><h3>E-Reconfirm</h3><pre class="txt">VEREDA · VX-7K2M9Q · ONE WEEK TO GO
+
+Seven days to Viñales. Three things:
+
+1. Confirm your flight: AF 0954, arriving HAV Sat 13 Feb
+   15:20. Correct? Reply YES or send the new details.
+2. Pickup: Reinier, Terminal 3 main exit, grey Peugeot
+   5008, sign "Vereda · Chen". +53 5 241 3388.
+3. Your offline kit is attached. Save it on your phone.
+
+Ana calls Thursday at 10:00 your time, 30 seconds.
+From Saturday you get a morning check-in SMS at 08:30.
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]</pre></div>
+      <div class="tx"><h3>E-Advisory</h3><pre class="txt">VEREDA · TRAVEL ADVISORY · CAUTION
+
+Fuel queues in Pinar del Río. What it means for your trip:
+
+- Transfers run as planned; our drivers carry reserves.
+- Day trips may move by a day. Your guide decides on site.
+- Nothing to do now.
+
+Current conditions, updated daily:
+https://vereda.travel/cuba-now
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]
+24/7 emergency line: +53 7 204 2516</pre></div>
+      <div class="tx"><h3>E-Options</h3><pre class="txt">VEREDA · VX-6RQ4JD · CASE DC-0931 · ANSWER BY 18:00 TODAY
+
+Power outage in Viñales. Choose how you'd like to continue:
+
+A. Stay, with a battery pack delivered by 17:00
+B. Move to a solar casa in the valley (same price)
+C. Swap to Trinidad two days early (we re-book)
+D. Early return, refund of unused nights
+
+Choose here (one tap):
+https://vereda.travel/o/6RQ4JD
+or reply with the letter.
+
+No answer by 18:00 keeps option A and we call you.
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]</pre></div>
+      <div class="tx"><h3>E-OFAC (ES)</h3><pre class="txt">VEREDA · VX-2F9HQ3 · ACCIÓN NECESARIA
+
+Luis, nos falta tu certificación OFAC. Llegas en 44 horas.
+Sin ella no podemos entregarte los bonos ni la orden al
+chofer.
+
+Dos minutos, en tu cuenta:
+https://vereda.travel/ofac/2F9HQ3
+
+Categoría más habitual: "Apoyo al pueblo cubano".
+¿Dudas? Responde a este correo.
+
+Vereda Expeditions S.L. · Licencia MINTUR [MINTUR-2026-XXXX]</pre></div>
+      <div class="tx"><h3>E-Retention</h3><pre class="txt">VEREDA · DATA PROTECTION NOTICE
+
+Pierre, it has been six months since your trip.
+On 20 April we erase your profile, passport details and
+messages unless you tell us to keep them.
+
+Keep my account:
+https://vereda.travel/keep/2MM8RV
+Delete it now:
+https://vereda.travel/delete/2MM8RV
+
+Invoices stay for the legal retention period either way.
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]</pre></div>
+      <div class="tx"><h3>E-NPS</h3><pre class="txt">VEREDA · VX-2MM8RV
+
+Welcome home, Pierre. One question:
+how likely are you to recommend us to a friend, 0 to 10?
+
+Answer here:
+https://vereda.travel/nps/2MM8RV
+
+Then, if you like, a word for Daylin, Yamilé and Reinier.
+They read every one.
+
+Vereda Expeditions S.L. · MINTUR licence [MINTUR-2026-XXXX]</pre></div>
+    </div>
+  </section>
+
+  <!-- 04 SMS budget + 05 push -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+        <p class="ov">04 · SMS budget · as drawn on <a href="S-Messages.dc.html">S-Messages</a></p>
+        <p class="p">GSM-7 gives 160 characters per message (153 when concatenated); one character outside the GSM-7 set switches the whole message to UCS-2 with 70 per segment. In Spanish, <strong>á í ó ú</strong> are outside the set, <strong>é è ñ ü à</strong> are inside, and <strong>€</strong> counts as two. SMS copy therefore drops the accents on á í ó ú only (never in email or the apps).</p>
+      </div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>Message</th><th>Drawn copy</th><th>Chars</th><th>Encoding · segments</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="f">Morning check-in</td><td class="m">Vereda: buenos días Margaret! All good at Casa Yamilé? Reply OK or write anything. Ana</td><td class="n">86</td><td><span class="pill warn">UCS-2 · 2</span></td><td>"buenos dias" → GSM-7, 1 segment</td></tr>
+          <tr><td class="f">Check-in acknowledgement</td><td class="m">Thanks, logged 08:41. Enjoy the valley walk.</td><td class="n">44</td><td><span class="pill ok">GSM-7 · 1</span></td><td>—</td></tr>
+          <tr><td class="f">Payment · 2 h left</td><td class="m">Vereda: 2 h left to pay the € 620 deposit for VX-7K2M9Q: vereda.travel/pay/7K2M9Q. Reply HOLD for 24 h more.</td><td class="n">108 (+1 for €)</td><td><span class="pill ok">GSM-7 · 1</span></td><td>—</td></tr>
+          <tr><td class="f">Payment · 24 h left</td><td class="m">Vereda: 24 h left to pay the € 620 deposit for VX-7K2M9Q: vereda.travel/pay/7K2M9Q. Questions? Reply here.</td><td class="n">106 (+1)</td><td><span class="pill ok">GSM-7 · 1</span></td><td>—</td></tr>
+          <tr><td class="f">HOLD acknowledgement</td><td class="m">Done: your hosts are held until Thu 15 Oct 14:35. One extension only.</td><td class="n">69</td><td><span class="pill ok">GSM-7 · 1</span></td><td>—</td></tr>
+          <tr><td class="f">Critical advisory</td><td class="m">Vereda ALERT: tropical storm watch for Holguín. Stay at your casa; we call you within the hour with a plan. 24/7: +53 7 204 2516</td><td class="n">128</td><td><span class="pill warn">UCS-2 · 2</span></td><td>"Holguin" → GSM-7, 1 segment; repeats every 6 h until acknowledged</td></tr>
+          <tr><td class="f">Disruption options</td><td class="m">Vereda: power outage in Viñales. Choose by 18:00: A stay (+battery), B move to solar casa, C swap to Trinidad, D early return. vereda.travel/o/6RQ4JD or reply A/B/C/D.</td><td class="n">167</td><td><span class="pill warn">GSM-7 · 2</span></td><td>Trim to ≤ 160: "Vereda: outage in Viñales. Reply A stay+battery, B solar casa, C Trinidad early, D early return, by 18:00. Details: vereda.travel/o/6RQ4JD" (141)</td></tr>
+          <tr><td class="f">Option acknowledgement</td><td class="m">Option A noted. Battery pack arrives by 17:00. Ana</td><td class="n">50</td><td><span class="pill ok">GSM-7 · 1</span></td><td>—</td></tr>
+          <tr><td class="f">OFAC reminder (ES)</td><td class="m">Vereda: falta tu certificacion OFAC para VX-2F9HQ3. Llegas en 44 h. Dos minutos: vereda.travel/ofac/2F9HQ3</td><td class="n">105</td><td><span class="pill ok">GSM-7 · 1</span></td><td>written without the accent on purpose</td></tr>
+          <tr><td class="f">Worker · offer fallback (ES)</td><td class="m">Vereda: tienes una oferta sin responder, caduca a las 15:02. Abre la app o llama al +53 7 204 2516.</td><td class="n">99</td><td><span class="pill ok">GSM-7 · 1</span></td><td>—</td></tr>
+          <tr><td class="f">Worker · sign-in code (ES)</td><td class="m">Vereda: tu código es 482 716. Caduca en 10 min. No lo compartas con nadie.</td><td class="n">74</td><td><span class="pill warn">UCS-2 · 2</span></td><td>"tu codigo es" → GSM-7, 1 segment</td></tr>
+          <tr><td class="f">Balance · 1 day</td><td class="m">Vereda: balance of € 2,480 for VX-7K2M9Q is due tomorrow. Paid from your saved card, or pay now: vereda.travel/pay/7K2M9Q</td><td class="n">115 (+1)</td><td><span class="pill ok">GSM-7 · 1</span></td><td>new, text-only</td></tr>
+        </tbody>
+      </table></div>
+      <p class="cap" style="padding: 10px 24px 16px">Budget rule: one segment for everything except the critical advisory, which may use two. Names are inserted from the first name only and truncated at 20 characters.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <div class="sheet" style="display: flex; flex-direction: column">
+        <div style="padding: 24px 24px 12px"><p class="ov">05 · Push budget · title ≤ 40 · body ≤ 90</p></div>
+        <div style="overflow-x: auto"><table class="tbl">
+          <thead><tr><th>Push</th><th>Title · body</th><th>Chars</th></tr></thead>
+          <tbody>
+            <tr><td class="f">Hosts confirmed</td><td>Your hosts all confirmed<br><span class="cap">Pay the € 620 deposit within 48 h to lock in Viñales.</span></td><td class="n">24 · 54</td></tr>
+            <tr><td class="f">Confirmed</td><td>Confirmed · vouchers ready<br><span class="cap">Viñales 13–20 Feb. Everything works offline in Documents.</span></td><td class="n">26 · 57</td></tr>
+            <tr><td class="f">Pickup today</td><td>Reinier is at Terminal 3<br><span class="cap">Main exit, grey Peugeot 5008, sign "Vereda · Chen". +53 5 241 3388</span></td><td class="n">24 · 66</td></tr>
+            <tr><td class="f">Worker offer (ES)</td><td>Nueva oferta de trabajo<br><span class="cap">Traslado Aeropuerto → Viñales, 13 feb · responde en 2 h · € 180</span></td><td class="n">23 · 63</td></tr>
+            <tr><td class="f">Ops Lite red alert</td><td>RED ALERT · VX-3PA8ZT<br><span class="cap">Guide Osvaldo timed out · tap to re-dispatch</span></td><td class="n">21 · 44</td></tr>
+            <tr><td class="f">Ops Lite approval</td><td>Approval needed · € 1,310 refund<br><span class="cap">Bianchi · DC-0931 · second approval (Dayana)</span></td><td class="n">32 · 44</td></tr>
+          </tbody>
+        </table></div>
+        <p class="cap" style="padding: 10px 24px 16px">Red alerts are time-sensitive (iOS) / high priority (Android) with sound, repeating every 60 s until acknowledged; mute is logged (A-A11y). All other pushes are default priority and respect quiet hours.</p>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <p class="ov">06 · Localisation limits</p>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 18px; color: #4A433D">
+          <li>Subjects ≤ 60 characters in EN; ES and FR may run to 72. The booking code goes last so it survives truncation on phones.</li>
+          <li>Preheaders ≤ 90 characters; never repeat the subject.</li>
+          <li>Money: "€ 620.00" in EN, "620,00 €" in ES and FR; SMS uses "€ 620" (no decimals) in every language.</li>
+          <li>Names: first name only, as typed by the traveler; workers by first name in traveler messages (spec §8.2).</li>
+          <li>Strings live in the i18n catalogue with the template id as key prefix (<span class="mono">email.invoice.subject</span>), per spec §10.3.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4100}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

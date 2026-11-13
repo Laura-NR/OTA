@@ -21,6 +21,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { ImportsService } from './imports.service';
@@ -32,6 +33,7 @@ const READ_ROLES = [
 ] as const;
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
+@Capability('catalog')
 @Controller('imports')
 export class ImportsController {
   constructor(private readonly imports: ImportsService) {}

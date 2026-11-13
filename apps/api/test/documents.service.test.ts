@@ -1,4 +1,4 @@
-import type { Document } from '@ota/db';
+import { Prisma, type Document } from '@ota/db';
 import type { TenantConfig } from '@ota/config';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -55,6 +55,7 @@ const reservation = {
   createdAt: new Date('2026-09-20T10:00:00Z'),
   updatedAt: new Date('2026-09-20T10:00:00Z'),
   user: { id: 'user-traveler', fullName: 'Jane Traveler', email: 'jane@example.test' },
+  priceLines: [],
   serviceItems: [
     {
       id: 'item-1',
@@ -71,6 +72,7 @@ const reservation = {
       declineReason: null,
       payoutRate: '40.00',
       payoutStatus: 'ACCRUED',
+      travelerPrice: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       supplier: {
@@ -99,6 +101,9 @@ describe('DocumentsService', () => {
 
   const fakePrisma = () =>
     ({
+      // M3: no travelers, so the OFAC gate is clear.
+      reservationTraveler: { findMany: async () => [] },
+      travelerAffidavit: { findMany: async () => [] },
       reservation: {
         findUnique: async () => reservation,
       },
@@ -146,6 +151,53 @@ describe('DocumentsService', () => {
     ]);
     expect(savedKeys).toHaveLength(3);
     expect(audits).toContain('documents.generated');
+  });
+
+  it('prints the per-service price and the frozen price lines on the invoice', async () => {
+    const priced = {
+      ...reservation,
+      serviceItems: reservation.serviceItems.map((item) => ({
+        ...item,
+        travelerPrice: new Prisma.Decimal('95'),
+      })),
+      priceLines: [
+        {
+          kind: 'FEE',
+          label: 'Service fee',
+          quantity: new Prisma.Decimal('1'),
+          amount: new Prisma.Decimal('100'),
+        },
+      ],
+    };
+    const prisma = {
+      ...fakePrisma(),
+      reservation: { findUnique: async () => priced },
+    } as unknown as PrismaService;
+    const render = vi.fn(async (_html: string) => new Uint8Array([37, 80, 68, 70]));
+    const service = new DocumentsService(prisma, { render }, storage, tenantConfig);
+
+    await service.generate(RESERVATION_ID, OPERATOR);
+
+    const invoice = render.mock.calls.at(-1)![0];
+    expect(invoice).toContain('95.00 EUR');
+    expect(invoice).toContain('Fee — Service fee');
+    expect(invoice).toContain('100.00 EUR');
+  });
+
+  it('holds the voucher and work orders while a US traveler has not certified (OFAC)', async () => {
+    const prisma = {
+      ...fakePrisma(),
+      reservationTraveler: {
+        findMany: async () => [{ id: 'traveler-us', usPerson: null, nationality: 'US' }],
+      },
+      travelerAffidavit: { findMany: async () => [] },
+    } as unknown as PrismaService;
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
+
+    const documents = await service.generate(RESERVATION_ID, OPERATOR);
+
+    expect(documents.map((document) => document.type)).toEqual(['INVOICE']);
+    expect(audits).toEqual(['documents.generated', 'documents.held']);
   });
 
   it('stores documents under the booking code', async () => {
@@ -196,5 +248,51 @@ describe('DocumentsService', () => {
     await expect(service.read('doc-1', traveler)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
+  });
+
+  it('forbids a service worker from reading a booking’s document', async () => {
+    const prisma = {
+      document: {
+        findUnique: async () => ({
+          id: 'doc-1',
+          type: 'VOUCHER',
+          storageKey: 'ABC12345/voucher-1.pdf',
+          reservation: { userId: 'user-traveler' },
+        }),
+      },
+    } as unknown as PrismaService;
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
+    const worker: AuthUser = {
+      id: 'user-worker',
+      email: 'guide@example.test',
+      role: 'SERVICE_WORKER',
+    };
+
+    await expect(service.read('doc-1', worker)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('lets the booking’s owner read its traveler documents', async () => {
+    const prisma = {
+      document: {
+        findUnique: async () => ({
+          id: 'doc-1',
+          type: 'VOUCHER',
+          storageKey: 'ABC12345/voucher-1.pdf',
+          reservation: { userId: 'user-traveler' },
+        }),
+      },
+    } as unknown as PrismaService;
+    const service = new DocumentsService(prisma, renderer, storage, tenantConfig);
+    const owner: AuthUser = {
+      id: 'user-traveler',
+      email: 'jane@example.test',
+      role: 'TRAVELER',
+    };
+
+    const result = await service.read('doc-1', owner);
+
+    expect(result.data).toBeInstanceOf(Uint8Array);
   });
 });

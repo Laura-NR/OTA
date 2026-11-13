@@ -10,9 +10,13 @@ import { Prisma, Role } from '@ota/db';
 import {
   isRetentionNoticeDue,
   isRetentionPurgeDue,
+  isRetentionReminderDue,
   retentionPurgeAt,
   retentionStatus,
+  eventRequestPurgeDue,
+  isInvitePurgeDue,
   type RetentionClock,
+  type RetentionPolicy,
 } from '@ota/domain';
 import { retentionNoticeEmail, type Mailer } from '@ota/email';
 import type {
@@ -20,9 +24,12 @@ import type {
   RetentionPendingUserDto,
   RetentionScanResultDto,
 } from '@ota/schemas';
+import type { ObjectStorage } from '@ota/storage';
 
 import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
+import { OBJECT_STORAGE } from '../storage/storage.module';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { signRetentionToken, verifyRetentionToken } from './retention-token';
 import { RETENTION_SCHEDULER, type RetentionScheduler } from './retention.scheduler';
@@ -100,6 +107,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     @Inject(MAILER) private readonly mailer: Mailer,
     @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
     @Inject(RETENTION_SCHEDULER) private readonly scheduler: RetentionScheduler,
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -112,22 +121,124 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     await this.scheduler.close();
   }
 
-  /** One pass of the lifecycle job: notices first, then due purges. */
+  /**
+   * One pass of the lifecycle job, under the retention policy in force (M9):
+   * notices first, then their one reminder a week before the deadline, then
+   * due purges, then the OFAC affidavits whose five years have run out (M3,
+   * D6), then staff invitations closed for 90 days (M9), then event requests
+   * closed without a booking for 90 days (M10).
+   */
   async scan(): Promise<RetentionScanResultDto> {
     const now = new Date();
-    const noticed = await this.sendDueNotices(now);
-    const purged = await this.purgeExpired(now);
-    if (noticed > 0 || purged > 0) {
+    const policy = await this.settings.retentionPolicy();
+    const noticed = await this.sendDueNotices(now, policy);
+    const reminded = await this.sendDueReminders(now, policy);
+    const purged = await this.purgeExpired(now, policy);
+    const affidavitsDeleted = await this.sweepAffidavits(now);
+    const invitesDeleted = await this.sweepInvites(now);
+    const eventRequestsDeleted = await this.sweepEventRequests(now);
+    if (
+      noticed > 0 ||
+      reminded > 0 ||
+      purged > 0 ||
+      affidavitsDeleted > 0 ||
+      invitesDeleted > 0 ||
+      eventRequestsDeleted > 0
+    ) {
       this.logger.log(
-        `Retention scan: ${noticed} notice(s) sent, ${purged} record(s) anonymized`,
+        `Retention scan: ${noticed} notice(s) sent, ${reminded} reminder(s) sent, ${purged} record(s) anonymized, ${affidavitsDeleted} affidavit(s) past retention deleted, ${invitesDeleted} closed invitation(s) deleted, ${eventRequestsDeleted} closed event request(s) deleted`,
       );
     }
-    return { noticed, purged };
+    return {
+      noticed,
+      reminded,
+      purged,
+      affidavitsDeleted,
+      invitesDeleted,
+      eventRequestsDeleted,
+    };
+  }
+
+  /**
+   * Delete event requests that closed without ever reaching a booking, 90 days
+   * after they closed (M10 D9, the board's "keep it for 90 days"). The audit
+   * log keeps the steps by reference.
+   */
+  private async sweepEventRequests(now: Date): Promise<number> {
+    const candidates = await this.prisma.eventRequest.findMany({
+      where: {
+        status: { in: ['UNAVAILABLE', 'CANCELLED'] },
+        reservationId: null,
+        closedAt: { not: null },
+      },
+      select: { id: true, status: true, reservationId: true, closedAt: true },
+    });
+    const due = candidates.filter((request) => eventRequestPurgeDue(request, now));
+    if (due.length === 0) return 0;
+    const deleted = await this.prisma.eventRequest.deleteMany({
+      where: { id: { in: due.map((request) => request.id) } },
+    });
+    return deleted.count;
+  }
+
+  /**
+   * Delete staff invitations 90 days after they closed (accepted, revoked or
+   * expired): each holds a work email, and the audit log keeps the event.
+   */
+  private async sweepInvites(now: Date): Promise<number> {
+    const candidates = await this.prisma.staffInvite.findMany({
+      where: {
+        OR: [
+          { acceptedAt: { not: null } },
+          { revokedAt: { not: null } },
+          { expiresAt: { lte: now } },
+        ],
+      },
+    });
+    const due = candidates.filter((invite) => isInvitePurgeDue(invite, now));
+    if (due.length === 0) return 0;
+    const deleted = await this.prisma.staffInvite.deleteMany({
+      where: { id: { in: due.map((invite) => invite.id) } },
+    });
+    return deleted.count;
+  }
+
+  /**
+   * Delete affidavits past `retainUntil` and their scans. They are kept out of
+   * the traveler purge (their own snapshot outlives it) and end only here; a
+   * newer affidavit that superseded one keeps its row, its link turning null.
+   */
+  private async sweepAffidavits(now: Date): Promise<number> {
+    const expired = await this.prisma.travelerAffidavit.findMany({
+      where: { retainUntil: { lt: now } },
+      select: { id: true, documentKey: true },
+    });
+    if (expired.length === 0) {
+      return 0;
+    }
+    for (const affidavit of expired) {
+      if (affidavit.documentKey) {
+        await this.storage.delete(affidavit.documentKey).catch(() => undefined);
+      }
+    }
+    await this.prisma.travelerAffidavit.deleteMany({
+      where: { id: { in: expired.map((affidavit) => affidavit.id) } },
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'retention.affidavits_deleted',
+        entityType: 'TravelerAffidavit',
+        entityId: null,
+        metadata: { count: expired.length },
+      },
+    });
+    return expired.length;
   }
 
   /** Travelers whose lifecycle is not simply ACTIVE, most urgent first. */
   async listPending(query: ListRetentionQuery): Promise<RetentionPendingUserDto[]> {
     const now = new Date();
+    const policy = await this.settings.retentionPolicy();
     const completions = await this.prisma.reservation.groupBy({
       by: ['userId'],
       where: { completedAt: { not: null }, user: { role: Role.TRAVELER } },
@@ -151,6 +262,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         },
         row._max.completedAt,
         now,
+        policy,
       );
       if (dto) {
         pending.push(dto);
@@ -218,7 +330,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  private async sendDueNotices(now: Date): Promise<number> {
+  private async sendDueNotices(now: Date, policy: RetentionPolicy): Promise<number> {
     const completions = await this.prisma.reservation.groupBy({
       by: ['userId'],
       where: { completedAt: { not: null }, user: { role: Role.TRAVELER } },
@@ -247,11 +359,11 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         consentGrantedAt: user.retentionConsentGrantedAt,
         anonymizedAt: user.anonymizedAt,
       };
-      if (!isRetentionNoticeDue(clock, now)) {
+      if (!isRetentionNoticeDue(clock, now, policy)) {
         continue;
       }
 
-      const purgeAt = retentionPurgeAt(now);
+      const purgeAt = retentionPurgeAt(now, policy);
       const token = signRetentionToken({
         userId: user.id,
         expiresAt: purgeAt,
@@ -265,6 +377,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
             keepAliveUrl: `${this.linkBaseUrl()}/retention/keep-alive?token=${encodeURIComponent(token)}`,
             purgeAt,
             branding: this.tenant.branding,
+            name: user.fullName,
+            locale: user.locale,
           }),
         );
       } catch (error) {
@@ -296,7 +410,92 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     return noticed;
   }
 
-  private async purgeExpired(now: Date): Promise<number> {
+  /**
+   * E-Retention's one reminder: a week before the deadline, to a traveler who
+   * has not kept the account. The audit log, keyed by the notice it follows,
+   * is the sent ledger, so a re-run never sends twice and no column is added.
+   */
+  private async sendDueReminders(now: Date, policy: RetentionPolicy): Promise<number> {
+    const authSecret = process.env.AUTH_SECRET;
+    if (!authSecret) {
+      return 0;
+    }
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: Role.TRAVELER,
+        anonymizedAt: null,
+        retentionNoticeSentAt: { not: null },
+      },
+    });
+
+    let reminded = 0;
+    for (const user of users) {
+      const noticeSentAt = user.retentionNoticeSentAt!;
+      const clock: RetentionClock = {
+        latestCompletedAt: null,
+        noticeSentAt,
+        consentGrantedAt: user.retentionConsentGrantedAt,
+        anonymizedAt: user.anonymizedAt,
+      };
+      if (!isRetentionReminderDue(clock, now, policy)) {
+        continue;
+      }
+      const already = await this.prisma.auditLog.findFirst({
+        where: {
+          action: 'retention.reminder_sent',
+          entityType: 'User',
+          entityId: user.id,
+          metadata: { path: ['noticeSentAt'], equals: noticeSentAt.toISOString() },
+        },
+        select: { id: true },
+      });
+      if (already) {
+        continue;
+      }
+
+      const purgeAt = retentionPurgeAt(noticeSentAt, policy);
+      const token = signRetentionToken({
+        userId: user.id,
+        expiresAt: purgeAt,
+        secret: authSecret,
+      });
+      try {
+        await this.mailer.send(
+          retentionNoticeEmail({
+            to: user.email,
+            keepAliveUrl: `${this.linkBaseUrl()}/retention/keep-alive?token=${encodeURIComponent(token)}`,
+            purgeAt,
+            branding: this.tenant.branding,
+            name: user.fullName,
+            locale: user.locale,
+            reminder: true,
+          }),
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Retention reminder failed for user ${user.id}: ${
+            error instanceof Error ? error.message : 'unknown error'
+          }`,
+        );
+        continue;
+      }
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'retention.reminder_sent',
+          entityType: 'User',
+          entityId: user.id,
+          metadata: {
+            noticeSentAt: noticeSentAt.toISOString(),
+            purgeAt: purgeAt.toISOString(),
+          },
+        },
+      });
+      reminded += 1;
+    }
+    return reminded;
+  }
+
+  private async purgeExpired(now: Date, policy: RetentionPolicy): Promise<number> {
     const candidates = await this.prisma.user.findMany({
       where: {
         role: Role.TRAVELER,
@@ -313,7 +512,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         consentGrantedAt: user.retentionConsentGrantedAt,
         anonymizedAt: user.anonymizedAt,
       };
-      if (!isRetentionPurgeDue(clock, now)) {
+      if (!isRetentionPurgeDue(clock, now, policy)) {
         continue;
       }
       await this.anonymize(user.id, user.email, now);
@@ -325,9 +524,14 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Scrub the traveler's PII and revoke their credentials in one transaction.
-   * Fiscal rows (reservation totals, service items, payment receipts, audit
-   * trail) are kept, but free-text PII on the traveler's bookings is redacted
-   * (`docs/pii-at-rest-review.md`, Tier 1).
+   * Fiscal rows (reservation totals, service items, price lines, payment
+   * receipts, audit trail) are kept, but free-text PII on the traveler's
+   * bookings is redacted, every traveler in their parties loses name, date of
+   * birth, nationality, passport and emergency contact, and their consent log
+   * loses its link to them (`docs/pii-at-rest-review.md`, Tier 1; M3 D6). OFAC
+   * affidavits are kept for their five years, critical-advisory
+   * acknowledgements stay with the anonymized user (M7 D8), and disruption
+   * cases keep the booking's safety state and choice but lose its notes (M8).
    */
   private async anonymize(userId: string, email: string, now: Date): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
@@ -358,6 +562,27 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         where: { reservationId: { in: reservationIds } },
         data: { description: '[redacted]' },
       });
+      // M3 D6: the consent log keeps its versioned counts, not who gave them.
+      // OFAC affidavits are not touched: they keep their own snapshot for five
+      // years and end in sweepAffidavits.
+      await tx.consentRecord.updateMany({
+        where: { userId },
+        data: { userId: null, visitorId: null, ipCountry: null },
+      });
+      // M2 party rows: keep kind, lead flag and room (party size and bed-nights
+      // stay reportable); drop who they were.
+      await tx.reservationTraveler.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: {
+          fullName: '[redacted]',
+          dateOfBirth: null,
+          nationality: null,
+          passportNumberEnc: null,
+          passportExpiresAt: null,
+          emergencyContactName: null,
+          emergencyContactPhone: null,
+        },
+      });
       await tx.serviceItem.updateMany({
         where: { reservationId: { in: reservationIds } },
         data: { declineReason: null },
@@ -369,6 +594,88 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         });
       }
 
+      // M8: the status board's notes about the party go; the case, its
+      // safety states and choices stay for the incident report.
+      await tx.disruptionCaseBooking.updateMany({
+        where: { reservationId: { in: reservationIds } },
+        data: { safetyNote: null },
+      });
+
+      // M10: an event request keeps its event, seats and frozen amounts for
+      // the aggregates; the traveler's notes and the desk's reason go.
+      await tx.eventRequest.updateMany({
+        where: { userId },
+        data: { notes: null, closedReason: null },
+      });
+
+      // M5: a custom request is a planning record. Keep its dates, party and
+      // chosen item ids for reporting; drop the traveler's notes and the
+      // personal itinerary narrative, and remove the proposal PDF.
+      const customRequests = await tx.customRequest.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          payload: true,
+          proposals: {
+            select: {
+              versions: { select: { id: true, document: true, pdfKey: true } },
+            },
+          },
+        },
+      });
+      if (customRequests.length > 0) {
+        for (const request of customRequests) {
+          const payload = (request.payload ?? {}) as Record<string, unknown>;
+          await tx.customRequest.update({
+            where: { id: request.id },
+            data: {
+              notes: null,
+              payload: {
+                startDate: payload.startDate ?? null,
+                endDate: payload.endDate ?? null,
+                adults: payload.adults ?? 1,
+                children: payload.children ?? 0,
+                inventoryItemIds: Array.isArray(payload.inventoryItemIds)
+                  ? payload.inventoryItemIds
+                  : [],
+              } as Prisma.InputJsonValue,
+            },
+          });
+          for (const proposal of request.proposals) {
+            for (const version of proposal.versions) {
+              const document = (version.document ?? {}) as Record<string, unknown>;
+              if (version.pdfKey) {
+                await this.storage.delete(version.pdfKey).catch(() => undefined);
+              }
+              await tx.proposalVersion.update({
+                where: { id: version.id },
+                data: {
+                  pdfKey: null,
+                  document: {
+                    summary: '[redacted]',
+                    startDate: document.startDate ?? '',
+                    endDate: document.endDate ?? '',
+                    adults: document.adults ?? 1,
+                    children: document.children ?? 0,
+                    stops: [],
+                    days: [],
+                    options: [],
+                  } as Prisma.InputJsonValue,
+                },
+              });
+            }
+          }
+        }
+        await tx.auditLog.create({
+          data: {
+            action: 'retention.custom_requests_scrubbed',
+            entityType: 'User',
+            entityId: userId,
+            metadata: { count: customRequests.length },
+          },
+        });
+      }
+
       // Better Auth verification rows are keyed by the old address.
       await tx.verification.deleteMany({
         where: { identifier: { contains: email } },
@@ -376,16 +683,35 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
 
       // Strip free-text PII keys from the traveler's audit metadata.
       if (reservationIds.length > 0 || serviceItemIds.length > 0) {
+        const cases = await tx.disruptionCaseBooking.findMany({
+          where: { reservationId: { in: reservationIds } },
+          select: { caseId: true },
+        });
         const audits = await tx.auditLog.findMany({
           where: {
             OR: [
               { entityType: 'Reservation', entityId: { in: reservationIds } },
               { entityType: 'ServiceItem', entityId: { in: serviceItemIds } },
+              {
+                entityType: 'DisruptionCase',
+                entityId: { in: cases.map((item) => item.caseId) },
+              },
             ],
           },
-          select: { id: true, metadata: true },
+          select: { id: true, entityType: true, metadata: true },
         });
         for (const audit of audits) {
+          // A case log also holds other travelers' lines; only this traveler's go.
+          if (
+            audit.entityType === 'DisruptionCase' &&
+            !reservationIds.includes(
+              String(
+                (audit.metadata as { reservationId?: unknown } | null)?.reservationId,
+              ),
+            )
+          ) {
+            continue;
+          }
           const cleaned = redactAuditMetadata(audit.metadata);
           if (cleaned) {
             await tx.auditLog.update({
@@ -425,6 +751,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     user: RetentionUserRow,
     latestCompletedAt: Date | null,
     now: Date,
+    policy: RetentionPolicy,
   ): RetentionPendingUserDto | null {
     const clock: RetentionClock = {
       latestCompletedAt,
@@ -432,7 +759,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       consentGrantedAt: user.retentionConsentGrantedAt,
       anonymizedAt: user.anonymizedAt,
     };
-    const status = retentionStatus(clock, now);
+    const status = retentionStatus(clock, now, policy);
     if (status === 'ACTIVE') {
       return null;
     }
@@ -440,7 +767,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     const purgeAt = user.anonymizedAt
       ? user.anonymizedAt
       : user.retentionNoticeSentAt
-        ? retentionPurgeAt(user.retentionNoticeSentAt)
+        ? retentionPurgeAt(user.retentionNoticeSentAt, policy)
         : null;
 
     return {

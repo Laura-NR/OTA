@@ -1,0 +1,354 @@
+'use client';
+
+import {
+  ADVISORY_DUAL_APPROVAL_LEVELS,
+  FX_LOCK_POINTS,
+  changedThresholds,
+  ipAddressText,
+  ipInRanges,
+  type OperatingThresholds,
+} from '@ota/domain';
+import type { SettingsVersionDto } from '@ota/schemas';
+import { Alert, Button, Field, Input, Select, Textarea } from '@ota/ui';
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useId, useState, type FormEvent } from 'react';
+
+import { apiRequest } from '@/lib/client-api';
+import { ApiError } from '@/lib/errors';
+import {
+  THRESHOLD_FIELDS,
+  THRESHOLD_GROUPS,
+  thresholdText,
+} from '@/lib/threshold-fields';
+
+import { IpAllowlistEditor } from './ip-allowlist-editor';
+
+export interface ThresholdsProposalProps {
+  current: OperatingThresholds;
+  defaults: OperatingThresholds;
+  pending: SettingsVersionDto | null;
+  actorId: string;
+  /** Active staff with no passkey yet, shown before the passkey rule is switched on. */
+  staffWithoutPasskey: number | null;
+  /** The address the signed-in Super Admin's session came from (`docs/schema-m9-ip-allowlist.md` I8). */
+  signInAddress: string | null;
+}
+
+/** The API's 422 code when an apply would refuse the applier (I4). */
+const IP_ALLOWLIST_EXCLUDES_YOU_CODE = 'IP_ALLOWLIST_EXCLUDES_YOU';
+
+/**
+ * A-Settings' "Approvals & thresholds" changes (M9 D1–D3), for Super Admins.
+ * With a proposal waiting, it shows what changes and lets the other Super
+ * Admins apply or reject it and its author withdraw it; otherwise it is the
+ * proposal form, with "Reset to spec defaults". Switching the staff passkey
+ * rule on says how many staff have no passkey yet; a Super Admin IP allowlist
+ * that would refuse the person's own sign-in address is flagged before it is
+ * proposed or applied. The page keys it by the version in force and the
+ * pending proposal, so a refresh resets it.
+ */
+export function ThresholdsProposal({
+  current,
+  defaults,
+  pending,
+  actorId,
+  staffWithoutPasskey,
+  signInAddress,
+}: ThresholdsProposalProps) {
+  const t = useTranslations('backoffice.settings.thresholds');
+  const why = useTranslations('backoffice.unavailable');
+  const units = useTranslations('backoffice.settings.thresholds.units');
+  const levels = useTranslations('advisoriesDesk.severities');
+  const locale = useLocale();
+  const router = useRouter();
+  const id = useId();
+  const [values, setValues] = useState<OperatingThresholds>(current);
+  const [reason, setReason] = useState('');
+  const [pendingAction, setPendingAction] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const text = (
+    key: keyof OperatingThresholds,
+    value: OperatingThresholds[keyof OperatingThresholds],
+  ) =>
+    thresholdText(
+      THRESHOLD_FIELDS.find((field) => field.key === key)!,
+      value,
+      locale,
+      units,
+      levels,
+    );
+
+  async function act(path: string, body?: unknown) {
+    setPendingAction(true);
+    setError(null);
+    try {
+      await apiRequest(path, {
+        method: 'POST',
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+      router.refresh();
+    } catch (actionError) {
+      const details =
+        actionError instanceof ApiError
+          ? (actionError.details as { code?: unknown; ipAddress?: unknown } | undefined)
+          : undefined;
+      setError(
+        details?.code === IP_ALLOWLIST_EXCLUDES_YOU_CODE
+          ? typeof details.ipAddress === 'string'
+            ? t('ipAllowlist.applyRefused', {
+                address: ipAddressText(details.ipAddress),
+              })
+            : t('ipAllowlist.excludesUnknown')
+          : actionError instanceof Error
+            ? actionError.message
+            : t('failed'),
+      );
+    } finally {
+      setPendingAction(false);
+    }
+  }
+
+  // Turning the rule on sends every staff member without a passkey to set one up.
+  const passkeyWarning = (next: OperatingThresholds) =>
+    next.staffPasskeysRequired &&
+    !current.staffPasskeysRequired &&
+    staffWithoutPasskey !== null ? (
+      <Alert>{t('passkeyWarning', { count: staffWithoutPasskey })}</Alert>
+    ) : null;
+
+  // Applying a list that leaves out the applier's own sign-in is refused (I4).
+  const ipWarning = (next: OperatingThresholds) =>
+    next.superAdminIpAllowlistOn &&
+    !ipInRanges(
+      signInAddress,
+      next.superAdminIpAllowlist.map((entry) => entry.cidr),
+    ) ? (
+      <Alert variant="warning">
+        {signInAddress !== null
+          ? t('ipAllowlist.excludesYou', { address: ipAddressText(signInAddress) })
+          : t('ipAllowlist.excludesUnknown')}
+      </Alert>
+    ) : null;
+
+  if (pending) {
+    const mine = pending.proposedById === actorId;
+    return (
+      <section
+        aria-labelledby={`${id}-pending`}
+        className="flex flex-col gap-3 rounded-lg border border-warning-500 bg-warning-100 px-5 py-4"
+      >
+        <h3 id={`${id}-pending`} className="text-h4">
+          {t('pendingTitle', { version: pending.version })}
+        </h3>
+        <p className="text-body-sm">
+          {t('pendingBy', {
+            name: pending.proposedByName ?? '—',
+            reason: pending.reason,
+          })}
+        </p>
+        <ul className="flex flex-col gap-1 text-body-sm">
+          {pending.changes.map((key) => {
+            const field = key as keyof OperatingThresholds;
+            return (
+              <li key={key}>
+                <span className="font-medium">{t(`labels.${field}`)}</span>
+                {': '}
+                {text(field, current[field])} →{' '}
+                <strong>{text(field, pending.values[field])}</strong>
+              </li>
+            );
+          })}
+        </ul>
+        {passkeyWarning(pending.values)}
+        {ipWarning(pending.values)}
+        {error ? <Alert variant="destructive">{error}</Alert> : null}
+        <div className="flex flex-wrap gap-2">
+          {mine ? (
+            <Button
+              variant="secondary"
+              disabled={pendingAction}
+              onClick={() =>
+                void act(`/settings/operating/versions/${pending.id}/withdraw`)
+              }
+            >
+              {t('withdraw')}
+            </Button>
+          ) : (
+            <>
+              <Button
+                disabled={pendingAction}
+                onClick={() =>
+                  void act(`/settings/operating/versions/${pending.id}/apply`)
+                }
+              >
+                {t('apply')}
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={pendingAction}
+                onClick={() =>
+                  void act(`/settings/operating/versions/${pending.id}/reject`)
+                }
+              >
+                {t('reject')}
+              </Button>
+            </>
+          )}
+        </div>
+        <p className="text-caption text-secondary">
+          {mine ? t('pendingMine') : t('pendingOther')}
+        </p>
+      </section>
+    );
+  }
+
+  const changes = changedThresholds(current, values);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void act('/settings/operating/versions', { values, reason });
+  }
+
+  return (
+    <form className="flex flex-col gap-5" onSubmit={submit}>
+      {THRESHOLD_GROUPS.map((group) => (
+        <fieldset key={group.key} className="flex flex-col gap-3">
+          <legend className="pb-2 text-body font-semibold">
+            {t(`groups.${group.key}`)}
+          </legend>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {group.fields.map((field) =>
+              field.unit === 'ipList' ? (
+                <IpAllowlistEditor
+                  key={field.key}
+                  entries={values.superAdminIpAllowlist}
+                  onChange={(entries) =>
+                    setValues({ ...values, superAdminIpAllowlist: entries })
+                  }
+                  on={values.superAdminIpAllowlistOn}
+                  signInAddress={signInAddress}
+                />
+              ) : (
+                <Field
+                  key={field.key}
+                  id={`${id}-${field.key}`}
+                  label={t(`labels.${field.key}`)}
+                  hint={
+                    field.unit === 'level' ||
+                    field.unit === 'switch' ||
+                    field.unit === 'lockPoint'
+                      ? undefined
+                      : t('bounds', { min: field.min ?? 0, max: field.max ?? 0 })
+                  }
+                >
+                  {(control) =>
+                    field.unit === 'switch' ? (
+                      <Select
+                        {...control}
+                        value={values[field.key] ? 'on' : 'off'}
+                        onChange={(event) =>
+                          setValues({
+                            ...values,
+                            [field.key]: event.target.value === 'on',
+                          })
+                        }
+                      >
+                        <option value="off">{units('off')}</option>
+                        <option value="on">{units('on')}</option>
+                      </Select>
+                    ) : field.unit === 'level' ? (
+                      <Select
+                        {...control}
+                        value={String(values[field.key])}
+                        onChange={(event) =>
+                          setValues({ ...values, [field.key]: event.target.value })
+                        }
+                      >
+                        {ADVISORY_DUAL_APPROVAL_LEVELS.map((level) => (
+                          <option key={level} value={level}>
+                            {t(`levels.${level}`)}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : field.unit === 'lockPoint' ? (
+                      <Select
+                        {...control}
+                        value={String(values[field.key])}
+                        onChange={(event) =>
+                          setValues({ ...values, [field.key]: event.target.value })
+                        }
+                      >
+                        {FX_LOCK_POINTS.map((point) => (
+                          <option key={point} value={point}>
+                            {units(point)}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : (
+                      <Input
+                        {...control}
+                        type="number"
+                        inputMode={field.step && field.step < 1 ? 'decimal' : 'numeric'}
+                        min={field.min}
+                        max={field.max}
+                        step={String(field.step ?? 1)}
+                        className="font-mono"
+                        value={String(values[field.key])}
+                        onChange={(event) =>
+                          setValues({
+                            ...values,
+                            [field.key]:
+                              event.target.value === '' ? 0 : Number(event.target.value),
+                          })
+                        }
+                      />
+                    )
+                  }
+                </Field>
+              ),
+            )}
+          </div>
+        </fieldset>
+      ))}
+      <Field id={`${id}-reason`} label={t('reason')} hint={t('reasonHint')} required>
+        {(control) => (
+          <Textarea
+            {...control}
+            rows={2}
+            maxLength={500}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+          />
+        )}
+      </Field>
+      <p className="text-caption text-secondary" aria-live="polite">
+        {changes.length === 0
+          ? t('noChanges')
+          : t('changes', { list: changes.map((key) => t(`labels.${key}`)).join(', ') })}
+      </p>
+      {passkeyWarning(values)}
+      {error ? <Alert variant="destructive">{error}</Alert> : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="submit"
+          disabled={pendingAction}
+          unavailableReason={
+            changes.length === 0
+              ? why('thresholdsChange')
+              : reason.trim().length < 3
+                ? why('minLength', { min: 3, field: t('reason') })
+                : undefined
+          }
+        >
+          {t('propose')}
+        </Button>
+        <Button type="button" variant="secondary" onClick={() => setValues(defaults)}>
+          {t('reset')}
+        </Button>
+      </div>
+      <p className="text-caption text-muted">{t('proposeNote')}</p>
+    </form>
+  );
+}

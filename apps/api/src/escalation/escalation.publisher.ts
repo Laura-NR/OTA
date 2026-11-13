@@ -17,11 +17,22 @@ export interface EscalationEvent {
 }
 
 /**
+ * The desk's own handling of its alerts (A-A11y 01): a red alert acknowledged,
+ * or the cue muted or unmuted, so every open desk follows. A mute concerns no
+ * item.
+ */
+export interface DeskAlertEvent {
+  type: 'alert.acknowledged' | 'alert.muted' | 'alert.unmuted';
+  serviceItemId: string | null;
+  occurredAt: string;
+}
+
+/**
  * Broadcasts dispatch/escalation events to the operations desk. The dispatch
  * service depends only on this interface, so tests run without a socket server.
  */
 export interface EscalationPublisher {
-  publish(event: EscalationEvent): void;
+  publish(event: EscalationEvent | DeskAlertEvent): void;
 }
 
 export class NoopEscalationPublisher implements EscalationPublisher {

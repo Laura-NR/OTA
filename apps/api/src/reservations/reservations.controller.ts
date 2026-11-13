@@ -29,6 +29,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -40,6 +41,7 @@ const READ_ROLES = [
   UserRole.SuperAdmin,
 ] as const;
 
+@Capability('bookings')
 @Controller('reservations')
 @UseFilters(DomainExceptionFilter)
 export class ReservationsController {

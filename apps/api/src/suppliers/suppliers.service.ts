@@ -3,32 +3,94 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
-import type { Availability, Prisma, SupplierProfile, User } from '@ota/db';
-import { VerificationStatus } from '@ota/domain';
+import type {
+  Availability,
+  Prisma,
+  SupplierProfile,
+  SupplierResources,
+  User,
+} from '@ota/db';
+import {
+  JOB_STATUSES,
+  ReservationStatus,
+  SupplierCategory,
+  VerificationStatus,
+  hasBackupPower,
+  isResourcesStale,
+  jobsInWindow,
+  lastJob,
+  longBlockedRun,
+  resourcesIssue,
+  supplierPower,
+  workerEarnings,
+  workerToday,
+  type PowerFacts,
+  type ResourceChannel,
+  type ResourcesIssue,
+  type SupplierJob,
+} from '@ota/domain';
 import type { ObjectStorage } from '@ota/storage';
+import { vehicleDetailsSchema } from '@ota/schemas';
 import type {
   AvailabilityDayDto,
   AvailabilityQuery,
+  ConfirmResourcesRequest,
   ExpiringSuppliersQuery,
   ListSuppliersQuery,
   SetAvailabilityRequest,
   SetVerificationRequest,
+  SupplierDetailDto,
   SupplierDto,
+  SupplierLastJobDto,
+  SupplierPayoutsDto,
+  SupplierResourcesDto,
+  SupplierRowDto,
   UploadCredentialRequest,
+  VehicleDetailsDto,
+  VehicleDetailsRequest,
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { OBJECT_STORAGE } from '../storage/storage.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
+import { finishedJobsWhere, payoutCents, toPayoutsDto } from './payouts';
 
 type SupplierWithUser = SupplierProfile & {
   user: Pick<User, 'email' | 'fullName'>;
 };
 
 const userSelect = { select: { email: true, fullName: true } } as const;
+
+/** The register and the inspector read the confirmed resources and who confirmed them. */
+const resourcesInclude = {
+  include: { confirmedBy: { select: { email: true, fullName: true } } },
+} as const;
+
+type ResourcesRow = SupplierResources & {
+  confirmedBy: Pick<User, 'email' | 'fullName'> | null;
+};
+
+type SupplierWithResources = SupplierWithUser & {
+  /** Absent when never confirmed (and in tests whose fakes ignore `include`). */
+  resources?: ResourcesRow | null;
+};
+
+type JobRow = SupplierJob & { supplierId: string };
+
+const RESOURCES_ISSUE_MESSAGE: Record<ResourcesIssue, string> = {
+  NO_RESOURCES_FOR_CATEGORY: 'Only casas and drivers record resources',
+  GENERATOR_REQUIRED: 'A casa states its generator, None included',
+  GENERATOR_DETAILS_WITHOUT_GENERATOR:
+    'Generator hours, schedule and fuel days need a generator',
+  FUEL_ON_CASA: 'The fuel reserve is recorded for drivers',
+  FUEL_REQUIRED: 'A driver states the fuel reserve in litres',
+  CASA_FIELDS_ON_DRIVER: 'Power, water and rooms are recorded for casas',
+};
 
 const MAX_CREDENTIAL_BYTES = 5 * 1024 * 1024;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -72,6 +134,7 @@ function toAvailabilityDto(day: Availability): AvailabilityDayDto {
     supplierId: day.supplierId,
     date: day.date.toISOString().slice(0, 10),
     isAvailable: day.isAvailable,
+    blockReason: day.blockReason,
   };
 }
 
@@ -95,14 +158,110 @@ function toDto(supplier: SupplierWithUser): SupplierDto {
   };
 }
 
+function powerFacts(resources: SupplierResources | null): PowerFacts | null {
+  if (!resources) return null;
+  return {
+    generator: resources.generator,
+    generatorHoursPerDay: resources.generatorHoursPerDay,
+    solarBatteryKwh:
+      resources.solarBatteryKwh === null ? null : Number(resources.solarBatteryKwh),
+    fuelReserveLitres: resources.fuelReserveLitres,
+  };
+}
+
+function toResourcesDto(
+  resources: ResourcesRow,
+  now: Date,
+  staleDays: number,
+): SupplierResourcesDto {
+  return {
+    generator: resources.generator,
+    generatorHoursPerDay: resources.generatorHoursPerDay,
+    generatorSchedule: resources.generatorSchedule,
+    generatorFuelDays: resources.generatorFuelDays,
+    solarBatteryKwh:
+      resources.solarBatteryKwh === null ? null : Number(resources.solarBatteryKwh),
+    waterTankLitres: resources.waterTankLitres,
+    rooms: resources.rooms,
+    guestCapacity: resources.guestCapacity,
+    fuelReserveLitres: resources.fuelReserveLitres,
+    confirmedAt: resources.confirmedAt.toISOString(),
+    confirmedByName: resources.confirmedBy
+      ? (resources.confirmedBy.fullName ?? resources.confirmedBy.email)
+      : null,
+    confirmedVia: resources.confirmedVia,
+    stale: isResourcesStale(resources.confirmedAt, now, staleDays),
+  };
+}
+
+function toLastJobDto(job: JobRow | null): SupplierLastJobDto | null {
+  return job
+    ? {
+        startsAt: job.startsAt.toISOString(),
+        serviceType: job.serviceType,
+        province: job.province,
+      }
+    : null;
+}
+
+function toRowDto(
+  supplier: SupplierWithResources,
+  jobs: readonly JobRow[],
+  now: Date,
+  staleDays: number,
+): SupplierRowDto {
+  const resources = supplier.resources ?? null;
+  const facts = powerFacts(resources);
+  return {
+    ...toDto(supplier),
+    power: {
+      ...supplierPower(supplier.category, facts),
+      backup: hasBackupPower(supplier.category, facts),
+      confirmedAt: resources ? resources.confirmedAt.toISOString() : null,
+      stale: resources ? isResourcesStale(resources.confirmedAt, now, staleDays) : false,
+    },
+    lastJob: toLastJobDto(lastJob(jobs, now)),
+  };
+}
+
+/** The stored vehicle, or null when there is none or it does not match the shape. */
+function storedVehicle(value: Prisma.JsonValue | null): VehicleDetailsDto | null {
+  const parsed = vehicleDetailsSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
+/** The resources row's values, as the audit log records them before and after (D8). */
+function resourcesValues(
+  resources: SupplierResources | Omit<ConfirmResourcesRequest, 'via'> | null,
+): Record<string, unknown> | null {
+  if (!resources) return null;
+  return {
+    generator: resources.generator,
+    generatorHoursPerDay: resources.generatorHoursPerDay,
+    generatorSchedule: resources.generatorSchedule,
+    generatorFuelDays: resources.generatorFuelDays,
+    solarBatteryKwh:
+      resources.solarBatteryKwh === null ? null : Number(resources.solarBatteryKwh),
+    waterTankLitres: resources.waterTankLitres,
+    rooms: resources.rooms,
+    guestCapacity: resources.guestCapacity,
+    fuelReserveLitres: resources.fuelReserveLitres,
+  };
+}
+
 @Injectable()
 export class SuppliersService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
-  async list(filters: ListSuppliersQuery): Promise<SupplierDto[]> {
+  /**
+   * The register: each supplier with its Power and Last job columns (M6 D1,
+   * D3). `backupPower` keeps the suppliers that pass `hasBackupPower`.
+   */
+  async list(filters: ListSuppliersQuery): Promise<SupplierRowDto[]> {
     const where: Prisma.SupplierProfileWhereInput = {};
     if (filters.status) {
       where.verificationStatus = filters.status;
@@ -111,13 +270,24 @@ export class SuppliersService {
       where.provincesActive = { has: filters.province };
     }
 
-    const suppliers = await this.prisma.supplierProfile.findMany({
-      where,
-      include: { user: userSelect },
-      orderBy: { createdAt: 'asc' },
-    });
+    const suppliers: SupplierWithResources[] = await this.prisma.supplierProfile.findMany(
+      {
+        where,
+        include: { user: userSelect, resources: resourcesInclude },
+        orderBy: { createdAt: 'asc' },
+      },
+    );
+    const now = new Date();
+    const staleDays = (await this.settings.thresholds()).resourcesStaleDays;
+    const jobs = await this.jobs(
+      suppliers.map((supplier) => supplier.id),
+      now,
+    );
 
-    return suppliers.map(toDto);
+    const rows = suppliers.map((supplier) =>
+      toRowDto(supplier, jobs.get(supplier.id) ?? [], now, staleDays),
+    );
+    return filters.backupPower ? rows.filter((row) => row.power.backup) : rows;
   }
 
   /** Suppliers whose credential is within `days` of expiry (or already expired). */
@@ -135,17 +305,184 @@ export class SuppliersService {
     return suppliers.map(toDto);
   }
 
-  async getById(id: string): Promise<SupplierDto> {
-    const supplier = await this.prisma.supplierProfile.findUnique({
-      where: { id },
-      include: { user: userSelect },
-    });
+  /**
+   * The inspector: the register row, the confirmed resources, the jobs of 12
+   * months and the payouts.
+   */
+  async getById(id: string): Promise<SupplierDetailDto> {
+    const supplier: SupplierWithResources | null =
+      await this.prisma.supplierProfile.findUnique({
+        where: { id },
+        include: { user: userSelect, resources: resourcesInclude },
+      });
 
     if (!supplier) {
       throw new NotFoundException(`Supplier ${id} not found`);
     }
 
-    return toDto(supplier);
+    const now = new Date();
+    const staleDays = (await this.settings.thresholds()).resourcesStaleDays;
+    const jobs = (await this.jobs([id], now)).get(id) ?? [];
+    const resources = supplier.resources ?? null;
+    const today = workerToday(now);
+    const blocked = await this.prisma.availability.findMany({
+      where: {
+        supplierId: id,
+        isAvailable: false,
+        date: { gte: new Date(`${today}T00:00:00Z`) },
+      },
+      select: { date: true },
+    });
+    return {
+      ...toRowDto(supplier, jobs, now, staleDays),
+      resources: resources ? toResourcesDto(resources, now, staleDays) : null,
+      jobs12m: jobsInWindow(jobs, now),
+      vehicle: storedVehicle(supplier.vehicleDetails),
+      longBlock: longBlockedRun(
+        blocked.map((row) => row.date.toISOString().slice(0, 10)),
+        today,
+      ),
+      payouts: await this.payouts(id, now),
+    };
+  }
+
+  /**
+   * The worker's payouts over their finished jobs (W-Earnings): what the
+   * inspector shows and the worker app's totals.
+   */
+  async payouts(supplierId: string, now: Date = new Date()): Promise<SupplierPayoutsDto> {
+    const items = await this.prisma.serviceItem.findMany({
+      where: finishedJobsWhere(supplierId, now),
+      select: {
+        status: true,
+        serviceDateEnd: true,
+        payoutRate: true,
+        payoutStatus: true,
+        reservation: { select: { status: true } },
+      },
+    });
+    return toPayoutsDto(
+      workerEarnings(
+        items.map((item) => ({
+          status: item.status,
+          reservationStatus: item.reservation.status,
+          endsAt: item.serviceDateEnd,
+          payoutCents: payoutCents(item.payoutRate),
+          payoutStatus: item.payoutStatus,
+        })),
+        now,
+      ),
+    );
+  }
+
+  /**
+   * Replace a driver's vehicle (M6 D7(b)) in the profile's `vehicle_details`
+   * JSON and audit the previous and new values as `supplier.vehicle_updated`.
+   * The insurance date is informational: it does not pause dispatch, which
+   * follows the credential rules only. Other categories get a 422.
+   */
+  async setVehicle(
+    id: string,
+    input: VehicleDetailsRequest,
+    actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    const supplier = await this.prisma.supplierProfile.findUnique({
+      where: { id },
+      select: { category: true, vehicleDetails: true },
+    });
+    if (!supplier) {
+      throw new NotFoundException(`Supplier ${id} not found`);
+    }
+    if (supplier.category !== SupplierCategory.PrivateDriver) {
+      throw new UnprocessableEntityException('Vehicle details are recorded for drivers');
+    }
+    const vehicle: VehicleDetailsDto = {
+      ...input,
+      insuranceUntil: input.insuranceUntil
+        ? input.insuranceUntil.toISOString().slice(0, 10)
+        : null,
+    };
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.supplierProfile.update({
+        where: { id },
+        data: { vehicleDetails: vehicle },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: 'supplier.vehicle_updated',
+          entityType: 'SupplierProfile',
+          entityId: id,
+          metadata: {
+            previous: supplier.vehicleDetails ?? null,
+            next: vehicle,
+          } as Prisma.InputJsonValue,
+        },
+      });
+    });
+
+    return this.getById(id);
+  }
+
+  /**
+   * Record a resources confirmation (M6 D1, D4): the row is replaced wholesale
+   * and stamped with the actor, the channel and now, and the previous and new
+   * values are audited as `supplier.resources_confirmed` (D8). Casa fields go
+   * to casas and the fuel reserve to drivers (422 otherwise).
+   */
+  async confirmResources(
+    id: string,
+    input: ConfirmResourcesRequest,
+    actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    await this.recordResources(id, input, actor);
+    return this.getById(id);
+  }
+
+  /**
+   * The write behind `confirmResources`, also used by the worker app's fuel
+   * declaration (W-Calendar), which arrives with `via: WORKER_APP`.
+   */
+  async recordResources(
+    id: string,
+    input: Omit<ConfirmResourcesRequest, 'via'> & { via: ResourceChannel },
+    actor: AuthUser,
+  ): Promise<void> {
+    const supplier = await this.prisma.supplierProfile.findUnique({
+      where: { id },
+      select: { category: true, resources: true },
+    });
+    if (!supplier) {
+      throw new NotFoundException(`Supplier ${id} not found`);
+    }
+    const { via, ...values } = input;
+    const issue = resourcesIssue(supplier.category, values);
+    if (issue) {
+      throw new UnprocessableEntityException(RESOURCES_ISSUE_MESSAGE[issue]);
+    }
+
+    const stamp = { confirmedAt: new Date(), confirmedById: actor.id, confirmedVia: via };
+    await this.prisma.$transaction(async (tx) => {
+      await tx.supplierResources.upsert({
+        where: { supplierId: id },
+        create: { supplierId: id, ...values, ...stamp },
+        update: { ...values, ...stamp },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: 'supplier.resources_confirmed',
+          entityType: 'SupplierProfile',
+          entityId: id,
+          metadata: {
+            via,
+            previous: resourcesValues(supplier.resources ?? null),
+            next: resourcesValues(input),
+          } as Prisma.InputJsonValue,
+        },
+      });
+    });
   }
 
   /**
@@ -293,6 +630,7 @@ export class SuppliersService {
   /**
    * Set one calendar day's availability (spec §5.2 single-tap toggle / granular
    * blocking). Upserts on the unique supplier+date pair and audits the change.
+   * The desk gives no reason, so a worker's reason for the day is cleared (K4).
    */
   async setAvailability(
     id: string,
@@ -306,7 +644,7 @@ export class SuppliersService {
       const result = await tx.availability.upsert({
         where: { supplierId_date: { supplierId: id, date } },
         create: { supplierId: id, date, isAvailable: input.isAvailable },
-        update: { isAvailable: input.isAvailable },
+        update: { isAvailable: input.isAvailable, blockReason: null },
       });
 
       await tx.auditLog.create({
@@ -326,6 +664,49 @@ export class SuppliersService {
     });
 
     return toAvailabilityDto(day);
+  }
+
+  /**
+   * The suppliers' jobs (M6 D3): service items assigned to them that were
+   * accepted or done, have started, and whose booking is not cancelled. The
+   * domain rules apply the same filter; the query only narrows the read.
+   */
+  private async jobs(
+    supplierIds: readonly string[],
+    now: Date,
+  ): Promise<Map<string, JobRow[]>> {
+    const bySupplier = new Map<string, JobRow[]>();
+    if (supplierIds.length === 0) return bySupplier;
+    const items = await this.prisma.serviceItem.findMany({
+      where: {
+        supplierId: { in: [...supplierIds] },
+        status: { in: [...JOB_STATUSES] },
+        serviceDateStart: { lte: now },
+        reservation: { status: { not: ReservationStatus.Cancelled } },
+      },
+      select: {
+        supplierId: true,
+        serviceDateStart: true,
+        status: true,
+        serviceType: true,
+        province: true,
+        reservation: { select: { status: true } },
+      },
+    });
+    for (const item of items) {
+      if (!item.supplierId) continue;
+      const list = bySupplier.get(item.supplierId) ?? [];
+      list.push({
+        supplierId: item.supplierId,
+        startsAt: item.serviceDateStart,
+        status: item.status,
+        serviceType: item.serviceType,
+        province: item.province,
+        reservationStatus: item.reservation.status,
+      });
+      bySupplier.set(item.supplierId, list);
+    }
+    return bySupplier;
   }
 
   private async requireSupplier(id: string): Promise<void> {

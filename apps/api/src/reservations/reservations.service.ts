@@ -7,7 +7,12 @@ import {
 } from '@nestjs/common';
 
 import type { Prisma, Reservation } from '@ota/db';
-import { ReservationStatus, assertTransition } from '@ota/domain';
+import {
+  ReservationStatus,
+  assertTransition,
+  ofacGate,
+  type TransitionReason,
+} from '@ota/domain';
 import type {
   AuditLogEntryDto,
   ClassifyReservationRequest,
@@ -23,20 +28,38 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
 import { DocumentsService } from '../documents/documents.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ServerTelemetry } from '../telemetry/server-telemetry';
+
+const ROW_CONTEXT = {
+  package: { select: { name: true } },
+  payments: { where: { status: 'PAID' }, select: { amount: true } },
+  travelers: { select: { id: true, usPerson: true, nationality: true } },
+  affidavits: { select: { travelerId: true } },
+  // M4: the next instalment still due, for the payment window and balance alerts.
+  instalments: {
+    where: { status: 'DUE' },
+    orderBy: { position: 'asc' },
+    take: 1,
+    select: { kind: true, amount: true, dueAt: true },
+  },
+} as const;
 
 type ListRow = Prisma.ReservationGetPayload<{
   include: {
     user: { select: { email: true; fullName: true } };
-    _count: { select: { serviceItems: true } };
-  };
+    serviceItems: { select: { status: true; province: true } };
+  } & typeof ROW_CONTEXT;
 }>;
 
 type DetailRow = Prisma.ReservationGetPayload<{
   include: {
     user: { select: { id: true; email: true; fullName: true } };
-    serviceItems: true;
-  };
+    serviceItems: {
+      include: { supplier: { include: { user: { select: { fullName: true } } } } };
+    };
+  } & typeof ROW_CONTEXT;
 }>;
 
 type AuditRow = Prisma.AuditLogGetPayload<{
@@ -57,12 +80,46 @@ function toDto(reservation: Reservation): ReservationDto {
   };
 }
 
+const SECURED_ITEM_STATUSES: readonly string[] = ['ACCEPTED', 'FULFILLED'];
+
+/**
+ * The context a row carries beyond the reservation: package, places, progress,
+ * money, OFAC, and the next instalment due (M4).
+ */
+function rowContext(row: ListRow | DetailRow) {
+  return {
+    serviceItemCount: row.serviceItems.length,
+    packageName: row.package?.name ?? null,
+    provinces: [
+      ...new Set(
+        row.serviceItems
+          .map((item) => item.province)
+          .filter((province): province is string => province !== null),
+      ),
+    ],
+    serviceItemsAccepted: row.serviceItems.filter((item) =>
+      SECURED_ITEM_STATUSES.includes(item.status),
+    ).length,
+    paidAmount: row.payments
+      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+      .toFixed(2),
+    ofacMissing: ofacGate(row.travelers, row.affidavits).missing.length,
+    nextInstalment: row.instalments[0]
+      ? {
+          kind: row.instalments[0].kind,
+          amount: row.instalments[0].amount.toFixed(2),
+          dueAt: row.instalments[0].dueAt.toISOString(),
+        }
+      : null,
+  };
+}
+
 function toListDto(row: ListRow): ReservationListItemDto {
   return {
     ...toDto(row),
     travelerEmail: row.user.email,
     travelerName: row.user.fullName,
-    serviceItemCount: row._count.serviceItems,
+    ...rowContext(row),
   };
 }
 
@@ -84,10 +141,15 @@ function toDetailDto(row: DetailRow): ReservationDetailDto {
   return {
     ...toDto(row),
     travelerId: row.user.id,
+    packageId: row.packageId,
     travelerEmail: row.user.email,
     travelerName: row.user.fullName,
-    serviceItemCount: row.serviceItems.length,
-    serviceItems: row.serviceItems.map(toServiceItemDto),
+    ...rowContext(row),
+    serviceItems: row.serviceItems.map((item) => ({
+      ...toServiceItemDto(item),
+      supplierName: item.supplier?.user.fullName ?? null,
+      payoutRate: item.payoutRate.toString(),
+    })),
   };
 }
 
@@ -110,12 +172,14 @@ export class ReservationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly documents: DocumentsService,
+    private readonly notifications: NotificationsService,
+    private readonly telemetry: ServerTelemetry,
   ) {}
 
   /**
    * The operations pipeline: most recent first, optionally narrowed to a single
-   * status. Each row carries the traveler and a service-item count so the board
-   * can be read without a second request.
+   * status. Each row carries the traveler, its package, provinces, accepted
+   * services and paid amount, so the bookings list reads without a second request.
    */
   async list(query: ListReservationsQuery): Promise<ReservationListItemDto[]> {
     const reservations = await this.prisma.reservation.findMany({
@@ -124,7 +188,8 @@ export class ReservationsService {
       take: query.limit,
       include: {
         user: { select: { email: true, fullName: true } },
-        _count: { select: { serviceItems: true } },
+        serviceItems: { select: { status: true, province: true } },
+        ...ROW_CONTEXT,
       },
     });
 
@@ -137,7 +202,11 @@ export class ReservationsService {
       where: { id },
       include: {
         user: { select: { id: true, email: true, fullName: true } },
-        serviceItems: { orderBy: { serviceDateStart: 'asc' } },
+        serviceItems: {
+          orderBy: { serviceDateStart: 'asc' },
+          include: { supplier: { include: { user: { select: { fullName: true } } } } },
+        },
+        ...ROW_CONTEXT,
       },
     });
 
@@ -243,14 +312,16 @@ export class ReservationsService {
   }
 
   /**
-   * Apply a status transition to a reservation and record it in the audit log.
-   * The domain state machine owns what is legal; this only loads, checks,
-   * persists, and reports.
+   * Apply a status transition to a reservation and record it in the audit log
+   * and as a T-Event, whose `reason` says what asked for it (the desk's
+   * buttons unless a caller says otherwise). The domain state machine owns
+   * what is legal; this only loads, checks, persists, and reports.
    */
   async transition(
     id: string,
     input: TransitionReservationRequest,
     actor: AuthUser,
+    reason: TransitionReason = 'manual',
   ): Promise<ReservationDto> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },
@@ -273,6 +344,21 @@ export class ReservationsService {
         },
       });
 
+      // M10 D3: a cancelled booking takes its event requests with it.
+      if (input.to === ReservationStatus.Cancelled) {
+        await tx.eventRequest.updateMany({
+          where: {
+            reservationId: id,
+            status: { in: ['SUBMITTED', 'REQUESTING', 'CONFIRMED'] },
+          },
+          data: {
+            status: 'CANCELLED',
+            closedAt: new Date(),
+            closedReason: 'The booking was cancelled.',
+          },
+        });
+      }
+
       await tx.auditLog.create({
         data: {
           actorUserId: actor.id,
@@ -286,9 +372,19 @@ export class ReservationsService {
       return result;
     });
 
+    this.telemetry.stateChanged({
+      bookingCode: updated.bookingCode,
+      from,
+      to: input.to,
+      actor,
+      reason,
+    });
+
     // Entering CONFIRMED issues the legal document set (spec §4.4). Generation
     // is best-effort: the transition is already persisted, and documents can be
-    // regenerated via POST /reservations/:id/documents if this fails.
+    // regenerated via POST /reservations/:id/documents if this fails. The
+    // traveler is then emailed (E-Confirmed, with the documents); entering
+    // SECURED_AND_INVOICED emails E-Invoice. Both sends are best-effort too.
     if (input.to === ReservationStatus.Confirmed) {
       try {
         await this.documents.generate(id, actor);
@@ -298,6 +394,10 @@ export class ReservationsService {
           error instanceof Error ? error.stack : undefined,
         );
       }
+      await this.notifications.bookingConfirmed(id);
+    }
+    if (input.to === ReservationStatus.SecuredAndInvoiced) {
+      await this.notifications.bookingSecured(id);
     }
 
     return toDto(updated);

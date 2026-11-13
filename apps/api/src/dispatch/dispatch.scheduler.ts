@@ -11,6 +11,7 @@ export interface DispatchScheduler {
   setTimeoutHandler(handler: DispatchTimeoutHandler): void;
   scheduleTimeout(serviceItemId: string, delayMs: number): Promise<void>;
   cancelTimeout(serviceItemId: string): Promise<void>;
+  close(): Promise<void>;
 }
 
 /** Used in tests and when no queue backend is configured. */
@@ -24,6 +25,10 @@ export class NoopDispatchScheduler implements DispatchScheduler {
   }
 
   async cancelTimeout(): Promise<void> {
+    // no-op
+  }
+
+  async close(): Promise<void> {
     // no-op
   }
 }

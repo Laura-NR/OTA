@@ -1,23 +1,77 @@
 import { Module } from '@nestjs/common';
 import { createPaymentProviders, type PaymentProviderName } from '@ota/payments';
 
+import { CurrenciesModule } from '../currencies/currencies.module';
 import { ReservationsModule } from '../reservations/reservations.module';
+import { PaymentsLedgerController } from './payments-ledger.controller';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PAYMENT_PROVIDERS } from './payments.tokens';
+import { ProofsController } from './proofs.controller';
+import { ProofsService } from './proofs.service';
 import { PublicPaymentController } from './public-payment.controller';
+import { RefundsController } from './refunds.controller';
+import { RefundsService } from './refunds.service';
+import { BullmqReminderScheduler } from './bullmq-reminders.scheduler';
+import { RemindersController } from './reminders.controller';
+import {
+  NoopReminderScheduler,
+  REMINDER_SCHEDULER,
+  WINDOW_REMINDER_SCHEDULER,
+} from './reminders.scheduler';
+import { RemindersService } from './reminders.service';
+import { ScheduleController } from './schedule.controller';
+import { ScheduleService } from './schedule.service';
 
 /**
- * Payment intents and confirmation. Concrete gateways are injected behind the
+ * Payment intents and confirmation, and the M4 schedule, proofs of transfer
+ * and refunds. Concrete gateways are injected behind the
  * `PAYMENT_PROVIDERS` map so a rail can be swapped without touching consumers
  * (ADR 0003). Wire transfer is the primary rail; the card rail stays on the
  * mock until a signed card gateway is wired.
  */
 @Module({
-  imports: [ReservationsModule],
-  controllers: [PaymentsController, PublicPaymentController],
+  imports: [ReservationsModule, CurrenciesModule],
+  controllers: [
+    PaymentsController,
+    PaymentsLedgerController,
+    PublicPaymentController,
+    ScheduleController,
+    ProofsController,
+    RefundsController,
+    RemindersController,
+  ],
   providers: [
     PaymentsService,
+    ScheduleService,
+    ProofsService,
+    RefundsService,
+    RemindersService,
+    {
+      provide: REMINDER_SCHEDULER,
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL;
+        if (process.env.NODE_ENV === 'test' || !redisUrl) {
+          return new NoopReminderScheduler();
+        }
+        return new BullmqReminderScheduler(redisUrl);
+      },
+    },
+    {
+      provide: WINDOW_REMINDER_SCHEDULER,
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL;
+        if (process.env.NODE_ENV === 'test' || !redisUrl) {
+          return new NoopReminderScheduler();
+        }
+        return new BullmqReminderScheduler(redisUrl, {
+          queueName: 'payment-window-reminders',
+          schedulerId: 'payment-window-reminder-scan',
+          // Every 15 minutes, so a 2-hour reminder goes out 1¾–2 hours ahead.
+          repeatEveryMs: 15 * 60_000,
+        });
+      },
+    },
     {
       provide: PAYMENT_PROVIDERS,
       useFactory: () =>
@@ -30,6 +84,6 @@ import { PublicPaymentController } from './public-payment.controller';
         }),
     },
   ],
-  exports: [PaymentsService],
+  exports: [PaymentsService, ScheduleService, ProofsService],
 })
 export class PaymentsModule {}

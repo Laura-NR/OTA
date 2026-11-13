@@ -11,6 +11,11 @@ export const meProfileSchema = z.object({
   fullName: z.string().nullable(),
   role: z.string(),
   locale: z.string(),
+  /** M10 D4: a request form asks for these only when they are missing. */
+  phone: z.string().nullable(),
+  nationality: z.string().nullable(),
+  /** M9 C4: the saved display currency; null follows the cookie or the default. */
+  displayCurrency: z.string().nullable(),
 });
 
 export type MeProfileDto = z.infer<typeof meProfileSchema>;
@@ -38,14 +43,50 @@ export const myReservationListItemSchema = z.object({
 
 export type MyReservationListItemDto = z.infer<typeof myReservationListItemSchema>;
 
+/** The package a trip was booked from, in the requested locale where translated. */
+export const myTripSchema = z.object({
+  name: z.string(),
+  /** The chosen tier's name, or null when the booking has none. */
+  tier: z.string().nullable(),
+});
+
+/** Where the provider requests stand (the dispatch ledger, no provider named). */
+export const providerProgressSchema = z.object({
+  services: z.number().int(),
+  confirmed: z.number().int(),
+  awaiting: z.number().int(),
+  arranging: z.number().int(),
+  requestsSent: z.number().int(),
+  answered: z.number().int(),
+});
+
+export type ProviderProgressDto = z.infer<typeof providerProgressSchema>;
+
+/** A member of the travel party, by name only (no passport or birth date). */
+export const myTravelerSchema = z.object({
+  fullName: z.string(),
+  isLead: z.boolean(),
+});
+
 export const myReservationDetailSchema = myReservationListItemSchema.extend({
   serviceItems: z.array(reservationServiceItemSchema),
   documents: z.array(myDocumentSchema),
   /** The caller's CSAT review, when the trip has been reviewed. */
   review: myReviewSchema.nullable(),
+  /** Null for a custom trip (builder or accepted proposal). */
+  trip: myTripSchema.nullable(),
+  travelers: z.array(myTravelerSchema),
+  providers: providerProgressSchema,
 });
 
 export type MyReservationDetailDto = z.infer<typeof myReservationDetailSchema>;
+
+/** `GET /me/reservations/:id?locale=` picks the package's published translation. */
+export const myReservationQuerySchema = z.object({
+  locale: z.string().trim().min(2).max(5).optional(),
+});
+
+export type MyReservationQuery = z.infer<typeof myReservationQuerySchema>;
 
 /**
  * A traveler-built itinerary (spec §4.2 / storefront dynamic package builder).

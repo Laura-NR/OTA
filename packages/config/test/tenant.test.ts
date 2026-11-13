@@ -15,6 +15,101 @@ const minimal = {
   },
 };
 
+const builder = {
+  transports: [{ key: 'minivan', pricePerPersonDay: 28 }],
+  stayStyles: [
+    { key: 'standard', pricePerNight: 30 },
+    { key: 'comfort', pricePerNight: 45 },
+  ],
+  defaultStayStyle: 'comfort',
+  guiding: { sharedPerPersonDay: 25, privatePerGroupDay: 55 },
+  interpreterPerGroupDay: 40,
+  offsetPerNight: 5,
+  feePercent: 12,
+};
+
+describe('custom builder terms', () => {
+  it('has none by default, so the builder shows no estimate', () => {
+    expect(parseTenantConfig(minimal).customBuilder).toBeNull();
+  });
+
+  it('reads the rates as placeholder data unless published', () => {
+    const config = parseTenantConfig({ ...minimal, customBuilder: builder });
+    expect(config.customBuilder).toMatchObject({
+      status: 'placeholder',
+      currency: 'EUR',
+      spreadPercent: 6,
+    });
+  });
+
+  it('refuses a default stay style that is not offered', () => {
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        customBuilder: { ...builder, defaultStayStyle: 'castle' },
+      }),
+    ).toThrow();
+  });
+});
+
+const scenario = {
+  key: 'outage',
+  label: 'Power outage > 12 h',
+  trigger: 'Outage > 6 h at a traveler accommodation',
+  steps: [{ text: 'Confirm safety', owner: 'Reservations', due: 'within 30 min' }],
+  options: [
+    { key: 'A', title: 'Stay', detail: 'No change to price' },
+    { key: 'B', title: 'Move', detail: 'Same price' },
+  ],
+  policy: 'Meal vouchers for outages over 12 h.',
+};
+
+describe('disruption playbooks', () => {
+  it('has no scenarios by default, so the desk cannot open a case', () => {
+    expect(parseTenantConfig(minimal).disruptions).toEqual({
+      status: 'placeholder',
+      deadlineHours: 4,
+      scenarios: [],
+    });
+  });
+
+  it('keeps option A as the default answer unless the scenario names another', () => {
+    const config = parseTenantConfig({
+      ...minimal,
+      disruptions: { scenarios: [scenario] },
+    });
+    expect(config.disruptions.scenarios[0]?.defaultOption).toBe('A');
+  });
+
+  it('refuses options that are not keyed A, B, C, D in order', () => {
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        disruptions: {
+          scenarios: [
+            { ...scenario, options: [{ key: 'B', title: 'Move', detail: 'Same price' }] },
+          ],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('refuses a default option the scenario does not offer', () => {
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        disruptions: { scenarios: [{ ...scenario, defaultOption: 'D' }] },
+      }),
+    ).toThrow();
+  });
+
+  it('refuses two scenarios with the same key', () => {
+    expect(() =>
+      parseTenantConfig({ ...minimal, disruptions: { scenarios: [scenario, scenario] } }),
+    ).toThrow();
+  });
+});
+
 describe('parseTenantConfig', () => {
   it('applies defaults for theme, features, and locales', () => {
     const config = parseTenantConfig(minimal);
@@ -25,6 +120,26 @@ describe('parseTenantConfig', () => {
     expect(config.features.instantBooking).toBe(false);
     expect(config.features.interactiveSvgMap).toBe(true);
     expect(config.payments.bankTransfer).toBeNull();
+  });
+
+  it('defaults the theme to the Vereda design system with no token overrides', () => {
+    const config = parseTenantConfig(minimal);
+
+    expect(config.branding.primaryColor).toBe('#0B4F6C');
+    expect(config.theme).toEqual({
+      palette: 'vereda',
+      borderRadius: 'md',
+      tokens: {},
+    });
+  });
+
+  it('keeps primitive token overrides from the manifest', () => {
+    const config = parseTenantConfig({
+      ...minimal,
+      theme: { tokens: { 'color-secondary-600': '#8B2F1A' } },
+    });
+
+    expect(config.theme.tokens).toEqual({ 'color-secondary-600': '#8B2F1A' });
   });
 
   it('honours explicit feature flags', () => {
@@ -47,6 +162,80 @@ describe('parseTenantConfig', () => {
     expect(config.emergencyContacts).toEqual([
       { label: 'Medical emergency', phone: '104' },
     ]);
+  });
+
+  it('defaults to no child bands and no fees, and validates configured terms', () => {
+    expect(parseTenantConfig(minimal).pricing).toEqual({ childBands: [], fees: [] });
+
+    const config = parseTenantConfig({
+      ...minimal,
+      pricing: {
+        childBands: [{ maxAge: 12, rate: 0.6 }],
+        fees: [{ label: 'Service fee', unit: 'PER_BOOKING', amount: 100 }],
+      },
+    });
+    expect(config.pricing.childBands).toEqual([{ maxAge: 12, rate: 0.6 }]);
+    expect(config.pricing.fees[0]?.unit).toBe('PER_BOOKING');
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        pricing: { childBands: [{ maxAge: 12, rate: 1.5 }] },
+      }),
+    ).toThrow();
+  });
+
+  it('defaults the M4 payment terms and validates the policies', () => {
+    const defaults = parseTenantConfig(minimal);
+    expect(defaults.policies).toEqual({ deposit: {}, cancellation: {} });
+    expect(defaults.payments).toMatchObject({
+      windowHours: 48,
+      cardFeePercent: 0,
+      refundApproval: { singleUpTo: 500, dualUpTo: 2000 },
+    });
+
+    const config = parseTenantConfig({
+      ...minimal,
+      policies: {
+        deposit: {
+          standard: {
+            percent: 20,
+            minDaysBeforeDeparture: 60,
+            balanceDaysBeforeDeparture: 30,
+          },
+        },
+        cancellation: { standard: { bands: [{ fromDays: 0, keepPercent: 100 }] } },
+      },
+    });
+    expect(config.policies.cancellation.standard?.bands[0]).toEqual({
+      fromDays: 0,
+      keepPercent: 100,
+      fee: 0,
+    });
+    // The balance cannot fall due before the deposit window has closed.
+    expect(() =>
+      parseTenantConfig({
+        ...minimal,
+        policies: {
+          deposit: {
+            late: {
+              percent: 20,
+              minDaysBeforeDeparture: 30,
+              balanceDaysBeforeDeparture: 45,
+            },
+          },
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('has no WhatsApp line unless the manifest sets one', () => {
+    expect(parseTenantConfig(minimal).branding.whatsappNumber).toBeNull();
+    expect(
+      parseTenantConfig({
+        ...minimal,
+        branding: { ...minimal.branding, whatsappNumber: '+34 600 000 000' },
+      }).branding.whatsappNumber,
+    ).toBe('+34 600 000 000');
   });
 
   it('rejects a manifest without a license number', () => {
@@ -130,5 +319,21 @@ describe('buildTenantManifest', () => {
       bic: 'XXXXES00',
       referenceNote: 'Quote the booking code.',
     });
+  });
+});
+
+describe('ticket concierge terms (M10 D8)', () => {
+  it('defaults to a placeholder with no fee, 8 seats and 7 days to pay', () => {
+    expect(parseTenantConfig(minimal).concierge).toEqual({
+      status: 'placeholder',
+      currency: 'EUR',
+      feePerSeat: 0,
+      maxSeats: 8,
+      ticketPaymentDays: 7,
+    });
+  });
+
+  it('never allows more seats than the database caps a request at', () => {
+    expect(() => parseTenantConfig({ ...minimal, concierge: { maxSeats: 9 } })).toThrow();
   });
 });

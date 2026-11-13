@@ -1,12 +1,23 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import type { InventoryType, Prisma } from '@ota/db';
-import { ReservationStatus, ServiceType } from '@ota/domain';
+import type { TenantConfig } from '@ota/config';
+import type { InventoryItem, InventoryType, PackageService, Prisma } from '@ota/db';
+import {
+  BASE_CURRENCY,
+  ReservationStatus,
+  ServiceType,
+  convertForDisplay,
+  providerProgress,
+} from '@ota/domain';
+import { bookingReceivedEmail, type Mailer } from '@ota/email';
 import type {
+  BookPackageRequest,
   CreateMyReservationRequest,
   CreatePackageBookingRequest,
   CreatePaymentIntentRequest,
@@ -21,8 +32,18 @@ import type {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
+import { accountReservationUrl } from '../common/storefront-url';
+import type { SigningClient } from '../compliance/affidavits.service';
+import { CurrenciesService } from '../currencies/currencies.service';
+import { MAILER } from '../email/email.module';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { claimDepartureSeats, claimPackageChoices } from '../travelers/departure-seats';
+import {
+  PackageBookingService,
+  type SubmittedReservation,
+} from './package-booking.service';
 
 /** Catalog types map onto the dispatch service types (inventory has no GUIDE). */
 const INVENTORY_TO_SERVICE: Record<InventoryType, ServiceType> = {
@@ -31,18 +52,50 @@ const INVENTORY_TO_SERVICE: Record<InventoryType, ServiceType> = {
   EXPERIENCE: ServiceType.Experience,
 };
 
+/**
+ * The documents a traveler holds. Supplier work orders carry the internal
+ * payout rate, so they are never listed or counted for the traveler.
+ */
+const TRAVELER_DOCUMENTS = {
+  type: { not: 'WORK_ORDER' },
+} satisfies Prisma.DocumentWhereInput;
+
 type ListRow = Prisma.ReservationGetPayload<{
   include: { _count: { select: { serviceItems: true; documents: true } } };
 }>;
 
 type DetailRow = Prisma.ReservationGetPayload<{
   include: {
-    serviceItems: true;
+    serviceItems: { include: { dispatchOffers: { select: { status: true } } } };
     documents: true;
     reviews: true;
+    package: {
+      select: {
+        name: true;
+        translations: { select: { name: true; tiers: true } };
+      };
+    };
+    tier: { select: { code: true; name: true } };
+    travelers: { select: { fullName: true; isLead: true } };
     _count: { select: { serviceItems: true; documents: true } };
   };
 }>;
+
+/**
+ * The trip's package and tier names, overlaid by the locale's published
+ * translation (M1 D1) where it has one; tiers overlay by code.
+ */
+function toTripDto(row: DetailRow): MyReservationDetailDto['trip'] {
+  if (!row.package) {
+    return null;
+  }
+  const translation = row.package.translations[0];
+  const tiers = (translation?.tiers ?? {}) as Record<string, { name?: string }>;
+  return {
+    name: translation?.name ?? row.package.name,
+    tier: row.tier ? (tiers[row.tier.code]?.name ?? row.tier.name) : null,
+  };
+}
 
 function toListDto(row: ListRow): MyReservationListItemDto {
   return {
@@ -70,6 +123,17 @@ function toDetailDto(row: DetailRow): MyReservationDetailDto {
           createdAt: review.createdAt.toISOString(),
         }
       : null,
+    trip: toTripDto(row),
+    travelers: row.travelers.map((traveler) => ({
+      fullName: traveler.fullName,
+      isLead: traveler.isLead,
+    })),
+    providers: providerProgress(
+      row.serviceItems.map((item) => ({
+        status: item.status,
+        offers: item.dispatchOffers,
+      })),
+    ),
     serviceItems: row.serviceItems.map((item) => ({
       id: item.id,
       serviceType: item.serviceType,
@@ -92,6 +156,8 @@ interface SubmissionServiceItem {
   serviceDateStart: Date;
   serviceDateEnd: Date;
   province: string | null;
+  /** The catalog price a custom trip charges for it; null inside a package. */
+  travelerPrice: number | null;
 }
 
 interface SubmissionParams {
@@ -104,6 +170,36 @@ interface SubmissionParams {
   auditMetadata?: Record<string, unknown>;
   packageId?: string;
   nationality?: string;
+  /** The Booking form's choices (M2); the defaults leave a booking unpriced. */
+  partySize?: number;
+  tierId?: string | null;
+  departureId?: string | null;
+  tourismCategory?: Prisma.ReservationCreateInput['tourismCategory'];
+  /** Runs first in the booking's transaction, before its row takes a foreign key. */
+  claimSeats?: (tx: Prisma.TransactionClient) => Promise<void>;
+  /** More writes that must land with the booking, in its transaction. */
+  within?: (
+    tx: Prisma.TransactionClient,
+    reservation: SubmittedReservation,
+  ) => Promise<void>;
+}
+
+/** A package's itinerary as service items, each on its day from `startDate`. */
+function packageServiceItems(
+  services: readonly (PackageService & { inventoryItem: InventoryItem })[],
+  startDate: Date,
+): SubmissionServiceItem[] {
+  return services.map((service) => {
+    const serviceDate = new Date(startDate);
+    serviceDate.setUTCDate(serviceDate.getUTCDate() + service.dayOffset);
+    return {
+      serviceType: INVENTORY_TO_SERVICE[service.inventoryItem.type],
+      serviceDateStart: serviceDate,
+      serviceDateEnd: serviceDate,
+      province: service.inventoryItem.province,
+      travelerPrice: null,
+    };
+  });
 }
 
 /**
@@ -113,9 +209,15 @@ interface SubmissionParams {
  */
 @Injectable()
 export class MeService {
+  private readonly logger = new Logger(MeService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
+    private readonly currencies: CurrenciesService,
+    private readonly bookings: PackageBookingService,
+    @Inject(MAILER) private readonly mailer: Mailer,
+    @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
   ) {}
 
   async getProfile(userId: string): Promise<MeProfileDto> {
@@ -129,6 +231,9 @@ export class MeService {
       fullName: user.fullName,
       role: user.role,
       locale: user.locale,
+      phone: user.phone,
+      nationality: user.nationality,
+      displayCurrency: user.displayCurrency,
     };
   }
 
@@ -136,19 +241,52 @@ export class MeService {
     const rows = await this.prisma.reservation.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { serviceItems: true, documents: true } } },
+      include: {
+        _count: {
+          select: { serviceItems: true, documents: { where: TRAVELER_DOCUMENTS } },
+        },
+      },
     });
     return rows.map(toListDto);
   }
 
-  async getReservation(userId: string, id: string): Promise<MyReservationDetailDto> {
+  /**
+   * One of the caller's trips. `locale` picks the package's published
+   * translation for the trip and tier names; without it they are the source
+   * text.
+   */
+  async getReservation(
+    userId: string,
+    id: string,
+    locale?: string,
+  ): Promise<MyReservationDetailDto> {
     const row = await this.prisma.reservation.findFirst({
       where: { id, userId },
       include: {
-        serviceItems: { orderBy: { serviceDateStart: 'asc' } },
-        documents: { orderBy: { generatedAt: 'desc' } },
+        serviceItems: {
+          orderBy: { serviceDateStart: 'asc' },
+          include: { dispatchOffers: { select: { status: true } } },
+        },
+        documents: { where: TRAVELER_DOCUMENTS, orderBy: { generatedAt: 'desc' } },
         reviews: { orderBy: { createdAt: 'desc' }, take: 1 },
-        _count: { select: { serviceItems: true, documents: true } },
+        package: {
+          select: {
+            name: true,
+            translations: {
+              // `in: []` matches nothing, so no locale means the source text.
+              where: { locale: { in: locale ? [locale] : [] }, published: true },
+              select: { name: true, tiers: true },
+            },
+          },
+        },
+        tier: { select: { code: true, name: true } },
+        travelers: {
+          orderBy: { position: 'asc' },
+          select: { fullName: true, isLead: true },
+        },
+        _count: {
+          select: { serviceItems: true, documents: { where: TRAVELER_DOCUMENTS } },
+        },
       },
     });
     if (!row) {
@@ -180,8 +318,19 @@ export class MeService {
     }
     const byId = new Map(items.map((item) => [item.id, item]));
 
-    const totalAmount = items.reduce((sum, item) => sum + Number(item.basePrice), 0);
     const currency = items[0]?.currency ?? 'EUR';
+    const serviceItems = input.serviceItems.map((selection) => {
+      const item = byId.get(selection.inventoryItemId)!;
+      return {
+        serviceType: INVENTORY_TO_SERVICE[item.type],
+        serviceDateStart: selection.serviceDateStart ?? input.startDate,
+        serviceDateEnd: selection.serviceDateEnd ?? input.endDate,
+        province: item.province,
+        travelerPrice: Number(item.basePrice),
+      };
+    });
+    // The total is the sum of the per-service prices, so the invoice adds up.
+    const totalAmount = serviceItems.reduce((sum, item) => sum + item.travelerPrice, 0);
 
     const createdId = await this.createSubmission(userId, {
       startDate: input.startDate,
@@ -190,15 +339,7 @@ export class MeService {
       totalAmount,
       customItineraryPayload: { notes: input.notes ?? null, inventoryItemIds: ids },
       nationality: input.nationality,
-      serviceItems: input.serviceItems.map((selection) => {
-        const item = byId.get(selection.inventoryItemId)!;
-        return {
-          serviceType: INVENTORY_TO_SERVICE[item.type],
-          serviceDateStart: selection.serviceDateStart ?? input.startDate,
-          serviceDateEnd: selection.serviceDateEnd ?? input.endDate,
-          province: item.province,
-        };
-      }),
+      serviceItems,
     });
 
     return this.getReservation(userId, createdId);
@@ -226,20 +367,11 @@ export class MeService {
         },
       },
     });
-    if (!pkg || !pkg.active) {
+    if (!pkg || pkg.status !== 'PUBLISHED') {
       throw new NotFoundException(`Package ${input.packageId} not found`);
     }
 
-    const serviceItems: SubmissionServiceItem[] = pkg.services.map((service) => {
-      const serviceDate = new Date(input.startDate);
-      serviceDate.setUTCDate(serviceDate.getUTCDate() + service.dayOffset);
-      return {
-        serviceType: INVENTORY_TO_SERVICE[service.inventoryItem.type],
-        serviceDateStart: serviceDate,
-        serviceDateEnd: serviceDate,
-        province: service.inventoryItem.province,
-      };
-    });
+    const serviceItems = packageServiceItems(pkg.services, input.startDate);
 
     const createdId = await this.createSubmission(userId, {
       startDate: input.startDate,
@@ -257,10 +389,134 @@ export class MeService {
   }
 
   /**
-   * Shared submission path for both the dynamic builder and curated packages:
-   * allocate a unique booking code, persist the reservation and its service
-   * items atomically, record the audit entry, and stamp the traveler's
-   * nationality when supplied.
+   * The storefront Booking form (Booking board, five steps): book a curated
+   * package on a departure with the traveler's party, rooms, tier and extras.
+   * The server prices it (M2) and freezes the lines; the US certifications
+   * (M3) and the booking consents are written with it. The booking lands at
+   * ITINERARY_SUBMITTED, like the other two paths.
+   */
+  async bookPackage(
+    actor: AuthUser,
+    input: BookPackageRequest,
+    client: SigningClient,
+  ): Promise<MyReservationDetailDto> {
+    const plan = await this.bookings.plan(input);
+    const { pkg, price } = plan;
+
+    const createdId = await this.createSubmission(actor.id, {
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      totalCurrency: pkg.currency,
+      totalAmount: price.total,
+      customItineraryPayload: {
+        packageId: pkg.id,
+        packageSlug: pkg.slug,
+        rooming: input.rooming,
+        roommateMatch: input.roommateMatch,
+        roomRequests: input.roomRequests ?? null,
+        notes: input.notes ?? null,
+      },
+      packageId: pkg.id,
+      nationality: input.travelers[0]!.nationality,
+      partySize: input.travelers.length,
+      tierId: plan.tierId,
+      departureId: plan.departureId,
+      tourismCategory: pkg.tourismCategory,
+      serviceItems: packageServiceItems(pkg.services, plan.startDate),
+      claimSeats: async (tx) => {
+        await claimDepartureSeats(tx, {
+          departureId: plan.departureId,
+          partySize: input.travelers.length,
+          mustBeOpen: true,
+        });
+        await claimPackageChoices(tx, {
+          tierId: plan.tierId,
+          packageExtraIds: plan.extras.map((extra) => extra.packageExtraId),
+        });
+      },
+      // Ids and counts only: no names, dates of birth or passport numbers.
+      auditMetadata: {
+        packageId: pkg.id,
+        packageSlug: pkg.slug,
+        departureId: plan.departureId,
+        tierId: plan.tierId,
+        partySize: input.travelers.length,
+        total: price.total.toFixed(2),
+        certifications: plan.affidavits.length,
+        consents: plan.consents.map((consent) => consent.purpose),
+      },
+      within: (tx, reservation) =>
+        this.bookings.write(tx, reservation, plan, input, actor.id, client),
+    });
+
+    await this.currencies.adoptShown(actor.id, input.displayCurrency);
+    const detail = await this.getReservation(actor.id, createdId);
+    await this.sendBookingReceived(actor, plan, input, detail);
+    return detail;
+  }
+
+  /**
+   * E-Received (Phase 6): the Booking form's first email, with the total's
+   * "about" guide in the traveler's display currency (M9 C7b). It is best
+   * effort — a mail failure never rolls back a request that has already been
+   * stored.
+   */
+  private async sendBookingReceived(
+    actor: AuthUser,
+    plan: { pkg: { name: string; currency: string }; startDate: Date; endDate: Date },
+    input: BookPackageRequest,
+    detail: MyReservationDetailDto,
+  ): Promise<void> {
+    const locale = this.travelerLocale(input.locale);
+    try {
+      const traveler = await this.prisma.user.findUnique({
+        where: { id: actor.id },
+        select: { displayCurrency: true },
+      });
+      // A new request has no locked rate yet: today's rate is the guide.
+      const rate = await this.currencies.emailReference(traveler?.displayCurrency, null);
+      await this.mailer.send(
+        bookingReceivedEmail({
+          to: actor.email,
+          name: input.travelers[0]!.fullName,
+          bookingCode: detail.bookingCode,
+          packageName: plan.pkg.name,
+          startDate: plan.startDate,
+          endDate: plan.endDate,
+          total: Number(detail.totalAmount),
+          currency: plan.pkg.currency,
+          reference:
+            rate && plan.pkg.currency === BASE_CURRENCY
+              ? {
+                  currency: rate.currency,
+                  total: convertForDisplay(Number(detail.totalAmount), rate.rate),
+                  lockedAt: rate.lockedAt,
+                  lockAt: rate.lockAt,
+                }
+              : null,
+          portalUrl: accountReservationUrl(this.tenant, locale, detail.id),
+          locale,
+          branding: this.tenant.branding,
+        }),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Booking-received email failed for ${detail.bookingCode}: ${
+          error instanceof Error ? error.message : 'unknown error'
+        }`,
+      );
+    }
+  }
+
+  private travelerLocale(value?: string | null): string {
+    return value ?? this.tenant.primaryLocale;
+  }
+
+  /**
+   * Shared submission path for the dynamic builder, curated packages and the
+   * Booking form: allocate a unique booking code, persist the reservation, its
+   * service items and the caller's `within` writes atomically, record the
+   * audit entry, and stamp the traveler's nationality when supplied.
    */
   private async createSubmission(
     userId: string,
@@ -277,6 +533,8 @@ export class MeService {
       }
 
       return this.prisma.$transaction(async (tx) => {
+        await params.claimSeats?.(tx);
+
         if (params.nationality) {
           await tx.user.update({
             where: { id: userId },
@@ -294,6 +552,12 @@ export class MeService {
             status: ReservationStatus.ItinerarySubmitted,
             totalCurrency: params.totalCurrency,
             totalAmount: params.totalAmount,
+            ...(params.partySize !== undefined ? { partySize: params.partySize } : {}),
+            tierId: params.tierId ?? null,
+            departureId: params.departureId ?? null,
+            ...(params.tourismCategory
+              ? { tourismCategory: params.tourismCategory }
+              : {}),
             customItineraryPayload: params.customItineraryPayload,
             serviceItems: {
               create: params.serviceItems.map((item) => ({
@@ -303,10 +567,13 @@ export class MeService {
                 province: item.province,
                 status: 'UNASSIGNED' as const,
                 payoutRate: 0,
+                travelerPrice: item.travelerPrice,
               })),
             },
           },
         });
+
+        await params.within?.(tx, reservation);
 
         await tx.auditLog.create({
           data: {
@@ -346,6 +613,7 @@ export class MeService {
     if (!reservation) {
       throw new NotFoundException(`Reservation ${reservationId} not found`);
     }
+    await this.currencies.adoptShown(actor.id, input.displayCurrency);
     return this.payments.createIntent(reservationId, input, actor);
   }
 

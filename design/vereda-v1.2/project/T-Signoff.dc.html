@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign-off record · baseline v1.0, acceptance dates, open items, change log, how changes are made</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.f{font-weight:600;color:#1F1B17}
+.tbl td.d{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;white-space:nowrap;color:#4A433D}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;white-space:nowrap}
+.ok{background:#E8F5E9;color:#1B5E20}.rev{background:#FEF3C7;color:#92400E}.open{background:#E6F0F4;color:#083B50}.dec{background:#F3EEE6;color:#4A433D}
+.stamp{border:2px solid #0B4F6C;border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:8px;background:#F1F6F8}
+.log{display:grid;grid-template-columns:110px 1fr;gap:4px 16px;padding:10px 0;border-top:1px solid #E8E2D9;font-size:13px;line-height:18px}
+.log:first-child{border-top:0;padding-top:0}
+.log .d{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:#083B50;white-space:nowrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;line-height:18px;margin:0}
+.kv dt{color:#6E665E}.kv dd{margin:0}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 960px">
+    <p class="ov">Handoff · sign-off · 10 Oct 2026</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">What is frozen, what is open, how it changes</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">The record developers pin in their tickets. Every artboard on this canvas belongs to one of the accepted sections below; a change to an accepted artboard gets a dated version label and a line in the log, so a build never silently diverges from the design it was estimated against.</p>
+  </header>
+
+  <!-- 01 baseline + 02 acceptance -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 24px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <div class="stamp">
+        <p class="ov">01 · Design baseline</p>
+        <p class="disp" style="font-size: 32px; line-height: 38px">v1.2 · 14 October 2026</p>
+        <dl class="kv">
+          <dt>Canvas</dt><dd>this artifact, version label "Handoff v1.2" in the version picker (v1.1 = "Handoff v1.1", 11 Oct; v1.0 = "Baseline v1.0", 10 Oct)</dd>
+          <dt>Pages</dt><dd>9 · artboards 119 (7 system sheets, 22 web incl. Map-Concept, 21 mobile, 17 admin, 10 app, 8 documents, 12 comms, 10 handoff, 12 brand of which 5 are marked "Record · not for the build")</dd>
+          <dt>Owner</dt><dd>Gabriel Pérez-García for Vereda Expeditions</dd>
+          <dt>Spec</dt><dd>OTA Specifications Document (3) · UI/UX docs 1–17 · Viability studies 1–14</dd>
+          <dt>Tokens</dt><dd><a href="DS-Handoff.dc.html">DS 06</a> CSS variables, frozen with the baseline; exported as <span class="mono">design-canvas/handoff/tokens.css</span> and <span class="mono">tokens.json</span>; v1.2 (14 Oct, change request 01): 14 primitives added, the text-on-primary alias, label / nav / compact type styles, the DS 07 breakpoints, motion tokens with their reduced-motion override, focus ring = primary-600</dd><dt>Brand</dt><dd>logo C "the name, set once" (<a href="B-Logo.dc.html">B-Logo</a>), chosen 11 Oct 2026; files in <span class="mono">design-canvas/brand/</span></dd>
+        </dl>
+        <p class="cap">Frozen = changed only through the procedure in section 05: tokens, the status vocabulary (DS 03), the state machine (G-StateMachine), the thresholds on A-Settings, the document footers.</p>
+      </div>
+      <div class="sheet" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 8px">
+        <p class="ov">Legend</p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="pill ok">Accepted</span><span class="pill rev">In review</span><span class="pill open">Open · input needed</span><span class="pill dec">Decided</span></div>
+      </div>
+    </div>
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px"><p class="ov">02 · Acceptance record</p></div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>#</th><th>Section</th><th>Artboards</th><th>Status</th><th>Date</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="d">1</td><td class="f">Design system</td><td>Main (01), DS 02–06</td><td><span class="pill ok">Accepted</span></td><td class="d">7 Oct 2026</td><td>Includes the 6 Oct accessibility corrections (teal focus ring, amber #B45309)</td></tr>
+          <tr><td class="d">2</td><td class="f">Customer web + mobile</td><td>20 web, 20 M-*</td><td><span class="pill ok">Accepted</span></td><td class="d">7 Oct 2026</td><td></td></tr>
+          <tr><td class="d">3</td><td class="f">Admin desk</td><td>13 A-* screens</td><td><span class="pill ok">Accepted</span></td><td class="d">7 Oct 2026</td><td></td></tr>
+          <tr><td class="d">4</td><td class="f">Worker app + Ops Lite</td><td>7 W-*, 3 AL-*</td><td><span class="pill ok">Accepted</span></td><td class="d">7 Oct 2026</td><td>Spanish UI for workers</td></tr>
+          <tr><td class="d">5</td><td class="f">Generated documents</td><td>8 D-* (A4)</td><td><span class="pill ok">Accepted</span></td><td class="d">10 Oct 2026</td><td>Values in [brackets] still open (section 03)</td></tr>
+          <tr><td class="d">6</td><td class="f">Recruitment portal + event banner</td><td>Join, M-Join, banners on Home / M-Home</td><td><span class="pill ok">Accepted</span></td><td class="d">10 Oct 2026</td><td></td></tr>
+          <tr><td class="d">7</td><td class="f">Notifications</td><td>10 E-*, S-Messages</td><td><span class="pill ok">Accepted</span></td><td class="d">10 Oct 2026</td><td></td></tr>
+          <tr><td class="d">8</td><td class="f">Handoff diagrams + traceability</td><td>5 G-*, T-Matrix</td><td><span class="pill ok">Accepted</span></td><td class="d">10 Oct 2026</td><td></td></tr>
+          <tr><td class="d">9</td><td class="f">Edge states + accessibility</td><td>A-States, A-A11y</td><td><span class="pill ok">Accepted</span></td><td class="d">10 Oct 2026</td><td></td></tr>
+          <tr><td class="d">10</td><td class="f">Usability test kit</td><td>T-Testing</td><td><span class="pill ok">Accepted</span></td><td class="d">10 Oct 2026</td><td></td></tr>
+          <tr><td class="d">11</td><td class="f">Dev-readiness pass</td><td>T-Events, T-Forms, DS 07, T-Assets, T-Signoff, C-Spec, Concierge, M-Concierge, A-Assistant, T-Matrix refresh</td><td><span class="pill ok">Accepted</span></td><td class="d">11 Oct 2026</td><td>Accepted with the brand section on 11 Oct 2026; recorded 14 Oct (change request 01, B4)</td></tr>
+          <tr><td class="d">12</td><td class="f">Province map</td><td>Map-Concept; the map merged into Destinations and M-Destinations</td><td><span class="pill ok">Accepted</span></td><td class="d">11 Oct 2026</td><td>"We're going to keep the map"; real geometry from the supplied Simplemaps file; province list as region columns, applied to the original Destinations the same day</td></tr>
+        <tr><td class="d">13</td><td class="f">Brand</td><td>Page 09: B-Logo, B-Card, B-Card-Portrait, B-DigitalCard, B-Signature, B-Email, B-Guidelines</td><td><span class="pill ok">Accepted</span></td><td class="d">11 Oct 2026</td><td>Accepted with logo A; logo C chosen the same day and applied to every board (change log). Five option sheets kept as "Record · not for the build".</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- 03 open items -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">03 · Open items · none blocks the start of the build; each blocks one output</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>Item</th><th>Status</th><th>Owner</th><th>Blocks</th><th>Where it lands</th></tr></thead>
+      <tbody>
+        <tr><td class="f">MINTUR licence number <span class="mono">[MINTUR-2026-XXXX]</span></td><td><span class="pill open">Open</span></td><td>Vereda · when issued</td><td>Printing any document; the manifest; every footer</td><td>A-Settings › Manifest; D-*, E-*, footers (one config value)</td></tr>
+        <tr><td class="f">Tax ID, registered address, founder name</td><td><span class="pill open">Open</span></td><td>Vereda</td><td>Invoice and receipt validity; Legal page imprint</td><td>Manifest; D-Invoice, D-Proposal, Legal, A-Settings users</td></tr>
+        <tr><td class="f">Clinic, embassy and insurer phone numbers; 24/7 line</td><td><span class="pill open">Open</span></td><td>Vereda operations</td><td>Offline kit and emergency pamphlet; S-Messages critical advisory</td><td>D-OfflineKit-2, Support, S-Messages (config per province)</td></tr>
+        <tr><td class="f">Res. 193/2026 reinvestment threshold; ecotourism ratio threshold</td><td><span class="pill open">Open</span></td><td>Vereda finance · MFP rules</td><td>Two figures on Reports and the MINTUR summary</td><td>A-Reports, D-MINTUR, A-Settings › Thresholds</td></tr>
+        <tr><td class="f">Legal and tax review of D-* documents and the Legal page</td><td><span class="pill open">Open</span></td><td>Cuban legal advisor + EU tax advisor</td><td>Document templates going live</td><td>Page 06, Legal, M-Legal</td></tr>
+        <tr><td class="f">ONAT XLSX template, bank statement formats, gateway hosted pages</td><td><span class="pill open">Open</span></td><td>Vereda finance · gateway</td><td>Exports and the card step only</td><td>Data formats, not UI; Payment uses the gateway's hosted fields</td></tr>
+        <tr><td class="f">Content placeholders: host and author bios (100+ words), certification badge, sample reviews, legal clause text, WhatsApp line number</td><td><span class="pill open">Open</span></td><td>Vereda · legal advisor</td><td>Final copy on Destination, Blog, About, Legal; one WhatsApp number in config</td><td>Destination, BlogPost, About, Legal, M-*; every "Talk to a specialist" link</td></tr>
+        <tr><td class="f">Event concierge ticket policy: <span class="mono">[price per seat]</span>, <span class="mono">[fee per seat]</span>, <span class="mono">[pass price]</span>, <span class="mono">[hold date]</span>, <span class="mono">[confirmation date]</span>, <span class="mono">[dates tbc]</span>, <span class="mono">[programme tbc]</span>, <span class="mono">[cancellation rule if tickets are not confirmed]</span></td><td><span class="pill open">Open</span></td><td>Vereda</td><td>The event cards and the ticket step on Concierge; eight bracketed values, one policy</td><td>Concierge, M-Concierge (config: concierge policy)</td></tr>
+        <tr><td class="f">Supplier names shown to travelers: <span class="mono">[provider]</span> for insurance, transfers and the custom-trip partners</td><td><span class="pill open">Open</span></td><td>Vereda operations · contracts</td><td>Printed documents and the booking detail name a real supplier; until then the placeholder prints</td><td>A-Booking, A-Customers, D-Invoice, D-Voucher-1, About, M-About (supplier records in A-Suppliers)</td></tr>
+        <tr><td class="f">Brand inputs: raster exports of the logo files (favicon PNG 32 / 180 / 192 / 512, app icons 1024 + adaptive layers, og-default JPG, email-logo@2x.png 360 × 122 hosted at vereda.travel/brand/), the five custom icon glyphs (T-Assets 03), real employee phones and handles for cards and signatures</td><td><span class="pill open">Open</span></td><td>Vereda · from the SVGs in design-canvas/brand/</td><td>Favicons, store listings, link previews, the signature image, the printed cards</td><td>T-Assets 01 and 03; B-Card, B-Card-Portrait, B-Signature</td></tr>
+        <tr><td class="f">ES and FR translation of the copy inventory (9,049 strings; the worker app is already Spanish)</td><td><span class="pill open">Open</span></td><td>Vereda · translator, through the A-Content workflow</td><td>The ES and FR locales going live; not the build (EN ships first)</td><td>handoff/copy-inventory (es, fr columns); A-Content</td></tr>
+        <tr><td class="f">Tablet layouts</td><td><span class="pill dec">Decided</span></td><td>—</td><td>—</td><td>No tablet artboards; rules on DS 07 and A-States › 07</td></tr>
+        <tr><td class="f">English worker app</td><td><span class="pill dec">Deferred</span></td><td>Vereda · if non-Spanish-speaking workers are recruited</td><td>Nothing now</td><td>A locale file, not new screens; W-* strings are short</td></tr>
+        <tr><td class="f">Native app shells (store listings, onboarding, permission prompts)</td><td><span class="pill dec">Deferred</span></td><td>Decide with the dev team's platform choice (spec §5: React Native / Flutter)</td><td>Store submission only</td><td>Worker app is native-first; traveler companion starts as the mobile web (M-*). If native, add: splash, push and location permission screens, store assets</td></tr>
+        <tr><td class="f">DE / IT locales</td><td><span class="pill dec">Deferred</span></td><td>Vereda · market priority</td><td>Nothing now</td><td>Content and translation workflow (A-Content); text-expansion checks already in DS 02 (German +30 %)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 04 change log + 05 procedure + 06 package -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+      <p class="ov">04 · Change log</p>
+      <div>
+        <div class="log"><span class="d">5 Oct 2026</span><span>Canvas created. Design system sheets 01–06 (Isla Abierta, warmed neutrals); customer web section drafted.</span></div>
+        <div class="log"><span class="d">6 Oct 2026</span><span>Customer mobile, admin desk, worker and Ops Lite apps. Accessibility corrections across all files: focus ring 2 px teal on light surfaces (ochre on the dark sidebar only), amber bars and arrows #B45309, elapsed % printed on amber pills. Documents, notifications, handoff diagrams, traceability, edge states, test kit added.</span></div>
+        <div class="log"><span class="d">7 Oct 2026</span><span>Sections 1–4 accepted. Canvas and repository synced byte for byte.</span></div>
+        <div class="log"><span class="d">10 Oct 2026</span><span>Sections 5–10 accepted without changes. Dev-readiness pass delivered: analytics events, form specs, responsive rules (tablet decision), asset manifest, this record, comms spec, event concierge flow (web + mobile), AI assistant surface, traceability refresh. Baseline v1.0 declared.</span></div>
+        <div class="log"><span class="d">11 Oct 2026</span><span>Map boards rebuilt on the Simplemaps province file supplied by Vereda; map kept. Province list under the map redrawn as West / Centre / East columns, then applied to the original Destinations. Verification scan run; decisions taken the same day: map copies merged into Destinations and M-Destinations (copies removed; pre-merge files kept in the repository); primary nav reduced to Destinations · Packages · Events · Travel info · Blog &amp; guides · Support with "About Vereda" in the footer; event banners point to Concierge; footer Cookie settings and Accessibility point to Legal; one WhatsApp link everywhere; copy inventory generated for the i18n catalogue.</span></div>
+        <div class="log"><span class="d">11 Oct 2026</span><span>Brand section (page 09) delivered and accepted: logo "the trail and the sun", business card with per-employee QR, NFC digital card, email signature, three email templates, guidelines. Two alternative directions built for comparison (B "the fanlight", C "the name, set once") with their cards and a comparison sheet.</span></div>
+        <div class="log"><span class="d">11 Oct 2026</span><span>Logo decision: option C chosen. The wordmark replaced the trail-and-sun in 95 places on 70 boards (tools/logo_swap_c.py); B-Logo, B-Card, B-DigitalCard, B-Signature, B-Email, B-Guidelines rebuilt in place; B-Card-Portrait added; the landscape duplicate removed; option sheets kept as "Record · not for the build". Live files moved to design-canvas/brand/ (previous mark in brand/option-a/). Handoff fixes: accessible names on 34 logos, tokens.css / tokens.json exported, open items 03 completed (concierge policy, supplier names, brand inputs). Version label "Handoff v1.1".</span></div>
+        <div class="log"><span class="d">14 Oct 2026</span><span>Change request 01 from the build team (13 Oct; 15 findings, all verified, answered in design-change-response-01.md). Tokens: motion values restored with the reduced-motion override kept as a media block, DS 07 breakpoints exported, focus ring token set to primary-600 to match every board and A-A11y, 14 primitives added for the tones the boards already use (-700 text, -200 borders, primary-50/200, warning-500, accent-50/700, neutral-600), text-on-primary alias ratified, label / nav / compact type styles ratified with a snap table for the rest; radii snap table. Defects fixed: T-Matrix UX 13 row rebuilt and two stray backreferences removed; T-Assets 01 rows rewritten for logo C and one email-logo size; B-Logo index title; T-Forms error text 14/20 error-600; the ecoGreen preset removed from the manifest (Isla Abierta only). Row 11 accepted. Exports: 96 of 119 boards rendered from source (pages 06, 07, 08, 09 complete; diagrams as PDF and PNG). Alt texts added to the copy inventory; translation listed as an open item. Version label "Handoff v1.2".</span></div>
+        <div class="log"><span class="d">next</span><span>Entries follow the procedure in 05: date · artboard · version label · what changed · why · who asked.</span></div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px">
+        <p class="ov">05 · How a change is made from here</p>
+        <ol style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 18px; color: #4A433D">
+          <li><strong>Ask</strong> on the canvas: a sticky note beside the artboard (red = blocks a build, orange = should fix, blue = question, gray = cosmetic, green = keep) or a comment thread on the frame. Usability findings use the same colours (<a href="T-Testing.dc.html">T-Testing</a>).</li>
+          <li><strong>Triage</strong> weekly with the dev lead: accept, defer or decline; declined notes are kept, marked.</li>
+          <li><strong>Change</strong> the artboard, then publish with a version label <span class="mono">v1.x · dd Mon · artboard · what</span>. Minor (x) = copy, values, states; a new major = a flow or token change, re-accepted by Vereda.</li>
+          <li><strong>Record</strong> it here (04) and on <a href="T-Matrix.dc.html">T-Matrix</a> if a requirement's status moves; a token change also updates <a href="DS-Handoff.dc.html">DS 06</a>.</li>
+          <li><strong>Pin</strong>: tickets reference the artboard name and the version label, never "the latest".</li>
+        </ol>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px">
+        <p class="ov">06 · What the dev team receives</p>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 18px; color: #4A433D">
+          <li>This canvas with Play mode (every link live) and the version label "Handoff v1.2" (14 Oct 2026; v1.1 and v1.0 stay in the version picker).</li>
+          <li>At the repository root: <span class="mono">HANDOFF.md</span>, the map of the package (start there), and <span class="mono">CLAUDE.md</span>, working rules for a coding agent; <span class="mono">design-change-request-NN.md</span> and <span class="mono">design-change-response-NN.md</span>, the change requests from the build team and their answers (section 05); <span class="mono">design-canvas/handoff/screens.json</span> and <span class="mono">SCREENS.md</span> list every screen with its page, kind, size, links and tweaks.</li>
+          <li><span class="mono">design-canvas/exports/</span>: every board rendered without the canvas: flattened standalone HTML, PNG at frame size, one PDF per canvas page, with an index. Renders of the source, generated by <span class="mono">tools/exports_build.py</span> from the editor's page exports.</li>
+          <li>Page 01 for tokens and components (CSS variables on DS 06), page 08 for flows, traceability, events, forms, assets, this record; page 09 for the brand: logo (B-Logo), business cards (B-Card landscape, B-Card-Portrait), NFC digital card, email signature, email templates, guidelines. The five boards titled "Record · not for the build" on page 09 document the logo decision and are not inputs.</li>
+          <li>In the repository: <span class="mono">design-canvas/handoff/tokens.css</span> and <span class="mono">tokens.json</span> (the DS 06 block, three tiers), <span class="mono">design-canvas/handoff/copy-inventory.csv/.json</span> (every visible string, re-run after the final copy pass), <span class="mono">design-canvas/brand/</span> (logo, favicon, app icons, OG preview, card QRs, vCard, signature), <span class="mono">design-canvas/tools/cuba-provinces-simplemaps.svg</span> (the province map). Exports: <span class="mono">design-canvas/exports/</span> covers 96 of 119 boards (pages 01–03, 06, 07, 08 and 09 complete; the 23 admin, worker and Ops Lite boards run on the canvas runtime and need a page export from the editor); the five diagrams ship as PDF and PNG, not SVG, because they are HTML cards with SVG arrows.</li>
+          <li>Research inputs: the specification PDF and docs 1–17 in the repository's <span class="mono">UI_UX/</span> folder; viability studies 1–14.</li>
+          <li>Not included on purpose: real photos (82 placeholders, T-Assets 05), raster versions of the logo (made from the SVGs, section 03), real values for section 03.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2500}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

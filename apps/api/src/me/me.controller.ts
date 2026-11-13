@@ -7,12 +7,18 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
+  Req,
 } from '@nestjs/common';
 import {
+  bookPackageSchema,
   createMyReservationSchema,
   createPackageBookingSchema,
   createPaymentIntentSchema,
   createReviewSchema,
+  myReservationQuerySchema,
+  proofUploadSchema,
+  type BookPackageRequest,
   type CreateMyReservationRequest,
   type CreatePackageBookingRequest,
   type CreatePaymentIntentRequest,
@@ -20,13 +26,22 @@ import {
   type MeProfileDto,
   type MyReservationDetailDto,
   type MyReservationListItemDto,
+  type MyReservationQuery,
   type MyReviewDto,
   type PaymentIntentDto,
+  type PaymentScheduleDto,
+  type ProofSummaryDto,
+  type ProofUploadRequest,
 } from '@ota/schemas';
+import type { Request } from 'express';
 
+import { AllowWithoutPasskey } from '../auth/allow-without-passkey.decorator';
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { ProofsService } from '../payments/proofs.service';
+import { ScheduleService } from '../payments/schedule.service';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { MeService } from './me.service';
 
 /**
@@ -35,9 +50,15 @@ import { MeService } from './me.service';
  */
 @Controller('me')
 export class MeController {
-  constructor(private readonly me: MeService) {}
+  constructor(
+    private readonly me: MeService,
+    private readonly schedule: ScheduleService,
+    private readonly proofs: ProofsService,
+    private readonly settings: OperatingSettingsService,
+  ) {}
 
   @Get()
+  @AllowWithoutPasskey()
   profile(@CurrentUser() actor: AuthUser): Promise<MeProfileDto> {
     return this.me.getProfile(actor.id);
   }
@@ -47,13 +68,15 @@ export class MeController {
     return this.me.listReservations(actor.id);
   }
 
+  /** A custom itinerary: refused while the custom builder is switched off (M9 D8b). */
   @Post('reservations')
   @HttpCode(HttpStatus.CREATED)
-  createReservation(
+  async createReservation(
     @Body(new ZodValidationPipe(createMyReservationSchema))
     body: CreateMyReservationRequest,
     @CurrentUser() actor: AuthUser,
   ): Promise<MyReservationDetailDto> {
+    await this.settings.requireFeature('customItineraryBuilder');
     return this.me.createReservation(actor.id, body);
   }
 
@@ -67,6 +90,25 @@ export class MeController {
     return this.me.createPackageReservation(actor.id, body);
   }
 
+  /**
+   * The Booking form: departure, tier, party, rooms, extras, US certifications
+   * and consents in one request. The request's IP and browser are kept with
+   * each online certification (M3, D5).
+   */
+  @Post('reservations/package-booking')
+  @HttpCode(HttpStatus.CREATED)
+  bookPackageWithParty(
+    @Body(new ZodValidationPipe(bookPackageSchema)) body: BookPackageRequest,
+    @CurrentUser() actor: AuthUser,
+    @Req() request: Request,
+  ): Promise<MyReservationDetailDto> {
+    const userAgent = request.headers['user-agent'];
+    return this.me.bookPackage(actor, body, {
+      ipAddress: request.ip ?? null,
+      userAgent: typeof userAgent === 'string' ? userAgent : null,
+    });
+  }
+
   @Post('reservations/:id/payments')
   @HttpCode(HttpStatus.CREATED)
   createPaymentLink(
@@ -76,6 +118,27 @@ export class MeController {
     @CurrentUser() actor: AuthUser,
   ): Promise<PaymentIntentDto> {
     return this.me.createPaymentLink(actor, id, body);
+  }
+
+  /** M4: the caller's payment schedule, receipts, proofs and refunds. */
+  @Get('reservations/:id/schedule')
+  paymentSchedule(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<PaymentScheduleDto> {
+    return this.schedule.get(id, { ownerId: actor.id });
+  }
+
+  /** M4 D5: a proof of transfer for the caller's own pending bank transfer. */
+  @Post('reservations/:id/payments/:paymentId/proof')
+  @HttpCode(HttpStatus.CREATED)
+  uploadProof(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('paymentId', ParseUUIDPipe) paymentId: string,
+    @Body(new ZodValidationPipe(proofUploadSchema)) body: ProofUploadRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<ProofSummaryDto> {
+    return this.proofs.upload(actor, id, paymentId, body);
   }
 
   @Post('reservations/:id/reviews')
@@ -91,8 +154,9 @@ export class MeController {
   @Get('reservations/:id')
   reservation(
     @Param('id', ParseUUIDPipe) id: string,
+    @Query(new ZodValidationPipe(myReservationQuerySchema)) query: MyReservationQuery,
     @CurrentUser() actor: AuthUser,
   ): Promise<MyReservationDetailDto> {
-    return this.me.getReservation(actor.id, id);
+    return this.me.getReservation(actor.id, id, query.locale);
   }
 }

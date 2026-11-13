@@ -1,27 +1,43 @@
 'use client';
 
+import { editedRatio } from '@ota/domain';
 import type { MessageDto } from '@ota/schemas';
 import { Alert, Button, Input } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useDeskLocked } from '@/components/desk-idle-lock';
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 import { connectConversation, type MessageSocketEvent } from '@/lib/socket';
 
 /**
  * Traveler↔operations thread (spec §3.5). Loads history over HTTP, follows the
  * `/conversations` socket for realtime, and posts through the same endpoint the
- * email fallback hangs off.
+ * email fallback hangs off. "Draft with AI" shows only while the AI assistant
+ * is in force (A4).
  */
-export function MessageThread({ reservationId }: { reservationId: string }) {
+export function MessageThread({
+  reservationId,
+  aiAssistant,
+}: {
+  reservationId: string;
+  aiAssistant: boolean;
+}) {
   const t = useTranslations('backoffice.messageThread');
+  const why = useTranslations('backoffice.unavailable');
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [body, setBody] = useState('');
   const [connected, setConnected] = useState(false);
+  /** The idle lock: the feed closes until the desk is unlocked. */
+  const locked = useDeskLocked();
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const track = useDeskTelemetry();
+  /** The assistant's last draft, until a message is sent. */
+  const draftBody = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   function upsert(message: MessageDto) {
@@ -43,6 +59,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
   }, [reservationId]);
 
   useEffect(() => {
+    if (locked) return;
     const socket = connectConversation(reservationId);
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
@@ -54,7 +71,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
     return () => {
       socket.close();
     };
-  }, [reservationId]);
+  }, [reservationId, locked]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,6 +91,13 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         { method: 'POST', body: JSON.stringify({ body: trimmed }) },
       );
       upsert(message);
+      if (draftBody.current !== null) {
+        track('ai_draft_used', {
+          context: 'reply',
+          edited_ratio: editedRatio(draftBody.current, trimmed),
+        });
+        draftBody.current = null;
+      }
       setBody('');
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : t('sendFailed'));
@@ -91,6 +115,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         { method: 'POST', body: JSON.stringify({ reservationId }) },
       );
       setBody(draft.body);
+      draftBody.current = draft.body;
     } catch (draftError) {
       setError(draftError instanceof Error ? draftError.message : t('draftFailed'));
     } finally {
@@ -100,10 +125,10 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-caption text-muted">
         <span
           className={`inline-block h-2 w-2 rounded-full ${
-            connected ? 'bg-success' : 'bg-destructive'
+            connected ? 'bg-success-600' : 'bg-error-600'
           }`}
           aria-hidden
         />
@@ -114,7 +139,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
 
       <div className="max-h-96 space-y-3 overflow-y-auto rounded-md border p-4">
         {messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('none')}</p>
+          <p className="text-body-sm text-muted">{t('none')}</p>
         ) : (
           messages.map((message) => (
             <div
@@ -122,10 +147,10 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
               className={`flex ${message.sender === 'OPERATIONS' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                className={`max-w-[80%] rounded-lg px-3 py-2 text-body-sm ${
                   message.sender === 'OPERATIONS'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground'
+                    ? 'bg-action-primary text-on-primary'
+                    : 'bg-sunken text-default'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{message.body}</p>
@@ -146,15 +171,23 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
           placeholder={t('placeholder')}
           aria-label={t('message')}
         />
+        {aiAssistant ? (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={drafting || busy}
+            onClick={draftWithAi}
+          >
+            {drafting ? t('drafting') : t('draftWithAi')}
+          </Button>
+        ) : null}
         <Button
-          type="button"
-          variant="outline"
-          disabled={drafting || busy}
-          onClick={draftWithAi}
+          type="submit"
+          disabled={busy}
+          unavailableReason={
+            body.trim() ? undefined : why('fillIn', { field: t('message') })
+          }
         >
-          {drafting ? t('drafting') : t('draftWithAi')}
-        </Button>
-        <Button type="submit" disabled={busy || !body.trim()}>
           {busy ? t('sending') : t('send')}
         </Button>
       </form>

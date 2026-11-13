@@ -20,6 +20,7 @@ import {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { DomainExceptionFilter } from '../common/errors/domain-exception.filter';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
@@ -33,6 +34,7 @@ const READ_ROLES = [
 const WRITE_ROLES = [UserRole.OperationsAdmin, UserRole.SuperAdmin] as const;
 
 /** Payment links and confirmation for one reservation (spec §7.1). */
+@Capability('payments')
 @Controller('reservations/:reservationId/payments')
 @UseFilters(DomainExceptionFilter)
 export class PaymentsController {

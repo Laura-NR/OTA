@@ -8,6 +8,24 @@ import {
 } from '../src';
 
 describe('MockPaymentProvider', () => {
+  it('refunds idempotently: the same key gives the same refund id', async () => {
+    const provider = new MockPaymentProvider();
+    const input = {
+      providerReference: 'mock_1',
+      amount: 120,
+      currency: 'EUR',
+      idempotencyKey: 'refund-1',
+    };
+
+    const first = await provider.refund(input);
+    expect(first).toEqual({ providerRefundId: 'mock_refund_refund-1' });
+    expect(await provider.refund(input)).toEqual(first);
+  });
+
+  it('leaves wire refunds to the agency bank', () => {
+    expect(new BankTransferProvider().refund).toBeUndefined();
+  });
+
   it('creates a pending intent with a gateway reference and checkout URL', async () => {
     const provider = new MockPaymentProvider({
       checkoutBaseUrl: 'http://localhost:3000',

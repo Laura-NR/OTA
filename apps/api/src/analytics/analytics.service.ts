@@ -28,36 +28,52 @@ export class AnalyticsService {
         : undefined;
     const where = createdAtFilter ? { createdAt: createdAtFilter } : {};
 
-    const [paid, payouts, offers, reservations, reviews, incidents, serviceItems] =
-      await Promise.all([
-        this.prisma.paymentReceipt.findMany({
-          where: { status: 'PAID', ...where },
-          select: {
-            amount: true,
-            rail: true,
-            reservation: { select: { packageId: true } },
-          },
-        }),
-        this.prisma.serviceItem.findMany({
-          where,
-          select: {
-            payoutRate: true,
-            payoutStatus: true,
-            reservation: { select: { packageId: true } },
-          },
-        }),
-        this.prisma.dispatchOffer.findMany({
-          where,
-          select: { status: true, offeredAt: true, respondedAt: true },
-        }),
-        this.prisma.reservation.findMany({ where, select: { status: true } }),
-        this.prisma.review.findMany({ where, select: { rating: true } }),
-        this.prisma.incident.findMany({
-          where,
-          select: { severity: true, resolvedAt: true },
-        }),
-        this.prisma.serviceItem.findMany({ where, select: { province: true } }),
-      ]);
+    const [
+      paid,
+      payouts,
+      offers,
+      reservations,
+      reviews,
+      incidents,
+      serviceItems,
+      refunds,
+    ] = await Promise.all([
+      this.prisma.paymentReceipt.findMany({
+        where: { status: 'PAID', ...where },
+        select: {
+          amount: true,
+          rail: true,
+          reservation: { select: { packageId: true } },
+        },
+      }),
+      this.prisma.serviceItem.findMany({
+        where,
+        select: {
+          payoutRate: true,
+          payoutStatus: true,
+          reservation: { select: { packageId: true } },
+        },
+      }),
+      this.prisma.dispatchOffer.findMany({
+        where,
+        select: { status: true, offeredAt: true, respondedAt: true },
+      }),
+      this.prisma.reservation.findMany({ where, select: { status: true } }),
+      this.prisma.review.findMany({ where, select: { rating: true } }),
+      this.prisma.incident.findMany({
+        where,
+        select: { severity: true, resolvedAt: true },
+      }),
+      this.prisma.serviceItem.findMany({ where, select: { province: true } }),
+      // M4: refunds count in the window they were sent.
+      this.prisma.refund.findMany({
+        where: {
+          status: 'SENT',
+          ...(createdAtFilter ? { sentAt: createdAtFilter } : {}),
+        },
+        select: { amount: true },
+      }),
+    ]);
 
     const finance = calculateFinance({
       paid: paid.map((payment) => ({
@@ -70,6 +86,7 @@ export class AnalyticsService {
         payoutStatus: payout.payoutStatus,
         packageId: payout.reservation.packageId,
       })),
+      refunds: refunds.map((refund) => ({ amount: Number(refund.amount) })),
     });
     const operations = calculateOperations({ offers, reservations });
     const quality = calculateQuality({

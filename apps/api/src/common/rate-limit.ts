@@ -39,11 +39,13 @@ interface Counter {
 }
 
 /**
- * Credential-bearing auth routes get the stricter limit. Session reads
+ * Credential-bearing auth routes get the stricter limit, and so does the public
+ * Support form, which sends an email per request. Session reads
  * (`/api/auth/get-session`, `/api/auth/ok`) are hit on every page load and use
  * the normal limit — throttling them would break normal browsing.
  */
 const SENSITIVE_AUTH_PREFIXES = [
+  '/contact',
   '/api/auth/sign-in',
   '/api/auth/sign-up',
   '/api/auth/magic-link',

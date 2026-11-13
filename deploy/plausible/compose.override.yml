@@ -1,0 +1,39 @@
+# Plausible CE on the platform's VM (docs/deployment-plan.md D20(b)): its own
+# compose project and Postgres, beside the upstream compose file of a pinned
+# release (written against plausible/community-edition v3.2.1, whose compose.yml
+# publishes no ports). From a checkout of that tag:
+#   docker compose -p plausible -f compose.yml -f <repo>/deploy/plausible/compose.override.yml up -d
+# Start the platform stack first: it creates the ota_edge network, through which
+# Caddy serves analytics.<domain> and the API posts events to
+# http://plausible:8000/api/event (TELEMETRY_PLAUSIBLE_ENDPOINT).
+# Set BASE_URL=https://analytics.<domain> and leave HTTPS_PORT unset: Caddy
+# terminates TLS.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '5'
+
+services:
+  plausible_db:
+    logging: *logging
+    mem_limit: 512m
+
+  plausible_events_db:
+    logging: *logging
+    # The heavy one; the upstream low-resources settings are already mounted.
+    mem_limit: 2g
+
+  plausible:
+    logging: *logging
+    environment:
+      - HTTP_PORT=8000
+    networks:
+      - default
+      - ota_edge
+    mem_limit: 1g
+
+networks:
+  ota_edge:
+    external: true

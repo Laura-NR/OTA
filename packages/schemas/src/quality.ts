@@ -51,6 +51,8 @@ export const supplierReliabilitySchema = z.object({
   supplierId: z.string().uuid(),
   supplierName: z.string().nullable(),
   offers: z.number().int(),
+  /** Offers accepted, declined or timed out: the base of the rates. */
+  answered: z.number().int(),
   accepted: z.number().int(),
   declined: z.number().int(),
   timedOut: z.number().int(),

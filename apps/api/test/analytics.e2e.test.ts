@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const SUPER_ADMIN = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -45,6 +46,8 @@ function createFakePrisma() {
       reservation: { packageId: null },
     },
   ];
+  // M4: one refund sent in the window.
+  const refunds = [{ amount: '10' }];
   const offers = [
     {
       status: 'ACCEPTED',
@@ -69,6 +72,8 @@ function createFakePrisma() {
     },
     serviceItem: { findMany: async () => serviceItems },
     dispatchOffer: { findMany: async () => offers },
+    // M4: refunds sent count against net revenue.
+    refund: { findMany: async () => refunds },
     reservation: { findMany: async () => reservations },
     review: { findMany: async () => reviews },
     incident: {
@@ -97,7 +102,7 @@ describe('analytics API', () => {
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma())
+      .useValue(withNoSettingsVersion(createFakePrisma()))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       .compile();
@@ -120,8 +125,10 @@ describe('analytics API', () => {
       gbv: 150,
       payoutsAccrued: 30,
       payoutsSettled: 20,
-      netRevenue: 100,
-      takeRate: 0.6667,
+      refundsSent: 10,
+      // 150 GBV less 50 of payouts and the 10 refunded.
+      netRevenue: 90,
+      takeRate: 0.6,
       averageOrderValue: 75,
       paidCount: 2,
     });

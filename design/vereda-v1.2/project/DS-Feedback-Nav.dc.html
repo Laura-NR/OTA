@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components · Status, feedback and navigation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;transition:background .12s ease-out;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-d{background:#C62828;color:#fff}.btn-d:hover{background:#B71C1C}
+.btn-sm{height:32px;padding:0 12px;font-size:14px}
+.btn:focus-visible,.tab:focus-visible,.acc:focus-visible,.pg:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.pill-lg{height:32px;padding:0 12px;font-size:14px}
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:8px;border:1px solid}
+.alert h4{margin:0;font-size:16px;line-height:24px;font-weight:600}
+.alert p{margin:0;font-size:14px;line-height:20px}
+.tab{height:48px;padding:0 4px;border:0;background:transparent;font:500 16px/24px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tab:hover{color:#1F1B17}
+.tab.on{color:#083B50;border-bottom-color:#0B4F6C;font-weight:600}
+.acc{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 0;border:0;background:transparent;font:600 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;cursor:pointer;text-align:left;min-height:56px}
+.acc:hover{color:#083B50}
+.pg{min-width:40px;height:40px;padding:0 8px;border:1px solid #D6CEC3;background:#fff;border-radius:8px;font:500 14px/20px Inter,system-ui,sans-serif;color:#083B50;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.pg:hover{background:#F3EEE6}
+.pg[aria-current]{background:#0B4F6C;color:#fff;border-color:#0B4F6C;cursor:default}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;line-height:20px;min-width:960px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:12px;border-bottom:1px solid #E8E2D9;vertical-align:middle}
+.tbl tbody tr:hover{background:#FBF8F3}
+.sk{background:#E8E2D9;border-radius:6px;position:relative;overflow:hidden}
+.sk::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:sh 1.4s infinite}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@media (prefers-reduced-motion: reduce){.sk::after{animation:none}}
+.demo{padding:20px;border:1px dashed #D6CEC3;border-radius:12px;background:#FBF8F3}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+
+  <header style="display: flex; flex-direction: column; gap: 12px; max-width: 860px">
+    <p class="ov">Vereda design system · Components 2 of 3</p>
+    <h1 class="disp" style="font-size: 40px; line-height: 48px">Status, feedback &amp; navigation</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Status is the product. A traveler must always know whether a stay is confirmed, waiting on a host, or needs a decision from them, and an admin must see the same truth in the same words. Tabs, accordion, modal, toast and the crisis banner are live.</p>
+  </header>
+
+  <!-- STATUS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">01 · Status badges</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">One vocabulary, traveler and admin</h2>
+    </div>
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Traveler-facing booking states</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <span class="pill pill-lg" style="background: #E3F2FD; color: #0D47A1"><svg class="ic" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"></path></svg>Request received</span>
+          <span class="pill pill-lg" style="background: #FEF3C7; color: #92400E"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Confirming with hosts</span>
+          <span class="pill pill-lg" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg>Action needed</span>
+          <span class="pill pill-lg" style="background: #F2B134; color: #1F1B17"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>Ready to pay · 46 h left</span>
+          <span class="pill pill-lg" style="background: #E8F5E9; color: #1B5E20"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Confirmed</span>
+          <span class="pill pill-lg" style="background: #fff; color: #1B5E20; border: 1px solid #2E7D32"><svg class="ic" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>Travel ready</span>
+          <span class="pill pill-lg" style="background: #E3F2FD; color: #0D47A1"><svg class="ic" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>On trip</span>
+          <span class="pill pill-lg" style="background: #F3EEE6; color: #4A433D"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Completed</span>
+          <span class="pill pill-lg" style="background: #F3EEE6; color: #4A433D; border: 1px solid #D6CEC3"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Waitlisted · you're 2nd</span>
+          <span class="pill pill-lg" style="background: #FDECEA; color: #B71C1C"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>Cancelled</span>
+          <span class="pill pill-lg" style="background: #F3EEE6; color: #4A433D"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Refunded</span>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto">
+        <table class="tbl" style="min-width: 760px">
+          <thead><tr><th>Traveler sees</th><th>System state (spec §4.2)</th><th>What the traveler is told</th><th>Timer</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill" style="background: #E3F2FD; color: #0D47A1">Request received</span></td><td class="mono">ITINERARY_SUBMITTED</td><td>"We've got your request. Nothing is charged yet."</td><td>—</td></tr>
+            <tr><td><span class="pill" style="background: #FEF3C7; color: #92400E">Confirming with hosts</span></td><td class="mono">DISPATCH_IN_PROGRESS · ASSEMBLY_&amp;_ESCALATION</td><td>"Your casa, driver and guide are confirming. Answer within 24 h."</td><td>24 h SLA, 72 h max</td></tr>
+            <tr><td><span class="pill" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B">Action needed</span></td><td class="mono">ACTION_REQUIRED (flagged)</td><td>"One stay is full on your dates. Choose an alternative below."</td><td>Admin red alert</td></tr>
+            <tr><td><span class="pill" style="background: #F2B134; color: #1F1B17">Ready to pay</span></td><td class="mono">SECURED_&amp;_INVOICED · PENDING_PAYMENT</td><td>"Everything is secured. Pay within 48 h to lock it in."</td><td>48 h countdown</td></tr>
+            <tr><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Confirmed</span></td><td class="mono">CONFIRMED</td><td>"Your trip is booked. Vouchers and host details are in Documents."</td><td>—</td></tr>
+            <tr><td><span class="pill" style="background: #fff; color: #1B5E20; border: 1px solid #2E7D32">Travel ready</span></td><td class="mono">CONFIRMED + documents approved</td><td>"Passport, insurance and e-visa checked. Download your offline kit."</td><td>7-day reconfirmation</td></tr>
+            <tr><td><span class="pill" style="background: #E3F2FD; color: #0D47A1">On trip</span></td><td class="mono">IN_PROGRESS</td><td>Daily morning check-in; emergency line pinned.</td><td>—</td></tr>
+            <tr><td><span class="pill" style="background: #F3EEE6; color: #4A433D">Completed</span></td><td class="mono">COMPLETED</td><td>Review prompt within 48 h; impact statement.</td><td>GDPR purge notice at 6 months</td></tr>
+            <tr><td><span class="pill" style="background: #FDECEA; color: #B71C1C">Cancelled</span></td><td class="mono">CANCELLED</td><td>Refund amount and date stated; travel credit option if force majeure.</td><td>Refund ≤ 14 business days</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Admin · per service item (dispatch)</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <span class="pill" style="background: #F3EEE6; color: #4A433D">Unassigned</span>
+            <span class="pill" style="background: #E3F2FD; color: #0D47A1"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Offered · 1 h 12 m</span>
+            <span class="pill" style="background: #E8F5E9; color: #1B5E20"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Accepted</span>
+            <span class="pill" style="background: #FDECEA; color: #B71C1C"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>Declined</span>
+            <span class="pill" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B">Amber · 75% of timer</span>
+            <span class="pill" style="background: #C62828; color: #fff"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg>Timeout · re-dispatch</span>
+            <span class="pill" style="background: #F3EEE6; color: #4A433D">Fulfilled</span>
+          </div>
+          <p class="cap">Timer: 2 h standard, 30 min when arrival is under 48 h. Amber at 75 %, red at 100 % or on decline.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Booking model · shown before checkout, always</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <span class="pill pill-lg" style="background: #0B4F6C; color: #fff"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path></svg>Instant confirmation</span>
+            <span class="pill pill-lg" style="background: #fff; color: #083B50; border: 1px solid #0B4F6C"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Request to book · answer in 24 h</span>
+            <span class="pill pill-lg" style="background: #E6F0F4; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>Confirming availability… up to 3 min</span>
+          </div>
+          <p class="cap">Casas, private drivers and guides are always request-to-book. Hotel allotments and pre-negotiated tours confirm instantly.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Tags, collections, advisory levels</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+            <span class="tag">Cultural</span><span class="tag">Eco &amp; agro</span><span class="tag">Beach</span><span class="tag">Family visit</span><span class="tag">Group 6–12</span>
+            <span class="pill" style="background: #E8F5E9; color: #1B5E20"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path></svg>Backup power guaranteed</span>
+            <span class="pill" style="background: #FEF3D6; color: #6B4A05"><svg class="ic" viewBox="0 0 24 24"><path d="M12 22c4-4 8-7.6 8-12a8 8 0 0 0-16 0c0 4.4 4 8 8 12Z"></path><path d="M12 6v8M8 10l4 4 4-4"></path></svg>85 % stays with local families</span>
+            <span class="pill" style="background: #E6F0F4; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>Verified traveler</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 9999px; background: #F2B134; color: #1F1B17; font: 700 12px/16px Inter, system-ui, sans-serif">3</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <span class="pill" style="background: #E8F5E9; color: #1B5E20">Level 1 · Exercise normal precautions</span>
+            <span class="pill" style="background: #E3F2FD; color: #0D47A1">Level 2 · Exercise increased caution</span>
+            <span class="pill" style="background: #FEF3C7; color: #92400E">Level 3 · Reconsider travel</span>
+            <span class="pill" style="background: #FDECEA; color: #B71C1C">Level 4 · Do not travel</span>
+          </div>
+          <p class="cap">Red is reserved for Level 4 and critical disruptions. Source and "last updated" always accompany an advisory.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALERTS & BANNERS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · Alerts, crisis banner, connectivity</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Honest, not alarmist: what happened, why, what to do</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Inline alerts</h3>
+        <div class="alert" role="status" style="background: #E3F2FD; border-color: #BBDEFB; color: #0D47A1"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><div><h4>Hurricane season runs June to November</h4><p>If an official advisory is raised for your dates you can move the trip for free, or take a full refund.</p></div></div>
+        <div class="alert" role="status" style="background: #E8F5E9; border-color: #C8E6C9; color: #1B5E20"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg><div><h4>Your request is in</h4><p>We've emailed a copy. Your hosts answer within 24 hours; you won't be charged until everything is confirmed.</p></div></div>
+        <div class="alert" role="alert" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg><div><h4>2 of 3 stays confirmed</h4><p>Casa Marta in Trinidad is full on 18 Feb. We've proposed Casa Osmany, 200 m away, same price and the same backup power. <a href="#alt" style="color: #92400E; font-weight: 600">Review the alternative</a> or keep waiting for another option.</p></div></div>
+        <div class="alert" role="alert" style="background: #FDECEA; border-color: #F5C6C2; color: #B71C1C"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg><div><h4>Your payment didn't go through</h4><p>You haven't been charged. Try another card, pay by bank transfer, or message us and we'll help within 15 minutes.</p></div></div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Site-wide crisis banner · sticky, three severities</h3>
+          <div style="display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: #E3F2FD; color: #0D47A1; border-radius: 8px"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><p style="margin: 0; font-size: 14px; line-height: 20px; flex: 1"><strong>Havana Jazz Festival 18–24 Jan.</strong> Some Old Havana streets close in the evenings; transfers may take 15 min longer.</p><a href="#more" style="font-size: 14px; font-weight: 600; white-space: nowrap">Read more</a></div>
+          <div style="display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: #FEF3C7; color: #92400E; border-radius: 8px"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg><p style="margin: 0; font-size: 14px; line-height: 20px; flex: 1"><strong>Tropical storm watch, western Cuba, from Thu 12 Oct.</strong> Departing before 20 Oct? Your options are in your inbox and in My trips.</p><a href="#more" style="font-size: 14px; font-weight: 600; white-space: nowrap; color: #92400E">Read the update</a></div>
+          <sc-if value="{{crisisOpen}}" hint-placeholder-val="{{ true }}">
+            <div role="alert" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; background: #C62828; color: #fff; border-radius: 8px"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg><div style="flex: 1; display: flex; flex-direction: column; gap: 8px"><p style="margin: 0; font-size: 14px; line-height: 20px"><strong>Hurricane warning · Pinar del Río and Artemisa.</strong> Departures 14–18 Oct are paused. We are contacting every affected traveler by WhatsApp and email with a free date change or a full refund. Updated 11 Oct, 14:30 · Source: Insmet.</p><div style="display: flex; gap: 12px; flex-wrap: wrap"><a href="#alerts" style="color: #fff; font-size: 14px; font-weight: 600">Full update &amp; emergency numbers</a><button class="btn btn-sm" type="button" onClick="{{ackCrisis}}" style="background: #fff; color: #B71C1C; border-color: #fff">I've read this</button></div></div></div>
+          </sc-if>
+          <sc-if value="{{crisisAcked}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: #F3EEE6; color: #4A433D; border-radius: 8px"><p style="margin: 0; font-size: 14px; line-height: 20px; flex: 1">Critical banner acknowledged; it collapses to a red dot on the Current Conditions link until the advisory is lifted.</p><button class="btn btn-sm btn-s" type="button" onClick="{{resetCrisis}}">Show again</button></div>
+          </sc-if>
+          <p class="cap">Critical banners cannot be dismissed with an ✕: the traveler acknowledges. Banner copy always names the date, the source and the next action.</p>
+        </div>
+
+        <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Connectivity &amp; toasts</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+            <span class="pill pill-lg" style="background: #1F1B17; color: #fff"><svg class="ic" viewBox="0 0 24 24"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M12 20h.01M19 12.9a10 10 0 0 0-3-2"></path></svg>You're offline · showing your saved trip · updated 2 h ago</span>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center; padding: 12px 16px; background: #F3EEE6; border-radius: 8px; flex-wrap: wrap"><p style="margin: 0; font-size: 14px; line-height: 20px; flex: 1; min-width: 220px">Slow connection detected. Switch to text-only mode? Prices and dates never depend on images.</p><button class="btn btn-sm btn-p" type="button">Switch</button><button class="btn btn-sm btn-t" type="button">Keep images</button></div>
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+            <button class="btn btn-s" type="button" onClick="{{showToast}}">Trigger toast</button>
+            <sc-if value="{{toastOn}}" hint-placeholder-val="{{ true }}">
+              <div role="status" aria-live="polite" style="display: flex; gap: 12px; align-items: center; padding: 12px 16px; background: #1F1B17; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(31,27,23,.16)"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg><span style="font-size: 14px; line-height: 20px">Saved to your trips.</span><button class="btn btn-sm" type="button" style="color: #F2B134; background: transparent; border: 0; padding: 0 4px">Undo</button><button type="button" aria-label="Dismiss" onClick="{{hideToast}}" style="background: transparent; border: 0; color: #fff; cursor: pointer; padding: 4px; display: inline-flex"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+            </sc-if>
+          </div>
+          <p class="cap">Toasts live 6 s, pause on hover, never carry the only copy of an error. Bottom-centre on mobile above the nav bar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">03 · Progress</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Stepper, pipeline tracker, loading</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 20px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Booking stepper · 5 steps</h3>
+          <ol style="margin: 0; padding: 0; list-style: none; display: flex; align-items: flex-start; gap: 0">
+            <li style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative"><span style="width: 32px; height: 32px; border-radius: 9999px; background: #0B4F6C; color: #fff; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size: 13px; line-height: 16px; font-weight: 600; color: #083B50">Dates</span><span style="position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background: #0B4F6C; z-index: -1"></span></li>
+            <li style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative"><span style="width: 32px; height: 32px; border-radius: 9999px; background: #0B4F6C; color: #fff; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size: 13px; line-height: 16px; font-weight: 600; color: #083B50">Stay</span><span style="position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background: #0B4F6C; z-index: -1"></span></li>
+            <li aria-current="step" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative"><span style="width: 32px; height: 32px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; font: 700 14px/16px Inter, system-ui, sans-serif; box-shadow: 0 0 0 4px #FEF3D6">3</span><span style="font-size: 13px; line-height: 16px; font-weight: 700; color: #1F1B17">Extras</span><span style="position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background: #D6CEC3; z-index: -1"></span></li>
+            <li style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative"><span style="width: 32px; height: 32px; border-radius: 9999px; background: #fff; border: 2px solid #D6CEC3; color: #6E665E; display: inline-flex; align-items: center; justify-content: center; font: 600 14px/16px Inter, system-ui, sans-serif; box-sizing: border-box">4</span><span style="font-size: 13px; line-height: 16px; color: #6E665E">Travelers</span><span style="position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background: #D6CEC3; z-index: -1"></span></li>
+            <li style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px"><span style="width: 32px; height: 32px; border-radius: 9999px; background: #fff; border: 2px solid #D6CEC3; color: #6E665E; display: inline-flex; align-items: center; justify-content: center; font: 600 14px/16px Inter, system-ui, sans-serif; box-sizing: border-box">5</span><span style="font-size: 13px; line-height: 16px; color: #6E665E">Review</span></li>
+          </ol>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: #FBF8F3; border-radius: 8px; max-width: 342px">
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span style="font-weight: 600">Step 3 of 5 · Extras</span><span style="color: #6E665E">Next: Travelers</span></div>
+            <div style="height: 8px; border-radius: 9999px; background: #E8E2D9; overflow: hidden" role="progressbar" aria-valuenow="3" aria-valuemin="0" aria-valuemax="5" aria-label="Booking progress"><div style="width: 60%; height: 100%; background: #0B4F6C"></div></div>
+            <p class="cap">Mobile variant: label + bar, steps tappable only when completed.</p>
+          </div>
+        </div>
+
+        <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Loading</h3>
+          <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap">
+            <svg class="ic" style="width: 24px; height: 24px; color: #0B4F6C" viewBox="0 0 24 24" aria-label="Loading"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>
+            <svg class="ic" style="width: 40px; height: 40px; color: #0B4F6C" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>
+            <div style="flex: 1; min-width: 200px; height: 8px; border-radius: 9999px; background: #E8E2D9; overflow: hidden"><div style="width: 45%; height: 100%; background: #0B4F6C; border-radius: 9999px"></div></div>
+          </div>
+          <div style="display: flex; gap: 16px; border: 1px solid #E8E2D9; border-radius: 12px; padding: 12px; max-width: 420px" aria-busy="true" aria-label="Loading package">
+            <div class="sk" style="width: 120px; height: 90px; border-radius: 8px"></div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding-top: 4px"><div class="sk" style="height: 14px; width: 80%"></div><div class="sk" style="height: 12px; width: 55%"></div><div class="sk" style="height: 12px; width: 40%; margin-top: 12px"></div></div>
+          </div>
+          <p class="cap">Text first: titles and prices render from the HTML before any image. Skeletons only for card media and review lists; copy says "Finding the best trips for you…"</p>
+        </div>
+      </div>
+
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Pipeline tracker · My trips</h3>
+        <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+          <li style="display: flex; gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 28px; height: 28px; border-radius: 9999px; background: #0B4F6C; color: #fff; display: inline-flex; align-items: center; justify-content: center; flex: none"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="width: 2px; flex: 1; background: #0B4F6C; min-height: 24px"></span></div><div style="padding-bottom: 20px"><p style="margin: 0; font-weight: 600">Request received</p><p class="cap">Tue 7 Oct, 09:14 · booking VX-7K2M9Q</p></div></li>
+          <li style="display: flex; gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 28px; height: 28px; border-radius: 9999px; background: #F2B134; color: #1F1B17; display: inline-flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 0 0 4px #FEF3D6"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span><span style="width: 2px; flex: 1; background: #D6CEC3; min-height: 24px"></span></div><div style="padding-bottom: 20px; display: flex; flex-direction: column; gap: 8px"><div><p style="margin: 0; font-weight: 700">Confirming with hosts</p><p class="cap">We'll have an answer by Wed 8 Oct, 09:14 (24 h)</p></div><ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px"><li style="display: flex; gap: 8px; align-items: center; color: #1B5E20"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Casa Yamilé, Viñales · accepted</li><li style="display: flex; gap: 8px; align-items: center; color: #1B5E20"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Driver Reinier · minivan with A/C · accepted</li><li style="display: flex; gap: 8px; align-items: center; color: #92400E"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Guide Daylin · offered 1 h ago</li></ul></div></li>
+          <li style="display: flex; gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 28px; height: 28px; border-radius: 9999px; background: #fff; border: 2px solid #D6CEC3; box-sizing: border-box; flex: none"></span><span style="width: 2px; flex: 1; background: #D6CEC3; min-height: 24px"></span></div><div style="padding-bottom: 20px"><p style="margin: 0; font-weight: 600; color: #6E665E">Ready to pay</p><p class="cap">Invoice and secure payment link · 48 h window</p></div></li>
+          <li style="display: flex; gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 28px; height: 28px; border-radius: 9999px; background: #fff; border: 2px solid #D6CEC3; box-sizing: border-box; flex: none"></span><span style="width: 2px; flex: 1; background: #D6CEC3; min-height: 24px"></span></div><div style="padding-bottom: 20px"><p style="margin: 0; font-weight: 600; color: #6E665E">Confirmed</p><p class="cap">Vouchers, host contacts, emergency card</p></div></li>
+          <li style="display: flex; gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 28px; height: 28px; border-radius: 9999px; background: #fff; border: 2px solid #D6CEC3; box-sizing: border-box; flex: none"></span></div><div><p style="margin: 0; font-weight: 600; color: #6E665E">Travel ready</p><p class="cap">Documents approved · offline kit downloaded</p></div></li>
+        </ol>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px"><a class="btn btn-s" href="#msg" style="gap: 8px"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg>Message us</a><button class="btn btn-t" type="button">Change request</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAVIGATION -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">04 · Navigation &amp; disclosure</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Breadcrumb, tabs, accordion, pagination, table</h2>
+    </div>
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 24px">
+      <nav aria-label="Breadcrumb"><ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; line-height: 20px; align-items: center"><li><a href="#home">Home</a></li><li aria-hidden="true" style="color: #6E665E">›</li><li><a href="#pk">Packages</a></li><li aria-hidden="true" style="color: #6E665E">›</li><li><a href="#eco">Eco &amp; agrotourism</a></li><li aria-hidden="true" style="color: #6E665E">›</li><li aria-current="page" style="color: #4A433D">Eco-Tourism in Viñales</li></ol></nav>
+
+      <div style="display: flex; flex-direction: column; gap: 0">
+        <div role="tablist" aria-label="Package sections" style="display: flex; gap: 24px; border-bottom: 1px solid #E8E2D9; overflow-x: auto">
+          <sc-for list="{{tabs}}" as="t" hint-placeholder-count="7">
+            <button class="tab {{t.cls}}" type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button>
+          </sc-for>
+        </div>
+        <div role="tabpanel" style="padding: 20px 0 4px; display: flex; flex-direction: column; gap: 8px">
+          <p style="margin: 0; font-weight: 600">{{tabTitle}}</p>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A433D; max-width: 72ch">{{tabBody}}</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 32px">
+        <div style="display: flex; flex-direction: column">
+          <h3 style="margin: 0 0 4px; font-size: 16px; line-height: 24px">Accordion · itinerary days</h3>
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+            <div style="border-bottom: 1px solid #E8E2D9">
+              <button class="acc" type="button" aria-expanded="{{d.on}}" onClick="{{d.toggle}}"><span style="display: flex; gap: 12px; align-items: baseline"><span class="ov" style="color: #A83E24; width: 48px">{{d.day}}</span><span>{{d.title}}</span></span><svg class="ic" style="transform: {{d.rot}}; transition: transform .2s; color: #4A433D" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></button>
+              <sc-if value="{{d.on}}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 0 16px 60px; display: flex; flex-direction: column; gap: 8px"><p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A433D">{{d.body}}</p><p class="cap">{{d.meta}}</p></div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <h3 style="margin: 0; font-size: 16px; line-height: 24px">Pagination</h3>
+          <nav aria-label="Results pages" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+            <button class="pg" type="button" aria-label="Previous page"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></button>
+            <button class="pg" type="button">1</button><button class="pg" type="button">2</button><span class="pg" aria-current="page">3</span><button class="pg" type="button">4</button><span style="color: #6E665E; padding: 0 4px">…</span><button class="pg" type="button">8</button>
+            <button class="pg" type="button" aria-label="Next page"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></button>
+          </nav>
+          <p class="cap">Current page is not a link. On mobile: "Show 12 more" button instead of numbers.</p>
+          <h3 style="margin: 8px 0 0; font-size: 16px; line-height: 24px">Sort</h3>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap"><label for="sort" style="font-size: 14px; font-weight: 500">Sort by</label><div style="position: relative; width: 240px"><select id="sort" style="height: 40px; width: 100%; padding: 0 40px 0 12px; border: 1px solid #D6CEC3; border-radius: 8px; font: 400 16px/24px Inter, system-ui, sans-serif; background: #fff; appearance: none; -webkit-appearance: none"><option>Recommended</option><option>Price · low to high</option><option>Duration</option><option>Departure date</option><option>Community share</option></select><svg class="ic" style="position: absolute; right: 12px; top: 10px; pointer-events: none; color: #4A433D" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></div></div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <h3 style="margin: 0; font-size: 16px; line-height: 24px">Data table · admin booking queue</h3>
+        <div style="overflow-x: auto; border: 1px solid #E8E2D9; border-radius: 8px">
+          <table class="tbl">
+            <thead><tr><th scope="col"><button type="button" style="background: transparent; border: 0; font: inherit; color: inherit; cursor: pointer; display: inline-flex; gap: 4px; align-items: center" aria-sort="descending">Code <svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></button></th><th scope="col">Traveler</th><th scope="col">Package · dates</th><th scope="col">Status</th><th scope="col">Dispatch</th><th scope="col" style="text-align: right">Total</th><th scope="col">Timer</th><th scope="col"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Actions</span></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">VX-7K2M9Q</td><td>Margaret Chen · CA</td><td>Eco-Tourism in Viñales · 13–20 Feb</td><td><span class="pill" style="background: #FEF3C7; color: #92400E">Confirming</span></td><td><span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 64px; height: 6px; border-radius: 9999px; background: #E8E2D9; overflow: hidden; display: inline-block"><span style="display: block; width: 66%; height: 100%; background: #0B4F6C"></span></span>2 / 3</span></td><td class="mono" style="text-align: right">€ 2,790.00</td><td style="color: #92400E; font-weight: 600">0 h 48 m</td><td><button class="btn btn-sm btn-s" type="button">Open</button></td></tr>
+              <tr style="background: #FDECEA"><td class="mono">VX-3PA8ZT</td><td>Klaus Müller · DE</td><td>Ciénaga de Zapata extension · 2–5 Mar</td><td><span class="pill" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B">Action needed</span></td><td><span style="color: #B71C1C; font-weight: 600; display: inline-flex; gap: 6px; align-items: center"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg>Guide declined</span></td><td class="mono" style="text-align: right">€ 1,180.00</td><td style="color: #B71C1C; font-weight: 600">Timed out</td><td><button class="btn btn-sm btn-p" type="button">Re-dispatch</button></td></tr>
+              <tr><td class="mono">VX-9QD1LM</td><td>Carlos Rodríguez · US</td><td>Family visit · Havana &amp; Matanzas · 20–30 Dec</td><td><span class="pill" style="background: #F2B134; color: #1F1B17">Ready to pay</span></td><td>3 / 3</td><td class="mono" style="text-align: right">€ 1,560.00</td><td>31 h left</td><td><button class="btn btn-sm btn-s" type="button">Open</button></td></tr>
+              <tr><td class="mono">VX-5HT4RW</td><td>Eleanor Whitfield · UK</td><td>Havana Cultural Immersion · 8–15 Nov</td><td><span class="pill" style="background: #E8F5E9; color: #1B5E20">Confirmed</span></td><td>4 / 4</td><td class="mono" style="text-align: right">€ 4,020.00</td><td>—</td><td><button class="btn btn-sm btn-s" type="button">Open</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="cap">Numeric columns right-aligned in mono; sortable headers carry aria-sort; rows become stacked cards under 768 px; the row's own button is the only click target.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERLAYS & STATES -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">05 · Modal, empty, error and not-found states</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Consequences stated before confirmation</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start">
+      <div class="demo" style="display: flex; flex-direction: column; gap: 16px; min-height: 320px; justify-content: center; align-items: center">
+        <sc-if value="{{modalClosed}}" hint-placeholder-val="{{ false }}">
+          <button class="btn btn-d" type="button" onClick="{{openModal}}">Cancel booking</button>
+          <p class="cap">Destructive action → confirmation dialog</p>
+        </sc-if>
+        <sc-if value="{{modalOpen}}" hint-placeholder-val="{{ true }}">
+          <div role="dialog" aria-modal="true" aria-labelledby="mt" style="width: 100%; max-width: 480px; background: #fff; border-radius: 12px; box-shadow: 0 12px 32px rgba(31,27,23,.16); display: flex; flex-direction: column">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 24px 0; gap: 12px"><h3 id="mt" style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 600">Cancel this booking?</h3><button type="button" aria-label="Close" onClick="{{closeModal}}" style="width: 40px; height: 40px; border: 0; background: transparent; cursor: pointer; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: -6px -8px 0 0"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+            <div style="padding: 12px 24px 20px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 20px; color: #4A433D">
+              <p style="margin: 0">You're 38 days from departure. Under the cancellation policy we keep <strong>10 % (€ 279)</strong> and refund <strong>€ 2,511</strong> to your original payment method within 14 business days.</p>
+              <p style="margin: 0">Prefer to keep your plans flexible? You can move the dates once for free instead.</p>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #E8E2D9; flex-wrap: wrap"><button class="btn btn-t" type="button" onClick="{{closeModal}}">Change dates instead</button><button class="btn btn-s" type="button" onClick="{{closeModal}}">Keep booking</button><button class="btn btn-d" type="button" onClick="{{closeModal}}">Cancel booking</button></div>
+          </div>
+          <p class="cap">Focus trapped, Escape closes, focus returns to the trigger. Overlay rgba(31,27,23,.5).</p>
+        </sc-if>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div class="sheet" style="padding: 32px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px">
+          <div aria-hidden="true" style="width: 72px; height: 72px; border-radius: 9999px; background: #F7E4DC; display: flex; align-items: center; justify-content: center; color: #A83E24"><svg class="ic" style="width: 32px; height: 32px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></div>
+          <h3 style="margin: 0; font-size: 20px; line-height: 28px">No packages match those filters</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A433D; max-width: 44ch">Try removing "Backup power guaranteed" or widening your dates by a week. Or tell us what you're after and we'll build it.</p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center"><button class="btn btn-s" type="button">Clear filters</button><a class="btn btn-p" href="#custom">Plan a custom trip</a></div>
+        </div>
+        <div class="sheet" style="padding: 20px 24px; display: flex; gap: 16px; align-items: flex-start; border-color: #F5C6C2">
+          <svg class="ic" style="color: #B71C1C; margin-top: 2px" viewBox="0 0 24 24"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M12 20h.01M19 12.9a10 10 0 0 0-3-2"></path></svg>
+          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1"><h3 style="margin: 0; font-size: 16px; line-height: 24px">We couldn't reach our booking system</h3><p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A433D">Showing prices saved 20 minutes ago; they may be stale. Your selections are kept.</p><div style="display: flex; gap: 12px; flex-wrap: wrap"><button class="btn btn-sm btn-p" type="button">Try again</button><a class="btn btn-sm btn-t" href="#help">Message us</a></div></div>
+        </div>
+        <div class="sheet" style="padding: 24px; display: flex; gap: 20px; align-items: center">
+          <p class="disp" style="font-size: 48px; line-height: 48px; color: #A83E24">404</p>
+          <div style="display: flex; flex-direction: column; gap: 6px"><h3 style="margin: 0; font-size: 20px; line-height: 28px">This page took a wrong turn</h3><p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A433D">The link may be old or mistyped. Search, or start from the destinations.</p><div style="display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px"><a class="btn btn-sm btn-p" href="#home">Go to homepage</a><a class="btn btn-sm btn-s" href="#dest">Browse destinations</a></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3720}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'itinerary', open: { d1: true, d2: false, d3: false }, modal: false, toast: false, crisis: 'open' };
+  }
+  renderVals() {
+    const s = this.state;
+    const tabDefs = [
+      ['overview', 'Overview', 'Seven nights in the Viñales valley', 'Casa stays with two host families, tobacco and coffee farms, birdwatching with a Formatur-certified guide, and one day at Cayo Levisa. Small group, 6 to 12 travelers.'],
+      ['itinerary', 'Itinerary', 'Day by day', 'Each day names the host, the guide and the vehicle. Timings are approximate: in Cuba the plan flexes with fuel and weather, and we say so.'],
+      ['inclusions', 'Inclusions', 'What the price covers', '7 nights casa particular with breakfast · private minivan with A/C · 4 guided activities · airport meet-and-greet · carbon offset · 24/7 emergency line. Not included: flights, e-visa, insurance, lunches and dinners (budget €15–25 a day).'],
+      ['hosts', 'Hosts', 'Meet the people you stay with', 'Yamilé and Osvaldo, hosting since 2014; Finca El Paraíso; guide Daylin, birder and biology graduate. Portraits appear only with written consent.'],
+      ['reviews', 'Reviews', 'Verified travelers only', 'Unfiltered: three-star reviews about outages sit next to five-star ones. Each shows first name, country, date and our reply.'],
+      ['conditions', 'Conditions', 'Current conditions in Pinar del Río', 'Power: 4 h backup at both casas. Fuel: normal. Advisory: Level 2. Updated weekly, with the source.'],
+      ['faq', 'FAQ', 'Common questions', 'E-visa, cash, tipping, what happens if a storm is forecast.']
+    ];
+    const tabs = tabDefs.map(([id, label]) => ({ id, label, on: s.tab === id, cls: s.tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) }));
+    const cur = tabDefs.find((t) => t[0] === s.tab) || tabDefs[0];
+    const dayDefs = [
+      ['d1', 'Day 1', 'Arrive in Havana, transfer to Viñales', 'Meet-and-greet at José Martí airport with driver Reinier (minivan, A/C). 2 h 30 drive west. Dinner at your casa with Yamilé.', 'Transfer 180 km · Casa Yamilé · dinner included'],
+      ['d2', 'Day 2', 'Valley walk and tobacco farm', 'Morning hike among the mogotes with Daylin; afternoon at Finca El Paraíso learning how leaves are cured. Evening free.', 'Walking 8 km, gentle · breakfast, lunch included'],
+      ['d3', 'Day 3', 'Birdwatching at dawn, Cueva del Indio', 'Early start for the Cuban tody and trogon, then the river cave by boat. Siesta; sunset at Los Jazmines viewpoint.', 'Start 06:00 · binoculars provided']
+    ];
+    const days = dayDefs.map(([id, day, title, body, meta]) => ({ id, day, title, body, meta, on: !!s.open[id], rot: s.open[id] ? 'rotate(180deg)' : 'rotate(0deg)', toggle: () => this.setState({ open: { ...s.open, [id]: !s.open[id] } }) }));
+    return {
+      tabs, tabTitle: cur[2], tabBody: cur[3], days,
+      modalOpen: s.modal, modalClosed: !s.modal, openModal: () => this.setState({ modal: true }), closeModal: () => this.setState({ modal: false }),
+      toastOn: s.toast, showToast: () => this.setState({ toast: true }), hideToast: () => this.setState({ toast: false }),
+      crisisOpen: s.crisis === 'open', crisisAcked: s.crisis === 'acked', ackCrisis: () => this.setState({ crisis: 'acked' }), resetCrisis: () => this.setState({ crisis: 'open' })
+    };
+  }
+}
+</script>
+</body>
+</html>

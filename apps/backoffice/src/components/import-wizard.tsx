@@ -18,6 +18,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 import { ApiError } from '@/lib/errors';
 
@@ -71,6 +72,8 @@ function guessMapping(columns: string[]): Record<string, string> {
 
 export function ImportWizard() {
   const t = useTranslations('backoffice.importWizard');
+  const why = useTranslations('backoffice.unavailable');
+  const track = useDeskTelemetry();
   const [preview, setPreview] = useState<ImportPreviewDto | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [result, setResult] = useState<ImportCommitResultDto | null>(null);
@@ -116,6 +119,7 @@ export function ImportWizard() {
     setBusy('commit');
     setError(null);
     setRowErrors([]);
+    const started = Date.now();
 
     try {
       const response = await apiRequest<ImportCommitResultDto>(
@@ -123,10 +127,20 @@ export function ImportWizard() {
         { method: 'POST', body: JSON.stringify({ mapping }) },
       );
       setResult(response);
+      track('import_committed', {
+        rows: preview.rowCount,
+        errors: 0,
+        duration_ms: Date.now() - started,
+      });
     } catch (commitError) {
       if (commitError instanceof ApiError && commitError.status === 422) {
         const details = commitError.details as { errors?: RowError[] } | undefined;
         setRowErrors(details?.errors ?? []);
+        track('import_committed', {
+          rows: preview.rowCount,
+          errors: details?.errors?.length ?? 0,
+          duration_ms: Date.now() - started,
+        });
       } else {
         setError(commitError instanceof Error ? commitError.message : t('commitFailed'));
       }
@@ -150,7 +164,7 @@ export function ImportWizard() {
           disabled={busy === 'upload'}
           onChange={onUpload}
         />
-        <p className="text-xs text-muted-foreground">{t('hint')}</p>
+        <p className="text-caption text-muted">{t('hint')}</p>
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
@@ -212,9 +226,15 @@ export function ImportWizard() {
             </TableBody>
           </Table>
 
-          <Button onClick={onCommit} disabled={busy === 'commit' || missingRequired}>
-            {busy === 'commit' ? t('committing') : t('commit')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              onClick={onCommit}
+              disabled={busy === 'commit'}
+              unavailableReason={missingRequired ? why('importMapping') : undefined}
+            >
+              {busy === 'commit' ? t('committing') : t('commit')}
+            </Button>
+          </div>
         </div>
       ) : null}
 

@@ -15,12 +15,27 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
+import { useTelemetry } from '@/components/telemetry/telemetry-provider';
+import { prefersReducedMotion } from '@/lib/display';
+
 /**
  * Traveler ↔ operations thread (spec §3.5) for one booking. History loads over
  * HTTP and replies post through the same endpoint the email fallback hangs off;
  * the socket only feeds the back-office, so the storefront refreshes on send.
  */
-export function MessageThread({ reservationId }: { reservationId: string }) {
+/** T-Events `message_sent` carries the message's size, never its words. */
+function lengthBucket(text: string): 'short' | 'medium' | 'long' {
+  return text.length <= 80 ? 'short' : text.length <= 400 ? 'medium' : 'long';
+}
+
+export function MessageThread({
+  reservationId,
+  bookingCode,
+}: {
+  reservationId: string;
+  bookingCode: string;
+}) {
+  const { track } = useTelemetry();
   const t = useTranslations('account.messages');
   const tSender = useTranslations('account.sender');
   const [messages, setMessages] = useState<MessageDto[]>([]);
@@ -53,7 +68,9 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
   }, [reservationId, t]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    });
   }, [messages]);
 
   async function send(event: FormEvent<HTMLFormElement>) {
@@ -74,6 +91,10 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
         throw new Error(t('sendError'));
       }
       const message = (await response.json()) as MessageDto;
+      track('message_sent', {
+        booking_code: bookingCode,
+        length_bucket: lengthBucket(trimmed),
+      });
       setMessages((current) => [...current, message]);
       setBody('');
     } catch (sendError) {
@@ -94,7 +115,7 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
 
         <div className="max-h-80 space-y-3 overflow-y-auto rounded-md border p-4">
           {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('empty')}</p>
+            <p className="text-body-sm text-muted">{t('empty')}</p>
           ) : (
             messages.map((message) => (
               <div
@@ -108,8 +129,8 @@ export function MessageThread({ reservationId }: { reservationId: string }) {
                 <div
                   className={
                     message.sender === 'TRAVELER'
-                      ? 'max-w-[80%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground'
-                      : 'max-w-[80%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground'
+                      ? 'max-w-[80%] rounded-lg bg-action-primary px-3 py-2 text-body-sm text-on-primary'
+                      : 'max-w-[80%] rounded-lg bg-sunken px-3 py-2 text-body-sm text-default'
                   }
                 >
                   <p className="whitespace-pre-wrap">{message.body}</p>

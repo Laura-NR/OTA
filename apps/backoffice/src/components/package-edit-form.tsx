@@ -1,6 +1,14 @@
 'use client';
 
-import type { InventoryItemDto, PackageDto } from '@ota/schemas';
+import { packagePublishIssues } from '@ota/domain';
+import { packageRowsInUseSchema } from '@ota/schemas';
+import type {
+  InventoryItemDto,
+  PackageDepartureDto,
+  PackageDto,
+  PackageEditRefusalDto,
+  PackageStatusDto,
+} from '@ota/schemas';
 import {
   Alert,
   Button,
@@ -18,29 +26,94 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import { ApiError } from '@/lib/errors';
 
 interface ServiceRow {
   inventoryItemId: string;
   dayOffset: number;
 }
 
-/** Edit a curated package and its itinerary (spec §3.3). */
+/** The rows keep the fields this form does not show, so a save sends them back. */
+interface TierRow {
+  code: string;
+  name: string;
+  description: string | null;
+  priceDelta: string;
+  singleSupplement: string;
+  isDefault: boolean;
+}
+
+interface DepartureRow {
+  startDate: string;
+  capacity: string;
+  price: string;
+  status: PackageDepartureDto['status'];
+}
+
+interface ExtraRow {
+  code: string;
+  name: string;
+  description: string | null;
+  durationLabel: string | null;
+  inventoryItemId: string | null;
+  dayOffset: number | null;
+  price: string;
+  priceUnit: 'PER_PERSON' | 'PER_BOOKING';
+  active: boolean;
+}
+
+interface DayRow {
+  dayOffset: number;
+  title: string;
+  body: string;
+  meals: string | null;
+}
+
+const DEPARTURE_STATUSES = ['OPEN', 'CLOSED', 'CANCELLED'] as const;
+const CODES_SHOWN = 5;
+
+function numberOrNull(value: string): number | null {
+  return value.trim() === '' ? null : Number(value);
+}
+
+/**
+ * Edit a curated package on the M1 model (A-Package-Edit, spec §3.3): the
+ * details, the itinerary, the accommodation tiers, the departures, the extras
+ * and the day texts, saved in one PATCH. Publishing runs the domain publish
+ * checks first, including the photos'. Photos and per-locale text are edited
+ * on their own tabs (`PackageMediaManager`, `PackageTranslations`).
+ */
 export function PackageEditForm({
   package: pkg,
   items,
+  policyKeys,
 }: {
   package: PackageDto;
   items: InventoryItemDto[];
+  /** The manifest's deposit and cancellation policy keys (M4 D2). */
+  policyKeys: string[];
 }) {
   const t = useTranslations('backoffice.packageEdit');
+  const why = useTranslations('backoffice.unavailable');
   const router = useRouter();
+
   const [name, setName] = useState(pkg.name);
+  const [slug, setSlug] = useState(pkg.slug);
+  const [summary, setSummary] = useState(pkg.summary ?? '');
   const [description, setDescription] = useState(pkg.description ?? '');
   const [province, setProvince] = useState(pkg.province ?? '');
   const [durationDays, setDurationDays] = useState(String(pkg.durationDays));
   const [currency, setCurrency] = useState(pkg.currency);
   const [basePrice, setBasePrice] = useState(pkg.basePrice);
-  const [active, setActive] = useState(pkg.active);
+  const [status, setStatus] = useState<PackageStatusDto>(pkg.status);
+  const [bookingModel, setBookingModel] = useState(pkg.bookingModel);
+  const [groupMin, setGroupMin] = useState(
+    pkg.groupMin === null ? '' : String(pkg.groupMin),
+  );
+  const [groupMax, setGroupMax] = useState(
+    pkg.groupMax === null ? '' : String(pkg.groupMax),
+  );
+  const [leadTimeDays, setLeadTimeDays] = useState(String(pkg.leadTimeDays));
   const [rows, setRows] = useState<ServiceRow[]>(
     [...pkg.services]
       .sort((a, b) => a.dayOffset - b.dayOffset || a.position - b.position)
@@ -49,56 +122,188 @@ export function PackageEditForm({
         dayOffset: service.dayOffset,
       })),
   );
+  const [tiers, setTiers] = useState<TierRow[]>(
+    [...pkg.tiers]
+      .sort((a, b) => a.position - b.position)
+      .map((tier) => ({
+        code: tier.code,
+        name: tier.name,
+        description: tier.description,
+        priceDelta: tier.priceDelta,
+        singleSupplement: tier.singleSupplement ?? '',
+        isDefault: tier.isDefault,
+      })),
+  );
+  const [departures, setDepartures] = useState<DepartureRow[]>(
+    pkg.departures.map((departure) => ({
+      startDate: departure.startDate.slice(0, 10),
+      capacity: String(departure.capacity),
+      price: departure.price ?? '',
+      status: departure.status,
+    })),
+  );
+  const [extras, setExtras] = useState<ExtraRow[]>(
+    [...pkg.extras]
+      .sort((a, b) => a.position - b.position)
+      .map((extra) => ({
+        code: extra.code,
+        name: extra.name,
+        description: extra.description,
+        durationLabel: extra.durationLabel,
+        inventoryItemId: extra.inventoryItemId,
+        dayOffset: extra.dayOffset,
+        price: extra.price,
+        priceUnit: extra.priceUnit,
+        active: extra.active,
+      })),
+  );
+  const [days, setDays] = useState<DayRow[]>(
+    [...pkg.days]
+      .sort((a, b) => a.dayOffset - b.dayOffset)
+      .map((day) => ({
+        dayOffset: day.dayOffset,
+        title: day.title,
+        body: day.body ?? '',
+        meals: day.meals,
+      })),
+  );
   const [newItemId, setNewItemId] = useState(items[0]?.id ?? '');
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refusals, setRefusals] = useState<PackageEditRefusalDto[]>([]);
 
   const itemName = (id: string) => items.find((item) => item.id === id)?.name ?? id;
 
-  function addService() {
-    if (!newItemId) return;
-    setRows((current) => [...current, { inventoryItemId: newItemId, dayOffset: 0 }]);
-  }
-
-  function removeService(index: number) {
-    setRows((current) => current.filter((_, i) => i !== index));
-  }
-
-  function setDay(index: number, day: number) {
-    setRows((current) =>
-      current.map((row, i) => (i === index ? { ...row, dayOffset: day } : row)),
+  function updateRow<T>(
+    setter: (fn: (current: T[]) => T[]) => void,
+    index: number,
+    patch: Partial<T>,
+  ) {
+    setter((current) =>
+      current.map((row, i) => (i === index ? { ...row, ...patch } : row)),
     );
+  }
+
+  function refusalText(refusal: PackageEditRefusalDto): string {
+    if (refusal.kind === 'ROW_DUPLICATED') {
+      return t('refusals.ROW_DUPLICATED', { row: refusal.row });
+    }
+    const shown = refusal.bookingCodes.slice(0, CODES_SHOWN).join(', ');
+    const hidden = refusal.bookingCodes.length - CODES_SHOWN;
+    const codes =
+      hidden > 0 ? t('refusals.more', { codes: shown, count: hidden }) : shown;
+    if (refusal.kind === 'DEPARTURE_BELOW_BOOKED') {
+      return t('refusals.DEPARTURE_BELOW_BOOKED', {
+        row: refusal.row,
+        booked: refusal.booked,
+        capacity: refusal.capacity,
+        codes,
+      });
+    }
+    return t(`refusals.${refusal.kind}`, { row: refusal.row, codes });
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError(null);
+    setRefusals([]);
     setSaved(false);
+
+    if (status === 'PUBLISHED') {
+      const issues = packagePublishIssues({
+        name,
+        slug,
+        serviceCount: rows.length,
+        departureCount: departures.length,
+        bookingModel,
+        cancellationPolicy: pkg.cancellationPolicy,
+        depositPolicy: pkg.depositPolicy,
+        // Only whether a consent reference is on file matters to the check.
+        media: pkg.media.map((photo) => ({
+          altText: photo.altText,
+          showsPeople: photo.showsPeople,
+          consentReference: photo.hasConsent ? 'on file' : null,
+        })),
+        knownPolicyKeys: policyKeys,
+      });
+      if (issues.length > 0) {
+        setError(t('publishIssues', { issues: issues.join(', ') }));
+        setBusy(false);
+        return;
+      }
+    }
 
     try {
       await apiRequest<PackageDto>(`/packages/${pkg.id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           name,
+          slug,
+          summary: summary || undefined,
           description: description || undefined,
           province: province || undefined,
           durationDays: Number(durationDays),
           currency,
           basePrice: Number(basePrice),
-          active,
+          status,
+          bookingModel,
+          groupMin: numberOrNull(groupMin),
+          groupMax: numberOrNull(groupMax),
+          leadTimeDays: Number(leadTimeDays),
           services: rows.map((row, index) => ({
             inventoryItemId: row.inventoryItemId,
             dayOffset: row.dayOffset,
             position: index,
+          })),
+          tiers: tiers.map((tier, index) => ({
+            code: tier.code,
+            name: tier.name,
+            description: tier.description ?? undefined,
+            position: index,
+            priceDelta: Number(tier.priceDelta) || 0,
+            singleSupplement: numberOrNull(tier.singleSupplement),
+            isDefault: tier.isDefault,
+          })),
+          departures: departures.map((departure) => ({
+            startDate: departure.startDate,
+            capacity: Number(departure.capacity),
+            price: numberOrNull(departure.price),
+            status: departure.status,
+          })),
+          extras: extras.map((extra, index) => ({
+            code: extra.code,
+            name: extra.name,
+            description: extra.description ?? undefined,
+            durationLabel: extra.durationLabel ?? undefined,
+            inventoryItemId: extra.inventoryItemId ?? undefined,
+            dayOffset: extra.dayOffset ?? undefined,
+            price: Number(extra.price),
+            priceUnit: extra.priceUnit,
+            position: index,
+            active: extra.active,
+          })),
+          days: days.map((day) => ({
+            dayOffset: day.dayOffset,
+            title: day.title,
+            body: day.body || undefined,
+            meals: day.meals ?? undefined,
           })),
         }),
       });
       setSaved(true);
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : t('saveFailed'));
+      const refused =
+        saveError instanceof ApiError
+          ? packageRowsInUseSchema.safeParse(saveError.details)
+          : null;
+      if (refused?.success) {
+        setRefusals(refused.data.refusals);
+      } else {
+        setError(saveError instanceof Error ? saveError.message : t('saveFailed'));
+      }
     } finally {
       setBusy(false);
     }
@@ -112,7 +317,7 @@ export function PackageEditForm({
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="edit-name">{t('name')}</Label>
               <Input
                 id="edit-name"
@@ -120,6 +325,25 @@ export function PackageEditForm({
                 onChange={(event) => setName(event.target.value)}
                 required
                 maxLength={200}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-slug">{t('slug')}</Label>
+              <Input
+                id="edit-slug"
+                value={slug}
+                onChange={(event) => setSlug(event.target.value)}
+                required
+                maxLength={200}
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="edit-summary">{t('summary')}</Label>
+              <Input
+                id="edit-summary"
+                value={summary}
+                onChange={(event) => setSummary(event.target.value)}
+                maxLength={400}
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
@@ -173,14 +397,66 @@ export function PackageEditForm({
                 maxLength={3}
               />
             </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={active}
-                onChange={(event) => setActive(event.target.checked)}
+            <div className="space-y-2">
+              <Label htmlFor="edit-status">{t('status')}</Label>
+              <Select
+                id="edit-status"
+                value={status}
+                onChange={(event) => setStatus(event.target.value as PackageStatusDto)}
+              >
+                {(['DRAFT', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED'] as const).map(
+                  (candidate) => (
+                    <option key={candidate} value={candidate}>
+                      {candidate}
+                    </option>
+                  ),
+                )}
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-booking-model">{t('bookingModel')}</Label>
+              <Select
+                id="edit-booking-model"
+                value={bookingModel}
+                onChange={(event) =>
+                  setBookingModel(event.target.value as PackageDto['bookingModel'])
+                }
+              >
+                <option value="REQUEST">{t('requestModel')}</option>
+                <option value="INSTANT">{t('instantModel')}</option>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-group-min">{t('groupMin')}</Label>
+              <Input
+                id="edit-group-min"
+                type="number"
+                min="1"
+                value={groupMin}
+                onChange={(event) => setGroupMin(event.target.value)}
               />
-              {t('active')}
-            </label>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-group-max">{t('groupMax')}</Label>
+              <Input
+                id="edit-group-max"
+                type="number"
+                min="1"
+                value={groupMax}
+                onChange={(event) => setGroupMax(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-lead-time">{t('leadTime')}</Label>
+              <Input
+                id="edit-lead-time"
+                type="number"
+                min="0"
+                max="365"
+                value={leadTimeDays}
+                onChange={(event) => setLeadTimeDays(event.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -197,12 +473,12 @@ export function PackageEditForm({
               {rows.map((row, index) => (
                 <li
                   key={`${row.inventoryItemId}-${index}`}
-                  className="flex items-center gap-3 rounded-md border p-2 text-sm"
+                  className="flex items-center gap-3 rounded-md border p-2 text-body-sm"
                 >
                   <span className="flex-1 font-medium">
                     {itemName(row.inventoryItemId)}
                   </span>
-                  <label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <label className="flex items-center gap-1 text-caption text-muted">
                     {t('day')}
                     <Input
                       type="number"
@@ -211,15 +487,19 @@ export function PackageEditForm({
                       className="h-8 w-16"
                       value={row.dayOffset + 1}
                       onChange={(event) =>
-                        setDay(index, Math.max(1, Number(event.target.value)) - 1)
+                        updateRow<ServiceRow>(setRows, index, {
+                          dayOffset: Math.max(1, Number(event.target.value)) - 1,
+                        })
                       }
                     />
                   </label>
                   <Button
                     type="button"
                     size="sm"
-                    variant="ghost"
-                    onClick={() => removeService(index)}
+                    variant="tertiary"
+                    onClick={() =>
+                      setRows((current) => current.filter((_, i) => i !== index))
+                    }
                   >
                     {t('remove')}
                   </Button>
@@ -245,9 +525,15 @@ export function PackageEditForm({
             </div>
             <Button
               type="button"
-              variant="outline"
-              onClick={addService}
-              disabled={!newItemId}
+              variant="secondary"
+              onClick={() =>
+                newItemId &&
+                setRows((current) => [
+                  ...current,
+                  { inventoryItemId: newItemId, dayOffset: 0 },
+                ])
+              }
+              unavailableReason={newItemId ? undefined : why('chooseItem')}
             >
               {t('add')}
             </Button>
@@ -255,12 +541,407 @@ export function PackageEditForm({
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('tiers')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {tiers.map((tier, index) => (
+            <div
+              key={index}
+              className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto]"
+            >
+              <div className="space-y-1">
+                <Label htmlFor={`package-tier-code-${index}`}>{t('tierCode')}</Label>
+                <Input
+                  id={`package-tier-code-${index}`}
+                  value={tier.code}
+                  onChange={(event) =>
+                    updateRow<TierRow>(setTiers, index, { code: event.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-tier-name-${index}`}>{t('tierName')}</Label>
+                <Input
+                  id={`package-tier-name-${index}`}
+                  value={tier.name}
+                  onChange={(event) =>
+                    updateRow<TierRow>(setTiers, index, { name: event.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-tier-delta-${index}`}>{t('tierDelta')}</Label>
+                <Input
+                  id={`package-tier-delta-${index}`}
+                  type="number"
+                  className="w-24"
+                  value={tier.priceDelta}
+                  onChange={(event) =>
+                    updateRow<TierRow>(setTiers, index, {
+                      priceDelta: event.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-tier-supplement-${index}`}>
+                  {t('tierSupplement')}
+                </Label>
+                <Input
+                  id={`package-tier-supplement-${index}`}
+                  type="number"
+                  className="w-24"
+                  value={tier.singleSupplement}
+                  onChange={(event) =>
+                    updateRow<TierRow>(setTiers, index, {
+                      singleSupplement: event.target.value,
+                    })
+                  }
+                />
+              </div>
+              <label className="flex items-center gap-1 pb-2 text-caption text-muted">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 shrink-0 accent-primary-600"
+                  checked={tier.isDefault}
+                  onChange={(event) =>
+                    updateRow<TierRow>(setTiers, index, {
+                      isDefault: event.target.checked,
+                    })
+                  }
+                />
+                {t('tierDefault')}
+              </label>
+              <Button
+                type="button"
+                size="sm"
+                variant="tertiary"
+                onClick={() =>
+                  setTiers((current) => current.filter((_, i) => i !== index))
+                }
+              >
+                {t('remove')}
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              setTiers((current) => [
+                ...current,
+                {
+                  code: '',
+                  name: '',
+                  description: null,
+                  priceDelta: '0',
+                  singleSupplement: '',
+                  isDefault: false,
+                },
+              ])
+            }
+          >
+            {t('addTier')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('departures')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {departures.map((departure, index) => (
+            <div
+              key={index}
+              className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[auto_auto_auto_auto_auto]"
+            >
+              <div className="space-y-1">
+                <Label htmlFor={`package-departure-date-${index}`}>
+                  {t('departureDate')}
+                </Label>
+                <Input
+                  id={`package-departure-date-${index}`}
+                  type="date"
+                  value={departure.startDate}
+                  onChange={(event) =>
+                    updateRow<DepartureRow>(setDepartures, index, {
+                      startDate: event.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-departure-seats-${index}`}>
+                  {t('departureSeats')}
+                </Label>
+                <Input
+                  id={`package-departure-seats-${index}`}
+                  type="number"
+                  min="1"
+                  className="w-24"
+                  value={departure.capacity}
+                  onChange={(event) =>
+                    updateRow<DepartureRow>(setDepartures, index, {
+                      capacity: event.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-departure-price-${index}`}>
+                  {t('departurePrice')}
+                </Label>
+                <Input
+                  id={`package-departure-price-${index}`}
+                  type="number"
+                  className="w-28"
+                  value={departure.price}
+                  onChange={(event) =>
+                    updateRow<DepartureRow>(setDepartures, index, {
+                      price: event.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-departure-status-${index}`}>
+                  {t('departureStatus')}
+                </Label>
+                <Select
+                  id={`package-departure-status-${index}`}
+                  value={departure.status}
+                  onChange={(event) =>
+                    updateRow<DepartureRow>(setDepartures, index, {
+                      status: event.target.value as DepartureRow['status'],
+                    })
+                  }
+                >
+                  {DEPARTURE_STATUSES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(`departureStatuses.${value}`)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="tertiary"
+                onClick={() =>
+                  setDepartures((current) => current.filter((_, i) => i !== index))
+                }
+              >
+                {t('remove')}
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              setDepartures((current) => [
+                ...current,
+                { startDate: '', capacity: '8', price: '', status: 'OPEN' },
+              ])
+            }
+          >
+            {t('addDeparture')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('extras')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {extras.map((extra, index) => (
+            <div
+              key={index}
+              className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto]"
+            >
+              <div className="space-y-1">
+                <Label htmlFor={`package-extra-code-${index}`}>{t('extraCode')}</Label>
+                <Input
+                  id={`package-extra-code-${index}`}
+                  value={extra.code}
+                  onChange={(event) =>
+                    updateRow<ExtraRow>(setExtras, index, { code: event.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-extra-name-${index}`}>{t('extraName')}</Label>
+                <Input
+                  id={`package-extra-name-${index}`}
+                  value={extra.name}
+                  onChange={(event) =>
+                    updateRow<ExtraRow>(setExtras, index, { name: event.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-extra-price-${index}`}>{t('extraPrice')}</Label>
+                <Input
+                  id={`package-extra-price-${index}`}
+                  type="number"
+                  className="w-24"
+                  value={extra.price}
+                  onChange={(event) =>
+                    updateRow<ExtraRow>(setExtras, index, { price: event.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-extra-unit-${index}`}>{t('extraUnit')}</Label>
+                <Select
+                  id={`package-extra-unit-${index}`}
+                  value={extra.priceUnit}
+                  onChange={(event) =>
+                    updateRow<ExtraRow>(setExtras, index, {
+                      priceUnit: event.target.value as ExtraRow['priceUnit'],
+                    })
+                  }
+                >
+                  <option value="PER_PERSON">PER_PERSON</option>
+                  <option value="PER_BOOKING">PER_BOOKING</option>
+                </Select>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="tertiary"
+                onClick={() =>
+                  setExtras((current) => current.filter((_, i) => i !== index))
+                }
+              >
+                {t('remove')}
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              setExtras((current) => [
+                ...current,
+                {
+                  code: '',
+                  name: '',
+                  description: null,
+                  durationLabel: null,
+                  inventoryItemId: null,
+                  dayOffset: null,
+                  price: '0',
+                  priceUnit: 'PER_PERSON',
+                  active: true,
+                },
+              ])
+            }
+          >
+            {t('addExtra')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('daysSection')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {days.map((day, index) => (
+            <div
+              key={index}
+              className="grid items-end gap-2 rounded-md border p-2 sm:grid-cols-[auto_1fr_2fr_auto]"
+            >
+              <div className="space-y-1">
+                <Label htmlFor={`package-day-number-${index}`}>{t('dayNumber')}</Label>
+                <Input
+                  id={`package-day-number-${index}`}
+                  type="number"
+                  min="1"
+                  max="60"
+                  className="w-16"
+                  value={day.dayOffset + 1}
+                  onChange={(event) =>
+                    updateRow<DayRow>(setDays, index, {
+                      dayOffset: Math.max(1, Number(event.target.value)) - 1,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-day-title-${index}`}>{t('dayTitle')}</Label>
+                <Input
+                  id={`package-day-title-${index}`}
+                  value={day.title}
+                  onChange={(event) =>
+                    updateRow<DayRow>(setDays, index, { title: event.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`package-day-body-${index}`}>{t('dayBody')}</Label>
+                <Input
+                  id={`package-day-body-${index}`}
+                  value={day.body}
+                  onChange={(event) =>
+                    updateRow<DayRow>(setDays, index, { body: event.target.value })
+                  }
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="tertiary"
+                onClick={() =>
+                  setDays((current) => current.filter((_, i) => i !== index))
+                }
+              >
+                {t('remove')}
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              setDays((current) => [
+                ...current,
+                { dayOffset: current.length, title: '', body: '', meals: null },
+              ])
+            }
+          >
+            {t('addDay')}
+          </Button>
+        </CardContent>
+      </Card>
+
       {error ? <Alert variant="destructive">{error}</Alert> : null}
+      {refusals.length > 0 ? (
+        <Alert variant="destructive">
+          <p>{t('refusals.title')}</p>
+          <ul className="mt-1 list-disc space-y-1 pl-4">
+            {refusals.map((refusal) => (
+              <li key={`${refusal.kind}-${refusal.row}`}>{refusalText(refusal)}</li>
+            ))}
+          </ul>
+        </Alert>
+      ) : null}
       {saved ? <Alert>{t('saved')}</Alert> : null}
 
-      <Button type="submit" disabled={busy || rows.length === 0}>
-        {busy ? t('saving') : t('save')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          disabled={busy}
+          unavailableReason={rows.length === 0 ? why('packageRows') : undefined}
+        >
+          {busy ? t('saving') : t('save')}
+        </Button>
+      </div>
     </form>
   );
 }

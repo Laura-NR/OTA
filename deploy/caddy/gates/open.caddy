@@ -1,0 +1,2 @@
+# Launched (SITE_GATE=open): no basic auth and no noindex header. Set
+# SITE_NOINDEX empty (or 0) for the storefront's robots.txt at the same time.

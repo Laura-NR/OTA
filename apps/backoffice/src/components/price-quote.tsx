@@ -42,17 +42,17 @@ export function PriceQuote({ inventoryItemId }: { inventoryItemId: string }) {
             onChange={(event) => setDate(event.target.value)}
           />
         </div>
-        <Button size="sm" variant="outline" disabled={busy} onClick={load}>
+        <Button size="sm" variant="secondary" disabled={busy} onClick={load}>
           {busy ? '…' : t('quote')}
         </Button>
       </div>
 
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       {quote ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-caption text-muted">
           {t('base')} {quote.base.toFixed(2)} · {t('seasonal')}{' '}
           {quote.seasonal.toFixed(2)} · {t('markup')} {quote.markup.toFixed(2)} →{' '}
-          <span className="font-medium text-foreground">{quote.total.toFixed(2)}</span>
+          <span className="font-medium text-default">{quote.total.toFixed(2)}</span>
         </p>
       ) : null}
     </div>

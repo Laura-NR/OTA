@@ -5,6 +5,7 @@ import {
   SUPPORTED_LOCALES,
   isSupportedLocale,
   loadMessages,
+  mergeMessages,
 } from '../src';
 
 function flatten(value: unknown, prefix = ''): string[] {
@@ -29,5 +30,29 @@ describe('@ota/i18n', () => {
     for (const locale of SUPPORTED_LOCALES) {
       expect(flatten(loadMessages(locale)).sort()).toEqual(reference);
     }
+  });
+});
+
+describe('mergeMessages', () => {
+  it('overrides leaves, merges objects and leaves the base untouched', () => {
+    const base = { nav: { home: 'Home', support: 'Support' }, footer: { license: 'L' } };
+    const merged = mergeMessages(
+      base,
+      { nav: { support: 'Help' } },
+      { content: { a: 1 } },
+    );
+
+    expect(merged).toEqual({
+      nav: { home: 'Home', support: 'Help' },
+      footer: { license: 'L' },
+      content: { a: 1 },
+    });
+    expect(base.nav.support).toBe('Support');
+  });
+
+  it('replaces arrays wholesale rather than merging them by index', () => {
+    expect(mergeMessages({ items: ['a', 'b'] }, { items: ['c'] })).toEqual({
+      items: ['c'],
+    });
   });
 });

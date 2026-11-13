@@ -8,6 +8,9 @@ import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { DocumentsService } from '../src/documents/documents.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { MockTelemetrySink } from '../src/telemetry/telemetry-sink';
+import { TELEMETRY_SINK } from '../src/telemetry/telemetry.tokens';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const SUPER_ADMIN = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -35,6 +38,10 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     totalCurrency: 'EUR',
     totalAmount: new Prisma.Decimal('321.00'),
     customItineraryPayload: null,
+    displayCurrency: null,
+    displayRate: null,
+    displayRateDate: null,
+    displayRateLockedAt: null,
     createdAt: new Date('2026-09-20T10:00:00Z'),
     updatedAt: new Date('2026-09-20T10:00:00Z'),
     ...overrides,
@@ -49,6 +56,8 @@ function makeReceipt(overrides: Partial<PaymentReceipt> = {}): PaymentReceipt {
     rail: 'CARD',
     currency: 'EUR',
     amount: new Prisma.Decimal('321.00'),
+    feeAmount: new Prisma.Decimal('0'),
+    instalmentId: null,
     status: 'PENDING',
     payoutStatus: 'ACCRUED',
     createdAt: new Date('2026-09-20T11:00:00Z'),
@@ -57,22 +66,76 @@ function makeReceipt(overrides: Partial<PaymentReceipt> = {}): PaymentReceipt {
   };
 }
 
+interface GateTraveler {
+  id: string;
+  usPerson: boolean | null;
+  nationality: string | null;
+}
+
+interface FakeInstalment {
+  id: string;
+  reservationId: string;
+  kind: string;
+  position: number;
+  amount: number;
+  dueAt: Date;
+  status: string;
+}
+
+interface FakeRate {
+  rateDate: Date;
+  currency: string;
+  rate: number;
+  source: string;
+}
+
 function createFakePrisma(state: {
   reservations: Map<string, Reservation>;
   receipts: Map<string, PaymentReceipt>;
   audits: { action: string }[];
+  travelers?: GateTraveler[];
+  affidavits?: { travelerId: string }[];
+  instalments?: FakeInstalment[];
+  /** M9: the traveler's saved display currency and the stored rates. */
+  displayCurrency?: string | null;
+  rates?: FakeRate[];
 }) {
+  const instalments = () => (state.instalments ??= []);
+  const rates = () => (state.rates ??= []);
   const fake = {
+    // M3: the OFAC gate reads the party and its affidavits.
+    reservationTraveler: { findMany: async () => state.travelers ?? [] },
+    travelerAffidavit: { findMany: async () => state.affidavits ?? [] },
     reservation: {
-      findUnique: async (args: { where: { id: string } }) =>
-        state.reservations.get(args.where.id) ?? null,
-      update: async (args: {
+      // M4: a payment link reads the schedule and the package's deposit plan.
+      findUnique: async (args: {
         where: { id: string };
-        data: { status: Reservation['status'] };
+        include?: unknown;
+        select?: unknown;
       }) => {
+        const row = state.reservations.get(args.where.id);
+        if (!row) return null;
+        // M9: the rate lock reads the lock and the traveler's display currency.
+        if (args.select) {
+          return {
+            displayRateLockedAt: row.displayRateLockedAt,
+            user: { displayCurrency: state.displayCurrency ?? null },
+          };
+        }
+        return args.include
+          ? {
+              ...row,
+              instalments: instalments()
+                .filter((instalment) => instalment.reservationId === row.id)
+                .sort((a, b) => a.position - b.position),
+              package: null,
+            }
+          : row;
+      },
+      update: async (args: { where: { id: string }; data: Partial<Reservation> }) => {
         const existing = state.reservations.get(args.where.id);
         if (!existing) throw new Error('not found');
-        const updated = { ...existing, status: args.data.status };
+        const updated = { ...existing, ...args.data };
         state.reservations.set(args.where.id, updated);
         return updated;
       },
@@ -80,16 +143,37 @@ function createFakePrisma(state: {
     paymentReceipt: {
       findUnique: async (args: { where: { id: string } }) =>
         state.receipts.get(args.where.id) ?? null,
+      count: async (args: {
+        where: { reservationId: string; status: string; id: { not: string } };
+      }) =>
+        [...state.receipts.values()].filter(
+          (receipt) =>
+            receipt.reservationId === args.where.reservationId &&
+            receipt.status === args.where.status &&
+            receipt.id !== args.where.id.not,
+        ).length,
       findFirst: async (args: { where: { gatewayTxId?: string } }) => {
         const receipt = [...state.receipts.values()].find(
           (row) => row.gatewayTxId === args.where.gatewayTxId,
         );
         return receipt ? { ...receipt, reservation: { bookingCode: 'PAY00001' } } : null;
       },
-      findMany: async (args: { where: { reservationId: string } }) =>
-        [...state.receipts.values()].filter(
-          (receipt) => receipt.reservationId === args.where.reservationId,
-        ),
+      findMany: async (args: {
+        where: { reservationId?: string; status?: string };
+        include?: unknown;
+      }) =>
+        [...state.receipts.values()]
+          .filter(
+            (receipt) =>
+              (args.where.reservationId === undefined ||
+                receipt.reservationId === args.where.reservationId) &&
+              (args.where.status === undefined || receipt.status === args.where.status),
+          )
+          .map((receipt) =>
+            args.include
+              ? { ...receipt, reservation: { bookingCode: 'PAY00001' } }
+              : receipt,
+          ),
       create: async (args: { data: Partial<PaymentReceipt> }) => {
         const receipt = { ...makeReceipt(), ...args.data } as PaymentReceipt;
         state.receipts.set(receipt.id, receipt);
@@ -103,10 +187,41 @@ function createFakePrisma(state: {
         return updated;
       },
     },
+    paymentInstalment: {
+      createMany: async (args: { data: FakeInstalment[] }) => {
+        instalments().push(...args.data.map((row) => ({ ...row, status: 'DUE' })));
+        return { count: args.data.length };
+      },
+      update: async (args: { where: { id: string }; data: Partial<FakeInstalment> }) => {
+        const row = instalments().find((instalment) => instalment.id === args.where.id);
+        if (!row) throw new Error('not found');
+        Object.assign(row, args.data);
+        return row;
+      },
+    },
     auditLog: {
       create: async (args: { data: { action: string } }) => {
         state.audits.push({ action: args.data.action });
         return args.data;
+      },
+    },
+    exchangeRate: {
+      findFirst: async () =>
+        [...rates()].sort((a, b) => b.rateDate.getTime() - a.rateDate.getTime())[0] ??
+        null,
+      findMany: async (args: { where: { rateDate: Date } }) =>
+        rates().filter((row) => row.rateDate.getTime() === args.where.rateDate.getTime()),
+      createMany: async (args: { data: FakeRate[] }) => {
+        const fresh = args.data.filter(
+          (row) =>
+            !rates().some(
+              (stored) =>
+                stored.currency === row.currency &&
+                stored.rateDate.getTime() === row.rateDate.getTime(),
+            ),
+        );
+        rates().push(...fresh);
+        return { count: fresh.length };
       },
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
@@ -135,9 +250,20 @@ describe('payments API', () => {
     reservations: Map<string, Reservation>;
     receipts: Map<string, PaymentReceipt>;
     audits: { action: string }[];
+    travelers?: GateTraveler[];
+    affidavits?: { travelerId: string }[];
+    displayCurrency?: string | null;
   };
 
+  let sink: MockTelemetrySink;
+  const moves = () =>
+    sink
+      .recent()
+      .filter((event) => event.event === 'booking_state_changed')
+      .map((event) => event.params);
+
   beforeEach(async () => {
+    sink = new MockTelemetrySink();
     state = {
       reservations: new Map([[RESERVATION_ID, makeReservation()]]),
       receipts: new Map(),
@@ -146,13 +272,15 @@ describe('payments API', () => {
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       // Documents are exercised elsewhere; override so CONFIRMED does not try
       // to render PDFs against the fake database.
       .overrideProvider(DocumentsService)
       .useValue({ generate: async () => undefined })
+      .overrideProvider(TELEMETRY_SINK)
+      .useValue(sink)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -184,6 +312,29 @@ describe('payments API', () => {
     expect(response.body.checkoutUrl).toContain('/checkout/mock/mock_');
     expect(state.reservations.get(RESERVATION_ID)?.status).toBe('PENDING_PAYMENT');
     expect(state.audits.map((entry) => entry.action)).toContain('payment.intent_created');
+    expect(moves()).toEqual([
+      expect.objectContaining({
+        from: 'SECURED_AND_INVOICED',
+        to: 'PENDING_PAYMENT',
+        actor: 'super_admin',
+        reason: 'payment_requested',
+      }),
+    ]);
+  });
+
+  it('keeps payment locked until every US traveler has certified (OFAC, M3)', async () => {
+    state.travelers = [
+      { id: '77777777-7777-4777-8777-777777777777', usPerson: null, nationality: 'US' },
+      { id: '78787878-7878-4878-8878-787878787878', usPerson: null, nationality: 'CA' },
+    ];
+
+    const locked = await createIntent();
+    expect(locked.status).toBe(409);
+    expect(locked.body.message).toContain('OFAC');
+    expect(state.reservations.get(RESERVATION_ID)?.status).toBe('SECURED_AND_INVOICED');
+
+    state.affidavits = [{ travelerId: '77777777-7777-4777-8777-777777777777' }];
+    expect((await createIntent()).status).toBe(201);
   });
 
   it('confirms a pending payment and moves the booking to CONFIRMED', async () => {
@@ -198,6 +349,47 @@ describe('payments API', () => {
     expect(state.reservations.get(RESERVATION_ID)?.status).toBe('CONFIRMED');
     expect([...state.receipts.values()][0]?.status).toBe('PAID');
     expect(state.audits.map((entry) => entry.action)).toContain('payment.confirmed');
+    expect(moves().at(-1)).toEqual(
+      expect.objectContaining({
+        from: 'PENDING_PAYMENT',
+        to: 'CONFIRMED',
+        reason: 'payment_confirmed',
+      }),
+    );
+  });
+
+  it("locks the traveler's display rate, spread included, at the first payment (M9 C6)", async () => {
+    state.displayCurrency = 'CAD';
+    const intent = await createIntent();
+
+    await request(app.getHttpServer())
+      .post(`/reservations/${RESERVATION_ID}/payments/${intent.body.id}/confirm`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .expect(200);
+
+    const reservation = state.reservations.get(RESERVATION_ID);
+    expect(reservation?.displayCurrency).toBe('CAD');
+    // The mock's CAD reference 1.4802 plus the default 0.6 % spread.
+    expect(Number(reservation?.displayRate)).toBe(1.489081);
+    expect(reservation?.displayRateLockedAt).toBeInstanceOf(Date);
+    expect(state.audits.map((entry) => entry.action)).toContain(
+      'reservation.display_rate_locked',
+    );
+  });
+
+  it('locks nothing for a traveler who sees EUR', async () => {
+    state.displayCurrency = 'EUR';
+    const intent = await createIntent();
+
+    await request(app.getHttpServer())
+      .post(`/reservations/${RESERVATION_ID}/payments/${intent.body.id}/confirm`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .expect(200);
+
+    expect(state.reservations.get(RESERVATION_ID)?.displayRateLockedAt).toBeNull();
+    expect(state.audits.map((entry) => entry.action)).not.toContain(
+      'reservation.display_rate_locked',
+    );
   });
 
   it('lists payment receipts for a reservation', async () => {
@@ -280,5 +472,33 @@ describe('payments API', () => {
     );
 
     expect(response.status).toBe(401);
+  });
+
+  it('lists the ledger across bookings with their codes, filtered by status', async () => {
+    state.receipts.set(PAYMENT_ID, makeReceipt({ status: 'PAID' }));
+    state.receipts.set(
+      '88888888-8888-4888-8888-888888888888',
+      makeReceipt({
+        id: '88888888-8888-4888-8888-888888888888',
+        status: 'PENDING',
+      }),
+    );
+
+    const all = await request(app.getHttpServer())
+      .get('/payments')
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(all.status).toBe(200);
+    expect(all.body).toHaveLength(2);
+    expect(all.body[0]).toMatchObject({ bookingCode: 'PAY00001', amount: '321' });
+
+    const paid = await request(app.getHttpServer())
+      .get('/payments?status=PAID')
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(paid.body.map((entry: { id: string }) => entry.id)).toEqual([PAYMENT_ID]);
+
+    const traveler = await request(app.getHttpServer())
+      .get('/payments')
+      .set('x-test-user', TRAVELER.email);
+    expect(traveler.status).toBe(403);
   });
 });

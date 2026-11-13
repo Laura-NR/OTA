@@ -3,6 +3,7 @@ import { UserRole } from '@ota/domain';
 import { analyticsRangeSchema, type AnalyticsRangeQuery } from '@ota/schemas';
 import type { Response } from 'express';
 
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { XLSX_CONTENT_TYPE } from './reports-digest.service';
@@ -15,6 +16,7 @@ const READ_ROLES = [
 ] as const;
 
 /** On-demand BI workbook download (spec §4.9.5). */
+@Capability('reports')
 @Controller('analytics/export')
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}

@@ -1,0 +1,1609 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-05T10:00:00Z"
+  },
+  "title": "Vereda Expeditions",
+  "launch": {
+    "view": "canvas",
+    "page": "ds"
+  },
+  "pages": [
+    {
+      "id": "ds",
+      "name": "01 Design system"
+    },
+    {
+      "id": "web",
+      "name": "02 Customer · Web"
+    },
+    {
+      "id": "mobile",
+      "name": "03 Customer · Mobile"
+    },
+    {
+      "id": "admin",
+      "name": "04 Admin"
+    },
+    {
+      "id": "apps",
+      "name": "05 Worker & Ops Lite apps"
+    },
+    {
+      "id": "docs",
+      "name": "06 Documents (PDF)"
+    },
+    {
+      "id": "comms",
+      "name": "07 Notifications & emails"
+    },
+    {
+      "id": "handoff",
+      "name": "08 Handoff · flows & traceability"
+    },
+    {
+      "id": "brand",
+      "name": "09 Brand"
+    }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 3360,
+      "title": "01 Foundations",
+      "page": "ds",
+      "expand": "fill"
+    },
+    "DS-Actions-Forms.dc.html": {
+      "x": 1360,
+      "y": 0,
+      "w": 1280,
+      "h": 3280,
+      "title": "02 Actions & forms",
+      "page": "ds",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DS-Feedback-Nav.dc.html": {
+      "x": 2720,
+      "y": 0,
+      "w": 1280,
+      "h": 3720,
+      "title": "03 Status, feedback & navigation",
+      "page": "ds",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DS-Cards-Content.dc.html": {
+      "x": 4080,
+      "y": 0,
+      "w": 1280,
+      "h": 3900,
+      "title": "04 Cards, content & commerce",
+      "page": "ds",
+      "expand": "fill"
+    },
+    "DS-Mobile-Patterns.dc.html": {
+      "x": 5440,
+      "y": 0,
+      "w": 1280,
+      "h": 2900,
+      "title": "05 Mobile, offline & responsive",
+      "page": "ds",
+      "expand": "fill"
+    },
+    "DS-Handoff.dc.html": {
+      "x": 6800,
+      "y": 0,
+      "w": 1280,
+      "h": 3400,
+      "title": "06 Developer handoff",
+      "page": "ds",
+      "expand": "fill"
+    },
+    "Home.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 4560,
+      "title": "Homepage · desktop 1440",
+      "page": "web",
+      "expand": "fill"
+    },
+    "M-Home.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 4300,
+      "title": "Homepage · mobile 390",
+      "page": "mobile",
+      "radius": 28
+    },
+    "Packages.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 2700,
+      "title": "Package listing · filters & compare",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Package.dc.html": {
+      "x": 6080,
+      "y": 0,
+      "w": 1440,
+      "h": 3400,
+      "title": "Package detail · tabs, tiers, departures",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Booking.dc.html": {
+      "x": 1520,
+      "y": 5400,
+      "w": 1440,
+      "h": 2100,
+      "title": "Booking flow · 5 steps + request sent",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Payment.dc.html": {
+      "x": 3040,
+      "y": 5400,
+      "w": 1440,
+      "h": 2200,
+      "title": "Payment · 4 rails, pending, failed, success",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Confirmation.dc.html": {
+      "x": 4560,
+      "y": 5400,
+      "w": 1440,
+      "h": 2200,
+      "title": "Confirmation · next steps, documents, CSAT",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Custom.dc.html": {
+      "x": 0,
+      "y": 5400,
+      "w": 1440,
+      "h": 2300,
+      "title": "Custom itinerary builder · 5 steps + proposal requested",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Destinations.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 3250,
+      "title": "Destinations · province map with three layers, panel and route sketching, filters, 14 places",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Destination.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 5300,
+      "title": "Destination detail · Viñales",
+      "page": "web",
+      "expand": "fill"
+    },
+    "Compare.dc.html": {
+      "x": 7600,
+      "y": 0,
+      "w": 1440,
+      "h": 2200,
+      "title": "Compare · 2–4 trips, highlight differences",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Account.dc.html": {
+      "x": 0,
+      "y": 10800,
+      "w": 1440,
+      "h": 2000,
+      "title": "Account · overview, trips, documents, messages, payments, prefs",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PreTrip.dc.html": {
+      "x": 1520,
+      "y": 10800,
+      "w": 1440,
+      "h": 2300,
+      "title": "Travel info hub · conditions, entry, money, health, OFAC",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Blog.dc.html": {
+      "x": 3040,
+      "y": 10800,
+      "w": 1440,
+      "h": 2300,
+      "title": "Blog & guides · listing",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "BlogPost.dc.html": {
+      "x": 4560,
+      "y": 10800,
+      "w": 1440,
+      "h": 3600,
+      "title": "Blog article · Power outages in Cuba",
+      "page": "web",
+      "expand": "fill"
+    },
+    "About.dc.html": {
+      "x": 6080,
+      "y": 10800,
+      "w": 1440,
+      "h": 3700,
+      "title": "About · Why Vereda",
+      "page": "web",
+      "expand": "fill"
+    },
+    "Support.dc.html": {
+      "x": 0,
+      "y": 16200,
+      "w": 1440,
+      "h": 3000,
+      "title": "Support · channels, FAQ, emergency, contact",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Auth.dc.html": {
+      "x": 1520,
+      "y": 16200,
+      "w": 1440,
+      "h": 960,
+      "title": "Sign in · create account · recover (passwordless)",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Legal.dc.html": {
+      "x": 3040,
+      "y": 16200,
+      "w": 1440,
+      "h": 2600,
+      "title": "Legal · terms, privacy, cancellation, cookies, data rights, sanctions, accessibility",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Errors.dc.html": {
+      "x": 4560,
+      "y": 16200,
+      "w": 1440,
+      "h": 900,
+      "title": "Errors · 404, 500, offline, compliance hold, maintenance",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "M-Packages.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 4700,
+      "title": "Listing · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Package.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 2600,
+      "title": "Package detail · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Booking.dc.html": {
+      "x": 470,
+      "y": 4800,
+      "w": 390,
+      "h": 1700,
+      "title": "Booking flow · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Payment.dc.html": {
+      "x": 940,
+      "y": 4800,
+      "w": 390,
+      "h": 1800,
+      "title": "Payment · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Confirmation.dc.html": {
+      "x": 1410,
+      "y": 4800,
+      "w": 390,
+      "h": 2250,
+      "title": "Confirmation · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Custom.dc.html": {
+      "x": 0,
+      "y": 4800,
+      "w": 390,
+      "h": 2400,
+      "title": "Custom itinerary builder · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Destinations.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 3800,
+      "title": "Destinations · mobile · list-first, map on demand",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Destination.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 3700,
+      "title": "Destination detail · mobile",
+      "page": "mobile",
+      "radius": 28
+    },
+    "M-Compare.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 1500,
+      "title": "Compare · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Account.dc.html": {
+      "x": 0,
+      "y": 9600,
+      "w": 390,
+      "h": 1900,
+      "title": "Account · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-PreTrip.dc.html": {
+      "x": 470,
+      "y": 9600,
+      "w": 390,
+      "h": 1900,
+      "title": "Travel info hub · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Blog.dc.html": {
+      "x": 940,
+      "y": 9600,
+      "w": 390,
+      "h": 2500,
+      "title": "Blog & guides · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-BlogPost.dc.html": {
+      "x": 1410,
+      "y": 9600,
+      "w": 390,
+      "h": 3300,
+      "title": "Blog article · mobile",
+      "page": "mobile",
+      "radius": 28
+    },
+    "M-About.dc.html": {
+      "x": 1880,
+      "y": 9600,
+      "w": 390,
+      "h": 3300,
+      "title": "About · mobile",
+      "page": "mobile",
+      "radius": 28
+    },
+    "M-Support.dc.html": {
+      "x": 0,
+      "y": 14400,
+      "w": 390,
+      "h": 2900,
+      "title": "Support · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Auth.dc.html": {
+      "x": 470,
+      "y": 14400,
+      "w": 390,
+      "h": 844,
+      "title": "Sign in · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Legal.dc.html": {
+      "x": 940,
+      "y": 14400,
+      "w": 390,
+      "h": 1800,
+      "title": "Legal · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "M-Errors.dc.html": {
+      "x": 1410,
+      "y": 14400,
+      "w": 390,
+      "h": 900,
+      "title": "Errors · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "A-Login.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 960,
+      "title": "Admin sign-in · passwordless + passkey, role shown after sign-in",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Dashboard.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 2300,
+      "title": "Operations dashboard · KPIs, aging buckets, dispatch matrix with amber/red timers, re-dispatch",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Bookings.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 2340,
+      "title": "Bookings queue · state-machine filter, saved views, who-acts legend",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Booking.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 1900,
+      "title": "Booking detail VX-7K2M9Q · dispatch items, one-click re-dispatch, messages, documents, audit",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Disruption.dc.html": {
+      "x": 6080,
+      "y": 0,
+      "w": 1440,
+      "h": 2500,
+      "title": "Disruption case DC-0931 · severity, scenario playbook, traveler options with deadline, status board",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Packages.dc.html": {
+      "x": 0,
+      "y": 3600,
+      "w": 1440,
+      "h": 2300,
+      "title": "Packages · catalogue list, status filter, bulk CSV import with column mapping",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Package-Edit.dc.html": {
+      "x": 1520,
+      "y": 3600,
+      "w": 1440,
+      "h": 2400,
+      "title": "Package editor · basics, day by day, suppliers & rates, seasonal pricing, availability, policies, SEO, publish/schedule",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Customers.dc.html": {
+      "x": 3040,
+      "y": 3600,
+      "w": 1440,
+      "h": 1700,
+      "title": "Customers · list + profile, communication history, OFAC certification, GDPR retention",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Suppliers.dc.html": {
+      "x": 4560,
+      "y": 3600,
+      "w": 1440,
+      "h": 2200,
+      "title": "Suppliers · credential inspector, 30-day expiry pause, reliability score, backup power fields",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Payments.dc.html": {
+      "x": 0,
+      "y": 7200,
+      "w": 1440,
+      "h": 1800,
+      "title": "Payments · reconciliation by rail, pending proofs, refunds within thresholds, payout liabilities per province",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Content.dc.html": {
+      "x": 1520,
+      "y": 7200,
+      "w": 1440,
+      "h": 2000,
+      "title": "Content · advisories & crisis banner with approval, blog, destination conditions, FAQs, media",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Reports.dc.html": {
+      "x": 3040,
+      "y": 7200,
+      "w": 1440,
+      "h": 2800,
+      "title": "Reports · GBV by rail, take rate, AOV, ecotourism ratio, MINTUR summary, ONAT export, dispatch latency, CSAT/NPS, incidents",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-Settings.dc.html": {
+      "x": 4560,
+      "y": 7200,
+      "w": 1440,
+      "h": 2200,
+      "title": "Settings · users & roles, permission matrix, currencies & languages, agency manifest & feature flags, thresholds, security",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "W-Login.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 900,
+      "title": "Worker app · sign-in by phone, credential status banner",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "W-Home.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 1160,
+      "title": "Worker app · home: availability toggle, pending offer timer, today's job, offline queue",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "W-Offer.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 1380,
+      "title": "Worker app · job offer with countdown, accept / decline with reason",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "W-Calendar.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 1400,
+      "title": "Worker app · availability calendar, tap-to-block days, fuel reserve",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "W-Job.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 1560,
+      "title": "Worker app · active job offline, service steps, one-touch on-site emergency",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "W-Credentials.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 1420,
+      "title": "Worker app · credentials: upload, PENDING_AUDIT, 30-day expiry rule",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "W-Earnings.dc.html": {
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 1500,
+      "title": "Worker app · profile: reliability score with its three numbers, payouts, receipts",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "AL-Alerts.dc.html": {
+      "x": 0,
+      "y": 4800,
+      "w": 390,
+      "h": 1480,
+      "title": "Ops Lite · alerts: red timeout push, one-click fallback re-dispatch, quick approvals",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "AL-Pipeline.dc.html": {
+      "x": 470,
+      "y": 4800,
+      "w": 390,
+      "h": 1500,
+      "title": "Ops Lite · pipeline: state machine on the phone, live bookings, travelers on trip",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "AL-Inbox.dc.html": {
+      "x": 940,
+      "y": 4800,
+      "w": 390,
+      "h": 1560,
+      "title": "Ops Lite · unified inbox: travelers and workers, urgent first, inline translation",
+      "page": "apps",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "D-Voucher-1.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Traveler voucher · Bono de Servicio · page 1 of 2",
+      "page": "docs"
+    },
+    "D-Voucher-2.dc.html": {
+      "x": 874,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Traveler voucher · page 2 of 2 · rendezvous, emergencies, policies",
+      "page": "docs"
+    },
+    "D-WorkOrder.dc.html": {
+      "x": 1748,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Orden de Trabajo · supplier work order (ES) · Casa Yamilé",
+      "page": "docs"
+    },
+    "D-Invoice.dc.html": {
+      "x": 2622,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Invoice · schedule, rails, cancellation summary",
+      "page": "docs"
+    },
+    "D-Proposal.dc.html": {
+      "x": 3496,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Custom itinerary proposal · VX-C-4R8T · route, days, price, next steps",
+      "page": "docs"
+    },
+    "D-OfflineKit-1.dc.html": {
+      "x": 4370,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Offline kit · page 1 · week at a glance, contacts, practical",
+      "page": "docs"
+    },
+    "D-OfflineKit-2.dc.html": {
+      "x": 5244,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Offline kit · page 2 · emergency pamphlet",
+      "page": "docs"
+    },
+    "D-MINTUR.dc.html": {
+      "x": 6118,
+      "y": 0,
+      "w": 794,
+      "h": 1123,
+      "title": "Resumen anual de actividad · MINTUR Art. 24 p) Res. 68/2026 (ES)",
+      "page": "docs"
+    },
+    "Join.dc.html": {
+      "x": 6080,
+      "y": 16200,
+      "w": 1440,
+      "h": 2500,
+      "title": "Join our network · supplier recruitment portal (ES) · category, identity, credential, audit",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "M-Join.dc.html": {
+      "x": 1880,
+      "y": 14400,
+      "w": 390,
+      "h": 2700,
+      "title": "Join our network · mobile (ES)",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "E-Received.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 600,
+      "h": 860,
+      "title": "Email · request received (ITINERARY_SUBMITTED)",
+      "page": "comms"
+    },
+    "E-Invoice.dc.html": {
+      "x": 680,
+      "y": 0,
+      "w": 600,
+      "h": 1000,
+      "title": "Email · secured, invoice, 48-hour window",
+      "page": "comms"
+    },
+    "E-Confirmed.dc.html": {
+      "x": 1360,
+      "y": 0,
+      "w": 600,
+      "h": 1080,
+      "title": "Email · confirmed, receipt, documents",
+      "page": "comms"
+    },
+    "E-Reminder.dc.html": {
+      "x": 2040,
+      "y": 0,
+      "w": 600,
+      "h": 720,
+      "title": "Email · payment reminder · 2 hours left",
+      "page": "comms"
+    },
+    "E-Reconfirm.dc.html": {
+      "x": 2720,
+      "y": 0,
+      "w": 600,
+      "h": 1060,
+      "title": "Email · T−7 reconfirmation, offline kit, morning check-ins",
+      "page": "comms"
+    },
+    "E-Advisory.dc.html": {
+      "x": 3400,
+      "y": 0,
+      "w": 600,
+      "h": 820,
+      "title": "Email · caution advisory to travelers in the region",
+      "page": "comms"
+    },
+    "E-Options.dc.html": {
+      "x": 4080,
+      "y": 0,
+      "w": 600,
+      "h": 960,
+      "title": "Email · disruption options with deadline (case DC-0931)",
+      "page": "comms"
+    },
+    "E-OFAC.dc.html": {
+      "x": 4760,
+      "y": 0,
+      "w": 600,
+      "h": 900,
+      "title": "Correo · recordatorio OFAC (ES) · documentos en espera",
+      "page": "comms"
+    },
+    "E-Retention.dc.html": {
+      "x": 5440,
+      "y": 0,
+      "w": 600,
+      "h": 880,
+      "title": "Email · GDPR retention notice · keep my account",
+      "page": "comms"
+    },
+    "E-NPS.dc.html": {
+      "x": 6120,
+      "y": 0,
+      "w": 600,
+      "h": 980,
+      "title": "Email · NPS at +24 h, rate each part",
+      "page": "comms"
+    },
+    "S-Messages.dc.html": {
+      "x": 6800,
+      "y": 0,
+      "w": 390,
+      "h": 1560,
+      "title": "SMS and push · check-in, payment, milestones, advisory, options, worker offers, admin alerts",
+      "page": "comms",
+      "radius": 28
+    },
+    "G-StateMachine.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1180,
+      "h": 1200,
+      "title": "Diagram · reservation state machine (spec §4.2)",
+      "page": "handoff"
+    },
+    "G-Dispatch.dc.html": {
+      "x": 1260,
+      "y": 0,
+      "w": 1720,
+      "h": 920,
+      "title": "Diagram · dispatch & escalation engine swimlane (spec §4.1–4.3)",
+      "page": "handoff"
+    },
+    "G-Disruption.dc.html": {
+      "x": 3060,
+      "y": 0,
+      "w": 1360,
+      "h": 1120,
+      "title": "Diagram · disruption handling decision flow",
+      "page": "handoff"
+    },
+    "G-Money.dc.html": {
+      "x": 0,
+      "y": 1400,
+      "w": 1760,
+      "h": 560,
+      "title": "Diagram · money flow, payment to payout",
+      "page": "handoff"
+    },
+    "G-Sync.dc.html": {
+      "x": 1840,
+      "y": 1400,
+      "w": 1200,
+      "h": 520,
+      "title": "Diagram · offline-first sync (spec §7.2)",
+      "page": "handoff"
+    },
+    "T-Matrix.dc.html": {
+      "x": 3120,
+      "y": 1400,
+      "w": 1280,
+      "h": 2500,
+      "title": "Traceability · spec and research requirements → artboards",
+      "page": "handoff",
+      "expand": "fill"
+    },
+    "A-States.dc.html": {
+      "x": 0,
+      "y": 10800,
+      "w": 1280,
+      "h": 2500,
+      "title": "Admin & apps · edge states: empty, denied, locked, degraded, errors, loading, narrow widths",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "A-A11y.dc.html": {
+      "x": 1520,
+      "y": 10800,
+      "w": 1280,
+      "h": 2400,
+      "title": "Admin & apps · accessibility: alerts in three channels, keyboard paths, contrast audit, fixes",
+      "page": "admin",
+      "expand": "fill"
+    },
+    "T-Testing.dc.html": {
+      "x": 3040,
+      "y": 10800,
+      "w": 1280,
+      "h": 2600,
+      "title": "Usability test kit · scripts per persona on the live prototype, metrics, severity scale",
+      "page": "admin",
+      "expand": "fill"
+    },
+    "T-Events.dc.html": {
+      "x": 0,
+      "y": 4300,
+      "w": 1280,
+      "h": 3300,
+      "title": "Analytics · event taxonomy per component (doc 13), funnel stages, payload contract",
+      "page": "handoff",
+      "expand": "fill"
+    },
+    "T-Forms.dc.html": {
+      "x": 1360,
+      "y": 4300,
+      "w": 1280,
+      "h": 3900,
+      "title": "Form field specs · six forms, validation rules, formats, error copy EN / ES / FR",
+      "page": "handoff",
+      "expand": "fill"
+    },
+    "DS-Responsive.dc.html": {
+      "x": 8160,
+      "y": 0,
+      "w": 1280,
+      "h": 3000,
+      "title": "07 Responsive behaviour · what moves at each width, admin and app rules, tablet decision, test matrix",
+      "page": "ds",
+      "expand": "fill"
+    },
+    "T-Signoff.dc.html": {
+      "x": 4080,
+      "y": 4300,
+      "w": 1280,
+      "h": 2500,
+      "title": "Sign-off record · baseline v1.0, acceptance dates, open items, change log, change procedure",
+      "page": "handoff",
+      "expand": "fill"
+    },
+    "T-Assets.dc.html": {
+      "x": 2720,
+      "y": 4300,
+      "w": 1280,
+      "h": 3200,
+      "title": "Asset manifest · logo, fonts, icon sprite, Cuba map file contract, photo shot list, document and email assets, third parties",
+      "page": "handoff",
+      "expand": "fill"
+    },
+    "C-Spec.dc.html": {
+      "x": 7280,
+      "y": 0,
+      "w": 1280,
+      "h": 4100,
+      "title": "Notifications spec · triggers, subjects, plain-text fallbacks, SMS segments, push budgets, localisation",
+      "page": "comms",
+      "expand": "fill"
+    },
+    "Concierge.dc.html": {
+      "x": 7600,
+      "y": 16200,
+      "w": 1440,
+      "h": 2500,
+      "title": "Event access · ticket concierge (spec §3.2) · request in 3 steps, trip paths, all events",
+      "page": "web",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "M-Concierge.dc.html": {
+      "x": 2350,
+      "y": 14400,
+      "w": 390,
+      "h": 2700,
+      "title": "Event access · ticket concierge · mobile",
+      "page": "mobile",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "A-Assistant.dc.html": {
+      "x": 6080,
+      "y": 7200,
+      "w": 1440,
+      "h": 1900,
+      "title": "Assistant (spec §4.8) · daily operations summary, draft composer with inserted facts, inline translation, weekly financial digest, data rules",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Map-Concept.dc.html": {
+      "x": 9120,
+      "y": 0,
+      "w": 1280,
+      "h": 3400,
+      "title": "Province map · concept and interaction contract: three jobs, layers, states, panel, device rules, data, kill metric",
+      "page": "web",
+      "expand": "fill"
+    },
+    "B-Logo.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 2900,
+      "title": "Logo · the trail and the sun: construction, lockups, colour versions, clear space, misuse, files",
+      "page": "brand",
+      "expand": "fill"
+    },
+    "B-Card.dc.html": {
+      "x": 1360,
+      "y": 0,
+      "w": 1400,
+      "h": 760,
+      "title": "Business card · 85 × 55 mm at 200 % · terracotta spine front (monogram, person) and terracotta back (monogram, company, QR) · employee fields as tweaks",
+      "page": "brand"
+    },
+    "B-DigitalCard.dc.html": {
+      "x": 2840,
+      "y": 0,
+      "w": 390,
+      "h": 1000,
+      "title": "Digital business card · NFC tap or QR landing · save contact (vCard), WhatsApp, call, plan a trip",
+      "page": "brand",
+      "radius": 28
+    },
+    "B-Guidelines.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 1280,
+      "h": 2900,
+      "title": "Brand guidelines · voice do/don’t, colour, type, stationery (letterhead, envelope, slip, stamp), social templates, checklist",
+      "page": "brand",
+      "expand": "fill"
+    },
+    "B-Signature.dc.html": {
+      "x": 0,
+      "y": 3200,
+      "w": 1280,
+      "h": 2100,
+      "title": "Email signature · EN, ES, mobile · HTML to paste, plain text, client checks",
+      "page": "brand",
+      "expand": "fill"
+    },
+    "B-Email.dc.html": {
+      "x": 1360,
+      "y": 3200,
+      "w": 1920,
+      "h": 1500,
+      "title": "Brand email templates · monthly letter, proposal cover, supplier outreach (ES) · 600 px",
+      "page": "brand",
+      "expand": "fill"
+    },
+    "B-Logo-B.dc.html": {
+      "x": 0,
+      "y": 5600,
+      "w": 1280,
+      "h": 2900,
+      "title": "Record · not for the build · Logo option B · the fanlight: construction, lockups, colour versions, clear space, misuse, files",
+      "page": "brand",
+      "expand": "fill"
+    },
+    "B-Logo-C.dc.html": {
+      "x": 1360,
+      "y": 5600,
+      "w": 1280,
+      "h": 2900,
+      "title": "Record · not for the build · Logo option C · the name, set once: construction, lockups, colour versions, clear space, misuse, files",
+      "page": "brand",
+      "expand": "fill"
+    },
+    "B-Card-B.dc.html": {
+      "x": 2720,
+      "y": 5600,
+      "w": 1400,
+      "h": 826,
+      "title": "Record · not for the build · Business card option B · 85 × 55 mm at 200 % · terracotta spine front (person), dark teal back (company + QR) · employee fields as tweaks",
+      "page": "brand"
+    },
+    "B-Card-C.dc.html": {
+      "x": 4200,
+      "y": 5600,
+      "w": 1400,
+      "h": 1066,
+      "title": "Record · not for the build · Business card option C · 85 × 55 mm portrait at 200 % · cream front (name at the top, person at the foot), terracotta back (monogram, company, QR) · employee fields as tweaks",
+      "page": "brand"
+    },
+    "B-Compare.dc.html": {
+      "x": 5680,
+      "y": 5600,
+      "w": 1280,
+      "h": 2500,
+      "title": "Record · not for the build · Logo options compared · A, B and C in the web header, the browser tab, on the card and on the dark sidebar · honest notes: does well, where it breaks, fits best",
+      "page": "brand",
+      "expand": "fill"
+    },
+    "B-Card-Portrait.dc.html": {
+      "x": 0,
+      "y": 8800,
+      "w": 1400,
+      "h": 1000,
+      "title": "Business card · logo C chosen · B's front as a top band (person at the foot) + C's back (monogram, company, QR) · portrait 55 × 85 mm at 200 % · employee fields as tweaks",
+      "page": "brand"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "DS-Actions-Forms.dc.html",
+    "DS-Feedback-Nav.dc.html",
+    "DS-Cards-Content.dc.html",
+    "DS-Mobile-Patterns.dc.html",
+    "DS-Handoff.dc.html",
+    "Home.dc.html",
+    "M-Home.dc.html",
+    "Packages.dc.html",
+    "Package.dc.html",
+    "Booking.dc.html",
+    "Payment.dc.html",
+    "Confirmation.dc.html",
+    "Custom.dc.html",
+    "Destinations.dc.html",
+    "Destination.dc.html",
+    "Compare.dc.html",
+    "Account.dc.html",
+    "PreTrip.dc.html",
+    "Blog.dc.html",
+    "BlogPost.dc.html",
+    "About.dc.html",
+    "Support.dc.html",
+    "Auth.dc.html",
+    "Legal.dc.html",
+    "Errors.dc.html",
+    "M-Packages.dc.html",
+    "M-Package.dc.html",
+    "M-Booking.dc.html",
+    "M-Payment.dc.html",
+    "M-Confirmation.dc.html",
+    "M-Custom.dc.html",
+    "M-Destinations.dc.html",
+    "M-Destination.dc.html",
+    "M-Compare.dc.html",
+    "M-Account.dc.html",
+    "M-PreTrip.dc.html",
+    "M-Blog.dc.html",
+    "M-BlogPost.dc.html",
+    "M-About.dc.html",
+    "M-Support.dc.html",
+    "M-Auth.dc.html",
+    "M-Legal.dc.html",
+    "M-Errors.dc.html",
+    "A-Login.dc.html",
+    "A-Dashboard.dc.html",
+    "A-Bookings.dc.html",
+    "A-Booking.dc.html",
+    "A-Disruption.dc.html",
+    "A-Packages.dc.html",
+    "A-Package-Edit.dc.html",
+    "A-Customers.dc.html",
+    "A-Suppliers.dc.html",
+    "A-Payments.dc.html",
+    "A-Content.dc.html",
+    "A-Reports.dc.html",
+    "A-Settings.dc.html",
+    "W-Login.dc.html",
+    "W-Home.dc.html",
+    "W-Offer.dc.html",
+    "W-Calendar.dc.html",
+    "W-Job.dc.html",
+    "W-Credentials.dc.html",
+    "W-Earnings.dc.html",
+    "AL-Alerts.dc.html",
+    "AL-Pipeline.dc.html",
+    "AL-Inbox.dc.html",
+    "D-Voucher-1.dc.html",
+    "D-Voucher-2.dc.html",
+    "D-WorkOrder.dc.html",
+    "D-Invoice.dc.html",
+    "D-Proposal.dc.html",
+    "D-OfflineKit-1.dc.html",
+    "D-OfflineKit-2.dc.html",
+    "D-MINTUR.dc.html",
+    "Join.dc.html",
+    "M-Join.dc.html",
+    "E-Received.dc.html",
+    "E-Invoice.dc.html",
+    "E-Confirmed.dc.html",
+    "E-Reminder.dc.html",
+    "E-Reconfirm.dc.html",
+    "E-Advisory.dc.html",
+    "E-Options.dc.html",
+    "E-OFAC.dc.html",
+    "E-Retention.dc.html",
+    "E-NPS.dc.html",
+    "S-Messages.dc.html",
+    "G-StateMachine.dc.html",
+    "G-Dispatch.dc.html",
+    "G-Disruption.dc.html",
+    "G-Money.dc.html",
+    "G-Sync.dc.html",
+    "T-Matrix.dc.html",
+    "A-States.dc.html",
+    "A-A11y.dc.html",
+    "T-Testing.dc.html",
+    "T-Events.dc.html",
+    "T-Forms.dc.html",
+    "DS-Responsive.dc.html",
+    "T-Signoff.dc.html",
+    "T-Assets.dc.html",
+    "C-Spec.dc.html",
+    "Concierge.dc.html",
+    "M-Concierge.dc.html",
+    "A-Assistant.dc.html",
+    "Map-Concept.dc.html",
+    "B-Logo.dc.html",
+    "B-Card.dc.html",
+    "B-DigitalCard.dc.html",
+    "B-Guidelines.dc.html",
+    "B-Signature.dc.html",
+    "B-Email.dc.html",
+    "B-Logo-B.dc.html",
+    "B-Logo-C.dc.html",
+    "B-Card-B.dc.html",
+    "B-Card-C.dc.html",
+    "B-Compare.dc.html",
+    "B-Card-Portrait.dc.html"
+  ],
+  "notes": {
+    "ds_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Design system · Vereda Expeditions",
+      "kind": "title1",
+      "maxW": 2640,
+      "page": "ds"
+    },
+    "web_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Customer · Web · Discover",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "web"
+    },
+    "web_title_b": {
+      "x": 0,
+      "y": 5100,
+      "text": "Customer · Web · Plan, book & pay",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "web"
+    },
+    "web_title_c": {
+      "x": 0,
+      "y": 10500,
+      "text": "Customer · Web · Account & content",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "web"
+    },
+    "web_title_d": {
+      "x": 0,
+      "y": 15900,
+      "text": "Customer · Web · Support, sign-in, legal, errors",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "web"
+    },
+    "web_note_booking": {
+      "x": 3040,
+      "y": 5400,
+      "w": 360,
+      "text": "Booking flow is ONE artboard so state carries across steps. Tweaks tab → 'model' switches request-to-book (default) vs instant confirmation: header copy, step 5 CTA and 'pay today' line change. Pick 'United States' as nationality on step 4 to see the OFAC gate block the Continue button.",
+      "fill": "teal",
+      "page": "web"
+    },
+    "mobile_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Customer · Mobile · Discover",
+      "kind": "title1",
+      "maxW": 2800,
+      "page": "mobile"
+    },
+    "mobile_title_b": {
+      "x": 0,
+      "y": 4500,
+      "text": "Customer · Mobile · Plan, book & pay",
+      "kind": "title1",
+      "maxW": 2800,
+      "page": "mobile"
+    },
+    "mobile_title_c": {
+      "x": 0,
+      "y": 9300,
+      "text": "Customer · Mobile · Account & content",
+      "kind": "title1",
+      "maxW": 2800,
+      "page": "mobile"
+    },
+    "mobile_title_d": {
+      "x": 0,
+      "y": 14100,
+      "text": "Customer · Mobile · Support, sign-in, legal, errors",
+      "kind": "title1",
+      "maxW": 2800,
+      "page": "mobile"
+    },
+    "mobile_note1": {
+      "x": 470,
+      "y": 0,
+      "w": 340,
+      "text": "Mobile homepage · the dashed line marks the first viewport (844 px); the bottom bar is drawn there because it is fixed in the real app. Search collapses to one field plus two chips that open bottom sheets. Primary CTAs sit in the thumb zone; the cookie consent (DS sheet 04) overlays on first visit.",
+      "fill": "teal",
+      "page": "mobile"
+    },
+    "web_note1": {
+      "x": 1520,
+      "y": 0,
+      "w": 360,
+      "text": "Homepage · direction proof for the design system. Tweaks tab: 'primary' swaps the CTA colour (teal / terracotta / green) across the page. Reviews are sample copy; photos are tinted placeholders carrying their alt text. Links become live when the package and destination screens land in section 2.",
+      "fill": "teal",
+      "page": "web"
+    },
+    "ds_note1": {
+      "x": 0,
+      "y": 3460,
+      "w": 360,
+      "text": "Source of truth: the team's Isla Abierta DS v1.0 (UI_UX doc 16). One deliberate deviation: neutrals are warmed (cream ground, stone borders) to match the 'warm cream / warm greys' brief. Brand hues, semantics, type and spacing are kept exactly.",
+      "fill": "orange",
+      "page": "ds"
+    },
+    "ds_note2": {
+      "x": 1360,
+      "y": 3380,
+      "w": 360,
+      "text": "A11y notes · Actions & forms: focus ring 2px teal #0B4F6C offset 2px on every control on light surfaces (ochre #F2B134 on the dark sidebar; corrected 6 Oct after a 1.78:1 contrast measurement); disabled buttons keep their label and get aria-disabled when they must stay focusable; counters announce the new value via aria-live; the currency menu is a listbox (Esc closes, focus returns to the trigger); insurance tiers are a radiogroup, never clickable divs.",
+      "fill": "teal",
+      "page": "ds"
+    },
+    "admin_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Admin · Sign-in, operations desk & bookings",
+      "kind": "title1",
+      "maxW": 7520,
+      "page": "admin"
+    },
+    "admin_note_login": {
+      "x": 1520,
+      "y": 1040,
+      "w": 360,
+      "text": "Admin shell for section 3: 1440-wide pages, same tokens as the customer site (teal, terracotta, ochre, cream), 44 px targets, status vocabulary from DS sheet 03. Tweaks tab on A-Login: \"role\" switches the signed-in card between Super Admin, Operations Admin and Administrative Support.",
+      "fill": "teal",
+      "page": "admin"
+    },
+    "admin_note_dash": {
+      "x": 3040,
+      "y": 2380,
+      "w": 380,
+      "text": "Dashboard · the red strip carries the audio cue (mute is logged, never silences a NEW red alert). Dispatch matrix: one column per service, timer bar amber at 75 %, red at 100 % or on decline. Click \"Re-dispatch\" on the VX-3PA8ZT row to open the one-click fallback menu: nearby qualified, verified workers only; \"Offer\" restarts a 2 h timer for that worker.",
+      "fill": "teal",
+      "page": "admin"
+    },
+    "admin_note_disr": {
+      "x": 7600,
+      "y": 0,
+      "w": 360,
+      "text": "Disruption case · scenario chips swap the playbook, options and compensation rule (crisis framework §1–2). Severity radios change the escalation path, banner level and whether emergency contacts are notified. \"Mark safe\" and \"Send options\" write to the case log at the bottom.",
+      "fill": "teal",
+      "page": "admin"
+    },
+    "admin_title_b": {
+      "x": 0,
+      "y": 3300,
+      "text": "Admin · Catalogue, customers & suppliers",
+      "kind": "title1",
+      "maxW": 6000,
+      "page": "admin"
+    },
+    "admin_note_pkg": {
+      "x": 0,
+      "y": 5980,
+      "w": 360,
+      "text": "Packages · the bulk import (spec §4.7) is a 4-step stepper at the bottom: upload → column mapping with confidence → validation grid that flags missing prices, foreign currency and unknown suppliers → commit (reversible 24 h). Click \"Use sample\" to walk through it.",
+      "fill": "teal",
+      "page": "admin"
+    },
+    "admin_note_sup": {
+      "x": 6080,
+      "y": 3600,
+      "w": 360,
+      "text": "Suppliers · select a row to load the inspector. Yoel Martínez shows the expiry pause (licence 2 Nov → auto-dispatch paused since 3 Oct, manual assignment still allowed with a note). Yunier Blanco shows PENDING_AUDIT with approve/reject. Casas carry the backup-power fields that feed the disruption console.",
+      "fill": "teal",
+      "page": "admin"
+    },
+    "admin_title_c": {
+      "x": 0,
+      "y": 6900,
+      "text": "Admin · Money, content, reports, settings & assistant",
+      "kind": "title1",
+      "maxW": 7520,
+      "page": "admin"
+    },
+    "admin_note_rep": {
+      "x": 4560,
+      "y": 9460,
+      "w": 360,
+      "text": "Reports · two figures are deliberate placeholders: the Res. 193/2026 reinvestment exemption threshold and the legal ecotourism-ratio threshold (both wait for the MFP implementing rules). The MINTUR licence number stays [MINTUR-2026-XXXX] everywhere until issued.",
+      "fill": "orange",
+      "page": "admin"
+    },
+    "apps_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Worker app · field operations (ES)",
+      "kind": "title1",
+      "maxW": 3210,
+      "page": "apps"
+    },
+    "apps_note_w": {
+      "x": 3290,
+      "y": 0,
+      "w": 340,
+      "text": "Worker app (spec §5.2) · Spanish UI because guides, drivers and hosts are Cuban; the desk sees translations. Offline-first: every accept, decline and calendar change is queued and synced later (sync_queue). Workers only ever see traveler first names, languages and local emergency numbers, never billing data (§8.2). Tweaks on W-Login: credential status banner.",
+      "fill": "teal",
+      "page": "apps"
+    },
+    "apps_title_b": {
+      "x": 0,
+      "y": 4500,
+      "text": "Ops Lite · admin triage on the phone (EN)",
+      "kind": "title1",
+      "maxW": 3210,
+      "page": "apps"
+    },
+    "apps_note_al": {
+      "x": 1410,
+      "y": 4800,
+      "w": 340,
+      "text": "Ops Lite (spec §5.4) · triage only: re-dispatch, call, acknowledge, approve, reply. Everything else stays on the desk. AL-Alerts: tap the red card, \"Re-dispatch\" shows the fallback guides, \"Offer\" restarts the timer. AL-Pipeline: tap a state to expand its bookings. AL-Inbox: worker threads translate inline; replies are logged as \"(mobile)\".",
+      "fill": "teal",
+      "page": "apps"
+    },
+    "docs_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Documents · generated PDFs (spec §4.4)",
+      "kind": "title1",
+      "maxW": 6900,
+      "page": "docs"
+    },
+    "docs_note": {
+      "x": 0,
+      "y": 1220,
+      "w": 380,
+      "text": "Generated documents · fixed A4 pages (794×1123) so footers with the MINTUR licence repeat on every sheet; Export PDF gives one page per artboard. Voucher and invoice in the traveler language, work order and the MINTUR summary in Spanish. Addresses, embassy and clinic numbers, tax ID and licence are placeholders in [brackets] until real values exist. QR squares stand for the live-document link.",
+      "fill": "teal",
+      "page": "docs"
+    },
+    "comms_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Notifications & emails · transactional templates",
+      "kind": "title1",
+      "maxW": 8560,
+      "page": "comms"
+    },
+    "comms_note": {
+      "x": 0,
+      "y": 1180,
+      "w": 380,
+      "text": "Emails at 600 px (EN shown; ES and FR render from the same template, the OFAC reminder is shown in Spanish because Luis prefers it). Subject, preheader, sender and attachments sit in the grey strip above each email. SMS, push and the morning check-in live on the phone board at the end. Every email carries the MINTUR licence and the 24/7 line; transactional ones have no unsubscribe.",
+      "fill": "teal",
+      "page": "comms"
+    },
+    "handoff_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Handoff · flows & traceability",
+      "kind": "title1",
+      "maxW": 4400,
+      "page": "handoff"
+    },
+    "handoff_note": {
+      "x": 0,
+      "y": 1280,
+      "w": 380,
+      "text": "Diagrams are built from separate cards and arrows (every box and arrow drags alone). Colours: teal = system state, green = success path, amber = waiting, red = escalation. The traceability sheet maps every spec section to the artboards that cover it and names what is still a placeholder.",
+      "fill": "teal",
+      "page": "handoff"
+    },
+    "admin_title_d": {
+      "x": 0,
+      "y": 10500,
+      "text": "Admin · Edge states, accessibility & test kit",
+      "kind": "title1",
+      "maxW": 4480,
+      "page": "admin"
+    },
+    "handoff_title_b": {
+      "x": 0,
+      "y": 4000,
+      "text": "Handoff · specs for the dev team",
+      "kind": "title1",
+      "maxW": 5360,
+      "page": "handoff"
+    },
+    "web_note_map": {
+      "x": 1520,
+      "y": 3350,
+      "w": 380,
+      "text": "Province map merged into Destinations and M-Destinations on 11 Oct 2026 (Simplemaps geometry supplied by Vereda; Map-Concept holds the contract; pre-merge files kept in design-canvas/tools/backup). Nav reduced the same day to six items; \"About Vereda\" lives in the footer.",
+      "fill": "teal",
+      "page": "web"
+    },
+    "brand_title": {
+      "x": 0,
+      "y": -300,
+      "text": "Brand · Vereda Expeditions · identity, stationery, cards, email",
+      "kind": "title1",
+      "maxW": 5440,
+      "page": "brand"
+    },
+    "brand_note_nfc": {
+      "x": 3310,
+      "y": 0,
+      "w": 360,
+      "text": "NFC card · write the URL vereda.travel/c/<handle> as an NDEF URI record on an NTAG213 card (144 bytes is plenty); iPhone XS+ and Android read it on tap with no app. The paper card’s QR opens the same handle on the platform (?via=). Save contact serves brand/cards/<handle>.vcf (FN, ORG, TITLE, TEL cell + 24/7 line, EMAIL, URL, ADR, NOTE licence). Page is static, ~20 KB, no cookies; event dcard_opened{via} on T-Events.",
+      "fill": "teal",
+      "page": "brand"
+    },
+    "brand_title_b": {
+      "x": 0,
+      "y": 2900,
+      "text": "Brand · email: signature and the three hand-sent templates",
+      "kind": "title1",
+      "maxW": 3280,
+      "page": "brand"
+    },
+    "brand_title_c": {
+      "x": 0,
+      "y": 5300,
+      "text": "Brand · record of the logo decision (11 Oct 2026): options A, B and C compared, C chosen · not for the build",
+      "kind": "title1",
+      "maxW": 6960,
+      "page": "brand"
+    },
+    "brand_title_d": {
+      "x": 0,
+      "y": 8500,
+      "text": "Brand · the portrait business card (the landscape card is B-Card in the first row)",
+      "kind": "title1",
+      "maxW": 1400,
+      "page": "brand"
+    }
+  },
+  "designSystems": []
+}

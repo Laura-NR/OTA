@@ -1,12 +1,18 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { Availability, SupplierProfile } from '@ota/db';
+import {
+  Prisma,
+  type Availability,
+  type SupplierProfile,
+  type SupplierResources,
+} from '@ota/db';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const SUPER_ADMIN = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -43,23 +49,86 @@ function makeSupplier(
   };
 }
 
+interface FakeJob {
+  supplierId: string;
+  serviceDateStart: Date;
+  status: string;
+  serviceType: string;
+  province: string | null;
+  reservation: { status: string };
+}
+
+/** A finished job as the inspector's payouts read it (W-Earnings). */
+interface FakePayoutJob {
+  supplierId: string;
+  status: string;
+  serviceDateEnd: Date;
+  payoutRate: Prisma.Decimal;
+  payoutStatus: string;
+  reservation: { status: string };
+}
+
 function createFakePrisma(
   store: Map<string, ReturnType<typeof makeSupplier>>,
   availability: Map<string, Availability>,
+  resources: Map<string, SupplierResources> = new Map(),
+  jobs: FakeJob[] = [],
+  payoutJobs: FakePayoutJob[] = [],
 ) {
   const availabilityKey = (supplierId: string, date: Date) =>
     `${supplierId}:${date.toISOString()}`;
+  const withResources = (row: ReturnType<typeof makeSupplier>) => {
+    const own = resources.get(row.id);
+    return { ...row, resources: own ? { ...own, confirmedBy: null } : null };
+  };
 
   const fake = {
+    serviceItem: {
+      findMany: async ({
+        where,
+      }: {
+        where: { supplierId: string | { in: string[] } };
+      }) => {
+        const { supplierId } = where;
+        return typeof supplierId === 'string'
+          ? payoutJobs.filter((job) => job.supplierId === supplierId)
+          : jobs.filter((job) => supplierId.in.includes(job.supplierId));
+      },
+    },
+    supplierResources: {
+      upsert: async ({
+        where,
+        create,
+      }: {
+        where: { supplierId: string };
+        create: Omit<SupplierResources, 'createdAt' | 'updatedAt'>;
+      }) => {
+        const row = {
+          ...create,
+          solarBatteryKwh: create.solarBatteryKwh,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as SupplierResources;
+        resources.set(where.supplierId, row);
+        return row;
+      },
+    },
     availability: {
       findMany: async ({
         where,
       }: {
-        where?: { supplierId?: string; date?: { gte?: Date; lte?: Date } };
+        where?: {
+          supplierId?: string;
+          isAvailable?: boolean;
+          date?: { gte?: Date; lte?: Date };
+        };
       }) => {
         let rows = [...availability.values()];
         if (where?.supplierId) {
           rows = rows.filter((row) => row.supplierId === where.supplierId);
+        }
+        if (where?.isAvailable !== undefined) {
+          rows = rows.filter((row) => row.isAvailable === where.isAvailable);
         }
         if (where?.date?.gte) {
           rows = rows.filter((row) => row.date >= where.date!.gte!);
@@ -76,7 +145,7 @@ function createFakePrisma(
       }: {
         where: { supplierId_date: { supplierId: string; date: Date } };
         create: Omit<Availability, 'id' | 'createdAt' | 'updatedAt'>;
-        update: { isAvailable: boolean };
+        update: Pick<Availability, 'isAvailable' | 'blockReason'>;
       }) => {
         const key = availabilityKey(
           where.supplierId_date.supplierId,
@@ -84,11 +153,12 @@ function createFakePrisma(
         );
         const existing = availability.get(key);
         if (existing) {
-          existing.isAvailable = update.isAvailable;
+          Object.assign(existing, update);
           return existing;
         }
         const created = {
           id: `avail-${availability.size + 1}`,
+          blockReason: null,
           ...create,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -124,10 +194,12 @@ function createFakePrisma(
             (row) => row.credentialExpiresAt !== null && row.credentialExpiresAt <= lte,
           );
         }
-        return rows;
+        return rows.map(withResources);
       },
-      findUnique: async ({ where }: { where: { id: string } }) =>
-        store.get(where.id) ?? null,
+      findUnique: async ({ where }: { where: { id: string } }) => {
+        const row = store.get(where.id);
+        return row ? withResources(row) : null;
+      },
       update: async ({
         where,
         data,
@@ -171,10 +243,16 @@ describe('suppliers', () => {
   let app: INestApplication;
   let store: Map<string, ReturnType<typeof makeSupplier>>;
   let availability: Map<string, Availability>;
+  let resources: Map<string, SupplierResources>;
+  let jobs: FakeJob[];
+  let payoutJobs: FakePayoutJob[];
   let fakePrisma: ReturnType<typeof createFakePrisma>;
 
   beforeEach(async () => {
     availability = new Map();
+    resources = new Map();
+    jobs = [];
+    payoutJobs = [];
     store = new Map([
       [
         GUIDE_ID,
@@ -195,11 +273,11 @@ describe('suppliers', () => {
       ],
     ]);
 
-    fakePrisma = createFakePrisma(store, availability);
+    fakePrisma = createFakePrisma(store, availability, resources, jobs, payoutJobs);
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(fakePrisma)
+      .useValue(withNoSettingsVersion(fakePrisma))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       .compile();
@@ -229,6 +307,40 @@ describe('suppliers', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
     expect(response.body[0].verificationStatus).toBe('VERIFIED');
+  });
+
+  it("shows the worker's payouts on the inspector, as the worker app reads them", async () => {
+    const finished = (endsAt: string, rate: string, payoutStatus: string) => ({
+      supplierId: DRIVER_ID,
+      status: 'ACCEPTED',
+      serviceDateEnd: new Date(endsAt),
+      payoutRate: new Prisma.Decimal(rate),
+      payoutStatus,
+      reservation: { status: 'CONFIRMED' },
+    });
+    const ended = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    payoutJobs.push(
+      finished(ended, '90.10', 'ACCRUED'),
+      finished(ended, '25.20', 'PROCESSING'),
+      finished(ended, '60.00', 'FAILED'),
+      { ...finished(ended, '40.00', 'SETTLED'), supplierId: GUIDE_ID },
+    );
+
+    const driver = await request(app.getHttpServer())
+      .get(`/suppliers/${DRIVER_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email);
+    const guide = await request(app.getHttpServer())
+      .get(`/suppliers/${GUIDE_ID}`)
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(driver.status).toBe(200);
+    expect(driver.body.payouts).toMatchObject({
+      currency: 'EUR',
+      pending: { amount: '115.30', jobs: 2 },
+      issue: { amount: '60.00', jobs: 1 },
+      paidThisYear: { amount: '0.00', jobs: 0 },
+    });
+    expect(guide.body.payouts.pending).toEqual({ amount: '0.00', jobs: 0 });
   });
 
   it('returns 404 for an unknown supplier', async () => {
@@ -366,6 +478,40 @@ describe('suppliers', () => {
     expect(list.body[0].isAvailable).toBe(true);
   });
 
+  it('lists the reason a worker gave for a blocked day, and drops it when the desk sets the day (K4)', async () => {
+    const date = new Date('2027-02-03T00:00:00Z');
+    availability.set(`${GUIDE_ID}:${date.toISOString()}`, {
+      id: 'avail-worker',
+      supplierId: GUIDE_ID,
+      date,
+      isAvailable: false,
+      blockReason: 'VEHICLE_REPAIR',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    const list = async () =>
+      (
+        await request(app.getHttpServer())
+          .get(`/suppliers/${GUIDE_ID}/availability?from=2027-02-01&to=2027-02-28`)
+          .set('x-test-user', SUPER_ADMIN.email)
+      ).body;
+
+    expect(await list()).toEqual([
+      expect.objectContaining({
+        date: '2027-02-03',
+        isAvailable: false,
+        blockReason: 'VEHICLE_REPAIR',
+      }),
+    ]);
+
+    const set = await request(app.getHttpServer())
+      .put(`/suppliers/${GUIDE_ID}/availability`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ date: '2027-02-03', isAvailable: false });
+    expect(set.body).toMatchObject({ isAvailable: false, blockReason: null });
+    expect((await list())[0].blockReason).toBeNull();
+  });
+
   it('returns 403 when a traveler sets availability', async () => {
     const response = await request(app.getHttpServer())
       .put(`/suppliers/${GUIDE_ID}/availability`)
@@ -382,5 +528,246 @@ describe('suppliers', () => {
       .send({ date: '2027-02-01', isAvailable: true });
 
     expect(response.status).toBe(404);
+  });
+
+  it('shows the inspector a block of more than fourteen days in a row ahead (W-Calendar)', async () => {
+    const block = (from: string, days: number, isAvailable = false) => {
+      for (let index = 0; index < days; index += 1) {
+        const date = new Date(Date.parse(`${from}T00:00:00Z`) + index * 86_400_000);
+        availability.set(`${GUIDE_ID}:${date.toISOString()}`, {
+          id: `avail-${availability.size + 1}`,
+          supplierId: GUIDE_ID,
+          date,
+          isAvailable,
+          blockReason: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    };
+    const inspect = async () =>
+      (
+        await request(app.getHttpServer())
+          .get(`/suppliers/${GUIDE_ID}`)
+          .set('x-test-user', SUPER_ADMIN.email)
+      ).body.longBlock;
+
+    // Fourteen blocked, a day freed, fourteen more: no run is long enough.
+    block('2099-03-01', 14);
+    block('2099-03-15', 1, true);
+    block('2099-03-16', 14);
+    expect(await inspect()).toBeNull();
+
+    block('2099-03-15', 1);
+    expect(await inspect()).toEqual({ from: '2099-03-01', to: '2099-03-29', days: 29 });
+  });
+
+  describe('M6 resources', () => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    function confirmed(
+      supplierId: string,
+      overrides: Partial<SupplierResources> = {},
+    ): SupplierResources {
+      return {
+        supplierId,
+        generator: null,
+        generatorHoursPerDay: null,
+        generatorSchedule: null,
+        generatorFuelDays: null,
+        solarBatteryKwh: null,
+        waterTankLitres: null,
+        rooms: null,
+        guestCapacity: null,
+        fuelReserveLitres: null,
+        confirmedAt: new Date(),
+        confirmedById: null,
+        confirmedVia: 'PHONE',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...overrides,
+      };
+    }
+
+    it('shows the Power and Last job columns on the register', async () => {
+      resources.set(DRIVER_ID, confirmed(DRIVER_ID, { fuelReserveLitres: 40 }));
+      jobs.push(
+        {
+          supplierId: DRIVER_ID,
+          serviceDateStart: new Date(Date.now() - 3 * DAY_MS),
+          status: 'ACCEPTED',
+          serviceType: 'TRANSPORTATION',
+          province: 'Matanzas',
+          reservation: { status: 'CONFIRMED' },
+        },
+        {
+          supplierId: DRIVER_ID,
+          serviceDateStart: new Date(Date.now() - DAY_MS),
+          status: 'DECLINED',
+          serviceType: 'TRANSPORTATION',
+          province: 'La Habana',
+          reservation: { status: 'CONFIRMED' },
+        },
+      );
+
+      const response = await request(app.getHttpServer())
+        .get('/suppliers')
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      const driver = response.body.find((row: { id: string }) => row.id === DRIVER_ID);
+      expect(driver.power).toMatchObject({ kind: 'FUEL', litres: 40, backup: true });
+      expect(driver.lastJob).toMatchObject({
+        serviceType: 'TRANSPORTATION',
+        province: 'Matanzas',
+      });
+      const guide = response.body.find((row: { id: string }) => row.id === GUIDE_ID);
+      expect(guide.power.kind).toBe('NOT_APPLICABLE');
+      expect(guide.lastJob).toBeNull();
+    });
+
+    it('keeps only suppliers with backup power under backupPower=1', async () => {
+      resources.set(DRIVER_ID, confirmed(DRIVER_ID, { fuelReserveLitres: 40 }));
+
+      const response = await request(app.getHttpServer())
+        .get('/suppliers?backupPower=1')
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.map((row: { id: string }) => row.id)).toEqual([DRIVER_ID]);
+    });
+
+    it('marks a confirmation older than seven days stale', async () => {
+      resources.set(
+        DRIVER_ID,
+        confirmed(DRIVER_ID, {
+          fuelReserveLitres: 40,
+          confirmedAt: new Date(Date.now() - 8 * DAY_MS),
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .get(`/suppliers/${DRIVER_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.resources.stale).toBe(true);
+      expect(response.body.power.stale).toBe(true);
+    });
+
+    it('confirms a driver fuel reserve with the actor and channel and audits both values', async () => {
+      resources.set(DRIVER_ID, confirmed(DRIVER_ID, { fuelReserveLitres: 60 }));
+
+      const response = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'WHATSAPP', fuelReserveLitres: 40 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.resources).toMatchObject({
+        fuelReserveLitres: 40,
+        confirmedVia: 'WHATSAPP',
+        stale: false,
+      });
+      expect(response.body.jobs12m).toBe(0);
+      expect(resources.get(DRIVER_ID)?.confirmedById).toBe(SUPER_ADMIN.id);
+      expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'supplier.resources_confirmed',
+          entityId: DRIVER_ID,
+          metadata: expect.objectContaining({
+            via: 'WHATSAPP',
+            previous: expect.objectContaining({ fuelReserveLitres: 60 }),
+            next: expect.objectContaining({ fuelReserveLitres: 40 }),
+          }),
+        }),
+      });
+    });
+
+    it('refuses casa fields on a driver and any resources on a guide', async () => {
+      const driver = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'PHONE', fuelReserveLitres: 40, rooms: 2 });
+      const guide = await request(app.getHttpServer())
+        .put(`/suppliers/${GUIDE_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'PHONE', fuelReserveLitres: 40 });
+
+      expect(driver.status).toBe(422);
+      expect(guide.status).toBe(422);
+      expect(resources.size).toBe(0);
+      expect(fakePrisma.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it('refuses the worker app channel and out-of-range hours with 400', async () => {
+      const channel = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'WORKER_APP', fuelReserveLitres: 40 });
+      const hours = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/resources`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'PHONE', generatorHoursPerDay: 30 });
+
+      expect(channel.status).toBe(400);
+      expect(hours.status).toBe(400);
+    });
+  });
+
+  describe('M6 D7(b) vehicle', () => {
+    const vehicle = {
+      model: 'Peugeot 5008',
+      seats: 7,
+      airConditioning: true,
+      extras: 'Child seat on request',
+      plate: 'P 207 913',
+      insurance: 'Civil liability',
+      insuranceUntil: '2027-01-31',
+      routes: ['HAV ⇄ Viñales', 'Zapata'],
+    };
+
+    it('stores a driver vehicle, returns it on the inspector and audits both values', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send(vehicle);
+
+      expect(response.status).toBe(200);
+      expect(response.body.vehicle).toEqual(vehicle);
+      expect(store.get(DRIVER_ID)?.vehicleDetails).toEqual(vehicle);
+      expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'supplier.vehicle_updated',
+          entityId: DRIVER_ID,
+          metadata: { previous: null, next: vehicle },
+        }),
+      });
+    });
+
+    it('refuses a vehicle on a guide and an invalid body', async () => {
+      const guide = await request(app.getHttpServer())
+        .put(`/suppliers/${GUIDE_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send(vehicle);
+      const invalid = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ ...vehicle, seats: 0 });
+
+      expect(guide.status).toBe(422);
+      expect(invalid.status).toBe(400);
+      expect(fakePrisma.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it('reads a stored value that does not match the shape as no vehicle', async () => {
+      store.set(DRIVER_ID, {
+        ...store.get(DRIVER_ID)!,
+        vehicleDetails: { legacy: true },
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/suppliers/${DRIVER_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.body.vehicle).toBeNull();
+    });
   });
 });

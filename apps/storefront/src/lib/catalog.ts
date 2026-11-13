@@ -1,4 +1,4 @@
-import type { InventoryItemDto } from '@ota/schemas';
+import type { CatalogItemDto } from '@ota/schemas';
 
 export interface CatalogFilters {
   type?: string;
@@ -16,7 +16,7 @@ function apiBaseUrl(): string {
  */
 export async function getCatalog(
   filters: CatalogFilters = {},
-): Promise<InventoryItemDto[]> {
+): Promise<CatalogItemDto[]> {
   const params = new URLSearchParams();
   if (filters.type) params.set('type', filters.type);
   if (filters.province) params.set('province', filters.province);
@@ -29,7 +29,7 @@ export async function getCatalog(
     if (!response.ok) {
       return [];
     }
-    return (await response.json()) as InventoryItemDto[];
+    return (await response.json()) as CatalogItemDto[];
   } catch {
     return [];
   }

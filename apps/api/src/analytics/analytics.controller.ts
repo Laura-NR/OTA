@@ -6,6 +6,7 @@ import {
   type AnalyticsRangeQuery,
 } from '@ota/schemas';
 
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { AnalyticsService } from './analytics.service';
@@ -17,6 +18,7 @@ const READ_ROLES = [
 ] as const;
 
 /** Business-intelligence reads for the operations dashboard (spec §4.9). */
+@Capability('reports')
 @Controller('analytics')
 export class AnalyticsController {
   constructor(private readonly analytics: AnalyticsService) {}

@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
+import { DOCUMENT_STORAGE } from '../src/documents/document-storage';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const TRAVELER = {
   id: '22222222-2222-4222-8222-222222222222',
@@ -14,6 +16,8 @@ const TRAVELER = {
   fullName: 'Example Traveler',
   role: 'TRAVELER',
   locale: 'es',
+  phone: null,
+  nationality: 'GB',
 };
 const OTHER = {
   id: '99999999-9999-4999-8999-999999999999',
@@ -34,9 +38,11 @@ const MY_RESERVATION = '33333333-3333-4333-8333-333333333333';
 const OTHER_RESERVATION = '44444444-4444-4444-8444-444444444444';
 const SERVICE_ITEM = '55555555-5555-4555-8555-555555555555';
 const DOCUMENT = '66666666-6666-4666-8666-666666666666';
+const WORK_ORDER = '67676767-6767-4767-8767-676767676767';
 const CATALOG_ITEM = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const PACKAGE_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const INACTIVE_PACKAGE_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const TIER_ID = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 
 function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
   return {
@@ -65,8 +71,16 @@ interface FakeState {
   packages: Record<string, unknown>[];
   receipts: Record<string, unknown>[];
   reviews: Record<string, unknown>[];
+  travelers: Record<string, unknown>[];
   audits: { action: string }[];
   counter: { value: number };
+}
+
+/** The fake's version of the service's `type: { not: 'WORK_ORDER' }` filter. */
+function travelerDocuments(state: FakeState, reservationId: string) {
+  return state.documents.filter(
+    (doc) => doc.reservationId === reservationId && doc.type !== 'WORK_ORDER',
+  );
 }
 
 function createFakePrisma(state: FakeState) {
@@ -74,11 +88,13 @@ function createFakePrisma(state: FakeState) {
     serviceItems: state.serviceItems.filter(
       (item) => item.reservationId === reservationId,
     ).length,
-    documents: state.documents.filter((doc) => doc.reservationId === reservationId)
-      .length,
+    documents: travelerDocuments(state, reservationId).length,
   });
 
   const fake = {
+    // M3: no travelers, so the OFAC gate is clear.
+    reservationTraveler: { findMany: async () => [] },
+    travelerAffidavit: { findMany: async () => [] },
     user: {
       findUnique: async (args: { where: { id: string } }) =>
         state.users.find((user) => user.id === args.where.id) ?? null,
@@ -101,11 +117,14 @@ function createFakePrisma(state: FakeState) {
       findUnique: async (args: { where: { id: string } }) =>
         state.packages.find((pkg) => pkg.id === args.where.id) ?? null,
     },
+    paymentInstalment: { createMany: async () => ({ count: 1 }) },
     paymentReceipt: {
       create: async (args: { data: Record<string, unknown> }) => {
         const receipt = {
           id: `receipt-${state.counter.value + 1}`,
           status: 'PENDING',
+          feeAmount: 0,
+          instalmentId: null,
           createdAt: new Date(),
           updatedAt: new Date(),
           ...args.data,
@@ -142,6 +161,7 @@ function createFakePrisma(state: FakeState) {
       findUnique: async (args: {
         where: { id?: string; bookingCode?: string };
         select?: unknown;
+        include?: unknown;
       }) => {
         const row = args.where.id
           ? state.reservations.get(args.where.id)
@@ -149,20 +169,50 @@ function createFakePrisma(state: FakeState) {
               (candidate) => candidate.bookingCode === args.where.bookingCode,
             );
         if (!row) return null;
-        return args.select ? { id: row.id } : row;
+        if (args.select) return { id: row.id };
+        // M4: a payment link reads the schedule (none yet) and the package's plan.
+        return args.include ? { ...row, instalments: [], package: null } : row;
       },
-      findFirst: async (args: { where: { id: string; userId: string } }) => {
+      findFirst: async (args: {
+        where: { id: string; userId: string };
+        include?: {
+          package?: {
+            select: { translations: { where: { locale: { in: string[] } } } };
+          };
+        };
+      }) => {
         const row = [...state.reservations.values()].find(
           (candidate) =>
             candidate.id === args.where.id && candidate.userId === args.where.userId,
         );
         if (!row) return null;
+        const trip = row as Reservation & { packageId?: string; tierId?: string };
+        const pkg = state.packages.find((candidate) => candidate.id === trip.packageId);
+        const locales = args.include?.package?.select.translations.where.locale.in ?? [];
+        const translations = (pkg?.translations ?? []) as {
+          locale: string;
+          published: boolean;
+        }[];
+        const tiers = (pkg?.tiers ?? []) as { id: string }[];
         return {
           ...row,
-          serviceItems: state.serviceItems.filter(
-            (item) => item.reservationId === row.id,
+          package: pkg
+            ? {
+                name: pkg.name,
+                translations: translations.filter(
+                  (translation) =>
+                    translation.published && locales.includes(translation.locale),
+                ),
+              }
+            : null,
+          tier: tiers.find((tier) => tier.id === trip.tierId) ?? null,
+          travelers: state.travelers.filter(
+            (traveler) => traveler.reservationId === row.id,
           ),
-          documents: state.documents.filter((doc) => doc.reservationId === row.id),
+          serviceItems: state.serviceItems
+            .filter((item) => item.reservationId === row.id)
+            .map((item) => ({ dispatchOffers: [], ...item })),
+          documents: travelerDocuments(state, row.id),
           reviews: state.reviews.filter((review) => review.reservationId === row.id),
           _count: counts(row.id),
         };
@@ -218,6 +268,18 @@ function createFakePrisma(state: FakeState) {
           });
         }
         return reservation;
+      },
+    },
+    document: {
+      findUnique: async (args: { where: { id: string } }) => {
+        const doc = state.documents.find((candidate) => candidate.id === args.where.id);
+        if (!doc) return null;
+        const reservation = state.reservations.get(doc.reservationId as string);
+        return {
+          ...doc,
+          storageKey: `${String(doc.id)}.pdf`,
+          reservation: { userId: reservation?.userId },
+        };
       },
     },
     auditLog: {
@@ -285,6 +347,12 @@ describe('me API', () => {
           type: 'VOUCHER',
           generatedAt: new Date('2026-11-01T08:00:00Z'),
         },
+        {
+          id: WORK_ORDER,
+          reservationId: MY_RESERVATION,
+          type: 'WORK_ORDER',
+          generatedAt: new Date('2026-11-01T08:00:00Z'),
+        },
       ],
       inventoryItems: [
         {
@@ -301,7 +369,17 @@ describe('me API', () => {
           id: PACKAGE_ID,
           name: 'Vinales Agro-Ecology Trail',
           slug: 'vinales-agro-ecology-trail',
-          active: true,
+          status: 'PUBLISHED',
+          tiers: [{ id: TIER_ID, code: 'mid', name: 'Mid-range' }],
+          translations: [
+            {
+              locale: 'es',
+              published: true,
+              name: 'Ruta agroecológica de Viñales',
+              tiers: { mid: { name: 'Gama media' } },
+            },
+            { locale: 'fr', published: false, name: 'Brouillon', tiers: null },
+          ],
           currency: 'EUR',
           basePrice: new Prisma.Decimal('180.00'),
           services: [
@@ -333,7 +411,7 @@ describe('me API', () => {
           id: INACTIVE_PACKAGE_ID,
           name: 'Retired Trail',
           slug: 'retired-trail',
-          active: false,
+          status: 'DRAFT',
           currency: 'EUR',
           basePrice: new Prisma.Decimal('99.00'),
           services: [],
@@ -341,15 +419,24 @@ describe('me API', () => {
       ],
       receipts: [],
       reviews: [],
+      travelers: [
+        { reservationId: MY_RESERVATION, fullName: 'Example Traveler', isLead: true },
+        { reservationId: MY_RESERVATION, fullName: 'Dana Companion', isLead: false },
+      ],
       audits: [],
       counter: { value: 0 },
     };
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
+      .overrideProvider(DOCUMENT_STORAGE)
+      .useValue({
+        save: async () => undefined,
+        read: async () => new TextEncoder().encode('%PDF-1.7'),
+      })
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -372,6 +459,8 @@ describe('me API', () => {
       role: 'TRAVELER',
       locale: 'es',
     });
+    // M10 D4: the request form reads what the account still lacks.
+    expect(response.body).toMatchObject({ phone: null, nationality: 'GB' });
   });
 
   it('lists only the caller reservations with counts', async () => {
@@ -398,6 +487,51 @@ describe('me API', () => {
     expect(response.body.documents).toHaveLength(1);
     expect(response.body.documents[0].type).toBe('VOUCHER');
     expect(response.body.documents[0].storageKey).toBeUndefined();
+    expect(response.body.trip).toBeNull();
+    // The one service is taken (ACCEPTED), with no offer on the ledger.
+    expect(response.body.providers).toEqual({
+      services: 1,
+      confirmed: 1,
+      awaiting: 0,
+      arranging: 0,
+      requestsSent: 0,
+      answered: 0,
+    });
+    expect(response.body.travelers).toEqual([
+      { fullName: 'Example Traveler', isLead: true },
+      { fullName: 'Dana Companion', isLead: false },
+    ]);
+  });
+
+  it('names a package trip and its tier in the published translation of the locale', async () => {
+    state.reservations.set(
+      MY_RESERVATION,
+      makeReservation({ packageId: PACKAGE_ID, tierId: TIER_ID } as Partial<Reservation>),
+    );
+    const read = (query: string) =>
+      request(app.getHttpServer())
+        .get(`/me/reservations/${MY_RESERVATION}${query}`)
+        .set('x-test-user', TRAVELER.email);
+
+    const translated = await read('?locale=es');
+    expect(translated.status).toBe(200);
+    expect(translated.body.trip).toEqual({
+      name: 'Ruta agroecológica de Viñales',
+      tier: 'Gama media',
+    });
+
+    // A draft translation is never shown; the source text stands in.
+    const draft = await read('?locale=fr');
+    expect(draft.body.trip).toEqual({
+      name: 'Vinales Agro-Ecology Trail',
+      tier: 'Mid-range',
+    });
+
+    const source = await read('');
+    expect(source.body.trip).toEqual({
+      name: 'Vinales Agro-Ecology Trail',
+      tier: 'Mid-range',
+    });
   });
 
   it('returns 404 for another traveler reservation', async () => {
@@ -406,6 +540,32 @@ describe('me API', () => {
       .set('x-test-user', TRAVELER.email);
 
     expect(response.status).toBe(404);
+  });
+
+  it('never shows or serves a supplier work order to the traveler', async () => {
+    const detail = await request(app.getHttpServer())
+      .get(`/me/reservations/${MY_RESERVATION}`)
+      .set('x-test-user', TRAVELER.email);
+    expect(detail.body.documents.map((doc: { type: string }) => doc.type)).toEqual([
+      'VOUCHER',
+    ]);
+    expect(detail.body.documentCount).toBe(1);
+
+    const voucher = await request(app.getHttpServer())
+      .get(`/documents/${DOCUMENT}/download`)
+      .set('x-test-user', TRAVELER.email);
+    expect(voucher.status).toBe(200);
+
+    const workOrder = await request(app.getHttpServer())
+      .get(`/documents/${WORK_ORDER}/download`)
+      .set('x-test-user', TRAVELER.email);
+    expect(workOrder.status).toBe(403);
+
+    // The desk still reads it.
+    const desk = await request(app.getHttpServer())
+      .get(`/documents/${WORK_ORDER}/download`)
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(desk.status).toBe(200);
   });
 
   it('builds an itinerary at ITINERARY_SUBMITTED for the caller', async () => {
@@ -431,6 +591,26 @@ describe('me API', () => {
     );
     expect(created?.userId).toBe(TRAVELER.id);
     expect(state.audits.map((entry) => entry.action)).toContain('reservation.submitted');
+    // Each service carries its catalog price, which the invoice itemises.
+    const service = state.serviceItems.find((item) => item.reservationId === created?.id);
+    expect(service?.travelerPrice).toBe(90);
+  });
+
+  it('totals a custom trip as the sum of its service prices, repeats included', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/me/reservations')
+      .set('x-test-user', TRAVELER.email)
+      .send({
+        startDate: '2027-01-10',
+        endDate: '2027-01-14',
+        serviceItems: [
+          { inventoryItemId: CATALOG_ITEM },
+          { inventoryItemId: CATALOG_ITEM },
+        ],
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.totalAmount).toBe('180');
   });
 
   it('rejects an unavailable catalog item', async () => {

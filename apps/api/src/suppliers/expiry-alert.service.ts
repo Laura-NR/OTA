@@ -5,15 +5,14 @@ import {
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
-import { CREDENTIAL_EXPIRY_WINDOW_DAYS } from '@ota/domain';
-
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { COMPLIANCE_SCHEDULER, type ComplianceScheduler } from './expiry-alert.scheduler';
 import { SuppliersService } from './suppliers.service';
 
 /**
  * Recurring credential-expiry scan (spec §4.5). Auto-dispatch already pauses
- * workers inside the 30-day window (domain `canAutoDispatch`); this flags them
- * for the operations desk.
+ * workers inside the expiry window (30 days unless M9 settings change it;
+ * domain `canAutoDispatch`); this flags them for the operations desk.
  */
 @Injectable()
 export class ExpiryAlertService implements OnModuleInit, OnModuleDestroy {
@@ -22,6 +21,7 @@ export class ExpiryAlertService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly suppliers: SuppliersService,
     @Inject(COMPLIANCE_SCHEDULER) private readonly scheduler: ComplianceScheduler,
+    private readonly settings: OperatingSettingsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -33,13 +33,12 @@ export class ExpiryAlertService implements OnModuleInit, OnModuleDestroy {
   }
 
   async scan(): Promise<void> {
-    const expiring = await this.suppliers.listExpiring({
-      days: CREDENTIAL_EXPIRY_WINDOW_DAYS,
-    });
+    const days = (await this.settings.thresholds()).credentialExpiryWindowDays;
+    const expiring = await this.suppliers.listExpiring({ days });
     if (expiring.length > 0) {
       this.logger.warn(
         `${expiring.length} supplier credential(s) expiring within ` +
-          `${CREDENTIAL_EXPIRY_WINDOW_DAYS} days (auto-dispatch paused): ` +
+          `${days} days (auto-dispatch paused): ` +
           expiring.map((supplier) => supplier.email).join(', '),
       );
     }

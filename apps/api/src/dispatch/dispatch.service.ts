@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
 import type {
@@ -17,16 +18,26 @@ import {
   ReservationStatus,
   SERVICE_TYPE_TO_SUPPLIER_CATEGORIES,
   ServiceItemStatus,
+  alertKey,
   assertTransition,
+  calculateSupplierReliability,
   canAutoDispatch,
   canTransition,
   coversProvince,
   escalationAlert,
+  hoursBetween,
+  isFreeForService,
+  meetsReliabilityFloor,
+  minutesBetween,
   resolveDispatchTimeoutMs,
+  serviceCalendarDays,
   type ServiceType,
   type SupplierCategory,
+  type SupplierReliability,
+  type TransitionReason,
 } from '@ota/domain';
 import type {
+  DispatchBoardRowDto,
   DispatchCandidateDto,
   DispatchServiceItemDto,
   DispatchViewDto,
@@ -34,11 +45,18 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { OperatingSettingsService } from '../settings/operating-settings.service';
 import {
   ESCALATION_PUBLISHER,
   type EscalationPublisher,
 } from '../escalation/escalation.publisher';
 import { PrismaService } from '../prisma/prisma.service';
+import { ServerTelemetry } from '../telemetry/server-telemetry';
+import {
+  ACKNOWLEDGEMENT_SELECT,
+  ALERT_ACKNOWLEDGED,
+  acknowledgementsByAlert,
+} from './alert-acknowledgements';
 import { DISPATCH_SCHEDULER, type DispatchScheduler } from './dispatch.scheduler';
 
 const VERIFIED = 'VERIFIED';
@@ -47,17 +65,23 @@ type ServiceItemWithSupplier = ServiceItem & { supplier: SupplierProfile | null 
 type ReservationWithItems = Reservation & { serviceItems: ServiceItemWithSupplier[] };
 
 @Injectable()
-export class DispatchService implements OnModuleInit {
+export class DispatchService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(DISPATCH_SCHEDULER) private readonly scheduler: DispatchScheduler,
     @Inject(ESCALATION_PUBLISHER) private readonly escalation: EscalationPublisher,
+    private readonly settings: OperatingSettingsService,
+    private readonly telemetry: ServerTelemetry,
   ) {}
 
   onModuleInit(): void {
     this.scheduler.setTimeoutHandler((serviceItemId) =>
       this.handleTimeout(serviceItemId),
     );
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.scheduler.close();
   }
 
   /** Start or resume dispatch for every unassigned service item. */
@@ -69,16 +93,19 @@ export class DispatchService implements OnModuleInit {
     }
 
     if (reservation.status !== ReservationStatus.DispatchInProgress) {
-      assertTransition(
-        reservation.status as ReservationStatus,
-        ReservationStatus.DispatchInProgress,
-      );
+      const from = reservation.status as ReservationStatus;
+      assertTransition(from, ReservationStatus.DispatchInProgress);
       await this.prisma.reservation.update({
         where: { id: reservationId },
         data: { status: ReservationStatus.DispatchInProgress },
       });
-      await this.audit(actor, reservationId, 'reservation.dispatch_started', {
-        from: reservation.status,
+      await this.audit(actor, reservationId, 'reservation.dispatch_started', { from });
+      this.telemetry.stateChanged({
+        bookingCode: reservation.bookingCode,
+        from,
+        to: ReservationStatus.DispatchInProgress,
+        actor,
+        reason: 'dispatch_started',
       });
     }
 
@@ -106,6 +133,7 @@ export class DispatchService implements OnModuleInit {
   ): Promise<DispatchViewDto> {
     const reservation = await this.loadReservation(reservationId);
     const now = new Date();
+    const amber = await this.amberThreshold();
 
     return {
       reservationId: reservation.id,
@@ -113,15 +141,17 @@ export class DispatchService implements OnModuleInit {
       status: reservation.status as ReservationStatus,
       serviceItems: reservation.serviceItems
         .filter((item) => !onlySupplierId || item.supplierId === onlySupplierId)
-        .map((item) => this.toItemDto(item, now)),
+        .map((item) => this.toItemDto(item, now, amber)),
     };
   }
 
   /**
    * Every reservation currently in the dispatch/escalation flow, for the live
-   * operations dashboard (spec §4.3).
+   * operations dashboard (spec §4.3). A booking waits from its first offer in
+   * the ledger, so a re-dispatch never makes it look younger. Each item carries
+   * the desk's acknowledgement of its current red alert, if any (A-A11y 01).
    */
-  async listActive(): Promise<DispatchViewDto[]> {
+  async listActive(): Promise<DispatchBoardRowDto[]> {
     const reservations = await this.prisma.reservation.findMany({
       where: {
         status: {
@@ -133,16 +163,67 @@ export class DispatchService implements OnModuleInit {
         },
       },
       orderBy: { createdAt: 'asc' },
-      include: { serviceItems: { include: { supplier: true } } },
+      include: {
+        user: { select: { fullName: true, email: true } },
+        serviceItems: {
+          include: {
+            supplier: { include: { user: { select: { fullName: true } } } },
+            dispatchOffers: {
+              select: { offeredAt: true },
+              orderBy: { offeredAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
     const now = new Date();
-    return reservations.map((reservation) => ({
-      reservationId: reservation.id,
-      bookingCode: reservation.bookingCode,
-      status: reservation.status as ReservationStatus,
-      serviceItems: reservation.serviceItems.map((item) => this.toItemDto(item, now)),
-    }));
+    const amber = await this.amberThreshold();
+    const acknowledgements = acknowledgementsByAlert(
+      await this.prisma.auditLog.findMany({
+        where: {
+          action: ALERT_ACKNOWLEDGED,
+          entityType: 'ServiceItem',
+          entityId: {
+            in: reservations.flatMap((reservation) =>
+              reservation.serviceItems.map((item) => item.id),
+            ),
+          },
+        },
+        select: ACKNOWLEDGEMENT_SELECT,
+      }),
+    );
+    return reservations.map((reservation) => {
+      const firstOffers = reservation.serviceItems.flatMap((item) =>
+        item.dispatchOffers.map((offer) => offer.offeredAt.getTime()),
+      );
+      const waitingSince =
+        firstOffers.length > 0
+          ? new Date(Math.min(...firstOffers))
+          : reservation.createdAt;
+
+      return {
+        reservationId: reservation.id,
+        bookingCode: reservation.bookingCode,
+        status: reservation.status as ReservationStatus,
+        travelerName: reservation.user.fullName,
+        travelerEmail: reservation.user.email,
+        startDate: reservation.startDate.toISOString(),
+        endDate: reservation.endDate.toISOString(),
+        waitingSince: waitingSince.toISOString(),
+        serviceItems: reservation.serviceItems.map((item) => {
+          const dto = this.toItemDto(item, now, amber);
+          return {
+            ...dto,
+            supplierName: item.supplier?.user.fullName ?? null,
+            respondedAt: item.respondedAt ? item.respondedAt.toISOString() : null,
+            acknowledgement:
+              acknowledgements.get(alertKey(item.id, dto.offeredAt)) ?? null,
+          };
+        }),
+      };
+    });
   }
 
   async accept(serviceItemId: string, actor: AuthUser): Promise<DispatchViewDto> {
@@ -168,6 +249,7 @@ export class DispatchService implements OnModuleInit {
         },
       });
     });
+    this.offerAnswered('offer_accepted', item, now);
 
     await this.scheduler.cancelTimeout(item.id);
     await this.advanceIfFullyAccepted(item.reservationId, actor);
@@ -218,9 +300,10 @@ export class DispatchService implements OnModuleInit {
         },
       });
     });
+    this.offerAnswered('offer_declined', item, now);
 
     await this.scheduler.cancelTimeout(item.id);
-    await this.flagReservation(item.reservationId, actor, reason);
+    await this.flagReservation(item.reservationId, actor, reason, 'offer_declined');
 
     this.escalation.publish({
       type: 'dispatch.decline',
@@ -265,8 +348,21 @@ export class DispatchService implements OnModuleInit {
         },
       });
     });
+    this.telemetry.emit('offer_timeout', {
+      service_item_id: item.id,
+      service_type: item.serviceType,
+      timer_h:
+        item.offeredAt && item.dispatchDeadline
+          ? hoursBetween(item.offeredAt, item.dispatchDeadline)
+          : undefined,
+    });
 
-    await this.flagReservation(item.reservationId, null, 'dispatch timeout');
+    await this.flagReservation(
+      item.reservationId,
+      null,
+      'dispatch timeout',
+      'offer_timeout',
+    );
 
     this.escalation.publish({
       type: 'dispatch.timeout',
@@ -325,13 +421,18 @@ export class DispatchService implements OnModuleInit {
       where: { id: item.reservationId },
     });
     if (reservation && reservation.status !== ReservationStatus.DispatchInProgress) {
-      assertTransition(
-        reservation.status as ReservationStatus,
-        ReservationStatus.DispatchInProgress,
-      );
+      const from = reservation.status as ReservationStatus;
+      assertTransition(from, ReservationStatus.DispatchInProgress);
       await this.prisma.reservation.update({
         where: { id: item.reservationId },
         data: { status: ReservationStatus.DispatchInProgress },
+      });
+      this.telemetry.stateChanged({
+        bookingCode: reservation.bookingCode,
+        from,
+        to: ReservationStatus.DispatchInProgress,
+        actor,
+        reason: 'redispatch',
       });
     }
 
@@ -355,21 +456,27 @@ export class DispatchService implements OnModuleInit {
     const now = new Date();
 
     const supplier = await this.pickSupplier(
+      item,
       categories,
       excluded,
       now,
-      item.province,
       preferredSupplierId,
     );
 
     if (!supplier) {
-      await this.flagReservation(item.reservationId, actor, 'no eligible supplier');
+      await this.flagReservation(
+        item.reservationId,
+        actor,
+        'no eligible supplier',
+        'no_supplier',
+      );
       return;
     }
 
     const timeoutMs = resolveDispatchTimeoutMs({
       now,
       arrivalAt: item.serviceDateStart,
+      timers: await this.settings.dispatchTimers(),
     });
     const deadline = new Date(now.getTime() + timeoutMs);
 
@@ -405,6 +512,12 @@ export class DispatchService implements OnModuleInit {
       });
     });
 
+    this.telemetry.emit('offer_sent', {
+      service_item_id: item.id,
+      service_type: item.serviceType,
+      timer_h: hoursBetween(now, deadline),
+    });
+
     await this.scheduler.scheduleTimeout(item.id, timeoutMs);
 
     this.escalation.publish({
@@ -419,38 +532,122 @@ export class DispatchService implements OnModuleInit {
     });
   }
 
+  /**
+   * The supplier to offer an item to. A supplier the desk named is offered
+   * when eligible and free on the service's days, whatever their reliability
+   * (a manual choice). Otherwise the first eligible supplier, in registration
+   * order, who is free on every day of the service and meets the reliability
+   * floor (A-Suppliers).
+   */
   private async pickSupplier(
+    item: ServiceItem,
     categories: readonly SupplierCategory[],
     excluded: Set<string>,
     now: Date,
-    province: string | null,
     preferredSupplierId?: string,
   ): Promise<SupplierProfile | null> {
     if (preferredSupplierId && !excluded.has(preferredSupplierId)) {
       const preferred = await this.prisma.supplierProfile.findUnique({
         where: { id: preferredSupplierId },
       });
-      if (preferred && this.isEligible(preferred, categories, now, province)) {
-        return preferred;
+      const window = (await this.settings.thresholds()).credentialExpiryWindowDays;
+      if (
+        preferred &&
+        this.isEligible(preferred, categories, now, item.province, window)
+      ) {
+        const facts = await this.dispatchFacts(item, [preferred.id]);
+        if (facts.isFree(preferred)) {
+          return preferred;
+        }
       }
     }
 
-    const candidates = await this.prisma.supplierProfile.findMany({
-      where: {
-        category: { in: [...categories] as PrismaSupplierCategory[] },
-        isAvailable: true,
-        verificationStatus: VERIFIED,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const thresholds = await this.settings.thresholds();
+    const candidates = (
+      await this.prisma.supplierProfile.findMany({
+        where: {
+          category: { in: [...categories] as PrismaSupplierCategory[] },
+          isAvailable: true,
+          verificationStatus: VERIFIED,
+        },
+        orderBy: { createdAt: 'asc' },
+      })
+    ).filter(
+      (candidate) =>
+        !excluded.has(candidate.id) &&
+        this.isEligible(
+          candidate,
+          categories,
+          now,
+          item.province,
+          thresholds.credentialExpiryWindowDays,
+        ),
+    );
+    const facts = await this.dispatchFacts(
+      item,
+      candidates.map((candidate) => candidate.id),
+    );
 
     return (
       candidates.find(
         (candidate) =>
-          !excluded.has(candidate.id) &&
-          this.isEligible(candidate, categories, now, province),
+          facts.isFree(candidate) &&
+          meetsReliabilityFloor(
+            facts.scorecard(candidate.id),
+            thresholds.reliabilityFloorPercent / 100,
+            thresholds.reliabilityMinAnswered,
+          ),
       ) ?? null
     );
+  }
+
+  /**
+   * What dispatch reads beyond the profiles: the service's calendar days, the
+   * days each supplier blocked among them (spec §5.2), and each supplier's
+   * scorecard over the offer ledger.
+   */
+  private async dispatchFacts(item: ServiceItem, supplierIds: readonly string[]) {
+    const days = serviceCalendarDays(item.serviceDateStart, item.serviceDateEnd);
+    const [blockedRows, offers] =
+      supplierIds.length === 0
+        ? [[], []]
+        : await Promise.all([
+            this.prisma.availability.findMany({
+              where: {
+                supplierId: { in: [...supplierIds] },
+                isAvailable: false,
+                date: { in: days.map((day) => new Date(`${day}T00:00:00Z`)) },
+              },
+              select: { supplierId: true, date: true },
+            }),
+            this.prisma.dispatchOffer.findMany({
+              where: { supplierId: { in: [...supplierIds] } },
+              select: {
+                supplierId: true,
+                status: true,
+                offeredAt: true,
+                respondedAt: true,
+              },
+            }),
+          ]);
+    const blocked = new Map<string, Set<string>>();
+    for (const row of blockedRows) {
+      const set = blocked.get(row.supplierId) ?? new Set<string>();
+      set.add(row.date.toISOString().slice(0, 10));
+      blocked.set(row.supplierId, set);
+    }
+    const scorecards = new Map<string, SupplierReliability>(
+      calculateSupplierReliability(offers).map((card) => [card.supplierId, card]),
+    );
+    return {
+      isFree: (supplier: Pick<SupplierProfile, 'id' | 'isAvailable'>) =>
+        isFreeForService(
+          supplier.isAvailable,
+          blocked.get(supplier.id) ?? new Set<string>(),
+          days,
+        ),
+      scorecard: (supplierId: string) => scorecards.get(supplierId) ?? null,
+    };
   }
 
   private isEligible(
@@ -458,6 +655,7 @@ export class DispatchService implements OnModuleInit {
     categories: readonly SupplierCategory[],
     now: Date,
     province: string | null,
+    credentialWindowDays: number,
   ): boolean {
     if (!categories.includes(supplier.category)) {
       return false;
@@ -472,6 +670,7 @@ export class DispatchService implements OnModuleInit {
         credentialExpiresAt: supplier.credentialExpiresAt,
       },
       now,
+      credentialWindowDays,
     );
   }
 
@@ -490,21 +689,45 @@ export class DispatchService implements OnModuleInit {
       return;
     }
 
-    assertTransition(
-      reservation.status as ReservationStatus,
-      ReservationStatus.AssemblyAndEscalation,
-    );
+    const from = reservation.status as ReservationStatus;
+    assertTransition(from, ReservationStatus.AssemblyAndEscalation);
     await this.prisma.reservation.update({
       where: { id: reservationId },
       data: { status: ReservationStatus.AssemblyAndEscalation },
     });
     await this.audit(actor, reservationId, 'reservation.fully_accepted');
+    this.telemetry.stateChanged({
+      bookingCode: reservation.bookingCode,
+      from,
+      to: ReservationStatus.AssemblyAndEscalation,
+      actor,
+      reason: 'all_accepted',
+    });
   }
 
+  /** A supplier's answer to an offer, timed from when it was made. */
+  private offerAnswered(
+    event: 'offer_accepted' | 'offer_declined',
+    item: ServiceItem,
+    now: Date,
+  ): void {
+    this.telemetry.emit(event, {
+      service_item_id: item.id,
+      service_type: item.serviceType,
+      minutes_to_answer: item.offeredAt ? minutesBetween(item.offeredAt, now) : undefined,
+    });
+  }
+
+  /**
+   * Move a booking to ACTION_REQUIRED for the desk. `reason` is the audit
+   * log's text (a worker's decline reason included); `trigger` is the code
+   * T-Events carries instead.
+   */
   private async flagReservation(
     reservationId: string,
     actor: AuthUser | null,
     reason: string,
+    trigger: TransitionReason,
   ): Promise<void> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
@@ -528,6 +751,13 @@ export class DispatchService implements OnModuleInit {
     await this.audit(actor, reservationId, 'reservation.action_required', {
       from,
       reason,
+    });
+    this.telemetry.stateChanged({
+      bookingCode: reservation.bookingCode,
+      from,
+      to: ReservationStatus.ActionRequired,
+      actor,
+      reason: trigger,
     });
   }
 
@@ -561,7 +791,9 @@ export class DispatchService implements OnModuleInit {
 
   /**
    * Manual re-dispatch menu: eligible suppliers that have not already been
-   * offered this item, restricted to those covering the item's province.
+   * offered this item, restricted to those covering the item's province and
+   * free on every day of the service. A supplier below the reliability floor
+   * is listed with the flag: automatic dispatch skips them, the desk may not.
    */
   async getCandidates(serviceItemId: string): Promise<DispatchCandidateDto[]> {
     const item = await this.prisma.serviceItem.findUnique({
@@ -590,22 +822,45 @@ export class DispatchService implements OnModuleInit {
       orderBy: { createdAt: 'asc' },
     });
 
-    return candidates
-      .filter(
-        (candidate) =>
-          !excluded.has(candidate.id) &&
-          this.isEligible(candidate, categories, now, item.province),
-      )
-      .map((candidate) => ({
-        supplierId: candidate.id,
-        fullName: candidate.user.fullName,
-        category: candidate.category,
-        primaryPhone: candidate.primaryPhone,
-        provincesActive: candidate.provincesActive,
-        credentialExpiresAt: candidate.credentialExpiresAt
-          ? candidate.credentialExpiresAt.toISOString()
-          : null,
-      }));
+    const thresholds = await this.settings.thresholds();
+    const eligible = candidates.filter(
+      (candidate) =>
+        !excluded.has(candidate.id) &&
+        this.isEligible(
+          candidate,
+          categories,
+          now,
+          item.province,
+          thresholds.credentialExpiryWindowDays,
+        ),
+    );
+    const facts = await this.dispatchFacts(
+      item,
+      eligible.map((candidate) => candidate.id),
+    );
+
+    return eligible
+      .filter((candidate) => facts.isFree(candidate))
+      .map((candidate) => {
+        const scorecard = facts.scorecard(candidate.id);
+        return {
+          supplierId: candidate.id,
+          fullName: candidate.user.fullName,
+          category: candidate.category,
+          primaryPhone: candidate.primaryPhone,
+          provincesActive: candidate.provincesActive,
+          credentialExpiresAt: candidate.credentialExpiresAt
+            ? candidate.credentialExpiresAt.toISOString()
+            : null,
+          acceptanceRate:
+            scorecard && scorecard.answered > 0 ? scorecard.acceptanceRate : null,
+          belowReliabilityFloor: !meetsReliabilityFloor(
+            scorecard,
+            thresholds.reliabilityFloorPercent / 100,
+            thresholds.reliabilityMinAnswered,
+          ),
+        };
+      });
   }
 
   private assertOpenForResponse(item: ServiceItem): void {
@@ -614,7 +869,16 @@ export class DispatchService implements OnModuleInit {
     }
   }
 
-  private toItemDto(item: ServiceItemWithSupplier, now: Date): DispatchServiceItemDto {
+  /** The share of an offer's timer that turns the desk amber (M9). */
+  private async amberThreshold(): Promise<number> {
+    return (await this.settings.thresholds()).amberPercent / 100;
+  }
+
+  private toItemDto(
+    item: ServiceItemWithSupplier,
+    now: Date,
+    amberThreshold: number,
+  ): DispatchServiceItemDto {
     let escalation: DispatchServiceItemDto['escalation'] = 'NONE';
     if (
       item.status === ServiceItemStatus.Declined ||
@@ -630,6 +894,7 @@ export class DispatchService implements OnModuleInit {
         offeredAt: item.offeredAt,
         deadline: item.dispatchDeadline,
         now,
+        amberThreshold,
       });
     }
 

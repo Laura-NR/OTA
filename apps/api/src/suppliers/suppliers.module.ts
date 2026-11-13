@@ -22,5 +22,7 @@ import { SuppliersService } from './suppliers.service';
       },
     },
   ],
+  // The worker app's fuel declaration writes through the desk's resources path.
+  exports: [SuppliersService],
 })
 export class SuppliersModule {}

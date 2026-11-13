@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Rodríguez;Ana;;;
+FN:Ana Rodríguez
+ORG:Vereda Expeditions S.L.
+TITLE:Operations Admin · Havana desk
+TEL;TYPE=CELL,VOICE:+535[number]
+TEL;TYPE=WORK,VOICE:+5372042516
+EMAIL;TYPE=WORK:ana@vereda.travel
+URL:https://vereda.travel/?via=ana
+ADR;TYPE=WORK:;;[Street address];La Habana;;;Cuba
+NOTE:Vereda Expeditions · casa-based journeys in Cuba · MINTUR licence [MINTUR-2026-XXXX] · 24/7 line +53 7 204 2516
+END:VCARD

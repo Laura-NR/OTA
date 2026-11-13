@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Design system 07 · Responsive behaviour · what moves at each width</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:14px;line-height:20px;color:#4A433D}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.tbl th{text-align:left;background:#F3EEE6;color:#4A433D;font-weight:600;padding:10px 12px;border-bottom:1px solid #E8E2D9;white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E8E2D9;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.f{font-weight:600;color:#1F1B17}
+.pre{margin:0;padding:14px 16px;border-radius:8px;background:#1F1B17;color:#F3EEE6;font:400 12px/18px "IBM Plex Mono",ui-monospace,monospace;overflow-x:auto;white-space:pre}
+.bp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.bp div{border:1px solid #E8E2D9;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:#FBF8F3}
+.bp b{font:600 13px/18px Inter,system-ui,sans-serif;color:#083B50}
+.bp span{font:500 12px/16px "IBM Plex Mono",ui-monospace,monospace;color:#4A433D}
+.ok{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;background:#E8F5E9;color:#1B5E20;white-space:nowrap}
+.na{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:9999px;font:600 11px/14px Inter,system-ui,sans-serif;background:#F3EEE6;color:#4A433D;white-space:nowrap}
+.frame{border:1px solid #D6CEC3;border-radius:8px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+.frame .t{height:10px;background:#083B50}
+.frame .r{display:flex;gap:4px;padding:6px}
+.frame .c{flex:1;height:22px;border-radius:3px;background:#E6F0F4}
+.frame .s{width:22px;border-radius:3px;background:#083B50}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px">
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 960px">
+    <p class="ov">Vereda design system · 07 · 10 Oct 2026</p>
+    <h1 class="disp" style="font-size: 48px; line-height: 56px">Responsive behaviour: what moves at each width</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">Sheet 01 fixes the grid and the five breakpoints. This sheet is the contract for how each family of screens reflows between them, component by component, so that no separate tablet artboards are needed: every PAGE on this canvas is fluid, and the rules here can be checked in Play mode at any window width. Content-driven, mobile-first, <span class="mono">min-width</span> queries only (doc 14 §3, doc 16 §5).</p>
+  </header>
+
+  <!-- 01 tokens -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 14px">
+      <p class="ov">01 · Breakpoint tokens and container</p>
+      <div class="bp">
+        <div><b>xs</b><span>0–479</span><span>4 col · m 16</span></div>
+        <div><b>sm</b><span>480–767</span><span>4 col · m 24</span></div>
+        <div><b>md</b><span>768–1023</span><span>8 col · m 32</span></div>
+        <div><b>lg</b><span>1024–1279</span><span>12 col · m 40</span></div>
+        <div><b>xl</b><span>1280+</span><span>12 col · max 1280</span></div>
+      </div>
+      <pre class="pre">:root { --bp-sm: 480px; --bp-md: 768px; --bp-lg: 1024px; --bp-xl: 1280px; --container: 1280px; }
+/* mobile first; one query per step up; never max-width queries */
+@media (min-width: 768px)  { .filters { position: static } .grid-cards { grid-template-columns: repeat(2, 1fr) } }
+@media (min-width: 1024px) { .grid-cards { grid-template-columns: repeat(3, 1fr) } .summary { position: sticky; top: 88px } }
+@media (min-width: 1280px) { .layout { grid-template-columns: 280px 1fr } }</pre>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 18px; color: #4A433D">
+        <li>Widths are CSS px of the viewport; the admin shell measures the window, not the content area, so the sidebar rule below is applied first.</li>
+        <li>Nothing is hidden by width. Content is re-flowed, collapsed into a sheet or drawer, or scrolled inside its own box. A table or matrix never makes the page scroll sideways.</li>
+        <li>Type does not scale with the viewport. Body stays 16 px on customer pages (prevents iOS zoom on inputs), 14 px on the desk; the large-text preference (Account › Preferences) scales everything 1.25× and the rules here still hold.</li>
+        <li>Test widths (doc 14): <span class="mono">320 · 375 · 414 · 768 · 1024 · 1440</span>. 320 is the floor; below it the page may scroll sideways.</li>
+      </ul>
+    </div>
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+      <p class="ov">The same page at four widths</p>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><div class="frame" style="height: 120px"><div class="t"></div><div class="r"><div class="c" style="flex: none; width: 60px"></div><div class="c"></div><div class="c"></div><div class="c"></div></div><div class="r"><div class="c"></div><div class="c"></div><div class="c"></div></div></div><p class="cap">xl · rail + 3 cards + sticky summary</p></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div class="frame" style="height: 120px; width: 70%"><div class="t"></div><div class="r"><div class="c" style="height: 14px"></div></div><div class="r"><div class="c"></div><div class="c"></div></div><div class="r"><div class="c"></div><div class="c"></div></div></div><p class="cap">md · filters as chips, 2 cards</p></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div class="frame" style="height: 120px; width: 42%"><div class="t"></div><div class="r"><div class="c" style="height: 14px"></div></div><div class="r"><div class="c"></div></div><div class="r"><div class="c"></div></div><div class="r" style="margin-top: auto"><div class="c" style="background: #083B50; height: 14px"></div></div></div><p class="cap">xs · 1 card, sticky CTA, bottom nav</p></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div class="frame" style="height: 120px"><div class="t"></div><div class="r" style="flex: 1"><div class="s"></div><div style="flex: 1; display: flex; flex-direction: column; gap: 4px"><div class="c" style="height: 14px"></div><div class="r" style="padding: 0"><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div></div></div></div></div><p class="cap">admin ≥ 1024 · sidebar 240 open</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 customer web -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · Customer web pages (section 02 artboards) · xs is the M-* artboard, xl the desktop one</p>
+      <p class="p">Between the two drawn sizes the rules below apply. "Sheet" is the bottom sheet from DS sheet 05; "drawer" the right-hand panel.</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>Region</th><th>xs · 0–479</th><th>sm · 480–767</th><th>md · 768–1023</th><th>lg · 1024–1279</th><th>xl · 1280+</th></tr></thead>
+      <tbody>
+        <tr><td class="f">Header</td><td>Logo, EN·€, menu button; bottom nav carries Home · Search · Trips · Support</td><td>same; bottom nav stays</td><td>Top bar: logo, menu button opens a drawer with the seven links; EN·€, Sign in; no bottom nav</td><td>Full nav row; "Talk to a specialist" as text button</td><td>Full nav; specialist button secondary</td></tr>
+        <tr><td class="f">Advisory and event banners</td><td>Two stacked strips, text truncates to one line with a chevron</td><td>same</td><td>Full copy, action wraps under the text</td><td>Single line each</td><td>Single line each</td></tr>
+        <tr><td class="f">Home search</td><td>One field + two chips; chips open sheets</td><td>same</td><td>Three fields in a row, button below</td><td>Four cells in one bar</td><td>One bar, 4 cells + button</td></tr>
+        <tr><td class="f">Filter rail (Packages, Destinations)</td><td>"Filters (3)" button opens a full-height sheet; applied filters as removable chips above the grid</td><td>same</td><td>Chips row + sheet (rail hidden)</td><td>Rail 240 px, sticky</td><td>Rail 280 px, sticky</td></tr>
+        <tr><td class="f">Card grids</td><td>1 up, full-width cards</td><td>2 up</td><td>2 up</td><td>3 up</td><td>3 up with rail, 4 up without</td></tr>
+        <tr><td class="f">Package detail</td><td>Tabs scroll horizontally with a fade; booking summary becomes the sticky bottom bar (price + CTA); gallery swipes</td><td>same</td><td>Tabs fit; summary card inline after the hero, then sticky bottom bar on scroll</td><td>Two columns 2 : 1, summary sticky right</td><td>Two columns 2 : 1, summary sticky right (top 88)</td></tr>
+        <tr><td class="f">Compare</td><td>2 trips side by side in a box that scrolls sideways; first column (row labels) sticky</td><td>2 in view</td><td>3 in view</td><td>4 in view</td><td>4 in view, no scroll</td></tr>
+        <tr><td class="f">Builder and booking steppers</td><td>"Step 2 of 5 · Transport" + progress bar; estimate in the sticky bottom bar, expands as a sheet</td><td>same</td><td>Numbered stepper row; estimate card inline at the end of each step</td><td>Stepper row; estimate rail sticky right</td><td>Stepper row; rail 360 px sticky</td></tr>
+        <tr><td class="f">Forms</td><td>Single column, 48 px inputs</td><td>Single column</td><td>Name pairs two-column; address, payment and consent single (doc 14)</td><td>Pairs two-column</td><td>Pairs two-column, max field width 560 px</td></tr>
+        <tr><td class="f">Destinations map</td><td>Horizontal province strip + list; map hidden behind "Show map" (list first, doc 14)</td><td>Strip + list</td><td>Map 100 % wide above the list; tap opens the province panel as a sheet</td><td>Map left 7 col, panel right 5 col</td><td>Map 8 col, panel 4 col, panel sticky</td></tr>
+        <tr><td class="f">Modals</td><td>Full-height sheet</td><td>Full-height sheet</td><td>Centered modal max 560</td><td>Centered modal</td><td>Centered modal max 640</td></tr>
+        <tr><td class="f">Account</td><td>Tabs as a scrollable row; each panel full width</td><td>same</td><td>Left nav list 200 px + panel</td><td>Left nav 240 + panel</td><td>Left nav 240 + panel, max 1080</td></tr>
+        <tr><td class="f">Footer</td><td>Stacked link groups, licence line last</td><td>2 columns</td><td>3 columns</td><td>4 columns</td><td>4 columns + licence row</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 03 admin + 04 apps -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; align-items: start">
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+        <p class="ov">03 · Admin desk (section 04) · drawn at 1440; rules continue <a href="A-States.dc.html">A-States › 07</a></p>
+        <p class="p">The desk is a laptop tool; below 560 the desk points to Ops Lite instead of shrinking.</p>
+      </div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>Region</th><th>≥ 1280</th><th>1024–1279 · tablet landscape</th><th>768–1023 · tablet portrait</th><th>≤ 560 · phone</th></tr></thead>
+        <tbody>
+          <tr><td class="f">Sidebar</td><td>240 px, always open</td><td>240 px, still open (content 784 px)</td><td>Stacks above the content as a wrapping row of links with counts</td><td>Pointer to Ops Lite; sign-in still works</td></tr>
+          <tr><td class="f">Top bar actions</td><td>All buttons in a row</td><td>Row; labels kept</td><td>Wraps to a second row; destructive action last</td><td>—</td></tr>
+          <tr><td class="f">Dispatch matrix</td><td>All columns visible</td><td>Scrolls sideways inside its box; first column sticky</td><td>Scrolls; Open and Re-dispatch stay reachable</td><td>Not offered (AL-Pipeline)</td></tr>
+          <tr><td class="f">KPI tiles</td><td>4–5 up</td><td>2–3 up</td><td>2 up</td><td>1 up</td></tr>
+          <tr><td class="f">Tables (queues, payments, suppliers)</td><td>Full width</td><td>Scroll inside the card, sticky first column</td><td>Scroll inside the card</td><td>Rows become stacked cards (DS 03)</td></tr>
+          <tr><td class="f">List + detail (Customers, Suppliers)</td><td>Side by side 5 : 7</td><td>Side by side 5 : 7</td><td>Stack, list first; selecting a row scrolls to the detail</td><td>Stack</td></tr>
+          <tr><td class="f">Editor tabs (Package editor, Settings)</td><td>Tab row</td><td>Tab row</td><td>Tab row scrolls with a fade</td><td>Select element instead of tabs</td></tr>
+          <tr><td class="f">Red alert strip and audio</td><td>Full-width strip under the top bar</td><td>same</td><td>same; the strip is the first focusable element</td><td>Ops Lite push</td></tr>
+          <tr><td class="f">Modals and inspectors</td><td>Right drawer 480 px</td><td>Drawer 420 px</td><td>Full-height sheet</td><td>Full-height sheet</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px">
+        <p class="ov">04 · Worker app and Ops Lite (section 05)</p>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 18px; color: #4A433D">
+          <li>Designed at 390 × 844; must work from <strong>320 to 430</strong> wide. Portrait only (locked); landscape shows the same layout.</li>
+          <li>On a tablet the apps render at phone width, centred, max 480 px. Ops Lite on a tablet is not the goal: the desk at 768 is (section 03).</li>
+          <li>Large-text (1.3×) and Android font scaling: offer cards and timers reflow to two lines, counters wrap, nothing truncates. The accept and decline buttons stay 48 px high and side by side down to 320.</li>
+          <li>The bottom bar and the sticky action are the only fixed elements; the keyboard pushes content, never covers the primary action.</li>
+          <li>Offline and low-bandwidth rules are on DS sheet 05 and <a href="G-Sync.dc.html">G-Sync</a>; width does not change them.</li>
+        </ul>
+      </div>
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px">
+        <p class="ov">05 · Emails and documents</p>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 18px; color: #4A433D">
+          <li><strong>Emails</strong> are a 600 px table layout (section 07). Under 620 px they go fluid: single column, full-width buttons (min 48 px), 16 px body, 24 px display. Two-column blocks (price + CTA) stack. Images max-width 100 %. Dark mode: logo as a transparent PNG, <span class="mono">color-scheme</span> meta, no pure-white boxes on dark.</li>
+          <li><strong>Generated PDFs</strong> are fixed A4 (section 06); nothing responsive. Documents opened on a phone are the PDF itself, pinch-zoomable; the offline kit's QR links go to live pages.</li>
+          <li><strong>Printing a web page</strong> (Legal, Travel info, Confirmation): print stylesheet hides nav, banners and sticky bars, expands accordions, prints link URLs after link text, keeps the licence line in the footer of every page.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 component reflow rules -->
+  <section class="sheet" style="display: flex; flex-direction: column">
+    <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">06 · Component reflow rules · one rule each, across all families</p>
+    </div>
+    <div style="overflow-x: auto"><table class="tbl">
+      <thead><tr><th>Component</th><th>Rule</th><th>Below</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="f">Tables</td><td>Wide tables scroll inside their card with a sticky first column and a visible shadow at the scrolled edge; under <span class="mono">sm</span> rows become stacked cards (label : value pairs, primary action last)</td><td>md → scroll · sm → cards</td><td>A page must never scroll sideways; the key column must stay readable</td></tr>
+        <tr><td class="f">Numbers, codes, timers</td><td><span class="mono">white-space: nowrap</span> and mono; the column shrinks the text column instead</td><td>always</td><td>€ 2,480.00 and VX-7K2M9Q must never break across lines</td></tr>
+        <tr><td class="f">Stepper</td><td>Numbered row with labels ≥ md; "Step n of 5 · label" + progress bar below</td><td>md</td><td>Five labels never fit on a phone</td></tr>
+        <tr><td class="f">Tabs</td><td>Scrollable row with an edge fade and the active tab scrolled into view; a <span class="mono">select</span> only when there are more than six</td><td>md</td><td>Keeps tab semantics for screen readers</td></tr>
+        <tr><td class="f">Filter rail</td><td>Rail ≥ lg; chips + full-height sheet below; result count live in both</td><td>lg</td><td>Doc 14: list first, filters on demand</td></tr>
+        <tr><td class="f">Sticky summary / price rail</td><td>Sticky right column ≥ lg; sticky bottom bar (56–64 px) with price and the one CTA below; the bar's expand control opens the detail as a sheet</td><td>lg</td><td>The next action stays in the thumb zone</td></tr>
+        <tr><td class="f">Two-column sections</td><td>Grid <span class="mono">minmax(min(380px, 100%), 1fr)</span>; columns stack in source order; the primary content is first in source</td><td>auto</td><td>No breakpoint needed; keyboard order matches reading order</td></tr>
+        <tr><td class="f">Modals and inspectors</td><td>Centered modal (max 560–640) or right drawer ≥ md; full-height sheet below with a grab handle and a Close button in the header</td><td>md</td><td>Sheets are reachable one-handed; Esc and swipe-down both close</td></tr>
+        <tr><td class="f">Toasts and alerts</td><td>Top-right on desktop; above the bottom bar on phones; the red alert strip is always full-width under the top bar</td><td>md</td><td>Never behind the keyboard or the bottom nav</td></tr>
+        <tr><td class="f">Hover-only affordances</td><td>Anything revealed on hover (map metrics, card secondary actions, table row actions) has a tap or always-visible equivalent from lg down</td><td>lg</td><td>Touch devices have no hover; keyboards need it visible on focus</td></tr>
+        <tr><td class="f">Touch targets</td><td>44 × 44 minimum everywhere; 48 px inputs and primary buttons on phones; 36 px compact controls only on the desk ≥ lg</td><td>always</td><td>WCAG 2.5.8, doc 14</td></tr>
+        <tr><td class="f">Images and maps</td><td><span class="mono">max-width: 100%</span>, fixed aspect boxes (3 : 2 cards, 16 : 9 heroes, 4 : 3 on phones); <span class="mono">srcset</span> at 390 / 780 / 1280 / 1920; the SVG map scales with its box, labels hide under 600 px wide and reappear in the panel</td><td>always</td><td>Low-bandwidth budget (DS sheet 05)</td></tr>
+        <tr><td class="f">Diagrams (handoff)</td><td>Fixed-size artboards; exported as SVG for the wiki, scroll in a box when embedded</td><td>—</td><td>Not product UI</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 07 decision and test matrix -->
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 24px; align-items: start">
+    <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 10px">
+      <p class="ov">07 · The tablet decision</p>
+      <p class="p"><strong>No separate tablet artboards.</strong> A tablet is <span class="mono">md</span> (portrait, 768) or <span class="mono">lg</span> (landscape, 1024) of the fluid pages; the rules on this sheet and on A-States › 07 define what it looks like, and Play mode at those widths shows it. Travelers on tablets are a small share of a casa-based market; the desk on a tablet is covered by the 768 and 1024 columns above.</p>
+      <p class="p">If a tablet-specific layout is ever wanted, it is two artboards (Packages at 768, A-Dashboard at 1024), not a section.</p>
+      <p class="cap">Decision recorded 10 Oct 2026 on <a href="T-Signoff.dc.html">T-Signoff</a>.</p>
+    </div>
+    <div class="sheet" style="display: flex; flex-direction: column">
+      <div style="padding: 24px 24px 12px; display: flex; flex-direction: column; gap: 6px">
+        <p class="ov">Responsive test matrix · run in Play mode, then in the build</p>
+        <p class="p">Pass = nothing hidden, no sideways page scroll, targets ≥ 44 px, the primary action visible without scrolling on load, focus order unchanged.</p>
+      </div>
+      <div style="overflow-x: auto"><table class="tbl">
+        <thead><tr><th>Screen</th><th>320</th><th>375</th><th>768</th><th>1024</th><th>1440</th><th>Watch for</th></tr></thead>
+        <tbody>
+          <tr><td class="f"><a href="Home.dc.html">Home</a> / M-Home</td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>Banners truncating; search chips</td></tr>
+          <tr><td class="f"><a href="Packages.dc.html">Packages</a></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>Rail → chips at 1023; 2-up at 768</td></tr>
+          <tr><td class="f"><a href="Package.dc.html">Package</a></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>Sticky summary → bottom bar; tabs fade</td></tr>
+          <tr><td class="f"><a href="Booking.dc.html">Booking</a> step 4</td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>Name pairs two-column from 768; OFAC block width</td></tr>
+          <tr><td class="f"><a href="Payment.dc.html">Payment</a></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>Gateway iframe height; plan cards stack</td></tr>
+          <tr><td class="f"><a href="Destinations.dc.html">Destinations</a> map</td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>List first under 768; panel as sheet at 768</td></tr>
+          <tr><td class="f"><a href="A-Dashboard.dc.html">A-Dashboard</a></td><td><span class="na">Ops Lite</span></td><td><span class="na">Ops Lite</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>Matrix scroll + sticky column; red strip first in focus order</td></tr>
+          <tr><td class="f"><a href="A-Package-Edit.dc.html">A-Package-Edit</a></td><td><span class="na">Ops Lite</span></td><td><span class="na">Ops Lite</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td>Tab row scroll; rate table scroll</td></tr>
+          <tr><td class="f"><a href="W-Offer.dc.html">W-Offer</a> · <a href="AL-Alerts.dc.html">AL-Alerts</a></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="na">phone width centred</span></td><td><span class="na">—</span></td><td><span class="na">—</span></td><td>Accept / decline side by side at 320; 1.3× text</td></tr>
+          <tr><td class="f"><a href="E-Invoice.dc.html">E-Invoice</a></td><td><span class="ok">pass</span></td><td><span class="ok">pass</span></td><td><span class="ok">600 fixed</span></td><td><span class="ok">600 fixed</span></td><td><span class="ok">600 fixed</span></td><td>Fluid under 620; dark-mode logo</td></tr>
+        </tbody>
+      </table></div>
+      <p class="cap" style="padding: 10px 24px 16px">"pass" is the expected result when the rules above are implemented; it becomes a recorded result in the usability and QA rounds (<a href="T-Testing.dc.html">T-Testing</a>).</p>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

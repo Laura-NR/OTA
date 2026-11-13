@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Booking flow · mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:disabled{background:#E8E2D9;color:#6E665E;border-color:transparent}
+.btn:focus-visible,.inp:focus-visible,.ck:focus-visible,.ibtn:focus-visible,.tier:focus-within{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.inp{height:48px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.ibtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #D6CEC3;background:#fff;cursor:pointer;color:#083B50}
+.ibtn:disabled{color:#6E665E;background:#F3EEE6}
+.tier{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer}
+.tier.on{border:2px solid #0B4F6C;padding:13px;background:#F1F6F8}
+.line{display:flex;justify-content:space-between;gap:12px;font-size:14px;line-height:20px}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid}
+.alert p{margin:0;font-size:14px;line-height:20px}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <!-- Checkout header -->
+  <header style="display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 8px; border-bottom: 1px solid #E8E2D9; background: #FBF8F3; position: sticky; top: 0; z-index: 3">
+    <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}"><button type="button" aria-label="Back" onClick="{{backOrExit}}" style="width: 44px; height: 44px; border: 0; background: transparent; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button></sc-if>
+    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0"><p class="sm" style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{headerTitle}}</p><p class="cap" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{headerSub}}</p></div>
+    <a class="btn btn-t btn-sm" href="M-Package.dc.html">Exit</a>
+  </header>
+
+  <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 12px 20px 0; display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">Step {{stepN}} of 5 · {{stepLabel}}</span><span style="color: #6E665E">{{nextLabel}}</span></div><div style="height: 8px; border-radius: 9999px; background: #E8E2D9; overflow: hidden" role="progressbar" aria-valuenow="{{stepN}}" aria-valuemin="0" aria-valuemax="5" aria-label="Booking progress"><div style="width: {{progress}}; height: 100%; background: #0B4F6C"></div></div></div>
+  </sc-if>
+
+  <main style="display: flex; flex-direction: column; gap: 16px; padding: 16px 20px 160px">
+
+    <!-- STEP 1 -->
+    <sc-if value="{{s1}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">When, and who's coming?</h1><p class="p">Eco-Tourism in Viñales · 7 nights · departs Saturdays</p></div>
+      <div class="fld"><label class="lbl" for="dep">Departure</label><div style="position: relative"><select class="inp" id="dep" style="appearance: none; -webkit-appearance: none; padding-right: 40px" onChange="{{pickDep}}"><sc-for list="{{deps}}" as="o" hint-placeholder-count="6"><option value="{{o.id}}" selected="{{o.sel}}" disabled="{{o.full}}">{{o.opt}}</option></sc-for></select><svg class="ic" style="position: absolute; right: 12px; top: 14px; color: #4A433D; pointer-events: none" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div><p class="hlp">{{depNote}}</p></div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <p class="lbl">Travelers</p>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><div><p class="sm" style="font-weight: 500">Adults</p><p class="hlp">18 and over</p></div><div style="display: flex; align-items: center; gap: 10px"><button class="ibtn" type="button" aria-label="Remove one adult" onClick="{{decA}}" disabled="{{aMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 24px; text-align: center" aria-live="polite">{{adults}}</span><button class="ibtn" type="button" aria-label="Add one adult" onClick="{{incA}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><div><p class="sm" style="font-weight: 500">Children</p><p class="hlp">2–12 · 60 %</p></div><div style="display: flex; align-items: center; gap: 10px"><button class="ibtn" type="button" aria-label="Remove one child" onClick="{{decC}}" disabled="{{cMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 24px; text-align: center" aria-live="polite">{{children}}</span><button class="ibtn" type="button" aria-label="Add one child" onClick="{{incC}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><div><p class="sm" style="font-weight: 500">Infants</p><p class="hlp">Under 2 · free</p></div><div style="display: flex; align-items: center; gap: 10px"><button class="ibtn" type="button" aria-label="Remove one infant" onClick="{{decI}}" disabled="{{iMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 24px; text-align: center" aria-live="polite">{{infants}}</span><button class="ibtn" type="button" aria-label="Add one infant" onClick="{{incI}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+        <sc-if value="{{groupRate}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #E8F5E9; border-color: #C8E6C9; color: #1B5E20"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><p>Six or more: 10 % group rate applied.</p></div></sc-if>
+      </div>
+      <fieldset style="border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px"><legend class="lbl" style="padding-bottom: 6px">Rooms</legend>
+        <label class="tier {{roomDbl}}"><input class="ck" type="radio" name="room" checked="{{isDbl}}" onChange="{{setDbl}}"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Share · double or twin</span><span class="hlp">One room per two travelers</span></span></label>
+        <label class="tier {{roomSgl}}"><input class="ck" type="radio" name="room" checked="{{isSgl}}" onChange="{{setSgl}}"><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="display: flex; justify-content: space-between"><span style="font-weight: 600">Private room each</span><span class="mono" style="font-size: 14px">+ € 380 pp</span></span><span class="hlp">Waived if we match you with a roommate</span></span></label>
+        <sc-if value="{{isSgl}}" hint-placeholder-val="{{ false }}"><label style="display: flex; gap: 12px; align-items: flex-start; padding: 4px 0 0 4px"><input class="ck" type="checkbox" checked="{{roommate}}" onChange="{{toggleRoommate}}"><span class="sm">Try to match me with a same-gender roommate.</span></label></sc-if>
+      </fieldset>
+    </sc-if>
+
+    <!-- STEP 2 -->
+    <sc-if value="{{s2}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">Where you sleep</h1><p class="p">Three tiers change the casa, never the route. Every option has backup power.</p></div>
+      <fieldset style="border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px"><legend style="position: absolute; left: -9999px">Stay tier</legend>
+        <sc-for list="{{tiers}}" as="tr" hint-placeholder-count="3"><label class="tier {{tr.cls}}"><input class="ck" type="radio" name="tier" checked="{{tr.on}}" onChange="{{tr.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 6px"><span style="display: flex; justify-content: space-between; gap: 8px; align-items: baseline"><span style="font-weight: 600">{{tr.name}}</span><span class="mono" style="font-size: 14px">€ {{tr.price}}</span></span><span class="sm" style="color: #4A433D">{{tr.desc}}</span><span style="display: flex; flex-wrap: wrap; gap: 6px"><span class="pill" style="background: #F3EEE6; color: #4A433D">{{tr.v}}</span><span class="pill" style="background: #E8F5E9; color: #1B5E20">{{tr.power}}</span></span></span></label></sc-for>
+      </fieldset>
+      <div class="fld"><label class="lbl" for="rn">Room requests <span style="color: #6E665E; font-weight: 400">· optional</span></label><textarea class="inp" id="rn" rows="2" style="height: auto; padding: 10px 12px" placeholder="Ground floor, twin beds…"></textarea></div>
+    </sc-if>
+
+    <!-- STEP 3 -->
+    <sc-if value="{{s3}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">Insurance and extras</h1><p class="p">Insurance is required to enter Cuba. Everything else is optional and itemised.</p></div>
+      <p class="lbl">Travel insurance <span class="pill" style="background: #FEF3C7; color: #92400E; vertical-align: middle">Required</span></p>
+      <div role="radiogroup" aria-label="Insurance plan" style="display: flex; flex-direction: column; gap: 8px"><sc-for list="{{ins}}" as="i" hint-placeholder-count="4"><label class="tier {{i.cls}}"><input class="ck" type="radio" name="ins" checked="{{i.on}}" onChange="{{i.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-weight: 600; font-size: 15px">{{i.name}}</span><span class="mono" style="font-size: 13px">{{i.price}}</span></span><span class="cap">{{i.desc}}</span></span></label></sc-for></div>
+      <p class="lbl">Experiences along the way</p>
+      <div style="display: flex; flex-direction: column; gap: 8px"><sc-for list="{{extras}}" as="x" hint-placeholder-count="4"><label class="tier {{x.cls}}"><input class="ck" type="checkbox" checked="{{x.on}}" onChange="{{x.toggle}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-weight: 600; font-size: 15px">{{x.name}}</span><span class="mono" style="font-size: 13px">€ {{x.price}} pp</span></span><span class="cap">{{x.when}}</span></span></label></sc-for></div>
+      <div class="alert" role="status" style="background: #E3F2FD; border-color: #BBDEFB; color: #0D47A1"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><p>Transfers, carbon offset and the 24/7 line are already in your price. Extras are confirmed with the hosts; prices are firm.</p></div>
+    </sc-if>
+
+    <!-- STEP 4 -->
+    <sc-if value="{{s4}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">Who's travelling</h1><p class="p">Names as on passports. Passport numbers can wait until 30 days before. No account needed; we send a sign-in link.</p></div>
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff">
+        <p class="sm" style="font-weight: 600">Traveler 1 · lead</p>
+        <div class="fld"><label class="lbl" for="fn1">First and middle names</label><input class="inp" id="fn1" type="text" value="Margaret Anne" autocomplete="given-name"></div>
+        <div class="fld"><label class="lbl" for="ln1">Last name</label><input class="inp" id="ln1" type="text" value="Chen" autocomplete="family-name"></div>
+        <div class="fld"><label class="lbl" for="dob1">Date of birth</label><input class="inp" id="dob1" type="text" value="14/03/1972" inputmode="numeric"><p class="hlp">DD/MM/YYYY</p></div>
+        <div class="fld"><label class="lbl" for="nat1">Nationality</label><div style="position: relative"><select class="inp" id="nat1" style="appearance: none; -webkit-appearance: none; padding-right: 40px" onChange="{{pickNat}}"><option value="CA" selected="{{natCA}}">Canada</option><option value="FR">France</option><option value="DE">Germany</option><option value="ES">Spain</option><option value="GB">United Kingdom</option><option value="US" selected="{{natUS}}">United States</option></select><svg class="ic" style="position: absolute; right: 12px; top: 14px; color: #4A433D; pointer-events: none" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div><p class="hlp">Pick United States to preview the certification.</p></div>
+        <div class="fld"><label class="lbl" for="em1">Email</label><input class="inp" id="em1" type="email" value="margaret.chen@example.com" autocomplete="email"><p class="hlp">For your confirmation and sign-in link.</p></div>
+        <div class="fld"><label class="lbl" for="ph1">Mobile (WhatsApp)</label><input class="inp" id="ph1" type="tel" value="+1 416 555 0134" autocomplete="tel"></div>
+        <sc-if value="{{natUS}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px">
+            <div style="display: flex; gap: 10px; color: #92400E"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><p class="sm">US travelers certify a travel category under US law. This trip is designed to fit "Support for the Cuban People". We keep the record 5 years.</p></div>
+            <div class="fld"><label class="lbl" for="cat">Your category</label><select class="inp" id="cat"><option>Support for the Cuban People</option><option>Family visits</option><option>Journalistic activity</option><option>Professional research</option><option>Educational activities</option><option>Religious activities</option><option>Humanitarian projects</option></select></div>
+            <div class="fld"><label class="lbl" for="sig">Type your full name as a signature</label><input class="inp" id="sig" type="text" placeholder="Margaret Anne Chen" style="font-family: Fraunces, Georgia, serif; font-style: italic; font-size: 20px"></div>
+            <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked="{{usCert}}" onChange="{{toggleCert}}"><span class="sm">I certify my travel falls under this category and I will keep a full-time schedule of qualifying activities.</span></label>
+          </div>
+        </sc-if>
+      </div>
+      <sc-if value="{{hasT2}}" hint-placeholder-val="{{ true }}"><div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff"><p class="sm" style="font-weight: 600">Traveler 2</p><div class="fld"><label class="lbl" for="fn2">First and middle names</label><input class="inp" id="fn2" type="text" value="David"></div><div class="fld"><label class="lbl" for="ln2">Last name</label><input class="inp" id="ln2" type="text" value="Chen"></div><div class="fld"><label class="lbl" for="dob2">Date of birth</label><input class="inp" id="dob2" type="text" value="02/11/1969" inputmode="numeric"></div></div></sc-if>
+      <sc-if value="{{moreTrav}}" hint-placeholder-val="{{ false }}"><p class="sm" style="color: #4A433D">{{moreTravNote}}</p></sc-if>
+      <div class="fld"><label class="lbl" for="nt">Anything your hosts should know? <span style="color: #6E665E; font-weight: 400">· optional</span></label><textarea class="inp" id="nt" rows="3" style="height: auto; padding: 10px 12px" placeholder="Vegetarian, limited mobility, a birthday…"></textarea></div>
+      <sc-if value="{{s4Blocked}}" hint-placeholder-val="{{ false }}"><p class="hlp">Complete the US certification to continue.</p></sc-if>
+    </sc-if>
+
+    <!-- STEP 5 -->
+    <sc-if value="{{s5}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">{{reviewTitle}}</h1><p class="p">{{reviewIntro}}</p></div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="padding: 14px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 4px"><div style="display: flex; justify-content: space-between"><p class="ov" style="color: #6E665E">Trip</p><button class="btn btn-t btn-sm" type="button" onClick="{{goto1}}">Edit</button></div><p class="sm" style="font-weight: 600">Eco-Tourism in Viñales</p><p class="sm">{{depLabel}} · {{travSummary}} · {{roomSummary}}</p></div>
+        <div style="padding: 14px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 4px"><div style="display: flex; justify-content: space-between"><p class="ov" style="color: #6E665E">Stay</p><button class="btn btn-t btn-sm" type="button" onClick="{{goto2}}">Edit</button></div><p class="sm" style="font-weight: 600">{{tierName}}</p><p class="sm" style="color: #1B5E20">Backup power at every stay</p></div>
+        <div style="padding: 14px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 4px"><div style="display: flex; justify-content: space-between"><p class="ov" style="color: #6E665E">Insurance &amp; extras</p><button class="btn btn-t btn-sm" type="button" onClick="{{goto3}}">Edit</button></div><p class="sm" style="font-weight: 600">{{insName}}</p><p class="sm">{{extrasSummary}}</p></div>
+        <div style="padding: 14px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 4px"><div style="display: flex; justify-content: space-between"><p class="ov" style="color: #6E665E">Travelers</p><button class="btn btn-t btn-sm" type="button" onClick="{{goto4}}">Edit</button></div><p class="sm" style="font-weight: 600">Margaret Anne Chen · lead</p><sc-if value="{{hasT2}}" hint-placeholder-val="{{ true }}"><p class="sm">David Chen</p></sc-if></div>
+      </div>
+      <div style="padding: 14px; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 8px"><p class="sm" style="font-weight: 600">What happens next</p><sc-if value="{{isRequest}}" hint-placeholder-val="{{ true }}"><ol style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 20px; color: #4A433D; display: flex; flex-direction: column; gap: 4px"><li>Your request goes to the hosts. <strong>Nothing is charged.</strong></li><li>They answer within 24 h (by {{slaDeadline}}); you follow it in My trips.</li><li>Then an invoice and 48 h to pay the 20 % deposit, € {{deposit}}. Balance due {{balanceDate}}.</li></ol></sc-if><sc-if value="{{isInstant}}" hint-placeholder-val="{{ false }}"><ol style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 20px; color: #4A433D; display: flex; flex-direction: column; gap: 4px"><li>Hotel confirms instantly when the deposit (€ {{deposit}}) is authorised.</li><li>Casa and transfers confirmed within 24 h; card captured only then.</li><li>Balance due {{balanceDate}}.</li></ol></sc-if></div>
+      <p class="sm" style="color: #4A433D">Until {{freeUntil}}: full refund minus € 60. Then 10 % · 25 % · 40 % · 60 % · 80 %. Hurricane or advisory: free change or refund. <a href="M-Legal.dc.html">Policy</a></p>
+      <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked="{{c1}}" onChange="{{toggleC1}}"><span class="sm">I've read the <a href="M-Legal.dc.html">terms</a>, <a href="M-Legal.dc.html">cancellation policy</a> and <a href="M-Legal.dc.html">privacy notice</a>.</span></label>
+      <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked="{{c2}}" onChange="{{toggleC2}}"><span class="sm">Every traveler will carry insurance with evacuation cover; cards don't work in Cuba.</span></label>
+    </sc-if>
+
+    <!-- SENT -->
+    <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <span style="width: 56px; height: 56px; border-radius: 9999px; background: #E8F5E9; color: #1B5E20; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" style="width: 28px; height: 28px" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></span>
+        <p class="ov" style="color: #1B5E20">Request received</p>
+        <h1 class="disp" style="font-size: 28px; line-height: 34px">Your request is with your hosts, Margaret.</h1>
+        <p class="p">Booking <span class="mono" style="color: #1F1B17; font-weight: 500">VX-7K2M9Q</span>. Copy emailed, sign-in link sent. Nothing charged.</p>
+        <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+          <li style="display: flex; gap: 12px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 24px; height: 24px; border-radius: 9999px; background: #0B4F6C; color: #fff; display: inline-flex; align-items: center; justify-content: center; flex: none"><svg class="ic" style="width: 12px; height: 12px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span style="width: 2px; flex: 1; background: #0B4F6C; min-height: 16px"></span></div><div style="padding-bottom: 12px"><p class="sm" style="font-weight: 600">Request received</p><p class="cap">Just now</p></div></li>
+          <li style="display: flex; gap: 12px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 24px; height: 24px; border-radius: 9999px; background: #F2B134; display: inline-flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 0 0 4px #FEF3D6"><svg class="ic" style="width: 12px; height: 12px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span style="width: 2px; flex: 1; background: #D6CEC3; min-height: 16px"></span></div><div style="padding-bottom: 12px"><p class="sm" style="font-weight: 700">Confirming with hosts</p><p class="cap">Answer by {{slaDeadline}} · 5 providers</p></div></li>
+          <li style="display: flex; gap: 12px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 24px; height: 24px; border-radius: 9999px; background: #fff; border: 2px solid #D6CEC3; box-sizing: border-box; flex: none"></span><span style="width: 2px; flex: 1; background: #D6CEC3; min-height: 16px"></span></div><div style="padding-bottom: 12px"><p class="sm" style="font-weight: 600; color: #6E665E">Ready to pay</p><p class="cap">48 h · deposit € {{deposit}}</p></div></li>
+          <li style="display: flex; gap: 12px"><div style="display: flex; flex-direction: column; align-items: center"><span style="width: 24px; height: 24px; border-radius: 9999px; background: #fff; border: 2px solid #D6CEC3; box-sizing: border-box; flex: none"></span></div><div><p class="sm" style="font-weight: 600; color: #6E665E">Confirmed</p><p class="cap">Vouchers, contacts, offline kit</p></div></li>
+        </ol>
+        <div style="padding: 14px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 6px"><p class="sm" style="font-weight: 600">Meanwhile</p><p class="sm" style="color: #4A433D">Start your <a href="M-PreTrip.dc.html">e-visa</a>; read the <a href="M-PreTrip.dc.html">money guide</a>. Questions: <a href="https://wa.me/">WhatsApp Ana</a>, 15-minute replies.</p></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><a class="btn btn-p" href="M-Account.dc.html">Go to My trips</a><a class="btn btn-s" href="M-Payment.dc.html">Prototype: skip to "Ready to pay"</a><button class="btn btn-t" type="button" onClick="{{restart}}">Restart flow</button></div>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- Sticky bottom bar (first viewport) -->
+  <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; left: 0; right: 0; top: 760px; background: #fff; border-top: 1px solid #E8E2D9; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+      <sc-if value="{{showSum}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 14px 16px 0; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid #E8E2D9; padding-bottom: 12px">
+          <div class="line"><span>{{tierShort}} · {{adults}} × € {{tierPrice}}</span><span class="mono">€ {{baseAdults}}</span></div>
+          <sc-if value="{{hasKids}}" hint-placeholder-val="{{ false }}"><div class="line"><span>Children × 60 %</span><span class="mono">€ {{baseKids}}</span></div></sc-if>
+          <sc-if value="{{sglOn}}" hint-placeholder-val="{{ false }}"><div class="line"><span>Single supplement</span><span class="mono">€ {{sglAmt}}</span></div></sc-if>
+          <sc-if value="{{insOn}}" hint-placeholder-val="{{ true }}"><div class="line"><span>{{insLine}}</span><span class="mono">€ {{insAmt}}</span></div></sc-if>
+          <sc-for list="{{extrasOn}}" as="xo" hint-placeholder-count="1"><div class="line"><span>{{xo.name}}</span><span class="mono">€ {{xo.amt}}</span></div></sc-for>
+          <div class="line" style="color: #4A433D"><span>Offset, fees, community fund</span><span class="mono">included</span></div>
+          <div class="line" style="color: #4A433D"><span>Deposit 20 % once confirmed</span><span class="mono">€ {{deposit}}</span></div>
+        </div>
+      </sc-if>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 16px 12px">
+        <button type="button" onClick="{{toggleSum}}" aria-expanded="{{showSum}}" style="flex: 1; background: transparent; border: 0; padding: 0; text-align: left; cursor: pointer; font: inherit; color: inherit"><p class="cap">Total · {{payTodayLabel}}</p><p style="margin: 0; font-size: 20px; line-height: 24px; font-weight: 700; display: flex; align-items: center; gap: 6px">€ {{total}}<svg class="ic" style="width: 16px; height: 16px; color: #0B4F6C; transform: {{sumRot}}" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg></p></button>
+        <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}"><button class="btn btn-p" type="button" onClick="{{next}}" disabled="{{nextBlocked}}" style="flex: 1.2">{{nextBtn}}</button></sc-if>
+        <sc-if value="{{isLast}}" hint-placeholder-val="{{ false }}"><sc-if value="{{isRequest}}" hint-placeholder-val="{{ true }}"><button class="btn btn-p" type="button" onClick="{{send}}" disabled="{{s5Blocked}}" style="flex: 1.2">Send request</button></sc-if><sc-if value="{{isInstant}}" hint-placeholder-val="{{ false }}"><a class="btn btn-p" href="M-Payment.dc.html" style="flex: 1.2; opacity: {{payOpacity}}; pointer-events: {{payEvents}}">Pay € {{deposit}}</a></sc-if></sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24; background: #FBF8F3; padding: 0 4px">viewport fold · 844</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"model":{"editor":"enum","options":["request","instant"],"default":"request","section":"Prototype"},"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 1, dep: 'feb13', adults: 2, children: 0, infants: 0, room: 'dbl', roommate: true, tier: 'mid', ins: 'standard', extras: { zip: false, horse: true, cook: false, night: false }, nat: 'CA', usCert: false, c1: false, c2: false, showSum: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const model = this.props.model ?? 'request';
+    const isRequest = model === 'request';
+    const fmt = (n) => Math.ceil(n).toLocaleString('en-US');
+    const base = { std: 1290, mid: 1395, prem: 1990 };
+    const depDefs = [['jan09', 'Sat 9 Jan 2027', 1.0, '8 places', false, 'Wed 25 Nov 2026', '10 Dec 2026'], ['feb13', 'Sat 13 Feb 2027', 1.0, '8 places', false, 'Tue 29 Dec 2026', '14 Jan 2027'], ['feb27', 'Sat 27 Feb 2027', 1.0, '4 places', false, 'Tue 12 Jan 2027', '28 Jan 2027'], ['mar13', 'Sat 13 Mar 2027', 1.0, 'Full', true, '', ''], ['apr10', 'Sat 10 Apr 2027', 1.0, '2 places', false, 'Tue 23 Feb 2027', '11 Mar 2027'], ['may15', 'Sat 15 May 2027', 0.85, '10 places', false, 'Tue 30 Mar 2027', '15 Apr 2027']];
+    const deps = depDefs.map(([id, label, k, places, full, freeUntil, balanceDate]) => ({ id, label, k, places, full, freeUntil, balanceDate, sel: s.dep === id, opt: label + (full ? ' · full' : ' · ' + places) }));
+    const cur = deps.find((d) => d.id === s.dep) || deps[1];
+    const tierDefs = [['std', 'Standard casa', 'Standard', 'Family casa, fan, private or shared bathroom', 'Casa Yamilé, fan room', 'Generator / battery'], ['mid', 'Mid-range · most chosen', 'Mid-range', 'A/C, private bathroom, generator or battery', 'Casa Yamilé, A/C', 'Generator 4 h · battery 8 h'], ['prem', 'Premium', 'Premium', 'Professionally run casa + boutique hotel in Havana', 'Villa Los Reyes, pool', 'Generator 24 h']];
+    const tiers = tierDefs.map(([id, name, short, desc, v, power]) => ({ id, name, short, desc, v, power, price: fmt(base[id] * cur.k), on: s.tier === id, cls: s.tier === id ? 'on' : '', pick: () => this.setState({ tier: id }) }));
+    const tier = tiers.find((t) => t.id === s.tier);
+    const pp = base[s.tier] * cur.k;
+    const n = s.adults + s.children;
+    const insDefs = [['essential', 'Essential', 48, 'Medical € 50k · evacuation € 500k'], ['standard', 'Standard · most chosen', 96, 'Medical € 100k · evacuation € 1M · cancellation'], ['plus', 'Plus · cancel for any reason', 142, 'Standard + 75 % back for any reason'], ['own', 'I already have insurance', 0, 'Upload the policy in Documents']];
+    const ins = insDefs.map(([id, name, p, desc]) => ({ id, name, p, desc, price: p ? '€ ' + p + ' pp' : '€ 0', on: s.ins === id, cls: s.ins === id ? 'on' : '', pick: () => this.setState({ ins: id }) }));
+    const insSel = ins.find((i) => i.id === s.ins);
+    const extraDefs = [['zip', 'Las Terrazas zip-line', 'Day 6 · 1 h', 30], ['horse', 'Horseback to the valley floor', 'Day 4 · 2 h', 25], ['cook', 'Cooking class with Lis', 'Day 7 · 3 h', 35], ['night', 'Extra night in Havana on arrival', 'Day 0', 45]];
+    const extras = extraDefs.map(([id, name, when, price]) => ({ id, name, when, price, on: !!s.extras[id], cls: s.extras[id] ? 'on' : '', toggle: () => this.setState({ extras: { ...s.extras, [id]: !s.extras[id] } }) }));
+    const extrasOn = extras.filter((x) => x.on).map((x) => ({ ...x, amt: fmt(x.price * n) }));
+    const baseAdults = pp * s.adults, baseKids = pp * 0.6 * s.children, sgl = s.room === 'sgl' ? 380 * s.adults : 0, group = n >= 6 ? 0.10 * (baseAdults + baseKids) : 0, insAmt = insSel.p * n, extrasAmt = extrasOn.reduce((a, x) => a + x.price * n, 0);
+    const total = baseAdults + baseKids + sgl - group + insAmt + extrasAmt, deposit = total * 0.2;
+    const labels = ['Dates & travelers', 'Stay', 'Extras', 'Travelers', 'Review'];
+    const natUS = s.nat === 'US', s4Blocked = natUS && !s.usCert, s5Blocked = !(s.c1 && s.c2);
+    const nextBlocked = s.step === 4 && s4Blocked;
+    const go = (k) => () => this.setState({ step: k, showSum: false });
+    return {
+      headerTitle: s.step === 6 ? 'Request sent' : 'Eco-Tourism in Viñales', headerSub: isRequest ? 'Secure request · nothing charged until hosts confirm' : 'Secure checkout · deposit captured on confirmation',
+      stepN: Math.min(s.step, 5), stepLabel: labels[Math.min(s.step, 5) - 1], nextLabel: s.step < 5 ? 'Next: ' + labels[s.step] : 'Last step', progress: (Math.min(s.step, 5) * 20) + '%',
+      s1: s.step === 1, s2: s.step === 2, s3: s.step === 3, s4: s.step === 4, s5: s.step === 5, sent: s.step === 6, notSent: s.step !== 6, notLast: s.step < 5, isLast: s.step === 5,
+      next: () => this.setState({ step: Math.min(5, s.step + 1), showSum: false }), nextBtn: s.step < 5 ? 'Continue' : 'Review', nextBlocked,
+      backOrExit: () => this.setState({ step: Math.max(1, s.step - 1), showSum: false }), goto1: go(1), goto2: go(2), goto3: go(3), goto4: go(4), send: () => this.setState({ step: 6 }), restart: () => this.setState({ step: 1, c1: false, c2: false }),
+      deps, pickDep: (e) => this.setState({ dep: e.target.value }), depLabel: cur.label, depNote: cur.k < 1 ? 'Low season price. Free date change if an advisory is raised.' : 'Mid-high season · hosts confirm within 24 h.',
+      adults: s.adults, children: s.children, infants: s.infants, aMin: s.adults <= 1, cMin: s.children <= 0, iMin: s.infants <= 0,
+      incA: () => this.setState({ adults: s.adults + 1 }), decA: () => this.setState({ adults: Math.max(1, s.adults - 1) }), incC: () => this.setState({ children: s.children + 1 }), decC: () => this.setState({ children: Math.max(0, s.children - 1) }), incI: () => this.setState({ infants: s.infants + 1 }), decI: () => this.setState({ infants: Math.max(0, s.infants - 1) }),
+      groupRate: n >= 6, hasKids: s.children > 0, baseKids: fmt(baseKids),
+      isDbl: s.room === 'dbl', isSgl: s.room === 'sgl', roomDbl: s.room === 'dbl' ? 'on' : '', roomSgl: s.room === 'sgl' ? 'on' : '', setDbl: () => this.setState({ room: 'dbl' }), setSgl: () => this.setState({ room: 'sgl' }), roommate: s.roommate, toggleRoommate: () => this.setState({ roommate: !s.roommate }), sglOn: sgl > 0, sglAmt: fmt(sgl),
+      tiers, tierName: tier.name, tierShort: tier.short, tierPrice: fmt(pp), baseAdults: fmt(baseAdults),
+      ins, insName: insSel.name, insOn: insSel.p > 0, insLine: 'Insurance · ' + n + ' × € ' + insSel.p, insAmt: fmt(insAmt),
+      extras, extrasOn, extrasSummary: extrasOn.length ? extrasOn.map((x) => x.name).join(' · ') : 'No extras',
+      natCA: !natUS, natUS, pickNat: (e) => this.setState({ nat: e.target.value }), usCert: s.usCert, toggleCert: () => this.setState({ usCert: !s.usCert }), s4Blocked,
+      hasT2: s.adults >= 2, moreTrav: n > 2, moreTravNote: 'Travelers 3 to ' + n + ': same form; names can be added later from My trips.',
+      travSummary: s.adults + (s.adults === 1 ? ' adult' : ' adults') + (s.children ? ', ' + s.children + (s.children === 1 ? ' child' : ' children') : ''), roomSummary: s.room === 'dbl' ? 'shared rooms' : 'private rooms',
+      total: fmt(total), deposit: fmt(deposit), balanceDate: cur.balanceDate || '—', freeUntil: cur.freeUntil || '—', slaDeadline: 'Wed 8 Oct, 09:14',
+      payTodayLabel: isRequest ? 'pay today € 0' : 'authorised today € ' + fmt(deposit),
+      reviewTitle: isRequest ? 'Review and send' : 'Review and pay the deposit', reviewIntro: isRequest ? 'Sending costs nothing; hosts answer within 24 hours.' : 'Hotel confirms instantly; the deposit is captured once casa and transfers confirm.',
+      isRequest, isInstant: !isRequest, c1: s.c1, c2: s.c2, toggleC1: () => this.setState({ c1: !s.c1 }), toggleC2: () => this.setState({ c2: !s.c2 }), s5Blocked, payOpacity: s5Blocked ? '.5' : '1', payEvents: s5Blocked ? 'none' : 'auto',
+      showSum: s.showSum, toggleSum: () => this.setState({ showSum: !s.showSum }), sumRot: s.showSum ? 'rotate(180deg)' : 'rotate(0deg)'
+    };
+  }
+}
+</script>
+</body>
+</html>

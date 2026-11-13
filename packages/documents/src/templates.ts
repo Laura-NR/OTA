@@ -1,7 +1,7 @@
 import type { DocumentBranding, DocumentEmergencyContact } from './branding';
 import type { InvoiceModel, VoucherModel, WorkOrderModel } from './data';
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -44,13 +44,26 @@ function emergencyBlock(branding: DocumentBranding): string {
     .join('')}</ul>`;
 }
 
-function page(title: string, body: string, branding: DocumentBranding): string {
+/**
+ * The shared A4 shell: the agency header with its MINTUR licence (spec §8.1),
+ * the body, and the footer. `lang` and `licenseLabel` let a localized document
+ * (the proposal) keep the same shell.
+ */
+export function page(
+  title: string,
+  body: string,
+  branding: DocumentBranding,
+  {
+    lang = 'en',
+    licenseLabel = 'MINTUR License',
+  }: { lang?: string; licenseLabel?: string } = {},
+): string {
   const contact = [branding.supportPhone, branding.supportEmail]
     .filter((value): value is string => Boolean(value))
     .join(' · ');
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${escapeHtml(lang)}">
 <head>
 <meta charset="utf-8" />
 <title>${escapeHtml(title)}</title>
@@ -67,6 +80,7 @@ function page(title: string, body: string, branding: DocumentBranding): string {
   ul.contacts { margin: 6px 0 0; padding-left: 18px; }
   ul.contacts li { margin: 2px 0; }
   .total { font-weight: bold; }
+  .amount { text-align: right; white-space: nowrap; }
   footer { position: fixed; bottom: 0; left: 0; right: 0; border-top: 1px solid #e5e7eb;
     padding-top: 6px; font-size: 10px; color: #6b7280; }
 </style>
@@ -74,7 +88,7 @@ function page(title: string, body: string, branding: DocumentBranding): string {
 <body>
 <header>
   <h1>${escapeHtml(branding.agencyName)}</h1>
-  <div class="muted">MINTUR License: ${escapeHtml(branding.licenseNumber)}</div>
+  <div class="muted">${escapeHtml(licenseLabel)}: ${escapeHtml(branding.licenseNumber)}</div>
 </header>
 ${body}
 <footer>
@@ -82,6 +96,35 @@ ${body}
 </footer>
 </body>
 </html>`;
+}
+
+/** M10: the event seats confirmed for this booking; nothing when there are none. */
+function eventTicketsBlock(model: VoucherModel): string {
+  if (model.eventTickets.length === 0) return '';
+  const rows = model.eventTickets
+    .map((tickets) => {
+      const nights =
+        tickets.nights.length === 0
+          ? 'Every festival night'
+          : tickets.nights
+              .map(
+                (night) =>
+                  `${escapeHtml(formatDate(night.date))} · ${escapeHtml(night.label)}${night.venue ? ` · ${escapeHtml(night.venue)}` : ''}`,
+              )
+              .join('<br/>');
+      return `<tr>
+        <td>${escapeHtml(tickets.eventName)}<br/><span class="muted">${escapeHtml(tickets.place)}</span></td>
+        <td>${tickets.seats} × ${escapeHtml(tickets.categoryName)}</td>
+        <td>${nights}</td>
+      </tr>`;
+    })
+    .join('');
+  return `
+<h2>Event tickets</h2>
+<table>
+  <thead><tr><th>Event</th><th>Seats</th><th>Nights</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>`;
 }
 
 export function renderVoucherHtml(
@@ -107,6 +150,7 @@ export function renderVoucherHtml(
   <thead><tr><th>Service</th><th>Rendezvous</th><th>Dates</th><th>Provider</th></tr></thead>
   <tbody>${rows || '<tr><td colspan="4" class="muted">No services scheduled.</td></tr>'}</tbody>
 </table>
+${eventTicketsBlock(model)}
 <p class="total">Total: ${escapeHtml(model.totalAmount)} ${escapeHtml(model.totalCurrency)}</p>
 <h2>Emergency &amp; duty of care</h2>
 <p class="muted">Keep this voucher with you. Present it at each service, and use these contacts in an emergency.</p>
@@ -138,29 +182,71 @@ ${emergencyBlock(branding)}`;
   return page(`Work order ${model.bookingCode}`, body, branding);
 }
 
+/** Invoice wording for the M2 price-line kinds (the label carries the name). */
+const PRICE_LINE_KINDS: Record<string, string> = {
+  BASE: 'Package',
+  TIER: 'Accommodation tier',
+  CHILD: 'Child rate',
+  SINGLE_SUPPLEMENT: 'Single supplement',
+  EXTRA: 'Extra',
+  SERVICE: 'Service',
+  FEE: 'Fee',
+  EVENT_TICKET: 'Event tickets',
+  CONCIERGE_FEE: 'Concierge fee',
+};
+
 export function renderInvoiceHtml(
   model: InvoiceModel,
   branding: DocumentBranding,
 ): string {
+  const currency = escapeHtml(model.currency);
   const rows = model.services
     .map(
       (service) => `<tr>
         <td>${escapeHtml(service.serviceType)} — ${escapeHtml(service.province ?? 'Cuba')}</td>
         <td>${escapeHtml(formatDate(service.start))} → ${escapeHtml(formatDate(service.end))}</td>
         <td>${escapeHtml(service.providerName ?? 'Agency arranged')}</td>
+        <td class="amount">${service.amount === null ? '<span class="muted">Included</span>' : `${escapeHtml(service.amount)} ${currency}`}</td>
       </tr>`,
     )
     .join('');
+
+  const breakdown =
+    model.priceLines.length === 0
+      ? ''
+      : `
+<h2>Price breakdown</h2>
+<table>
+  <thead><tr><th>Item</th><th class="amount">Qty</th><th class="amount">Amount</th></tr></thead>
+  <tbody>${model.priceLines
+    .map(
+      (line) => `<tr>
+        <td>${escapeHtml(PRICE_LINE_KINDS[line.kind] ?? line.kind)} — ${escapeHtml(line.label)}</td>
+        <td class="amount">${escapeHtml(line.quantity)}</td>
+        <td class="amount">${escapeHtml(line.amount)} ${currency}</td>
+      </tr>`,
+    )
+    .join('')}</tbody>
+</table>`;
+
+  const bundledNote = model.services.some((service) => service.amount === null)
+    ? `Services marked Included are part of the package price${model.priceLines.length > 0 ? ', itemised in the price breakdown' : ''}. `
+    : '';
+
+  // D-Invoice: the locked display rate as a reference, never as the amount due.
+  const reference = model.displayReference
+    ? `<p class="muted">Prices in ${currency}. Reference in ${escapeHtml(model.displayReference.currency)} at the rate locked on ${escapeHtml(model.displayReference.rateDate)} (${escapeHtml(model.displayReference.rate)}): ${escapeHtml(model.displayReference.amount)} ${escapeHtml(model.displayReference.currency)}. The rate stays the same for the whole payment schedule; your bank sets the rate it charges.</p>`
+    : '';
 
   const body = `
 <h2>Invoice</h2>
 <p class="muted">Booking ${escapeHtml(model.bookingCode)} · Billed to ${escapeHtml(model.travelerName)}</p>
 <table>
-  <thead><tr><th>Included service</th><th>Dates</th><th>Provider</th></tr></thead>
-  <tbody>${rows || '<tr><td colspan="3" class="muted">Curated travel package.</td></tr>'}</tbody>
-</table>
-<p class="total">Total due: ${escapeHtml(model.total)} ${escapeHtml(model.currency)}</p>
-<p class="muted">Itemised by included service. See the voucher for rendezvous points and emergency contacts.</p>`;
+  <thead><tr><th>Included service</th><th>Dates</th><th>Provider</th><th class="amount">Amount</th></tr></thead>
+  <tbody>${rows || '<tr><td colspan="4" class="muted">Curated travel package.</td></tr>'}</tbody>
+</table>${breakdown}
+<p class="total">Total due: ${escapeHtml(model.total)} ${currency}</p>${reference}
+<p class="muted">${bundledNote}See the voucher for rendezvous points and emergency contacts.</p>`;
 
   return page(`Invoice ${model.bookingCode}`, body, branding);
 }

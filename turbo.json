@@ -13,7 +13,24 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "passThroughEnv": [
+        "AUTH_ALLOWED_HOSTS",
+        "PASSKEY_RP_ID",
+        "PASSPORT_ENCRYPTION_KEY",
+        "RATE_LIMIT_MAX",
+        "RATE_LIMIT_AUTH_MAX",
+        "SITE_NOINDEX",
+        "STAFF_PASSKEYS_OVERRIDE",
+        "TELEMETRY_SINK",
+        "TELEMETRY_SINK_FILE",
+        "TELEMETRY_PLAUSIBLE_ENDPOINT",
+        "TELEMETRY_PLAUSIBLE_DOMAIN",
+        "TELEMETRY_PLAUSIBLE_SITE_URL",
+        "TELEMETRY_PLAUSIBLE_USER_AGENT",
+        "TELEMETRY_PLAUSIBLE_TIMEOUT_MS",
+        "TRUSTED_ORIGINS"
+      ]
     }
   }
 }

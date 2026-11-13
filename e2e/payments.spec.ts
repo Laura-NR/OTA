@@ -27,6 +27,10 @@ test.describe('payment pipeline', () => {
       await prisma.paymentReceipt.deleteMany({
         where: { reservationId: reservation.id },
       });
+      // M4: the first link fixes a schedule; clear it so the next run starts fresh.
+      await prisma.paymentInstalment.deleteMany({
+        where: { reservationId: reservation.id },
+      });
       await prisma.document.deleteMany({ where: { reservationId: reservation.id } });
       await prisma.reservation.update({
         where: { id: reservation.id },
@@ -40,7 +44,7 @@ test.describe('payment pipeline', () => {
   });
 
   test('creates a payment link and confirms the booking', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/bookings');
     await page.getByRole('link', { name: /E2E0001/ }).click();
     await expect(page.getByRole('heading', { name: 'E2E0001' })).toBeVisible();
 

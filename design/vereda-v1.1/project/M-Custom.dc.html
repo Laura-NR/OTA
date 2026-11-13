@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Custom itinerary builder · mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:disabled{background:#E8E2D9;color:#6E665E;border-color:transparent}
+.btn:focus-visible,.inp:focus-visible,.ck:focus-visible,.ibtn:focus-visible,.chip:focus-visible,.prov:focus-visible,.tier:focus-within{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.inp{height:48px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.ibtn{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #D6CEC3;background:#fff;cursor:pointer;color:#083B50}
+.ibtn:disabled{color:#6E665E;background:#F3EEE6}
+.tier{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer}
+.tier.on{border:2px solid #0B4F6C;padding:13px;background:#F1F6F8}
+.chip{height:40px;padding:0 14px;border-radius:9999px;border:1px solid #D6CEC3;background:#fff;font:500 14px/20px Inter,system-ui,sans-serif;color:#4A433D;cursor:pointer;white-space:nowrap}
+.chip.on{background:#0B4F6C;color:#fff;border-color:#0B4F6C}
+.prov{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid #D6CEC3;border-radius:8px;background:#fff;cursor:pointer;font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17;text-align:left;width:100%}
+.prov.on{border-color:#0B4F6C;background:#F1F6F8}
+.line{display:flex;justify-content:space-between;gap:12px;font-size:14px;line-height:20px}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid}
+.alert p{margin:0;font-size:14px;line-height:20px}
+.stop{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid #E8E2D9;border-radius:12px;background:#fff}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 8px; border-bottom: 1px solid #E8E2D9; background: #FBF8F3; position: sticky; top: 0; z-index: 3">
+    <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}"><button type="button" aria-label="Back" onClick="{{back}}" style="width: 44px; height: 44px; border: 0; background: transparent; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button></sc-if>
+    <div style="flex: 1; min-width: 0"><p class="sm" style="font-weight: 600">Custom itinerary</p><p class="cap">Free proposal · no commitment</p></div>
+    <a class="btn btn-t btn-sm" href="https://wa.me/" aria-label="Talk to a specialist on WhatsApp"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"/></svg></a>
+  </header>
+
+  <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 12px 20px 0; display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">Step {{stepN}} of 5 · {{stepLabel}}</span><span style="color: #6E665E">{{nextLabel}}</span></div><div style="height: 8px; border-radius: 9999px; background: #E8E2D9; overflow: hidden" role="progressbar" aria-valuenow="{{stepN}}" aria-valuemin="0" aria-valuemax="5" aria-label="Builder progress"><div style="width: {{progress}}; height: 100%; background: #0B4F6C"></div></div></div>
+  </sc-if>
+
+  <main style="display: flex; flex-direction: column; gap: 16px; padding: 16px 20px 150px">
+
+    <!-- STEP 1 -->
+    <sc-if value="{{s1}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">When, who, which way round?</h1><p class="p">Dates first: seasons change prices. Then the provinces you'll sleep in, in order.</p></div>
+      <div class="fld"><label class="lbl" for="start">Arrival in Cuba</label><input class="inp" id="start" type="text" value="Sat 6 Mar 2027"></div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div class="fld"><p class="lbl">Nights</p><div style="display: flex; align-items: center; gap: 6px"><button class="ibtn" type="button" aria-label="One night fewer" onClick="{{decN}}" disabled="{{nMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 24px; text-align: center" aria-live="polite">{{nightsTotal}}</span><button class="ibtn" type="button" aria-label="One night more" onClick="{{incN}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+        <div class="fld"><p class="lbl">Adults</p><div style="display: flex; align-items: center; gap: 6px"><button class="ibtn" type="button" aria-label="Remove one adult" onClick="{{decA}}" disabled="{{aMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 24px; text-align: center" aria-live="polite">{{adults}}</span><button class="ibtn" type="button" aria-label="Add one adult" onClick="{{incA}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+        <div class="fld"><p class="lbl">Children</p><div style="display: flex; align-items: center; gap: 6px"><button class="ibtn" type="button" aria-label="Remove one child" onClick="{{decC}}" disabled="{{cMin}}"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 24px; text-align: center" aria-live="polite">{{children}}</span><button class="ibtn" type="button" aria-label="Add one child" onClick="{{incC}}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <p class="lbl">Your route · {{nightsAssigned}} of {{nightsTotal}} nights placed</p>
+        <sc-if value="{{noRoute}}" hint-placeholder-val="{{ false }}"><div style="padding: 16px; border: 1px dashed #D6CEC3; border-radius: 12px; text-align: center"><p class="sm" style="color: #4A433D">Add at least one province below.</p></div></sc-if>
+        <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px"><sc-for list="{{route}}" as="r" hint-placeholder-count="3"><li class="stop"><span class="disp" style="font-size: 18px; color: #A83E24; width: 18px">{{r.idx}}</span><span style="flex: 1; display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span class="cap">{{r.drive}}</span></span><button class="ibtn" type="button" aria-label="One night fewer in {{r.name}}" onClick="{{r.dec}}" disabled="{{r.min}}" style="width: 36px; height: 36px"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="mono" style="width: 30px; text-align: center; font-size: 13px">{{r.nights}} n</span><button class="ibtn" type="button" aria-label="One night more in {{r.name}}" onClick="{{r.inc}}" style="width: 36px; height: 36px"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="ibtn" type="button" aria-label="Remove {{r.name}}" onClick="{{r.remove}}" style="width: 36px; height: 36px; border-color: transparent"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></li></sc-for></ol>
+        <sc-if value="{{nightsMismatch}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><p>{{mismatchCopy}}</p></div></sc-if>
+        <sc-if value="{{longDrive}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #E3F2FD; border-color: #BBDEFB; color: #0D47A1"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><p>Havana to Santiago is 870 km; we'll price a flight or a night in Camagüey.</p></div></sc-if>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><p class="lbl">Provinces · tap to add in order</p><sc-for list="{{provinces}}" as="pv" hint-placeholder-count="12"><button class="prov {{pv.cls}}" type="button" aria-pressed="{{pv.on}}" onClick="{{pv.toggle}}"><span style="display: flex; flex-direction: column; min-width: 0"><span>{{pv.name}}</span><span class="cap" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{pv.hint}}</span></span><span class="pill" style="background: {{pv.badgeBg}}; color: {{pv.badgeFg}}">{{pv.badge}}</span></button></sc-for></div>
+      <div style="display: flex; flex-direction: column; gap: 8px"><p class="lbl">Pace</p><div style="display: flex; gap: 8px"><sc-for list="{{paces}}" as="pc" hint-placeholder-count="3"><button class="chip {{pc.cls}}" type="button" aria-pressed="{{pc.on}}" onClick="{{pc.pick}}" style="flex: 1">{{pc.label}}</button></sc-for></div><p class="hlp">{{paceHint}}</p></div>
+      <div style="display: flex; flex-direction: column; gap: 8px"><p class="lbl">What you're after</p><div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{interests}}" as="it" hint-placeholder-count="8"><button class="chip {{it.cls}}" type="button" aria-pressed="{{it.on}}" onClick="{{it.toggle}}">{{it.label}}</button></sc-for></div></div>
+    </sc-if>
+
+    <!-- STEP 2 -->
+    <sc-if value="{{s2}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">How you move between stops</h1><p class="p">Licensed drivers vetted by our Havana team. Fuel confirmed 24 h before each leg.</p></div>
+      <div style="display: flex; flex-direction: column; gap: 10px" role="radiogroup" aria-label="Transport"><sc-for list="{{transports}}" as="t" hint-placeholder-count="4"><label class="tier {{t.cls}}"><input class="ck" type="radio" name="tr" checked="{{t.on}}" onChange="{{t.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 6px"><span style="display: flex; justify-content: space-between; gap: 8px; align-items: baseline"><span style="font-weight: 600; font-size: 15px">{{t.name}}</span><span class="mono" style="font-size: 13px">≈ € {{t.price}} pp/day</span></span><span class="cap">{{t.desc}}</span><span style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{t.tags}}" as="tg" hint-placeholder-count="3"><span class="pill" style="background: {{tg.bg}}; color: {{tg.fg}}">{{tg.t}}</span></sc-for></span></span></label></sc-for></div>
+      <p class="hlp">Airport meet-and-greet and transfers are always included. We don't offer Viazul coaches.</p>
+    </sc-if>
+
+    <!-- STEP 3 -->
+    <sc-if value="{{s3}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">Where you sleep at each stop</h1><p class="p">All stays verified: licence, backup power, water, host response time.</p></div>
+      <sc-for list="{{stayStops}}" as="ss" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><p class="sm" style="font-weight: 600">{{ss.idx}}. {{ss.name}} · {{ss.nights}} n</p><span class="cap">{{ss.available}}</span></div>
+          <div style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -14px; padding: 2px 14px" role="radiogroup" aria-label="Stay style in {{ss.name}}"><sc-for list="{{ss.options}}" as="so" hint-placeholder-count="5"><button class="chip {{so.cls}}" type="button" aria-pressed="{{so.on}}" onClick="{{so.pick}}">{{so.label}} · € {{so.price}}</button></sc-for></div>
+          <div style="display: flex; gap: 10px; align-items: center; padding: 10px; background: #FBF8F3; border-radius: 8px"><span aria-hidden="true" style="width: 56px; height: 42px; border-radius: 6px; background: {{ss.tint}}; flex: none"></span><div style="flex: 1; min-width: 0"><p class="sm" style="font-weight: 600">{{ss.example}}</p><p class="cap">{{ss.power}}</p></div></div>
+        </div>
+      </sc-for>
+      <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked="{{stepFree}}" onChange="{{toggleStepFree}}"><span class="sm">We need step-free or ground-floor rooms.</span></label>
+    </sc-if>
+
+    <!-- STEP 4 -->
+    <sc-if value="{{s4}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">Activities and guides</h1><p class="p">Suggestions follow your route and interests. Guides keep 100 % of their rate.</p></div>
+      <sc-for list="{{actStops}}" as="as" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 8px"><p class="sm" style="font-weight: 600">{{as.idx}}. {{as.name}}</p><sc-for list="{{as.acts}}" as="a" hint-placeholder-count="3"><label class="tier {{a.cls}}" style="padding: 12px"><input class="ck" type="checkbox" checked="{{a.on}}" onChange="{{a.toggle}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-weight: 600; font-size: 14px">{{a.name}}</span><span class="mono" style="font-size: 13px">€ {{a.price}}</span></span><span class="cap">{{a.meta}}</span></span></label></sc-for></div>
+      </sc-for>
+      <p class="sm" style="font-weight: 600">Guiding</p>
+      <div style="display: flex; flex-direction: column; gap: 8px" role="radiogroup" aria-label="Guiding"><sc-for list="{{guides}}" as="g" hint-placeholder-count="3"><label class="tier {{g.cls}}" style="padding: 12px"><input class="ck" type="radio" name="gd" checked="{{g.on}}" onChange="{{g.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-weight: 600; font-size: 14px">{{g.name}}</span><span class="mono" style="font-size: 12px">{{g.price}}</span></span><span class="cap">{{g.desc}}</span></span></label></sc-for></div>
+      <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked="{{translator}}" onChange="{{toggleTranslator}}"><span class="sm">Add an interpreter on days without a guide (€ 40 / day per group).</span></label>
+    </sc-if>
+
+    <!-- STEP 5 -->
+    <sc-if value="{{s5}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">Your draft, and how to reach you</h1><p class="p">A Havana specialist replies with a priced day-by-day proposal within 4 working hours. Free.</p></div>
+      <div style="padding: 14px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between"><p class="ov" style="color: #6E665E">Route</p><button class="btn btn-t btn-sm" type="button" onClick="{{goto1}}">Edit</button></div><p class="sm" style="font-weight: 600">{{routeSummary}}</p><p class="cap">From Sat 6 Mar 2027 · {{nightsTotal}} nights · {{travSummary}} · {{paceLabel}}</p>
+        <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid #E8E2D9"><p class="ov" style="color: #6E665E">Transport &amp; stays</p><button class="btn btn-t btn-sm" type="button" onClick="{{goto2}}">Edit</button></div><p class="sm">{{transportName}}</p><p class="cap">{{staySummary}}</p>
+        <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid #E8E2D9"><p class="ov" style="color: #6E665E">Activities &amp; guides</p><button class="btn btn-t btn-sm" type="button" onClick="{{goto4}}">Edit</button></div><p class="sm">{{actCount}} activities · {{guideName}}</p>
+      </div>
+      <div class="fld"><label class="lbl" for="nm">Your name</label><input class="inp" id="nm" type="text" value="Klaus Müller" autocomplete="name"></div>
+      <div class="fld"><label class="lbl" for="em">Email</label><input class="inp" id="em" type="email" value="klaus.mueller@example.de" autocomplete="email"><p class="hlp">We process this to send your proposal.</p></div>
+      <div class="fld"><label class="lbl" for="ph">WhatsApp or phone <span style="color: #6E665E; font-weight: 400">· optional</span></label><input class="inp" id="ph" type="tel" value="+49 170 0000000"></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><div class="fld"><label class="lbl" for="nat">Nationality</label><select class="inp" id="nat" onChange="{{pickNat}}"><option value="DE" selected="{{natDE}}">Germany</option><option value="CA">Canada</option><option value="FR">France</option><option value="ES">Spain</option><option value="GB">UK</option><option value="US" selected="{{natUS}}">United States</option></select></div><div class="fld"><label class="lbl" for="lang">Proposal in</label><select class="inp" id="lang"><option>English</option><option>Deutsch</option><option>Español</option><option>Français</option></select></div></div>
+      <sc-if value="{{natUS}}" hint-placeholder-val="{{ false }}"><div class="alert" role="status" style="background: #FFFBEB; border-color: #FDE68A; color: #92400E"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><p>US travelers: the proposal is designed as a full-time schedule of qualifying activities; you certify your category before any payment.</p></div></sc-if>
+      <div class="fld"><label class="lbl" for="notes">Must-haves, no-gos <span style="color: #6E665E; font-weight: 400">· optional</span></label><textarea class="inp" id="notes" rows="3" style="height: auto; padding: 10px 12px" placeholder="Endemic birds first. No resort. Vegetarian."></textarea></div>
+      <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked="{{consent}}" onChange="{{toggleConsent}}"><span class="sm">Send my draft to a specialist and keep it 90 days so I can come back. <a href="M-Legal.dc.html">Privacy</a><a href="M-About.dc.html">About Vereda</a></span></label>
+      <p class="hlp">No payment details asked. A € 140 planning fee applies only if you book, and comes off the price.</p>
+    </sc-if>
+
+    <!-- SENT -->
+    <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <span style="width: 56px; height: 56px; border-radius: 9999px; background: #E8F5E9; color: #1B5E20; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" style="width: 28px; height: 28px" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></span>
+        <p class="ov" style="color: #1B5E20">Proposal requested</p>
+        <h1 class="disp" style="font-size: 28px; line-height: 34px">Danke, Klaus. Ana has your draft.</h1>
+        <p class="p">Reference <span class="mono" style="color: #1F1B17; font-weight: 500">VX-C-4R8T</span>. A priced proposal by email within 4 working hours, plus a sign-in link to review, change or accept it.</p>
+        <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px">
+          <li style="padding: 10px 12px; border-left: 3px solid #0B4F6C; background: #fff"><p class="sm" style="font-weight: 600">Submitted</p><p class="cap">Just now</p></li>
+          <li style="padding: 10px 12px; border-left: 3px solid #F2B134; background: #FEF3D6"><p class="sm" style="font-weight: 700">In review</p><p class="cap">Ana checks casas and guides on your dates</p></li>
+          <li style="padding: 10px 12px; border-left: 3px solid #D6CEC3; background: #fff"><p class="sm" style="font-weight: 600; color: #6E665E">Proposal sent · within 4 h</p></li>
+          <li style="padding: 10px 12px; border-left: 3px solid #D6CEC3; background: #fff"><p class="sm" style="font-weight: 600; color: #6E665E">Revisions · as many as you need</p></li>
+          <li style="padding: 10px 12px; border-left: 3px solid #D6CEC3; background: #fff"><p class="sm" style="font-weight: 600; color: #6E665E">Accepted · becomes a request to book</p></li>
+        </ol>
+        <a class="btn btn-p" href="M-Account.dc.html">Go to My trips</a><a class="btn btn-s" href="https://wa.me/">WhatsApp Ana now</a><button class="btn btn-t" type="button" onClick="{{restart}}">Restart builder</button>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- Sticky estimate bar -->
+  <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; left: 0; right: 0; top: 760px; background: #fff; border-top: 1px solid #E8E2D9; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+      <sc-if value="{{showSum}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px 16px; border-bottom: 1px solid #E8E2D9; display: flex; flex-direction: column; gap: 4px"><div class="line"><span>Stays · {{nightsAssigned}} n</span><span class="mono">€ {{estStays}}</span></div><div class="line"><span>Transport</span><span class="mono">€ {{estTransport}}</span></div><div class="line"><span>Activities · {{actCount}}</span><span class="mono">€ {{estActs}}</span></div><div class="line"><span>Guides &amp; interpreter</span><span class="mono">€ {{estGuides}}</span></div><div class="line"><span>Offset · € 5 / night</span><span class="mono">€ {{estOffset}}</span></div><div class="line"><span>Vereda fee · 12 %</span><span class="mono">€ {{estFee}}</span></div><p class="cap">Excludes flights, e-visa, insurance, meals out. Firm price in the proposal.</p></div></sc-if>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 16px 12px">
+        <button type="button" onClick="{{toggleSum}}" aria-expanded="{{showSum}}" style="flex: 1; background: transparent; border: 0; padding: 0; text-align: left; cursor: pointer; font: inherit; color: inherit"><p class="cap">Estimate · per person</p><p style="margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; display: flex; align-items: center; gap: 6px" aria-live="polite">€ {{estLow}}–{{estHigh}}<svg class="ic" style="width: 16px; height: 16px; color: #0B4F6C; transform: {{sumRot}}" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg></p></button>
+        <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}"><button class="btn btn-p" type="button" onClick="{{next}}" disabled="{{nextBlocked}}" style="flex: 1.1">Continue</button></sc-if>
+        <sc-if value="{{isLast}}" hint-placeholder-val="{{ false }}"><button class="btn btn-p" type="button" onClick="{{send}}" disabled="{{sendBlocked}}" style="flex: 1.3">Request proposal</button></sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24; background: #FBF8F3; padding: 0 4px">viewport fold · 844</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 1, nightsTotal: 10, adults: 2, children: 0, route: ['hav', 'pri', 'ssp'], nights: { hav: 3, pri: 4, ssp: 3 }, pace: 'moderate', interests: { nature: true, farm: true, music: false, food: true, arch: false, afro: false, beach: false, dive: false }, transport: 'minivan', stays: {}, stepFree: false, acts: { a1: true, a2: true, a5: true, a7: true }, guide: 'shared', translator: false, nat: 'DE', consent: false, showSum: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const fmt = (n) => Math.ceil(n).toLocaleString('en-US');
+    const provDefs = [['hav', 'Havana', 'Music, art, paladares', 'Active', false, 0], ['art', 'Artemisa · Las Terrazas', 'Eco-community, river pools', 'Active', false, 75], ['pri', 'Pinar del Río · Viñales', 'Mogotes, farms, birding', 'Active', false, 180], ['mat', 'Matanzas · Varadero & Zapata', 'Beach, wetlands, reefs', 'Active', false, 150], ['cfg', 'Cienfuegos', 'Bay city, botanical garden', 'Active', false, 250], ['vcl', 'Villa Clara', 'Santa Clara, Remedios', 'Active', false, 280], ['ssp', 'Sancti Spíritus · Trinidad', 'Colonial town, waterfalls', 'Active', false, 320], ['cav', 'Ciego de Ávila · Cayo Coco', 'Reef; resort-heavy', 'Limited', true, 460], ['cmg', 'Camagüey', 'Plazas, farm stay', 'Active', false, 540], ['hol', 'Holguín · Gibara', 'Recovering', 'Limited', true, 740], ['scu', 'Santiago de Cuba', 'Son, carnival, castle', 'Active', false, 870], ['gtm', 'Guantánamo · Baracoa', 'Cocoa farms, rafting', 'Limited', true, 1000]];
+    const byId = {}; provDefs.forEach((p) => { byId[p[0]] = p; });
+    const provinces = provDefs.map(([id, name, hint, badge, limited, km]) => ({ id, name, hint, badge, limited, on: s.route.includes(id), cls: s.route.includes(id) ? 'on' : '', badgeBg: limited ? '#FEF3C7' : '#E8F5E9', badgeFg: limited ? '#92400E' : '#1B5E20', toggle: () => { const inR = s.route.includes(id); const route = inR ? s.route.filter((x) => x !== id) : [...s.route, id]; const nights = { ...s.nights }; if (!inR && !nights[id]) nights[id] = 2; this.setState({ route, nights }); } }));
+    const route = s.route.map((id, i) => { const p = byId[id]; const prev = i > 0 ? byId[s.route[i - 1]] : null; const d = prev ? Math.abs(p[5] - prev[5]) : p[5]; return { id, idx: i + 1, name: p[1], nights: s.nights[id] || 0, drive: i === 0 ? (d ? 'From airport · ' + d + ' km' : 'Arrival city') : '≈ ' + d + ' km', min: (s.nights[id] || 0) <= 1, inc: () => this.setState({ nights: { ...s.nights, [id]: (s.nights[id] || 0) + 1 } }), dec: () => this.setState({ nights: { ...s.nights, [id]: Math.max(1, (s.nights[id] || 0) - 1) } }), remove: () => this.setState({ route: s.route.filter((x) => x !== id) }) }; });
+    const nightsAssigned = route.reduce((a, r) => a + r.nights, 0);
+    const diff = s.nightsTotal - nightsAssigned;
+    const longDrive = s.route.some((id, i) => i > 0 && Math.abs(byId[id][5] - byId[s.route[i - 1]][5]) > 600);
+    const paceDefs = [['gentle', 'Gentle', 'Walks under 2 h, no early starts.'], ['moderate', 'Moderate', 'A full day most days, one free afternoon per stop.'], ['active', 'Active', 'Hikes, early birding, longer drives.']];
+    const paces = paceDefs.map(([id, label]) => ({ id, label, on: s.pace === id, cls: s.pace === id ? 'on' : '', pick: () => this.setState({ pace: id }) }));
+    const intDefs = [['nature', 'Nature & birding'], ['farm', 'Farm life'], ['music', 'Music'], ['food', 'Food'], ['arch', 'Architecture'], ['afro', 'Afro-Cuban heritage'], ['beach', 'A beach day'], ['dive', 'Snorkelling']];
+    const interests = intDefs.map(([id, label]) => ({ id, label, on: !!s.interests[id], cls: s.interests[id] ? 'on' : '', toggle: () => this.setState({ interests: { ...s.interests, [id]: !s.interests[id] } }) }));
+    const tag = (t, ok) => ({ t, bg: ok ? '#E8F5E9' : '#F3EEE6', fg: ok ? '#1B5E20' : '#4A433D' });
+    const trDefs = [['minivan', 'Private minivan with driver', 28, 'Yours for the route; driver named before you pay.', [tag('A/C verified', true), tag('8 seats', false), tag('Fuel confirmed', true)], 'minivan'], ['classic', 'Classic 1950s car in Havana + minivan', 35, 'Almendrón for the Havana days, minivan between provinces.', [tag('No A/C', false), tag('4 seats', false), tag('Owner-driven', true)], 'classic + minivan'], ['sedan', 'Private sedan with driver', 24, 'Modern sedan, 3 passengers, light luggage.', [tag('A/C verified', true), tag('3 seats', false), tag('Fuel confirmed', true)], 'sedan'], ['colectivo', 'Shared taxi colectivo', 15, 'Licensed shared taxis, fixed routes. Cheapest, less certain times.', [tag('Shared', false), tag('Fixed departures', false), tag('Licensed', true)], 'colectivo']];
+    const transports = trDefs.map(([id, name, price, desc, tags]) => ({ id, name, price, desc, tags, on: s.transport === id, cls: s.transport === id ? 'on' : '', pick: () => this.setState({ transport: id }) }));
+    const trSel = trDefs.find((t) => t[0] === s.transport);
+    const stayOpts = [['std', 'Standard casa', 30], ['mid', 'Casa · A/C & backup', 45], ['agro', 'Agro-homestay', 40], ['heritage', 'Heritage casa', 55], ['eco', 'Eco-villa', 70], ['boutique', 'Boutique hotel', 110]];
+    const stayExamples = { hav: ['Casa Lis, Vedado', 'Battery 8 h', '#E3B9A6', '14 casas, 2 hotels'], pri: ['Casa Yamilé & Osvaldo', 'Generator 4 h', '#B9CFD6', '9 casas, 2 farm stays'], ssp: ['Casa Marta, Trinidad', 'Generator 6 h', '#DCC9B6', '7 casas'], art: ['Las Terrazas rooms', 'Solar', '#B9CFD6', '1 community stay'], mat: ['Casa Enrique, Playa Larga', 'Solar + generator', '#B9CFD6', '6 casas'], cfg: ['Casa Punta Gorda', 'Battery 6 h', '#DCC9B6', '5 casas'], vcl: ['Casa Remedios Colonial', 'Generator', '#DCC9B6', '4 casas'], cmg: ['Finca La Liliana', 'Solar', '#B9CFD6', '2 casas, 1 farm'], scu: ['Casa Tivolí', 'Generator 4 h', '#E3B9A6', '5 casas'], cav: ['[to be confirmed]', 'Hotel generator', '#F3EEE6', 'Limited'], hol: ['[to be confirmed]', '—', '#F3EEE6', 'Limited'], gtm: ['Casa Baracoa Vieja', 'Battery', '#E3B9A6', '3 casas'] };
+    const stayStops = route.map((r) => { const cur = s.stays[r.id] || 'mid'; const ex = stayExamples[r.id] || ['[tbc]', '—', '#F3EEE6', '']; return { ...r, example: ex[0], power: ex[1], tint: ex[2], available: ex[3], options: stayOpts.map(([id, label, price]) => ({ id, label, price, on: cur === id, cls: cur === id ? 'on' : '', pick: () => this.setState({ stays: { ...s.stays, [r.id]: id } }) })) }; });
+    const actDefs = [['a1', 'hav', 'Afro-Cuban heritage walk & rumba', 'Sunday · 3 h', 22], ['a2', 'hav', 'Cooking class with Lis', '3 h', 35], ['a3', 'hav', 'Art studios & Fusterlandia', 'Half day', 28], ['a4', 'pri', 'Tobacco farm & valley walk', 'Full day', 30], ['a5', 'pri', 'Dawn birding with Daylin', '4 h · 06:00', 25], ['a6', 'pri', 'Cayo Levisa day trip', 'Full day', 42], ['a7', 'ssp', 'Topes de Collantes waterfall hike', 'Full day', 34], ['a8', 'ssp', 'Valle de los Ingenios by steam train', 'Half day', 20], ['a9', 'art', 'Las Terrazas zip-line & pools', '3 h', 30], ['a10', 'mat', 'Las Salinas flamingo tour', 'Half day', 28], ['a11', 'mat', 'Snorkelling, Bay of Pigs', 'Half day', 35], ['a12', 'cfg', 'Cienfuegos bay by boat', 'Half day', 24], ['a13', 'vcl', 'Remedios & Che memorial', 'Half day', 15], ['a14', 'cmg', 'Finca La Liliana farm day', 'Full day', 32], ['a15', 'scu', 'Casa de la Trova & El Cobre', 'Evening + half day', 26], ['a16', 'gtm', 'Cocoa farm & Yumurí river', 'Full day', 30]];
+    const actStops = route.map((r) => ({ ...r, acts: actDefs.filter((a) => a[1] === r.id).map(([id, pv, name, meta, price]) => ({ id, name, meta, price, on: !!s.acts[id], cls: s.acts[id] ? 'on' : '', toggle: () => this.setState({ acts: { ...s.acts, [id]: !s.acts[id] } }) })) }));
+    const actsOn = actDefs.filter((a) => s.acts[a[0]] && s.route.includes(a[1]));
+    const guideDefs = [['none', 'Activity guides only', '€ 0', 'Each activity has its own guide.'], ['shared', 'Shared guide on activity days', '€ 25 pp/day', 'Formatur-certified, shared with your group.'], ['private', 'Private guide, whole trip', '€ 55/day group', 'One guide from arrival to departure.']];
+    const guides = guideDefs.map(([id, name, price, desc]) => ({ id, name, price, desc, on: s.guide === id, cls: s.guide === id ? 'on' : '', pick: () => this.setState({ guide: id }) }));
+    const n = s.adults + s.children, days = s.nightsTotal + 1;
+    const estStays = route.reduce((a, r) => a + r.nights * stayOpts.find((o) => o[0] === (s.stays[r.id] || 'mid'))[2], 0);
+    const estTransport = trSel[2] * days, estActs = actsOn.reduce((a, x) => a + x[4], 0), guideDays = actsOn.length;
+    const estGuides = (s.guide === 'shared' ? 25 * guideDays : s.guide === 'private' ? (55 * days) / Math.max(1, n) : 0) + (s.translator ? (40 * Math.max(0, days - guideDays)) / Math.max(1, n) : 0);
+    const estOffset = 5 * s.nightsTotal, sub = estStays + estTransport + estActs + estGuides + estOffset, estFee = sub * 0.12, est = sub + estFee;
+    const labels = ['Dates & route', 'Transport', 'Stays', 'Activities', 'Summary'];
+    const natUS = s.nat === 'US';
+    const go = (k) => () => this.setState({ step: k, showSum: false });
+    return {
+      stepN: Math.min(s.step, 5), stepLabel: labels[Math.min(s.step, 5) - 1], nextLabel: s.step < 5 ? 'Next: ' + labels[s.step] : 'Last step', progress: (Math.min(s.step, 5) * 20) + '%',
+      s1: s.step === 1, s2: s.step === 2, s3: s.step === 3, s4: s.step === 4, s5: s.step === 5, sent: s.step === 6, notSent: s.step !== 6, notLast: s.step < 5, isLast: s.step === 5,
+      next: () => this.setState({ step: Math.min(5, s.step + 1), showSum: false }), back: () => this.setState({ step: Math.max(1, s.step - 1), showSum: false }), goto1: go(1), goto2: go(2), goto4: go(4), send: () => this.setState({ step: 6 }), restart: () => this.setState({ step: 1, consent: false }),
+      nextBlocked: s.step === 1 && (route.length === 0 || diff !== 0),
+      nightsTotal: s.nightsTotal, incN: () => this.setState({ nightsTotal: s.nightsTotal + 1 }), decN: () => this.setState({ nightsTotal: Math.max(3, s.nightsTotal - 1) }), nMin: s.nightsTotal <= 3,
+      adults: s.adults, children: s.children, aMin: s.adults <= 1, cMin: s.children <= 0, incA: () => this.setState({ adults: s.adults + 1 }), decA: () => this.setState({ adults: Math.max(1, s.adults - 1) }), incC: () => this.setState({ children: s.children + 1 }), decC: () => this.setState({ children: Math.max(0, s.children - 1) }),
+      provinces, route, noRoute: route.length === 0, nightsAssigned, nightsMismatch: diff !== 0 && route.length > 0, mismatchCopy: diff > 0 ? diff + ' night' + (diff === 1 ? '' : 's') + ' still to place.' : Math.abs(diff) + ' night' + (diff === -1 ? '' : 's') + ' over your total.', longDrive,
+      paces, paceHint: paceDefs.find((p) => p[0] === s.pace)[2], paceLabel: paceDefs.find((p) => p[0] === s.pace)[1], interests,
+      transports, transportName: trSel[1], stayStops, stepFree: s.stepFree, toggleStepFree: () => this.setState({ stepFree: !s.stepFree }), staySummary: route.map((r) => r.name.split(' ·')[0] + ': ' + stayOpts.find((o) => o[0] === (s.stays[r.id] || 'mid'))[1].toLowerCase()).join(' · ') || '—',
+      actStops, actCount: actsOn.length, guides, guideName: guideDefs.find((g) => g[0] === s.guide)[1], translator: s.translator, toggleTranslator: () => this.setState({ translator: !s.translator }),
+      routeSummary: route.map((r) => r.name.split(' ·')[0] + ' (' + r.nights + ')').join(' → ') || 'No route yet', travSummary: s.adults + (s.adults === 1 ? ' adult' : ' adults') + (s.children ? ', ' + s.children + (s.children === 1 ? ' child' : ' children') : ''),
+      natDE: !natUS, natUS, pickNat: (e) => this.setState({ nat: e.target.value }), consent: s.consent, toggleConsent: () => this.setState({ consent: !s.consent }), sendBlocked: !s.consent,
+      estLow: fmt(est * 0.94), estHigh: fmt(est * 1.06), estStays: fmt(estStays), estTransport: fmt(estTransport), estActs: fmt(estActs), estGuides: fmt(estGuides), estOffset: fmt(estOffset), estFee: fmt(estFee),
+      showSum: s.showSum, toggleSum: () => this.setState({ showSum: !s.showSum }), sumRot: s.showSum ? 'rotate(180deg)' : 'rotate(0deg)'
+    };
+  }
+}
+</script>
+</body>
+</html>

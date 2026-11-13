@@ -7,15 +7,21 @@ import { useState } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
 
-/** Approve (creates the account + profile) or reject a recruitment application. */
+/**
+ * Approve (creates the account + profile) or reject a recruitment application.
+ * Approving stays with the role, never a permission override
+ * (`docs/schema-m9-permission-overrides.md` O3).
+ */
 export function ApplicationActions({
   applicationId,
   status,
   canReview,
+  canApprove = canReview,
 }: {
   applicationId: string;
   status: string;
   canReview: boolean;
+  canApprove?: boolean;
 }) {
   const t = useTranslations('backoffice.applicationActions');
   const router = useRouter();
@@ -45,9 +51,11 @@ export function ApplicationActions({
     <div className="space-y-1">
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       <div className="flex gap-2">
-        <Button size="sm" disabled={busy} onClick={() => review('approve')}>
-          {t('approve')}
-        </Button>
+        {canApprove ? (
+          <Button size="sm" disabled={busy} onClick={() => review('approve')}>
+            {t('approve')}
+          </Button>
+        ) : null}
         <Button
           size="sm"
           variant="destructive"

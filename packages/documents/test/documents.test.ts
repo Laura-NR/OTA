@@ -36,6 +36,7 @@ const input: ReservationDocumentInput = {
       serviceDateStart: '2026-11-02T09:00:00.000Z',
       serviceDateEnd: '2026-11-02T13:00:00.000Z',
       payoutRate: '40.00',
+      travelerPrice: '95.00',
       supplier: { fullName: 'Guide One', primaryPhone: '+53 5555 1111' },
     },
     {
@@ -89,6 +90,67 @@ describe('document templates', () => {
     expect(html).toContain('Guide One');
   });
 
+  it('prices each service on the invoice and marks bundled ones as included', () => {
+    const invoice = buildInvoiceModel(input);
+    const html = renderInvoiceHtml(invoice, branding);
+
+    expect(invoice.services.map((service) => service.amount)).toEqual(['95.00', null]);
+    expect(html).toContain('95.00 EUR');
+    expect(html).toContain('Included');
+    expect(html).not.toContain('Price breakdown');
+  });
+
+  it('adds the frozen price lines as a breakdown', () => {
+    const html = renderInvoiceHtml(
+      buildInvoiceModel({
+        ...input,
+        priceLines: [
+          {
+            kind: 'BASE',
+            label: 'Trinidad Heritage Trail',
+            quantity: '2',
+            amount: '2550.00',
+          },
+          {
+            kind: 'CHILD',
+            label: 'Trinidad Heritage Trail',
+            quantity: '1',
+            amount: '837.00',
+          },
+          { kind: 'FEE', label: 'Service fee', quantity: '1', amount: '100.00' },
+        ],
+      }),
+      branding,
+    );
+
+    expect(html).toContain('Price breakdown');
+    expect(html).toContain('Package — Trinidad Heritage Trail');
+    expect(html).toContain('Child rate — Trinidad Heritage Trail');
+    expect(html).toContain('Fee — Service fee');
+    expect(html).toContain('2550.00 EUR');
+  });
+
+  it('prints the locked display rate as a reference under the EUR total, and nothing without one (M9)', () => {
+    const html = renderInvoiceHtml(
+      buildInvoiceModel({
+        ...input,
+        displayReference: {
+          currency: 'CAD',
+          rate: '1.489081',
+          rateDate: '2026-10-12',
+          amount: '4616.15',
+        },
+      }),
+      branding,
+    );
+    expect(html).toContain(
+      'Reference in CAD at the rate locked on 2026-10-12 (1.489081): 4616.15 CAD',
+    );
+    expect(renderInvoiceHtml(buildInvoiceModel(input), branding)).not.toContain(
+      'Reference in',
+    );
+  });
+
   it('renders the invoice total and itemised services', () => {
     const html = renderInvoiceHtml(buildInvoiceModel(input), branding);
 
@@ -103,6 +165,70 @@ describe('document templates', () => {
     expect(html).toContain('Rendezvous');
     expect(html).toContain('Medical emergency');
     expect(html).toContain('104');
+  });
+
+  it('prints confirmed event seats on the voucher, and nothing without them (M10)', () => {
+    const html = renderVoucherHtml(
+      buildVoucherModel({
+        ...input,
+        eventTickets: [
+          {
+            eventName: 'Havana Jazz Festival',
+            place: 'Vedado',
+            categoryName: 'Numbered seat',
+            seats: 2,
+            nights: [
+              {
+                date: '2027-01-18T00:00:00.000Z',
+                label: 'Opening gala',
+                venue: 'Teatro Nacional',
+              },
+            ],
+          },
+          {
+            eventName: 'Jazz <Pass>',
+            place: 'Havana',
+            categoryName: 'Pass',
+            seats: 1,
+            nights: [],
+          },
+        ],
+      }),
+      branding,
+    );
+    expect(html).toContain('Event tickets');
+    expect(html).toContain('2 × Numbered seat');
+    expect(html).toContain('2027-01-18 · Opening gala · Teatro Nacional');
+    expect(html).toContain('Every festival night');
+    expect(html).toContain('Jazz &lt;Pass&gt;');
+    expect(renderVoucherHtml(buildVoucherModel(input), branding)).not.toContain(
+      'Event tickets',
+    );
+  });
+
+  it('labels the event lines on the invoice breakdown (M10)', () => {
+    const html = renderInvoiceHtml(
+      buildInvoiceModel({
+        ...input,
+        priceLines: [
+          {
+            kind: 'EVENT_TICKET',
+            label: 'Jazz · Numbered',
+            quantity: '4',
+            amount: '180.00',
+          },
+          {
+            kind: 'CONCIERGE_FEE',
+            label: 'Concierge fee · Jazz',
+            quantity: '4',
+            amount: '60.00',
+          },
+        ],
+      }),
+      branding,
+    );
+    expect(html).toContain('Event tickets — Jazz · Numbered');
+    expect(html).toContain('Concierge fee — Concierge fee · Jazz');
   });
 
   it('adds the emergency protocol to the work order', () => {

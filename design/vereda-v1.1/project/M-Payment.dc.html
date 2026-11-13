@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payment · mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn:disabled{background:#E8E2D9;color:#6E665E;border-color:transparent}
+.btn:focus-visible,.inp:focus-visible,.ck:focus-visible,.pm:focus-within{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.inp{height:48px;padding:0 12px;border:1px solid #D6CEC3;border-radius:8px;font:400 16px/24px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;width:100%;box-sizing:border-box}
+.lbl{font:500 14px/20px Inter,system-ui,sans-serif;color:#1F1B17}
+.hlp{font:400 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.pm{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer}
+.pm.on{border:2px solid #0B4F6C;padding:13px;background:#F1F6F8}
+.line{display:flex;justify-content:space-between;gap:12px;font-size:14px;line-height:20px}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid}
+.alert p{margin:0;font-size:14px;line-height:20px}
+.hosted{border:1px dashed #0E6B8C;border-radius:12px;padding:14px;background:#F7FAFB;display:flex;flex-direction:column;gap:10px}
+.wallet{height:48px;border-radius:8px;border:0;background:#1F1B17;color:#fff;font:600 16px/24px Inter,system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:1}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 8px; border-bottom: 1px solid #E8E2D9; background: #FBF8F3; position: sticky; top: 0; z-index: 3">
+    <a href="M-Account.dc.html" aria-label="Back to My trips" style="width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></a>
+    <div style="flex: 1; min-width: 0"><p class="sm" style="font-weight: 600; display: flex; align-items: center; gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secure payment</p><p class="cap">Booking <span class="mono">VX-7K2M9Q</span> · 46 h 12 min left</p></div>
+    <a class="btn btn-t btn-sm" href="https://wa.me/" aria-label="Help on WhatsApp"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"/></svg></a>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 16px; padding: 16px 20px 150px">
+
+    <sc-if value="{{showForm}}" hint-placeholder-val="{{ true }}">
+      <div class="alert" role="status" style="background: #E8F5E9; border-color: #C8E6C9; color: #1B5E20"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><p><strong>All 5 providers confirmed.</strong> Pay by Fri 10 Oct, 09:14 to lock it in.</p></div>
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 class="disp" style="font-size: 26px; line-height: 32px">How would you like to pay?</h1><p class="p">Prices in euros, locked from this payment. Transfer free; card and wallets + 3 %.</p></div>
+
+      <sc-if value="{{failed}}" hint-placeholder-val="{{ false }}"><div class="alert" role="alert" style="background: #FDECEA; border-color: #F5C6C2; color: #B71C1C"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><p><strong>Payment didn't go through.</strong> Your bank declined the 3-D Secure check. You haven't been charged; your places are still held. Try again, switch to transfer, or message us.</p></div></sc-if>
+
+      <fieldset style="border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px"><legend class="lbl" style="padding-bottom: 6px">Amount</legend>
+        <label class="pm {{amtDepCls}}"><input class="ck" type="radio" name="amt" checked="{{amtDep}}" onChange="{{setDep}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between"><span style="font-weight: 600">Deposit · 20 %</span><span class="mono">€ 620.00</span></span><span class="hlp">Balance € 2,480 due 14 Jan 2027; reminders 7, 3, 1 day before</span></span></label>
+        <label class="pm {{amtFullCls}}"><input class="ck" type="radio" name="amt" checked="{{amtFull}}" onChange="{{setFull}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between"><span style="font-weight: 600">Pay in full</span><span class="mono">€ 3,100.00</span></span><span class="hlp">Nothing more to remember</span></span></label>
+      </fieldset>
+
+      <fieldset style="border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px"><legend class="lbl" style="padding-bottom: 6px">Method</legend>
+        <sc-for list="{{methods}}" as="m" hint-placeholder-count="4"><label class="pm {{m.cls}}"><input class="ck" type="radio" name="pm" checked="{{m.on}}" onChange="{{m.pick}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span style="display: flex; justify-content: space-between; gap: 8px; align-items: center"><span style="font-weight: 600; font-size: 15px">{{m.name}}</span><span class="pill" style="background: {{m.feeBg}}; color: {{m.feeFg}}">{{m.fee}}</span></span><span class="cap">{{m.desc}}</span></span></label></sc-for>
+      </fieldset>
+
+      <sc-if value="{{isBank}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff">
+          <p class="sm" style="font-weight: 600">Pay from your bank app</p>
+          <div class="fld"><label class="lbl" for="bank">Your bank</label><div style="position: relative"><select class="inp" id="bank" style="appearance: none; -webkit-appearance: none; padding-right: 40px"><option>Choose your bank…</option><option>BNP Paribas</option><option>Deutsche Bank</option><option>ING</option><option>CaixaBank</option><option>Revolut</option><option>N26</option></select><svg class="ic" style="position: absolute; right: 12px; top: 14px; color: #4A433D; pointer-events: none" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="flex: 1; height: 1px; background: #E8E2D9"></span><span class="cap">or manually</span><span style="flex: 1; height: 1px; background: #E8E2D9"></span></div>
+          <div class="line"><span class="cap">IBAN</span><span class="mono" style="font-size: 13px">ES00 0000 0000 0000 0000 0000</span></div>
+          <div class="line"><span class="cap">Reference · required</span><span class="mono" style="font-size: 13px; font-weight: 500">VX-7K2M9Q</span></div>
+          <div class="line"><span class="cap">Amount</span><span class="mono" style="font-size: 13px; font-weight: 500">€ {{amount}}</span></div>
+          <div style="display: flex; gap: 8px"><button class="btn btn-s btn-sm" type="button" style="flex: 1">Copy details</button><button class="btn btn-s btn-sm" type="button" style="flex: 1; gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Upload proof</button></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isCard}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff">
+          <div style="display: flex; justify-content: space-between; align-items: center"><p class="sm" style="font-weight: 600">Card details</p><div style="display: flex; gap: 4px"><span class="pill" style="background: #F3EEE6; color: #4A433D">Visa</span><span class="pill" style="background: #F3EEE6; color: #4A433D">MC</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Amex</span></div></div>
+          <div class="hosted" aria-label="Hosted card fields">
+            <p class="cap" style="color: #0E6B8C">Hosted fields · gateway iframe · PCI SAQ A</p>
+            <div class="fld"><label class="lbl" for="cn">Card number</label><input class="inp" id="cn" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456"></div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><div class="fld"><label class="lbl" for="exp">Expiry</label><input class="inp" id="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY"></div><div class="fld"><label class="lbl" for="cvc">Security code</label><input class="inp" id="cvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC"></div></div>
+            <div class="fld"><label class="lbl" for="nm">Name on card</label><input class="inp" id="nm" type="text" autocomplete="cc-name" value="Margaret A Chen"></div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><div class="fld"><label class="lbl" for="bc">Billing country</label><select class="inp" id="bc"><option>Canada</option><option>France</option><option>Germany</option><option>Spain</option><option>United Kingdom</option></select></div><div class="fld"><label class="lbl" for="pc">Postal code</label><input class="inp" id="pc" type="text" value="M5S 1A1"></div></div>
+          <div class="alert" role="status" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><p>Charged in EUR (≈ CA$ {{cadApprox}}). US-issued cards are declined; use transfer or invoice.</p></div>
+          <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked><span class="sm">Save this card (gateway token) to pay the balance on 14 Jan 2027.</span></label>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isWallet}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff"><p class="sm" style="font-weight: 600">One tap on your phone</p><div style="display: flex; gap: 10px"><button class="wallet" type="button" aria-label="Pay with Apple Pay">Apple Pay</button><button class="wallet" type="button" aria-label="Pay with Google Pay">Google Pay</button></div><p class="cap">Same card rail, € {{amountFee}} including the 3 % fee. Not for US-issued cards.</p></div>
+      </sc-if>
+
+      <sc-if value="{{isInvoice}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid #E8E2D9; border-radius: 12px; background: #fff"><p class="sm" style="font-weight: 600">Invoice and international wire</p><p class="sm" style="color: #4A433D">We email a PDF invoice with SWIFT details and your reference. Pay within 48 h from any bank; upload the proof; we reconcile by hand.</p><div class="fld"><label class="lbl" for="co">Company name <span style="color: #6E665E; font-weight: 400">· optional</span></label><input class="inp" id="co" type="text"></div><p class="cap">VAT not applicable: services consumed outside the EU/UK.</p></div>
+      </sc-if>
+
+      <div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; color: #92400E"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg><p class="sm"><strong>Sanctions notice.</strong> Vereda is a Spanish company settling outside the US banking system; no USD clearing. US persons: your travel-category certification is attached to this booking (kept 5 years). Cards don't work inside Cuba: bring cash in EUR or CAD. <a href="M-Legal.dc.html" style="color: #92400E; font-weight: 600">Full notice</a></p></div>
+      <label style="display: flex; gap: 12px; align-items: flex-start"><input class="ck" type="checkbox" checked="{{ack}}" onChange="{{toggleAck}}"><span class="sm">I've read the sanctions notice and the <a href="M-Legal.dc.html">cancellation policy</a>; the deposit is refundable only if a host cancels or under force majeure.</span></label>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; color: #4A433D"><span style="display: inline-flex; gap: 6px; align-items: center"><svg class="ic" style="width: 14px; height: 14px; color: #0B4F6C" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>TLS 1.3</span><span style="display: inline-flex; gap: 6px; align-items: center"><svg class="ic" style="width: 14px; height: 14px; color: #0B4F6C" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>3-D Secure</span><span style="display: inline-flex; gap: 6px; align-items: center"><svg class="ic" style="width: 14px; height: 14px; color: #0B4F6C" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>No card data stored</span><span style="display: inline-flex; gap: 6px; align-items: center"><svg class="ic" style="width: 14px; height: 14px; color: #0B4F6C" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>MINTUR licensed</span></div>
+    </sc-if>
+
+    <sc-if value="{{processing}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 48px 0" aria-busy="true" aria-live="polite"><svg class="ic" style="width: 44px; height: 44px; color: #0B4F6C" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg><h1 class="disp" style="font-size: 26px; line-height: 32px">Confirming your payment…</h1><p class="p">{{processingCopy}}</p><p class="cap">Don't close this page. If it takes longer, we email you the result; your places stay held.</p><div style="display: flex; gap: 8px"><button class="btn btn-s btn-sm" type="button" onClick="{{simOk}}">Prototype: succeed</button><button class="btn btn-s btn-sm" type="button" onClick="{{simFail}}">Prototype: fail</button></div></div>
+    </sc-if>
+
+    <sc-if value="{{pending}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 16px"><span style="width: 48px; height: 48px; border-radius: 9999px; background: #FEF3D6; color: #6B4A05; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" style="width: 24px; height: 24px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><p class="ov" style="color: #6B4A05">Payment pending</p><h1 class="disp" style="font-size: 26px; line-height: 32px">We're waiting for your bank.</h1><p class="p">{{pendingCopy}} Your places are held until Fri 10 Oct, 09:14. When the money lands you move to Confirmed and your vouchers unlock.</p><a class="btn btn-p" href="M-Account.dc.html">Track it in My trips</a><button class="btn btn-s" type="button" onClick="{{simOk}}">Prototype: money arrived</button><button class="btn btn-t" type="button" onClick="{{reset}}">Change method</button></div>
+    </sc-if>
+
+    <sc-if value="{{success}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 16px"><span style="width: 48px; height: 48px; border-radius: 9999px; background: #E8F5E9; color: #1B5E20; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" style="width: 24px; height: 24px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><p class="ov" style="color: #1B5E20">Payment received</p><h1 class="disp" style="font-size: 26px; line-height: 32px">Your trip is booked, Margaret.</h1><p class="p">€ {{amount}} received. Receipt, vouchers and host contacts are on their way to your inbox.</p><a class="btn btn-p" href="M-Confirmation.dc.html">See your confirmation</a><button class="btn btn-t" type="button" onClick="{{reset}}">Prototype: restart</button></div>
+    </sc-if>
+  </main>
+
+  <!-- Sticky pay bar -->
+  <sc-if value="{{showForm}}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; left: 0; right: 0; top: 760px; background: #fff; border-top: 1px solid #E8E2D9; box-shadow: 0 -4px 12px rgba(31,27,23,.06); display: flex; align-items: center; gap: 12px; padding: 10px 16px 12px">
+      <div style="flex: 1"><p class="cap">{{payNowLabel}}</p><p style="margin: 0; font-size: 20px; line-height: 24px; font-weight: 700" aria-live="polite">€ {{amountFee}}</p><p class="cap">≈ CA$ {{cadApprox}} · {{feeNote}}</p></div>
+      <button class="btn btn-p" type="button" onClick="{{pay}}" disabled="{{payBlocked}}" style="flex: 1.1">{{payLabel}}</button>
+    </div>
+  </sc-if>
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24; background: #FBF8F3; padding: 0 4px">viewport fold · 844</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { amt: 'dep', method: 'bank', ack: false, phase: 'idle' };
+  }
+  renderVals() {
+    const s = this.state;
+    const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const base = s.amt === 'dep' ? 620 : 3100;
+    const cardFee = s.method === 'card' || s.method === 'wallet';
+    const fee = cardFee ? base * 0.03 : 0;
+    const amountFee = base + fee;
+    const methodDefs = [['bank', 'Bank transfer · SEPA', 'No fee', 'Bank app or IBAN · 1–2 business days'], ['card', 'Card', '+ 3 %', 'Visa, MC, Amex · 3-D Secure · EUR'], ['wallet', 'Apple Pay · Google Pay', '+ 3 %', 'One tap, same card rail'], ['invoice', 'Invoice · wire (SWIFT)', 'Bank fees', 'PDF invoice, pay within 48 h, upload proof']];
+    const methods = methodDefs.map(([id, name, fee, desc]) => ({ id, name, fee, desc, on: s.method === id, cls: s.method === id ? 'on' : '', feeBg: fee === 'No fee' ? '#E8F5E9' : '#F3EEE6', feeFg: fee === 'No fee' ? '#1B5E20' : '#4A433D', pick: () => this.setState({ method: id }) }));
+    const isBank = s.method === 'bank', isCard = s.method === 'card', isWallet = s.method === 'wallet', isInvoice = s.method === 'invoice';
+    const payLabels = { bank: 'To my bank', card: 'Pay now', wallet: 'Continue', invoice: 'Email invoice' };
+    return {
+      amtDep: s.amt === 'dep', amtFull: s.amt === 'full', amtDepCls: s.amt === 'dep' ? 'on' : '', amtFullCls: s.amt === 'full' ? 'on' : '', setDep: () => this.setState({ amt: 'dep' }), setFull: () => this.setState({ amt: 'full' }),
+      methods, isBank, isCard, isWallet, isInvoice,
+      amount: fmt(base), amountFee: fmt(amountFee), cadApprox: Math.round(amountFee * 1.49).toLocaleString('en-US'), feeNote: cardFee ? 'incl. 3 % card fee' : 'no fee',
+      payNowLabel: s.amt === 'dep' ? 'Pay now · deposit 20 %' : 'Pay now · in full',
+      ack: s.ack, toggleAck: () => this.setState({ ack: !s.ack }), payBlocked: !s.ack, payLabel: payLabels[s.method],
+      pay: () => this.setState({ phase: (isBank || isInvoice) ? 'pending' : 'processing' }),
+      showForm: s.phase === 'idle' || s.phase === 'failed', failed: s.phase === 'failed', processing: s.phase === 'processing', pending: s.phase === 'pending', success: s.phase === 'success',
+      processingCopy: isCard ? 'Your bank may ask you to approve in its app (3-D Secure). Usually under a minute, up to 3.' : 'Waiting for your wallet to confirm.',
+      pendingCopy: isBank ? 'Bank-app transfers land within minutes; manual IBAN transfers take 1–2 business days.' : 'The invoice is in your inbox. Wires take 1–3 business days.',
+      simOk: () => this.setState({ phase: 'success' }), simFail: () => this.setState({ phase: 'failed' }), reset: () => this.setState({ phase: 'idle' })
+    };
+  }
+}
+</script>
+</body>
+</html>

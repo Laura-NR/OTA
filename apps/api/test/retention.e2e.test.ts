@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { MAILER } from '../src/email/email.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 import { signRetentionToken } from '../src/retention/retention-token';
 
 process.env.AUTH_SECRET ??= 'retention-test-secret-0123456789';
@@ -38,8 +39,18 @@ interface FakeUser {
 interface RetentionState {
   users: FakeUser[];
   completions: { userId: string; _max: { completedAt: Date | null } }[];
-  audits: { action: string; entityId: string | null }[];
+  audits: {
+    action: string;
+    entityId: string | null;
+    metadata?: Record<string, unknown>;
+  }[];
   deleted: { sessions: string[]; accounts: string[]; passkeys: string[] };
+  eventRequests: {
+    id: string;
+    status: string;
+    reservationId: string | null;
+    closedAt: Date | null;
+  }[];
 }
 
 function makeUser(overrides: Partial<FakeUser> = {}): FakeUser {
@@ -71,9 +82,26 @@ function createFakePrisma(state: RetentionState) {
     message: { updateMany: noopWrite },
     review: { updateMany: noopWrite },
     incident: { updateMany: noopWrite },
+    reservationTraveler: { updateMany: noopWrite },
+    consentRecord: { updateMany: noopWrite },
+    travelerAffidavit: { findMany: async () => [], deleteMany: noopWrite },
     serviceItem: { updateMany: noopWrite },
     dispatchOffer: { updateMany: noopWrite },
     verification: { deleteMany: noopWrite },
+    customRequest: { findMany: async () => [], update: noopWrite },
+    proposalVersion: { update: noopWrite },
+    disruptionCaseBooking: { updateMany: noopWrite },
+    eventRequest: {
+      findMany: async () => state.eventRequests,
+      deleteMany: async (args: { where: { id: { in: string[] } } }) => {
+        const before = state.eventRequests.length;
+        state.eventRequests = state.eventRequests.filter(
+          (row) => !args.where.id.in.includes(row.id),
+        );
+        return { count: before - state.eventRequests.length };
+      },
+      updateMany: noopWrite,
+    },
     user: {
       findUnique: async (args: { where: { id: string } }) =>
         state.users.find((user) => user.id === args.where.id) ?? null,
@@ -119,13 +147,35 @@ function createFakePrisma(state: RetentionState) {
       },
     },
     auditLog: {
-      create: async (args: { data: { action: string; entityId: string | null } }) => {
+      create: async (args: {
+        data: {
+          action: string;
+          entityId: string | null;
+          metadata?: Record<string, unknown>;
+        };
+      }) => {
         state.audits.push({
           action: args.data.action,
           entityId: args.data.entityId,
+          metadata: args.data.metadata,
         });
         return args.data;
       },
+      findFirst: async (args: {
+        where: {
+          action: string;
+          entityId: string;
+          metadata?: { path: string[]; equals: unknown };
+        };
+      }) =>
+        state.audits.find(
+          (audit) =>
+            audit.action === args.where.action &&
+            audit.entityId === args.where.entityId &&
+            (!args.where.metadata ||
+              audit.metadata?.[args.where.metadata.path[0]!] ===
+                args.where.metadata.equals),
+        ) ?? null,
       findMany: async () => [],
       update: async () => ({}),
     },
@@ -164,12 +214,13 @@ describe('retention API', () => {
       ],
       audits: [],
       deleted: { sessions: [], accounts: [], passkeys: [] },
+      eventRequests: [],
     };
     mailer = { send: vi.fn(async () => undefined) };
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma(state))
+      .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       .overrideProvider(MAILER)
@@ -190,7 +241,14 @@ describe('retention API', () => {
       .set('x-test-user', SUPER_ADMIN.email);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ noticed: 1, purged: 0 });
+    expect(response.body).toEqual({
+      noticed: 1,
+      reminded: 0,
+      purged: 0,
+      affidavitsDeleted: 0,
+      invitesDeleted: 0,
+      eventRequestsDeleted: 0,
+    });
     expect(mailer.send).toHaveBeenCalledTimes(1);
     const email = mailer.send.mock.calls[0][0] as {
       to: string;
@@ -198,7 +256,7 @@ describe('retention API', () => {
       html: string;
     };
     expect(email.to).toBe('traveler@example.test');
-    expect(email.subject).toContain('Keep your');
+    expect(email.subject).toContain('Vereda Expeditions account: keep it');
     expect(email.html).toContain('/retention/keep-alive?token=');
     expect(state.users[0].retentionNoticeSentAt).not.toBeNull();
     expect(state.audits.map((entry) => entry.action)).toContain('retention.notice_sent');
@@ -213,8 +271,43 @@ describe('retention API', () => {
       .post('/retention/scan')
       .set('x-test-user', SUPER_ADMIN.email);
 
-    expect(response.body).toEqual({ noticed: 0, purged: 0 });
+    expect(response.body).toEqual({
+      noticed: 0,
+      reminded: 0,
+      purged: 0,
+      affidavitsDeleted: 0,
+      invitesDeleted: 0,
+      eventRequestsDeleted: 0,
+    });
     expect(mailer.send).not.toHaveBeenCalled();
+  });
+
+  it('reminds once in the last week of the grace period (E-Retention)', async () => {
+    state.users = [makeUser({ retentionNoticeSentAt: new Date(now - 24 * DAY_MS) })];
+    const scan = () =>
+      request(app.getHttpServer())
+        .post('/retention/scan')
+        .set('x-test-user', SUPER_ADMIN.email);
+
+    const first = await scan();
+    expect(first.body).toEqual({
+      noticed: 0,
+      reminded: 1,
+      purged: 0,
+      affidavitsDeleted: 0,
+      invitesDeleted: 0,
+      eventRequestsDeleted: 0,
+    });
+    const email = mailer.send.mock.calls[0][0] as { subject: string; html: string };
+    expect(email.subject).toMatch(/^Reminder: keep your /);
+    expect(email.html).toContain('/retention/keep-alive?token=');
+    expect(state.audits.map((entry) => entry.action)).toContain(
+      'retention.reminder_sent',
+    );
+
+    const second = await scan();
+    expect(second.body.reminded).toBe(0);
+    expect(mailer.send).toHaveBeenCalledTimes(1);
   });
 
   it('anonymizes a traveler after the grace period and revokes credentials', async () => {
@@ -224,7 +317,14 @@ describe('retention API', () => {
       .post('/retention/scan')
       .set('x-test-user', SUPER_ADMIN.email);
 
-    expect(response.body).toEqual({ noticed: 0, purged: 1 });
+    expect(response.body).toEqual({
+      noticed: 0,
+      reminded: 0,
+      purged: 1,
+      affidavitsDeleted: 0,
+      invitesDeleted: 0,
+      eventRequestsDeleted: 0,
+    });
     const user = state.users[0];
     expect(user.email).toBe(`anonymized+${TRAVELER_ID}@anonymized.invalid`);
     expect(user.fullName).toBeNull();
@@ -263,7 +363,47 @@ describe('retention API', () => {
     const scan = await request(app.getHttpServer())
       .post('/retention/scan')
       .set('x-test-user', SUPER_ADMIN.email);
-    expect(scan.body).toEqual({ noticed: 0, purged: 0 });
+    expect(scan.body).toEqual({
+      noticed: 0,
+      reminded: 0,
+      purged: 0,
+      affidavitsDeleted: 0,
+      invitesDeleted: 0,
+      eventRequestsDeleted: 0,
+    });
+  });
+
+  it('deletes an event request closed without a booking 90 days ago, and keeps the rest (M10 D9)', async () => {
+    state.users = [];
+    state.completions = [];
+    state.eventRequests = [
+      {
+        id: 'old',
+        status: 'UNAVAILABLE',
+        reservationId: null,
+        closedAt: new Date(now - 91 * DAY_MS),
+      },
+      {
+        id: 'recent',
+        status: 'CANCELLED',
+        reservationId: null,
+        closedAt: new Date(now - 10 * DAY_MS),
+      },
+      {
+        id: 'booked',
+        status: 'CANCELLED',
+        reservationId: 'r1',
+        closedAt: new Date(now - 200 * DAY_MS),
+      },
+    ];
+
+    const response = await request(app.getHttpServer())
+      .post('/retention/scan')
+      .set('x-test-user', SUPER_ADMIN.email)
+      .expect(200);
+
+    expect(response.body.eventRequestsDeleted).toBe(1);
+    expect(state.eventRequests.map((row) => row.id)).toEqual(['recent', 'booked']);
   });
 
   it('lists pending retention records for operations', async () => {

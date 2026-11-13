@@ -101,7 +101,7 @@ export function PricingRulesManager({
           {rules.map((rule) => (
             <li
               key={rule.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-body-sm"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -111,7 +111,7 @@ export function PricingRulesManager({
                     {rule.active ? t('active') : t('paused')}
                   </Badge>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-caption text-muted">
                   {rule.kind === 'SEASONAL_RATE'
                     ? `${rule.amount} · ${rule.startDate?.slice(0, 10) ?? t('any')} → ${
                         rule.endDate?.slice(0, 10) ?? t('any')
@@ -122,7 +122,7 @@ export function PricingRulesManager({
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   disabled={busy}
                   onClick={() => toggle(rule)}
                 >

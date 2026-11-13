@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { DOCUMENT_RENDERER } from '../src/documents/document-renderer';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const SUPER_ADMIN = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -67,6 +68,7 @@ function createFakePrisma() {
       ],
     },
     dispatchOffer: { findMany: async () => [] },
+    refund: { findMany: async () => [] },
     review: { findMany: async () => [{ rating: 5 }] },
     incident: { findMany: async () => [] },
   };
@@ -99,7 +101,7 @@ describe('reports API', () => {
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(createFakePrisma())
+      .useValue(withNoSettingsVersion(createFakePrisma()))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
       .overrideProvider(DOCUMENT_RENDERER)

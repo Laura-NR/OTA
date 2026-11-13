@@ -1,0 +1,32 @@
+# The production images build from the repository root (deploy/docker/*.Dockerfile).
+# Never send secrets, dependencies or build output into the build context.
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+**/.documents
+**/.telemetry
+.git
+.pnpm-store
+test-results
+playwright-report
+blob-report
+coverage
+
+# Not part of any image.
+design
+docs
+e2e
+resources
+vereda-handoff-v1.1
+*.zip
+*.docx
+*.pdf
+deploy
+# The backup image's two scripts (deploy/docker/backup.Dockerfile).
+!deploy/backup/ota-backup.sh
+!deploy/postgres/init/10-runtime-role.sh

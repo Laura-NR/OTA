@@ -1,0 +1,116 @@
+import type { SupplierApplicationDto } from '@ota/schemas';
+import {
+  Alert,
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@ota/ui';
+import { getTranslations } from 'next-intl/server';
+
+import { OverrideNotice } from '@/components/override-notice';
+import { deskAccess } from '@/lib/overrides';
+import { ApplicationActions } from '@/components/application-actions';
+import { FeatureOffNotice } from '@/components/feature-off-notice';
+import { PageHeader } from '@/components/page-header';
+import { apiFetch, getServerSession } from '@/lib/api';
+import { getThresholds } from '@/lib/operating';
+
+function statusVariant(status: string) {
+  if (status === 'APPROVED') return 'success' as const;
+  if (status === 'REJECTED') return 'destructive' as const;
+  return 'secondary' as const;
+}
+
+export default async function ApplicationsPage() {
+  const [t, session, thresholds] = await Promise.all([
+    getTranslations('backoffice.applications'),
+    getServerSession(),
+    getThresholds(),
+  ]);
+  const access = await deskAccess(session?.user.role, 'suppliers');
+  const canReview = access.canManage;
+
+  let applications: SupplierApplicationDto[] = [];
+  let loadError: string | null = null;
+  try {
+    applications = await apiFetch<SupplierApplicationDto[]>('/supplier-applications');
+  } catch (error) {
+    loadError = error instanceof Error ? error.message : t('loadError');
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title={t('title')} description={t('description')} />
+      <OverrideNotice capability="suppliers" overrides={access.overrides} />
+      {thresholds.recruitmentPortal ? null : (
+        <FeatureOffNotice feature="recruitmentPortal" />
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('recruitment')}</CardTitle>
+          <CardDescription>
+            {t('applicationsCount', { count: applications.length })}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadError ? (
+            <Alert variant="destructive">{loadError}</Alert>
+          ) : applications.length === 0 ? (
+            <Alert>{t('empty')}</Alert>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('applicant')}</TableHead>
+                  <TableHead>{t('category')}</TableHead>
+                  <TableHead>{t('provinces')}</TableHead>
+                  <TableHead>{t('rtnLicence')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  <TableHead>{t('review')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {applications.map((application) => (
+                  <TableRow key={application.id}>
+                    <TableCell>
+                      <div className="font-medium">{application.fullName}</div>
+                      <div className="text-caption text-muted">
+                        {application.email} · {application.phone}
+                      </div>
+                    </TableCell>
+                    <TableCell>{application.category.replaceAll('_', ' ')}</TableCell>
+                    <TableCell>{application.provincesActive.join(', ')}</TableCell>
+                    <TableCell>{application.rtnLicenseNumber}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant(application.status)}>
+                        {application.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <ApplicationActions
+                        applicationId={application.id}
+                        status={application.status}
+                        canReview={canReview}
+                        canApprove={access.byRole}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

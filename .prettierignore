@@ -10,3 +10,5 @@ pnpm-lock.yaml
 resources
 tools
 apps/storefront/src/lib/cuba-provinces.ts
+design
+packages/ui/src/icons/sprite.ts

@@ -52,8 +52,27 @@ const APPLICATION = '20202020-2020-4020-8020-202020202020';
 const RULE = '30303030-3030-4030-8030-303030303030';
 const MEDIA = '40404040-4040-4040-8040-404040404040';
 const PAYMENT = '50505050-5050-4050-8050-505050505050';
+const CUSTOMER = '60606060-6060-4060-8060-606060606060';
+const TRAVELER_ROW = '70707070-7070-4070-8070-707070707070';
+const EXTRA = '80808080-8080-4080-8080-808080808080';
+const AFFIDAVIT = '90909090-9090-4090-8090-909090909090';
+const INSTALMENT = 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1';
+const PROOF = 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2';
+const REFUND = 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3';
+const PROPOSAL = 'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4';
+const PROPOSAL_VERSION = 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5';
+const ADVISORY = 'a7a7a7a7-a7a7-4a7a-8a7a-a7a7a7a7a7a7';
+const DISRUPTION = 'b8b8b8b8-b8b8-4b8b-8b8b-b8b8b8b8b8b8';
+const STEP = 'c9c9c9c9-c9c9-4c9c-8c9c-c9c9c9c9c9c9';
+const CASE_BOOKING = 'dadadada-dada-4ada-8ada-dadadadadada';
+const SETTINGS_VERSION = 'ebebebeb-ebeb-4beb-8beb-ebebebebebeb';
+const INVITE = 'fcfcfcfc-fcfc-4cfc-8cfc-fcfcfcfcfcfc';
+const STAFF_USER = '0d0d0d0d-0d0d-4d0d-8d0d-0d0d0d0d0d0d';
+const EVENT = '1e1e1e1e-1e1e-4e1e-8e1e-1e1e1e1e1e1e';
+const EVENT_REQUEST = '2f2f2f2f-2f2f-4f2f-8f2f-2f2f2f2f2f2f';
+const OVERRIDE = '3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a';
 
-type Allowed = 'opsRead' | 'opsWrite' | 'worker';
+type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
 
 interface Route {
@@ -79,6 +98,10 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/reservations/${RESERVATION}`, allowed: 'opsRead' },
   { method: 'get', path: `/reservations/${RESERVATION}/audit`, allowed: 'opsRead' },
   { method: 'get', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsRead' },
+  { method: 'get', path: '/payments', allowed: 'opsRead' },
+  { method: 'post', path: '/payments/reminders/scan', allowed: 'opsWrite' },
+  { method: 'post', path: '/payments/reminders/window-scan', allowed: 'opsWrite' },
+  { method: 'post', path: '/notifications/scan', allowed: 'opsWrite' },
   { method: 'post', path: `/reservations/${RESERVATION}/payments`, allowed: 'opsWrite' },
   {
     method: 'post',
@@ -98,6 +121,126 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/reservations/${RESERVATION}/documents`, allowed: 'opsRead' },
   { method: 'post', path: `/reservations/${RESERVATION}/documents`, allowed: 'opsWrite' },
 
+  // M2 party, extras, price lines; the passport vault is writers-only.
+  { method: 'get', path: `/reservations/${RESERVATION}/travelers`, allowed: 'opsRead' },
+  { method: 'put', path: `/reservations/${RESERVATION}/travelers`, allowed: 'opsWrite' },
+  {
+    method: 'get',
+    path: `/reservations/${RESERVATION}/travelers/${TRAVELER_ROW}/passport`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/reservations/${RESERVATION}/extras`, allowed: 'opsWrite' },
+  {
+    method: 'delete',
+    path: `/reservations/${RESERVATION}/extras/${EXTRA}`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: `/reservations/${RESERVATION}/price-lines`, allowed: 'opsRead' },
+
+  // M3 compliance: statuses for every ops role; records, scans and paper
+  // affidavits for writers; the legal export for the Super Admin alone.
+  { method: 'get', path: `/reservations/${RESERVATION}/ofac`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/reservations/${RESERVATION}/travelers/${TRAVELER_ROW}/affidavit`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: '/affidavits/export', allowed: 'superAdmin' },
+  { method: 'get', path: `/affidavits/${AFFIDAVIT}`, allowed: 'opsWrite' },
+  { method: 'get', path: `/affidavits/${AFFIDAVIT}/document`, allowed: 'opsWrite' },
+  { method: 'get', path: `/customers/${CUSTOMER}/consents`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/customers/${CUSTOMER}/certification-reminder`,
+    allowed: 'opsWrite',
+  },
+  // The traveler's own (scoped to the caller in the service).
+  {
+    method: 'get',
+    path: `/me/reservations/${RESERVATION}/ofac`,
+    allowed: 'authenticated',
+  },
+  {
+    method: 'post',
+    path: `/me/reservations/${RESERVATION}/travelers/${TRAVELER_ROW}/affidavit`,
+    allowed: 'authenticated',
+  },
+  // docs/schema-m9-passkeys.md P3: the setup page's status, for any signed-in person.
+  { method: 'get', path: '/me/passkeys', allowed: 'authenticated' },
+  // docs/schema-m9-idle-lock.md: the desk's lock facts, input reports and own-device choice.
+  { method: 'get', path: '/me/session', allowed: 'opsRead' },
+  { method: 'post', path: '/me/activity', allowed: 'opsRead' },
+  { method: 'post', path: '/me/session/own-device', allowed: 'opsRead' },
+  { method: 'get', path: '/me/consents', allowed: 'authenticated' },
+  { method: 'post', path: '/me/consents', allowed: 'authenticated' },
+  // M9 C4: anyone signed in keeps their own display currency.
+  { method: 'put', path: '/me/display-currency', allowed: 'authenticated' },
+  // M5: the traveler's own custom requests and proposals.
+  { method: 'post', path: '/me/custom-requests', allowed: 'authenticated' },
+  { method: 'get', path: '/me/proposals', allowed: 'authenticated' },
+  { method: 'get', path: `/me/proposals/${PROPOSAL}`, allowed: 'authenticated' },
+  // "Keep building the trip": the caller's own request, until it is priced.
+  { method: 'put', path: `/me/proposals/${PROPOSAL}/request`, allowed: 'authenticated' },
+  {
+    method: 'get',
+    path: `/me/proposals/${PROPOSAL}/versions/${PROPOSAL_VERSION}/pdf`,
+    allowed: 'authenticated',
+  },
+  {
+    method: 'post',
+    path: `/me/proposals/${PROPOSAL}/accept`,
+    allowed: 'authenticated',
+  },
+  {
+    method: 'post',
+    path: `/me/proposals/${PROPOSAL}/decline`,
+    allowed: 'authenticated',
+  },
+  // The Booking form: books for the caller, so any signed-in role.
+  { method: 'post', path: '/me/reservations/package-booking', allowed: 'authenticated' },
+  // M4: the caller's own schedule and proofs of transfer (scoped in the service).
+  {
+    method: 'get',
+    path: `/me/reservations/${RESERVATION}/schedule`,
+    allowed: 'authenticated',
+  },
+  {
+    method: 'post',
+    path: `/me/reservations/${RESERVATION}/payments/${PAYMENT}/proof`,
+    allowed: 'authenticated',
+  },
+
+  // M4 payment schedule, proofs and refunds — read by ops roles, changed by writers.
+  { method: 'get', path: `/reservations/${RESERVATION}/schedule`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/reservations/${RESERVATION}/instalments/${INSTALMENT}/extend`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'get',
+    path: `/reservations/${RESERVATION}/refunds/quote`,
+    allowed: 'opsRead',
+  },
+  { method: 'post', path: `/reservations/${RESERVATION}/refunds`, allowed: 'opsWrite' },
+  { method: 'get', path: '/payments/proofs', allowed: 'opsRead' },
+  { method: 'get', path: `/payments/proofs/${PROOF}/file`, allowed: 'opsRead' },
+  { method: 'post', path: `/payments/proofs/${PROOF}/accept`, allowed: 'opsWrite' },
+  { method: 'post', path: `/payments/proofs/${PROOF}/reject`, allowed: 'opsWrite' },
+  { method: 'get', path: '/refunds', allowed: 'opsRead' },
+  // M5 proposal queue: reads by ops roles, pricing by writers.
+  { method: 'get', path: '/proposals', allowed: 'opsRead' },
+  { method: 'get', path: `/proposals/${PROPOSAL}`, allowed: 'opsRead' },
+  {
+    method: 'get',
+    path: `/proposals/${PROPOSAL}/versions/${PROPOSAL_VERSION}/pdf`,
+    allowed: 'opsRead',
+  },
+  { method: 'post', path: `/proposals/${PROPOSAL}/versions`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/approve`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/reject`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/sent`, allowed: 'opsWrite' },
+
   // Dispatch / escalation — ops control; worker responds.
   { method: 'post', path: `/reservations/${RESERVATION}/dispatch`, allowed: 'opsWrite' },
   { method: 'get', path: '/dispatch/active', allowed: 'opsRead' },
@@ -114,6 +257,24 @@ const ROUTES: Route[] = [
   },
   { method: 'post', path: `/service-items/${SERVICE_ITEM}/accept`, allowed: 'worker' },
   { method: 'post', path: `/service-items/${SERVICE_ITEM}/decline`, allowed: 'worker' },
+  // The worker app (docs/worker-app-plan.md W5).
+  { method: 'get', path: '/worker/home', allowed: 'worker' },
+  { method: 'post', path: '/worker/sign-out', allowed: 'worker' },
+  // W-Calendar: the worker's own days and fuel declaration.
+  { method: 'get', path: '/worker/calendar', allowed: 'worker' },
+  { method: 'put', path: '/worker/availability', allowed: 'worker' },
+  { method: 'put', path: '/worker/fuel', allowed: 'worker' },
+  // W-Earnings: the worker's own reliability and payouts, read-only.
+  { method: 'get', path: '/worker/earnings', allowed: 'worker' },
+  // The desk's alert handling: support sees the mute, ops acknowledge and mute.
+  {
+    method: 'post',
+    path: `/service-items/${SERVICE_ITEM}/acknowledge-alert`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: '/dispatch/alert-mute', allowed: 'opsRead' },
+  { method: 'post', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
+  { method: 'delete', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
 
   // Inventory / CMS / pricing.
   { method: 'get', path: '/inventory', allowed: 'opsRead' },
@@ -147,6 +308,10 @@ const ROUTES: Route[] = [
   { method: 'get', path: `/packages/${PACKAGE}`, allowed: 'opsRead' },
   { method: 'post', path: '/packages', allowed: 'opsWrite' },
   { method: 'patch', path: `/packages/${PACKAGE}`, allowed: 'opsWrite' },
+  { method: 'put', path: `/packages/${PACKAGE}/translations/es`, allowed: 'opsWrite' },
+  { method: 'get', path: `/packages/media/${MEDIA}`, allowed: 'opsRead' },
+  { method: 'post', path: `/packages/${PACKAGE}/media`, allowed: 'opsWrite' },
+  { method: 'delete', path: `/packages/${PACKAGE}/media/${MEDIA}`, allowed: 'opsWrite' },
   { method: 'delete', path: `/packages/${PACKAGE}`, allowed: 'opsWrite' },
 
   // Suppliers + compliance.
@@ -157,6 +322,12 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
   { method: 'get', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsRead' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsWrite' },
+  // The desk's worker sign-in code (W1) and sign-out: no permission override reaches them.
+  { method: 'post', path: `/suppliers/${SUPPLIER}/sign-in-code`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/worker-sign-out`, allowed: 'opsWrite' },
+  // M6: support reads the resources on the inspector; only the desk writes them.
+  { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
+  { method: 'put', path: `/suppliers/${SUPPLIER}/vehicle`, allowed: 'opsWrite' },
   { method: 'post', path: `/suppliers/${SUPPLIER}/verification`, allowed: 'opsWrite' },
 
   // Imports, applications, quality.
@@ -180,15 +351,207 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/reviews', allowed: 'opsRead' },
   { method: 'get', path: '/quality/supplier-reliability', allowed: 'opsRead' },
 
+  // M7 advisories: the desk reads; drafting, approving, versions and lifting
+  // are writes (the approval rule itself is in the service).
+  { method: 'get', path: '/advisories', allowed: 'opsRead' },
+  { method: 'post', path: '/advisories', allowed: 'opsWrite' },
+  { method: 'get', path: `/advisories/${ADVISORY}`, allowed: 'opsRead' },
+  { method: 'patch', path: `/advisories/${ADVISORY}`, allowed: 'opsWrite' },
+  { method: 'post', path: `/advisories/${ADVISORY}/versions`, allowed: 'opsWrite' },
+  { method: 'post', path: `/advisories/${ADVISORY}/approve`, allowed: 'opsWrite' },
+  {
+    method: 'post',
+    path: `/advisories/${ADVISORY}/request-changes`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/advisories/${ADVISORY}/lift`, allowed: 'opsWrite' },
+  // The caller's own critical acknowledgements.
+  { method: 'get', path: '/me/advisories/acknowledgements', allowed: 'authenticated' },
+  {
+    method: 'post',
+    path: `/me/advisories/${ADVISORY}/acknowledge`,
+    allowed: 'authenticated',
+  },
+
+  // M8 disruptions: the desk reads; every case action is a write.
+  { method: 'get', path: '/disruptions', allowed: 'opsRead' },
+  { method: 'get', path: '/disruptions/alerts', allowed: 'opsRead' },
+  { method: 'post', path: '/disruptions', allowed: 'opsWrite' },
+  { method: 'get', path: `/disruptions/${DISRUPTION}`, allowed: 'opsRead' },
+  { method: 'get', path: `/disruptions/${DISRUPTION}/resources`, allowed: 'opsRead' },
+  { method: 'patch', path: `/disruptions/${DISRUPTION}`, allowed: 'opsWrite' },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/steps/${STEP}/done`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/disruptions/${DISRUPTION}/bookings`, allowed: 'opsWrite' },
+  { method: 'put', path: `/disruptions/${DISRUPTION}/options`, allowed: 'opsWrite' },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/send-options`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/bookings/${RESERVATION}/safety`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/disruptions/${DISRUPTION}/bookings/${RESERVATION}/choice`,
+    allowed: 'opsWrite',
+  },
+  { method: 'post', path: `/disruptions/${DISRUPTION}/advisory`, allowed: 'opsWrite' },
+  // The traveler's own offers and answer.
+  { method: 'get', path: '/me/disruptions', allowed: 'authenticated' },
+  {
+    method: 'post',
+    path: `/me/disruptions/${CASE_BOOKING}/choice`,
+    allowed: 'authenticated',
+  },
+
+  // M10 events: the desk reads; writes are ops+super. The catalog is public.
+  { method: 'get', path: '/events', allowed: 'opsRead' },
+  { method: 'post', path: '/events', allowed: 'opsWrite' },
+  { method: 'get', path: `/events/${EVENT}`, allowed: 'opsRead' },
+  { method: 'patch', path: `/events/${EVENT}`, allowed: 'opsWrite' },
+  { method: 'delete', path: `/events/${EVENT}`, allowed: 'opsWrite' },
+  { method: 'put', path: `/events/${EVENT}/translations/es`, allowed: 'opsWrite' },
+  { method: 'post', path: `/events/${EVENT}/publish`, allowed: 'opsWrite' },
+  { method: 'post', path: `/events/${EVENT}/archive`, allowed: 'opsWrite' },
+  // M10 concierge requests: the desk's queue, and the traveler's own requests.
+  { method: 'get', path: '/event-requests', allowed: 'opsRead' },
+  { method: 'get', path: `/event-requests/${EVENT_REQUEST}`, allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/requesting`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/unavailable`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/cancel`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/event-requests/${EVENT_REQUEST}/confirm`,
+    allowed: 'opsWrite',
+  },
+  { method: 'get', path: '/me/event-requests', allowed: 'authenticated' },
+  { method: 'post', path: '/me/event-requests', allowed: 'authenticated' },
+  { method: 'get', path: '/me/event-requests/link-targets', allowed: 'authenticated' },
+  {
+    method: 'post',
+    path: `/me/event-requests/${EVENT_REQUEST}/cancel`,
+    allowed: 'authenticated',
+  },
+
   // GDPR retention lifecycle (the keep-alive link itself is public).
   { method: 'get', path: '/retention/pending', allowed: 'opsRead' },
   { method: 'post', path: '/retention/scan', allowed: 'opsWrite' },
+
+  // Customers read model.
+  // M9 settings: the desk reads the thresholds in force; the rest is Super Admin.
+  { method: 'get', path: '/settings/operating', allowed: 'opsRead' },
+  // docs/schema-m9-display-currencies.md: A-Settings' currency table, for every desk role.
+  { method: 'get', path: '/settings/currencies', allowed: 'opsRead' },
+  { method: 'get', path: '/settings/operating/versions', allowed: 'superAdmin' },
+  { method: 'post', path: '/settings/operating/versions', allowed: 'superAdmin' },
+  {
+    method: 'post',
+    path: `/settings/operating/versions/${SETTINGS_VERSION}/apply`,
+    allowed: 'superAdmin',
+  },
+  {
+    method: 'post',
+    path: `/settings/operating/versions/${SETTINGS_VERSION}/reject`,
+    allowed: 'superAdmin',
+  },
+  {
+    method: 'post',
+    path: `/settings/operating/versions/${SETTINGS_VERSION}/withdraw`,
+    allowed: 'superAdmin',
+  },
+  { method: 'get', path: '/settings/security', allowed: 'superAdmin' },
+  { method: 'get', path: '/audit-log', allowed: 'superAdmin' },
+  // M9 staff: Super Admin only, except accepting an invitation.
+  { method: 'get', path: '/staff', allowed: 'superAdmin' },
+  { method: 'get', path: '/staff/invites', allowed: 'superAdmin' },
+  { method: 'post', path: '/staff/invites', allowed: 'superAdmin' },
+  { method: 'post', path: '/staff/invites/accept', allowed: 'authenticated' },
+  { method: 'post', path: `/staff/invites/${INVITE}/confirm`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/invites/${INVITE}/resend`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/invites/${INVITE}/revoke`, allowed: 'superAdmin' },
+  { method: 'patch', path: `/staff/${STAFF_USER}`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/revoke-sessions`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/reset-passkeys`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/recovery-code`, allowed: 'superAdmin' },
+  {
+    method: 'post',
+    path: `/staff/${STAFF_USER}/recovery-code/withdraw`,
+    allowed: 'superAdmin',
+  },
+  { method: 'post', path: `/staff/${STAFF_USER}/deactivate`, allowed: 'superAdmin' },
+  { method: 'post', path: `/staff/${STAFF_USER}/reactivate`, allowed: 'superAdmin' },
+  { method: 'get', path: '/customers', allowed: 'opsRead' },
+  { method: 'get', path: `/customers/${CUSTOMER}`, allowed: 'opsRead' },
+  // M9 permission overrides: any staff member asks, reads their own and ends
+  // their own; Super Admins list and decide.
+  { method: 'post', path: '/permission-overrides', allowed: 'opsRead' },
+  { method: 'get', path: '/permission-overrides/mine', allowed: 'opsRead' },
+  { method: 'post', path: `/permission-overrides/${OVERRIDE}/end`, allowed: 'opsRead' },
+  { method: 'get', path: '/permission-overrides', allowed: 'superAdmin' },
+  {
+    method: 'post',
+    path: `/permission-overrides/${OVERRIDE}/approve`,
+    allowed: 'superAdmin',
+  },
+  {
+    method: 'post',
+    path: `/permission-overrides/${OVERRIDE}/decline`,
+    allowed: 'superAdmin',
+  },
 ];
+
+const DOCUMENT = 'f6f6f6f6-f6f6-4f6f-8f6f-f6f6f6f6f6f6';
+
+/** The matrix row support holds an override for, in the override cases; none by default. */
+let supportOverride: string | null = null;
 
 const fakePrisma = {
   serviceItem: { findUnique: async () => null },
+  permissionOverride: {
+    findFirst: async ({ where }: { where: { userId: string; capability: string } }) =>
+      where.userId === USERS.support.id && where.capability === supportOverride
+        ? { id: OVERRIDE }
+        : null,
+  },
+  // A traveler voucher on a booking the fixture traveler owns.
+  document: {
+    findUnique: async () => ({
+      id: DOCUMENT,
+      type: 'VOUCHER',
+      storageKey: 'missing/voucher.pdf',
+      reservation: { userId: USERS.traveler.id },
+    }),
+  },
   paymentReceipt: { findFirst: async () => null },
   $queryRaw: async () => [{ '?column?': 1 }],
+  advisory: { findMany: async () => [] },
+  event: { findMany: async () => [], findFirst: async () => null },
+  // M9: no stored rate (the mock provider's write is dropped), so the rates read is empty.
+  exchangeRate: {
+    findFirst: async () => null,
+    createMany: async () => ({ count: 0 }),
+  },
+  // M9: no applied settings version, so the public events read the defaults.
+  operatingSettings: { findFirst: async () => null },
 };
 
 const fakeAuthService = {
@@ -219,10 +582,22 @@ describe('authorization matrix', () => {
   });
 
   afterEach(async () => {
+    supportOverride = null;
     await app.close();
   });
 
   function deniedFor(allowed: Allowed): { email: string; label: string }[] {
+    if (allowed === 'authenticated') {
+      return [];
+    }
+    if (allowed === 'superAdmin') {
+      return [
+        { email: USERS.operations.email, label: 'operations admin' },
+        { email: USERS.support.email, label: 'support' },
+        { email: USERS.worker.email, label: 'service worker' },
+        { email: USERS.traveler.email, label: 'traveler' },
+      ];
+    }
     if (allowed === 'worker') {
       return [
         { email: USERS.operations.email, label: 'operations admin' },
@@ -273,6 +648,29 @@ describe('authorization matrix', () => {
     }
   });
 
+  it('limits document downloads to the booking’s owner and the ops roles', async () => {
+    const path = `/documents/${DOCUMENT}/download`;
+    expect((await request(app.getHttpServer()).get(path)).status).toBe(401);
+    const worker = await request(app.getHttpServer())
+      .get(path)
+      .set('x-test-user', USERS.worker.email);
+    expect(worker.status, 'service worker').toBe(403);
+
+    // Past the check, the fixture file does not exist in storage; what matters
+    // is that the owner and every ops role get through it.
+    for (const user of [
+      USERS.traveler,
+      USERS.support,
+      USERS.operations,
+      USERS.superAdmin,
+    ]) {
+      const response = await request(app.getHttpServer())
+        .get(path)
+        .set('x-test-user', user.email);
+      expect([401, 403], user.role).not.toContain(response.status);
+    }
+  });
+
   it('keeps public endpoints open without a session', async () => {
     expect((await request(app.getHttpServer()).get('/health')).status).toBe(200);
     expect((await request(app.getHttpServer()).get('/health/ready')).status).toBe(200);
@@ -290,5 +688,93 @@ describe('authorization matrix', () => {
       '/payments/intents/unknown-reference',
     );
     expect(intent.status).toBe(404);
+
+    // The advisory banner, package notices and Current Conditions history are
+    // public reads; a malformed province is a 400, not a 401.
+    expect((await request(app.getHttpServer()).get('/advisories/active')).status).toBe(
+      200,
+    );
+    expect(
+      (await request(app.getHttpServer()).get('/advisories/active?province=CU01')).status,
+    ).toBe(200);
+    expect(
+      (await request(app.getHttpServer()).get('/advisories/active?province=Havana'))
+        .status,
+    ).toBe(400);
+    expect((await request(app.getHttpServer()).get('/advisories/history')).status).toBe(
+      200,
+    );
+
+    // The M10 events catalog is public; an unknown slug is a 404, not a 401.
+    expect((await request(app.getHttpServer()).get('/catalog/events')).status).toBe(200);
+    expect(
+      (await request(app.getHttpServer()).get('/catalog/events/no-such-event')).status,
+    ).toBe(404);
+
+    // The display rates are public: the storefront converts browsing prices with them.
+    expect((await request(app.getHttpServer()).get('/catalog/currencies')).status).toBe(
+      200,
+    );
+
+    // The Support form is public; an empty body fails validation (400), not auth.
+    const contact = await request(app.getHttpServer()).post('/contact').send({});
+    expect(contact.status).toBe(400);
+
+    // The T-Events intake is public (signed-out visitors browse too); an empty
+    // batch fails validation (400), not auth.
+    const telemetry = await request(app.getHttpServer())
+      .post('/telemetry/events')
+      .send({ events: [] });
+    expect(telemetry.status).toBe(400);
+  });
+
+  // docs/schema-m9-permission-overrides.md O2, O3, O7.
+  it('lets support through only its overridden row, never an approval or a Super Admin row', async () => {
+    const as = (method: Method, path: string) =>
+      request(app.getHttpServer())[method](path).set('x-test-user', USERS.support.email);
+    const blocked = [
+      ['post', `/reservations/${RESERVATION}/payments`],
+      ['post', `/refunds/${REFUND}/sent`],
+      ['post', `/payments/proofs/${PROOF}/accept`],
+    ] as const;
+    for (const [method, path] of blocked) {
+      expect((await as(method, path)).status, `${path} without an override`).toBe(403);
+    }
+
+    supportOverride = 'payments';
+    for (const [method, path] of blocked) {
+      expect([401, 403], `${path} with a payments override`).not.toContain(
+        (await as(method, path)).status,
+      );
+    }
+    for (const [method, path] of [
+      // O3: refund votes stay with the roles that hold them.
+      ['post', `/refunds/${REFUND}/approve`],
+      ['post', `/refunds/${REFUND}/reject`],
+      // Another row.
+      ['post', '/reservations'],
+      ['post', `/reservations/${RESERVATION}/dispatch`],
+      // Super Admin rows.
+      ['get', '/staff'],
+      ['get', '/affidavits/export'],
+      ['post', '/settings/operating/versions'],
+    ] as const) {
+      expect((await as(method, path)).status, `${path} with a payments override`).toBe(
+        403,
+      );
+    }
+  });
+
+  it('keeps advisory and supplier-application approvals with their roles under an override', async () => {
+    const as = (path: string) =>
+      request(app.getHttpServer()).post(path).set('x-test-user', USERS.support.email);
+    supportOverride = 'advisories';
+    expect((await as(`/advisories/${ADVISORY}/approve`)).status).toBe(403);
+    expect((await as(`/advisories/${ADVISORY}/request-changes`)).status).toBe(403);
+    supportOverride = 'suppliers';
+    expect((await as(`/supplier-applications/${APPLICATION}/approve`)).status).toBe(403);
+    expect([401, 403]).not.toContain(
+      (await as(`/supplier-applications/${APPLICATION}/reject`)).status,
+    );
   });
 });

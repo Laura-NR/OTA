@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>App de colaboradores · oferta de trabajo con cuenta atrás · aceptar o rechazar con motivo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 20px;border-radius:10px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-g{background:#2E7D32;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C;height:44px;padding:0 10px}
+.btn-d{background:#fff;color:#B71C1C;border-color:#F5B5B0}
+.btn:focus-visible,.rb:focus-visible,.ta:focus-visible,.bn a:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.dl{display:grid;grid-template-columns:92px 1fr;gap:8px 12px;font-size:14px;line-height:20px;margin:0}
+.dl dt{color:#6E665E}.dl dd{margin:0}
+.tmr{height:8px;border-radius:9999px;background:#E8E2D9;overflow:hidden;display:block}
+.tmr span{display:block;height:100%}
+.rb{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid #D6CEC3;border-radius:10px;background:#fff;cursor:pointer;font-size:15px}
+.rb input{width:22px;height:22px;accent-color:#0B4F6C;margin:0;flex:none}
+.ta{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #D6CEC3;border-radius:10px;font:400 15px/22px Inter,system-ui,sans-serif;min-height:72px;resize:vertical;background:#fff;color:#1F1B17}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E665E;font:500 11px/14px Inter,system-ui,sans-serif;position:relative}
+.bn a.on{color:#083B50;font-weight:700}
+.bn .dot{position:absolute;top:8px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:9999px;background:#C62828;color:#fff;font:700 10px/16px Inter,system-ui,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <!-- Notificación push (como la ve el teléfono) -->
+  <div aria-label="Notificación push" style="margin: 10px 12px 0; padding: 10px 12px; border-radius: 14px; background: #1F1B17; color: #fff; display: flex; gap: 10px; align-items: flex-start">
+    <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true" style="margin-top: 2px"><g transform="translate(-0.8 0) scale(1)"><path d="M12.2 26.09H9.8Q8.87 26.09 8.22 25.53Q7.56 24.98 7.08 23.81L1.94 11.01Q1.58 10.15 1.41 9.84Q1.23 9.53 0.89 9.28L0.46 9.02Q-0 8.63 -0.16 8.33Q-0.32 8.03 -0.32 7.55Q-0.32 6.82 0.12 6.41Q0.56 6 1.3 6H10.45Q11.95 6 11.95 7.55Q11.95 8.12 11.67 8.44Q11.39 8.75 10.87 9.08L10.4 9.32Q9.87 9.6 9.75 10.19Q9.63 10.78 9.97 11.74L14.08 22.79L12.21 23.16L16.4 11.71Q16.7 10.87 16.54 10.27Q16.39 9.67 15.72 9.3L15.22 9.08Q14.69 8.76 14.47 8.44Q14.26 8.13 14.26 7.55Q14.26 6.82 14.69 6.41Q15.12 6 15.88 6H20.86Q21.61 6 22.06 6.41Q22.5 6.82 22.5 7.55Q22.5 8.03 22.33 8.36Q22.15 8.68 21.7 9L21.27 9.26Q20.9 9.53 20.62 10Q20.35 10.46 19.76 11.96L14.95 24.02Q14.47 25.21 13.76 25.65Q13.05 26.09 12.2 26.09Z" fill="#F2B134"/><path d="M27.8 26.58Q26.57 26.58 25.6 25.97Q24.62 25.36 24.06 24.36Q23.5 23.36 23.5 22.15Q23.5 20.92 24.06 19.94Q24.62 18.95 25.6 18.36Q26.57 17.78 27.8 17.78Q29.06 17.78 30.03 18.36Q31.01 18.95 31.57 19.93Q32.12 20.92 32.12 22.15Q32.12 23.36 31.57 24.36Q31.01 25.36 30.04 25.97Q29.07 26.58 27.8 26.58Z" fill="#F2B134"/></g></svg>
+    <div style="display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0"><span style="font: 600 13px/18px Inter, system-ui, sans-serif">Vereda · Nueva oferta de trabajo</span><span style="font: 400 13px/18px Inter, system-ui, sans-serif; color: #D6CEC3">Traslado Aeropuerto → Viñales, 13 feb · responde en 2 h · € 180</span></div>
+    <span class="cap" style="color: #D6CEC3">13:03</span>
+  </div>
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 0 20px">
+    <h1 class="disp" style="font-size: 24px; line-height: 30px; flex: 1">Oferta de trabajo</h1>
+    <a href="W-Home.dc.html" aria-label="Cerrar" style="width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></a>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 24px; flex: 1">
+
+    <!-- Cuenta atrás -->
+    <sc-if value="{{isOpen}}" hint-placeholder-val="{{ true }}">
+      <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px; border-color: #F59E0B; background: #FFFBEB">
+        <div style="display: flex; align-items: baseline; gap: 10px"><span class="mono" style="font-size: 40px; line-height: 44px; font-weight: 500; color: #92400E">0:29</span><span style="font-size: 14px; line-height: 20px; color: #92400E; flex: 1">para responder · ofrecido a las 13:03</span></div>
+        <span class="tmr" aria-label="76 % del tiempo consumido"><span style="width: 76%; background: #B45309"></span></span>
+        <p class="cap" style="color: #92400E">Queda menos de un cuarto del tiempo. Si no respondes, la central ofrece el trabajo a otro chofer y la oferta desaparece.</p>
+      </div>
+    </sc-if>
+    <sc-if value="{{isAccepted}}" hint-placeholder-val="{{ false }}">
+      <div class="card" role="status" style="padding: 14px; display: flex; gap: 12px; align-items: flex-start; border-color: #A5D6A7; background: #E8F5E9; color: #1B5E20"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><div style="display: flex; flex-direction: column; gap: 4px"><strong style="font-size: 16px; line-height: 22px">Aceptado · 14:33</strong><span style="font-size: 14px; line-height: 20px">Ya está en tu calendario. La central y los viajeros reciben la confirmación. La orden de trabajo (PDF) llega cuando el viaje quede confirmado y pagado.</span><span class="cap" style="color: #1B5E20">Enviado · si pierdes la señal se guarda y se reenvía solo.</span></div></div>
+      <a class="btn btn-p" href="W-Calendar.dc.html">Ver en el calendario</a>
+    </sc-if>
+    <sc-if value="{{isDeclined}}" hint-placeholder-val="{{ false }}">
+      <div class="card" role="status" style="padding: 14px; display: flex; gap: 12px; align-items: flex-start; border-color: #E8E2D9; background: #F3EEE6; color: #4A433D"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg><div style="display: flex; flex-direction: column; gap: 4px"><strong style="font-size: 16px; line-height: 22px">Rechazado · motivo: {{reasonLabel}}</strong><span style="font-size: 14px; line-height: 20px">Gracias por avisar rápido: la central ya lo está ofreciendo a otro chofer. Los rechazos cuentan en tu fiabilidad (ahora 95); un motivo claro pesa menos que no responder.</span></div></div>
+      <a class="btn btn-s" href="W-Home.dc.html">Volver al inicio</a>
+    </sc-if>
+
+    <!-- Detalle -->
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px"><p class="ov">Traslado · ida y vuelta</p><h2 class="disp" style="font-size: 20px; line-height: 26px">Aeropuerto José Martí ⇄ Casa Yamilé, Viñales</h2></div>
+      <dl class="dl">
+        <dt>Ida</dt><dd><strong>Vie 13 feb · 15:40</strong><br>T3 llegadas (vuelo AC 1808) → Viñales · 2 h 30</dd>
+        <dt>Vuelta</dt><dd><strong>Vie 20 feb · 11:00</strong><br>Casa Yamilé → Aeropuerto T3 (vuelo 18:10)</dd>
+        <dt>Viajeros</dt><dd>Margaret +1 · inglés · 2 maletas grandes<br><span class="cap">Ritmo tranquilo: David tiene una rodilla delicada, ayuda con las maletas.</span></dd>
+        <dt>Vehículo</dt><dd>5 plazas o más · aire acondicionado · tu Peugeot 5008 cumple</dd>
+        <dt>Pago</dt><dd><strong class="mono">€ 180</strong> neto (€ 90 + € 90) · se paga en efectivo o transferencia a los 5 días hábiles de terminar</dd>
+        <dt>Central</dt><dd>Recoger con cartel «Vereda · Chen». Confirma el combustible 48 h antes.</dd>
+      </dl>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="tag">Reserva VX-7K2M9Q</span><span class="tag">Pinar del Río</span><span class="tag">Reserva pendiente de pago del cliente</span></div>
+    </div>
+
+    <!-- Acciones -->
+    <sc-if value="{{isOpen}}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{noSheet}}" hint-placeholder-val="{{ true }}">
+        <button class="btn btn-g" type="button" onClick="{{accept}}" style="height: 56px; font-size: 18px"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Aceptar el trabajo</button>
+        <button class="btn btn-d" type="button" onClick="{{openSheet}}">Rechazar…</button>
+        <p class="cap">Aceptar es un compromiso: una cancelación de última hora baja tu fiabilidad más que un rechazo a tiempo.</p>
+      </sc-if>
+      <sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}">
+        <div class="card" role="dialog" aria-labelledby="rz" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 12px 32px rgba(31,27,23,.14)">
+          <h2 id="rz" style="margin: 0; font-size: 18px; line-height: 24px">¿Por qué no puedes?</h2>
+          <div role="radiogroup" aria-label="Motivo" style="display: flex; flex-direction: column; gap: 8px">
+            <sc-for list="{{reasons}}" as="r" hint-placeholder-count="5"><label class="rb" style="border-color: {{r.bd}}"><input type="radio" name="rz" checked="{{r.on}}" onChange="{{r.pick}}"><span>{{r.label}}</span></label></sc-for>
+          </div>
+          <sc-if value="{{isOther}}" hint-placeholder-val="{{ false }}"><label class="cap" for="rzt">Cuéntanos brevemente</label><textarea class="ta" id="rzt" placeholder="Por ejemplo: el carro está en el taller hasta el lunes"></textarea></sc-if>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-p" type="button" onClick="{{decline}}" style="flex: 1">Confirmar rechazo</button><button class="btn btn-s" type="button" onClick="{{closeSheet}}">Volver</button></div>
+          <p class="cap">Si el motivo es el combustible, la central puede mandarte un chofer de apoyo con reserva en vez de perder el trabajo.</p>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <!-- Otras ofertas -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">Otras ofertas</p>
+      <a class="card" href="W-Offer.dc.html" style="padding: 14px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit"><div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><strong style="font-size: 15px; line-height: 20px">Sáb 17 oct · Viñales → La Habana · 10:00</strong><span class="cap">Sophie +1 · francés / inglés · € 90 · quedan 1:52</span></div><span class="tmr" style="width: 56px; flex: none" aria-label="7 % del tiempo consumido"><span style="width: 7%; background: #0B4F6C"></span></span></a>
+      <p class="cap">Las ofertas llegan por notificación y SMS. Si el teléfono está sin señal más de 1 hora, la central te llama.</p>
+    </section>
+    <div style="height: 72px"></div>
+  </main>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24">primer viewport · 844</span></div>
+  <nav class="bn" aria-label="Principal" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="W-Home.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/><path d="M9 21v-6h6v6"/></svg>Inicio</a>
+    <a href="W-Offer.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>Ofertas<span class="dot">{{badge}}</span></a>
+    <a href="W-Calendar.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Calendario</a>
+    <a href="W-Job.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M8 7V5h8v2M3 12h18"/></svg>Trabajos</a>
+    <a href="W-Earnings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1380}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { st: 'open', sheet: false, reason: 'busy' };
+  }
+  renderVals() {
+    const s = this.state;
+    const R = [['busy', 'Ya tengo otro trabajo ese día'], ['vehicle', 'Problema con el vehículo'], ['fuel', 'No tengo combustible asegurado'], ['far', 'Demasiado lejos para mí'], ['other', 'Otro motivo']];
+    const reasons = R.map(([k, label]) => ({ key: k, label, on: s.reason === k, bd: s.reason === k ? '#0B4F6C' : '#D6CEC3', pick: () => this.setState({ reason: k }) }));
+    const found = R.filter((x) => x[0] === s.reason)[0];
+    return {
+      isOpen: s.st === 'open', isAccepted: s.st === 'accepted', isDeclined: s.st === 'declined', badge: s.st === 'open' ? 2 : 1,
+      sheet: s.sheet, noSheet: !s.sheet, openSheet: () => this.setState({ sheet: true }), closeSheet: () => this.setState({ sheet: false }),
+      reasons, isOther: s.reason === 'other', reasonLabel: found ? found[1].toLowerCase() : '',
+      accept: () => this.setState({ st: 'accepted', sheet: false }), decline: () => this.setState({ st: 'declined', sheet: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

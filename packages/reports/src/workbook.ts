@@ -9,6 +9,8 @@ export interface FinanceReport {
   gbv: number;
   payoutsAccrued: number;
   payoutsSettled: number;
+  /** M4: refunds sent in the window. */
+  refundsSent?: number;
   netRevenue: number;
   takeRate: number;
   averageOrderValue: number;
@@ -119,6 +121,7 @@ export async function buildAnalyticsWorkbook(
     ['Gross booking value', input.finance.gbv],
     ['Payouts accrued', input.finance.payoutsAccrued],
     ['Payouts settled', input.finance.payoutsSettled],
+    ['Refunds sent', input.finance.refundsSent ?? 0],
     ['Net revenue', input.finance.netRevenue],
     ['Take rate', input.finance.takeRate],
     ['Average order value', input.finance.averageOrderValue],

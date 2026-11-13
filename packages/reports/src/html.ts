@@ -59,6 +59,7 @@ export function buildAnalyticsHtml(input: AnalyticsReportInput): string {
       ['Gross booking value', input.finance.gbv],
       ['Payouts accrued', input.finance.payoutsAccrued],
       ['Payouts settled', input.finance.payoutsSettled],
+      ['Refunds sent', input.finance.refundsSent ?? 0],
       ['Net revenue', input.finance.netRevenue],
       ['Take rate', input.finance.takeRate],
       ['Average order value', input.finance.averageOrderValue],

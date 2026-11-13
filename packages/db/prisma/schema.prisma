@@ -113,6 +113,188 @@ enum PayoutStatus {
   FAILED
 }
 
+// M4 payment schedule (docs/schema-m4-payment-schedule.md)
+enum InstalmentKind {
+  DEPOSIT
+  BALANCE
+  FULL
+  // M10: seats confirmed after the price locked (D6).
+  TICKETS
+}
+
+enum InstalmentStatus {
+  DUE
+  PAID
+  // The desk forgave it (a goodwill gesture); audited.
+  WAIVED
+  // The booking was cancelled before it fell due.
+  CANCELLED
+}
+
+enum ProofStatus {
+  SUBMITTED
+  // Looks right and the window was extended; the money is still to be seen.
+  ACCEPTED
+  REJECTED
+}
+
+enum RefundReason {
+  TRAVELER_CANCELLATION
+  HOST_CANCELLATION
+  FORCE_MAJEURE
+  GOODWILL
+  PRICE_CORRECTION
+}
+
+enum RefundStatus {
+  REQUESTED
+  // Every approval the threshold needs is in.
+  APPROVED
+  REJECTED
+  // The bank or the provider has it.
+  SENT
+  FAILED
+}
+
+
+/// M5: the Custom builder's request, before the desk prices it.
+enum CustomRequestStatus {
+  OPEN
+  CONVERTED
+  CLOSED
+}
+
+/// M5: a proposal thread's lifecycle. EXPIRED is derived on read from validUntil.
+enum ProposalStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum ProposalLineKind {
+  TRANSPORT
+  LODGING
+  GUIDES
+  ACTIVITIES
+  MEALS
+  INSURANCE
+  FEE
+  OTHER
+}
+
+/// M7: an advisory's severity. INFO and CAUTION are dismissible; CRITICAL is acknowledged.
+enum AdvisorySeverity {
+  INFO
+  CAUTION
+  CRITICAL
+}
+
+/// M7: Scheduled (published, not yet effective) and Expired are derived on read.
+enum AdvisoryStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  SUPERSEDED
+  LIFTED
+}
+
+/// M8: who is paged and how often travelers are contacted (D3).
+enum DisruptionSeverity {
+  MINOR
+  MAJOR
+  EMERGENCY
+}
+
+enum DisruptionStatus {
+  OPEN
+  CLOSED
+}
+
+enum TravelerSafety {
+  UNKNOWN
+  SAFE
+  NEEDS_HELP
+}
+
+enum DisruptionChoiceSource {
+  TRAVELER
+  DESK
+  /// The deadline passed with no answer; recorded when the desk confirms it.
+  DEFAULT
+}
+
+/// M9: a thresholds version's life (D1, D3).
+enum SettingsVersionStatus {
+  PROPOSED
+  APPLIED
+  REJECTED
+  WITHDRAWN
+}
+
+/// M10: an event's publication state (D2).
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+/// M10: the board's access chip (D2).
+enum EventAccess {
+  ALLOCATIONS_OPEN
+  REQUEST_ONLY
+  PASSES
+  GUIDE_ONLY // free events: no seats, the page offers the builder
+}
+
+/// M10: a seat category's kind (D3).
+enum SeatCategoryKind {
+  GENERAL
+  NUMBERED
+  PASS // every night; one ticket per seat
+}
+
+/// M10: a request's life (D3).
+enum EventRequestStatus {
+  SUBMITTED
+  REQUESTING  // the desk confirmed it can request these seats
+  CONFIRMED   // seats secured and priced on a booking
+  UNAVAILABLE // not obtainable, or fell through before confirmation
+  CANCELLED
+}
+
+/// M10: where the tickets go (D5).
+enum EventRequestPath {
+  BUILD
+  EXISTING
+  TICKETS_ONLY
+}
+
+/// M6: a casa's generator (D1).
+enum GeneratorAccess {
+  NONE
+  OWN
+  SHARED
+}
+
+/// M6: how a resources confirmation reached the desk.
+enum ResourceChannel {
+  PHONE
+  WHATSAPP
+  VISIT
+  /// The worker app's self-declaration (Phase 7).
+  WORKER_APP
+}
+
+enum ProposalLineUnit {
+  PER_PERSON
+  PER_BOOKING
+  PER_NIGHT
+  PER_DAY
+  PER_GROUP
+}
+
 enum DocumentType {
   VOUCHER
   WORK_ORDER
@@ -137,6 +319,97 @@ enum MessageSender {
   OPERATIONS
 }
 
+// Publish lifecycle of a curated package. Only PUBLISHED shows on the public
+// catalog; ARCHIVED keeps the row for the bookings that reference it.
+enum PackageStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+// REQUEST: hosts confirm within the tenant's response window. INSTANT needs
+// every component allotment-backed; nothing is today, so the publish check
+// refuses INSTANT until allotments exist (A-Package-Edit draws it locked).
+enum BookingModel {
+  REQUEST
+  INSTANT
+}
+
+enum DepartureStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum ExtraPriceUnit {
+  PER_PERSON
+  PER_BOOKING
+}
+
+// M2: who travels and at what price.
+enum TravelerKind {
+  ADULT
+  CHILD
+  INFANT
+}
+
+enum PriceLineKind {
+  BASE
+  TIER
+  CHILD
+  SINGLE_SUPPLEMENT
+  EXTRA
+  SERVICE
+  FEE
+  // M10: confirmed event seats and the concierge fee (D6).
+  EVENT_TICKET
+  CONCIERGE_FEE
+}
+
+// M3: the twelve general-licence categories of 31 CFR 515.560(a)
+// (counsel to confirm the wording).
+enum OfacCategory {
+  FAMILY_VISITS                  // 515.561
+  OFFICIAL_GOVERNMENT_BUSINESS   // 515.562
+  JOURNALISTIC_ACTIVITY          // 515.563
+  PROFESSIONAL_RESEARCH          // 515.564
+  EDUCATIONAL_ACTIVITIES         // 515.565
+  RELIGIOUS_ACTIVITIES           // 515.566
+  PUBLIC_PERFORMANCES            // 515.567
+  SUPPORT_FOR_THE_CUBAN_PEOPLE   // 515.574
+  HUMANITARIAN_PROJECTS          // 515.575
+  PRIVATE_FOUNDATIONS_RESEARCH   // 515.576
+  INFORMATIONAL_MATERIALS        // 515.545
+  AUTHORIZED_EXPORT_TRANSACTIONS // 515.533, 515.559
+}
+
+enum AffidavitSource {
+  ONLINE
+  PAPER
+}
+
+enum ConsentPurpose {
+  TERMS
+  PRIVACY_NOTICE
+  CANCELLATION_POLICY
+  INSURANCE_ACKNOWLEDGEMENT
+  PAYMENT_TERMS
+  MARKETING_EMAIL
+  TRIP_MESSAGES // pre-departure briefing and daily WhatsApp check-ins
+  COOKIES_ANALYTICS
+  COOKIES_MARKETING
+}
+
+enum ConsentSource {
+  BOOKING
+  ACCOUNT
+  COOKIE_BANNER
+  PAYMENT
+  CUSTOM_REQUEST
+  DESK
+}
+
 model User {
   id            String   @id @default(uuid()) @db.Uuid
   email         String   @unique
@@ -156,10 +429,50 @@ model User {
   retentionConsentGrantedAt DateTime? @map("retention_consent_granted_at")
   retentionNoticeSentAt     DateTime? @map("retention_notice_sent_at")
   anonymizedAt              DateTime? @map("anonymized_at")
+  /// M9 D5: a deactivated staff user is refused by the auth guard; null means active.
+  deactivatedAt             DateTime? @map("deactivated_at")
+  /// M9 display currencies C4: the traveler's display currency; null follows the cookie or the default.
+  displayCurrency           String?   @map("display_currency") @db.Char(3)
 
   supplierProfile SupplierProfile?
   reservations    Reservation[]
   auditLogs       AuditLog[]
+  // M3
+  consents           ConsentRecord[]
+  affidavitsRecorded TravelerAffidavit[] @relation("AffidavitRecordedBy")
+  // M4
+  proofsUploaded   PaymentProof[]   @relation("ProofUploadedBy")
+  proofsReviewed   PaymentProof[]   @relation("ProofReviewedBy")
+  refundsRequested Refund[]         @relation("RefundRequestedBy")
+  refundApprovals  RefundApproval[]
+  // M5
+  customRequests       CustomRequest[]
+  eventRequests        EventRequest[]
+  proposalsAssigned    Proposal[]        @relation("ProposalAssignedTo")
+  proposalVersionsMade ProposalVersion[] @relation("ProposalVersionCreatedBy")
+  // M7
+  advisoriesCreated        Advisory[]                @relation("AdvisoryCreatedBy")
+  advisoryApprovals        AdvisoryApproval[]        @relation("AdvisoryApprovals")
+  advisoryAcknowledgements AdvisoryAcknowledgement[]
+  // M8
+  disruptionsOwned    DisruptionCase[]        @relation("DisruptionOwner")
+  disruptionStepsDone DisruptionStep[]        @relation("DisruptionStepDoneBy")
+  safetyConfirmations DisruptionCaseBooking[] @relation("DisruptionSafetyConfirmedBy")
+  disruptionChoices   DisruptionCaseBooking[] @relation("DisruptionChoiceBy")
+  // M6
+  supplierResourcesConfirmed SupplierResources[] @relation("SupplierResourcesConfirmedBy")
+  // M9
+  settingsProposed OperatingSettings[] @relation("OperatingSettingsProposedBy")
+  settingsDecided  OperatingSettings[] @relation("OperatingSettingsDecidedBy")
+  invitesSent      StaffInvite[]       @relation("StaffInviteInvitedBy")
+  invitesConfirmed StaffInvite[]       @relation("StaffInviteConfirmedBy")
+  invitesAccepted  StaffInvite[]       @relation("StaffInviteAcceptedBy")
+  recoveryCodes       StaffRecoveryCode[] @relation("StaffRecoveryCodeUser")
+  recoveryCodesIssued StaffRecoveryCode[] @relation("StaffRecoveryCodeIssuedBy")
+  knownDevices        StaffKnownDevice[]
+  overrides           PermissionOverride[] @relation("PermissionOverrideUser")
+  overridesDecided    PermissionOverride[] @relation("PermissionOverrideDecidedBy")
+  overridesEnded      PermissionOverride[] @relation("PermissionOverrideEndedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -182,6 +495,15 @@ model Session {
   updatedAt DateTime
   ipAddress String?
   userAgent String?
+  /// How the session was created (passkey, magic_link, password, oauth, other), set by the
+  /// auth package's session hook and never by a client. Null for sessions from before it
+  /// existed; only "passkey" satisfies the staff passkey rule.
+  signInMethod String?
+  /// The desk's last reported input (docs/schema-m9-idle-lock.md L2), written by
+  /// POST /me/activity only. Null reads as the sign-in time.
+  lastActiveAt DateTime?
+  /// The person said at sign-in that this is their own device (L1): no idle lock.
+  ownDevice    Boolean   @default(false)
   userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -256,9 +578,41 @@ model SupplierProfile {
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
   inventoryItems InventoryItem[]
+  // M6
+  resources      SupplierResources?
 
   @@index([verificationStatus])
   @@map("supplier_profiles")
+}
+
+/// M6: a supplier's backup power, water, capacity and fuel, as last confirmed (D1, D2).
+/// No row means never confirmed. History is the audit log (D8).
+model SupplierResources {
+  supplierId           String           @id @map("supplier_id") @db.Uuid
+  /// Casas (HOMESTAY_HOST).
+  generator            GeneratorAccess?
+  generatorHoursPerDay Int?             @map("generator_hours_per_day") @db.SmallInt
+  /// The hours as the host words them ("06–09, 18–21"), at most 60 characters.
+  generatorSchedule    String?          @map("generator_schedule") @db.VarChar(60)
+  generatorFuelDays    Int?             @map("generator_fuel_days") @db.SmallInt
+  /// Null or 0 means no solar.
+  solarBatteryKwh      Decimal?         @map("solar_battery_kwh") @db.Decimal(5, 1)
+  waterTankLitres      Int?             @map("water_tank_litres")
+  rooms                Int?             @db.SmallInt
+  guestCapacity        Int?             @map("guest_capacity") @db.SmallInt
+  /// Drivers (PRIVATE_DRIVER).
+  fuelReserveLitres    Int?             @map("fuel_reserve_litres")
+  confirmedAt          DateTime         @map("confirmed_at")
+  confirmedById        String?          @map("confirmed_by_id") @db.Uuid
+  confirmedVia         ResourceChannel  @map("confirmed_via")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  supplier    SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  confirmedBy User?           @relation("SupplierResourcesConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+
+  @@index([confirmedAt])
+  @@map("supplier_resources")
 }
 
 // Public recruitment application (spec §4.6 supplier management). Approved
@@ -304,6 +658,8 @@ model InventoryItem {
   pricingRules    PricingRule[]
   media           InventoryMedia[]
   packageServices PackageService[]
+  packageExtras   PackageExtra[]
+  proposalLines   ProposalPriceLine[]
 
   @@index([type])
   @@index([province])
@@ -319,19 +675,56 @@ model Package {
   name        String
   slug        String   @unique
   description String?
+  // Card text (A-Package-Edit: 160–220 characters).
+  summary     String?
   province    String?
   durationDays Int     @map("duration_days")
   currency    String   @default("EUR")
+  // Per person, before the tier delta, for a date with no departure price.
   basePrice   Decimal  @map("base_price") @db.Decimal(10, 2)
-  active      Boolean  @default(true)
+  status      PackageStatus @default(DRAFT)
+  publishedAt DateTime?     @map("published_at")
+  // Locale of the text on this row and on its days, tiers, extras and media;
+  // PackageTranslation overlays the other locales.
+  sourceLocale     String   @default("en") @map("source_locale")
+  // Set by the API when source text changes; a translation made from an
+  // older value is outdated.
+  contentUpdatedAt DateTime @default(now()) @map("content_updated_at")
+  bookingModel     BookingModel    @default(REQUEST) @map("booking_model")
+  // Departs with groupMin travelers; null bounds mean no limit.
+  groupMin         Int?            @map("group_min")
+  groupMax         Int?            @map("group_max")
+  leadTimeDays     Int             @default(2) @map("lead_time_days")
+  // Copied onto the reservation when a traveler books this package.
+  tourismCategory  TourismCategory @default(GENERAL) @map("tourism_category")
+  // Tenant theme keys, the same vocabulary as tenant/destinations.json.
+  themes           String[]        @default([])
+  // 1 (gentle) to 5 (demanding).
+  difficulty       Int?
+  accessibility    String[]        @default([])
+  // Keys into the manifest's policies; null is the tenant default.
+  cancellationPolicy String?       @map("cancellation_policy")
+  depositPolicy      String?       @map("deposit_policy")
+  included         String[]        @default([])
+  excluded         String[]        @default([])
+  cubaNotes        String?         @map("cuba_notes")
+  seoTitle         String?         @map("seo_title")
+  seoDescription   String?         @map("seo_description")
   attributes  Json?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  services     PackageService[]
-  reservations Reservation[]
+  services      PackageService[]
+  reservations  Reservation[]
+  days          PackageDay[]
+  tiers         PackageTier[]
+  departures    PackageDeparture[]
+  extras        PackageExtra[]
+  media         PackageMedia[]
+  translations  PackageTranslation[]
+  slugRedirects PackageSlugRedirect[]
 
-  @@index([active])
+  @@index([status])
   @@index([province])
   @@map("packages")
 }
@@ -342,15 +735,172 @@ model PackageService {
   id              String   @id @default(uuid()) @db.Uuid
   packageId       String   @map("package_id") @db.Uuid
   inventoryItemId String   @map("inventory_item_id") @db.Uuid
+  // Null: every tier books this service. Set: only that tier (its casa).
+  tierId          String?  @map("tier_id") @db.Uuid
   dayOffset       Int      @default(0) @map("day_offset")
   position        Int      @default(0)
   createdAt       DateTime @default(now()) @map("created_at")
 
   package       Package       @relation(fields: [packageId], references: [id], onDelete: Cascade)
   inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  tier          PackageTier?  @relation(fields: [tierId], references: [id], onDelete: Cascade)
 
   @@index([packageId])
+  @@index([tierId])
   @@map("package_services")
+}
+
+// The words for one itinerary day. The services the day uses stay in
+// PackageService, keyed by the same dayOffset.
+model PackageDay {
+  id        String  @id @default(uuid()) @db.Uuid
+  packageId String  @map("package_id") @db.Uuid
+  dayOffset Int     @map("day_offset")
+  title     String
+  body      String?
+  meals     String?
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, dayOffset])
+  @@map("package_days")
+}
+
+// An accommodation tier: it changes the stays, never the route. Its price is
+// a delta over the departure price, so a season moves every tier together.
+model PackageTier {
+  id               String   @id @default(uuid()) @db.Uuid
+  packageId        String   @map("package_id") @db.Uuid
+  code             String
+  name             String
+  description      String?
+  position         Int      @default(0)
+  priceDelta       Decimal  @default(0) @map("price_delta") @db.Decimal(10, 2)
+  singleSupplement Decimal? @map("single_supplement") @db.Decimal(10, 2)
+  isDefault        Boolean  @default(false) @map("is_default")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  package  Package          @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  services PackageService[]
+  reservations Reservation[]
+
+  @@unique([packageId, code])
+  @@map("package_tiers")
+}
+
+// A fixed departure. It ends on startDate + durationDays - 1. Places left are
+// capacity minus the travelers booked on it, which M2 records.
+model PackageDeparture {
+  id        String          @id @default(uuid()) @db.Uuid
+  packageId String          @map("package_id") @db.Uuid
+  startDate DateTime        @map("start_date") @db.Date
+  capacity  Int
+  // Per person, before the tier delta; null is Package.basePrice. The season
+  // label ("High · +25 %") is derived from the difference.
+  price     Decimal?        @db.Decimal(10, 2)
+  status    DepartureStatus @default(OPEN)
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+
+  @@unique([packageId, startDate])
+  @@index([startDate])
+  @@map("package_departures")
+}
+
+// An optional add-on (an activity, an extra night). When it is linked to a
+// catalog item it is dispatched like any service.
+model PackageExtra {
+  id              String         @id @default(uuid()) @db.Uuid
+  packageId       String         @map("package_id") @db.Uuid
+  code            String
+  name            String
+  description     String?
+  durationLabel   String?        @map("duration_label")
+  inventoryItemId String?        @map("inventory_item_id") @db.Uuid
+  dayOffset       Int?           @map("day_offset")
+  price           Decimal        @db.Decimal(10, 2)
+  priceUnit       ExtraPriceUnit @default(PER_PERSON) @map("price_unit")
+  position        Int            @default(0)
+  active          Boolean        @default(true)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  package       Package        @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  reservationExtras ReservationExtra[]
+
+  @@unique([packageId, code])
+  @@map("package_extras")
+}
+
+// Package photos; position 0 is the hero. The binary is in object storage
+// (packages/<packageId>/<uuid>.<ext>) and the content type comes from the key,
+// as for InventoryMedia. A photo that shows people needs a consent reference
+// before the package can publish.
+model PackageMedia {
+  id               String   @id @default(uuid()) @db.Uuid
+  packageId        String   @map("package_id") @db.Uuid
+  storageKey       String   @map("storage_key")
+  altText          String   @map("alt_text")
+  position         Int      @default(0)
+  showsPeople      Boolean  @default(false) @map("shows_people")
+  consentReference String?  @map("consent_reference")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+  @@map("package_media")
+}
+
+// One locale's overlay of a package's words; anything missing falls back to
+// the source locale. Nested words are keyed by the source's stable keys: days
+// by dayOffset, tiers and extras by code, media by id. @ota/schemas validates
+// the JSON.
+model PackageTranslation {
+  id              String   @id @default(uuid()) @db.Uuid
+  packageId       String   @map("package_id") @db.Uuid
+  locale          String
+  name            String?
+  summary         String?
+  description     String?
+  included        String[] @default([])
+  excluded        String[] @default([])
+  cubaNotes       String?  @map("cuba_notes")
+  seoTitle        String?  @map("seo_title")
+  seoDescription  String?  @map("seo_description")
+  days            Json?
+  tiers           Json?
+  extras          Json?
+  mediaAlt        Json?    @map("media_alt")
+  // Drafted text waits for a reviewer before travelers see it.
+  published       Boolean  @default(false)
+  // Package.contentUpdatedAt when this translation was last brought in line.
+  sourceUpdatedAt DateTime @map("source_updated_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, locale])
+  @@map("package_translations")
+}
+
+// A retired slug that redirects to its package. The API keeps a retired slug
+// from being taken by another package.
+model PackageSlugRedirect {
+  slug      String   @id
+  packageId String   @map("package_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+  @@map("package_slug_redirects")
 }
 
 // Gallery images for a catalog item (spec §4.6). The binary lives in object
@@ -427,24 +977,211 @@ model Reservation {
   completedAt             DateTime?         @map("completed_at")
   totalCurrency           String            @default("EUR") @map("total_currency")
   totalAmount             Decimal           @default(0) @map("total_amount") @db.Decimal(10, 2)
+  // M9 display currencies C6: the display currency and rate (spread included)
+  // locked at the deposit or the invoice; null before, or for a EUR traveler.
+  displayCurrency         String?           @map("display_currency") @db.Char(3)
+  displayRate             Decimal?          @map("display_rate") @db.Decimal(12, 6)
+  displayRateDate         DateTime?         @map("display_rate_date") @db.Date
+  displayRateLockedAt     DateTime?         @map("display_rate_locked_at")
+  // M2: the party, the chosen tier/departure and the frozen price lines.
+  partySize               Int               @map("party_size") @default(1)
+  tierId                  String?           @map("tier_id") @db.Uuid
+  departureId             String?           @map("departure_id") @db.Uuid
   customItineraryPayload  Json?             @map("custom_itinerary_payload")
   createdAt               DateTime          @default(now()) @map("created_at")
   updatedAt               DateTime          @updatedAt @map("updated_at")
 
   user        User            @relation(fields: [userId], references: [id])
   package     Package?        @relation(fields: [packageId], references: [id])
+  tier        PackageTier?      @relation(fields: [tierId], references: [id], onDelete: SetNull)
+  departure   PackageDeparture? @relation(fields: [departureId], references: [id], onDelete: SetNull)
   serviceItems ServiceItem[]
   payments    PaymentReceipt[]
   documents   Document[]
   messages    Message[]
   reviews     Review[]
   incidents   Incident[]
+  travelers   ReservationTraveler[]
+  rooms       ReservationRoom[]
+  extras      ReservationExtra[]
+  priceLines  ReservationPriceLine[]
+  affidavits  TravelerAffidavit[]
+  consents    ConsentRecord[]
+  instalments PaymentInstalment[]
+  refunds     Refund[]
+  proposal    Proposal?
+  disruptions DisruptionCaseBooking[]
+  eventRequests EventRequest[]
 
   @@index([userId])
   @@index([status])
   @@index([packageId])
   @@index([completedAt])
+  @@index([tierId])
+  @@index([departureId])
   @@map("reservations")
+}
+
+// One traveler on a booking (M2). `passportNumberEnc` is AES-256-GCM ciphertext
+// (decision D1); the plaintext is returned only by the logged vault route.
+model ReservationTraveler {
+  id                    String       @id @default(uuid()) @db.Uuid
+  reservationId         String       @map("reservation_id") @db.Uuid
+  roomId                String?      @map("room_id") @db.Uuid
+  position              Int          @default(0)
+  kind                  TravelerKind @default(ADULT)
+  isLead                Boolean      @default(false) @map("is_lead")
+  fullName              String       @map("full_name")
+  dateOfBirth           DateTime?    @map("date_of_birth") @db.Date
+  nationality           String?
+  // M3 D3: null derives US-person status from nationality; the desk sets it for
+  // US residents on another passport.
+  usPerson              Boolean?     @map("us_person")
+  passportNumberEnc     String?      @map("passport_number_enc")
+  passportExpiresAt     DateTime?    @map("passport_expires_at") @db.Date
+  emergencyContactName  String?      @map("emergency_contact_name")
+  emergencyContactPhone String?      @map("emergency_contact_phone")
+  createdAt             DateTime     @default(now()) @map("created_at")
+  updatedAt             DateTime     @updatedAt @map("updated_at")
+
+  reservation Reservation           @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  room        ReservationRoom?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  priceLines  ReservationPriceLine[]
+  affidavits  TravelerAffidavit[]
+
+  @@index([reservationId])
+  @@index([roomId])
+  @@map("reservation_travelers")
+}
+
+// A room on the rooming list (M2); position orders them on the voucher.
+model ReservationRoom {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @map("reservation_id") @db.Uuid
+  label         String
+  capacity      Int      @default(2)
+  position      Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  reservation Reservation           @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  travelers   ReservationTraveler[]
+
+  @@index([reservationId])
+  @@map("reservation_rooms")
+}
+
+// An add-on chosen on the booking (M2), priced from the package extra or manual.
+model ReservationExtra {
+  id             String         @id @default(uuid()) @db.Uuid
+  reservationId  String         @map("reservation_id") @db.Uuid
+  packageExtraId String?        @map("package_extra_id") @db.Uuid
+  label          String
+  unit           ExtraPriceUnit @default(PER_PERSON)
+  quantity       Int            @default(1)
+  unitAmount     Decimal        @map("unit_amount") @db.Decimal(10, 2)
+  amount         Decimal        @db.Decimal(10, 2)
+  currency       String         @default("EUR")
+  position       Int            @default(0)
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  reservation  Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  packageExtra PackageExtra? @relation(fields: [packageExtraId], references: [id], onDelete: SetNull)
+
+  @@index([reservationId])
+  @@map("reservation_extras")
+}
+
+// A frozen price line (M2): the reproducible invoice of what the traveler paid.
+model ReservationPriceLine {
+  id            String        @id @default(uuid()) @db.Uuid
+  reservationId String        @map("reservation_id") @db.Uuid
+  travelerId    String?       @map("traveler_id") @db.Uuid
+  kind          PriceLineKind
+  label         String
+  quantity      Decimal       @default(1) @db.Decimal(6, 2)
+  unitAmount    Decimal       @map("unit_amount") @db.Decimal(10, 2)
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("EUR")
+  position      Int           @default(0)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  reservation Reservation          @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  traveler    ReservationTraveler? @relation(fields: [travelerId], references: [id], onDelete: SetNull)
+
+  @@index([reservationId])
+  @@map("reservation_price_lines")
+}
+
+// One US person's travel-category certification for one booking (M3, D1). It
+// snapshots who signed for what, so it outlives the traveler purge (D6), and is
+// append-only (D2, enforced by a trigger): a correction is a new row that
+// supersedes this one.
+model TravelerAffidavit {
+  id                String          @id @default(uuid()) @db.Uuid
+  reservationId     String?         @map("reservation_id") @db.Uuid
+  travelerId        String?         @map("traveler_id") @db.Uuid
+  supersedesId      String?         @unique @map("supersedes_id") @db.Uuid
+  category          OfacCategory
+  signerName        String          @map("signer_name")
+  signerNationality String?         @map("signer_nationality")
+  bookingCode       String          @map("booking_code")
+  travelStart       DateTime        @map("travel_start") @db.Date
+  travelEnd         DateTime        @map("travel_end") @db.Date
+  statementVersion  String          @map("statement_version")
+  statementHash     String          @map("statement_hash")
+  // The typed name (ONLINE) or the name on the scanned form (PAPER).
+  signature         String
+  source            AffidavitSource @default(ONLINE)
+  // The signed scan (PAPER), behind packages/storage.
+  documentKey       String?         @map("document_key")
+  ipAddress         String?         @map("ip_address")
+  userAgent         String?         @map("user_agent")
+  recordedById      String?         @map("recorded_by_id") @db.Uuid
+  signedAt          DateTime        @map("signed_at")
+  // travelEnd + 5 years (D6); the sweep deletes the row and its document after it.
+  retainUntil       DateTime        @map("retain_until")
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  reservation  Reservation?         @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  traveler     ReservationTraveler? @relation(fields: [travelerId], references: [id], onDelete: SetNull)
+  recordedBy   User?                @relation("AffidavitRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  supersedes   TravelerAffidavit?   @relation("AffidavitSupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
+  supersededBy TravelerAffidavit?   @relation("AffidavitSupersedes")
+
+  @@index([reservationId])
+  @@index([travelerId])
+  @@index([retainUntil])
+  @@map("traveler_affidavits")
+}
+
+// Append-only consent log (M3, D4): the latest row per subject and purpose is
+// the current state; a withdrawal is a new row with granted = false.
+model ConsentRecord {
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String?        @map("user_id") @db.Uuid
+  // A random id from the consent cookie, before the visitor signs in.
+  visitorId     String?        @map("visitor_id")
+  reservationId String?        @map("reservation_id") @db.Uuid
+  purpose       ConsentPurpose
+  granted       Boolean
+  // Declared by the tenant content that holds the text, e.g. "privacy@2026-10-14".
+  textVersion   String         @map("text_version")
+  textHash      String?        @map("text_hash")
+  source        ConsentSource
+  locale        String?
+  // Which banner variant applied: "EU", "UK", "US-CA", …
+  region        String?
+  // Null until a geo-IP source is approved (D5).
+  ipCountry     String?        @map("ip_country")
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, purpose, createdAt])
+  @@index([visitorId])
+  @@index([reservationId])
+  @@map("consent_records")
 }
 
 model ServiceItem {
@@ -460,8 +1197,11 @@ model ServiceItem {
   offeredAt        DateTime?         @map("offered_at")
   respondedAt      DateTime?         @map("responded_at")
   declineReason    String?           @map("decline_reason")
-  payoutRate       Decimal           @default(0) @map("payout_rate") @db.Decimal(10, 2)
-  payoutStatus     PayoutStatus      @default(ACCRUED) @map("payout_status")
+  payoutRate      Decimal           @default(0) @map("payout_rate") @db.Decimal(10, 2)
+  payoutStatus    PayoutStatus      @default(ACCRUED) @map("payout_status")
+  // M2: what the traveler pays for this service (closes the invoice gap);
+  // null until the booking is priced.
+  travelerPrice   Decimal?          @map("traveler_price") @db.Decimal(10, 2)
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
@@ -506,15 +1246,405 @@ model PaymentReceipt {
   rail         PaymentRail
   currency     String        @default("EUR")
   amount       Decimal       @db.Decimal(10, 2)
+  // M4 D6: the rail's fee on top of the amount (card surcharge); 0 for transfers.
+  feeAmount    Decimal       @default(0) @map("fee_amount") @db.Decimal(10, 2)
+  // M4 D1: the instalment this payment is for; null on payments made before M4.
+  instalmentId String?       @map("instalment_id") @db.Uuid
   status       PaymentStatus @default(PENDING)
   payoutStatus PayoutStatus  @default(ACCRUED) @map("payout_status")
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
-  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservation Reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  instalment  PaymentInstalment? @relation(fields: [instalmentId], references: [id], onDelete: SetNull)
+  proofs      PaymentProof[]
+  refunds     Refund[]
 
   @@index([reservationId])
+  @@index([instalmentId])
   @@map("payment_receipts")
+}
+
+/// M4 D1: one amount the traveler owes, with its due date.
+model PaymentInstalment {
+  id            String           @id @default(uuid()) @db.Uuid
+  reservationId String           @map("reservation_id") @db.Uuid
+  kind          InstalmentKind
+  position      Int
+  amount        Decimal          @db.Decimal(10, 2)
+  currency      String           @default("EUR")
+  dueAt         DateTime         @map("due_at")
+  status        InstalmentStatus @default(DUE)
+  paidAt        DateTime?        @map("paid_at")
+  /// The manifest deposit policy key the schedule was built from.
+  policyKey     String?          @map("policy_key")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  receipts    PaymentReceipt[]
+
+  @@unique([reservationId, position])
+  @@index([status, dueAt])
+  @@map("payment_instalments")
+}
+
+/// M4 D5: a traveler's proof of transfer, reviewed by operations.
+model PaymentProof {
+  id           String      @id @default(uuid()) @db.Uuid
+  receiptId    String      @map("receipt_id") @db.Uuid
+  storageKey   String      @map("storage_key")
+  uploadedById String?     @map("uploaded_by_id") @db.Uuid
+  status       ProofStatus @default(SUBMITTED)
+  reviewedById String?     @map("reviewed_by_id") @db.Uuid
+  reviewedAt   DateTime?   @map("reviewed_at")
+  /// What the traveler is told on a rejection, or the desk's note.
+  reviewNote   String?     @map("review_note")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  receipt    PaymentReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  uploadedBy User?          @relation("ProofUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  reviewedBy User?          @relation("ProofReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([receiptId])
+  @@map("payment_proofs")
+}
+
+/// M4 D7: money returned from one receipt, with its approvals.
+model Refund {
+  id               String       @id @default(uuid()) @db.Uuid
+  reservationId    String       @map("reservation_id") @db.Uuid
+  receiptId        String       @map("receipt_id") @db.Uuid
+  amount           Decimal      @db.Decimal(10, 2)
+  currency         String       @default("EUR")
+  reason           RefundReason
+  /// Mandatory; it also goes to the audit log.
+  note             String
+  /// The policy key, band and share kept it was computed with; null for a set amount.
+  rule             Json?
+  status           RefundStatus @default(REQUESTED)
+  requestedById    String?      @map("requested_by_id") @db.Uuid
+  /// The provider's refund id, or the bank reference; stored before the provider call.
+  providerRefundId String?      @unique @map("provider_refund_id")
+  sentAt           DateTime?    @map("sent_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  // NoAction (checked at the end of the statement) lets a booking's cascade
+  // remove both rows, while a receipt with refunds cannot be deleted alone.
+  receipt     PaymentReceipt   @relation(fields: [receiptId], references: [id], onDelete: NoAction)
+  requestedBy User?            @relation("RefundRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvals   RefundApproval[]
+
+  @@index([status, createdAt])
+  @@index([reservationId])
+  @@index([receiptId])
+  @@map("refunds")
+}
+
+/// M4 D7: one person's vote on a refund; dual approval needs two different people.
+model RefundApproval {
+  id         String   @id @default(uuid()) @db.Uuid
+  refundId   String   @map("refund_id") @db.Uuid
+  approverId String   @map("approver_id") @db.Uuid
+  approve    Boolean
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  refund   Refund @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  approver User   @relation(fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@unique([refundId, approverId])
+  @@map("refund_approvals")
+}
+
+
+/// M5: the Custom builder's request. It is not a booking and holds no price.
+model CustomRequest {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  /// The visible reference (VX-C-XXXXXXXX), unique across requests.
+  reference String              @unique
+  status    CustomRequestStatus @default(OPEN)
+  locale    String?
+  /// The builder's answers, validated by the CustomRequest payload schema.
+  payload   Json
+  notes     String?
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposals Proposal[]
+  /// M10: event requests whose trip this request is (D5).
+  eventRequests EventRequest[]
+
+  @@index([userId, createdAt])
+  @@map("custom_requests")
+}
+
+/// M5: the proposal thread: one reference, a current version and its acceptance.
+model Proposal {
+  id                String         @id @default(uuid()) @db.Uuid
+  requestId         String         @map("request_id") @db.Uuid
+  status            ProposalStatus @default(DRAFT)
+  currentVersion    Int            @default(0) @map("current_version")
+  assignedToId      String?        @map("assigned_to_id") @db.Uuid
+  acceptedVersionId String?        @unique @map("accepted_version_id") @db.Uuid
+  reservationId     String?        @unique @map("reservation_id") @db.Uuid
+  sentAt            DateTime?      @map("sent_at")
+  acceptedAt        DateTime?      @map("accepted_at")
+  declinedAt        DateTime?      @map("declined_at")
+  declineReason     String?        @map("decline_reason")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  request         CustomRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  assignedTo      User?             @relation("ProposalAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  acceptedVersion ProposalVersion?  @relation("ProposalAcceptedVersion", fields: [acceptedVersionId], references: [id], onDelete: SetNull)
+  reservation     Reservation?      @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  versions        ProposalVersion[] @relation("ProposalVersions")
+
+  @@index([status, createdAt])
+  @@index([requestId])
+  @@map("proposals")
+}
+
+/// M5: one immutable priced version sent to the traveler.
+model ProposalVersion {
+  id          String   @id @default(uuid()) @db.Uuid
+  proposalId  String   @map("proposal_id") @db.Uuid
+  version     Int
+  currency    String   @default("EUR")
+  total       Decimal  @db.Decimal(10, 2)
+  perPerson   Decimal? @map("per_person") @db.Decimal(10, 2)
+  validUntil  DateTime @map("valid_until")
+  /// Route, stops, days, options and the summary; validated by ProposalDocument.
+  document    Json
+  /// The policy keys and words shown, snapshotted (M5 D8).
+  terms       Json?
+  pdfKey      String?  @map("pdf_key")
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  proposal   Proposal            @relation("ProposalVersions", fields: [proposalId], references: [id], onDelete: Cascade)
+  createdBy  User?               @relation("ProposalVersionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  priceLines ProposalPriceLine[]
+  acceptedIn Proposal?           @relation("ProposalAcceptedVersion")
+
+  @@unique([proposalId, version])
+  @@map("proposal_versions")
+}
+
+/// M5: one money line of a version; copied into ReservationPriceLine on acceptance.
+model ProposalPriceLine {
+  id               String           @id @default(uuid()) @db.Uuid
+  versionId        String           @map("version_id") @db.Uuid
+  kind             ProposalLineKind
+  unit             ProposalLineUnit @default(PER_BOOKING)
+  label            String
+  description      String?
+  quantity         Decimal          @default(1) @db.Decimal(6, 2)
+  unitAmount       Decimal          @map("unit_amount") @db.Decimal(10, 2)
+  amount           Decimal          @db.Decimal(10, 2)
+  currency         String           @default("EUR")
+  position         Int              @default(0)
+  serviceType      ServiceType?     @map("service_type")
+  province         String?
+  serviceDateStart DateTime?        @map("service_date_start") @db.Date
+  serviceDateEnd   DateTime?        @map("service_date_end") @db.Date
+  inventoryItemId  String?          @map("inventory_item_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  version       ProposalVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem?  @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+
+  @@index([versionId, position])
+  @@map("proposal_price_lines")
+}
+
+/// M7: a travel advisory and crisis banner. A published advisory is edited by
+/// a new row that supersedes it (D2).
+model Advisory {
+  id              String           @id @default(uuid()) @db.Uuid
+  /// The visible reference (ADV-2026-031), unique.
+  reference       String           @unique
+  severity        AdvisorySeverity
+  status          AdvisoryStatus   @default(DRAFT)
+  /// Province codes (CU01…); empty is the whole country (D3).
+  regions         String[]         @default([])
+  effectiveFrom   DateTime         @map("effective_from")
+  /// Mandatory: a banner without an end date is a stale banner.
+  expiresAt       DateTime         @map("expires_at")
+  /// Shown to travelers ("Vereda drivers on the ground · …").
+  source          String
+  sourceLocale    String           @default("en") @map("source_locale")
+  showOnSite      Boolean          @default(true) @map("show_on_site")
+  showOnPackages  Boolean          @default(true) @map("show_on_packages")
+  notifyTravelers Boolean          @default(true) @map("notify_travelers")
+  /// The published advisory this version replaces (D2).
+  supersedesId    String?          @unique @map("supersedes_id") @db.Uuid
+  createdById     String?          @map("created_by_id") @db.Uuid
+  publishedAt     DateTime?        @map("published_at")
+  liftedAt        DateTime?        @map("lifted_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  supersedes       Advisory?                 @relation("AdvisorySupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
+  supersededBy     Advisory?                 @relation("AdvisorySupersedes")
+  createdBy        User?                     @relation("AdvisoryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  translations     AdvisoryTranslation[]
+  approvals        AdvisoryApproval[]
+  acknowledgements AdvisoryAcknowledgement[]
+  /// M8: the disruption case this banner speaks for (D7).
+  disruptionCaseId String?                   @map("disruption_case_id") @db.Uuid
+  disruptionCase   DisruptionCase?           @relation(fields: [disruptionCaseId], references: [id], onDelete: SetNull)
+
+  @@index([status, expiresAt])
+  @@map("advisories")
+}
+
+model AdvisoryTranslation {
+  id         String   @id @default(uuid()) @db.Uuid
+  advisoryId String   @map("advisory_id") @db.Uuid
+  locale     String
+  headline   String
+  /// What happened, why, what to do.
+  body       String
+  cta        String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  advisory Advisory @relation(fields: [advisoryId], references: [id], onDelete: Cascade)
+
+  @@unique([advisoryId, locale])
+  @@map("advisory_translations")
+}
+
+model AdvisoryApproval {
+  id         String   @id @default(uuid()) @db.Uuid
+  advisoryId String   @map("advisory_id") @db.Uuid
+  approverId String?  @map("approver_id") @db.Uuid
+  /// The approver's role when they approved (D4 counts roles).
+  role       Role
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  advisory Advisory @relation(fields: [advisoryId], references: [id], onDelete: Cascade)
+  approver User?    @relation("AdvisoryApprovals", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@unique([advisoryId, approverId])
+  @@map("advisory_approvals")
+}
+
+model AdvisoryAcknowledgement {
+  id         String   @id @default(uuid()) @db.Uuid
+  advisoryId String   @map("advisory_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  advisory Advisory @relation(fields: [advisoryId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([advisoryId, userId])
+  @@map("advisory_acknowledgements")
+}
+
+/// M8: a disruption case (A-Disruption). Its log is the audit trail (D8).
+model DisruptionCase {
+  id        String             @id @default(uuid()) @db.Uuid
+  /// The visible reference (DC-0931), unique.
+  reference String             @unique
+  /// The manifest scenario key (outage, hurricane, fuel, casa, flight).
+  scenario  String
+  severity  DisruptionSeverity
+  status    DisruptionStatus   @default(OPEN)
+  /// A province code (CU01…); null when it is not regional (a flight).
+  province  String?
+  title     String
+  summary   String
+  /// The scenario's compensation rule as it read when the case opened.
+  policy    String
+  ownerId   String?            @map("owner_id") @db.Uuid
+  openedAt  DateTime           @default(now()) @map("opened_at")
+  closedAt  DateTime?          @map("closed_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  owner      User?                   @relation("DisruptionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  steps      DisruptionStep[]
+  options    DisruptionOption[]
+  bookings   DisruptionCaseBooking[]
+  advisories Advisory[]
+
+  @@index([status, openedAt])
+  @@map("disruption_cases")
+}
+
+/// A playbook step, copied from the manifest when the case opens (D1).
+model DisruptionStep {
+  id        String    @id @default(uuid()) @db.Uuid
+  caseId    String    @map("case_id") @db.Uuid
+  position  Int
+  text      String
+  /// The owner as the playbook names it ("Local coordinator").
+  owner     String
+  /// The due time as the playbook words it ("within 2 h").
+  due       String
+  doneAt    DateTime? @map("done_at")
+  doneById  String?   @map("done_by_id") @db.Uuid
+
+  case   DisruptionCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  doneBy User?          @relation("DisruptionStepDoneBy", fields: [doneById], references: [id], onDelete: SetNull)
+
+  @@unique([caseId, position])
+  @@map("disruption_steps")
+}
+
+/// The options offered to the case's bookings (D4), each stating its money consequence.
+model DisruptionOption {
+  id       String @id @default(uuid()) @db.Uuid
+  caseId   String @map("case_id") @db.Uuid
+  /// A, B, C, D.
+  key      String
+  position Int
+  title    String
+  detail   String
+
+  case DisruptionCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, key])
+  @@map("disruption_options")
+}
+
+/// One attached booking: its safety on the status board (D6) and its offer and choice (D4).
+model DisruptionCaseBooking {
+  id                String                  @id @default(uuid()) @db.Uuid
+  caseId            String                  @map("case_id") @db.Uuid
+  reservationId     String                  @map("reservation_id") @db.Uuid
+  safety            TravelerSafety          @default(UNKNOWN)
+  lastContactAt     DateTime?               @map("last_contact_at")
+  /// "SMS reply: all fine" — redacted with the traveler (retention Tier 1).
+  safetyNote        String?                 @map("safety_note")
+  safetyConfirmedBy String?                 @map("safety_confirmed_by_id") @db.Uuid
+  offerSentAt       DateTime?               @map("offer_sent_at")
+  offerDeadline     DateTime?               @map("offer_deadline")
+  defaultOptionKey  String?                 @map("default_option_key")
+  chosenOptionKey   String?                 @map("chosen_option_key")
+  choiceSource      DisruptionChoiceSource? @map("choice_source")
+  chosenAt          DateTime?               @map("chosen_at")
+  chosenById        String?                 @map("chosen_by_id") @db.Uuid
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+
+  case        DisruptionCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  reservation Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  confirmedBy User?          @relation("DisruptionSafetyConfirmedBy", fields: [safetyConfirmedBy], references: [id], onDelete: SetNull)
+  chosenBy    User?          @relation("DisruptionChoiceBy", fields: [chosenById], references: [id], onDelete: SetNull)
+
+  @@unique([caseId, reservationId])
+  @@index([reservationId])
+  @@map("disruption_case_bookings")
 }
 
 model Document {
@@ -545,11 +1675,21 @@ model Message {
   @@map("messages")
 }
 
+/// W-Calendar: why a worker blocked a day.
+enum AvailabilityBlockReason {
+  FAMILY
+  VEHICLE_REPAIR
+  OTHER_JOB
+  OTHER
+}
+
 model Availability {
   id         String   @id @default(uuid()) @db.Uuid
   supplierId String   @map("supplier_id") @db.Uuid
   date       DateTime @db.Date
   isAvailable Boolean @default(true) @map("is_available")
+  /// Null when available, set by the desk, or blocked before the reasons existed.
+  blockReason AvailabilityBlockReason? @map("block_reason")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -602,4 +1742,278 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorUserId])
   @@map("audit_logs")
+}
+
+/// M9: one version of the operating thresholds (D1). Append-only: only a pending
+/// version's status, decider and decision time change.
+model OperatingSettings {
+  id           String                @id @default(uuid()) @db.Uuid
+  version      Int                   @unique
+  /// The thresholds document, validated by @ota/schemas before it is written.
+  values       Json
+  /// Why the change was proposed, shown to the approver.
+  reason       String
+  status       SettingsVersionStatus @default(PROPOSED)
+  proposedById String?               @map("proposed_by_id") @db.Uuid
+  decidedById  String?               @map("decided_by_id") @db.Uuid
+  decidedAt    DateTime?             @map("decided_at")
+  createdAt    DateTime              @default(now()) @map("created_at")
+
+  proposedBy User? @relation("OperatingSettingsProposedBy", fields: [proposedById], references: [id], onDelete: SetNull)
+  decidedBy  User? @relation("OperatingSettingsDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([status, version])
+  @@map("operating_settings")
+}
+
+/// M9: an invitation to join the desk, or to become a Super Admin (D4).
+model StaffInvite {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String
+  role          Role
+  /// SHA-256 of the single-use token in the email; the token itself is never stored.
+  tokenHash     String    @unique @map("token_hash")
+  invitedById   String?   @map("invited_by_id") @db.Uuid
+  /// A Super Admin invite is sent only once a second Super Admin confirms it.
+  confirmedById String?   @map("confirmed_by_id") @db.Uuid
+  confirmedAt   DateTime? @map("confirmed_at")
+  expiresAt     DateTime  @map("expires_at")
+  acceptedAt    DateTime? @map("accepted_at")
+  acceptedById  String?   @map("accepted_by_id") @db.Uuid
+  revokedAt     DateTime? @map("revoked_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  invitedBy   User? @relation("StaffInviteInvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+  confirmedBy User? @relation("StaffInviteConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+  acceptedBy  User? @relation("StaffInviteAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@map("staff_invites")
+}
+
+/// A one-time code a Super Admin issues for a staff member who lost access
+/// (docs/schema-m9-recovery-codes.md). The code itself is never stored.
+model StaffRecoveryCode {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  /// SHA-256 of the normalised code (R4).
+  codeHash       String    @map("code_hash")
+  issuedById     String?   @map("issued_by_id") @db.Uuid
+  expiresAt      DateTime  @map("expires_at")
+  /// Wrong codes typed for this person while the code was open; the fifth withdraws it.
+  failedAttempts Int       @default(0) @map("failed_attempts")
+  usedAt         DateTime? @map("used_at")
+  /// Replaced by a newer code, withdrawn by a Super Admin, or by wrong tries.
+  withdrawnAt    DateTime? @map("withdrawn_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  user     User  @relation("StaffRecoveryCodeUser", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy User? @relation("StaffRecoveryCodeIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("staff_recovery_codes")
+}
+
+/// A browser a staff member signed in from (docs/schema-m9-new-device-email.md).
+/// The device cookie itself is never stored.
+model StaffKnownDevice {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  /// SHA-256 of the `ota_device` cookie value (N1).
+  tokenHash   String   @unique @map("token_hash")
+  /// "Firefox on Windows", read from the user agent at first sign-in.
+  label       String
+  firstSeenAt DateTime @default(now()) @map("first_seen_at")
+  lastSeenAt  DateTime @default(now()) @map("last_seen_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lastSeenAt])
+  @@map("staff_known_devices")
+}
+
+/// A time-limited grant of one permission-matrix row to one staff member
+/// (docs/schema-m9-permission-overrides.md).
+model PermissionOverride {
+  id           String                  @id @default(uuid()) @db.Uuid
+  userId       String                  @map("user_id") @db.Uuid
+  /// A matrix row key from @ota/domain (`payments`, `catalog`, …).
+  capability   String
+  reason       String
+  state        PermissionOverrideState @default(REQUESTED)
+  requestedAt  DateTime                @default(now()) @map("requested_at")
+  decidedById  String?                 @map("decided_by_id") @db.Uuid
+  decidedAt    DateTime?               @map("decided_at")
+  decisionNote String?                 @map("decision_note")
+  /// Set at approval: decidedAt + overrideExpiryHours (O5).
+  expiresAt    DateTime?               @map("expires_at")
+  /// Ended before expiresAt by a Super Admin, the holder, or a reset (O5).
+  endedById    String?                 @map("ended_by_id") @db.Uuid
+  endedAt      DateTime?               @map("ended_at")
+  endNote      String?                 @map("end_note")
+
+  user      User  @relation("PermissionOverrideUser", fields: [userId], references: [id], onDelete: Cascade)
+  decidedBy User? @relation("PermissionOverrideDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  endedBy   User? @relation("PermissionOverrideEndedBy", fields: [endedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, capability, state])
+  @@map("permission_overrides")
+}
+
+/// Lapsed requests and expired overrides are derived from the clock, not stored.
+enum PermissionOverrideState {
+  REQUESTED
+  APPROVED
+  DECLINED
+  ENDED
+}
+
+/// M10: an event the concierge can request seats for (D1, D2).
+model Event {
+  id             String      @id @default(uuid()) @db.Uuid
+  slug           String      @unique
+  status         EventStatus @default(DRAFT)
+  access         EventAccess
+  /// Province code (CU01…), as M7 regions.
+  province       String
+  /// UTC calendar days; at least the month's bounds until datesConfirmed (D2).
+  startsOn       DateTime    @map("starts_on") @db.Date
+  endsOn         DateTime    @map("ends_on") @db.Date
+  datesConfirmed Boolean     @default(false) @map("dates_confirmed")
+  /// The date by which the desk confirms seats.
+  confirmBy      DateTime?   @map("confirm_by") @db.Date
+  sourceLocale   String      @default("en") @map("source_locale")
+  name           String
+  place          String
+  summary        String
+  notes          String?
+  publishedAt    DateTime?   @map("published_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  nights       EventNight[]
+  categories   EventSeatCategory[]
+  translations EventTranslation[]
+  requests     EventRequest[]
+
+  @@index([status, endsOn])
+  @@map("events")
+}
+
+/// M10: one festival night of an event's programme.
+model EventNight {
+  id       String   @id @default(uuid()) @db.Uuid
+  eventId  String   @map("event_id") @db.Uuid
+  date     DateTime @db.Date
+  label    String
+  venue    String?
+  position Int
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, position])
+  @@map("event_nights")
+}
+
+/// M10: a seat category the traveler can ask for.
+model EventSeatCategory {
+  id           String           @id @default(uuid()) @db.Uuid
+  eventId      String           @map("event_id") @db.Uuid
+  kind         SeatCategoryKind
+  name         String
+  description  String?
+  /// Indicative; null until the organiser announces it. The paid price is frozen on the request.
+  pricePerSeat Decimal?         @map("price_per_seat") @db.Decimal(10, 2)
+  currency     String           @default("EUR")
+  position     Int
+
+  event    Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  requests EventRequest[]
+
+  @@unique([eventId, position])
+  @@map("event_seat_categories")
+}
+
+/// M10: one locale's overlay of an event's text (D1).
+model EventTranslation {
+  id              String   @id @default(uuid()) @db.Uuid
+  eventId         String   @map("event_id") @db.Uuid
+  locale          String
+  name            String?
+  place           String?
+  summary         String?
+  notes           String?
+  /// { [nightId]: { label, venue } }
+  nights          Json?
+  /// { [categoryId]: { name, description } }
+  categories      Json?
+  // Drafted text waits for a reviewer before travelers see it.
+  published       Boolean  @default(false)
+  // Event.updatedAt when this translation was last brought in line.
+  sourceUpdatedAt DateTime @map("source_updated_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, locale])
+  @@map("event_translations")
+}
+
+/// M10: a traveler's request for event seats (D3, D5, D6).
+model EventRequest {
+  id              String             @id @default(uuid()) @db.Uuid
+  /// The visible reference (VX-E-XXXXXXXX).
+  reference       String             @unique
+  userId          String             @map("user_id") @db.Uuid
+  eventId         String             @map("event_id") @db.Uuid
+  categoryId      String             @map("category_id") @db.Uuid
+  /// EventNight ids; empty for a pass.
+  nightIds        String[]           @default([]) @map("night_ids") @db.Uuid
+  seats           Int
+  path            EventRequestPath
+  status          EventRequestStatus @default(SUBMITTED)
+  /// BUILD / TICKETS_ONLY: the derived M5 request; EXISTING: the one picked, if a request.
+  customRequestId String?            @map("custom_request_id") @db.Uuid
+  /// EXISTING: the booking picked; set on proposal acceptance for the other paths.
+  reservationId   String?            @map("reservation_id") @db.Uuid
+  locale          String?
+  notes           String?
+  /// Frozen at confirmation (D6).
+  pricePerSeat    Decimal?           @map("price_per_seat") @db.Decimal(10, 2)
+  feePerSeat      Decimal?           @map("fee_per_seat") @db.Decimal(10, 2)
+  currency        String             @default("EUR")
+  /// Why the desk marked it unavailable or cancelled it.
+  closedReason    String?            @map("closed_reason")
+  answeredAt      DateTime?          @map("answered_at")
+  confirmedAt     DateTime?          @map("confirmed_at")
+  closedAt        DateTime?          @map("closed_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event         Event             @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  category      EventSeatCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  customRequest CustomRequest?    @relation(fields: [customRequestId], references: [id], onDelete: SetNull)
+  reservation   Reservation?      @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([reservationId])
+  @@map("event_requests")
+}
+
+/// M9 display currencies C5: one reference rate per day and currency (units per 1 EUR), before the spread.
+model ExchangeRate {
+  id        String   @id @default(uuid()) @db.Uuid
+  rateDate  DateTime @map("rate_date") @db.Date
+  currency  String   @db.Char(3)
+  rate      Decimal  @db.Decimal(12, 6)
+  /// "mock" or "ecb".
+  source    String
+  fetchedAt DateTime @default(now()) @map("fetched_at")
+
+  @@unique([rateDate, currency])
+  @@index([currency, rateDate])
+  @@map("exchange_rates")
 }

@@ -12,7 +12,7 @@ test.describe('operations messaging', () => {
     const target = reservations.find((row) => row.bookingCode === 'E2E0001');
     expect(target).toBeTruthy();
 
-    await page.goto(`/messages?reservation=${target?.id}`);
+    await page.goto(`/bookings/messages?reservation=${target?.id}`);
     await expect(page.getByRole('heading', { name: 'Conversation' })).toBeVisible();
 
     const body = `e2e message ${Date.now()}`;
@@ -30,7 +30,7 @@ test.describe('operations messaging', () => {
     const target = reservations.find((row) => row.bookingCode === 'E2E0001');
     expect(target).toBeTruthy();
 
-    await page.goto(`/messages?reservation=${target?.id}`);
+    await page.goto(`/bookings/messages?reservation=${target?.id}`);
     await page.getByRole('button', { name: 'Draft with AI' }).click();
 
     await expect(page.getByLabel('Message')).toHaveValue(/E2E0001/);

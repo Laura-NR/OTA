@@ -14,24 +14,31 @@ import {
 import { UserRole } from '@ota/domain';
 import {
   availabilityQuerySchema,
+  confirmResourcesSchema,
   expiringSuppliersQuerySchema,
   listSuppliersQuerySchema,
   setAvailabilitySchema,
   setVerificationSchema,
   uploadCredentialSchema,
+  vehicleDetailsInputSchema,
   type AvailabilityDayDto,
   type AvailabilityQuery,
+  type ConfirmResourcesRequest,
   type ExpiringSuppliersQuery,
   type ListSuppliersQuery,
   type SetAvailabilityRequest,
   type SetVerificationRequest,
+  type SupplierDetailDto,
   type SupplierDto,
+  type SupplierRowDto,
   type UploadCredentialRequest,
+  type VehicleDetailsRequest,
 } from '@ota/schemas';
 import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
+import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { SuppliersService } from './suppliers.service';
@@ -42,6 +49,7 @@ const READ_ROLES = [
   UserRole.SuperAdmin,
 ] as const;
 
+@Capability('suppliers')
 @Controller('suppliers')
 export class SuppliersController {
   constructor(private readonly suppliers: SuppliersService) {}
@@ -51,7 +59,7 @@ export class SuppliersController {
   list(
     @Query(new ZodValidationPipe(listSuppliersQuerySchema))
     query: ListSuppliersQuery,
-  ): Promise<SupplierDto[]> {
+  ): Promise<SupplierRowDto[]> {
     return this.suppliers.list(query);
   }
 
@@ -66,7 +74,7 @@ export class SuppliersController {
 
   @Get(':id')
   @Roles(...READ_ROLES)
-  getById(@Param('id', ParseUUIDPipe) id: string): Promise<SupplierDto> {
+  getById(@Param('id', ParseUUIDPipe) id: string): Promise<SupplierDetailDto> {
     return this.suppliers.getById(id);
   }
 
@@ -100,6 +108,30 @@ export class SuppliersController {
     @CurrentUser() actor: AuthUser,
   ): Promise<AvailabilityDayDto> {
     return this.suppliers.setAvailability(id, body, actor);
+  }
+
+  /** M6 D4: the desk confirms a casa's power or a driver's fuel; support reads only. */
+  @Put(':id/resources')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  confirmResources(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(confirmResourcesSchema)) body: ConfirmResourcesRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.suppliers.confirmResources(id, body, actor);
+  }
+
+  /** M6 D7(b): a driver's vehicle, written by the desk like the resources. */
+  @Put(':id/vehicle')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  setVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(vehicleDetailsInputSchema)) body: VehicleDetailsRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.suppliers.setVehicle(id, body, actor);
   }
 
   @Post(':id/verification')

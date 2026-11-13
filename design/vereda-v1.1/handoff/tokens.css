@@ -1,0 +1,100 @@
+/* Vereda Expeditions · design tokens · exported 11 Oct 2026 from DS 06 (DS-Handoff) · frozen with the design baseline (T-Signoff 01); change only through T-Signoff 05 */
+:root {
+  /* ===== primitive ===== */
+  /* brand */
+  --color-primary-700: #083B50;
+  --color-primary-600: #0B4F6C;
+  --color-primary-500: #0E6B8C;
+  --color-primary-100: #E6F0F4;
+  --color-secondary-700: #7A2A16;
+  --color-secondary-600: #A83E24;
+  --color-secondary-500: #C75B39;
+  --color-secondary-100: #F7E4DC;
+  --color-accent-600: #D99A1F;
+  --color-accent-500: #F2B134;
+  --color-accent-100: #FEF3D6;
+  /* neutrals (warm) */
+  --color-neutral-900: #1F1B17;
+  --color-neutral-700: #4A433D;
+  --color-neutral-500: #6E665E;
+  --color-neutral-300: #D6CEC3;
+  --color-neutral-200: #E8E2D9;
+  --color-neutral-100: #F3EEE6;
+  --color-neutral-50: #FBF8F3;
+  --color-neutral-0: #FFFFFF;
+  /* semantic fg / bg */
+  --color-success-600: #2E7D32;
+  --color-success-100: #E8F5E9;
+  --color-warning-600: #B45309;
+  --color-warning-100: #FEF3C7;
+  --color-error-600: #C62828;
+  --color-error-100: #FDECEA;
+  --color-info-600: #1565C0;
+  --color-info-100: #E3F2FD;
+  --color-timeout-600: #C62828;
+  /* type */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* space (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  /* geometry */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px rgba(31,27,23,.08);
+  --shadow-md: 0 4px 12px rgba(31,27,23,.10);
+  --shadow-lg: 0 12px 32px rgba(31,27,23,.16);
+  /* layout */
+  --motion-fast: 0ms;
+  --motion-base: 0ms;
+  --motion-slow: 0ms;
+  --container-max: 1280px;
+  --gutter: 24px;
+  --margin-xs: 24px;
+  --margin-md: 32px;
+  --margin-lg: 40px;
+  --touch-min: 44px;
+  --touch-base: 48px;
+  /* ===== alias ===== */
+  /* alias */
+  --color-text-default: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-700);
+  --color-text-muted: var(--color-neutral-500);
+  --color-bg-page: var(--color-neutral-50);
+  --color-bg-surface: var(--color-neutral-0);
+  --color-bg-sunken: var(--color-neutral-100);
+  --color-border: var(--color-neutral-200);
+  --color-action-primary: var(--color-primary-600);
+  --color-action-primary-hover: var(--color-primary-500);
+  --color-action-primary-active: var(--color-primary-700);
+  /* type */
+  --text-display-1: 600 56px/64px var(--font-display);
+  --text-display-2: 600 48px/56px var(--font-display);
+  --text-h1: 600 40px/48px var(--font-display);
+  --text-h2: 600 32px/40px var(--font-display);
+  --text-h3: 600 24px/32px var(--font-body);
+  --text-h4: 600 20px/28px var(--font-body);
+  --text-body-lg: 400 18px/28px var(--font-body);
+  --text-body: 400 16px/24px var(--font-body);
+  --text-body-sm: 400 14px/20px var(--font-body);
+  --text-caption: 500 12px/16px var(--font-body);
+  --text-overline: 700 12px/16px var(--font-body);
+  /* ===== component ===== */
+  /* alias */
+  --color-border-input: var(--color-neutral-300);
+  --color-focus-ring: var(--color-primary-500);
+  /* type */
+  --text-button: 600 16px/24px var(--font-body);
+}

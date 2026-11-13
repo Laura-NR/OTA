@@ -64,6 +64,27 @@ export const reservationListItemSchema = reservationSchema.extend({
   travelerEmail: z.string().email(),
   travelerName: z.string().nullable(),
   serviceItemCount: z.number().int().nonnegative(),
+  /** The curated package it was booked from; null for a custom itinerary. */
+  packageName: z.string().nullable(),
+  /** The distinct provinces its services take place in. */
+  provinces: z.array(z.string()),
+  /** Services a worker has accepted or fulfilled. */
+  serviceItemsAccepted: z.number().int().nonnegative(),
+  /** The sum of its PAID receipts, in the booking's currency. */
+  paidAmount: z.string(),
+  /** US persons still without an OFAC affidavit; any holds payment and vouchers (M3). */
+  ofacMissing: z.number().int().nonnegative(),
+  /**
+   * M4: the next instalment still due. Past its date, a deposit or full payment
+   * is an expired payment window and a balance is overdue.
+   */
+  nextInstalment: z
+    .object({
+      kind: z.enum(['DEPOSIT', 'BALANCE', 'FULL', 'TICKETS']),
+      amount: z.string(),
+      dueAt: z.string(),
+    })
+    .nullable(),
 });
 
 export type ReservationListItemDto = z.infer<typeof reservationListItemSchema>;
@@ -92,9 +113,22 @@ export const reservationServiceItemSchema = z.object({
 
 export type ReservationServiceItemDto = z.infer<typeof reservationServiceItemSchema>;
 
+/**
+ * A service on the desk's booking page: who holds it and the payout agreed with
+ * them. Ops-only; the traveler's own view keeps `reservationServiceItemSchema`.
+ */
+export const reservationDeskItemSchema = reservationServiceItemSchema.extend({
+  supplierName: z.string().nullable(),
+  payoutRate: z.string(),
+});
+
+export type ReservationDeskItemDto = z.infer<typeof reservationDeskItemSchema>;
+
 export const reservationDetailSchema = reservationListItemSchema.extend({
   travelerId: z.string().uuid(),
-  serviceItems: z.array(reservationServiceItemSchema),
+  /** The curated package it was booked from (its tiers, departures and extras). */
+  packageId: z.string().uuid().nullable(),
+  serviceItems: z.array(reservationDeskItemSchema),
 });
 
 export type ReservationDetailDto = z.infer<typeof reservationDetailSchema>;

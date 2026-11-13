@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MockLlmProvider, createLlmProvider } from '../src';
+import { MockLlmProvider, createLlmProvider, llmProviderName } from '../src';
 
 describe('MockLlmProvider', () => {
   it('drafts a contextual reply in the traveler locale', async () => {
@@ -57,5 +57,13 @@ describe('MockLlmProvider', () => {
     await expect(
       provider.translate({ text: 'Hello', targetLocale: 'fr' }),
     ).resolves.toEqual({ text: '[fr] Hello', targetLocale: 'fr' });
+  });
+});
+
+describe('llmProviderName', () => {
+  it('selects the mock for an unset or unknown provider, since only the mock ships', () => {
+    expect(llmProviderName(undefined)).toBe('mock');
+    expect(llmProviderName('mock')).toBe('mock');
+    expect(llmProviderName('mistral')).toBe('mock');
   });
 });

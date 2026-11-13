@@ -24,7 +24,7 @@ export function LocaleSwitcher() {
         document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
         startTransition(() => router.refresh());
       }}
-      className="h-8 rounded-sm border border-input bg-background px-2 text-xs"
+      className="h-8 rounded-sm border border-input bg-surface px-2 text-caption"
     >
       {SUPPORTED_LOCALES.map((code) => (
         <option key={code} value={code}>

@@ -1,0 +1,149 @@
+{
+  "status": "placeholder",
+  "destinations": [
+    {
+      "slug": "havana",
+      "province": "CU03",
+      "theme": "culture",
+      "power": "ok",
+      "point": {
+        "x": 262.2,
+        "y": 24.3
+      }
+    },
+    {
+      "slug": "vinales",
+      "province": "CU01",
+      "theme": "nature",
+      "power": "ok",
+      "point": {
+        "x": 149.5,
+        "y": 69.4
+      }
+    },
+    {
+      "slug": "trinidad",
+      "province": "CU07",
+      "theme": "culture",
+      "power": "caution",
+      "packages": ["trinidad-heritage-trail"],
+      "point": {
+        "x": 462.7,
+        "y": 146.9
+      }
+    },
+    {
+      "slug": "zapata",
+      "province": "CU04",
+      "theme": "nature",
+      "power": "ok",
+      "point": {
+        "x": 359.0,
+        "y": 101.8
+      }
+    },
+    {
+      "slug": "varadero",
+      "province": "CU04",
+      "theme": "beach",
+      "power": "ok",
+      "point": {
+        "x": 356.1,
+        "y": 21.3
+      }
+    },
+    {
+      "slug": "las-terrazas",
+      "province": "CU15",
+      "theme": "farm",
+      "power": "ok",
+      "point": {
+        "x": 215.7,
+        "y": 48.3
+      }
+    },
+    {
+      "slug": "santiago",
+      "province": "CU13",
+      "theme": "culture",
+      "power": "caution",
+      "point": {
+        "x": 812.9,
+        "y": 314.2
+      }
+    },
+    {
+      "slug": "cienfuegos",
+      "province": "CU06",
+      "theme": "culture",
+      "power": "ok",
+      "point": {
+        "x": 424.7,
+        "y": 115.0
+      }
+    },
+    {
+      "slug": "santa-clara",
+      "province": "CU05",
+      "theme": "culture",
+      "power": "ok",
+      "point": {
+        "x": 464.3,
+        "y": 91.2
+      }
+    },
+    {
+      "slug": "camaguey",
+      "province": "CU09",
+      "theme": "farm",
+      "power": "ok",
+      "point": {
+        "x": 636.6,
+        "y": 187.5
+      }
+    },
+    {
+      "slug": "la-picadora",
+      "province": "CU07",
+      "theme": "farm",
+      "power": "ok",
+      "point": {
+        "x": 526.1,
+        "y": 98.8
+      }
+    },
+    {
+      "slug": "baracoa",
+      "province": "CU14",
+      "theme": "nature",
+      "power": "ok",
+      "limited": true,
+      "point": {
+        "x": 923.2,
+        "y": 285.3
+      }
+    },
+    {
+      "slug": "holguin",
+      "province": "CU11",
+      "theme": "beach",
+      "power": "caution",
+      "limited": true,
+      "point": {
+        "x": 786.8,
+        "y": 213.9
+      }
+    },
+    {
+      "slug": "jardines-del-rey",
+      "province": "CU08",
+      "theme": "beach",
+      "power": "ok",
+      "limited": true,
+      "point": {
+        "x": 594.3,
+        "y": 82.7
+      }
+    }
+  ]
+}

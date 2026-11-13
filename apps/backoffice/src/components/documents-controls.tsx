@@ -5,16 +5,21 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
 
 export function RegenerateDocumentsButton({
   reservationId,
+  bookingCode,
   canManage,
 }: {
   reservationId: string;
+  /** For T-Events; null when the picked booking is not in the list. */
+  bookingCode: string | null;
   canManage: boolean;
 }) {
   const t = useTranslations('backoffice.documentsControls');
+  const track = useDeskTelemetry();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +40,10 @@ export function RegenerateDocumentsButton({
           try {
             await apiRequest(`/reservations/${reservationId}/documents`, {
               method: 'POST',
+            });
+            track('document_generated', {
+              ...(bookingCode ? { booking_code: bookingCode } : {}),
+              trigger: 'manual',
             });
             router.refresh();
           } catch (generateError) {

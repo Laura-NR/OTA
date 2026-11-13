@@ -13,6 +13,8 @@ export interface EmailMessage {
   text: string;
   /** Optional attachments (e.g. a scheduled BI digest). */
   attachments?: EmailAttachment[];
+  /** Where a reply goes, when not to the sender (e.g. the traveler who wrote in). */
+  replyTo?: string;
 }
 
 export interface Mailer {
@@ -54,6 +56,7 @@ export class SmtpMailer implements Mailer {
       html: message.html,
       text: message.text,
       attachments: message.attachments,
+      replyTo: message.replyTo,
     });
   }
 }

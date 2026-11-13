@@ -7,13 +7,16 @@ test.describe('regulatory reporting', () => {
     await signIn(page);
   });
 
-  test('renders the MINTUR summary and the fiscal export', async ({ page }) => {
-    await page.goto('/regulatory');
+  test('renders the MINTUR summary and the fiscal export on Reports', async ({
+    page,
+  }) => {
+    await page.goto('/reports/regulatory');
+    await expect(page).toHaveURL(/\/reports#regulatory$/);
 
     await expect(
-      page.getByRole('heading', { name: 'Regulatory reporting' }),
+      page.getByRole('heading', { name: 'Regulatory & tax compliance' }),
     ).toBeVisible();
-    await expect(page.getByText('Specialised ratio')).toBeVisible();
+    await expect(page.getByText('Specialised ratio', { exact: true })).toBeVisible();
     await expect(
       page.getByRole('heading', { name: 'Tourism classification' }),
     ).toBeVisible();
@@ -28,6 +31,7 @@ test.describe('regulatory reporting', () => {
   });
 
   test('classifies a booking from the operator workbench', async ({ page }) => {
+    await page.goto('/bookings');
     const card = page.getByRole('link', { name: /E2E0001/ });
     await expect(card).toBeVisible();
     await card.click();

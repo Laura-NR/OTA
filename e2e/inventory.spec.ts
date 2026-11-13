@@ -9,7 +9,7 @@ const PNG_1X1 =
 test.describe('inventory CMS', () => {
   test.beforeEach(async ({ page }) => {
     await signIn(page);
-    await page.goto('/inventory');
+    await page.goto('/packages/inventory');
     await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
   });
 

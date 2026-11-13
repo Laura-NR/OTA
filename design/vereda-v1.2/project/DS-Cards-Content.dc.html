@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components · Cards, content and commerce</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}a:hover{color:#083B50}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.sheet{background:#fff;border:1px solid #E8E2D9;border-radius:12px}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.sm{font-size:14px;line-height:20px;margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;font:600 16px/24px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;transition:background .12s ease-out;white-space:nowrap;text-decoration:none}
+.btn-p{background:#0B4F6C;color:#fff}.btn-p:hover{background:#0E6B8C}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}.btn-s:hover{background:#F3EEE6}
+.btn-t{background:transparent;color:#0B4F6C}.btn-t:hover{background:#E6F0F4}
+.btn-sm{height:32px;padding:0 12px;font-size:14px}.btn-lg{height:48px;padding:0 20px}
+.btn:focus-visible,.card:focus-within,.pm:focus-within{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 13px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.pill .ic{width:14px;height:14px}
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:4px;background:rgba(255,255,255,.92);color:#4A433D;font:600 12px/16px Inter,system-ui,sans-serif}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:12px;box-shadow:0 1px 2px rgba(31,27,23,.08);display:flex;flex-direction:column;overflow:hidden;transition:box-shadow .12s,transform .12s}
+.card:hover{box-shadow:0 4px 12px rgba(31,27,23,.10);transform:translateY(-2px)}
+.ph{position:relative;background:#DCC9B6;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box}
+.ph .alt{font:500 11px/14px Inter,system-ui,sans-serif;color:#4A433D;background:rgba(255,255,255,.85);padding:3px 6px;border-radius:4px}
+.star{width:16px;height:16px;fill:#D99A1F;stroke:#D99A1F;stroke-width:1.5;stroke-linejoin:round}
+.star.o{fill:none}
+.inc{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:20px;color:#4A433D}
+.inc .ic{width:16px;height:16px;color:#2E7D32;margin-top:2px}
+.pm{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid #D6CEC3;border-radius:12px;background:#fff;cursor:pointer}
+.pm.on{border:2px solid #0B4F6C;padding:15px;background:#F1F6F8}
+.ck{width:20px;height:20px;accent-color:#0B4F6C;margin:2px 0 0;flex:none}
+.line{display:flex;justify-content:space-between;gap:12px;font-size:14px;line-height:20px}
+.nav a{color:#1F1B17;text-decoration:none;font:500 15px/20px Inter,system-ui,sans-serif;padding:10px 4px;border-bottom:2px solid transparent}
+.nav a:hover{color:#083B50;border-bottom-color:#D6CEC3}
+.nav a[aria-current]{color:#083B50;border-bottom-color:#0B4F6C}
+.foot a{color:#E8E2D9;text-decoration:none;font-size:14px;line-height:20px}
+.foot a:hover{color:#fff;text-decoration:underline}
+.tog{width:44px;height:24px;border-radius:9999px;position:relative;display:inline-block;flex:none}
+.tog span{position:absolute;top:2px;width:20px;height:20px;border-radius:9999px;background:#fff;box-shadow:0 1px 2px rgba(31,27,23,.2)}
+</style>
+</helmet>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+
+  <header style="display: flex; flex-direction: column; gap: 12px; max-width: 860px">
+    <p class="ov">Vereda design system · Components 3 of 3</p>
+    <h1 class="disp" style="font-size: 40px; line-height: 48px">Cards, content &amp; commerce</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 28px; color: #4A433D">The content-carrying pieces: package and destination cards that show the total price and the booking model before a click, stay cards that say whether there is a generator, reviews that keep the three-star outage story, and the payment and consent blocks the compliance docs require.</p>
+  </header>
+
+  <!-- HEADER & FOOTER -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">01 · Global header &amp; footer</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Eight sections, one visible promise of help</h2>
+    </div>
+    <div class="sheet" style="overflow: hidden">
+      <div style="display: flex; gap: 12px; align-items: center; padding: 8px 24px; background: #E3F2FD; color: #0D47A1; font-size: 14px; line-height: 20px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><span style="flex: 1"><strong>Current conditions · Level 2.</strong> Power cuts of 6–12 h are common outside Havana; every stay we book has backup power. Updated 3 Oct.</span><a href="#cond" style="font-weight: 600; color: #0D47A1">Details</a></div>
+      <div style="display: flex; align-items: center; gap: 24px; padding: 0 24px; height: 72px; border-bottom: 1px solid #E8E2D9; flex-wrap: wrap">
+        <a href="#home" aria-label="Vereda Expeditions home" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #083B50"><svg width="117.37" height="28" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#A83E24"></path><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#1F1B17"></path><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#1F1B17"></path><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#1F1B17"></path><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#1F1B17"></path><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#1F1B17"></path><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"></path></svg></a>
+        <nav class="nav" aria-label="Primary" style="display: flex; gap: 20px; flex: 1; flex-wrap: wrap"><a href="#d">Destinations</a><a href="#p" aria-current="page">Packages</a><a href="#ev">Events</a><a href="#t">Travel info</a><a href="#b">Blog &amp; guides</a><a href="#s">Support</a></nav>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+          <button class="btn btn-t btn-sm" type="button" aria-label="Language: English" style="gap: 6px"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M2 12h20M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>EN</button>
+          <button class="btn btn-t btn-sm" type="button" aria-label="Currency: Euro">EUR €</button>
+          <a class="btn btn-t btn-sm" href="#signin">Sign in</a>
+          <a class="btn btn-s" href="#plan" style="gap: 8px"><svg class="ic" style="width: 18px; height: 18px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg>Talk to a specialist</a>
+        </div>
+      </div>
+      <p class="cap" style="padding: 12px 24px">Conditions strip is persistent and informational (blue). The header CTA is secondary so the page's own primary action stays unique. Under 1024 px the nav collapses to a drawer; under 768 px the bottom bar takes over (see Patterns).</p>
+    </div>
+
+    <div class="sheet foot" style="background: #083B50; color: #E8E2D9; border-color: #083B50; padding: 40px 32px 24px; display: flex; flex-direction: column; gap: 32px">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 12px; grid-column: span 1"><a href="#home" aria-label="Vereda Expeditions home" style="display: inline-flex; align-items: center; gap: 10px; color: #fff"><svg width="117.37" height="28" viewBox="0 0 134.13 32" aria-hidden="true"><path d="M11.56 32.09H9.29Q8.41 32.09 7.79 31.56Q7.17 31.03 6.71 29.92L1.83 17.8Q1.5 16.98 1.33 16.69Q1.16 16.39 0.84 16.15L0.44 15.91Q-0 15.53 -0.15 15.25Q-0.3 14.97 -0.3 14.51Q-0.3 13.82 0.11 13.43Q0.53 13.05 1.24 13.05H9.9Q11.33 13.05 11.33 14.51Q11.33 15.06 11.06 15.35Q10.79 15.65 10.3 15.96L9.85 16.19Q9.35 16.46 9.24 17.02Q9.13 17.58 9.45 18.48L13.35 28.96L11.57 29.31L15.54 18.46Q15.82 17.66 15.68 17.09Q15.53 16.52 14.9 16.17L14.42 15.96Q13.92 15.66 13.72 15.36Q13.51 15.06 13.51 14.51Q13.51 13.82 13.92 13.44Q14.33 13.05 15.05 13.05H19.77Q20.48 13.05 20.9 13.43Q21.33 13.82 21.33 14.51Q21.33 14.97 21.16 15.28Q20.99 15.59 20.57 15.89L20.15 16.14Q19.8 16.39 19.55 16.83Q19.29 17.27 18.72 18.69L14.17 30.13Q13.71 31.25 13.04 31.67Q12.37 32.09 11.56 32.09Z" fill="#F2B134"></path><path d="M39.97 19.83Q39.97 21.42 39.13 22.28Q38.3 23.13 36.78 23.13H26.08V20.68H31.92Q33.14 20.68 33.14 19.43Q33.14 17.71 32.43 16.85Q31.73 16 30.69 16Q29.84 16 29.17 16.5Q28.49 17.01 28.1 18.04Q27.7 19.07 27.7 20.65Q27.7 24.1 29.23 25.82Q30.76 27.55 33.28 27.55Q34.64 27.55 35.84 26.99Q37.04 26.43 37.86 25.51Q38.28 25.11 38.58 24.96Q38.88 24.81 39.14 24.81Q39.48 24.81 39.7 25.08Q39.93 25.36 39.92 25.96Q39.87 27.63 38.82 29.11Q37.77 30.59 35.86 31.51Q33.96 32.43 31.36 32.43Q28.4 32.43 26.21 31.21Q24.01 30 22.81 27.8Q21.61 25.61 21.61 22.7Q21.61 19.82 22.76 17.54Q23.91 15.26 26.15 13.94Q28.39 12.62 31.62 12.62Q34.2 12.62 36.07 13.58Q37.94 14.55 38.95 16.19Q39.97 17.83 39.97 19.83Z" fill="#FFFFFF"></path><path d="M49.3 21.6Q49.3 18.5 50.03 16.51Q50.76 14.53 52.01 13.57Q53.26 12.62 54.83 12.62Q56.65 12.62 57.65 13.8Q58.65 14.99 58.65 17.35Q58.65 19.54 57.82 20.57Q56.99 21.6 55.66 21.6Q54.24 21.6 53.53 20.92Q52.82 20.25 52.82 19.05V18.25Q52.82 17.68 52.61 17.41Q52.39 17.14 51.95 17.14Q51.44 17.14 51.01 17.59Q50.58 18.05 50.34 18.95Q50.09 19.84 50.09 21.19ZM49.7 14.45 50.09 18.48V27.01Q50.09 27.86 50.33 28.29Q50.56 28.73 51.13 28.83L52.39 29.02Q53.04 29.12 53.35 29.54Q53.65 29.95 53.65 30.54Q53.65 31.19 53.25 31.6Q52.84 32 52.06 32H43.07Q42.35 32 41.94 31.61Q41.53 31.23 41.53 30.54Q41.53 30 41.75 29.66Q41.96 29.32 42.38 29.02L42.78 28.83Q43.1 28.64 43.24 28.29Q43.38 27.94 43.38 27.01V19.34Q43.38 18.58 43.21 18.26Q43.05 17.95 42.67 17.76L42.15 17.66Q41.67 17.38 41.47 17.09Q41.28 16.79 41.28 16.32Q41.28 15.79 41.6 15.4Q41.93 15.01 42.71 14.7L46.33 13.26Q47.12 12.95 47.66 12.81Q48.19 12.67 48.53 12.67Q49.02 12.67 49.3 13.04Q49.58 13.41 49.7 14.45Z" fill="#FFFFFF"></path><path d="M77.88 19.83Q77.88 21.42 77.05 22.28Q76.22 23.13 74.7 23.13H64V20.68H69.84Q71.06 20.68 71.06 19.43Q71.06 17.71 70.35 16.85Q69.64 16 68.6 16Q67.76 16 67.08 16.5Q66.41 17.01 66.01 18.04Q65.62 19.07 65.62 20.65Q65.62 24.1 67.14 25.82Q68.67 27.55 71.19 27.55Q72.56 27.55 73.76 26.99Q74.96 26.43 75.77 25.51Q76.2 25.11 76.49 24.96Q76.79 24.81 77.05 24.81Q77.39 24.81 77.62 25.08Q77.85 25.36 77.84 25.96Q77.79 27.63 76.74 29.11Q75.69 30.59 73.78 31.51Q71.87 32.43 69.28 32.43Q66.32 32.43 64.12 31.21Q61.93 30 60.73 27.8Q59.52 25.61 59.52 22.7Q59.52 19.82 60.67 17.54Q61.82 15.26 64.07 13.94Q66.31 12.62 69.54 12.62Q72.12 12.62 73.99 13.58Q75.86 14.55 76.87 16.19Q77.88 17.83 77.88 19.83Z" fill="#FFFFFF"></path><path d="M92.79 27.99 92.47 27.89V6.67Q92.47 5.9 92.3 5.59Q92.14 5.27 91.76 5.09L91.24 4.98Q90.76 4.71 90.56 4.41Q90.37 4.11 90.37 3.65Q90.37 3.12 90.68 2.74Q91 2.35 91.8 2.03L95.27 0.66Q96.23 0.27 96.77 0.14Q97.31 0 97.77 0Q98.47 0 98.83 0.43Q99.18 0.87 99.18 1.57V27.01Q99.18 27.94 99.34 28.29Q99.49 28.64 99.78 28.83L100.18 29.02Q100.58 29.33 100.8 29.67Q101.03 30 101.03 30.54Q101.03 31.23 100.62 31.61Q100.21 32 99.49 32H95.78Q94.57 32 93.68 31.15Q92.79 30.29 92.79 29.09ZM79.35 23.09Q79.35 19.73 80.52 17.39Q81.69 15.06 83.76 13.84Q85.82 12.62 88.48 12.62Q90.73 12.62 92.4 13.67Q94.08 14.73 95.26 16.76L93.46 19.09Q92.69 17.56 91.78 16.93Q90.87 16.3 89.8 16.3Q88.78 16.3 87.98 16.99Q87.19 17.69 86.73 19.03Q86.28 20.36 86.28 22.31Q86.28 24.31 86.76 25.64Q87.24 26.96 88.07 27.62Q88.91 28.27 89.97 28.27Q91.12 28.27 92.07 27.54Q93.01 26.8 93.71 25.29L94.86 26.79Q93.34 29.43 91.35 30.93Q89.37 32.43 86.79 32.43Q84.59 32.43 82.91 31.29Q81.23 30.15 80.29 28.05Q79.35 25.94 79.35 23.09Z" fill="#FFFFFF"></path><path d="M113.42 28.9V28.32L112.83 28.24V17.38Q112.83 16.33 112.33 15.75Q111.84 15.17 110.95 15.17Q110.23 15.17 109.76 15.51Q109.3 15.86 109.3 16.44V17.42Q109.3 18.93 108.42 19.72Q107.54 20.51 105.88 20.51Q104.32 20.51 103.59 19.81Q102.87 19.11 102.87 17.9Q102.87 16.54 103.92 15.33Q104.96 14.13 107.05 13.37Q109.13 12.62 112.21 12.62Q115.99 12.62 117.76 14.11Q119.54 15.6 119.54 18.24V27.18Q119.54 27.54 119.7 27.81Q119.87 28.08 120.29 28.08Q120.52 28.08 120.68 28Q120.83 27.92 120.96 27.79Q121.07 27.71 121.19 27.65Q121.32 27.58 121.49 27.58Q121.87 27.58 122.07 27.92Q122.28 28.26 122.28 28.74Q122.28 29.62 121.74 30.47Q121.2 31.32 120.2 31.88Q119.2 32.43 117.81 32.43Q115.91 32.43 114.67 31.44Q113.42 30.45 113.42 28.9ZM102.17 27.64Q102.17 24.84 104.44 23.26Q106.71 21.68 110.66 21.68Q111.6 21.68 112.47 21.81Q113.34 21.94 113.92 22.18L113.27 24.31Q112.79 24.05 112.33 23.94Q111.87 23.82 111.3 23.82Q110.2 23.82 109.55 24.49Q108.9 25.15 108.9 26.3Q108.9 27.42 109.5 28.02Q110.11 28.63 111.13 28.63Q111.91 28.63 112.55 28.29Q113.19 27.95 113.56 27.44L114.02 29.47Q113.15 30.86 111.45 31.65Q109.75 32.43 107.75 32.43Q105.14 32.43 103.66 31.09Q102.17 29.76 102.17 27.64Z" fill="#FFFFFF"></path><path d="M127.63 32.55Q126.47 32.55 125.54 31.97Q124.62 31.39 124.09 30.44Q123.55 29.5 123.55 28.35Q123.55 27.19 124.09 26.25Q124.62 25.32 125.54 24.76Q126.47 24.21 127.64 24.21Q128.83 24.21 129.75 24.76Q130.67 25.32 131.2 26.25Q131.73 27.18 131.73 28.35Q131.73 29.5 131.2 30.44Q130.68 31.39 129.76 31.97Q128.84 32.55 127.63 32.55Z" fill="#F2B134"></path></svg></a><p class="sm" style="color: #C9DDE6; max-width: 28ch">Casa-based, small-group journeys across Cuba. Your trip supports Cuban families.</p><p class="sm" style="color: #C9DDE6">Licensed travel agency · MINTUR licence [MINTUR-2026-XXXX]</p></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov" style="color: #F2B134">Destinations</p><a href="#">Havana</a><a href="#">Viñales</a><a href="#">Trinidad</a><a href="#">Santiago de Cuba</a><a href="#">Ciénaga de Zapata</a><a href="#">Varadero</a></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov" style="color: #F2B134">Packages</p><a href="#">Cultural circuits</a><a href="#">Eco &amp; agrotourism</a><a href="#">Beach + Havana</a><a href="#">Family visits</a><a href="#">Custom itinerary</a><a href="#">Compare</a></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov" style="color: #F2B134">Travel info</p><a href="#">Current conditions</a><a href="#">E-visa &amp; entry</a><a href="#">Money &amp; cash</a><a href="#">Health &amp; insurance</a><a href="#">US travelers &amp; OFAC</a><a href="#">Travel alerts</a></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><p class="ov" style="color: #F2B134">Support</p><a href="#">FAQ</a><a href="#">WhatsApp · +34 600 000 000</a><a href="#">Emergency line 24/7</a><a href="#">Contact</a><a href="#">Join our network</a><a href="#">About us</a></div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.15)">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <span class="pill" style="background: rgba(255,255,255,.1); color: #fff"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Secure · TLS 1.3</span>
+          <span class="pill" style="background: rgba(255,255,255,.1); color: #fff">SEPA</span><span class="pill" style="background: rgba(255,255,255,.1); color: #fff">Visa</span><span class="pill" style="background: rgba(255,255,255,.1); color: #fff">Mastercard</span><span class="pill" style="background: rgba(255,255,255,.1); color: #fff">Apple Pay</span><span class="pill" style="background: rgba(255,255,255,.1); color: #fff">Google Pay</span>
+        </div>
+        <div style="display: flex; gap: 8px; margin-left: auto"><button class="btn btn-sm" type="button" style="background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.3)">EN</button><button class="btn btn-sm" type="button" style="background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.3)">EUR €</button></div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: #C9DDE6"><span>© 2026 Vereda Expeditions S.L.</span><a href="#" style="font-size: 13px">Privacy</a><a href="#" style="font-size: 13px">Terms</a><a href="#" style="font-size: 13px">Cancellation policy</a><a href="#" style="font-size: 13px">Cookie settings</a><a href="#" style="font-size: 13px">Your data rights</a><a href="#" style="font-size: 13px">Accessibility statement · EN / ES</a><a href="#" style="font-size: 13px">Sanctions notice</a></div>
+    </div>
+  </section>
+
+  <!-- CARDS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">02 · Package, destination, stay, experience</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Total price and booking model before the click</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px; align-items: start">
+
+      <article class="card" aria-labelledby="pc1">
+        <div class="ph" style="aspect-ratio: 16/9; background: #B9CFD6"><span class="tag" style="position: absolute; top: 10px; left: 10px">Eco &amp; agro</span><button type="button" aria-label="Save Eco-Tourism in Viñales" style="position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border-radius: 9999px; border: 0; background: rgba(255,255,255,.92); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 22l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg></button><span class="alt">alt: Farmer Osvaldo walking oxen through the Viñales valley</span></div>
+        <div style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px"><p class="ov" style="color: #6E665E">8 days · 7 nights · group 6–12</p><h3 id="pc1" class="disp" style="font-size: 22px; line-height: 28px"><a href="#pkg" style="color: #1F1B17; text-decoration: none">Eco-Tourism in Viñales</a></h3><p class="sm" style="color: #4A433D">Viñales · Las Terrazas · Cayo Levisa</p></div>
+          <div style="display: flex; align-items: center; gap: 6px"><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><span class="sm" style="font-weight: 600">4.8</span><span class="sm" style="color: #6E665E">· 23 verified reviews</span></div>
+          <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px"><li class="inc"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>2 casas particulares with backup power</li><li class="inc"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Private minivan with A/C, 4 guided days</li><li class="inc"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Carbon offset &amp; 24/7 line included</li></ul>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-top: 8px; border-top: 1px solid #E8E2D9"><div><p class="cap">From, per person</p><p style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700">€ 1,290</p><p class="cap">€ 2,580 total for 2 · all fees in</p></div><span class="pill" style="background: #fff; color: #083B50; border: 1px solid #0B4F6C"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Request · 24 h</span></div>
+          <a class="btn btn-p" href="#pkg">View trip</a>
+        </div>
+      </article>
+
+      <article class="card" aria-labelledby="pc2" style="box-shadow: 0 4px 12px rgba(31,27,23,.10); transform: translateY(-2px)">
+        <div class="ph" style="aspect-ratio: 16/9; background: #E3B9A6"><span class="tag" style="position: absolute; top: 10px; left: 10px">Beach + Havana</span><span class="alt">alt: Families on Varadero beach at late afternoon</span></div>
+        <div style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px"><p class="ov" style="color: #6E665E">8 days · 7 nights · any group size</p><h3 id="pc2" class="disp" style="font-size: 22px; line-height: 28px"><a href="#pkg" style="color: #1F1B17; text-decoration: none">Varadero Beach + Havana Combo</a></h3><p class="sm" style="color: #4A433D">3 nights Havana casa · 4 nights Varadero hotel</p></div>
+          <div style="display: flex; align-items: center; gap: 6px"><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><span class="sm" style="font-weight: 600">4.5</span><span class="sm" style="color: #6E665E">· 41 verified reviews</span></div>
+          <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px"><li class="inc"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Hotel with generator, all meals in Varadero</li><li class="inc"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Private transfers, Old Havana walking tour</li><li class="inc"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Independent, non-GAESA hotel partner</li></ul>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-top: 8px; border-top: 1px solid #E8E2D9"><div><p class="cap">From, per person</p><p style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700">€ 1,180</p><p class="cap">€ 2,360 total for 2 · all fees in</p></div><span class="pill" style="background: #0B4F6C; color: #fff"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path></svg>Instant</span></div>
+          <a class="btn btn-p" href="#pkg" style="background: #0E6B8C">View trip</a>
+          <p class="cap" style="text-align: center">↑ hover state: shadow md, lift 2 px</p>
+        </div>
+      </article>
+
+      <article class="card" aria-labelledby="pc3">
+        <div class="ph" style="aspect-ratio: 16/9; background: #DCC9B6"><span class="tag" style="position: absolute; top: 10px; left: 10px">Cultural</span><div style="position: absolute; inset: 0; background: rgba(251,248,243,.55)"></div><span class="pill" style="position: absolute; top: 10px; right: 10px; background: #1F1B17; color: #fff">Sold out 13–20 Feb</span><span class="alt">alt: Rumba at Callejón de Hamel, Havana</span></div>
+        <div style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px"><p class="ov" style="color: #6E665E">8 days · 7 nights · group 6–12</p><h3 id="pc3" class="disp" style="font-size: 22px; line-height: 28px"><a href="#pkg" style="color: #1F1B17; text-decoration: none">Havana Cultural Immersion</a></h3><p class="sm" style="color: #4A433D">Old Havana · Vedado · Las Terrazas day trip</p></div>
+          <div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: #F3EEE6; border-radius: 8px"><svg class="ic" style="color: #4A433D; margin-top: 2px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><div><p class="sm" style="font-weight: 600">Full on your dates</p><p class="sm" style="color: #4A433D">Next departures: 27 Feb (4 places), 13 Mar (8 places). Or join the waitlist for 13 Feb.</p></div></div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-top: 8px; border-top: 1px solid #E8E2D9"><div><p class="cap">From, per person</p><p style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700">€ 1,050</p><p class="cap">€ 2,100 total for 2 · all fees in</p></div></div>
+          <div style="display: flex; gap: 8px"><a class="btn btn-s" href="#dates" style="flex: 1">Other dates</a><button class="btn btn-t" type="button" style="flex: 1">Join waitlist</button></div>
+        </div>
+      </article>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px; align-items: start">
+      <article class="card" aria-labelledby="dc1">
+        <div class="ph" style="aspect-ratio: 4/3; background: #B9CFD6"><span class="alt">alt: Cuban trogon on a branch, Ciénaga de Zapata</span></div>
+        <div style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px">
+          <h3 id="dc1" class="disp" style="font-size: 24px; line-height: 32px"><a href="#dest" style="color: #1F1B17; text-decoration: none">Ciénaga de Zapata</a></h3>
+          <p class="sm" style="color: #4A433D">The Caribbean's largest wetland: flamingos, Cuban crocodiles and the Bay of Pigs reefs. UNESCO Biosphere Reserve.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px"><span class="pill" style="background: #E3F2FD; color: #0D47A1">Level 2</span><span class="pill" style="background: #E8F5E9; color: #1B5E20"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path></svg>Solar backup at all casas</span></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #E8E2D9"><span class="sm">2 packages · 1 extension</span><span class="sm" style="font-weight: 600">from € 470</span></div>
+        </div>
+      </article>
+
+      <article class="card" aria-labelledby="sc1">
+        <div class="ph" style="aspect-ratio: 16/9; background: #DCC9B6"><span class="tag" style="position: absolute; top: 10px; left: 10px">Casa particular</span><span class="alt">alt: Guest room with two beds and a rocking chair, Casa Yamilé</span></div>
+        <div style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div><h3 id="sc1" style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600">Casa Yamilé &amp; Osvaldo</h3><p class="sm" style="color: #4A433D">Viñales village · 6 min walk to the plaza</p></div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; font-size: 14px; line-height: 20px; color: #4A433D"><span>Double or twin</span><span>Private bathroom</span><span>Air conditioning</span><span>Hot water · tank</span><span>Wi-Fi · ETECSA card</span><span style="color: #1B5E20; font-weight: 600">Backup power: generator, 4 h</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; padding: 12px; background: #FBF8F3; border-radius: 8px"><span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #E3B9A6; flex: none"></span><div><p class="sm" style="font-weight: 600">Hosted by Yamilé · hosting since 2014</p><p class="cap">Speaks Spanish, some English · replies within 30 min</p></div></div>
+          <p class="cap">Accessibility: 3 steps at the entrance, ground-floor room available on request.</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #E8E2D9"><span class="sm"><strong>€ 38</strong> per night · breakfast included</span><button class="btn btn-sm btn-s" type="button">Choose</button></div>
+        </div>
+      </article>
+
+      <article class="card" aria-labelledby="ec1">
+        <div class="ph" style="aspect-ratio: 16/9; background: #E3B9A6"><span class="alt">alt: Chef Lis teaching a cooking class in a paladar kitchen</span></div>
+        <div style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px">
+          <div><p class="ov" style="color: #6E665E">Food &amp; cuisine · Havana</p><h3 id="ec1" style="margin: 4px 0 0; font-size: 20px; line-height: 28px; font-weight: 600">Cooking class with a paladar chef</h3></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; line-height: 20px; color: #4A433D"><span style="display: inline-flex; gap: 6px; align-items: center"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>3 h</span><span style="display: inline-flex; gap: 6px; align-items: center"><svg class="ic" style="width: 16px; height: 16px" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>2–8 people</span><span>Host: Lis, Vedado</span></div>
+          <p class="sm" style="color: #4A433D">Shop at an agromercado, cook ropa vieja and congrí, eat together. 85 % of the fee goes to the paladar.</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #E8E2D9"><span class="sm"><strong>€ 35</strong> per person</span><button class="btn btn-sm btn-s" type="button">Add to trip</button></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- REVIEWS & HOSTS -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">03 · Reviews, hosts, trust</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Unfiltered reviews, named hosts</h2>
+      <p class="sm" style="color: #4A433D; max-width: 72ch">Review texts below are sample copy for layout; the reviews system ships in phase 2 and only verified travelers can post. Three-star reviews that mention outages stay visible, with our reply.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px; align-items: start">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; align-items: baseline; gap: 12px"><span class="disp" style="font-size: 48px; line-height: 48px">4.7</span><div><div style="display: flex; gap: 2px" aria-label="4.7 out of 5"><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star o" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg></div><p class="cap">23 verified reviews</p></div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 12px">5</span><div style="flex: 1; height: 8px; background: #E8E2D9; border-radius: 9999px; overflow: hidden"><div style="width: 74%; height: 100%; background: #0B4F6C"></div></div><span style="width: 24px; color: #6E665E">17</span></div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 12px">4</span><div style="flex: 1; height: 8px; background: #E8E2D9; border-radius: 9999px; overflow: hidden"><div style="width: 17%; height: 100%; background: #0B4F6C"></div></div><span style="width: 24px; color: #6E665E">4</span></div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 12px">3</span><div style="flex: 1; height: 8px; background: #E8E2D9; border-radius: 9999px; overflow: hidden"><div style="width: 9%; height: 100%; background: #0B4F6C"></div></div><span style="width: 24px; color: #6E665E">2</span></div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 12px">2</span><div style="flex: 1; height: 8px; background: #E8E2D9; border-radius: 9999px; overflow: hidden"><div style="width: 0%; height: 100%; background: #0B4F6C"></div></div><span style="width: 24px; color: #6E665E">0</span></div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 12px">1</span><div style="flex: 1; height: 8px; background: #E8E2D9; border-radius: 9999px; overflow: hidden"><div style="width: 0%; height: 100%; background: #0B4F6C"></div></div><span style="width: 24px; color: #6E665E">0</span></div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px"><span class="pill" style="background: #0B4F6C; color: #fff">All</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Couples</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Solo</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Families</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Mentions outages · 5</span></div>
+        <p class="cap">Guides 4.9 · Casas 4.7 · Transport 4.5 · Value 4.6</p>
+      </div>
+
+      <article class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start"><div style="display: flex; gap: 12px; align-items: center"><span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #B9CFD6; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #083B50">M</span><div><p class="sm" style="font-weight: 600">Marion T. · France</p><p class="cap">Travelled Feb 2026 · couple</p></div></div><span class="pill" style="background: #E6F0F4; color: #083B50"><svg class="ic" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>Verified</span></div>
+        <div style="display: flex; gap: 2px" aria-label="3 out of 5"><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star o" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg><svg class="star o" viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3Z"></path></svg></div>
+        <p class="sm" style="color: #1F1B17">[Sample review] Two nights of the week had a <mark style="background: #FEF3D6; color: #1F1B17; padding: 0 2px">power outage</mark> of 10+ hours. The generator at the casa ran the fan and the fridge, and the team messaged us each morning. Honest, but tiring. The guide, Daylin, was outstanding.</p>
+        <div style="display: flex; gap: 8px"><span aria-hidden="true" style="width: 64px; height: 48px; border-radius: 6px; background: #DCC9B6"></span><span aria-hidden="true" style="width: 64px; height: 48px; border-radius: 6px; background: #B9CFD6"></span></div>
+        <div style="padding: 12px; background: #FBF8F3; border-radius: 8px; border-left: 0"><p class="cap" style="color: #083B50; font-weight: 700">Reply from Vereda · 3 days later</p><p class="sm" style="color: #4A433D">Thank you, Marion. Both casas on this route now have 8-hour batteries as well as the generator. We've added that to the Conditions tab.</p></div>
+      </article>
+
+      <article class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; gap: 16px; align-items: center"><span aria-hidden="true" style="width: 72px; height: 72px; border-radius: 9999px; background: #E3B9A6; flex: none"></span><div><p class="ov" style="color: #A83E24">Guide · Pinar del Río</p><h3 style="margin: 4px 0 0; font-size: 20px; line-height: 28px; font-weight: 600">Daylin Pérez</h3><p class="cap">Formatur-certified · guiding since 2016 · Spanish, English, French</p></div></div>
+        <p class="sm" style="color: #4A433D">[Host bio placeholder, 100+ words] Daylin grew up in Viñales and studied biology in Pinar del Río. She leads the dawn birding walks and knows where the Cuban tody nests each spring. Portrait and bio published with written consent on file.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px"><span class="pill" style="background: #F3EEE6; color: #4A433D">Birdwatching</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Geology</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Gentle pace</span></div>
+        <p class="cap">Guides receive 100 % of their day rate; Vereda's fee is shown separately in the price breakdown.</p>
+      </article>
+    </div>
+
+    <div class="sheet" style="padding: 20px 24px; display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: center; justify-content: center">
+      <span style="display: inline-flex; gap: 10px; align-items: center; font-size: 14px; line-height: 20px; color: #4A433D"><svg class="ic" style="color: #0B4F6C" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Secure payment · card data never touches our servers</span>
+      <span style="display: inline-flex; gap: 10px; align-items: center; font-size: 14px; line-height: 20px; color: #4A433D"><svg class="ic" style="color: #0B4F6C" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>Licensed agency · MINTUR [licence no.]</span>
+      <span style="display: inline-flex; gap: 10px; align-items: center; font-size: 14px; line-height: 20px; color: #4A433D"><svg class="ic" style="color: #0B4F6C" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>Total price shown · no fees at checkout</span>
+      <span style="display: inline-flex; gap: 10px; align-items: center; font-size: 14px; line-height: 20px; color: #4A433D"><svg class="ic" style="color: #0B4F6C" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.9 2.1Z"></path></svg>24/7 emergency line · 15-minute response</span>
+      <span style="display: inline-flex; gap: 10px; align-items: center; font-size: 14px; line-height: 20px; color: #4A433D"><svg class="ic" style="color: #0B4F6C" viewBox="0 0 24 24"><path d="M12 22c4-4 8-7.6 8-12a8 8 0 0 0-16 0c0 4.4 4 8 8 12Z"></path><path d="M12 6v8M8 10l4 4 4-4"></path></svg>85 %+ of your spending stays with Cuban families</span>
+    </div>
+  </section>
+
+  <!-- COMMERCE -->
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p class="ov">04 · Booking summary, payment methods, consent</p>
+      <h2 class="disp" style="font-size: 32px; line-height: 40px">Every euro itemised, every rail explained</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 24px; align-items: start">
+
+      <aside class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(31,27,23,.10)" aria-label="Booking summary">
+        <div style="display: flex; gap: 12px"><span aria-hidden="true" style="width: 72px; height: 56px; border-radius: 8px; background: #B9CFD6; flex: none"></span><div><p class="sm" style="font-weight: 600">Eco-Tourism in Viñales</p><p class="cap">13 – 20 Feb 2027 · 7 nights · 2 adults</p><p class="cap">Mid-range casas · twin room</p></div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #E8E2D9">
+          <div class="line"><span>Package · 2 × € 1,395</span><span class="mono">€ 2,790.00</span></div>
+          <div class="line"><span>Las Terrazas day trip · 2 × € 59</span><span class="mono">€ 118.00</span></div>
+          <div class="line"><span>Insurance Standard · 2 × € 96</span><span class="mono">€ 192.00</span></div>
+          <div class="line" style="color: #4A433D"><span>Carbon offset · 2 × € 35</span><span class="mono">included</span></div>
+          <div class="line" style="color: #4A433D"><span>Community fund 1 % · service fee</span><span class="mono">included</span></div>
+          <div class="line" style="color: #4A433D"><span>Bank transfer fee</span><span class="mono">€ 0.00</span></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; border-top: 1px solid #E8E2D9"><span style="font-weight: 700">Total</span><span class="mono" style="font-size: 22px; font-weight: 500">€ 3,100.00</span></div>
+        <div style="padding: 12px; background: #FEF3D6; border-radius: 8px; display: flex; flex-direction: column; gap: 4px"><div class="line"><span style="font-weight: 600">Pay today · 20 % deposit</span><span class="mono" style="font-weight: 500">€ 620.00</span></div><div class="line" style="color: #4A433D"><span>Balance due 14 Jan 2027</span><span class="mono">€ 2,480.00</span></div></div>
+        <p class="cap"><svg class="ic" style="width: 14px; height: 14px; vertical-align: -2px" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Nothing is charged until your hosts confirm. <a href="#policy">Cancellation policy</a> · free cancellation minus € 60 fee until 29 Dec.</p>
+        <button class="btn btn-p btn-lg" type="button">Continue to payment</button>
+        <p class="cap" style="text-align: center">Sticky on desktop · collapsible bar on mobile</p>
+      </aside>
+
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 10px" role="radiogroup" aria-label="Payment method">
+          <label class="pm on"><input class="ck" type="radio" name="pm" checked=""><span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-weight: 600">Bank transfer · SEPA / Open Banking</span><span class="pill" style="background: #E8F5E9; color: #1B5E20">No fee</span></span><span class="sm" style="color: #4A433D">Pay from your EU bank app in seconds, or by IBAN. Confirmed within 1–2 business days. Recommended for EUR accounts.</span></span></label>
+          <label class="pm"><input class="ck" type="radio" name="pm"><span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-weight: 600">Card · Visa, Mastercard</span><span class="pill" style="background: #F3EEE6; color: #4A433D">+ 3 % · € 93.00</span></span><span class="sm" style="color: #4A433D">3-D Secure, processed by a European gateway, charged in EUR. Your bank converts CAD or GBP at its rate. US-issued cards are declined by the gateway: choose bank transfer or invoice.</span></span></label>
+          <label class="pm"><input class="ck" type="radio" name="pm"><span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-weight: 600">Apple Pay · Google Pay</span><span class="pill" style="background: #F3EEE6; color: #4A433D">+ 3 %</span></span><span class="sm" style="color: #4A433D">Same card rail, one tap on your phone.</span></span></label>
+          <label class="pm"><input class="ck" type="radio" name="pm"><span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-weight: 600">Invoice · international wire (SWIFT)</span><span class="pill" style="background: #F3EEE6; color: #4A433D">Bank fees vary</span></span><span class="sm" style="color: #4A433D">We email an invoice with a reference. Pay within 48 h, upload the proof, and we reconcile by hand. Best for CAD, GBP and company bookings.</span></span></label>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start; padding: 16px; background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; color: #92400E">
+          <svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px"><p style="margin: 0; font-weight: 600">Sanctions notice</p><p style="margin: 0">Vereda Expeditions is a European company and settles payments outside the US banking system. US persons may only spend on Cuba travel under an OFAC general-licence category; the certification you signed is attached to this booking and kept for five years. Visa and Mastercard do not work inside Cuba: bring cash in EUR or CAD, not USD. <a href="#notice" style="color: #92400E; font-weight: 600">Full notice</a></p></div>
+        </div>
+        <p class="cap">PCI: hosted fields in an iframe, tokenised at capture; we show the last 4 digits only. Merchant descriptor "VEREDA EXPEDITIONS" and never a USD charge.</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 24px; align-items: start">
+      <div class="sheet" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 12px 32px rgba(31,27,23,.16)" role="dialog" aria-labelledby="ck-t">
+        <div><h3 id="ck-t" style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600">Cookies, your choice</h3><p class="sm" style="color: #4A433D; margin-top: 4px">Essential cookies run the booking. The rest are off until you say otherwise. <a href="#privacy">Privacy policy</a></p></div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center"><div><p class="sm" style="font-weight: 600">Essential</p><p class="cap">Session, currency, language, security</p></div><span class="pill" style="background: #F3EEE6; color: #4A433D">Always on</span></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center"><div><p class="sm" style="font-weight: 600">Analytics</p><p class="cap">Privacy-friendly, self-hosted (Plausible); no cross-site tracking</p></div><button type="button" role="switch" aria-checked="false" aria-label="Analytics cookies" class="tog" style="background: #D6CEC3; border: 0; cursor: pointer; padding: 0"><span style="left: 2px"></span></button></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center"><div><p class="sm" style="font-weight: 600">Marketing</p><p class="cap">Remember trips you looked at, referral links</p></div><button type="button" role="switch" aria-checked="false" aria-label="Marketing cookies" class="tog" style="background: #D6CEC3; border: 0; cursor: pointer; padding: 0"><span style="left: 2px"></span></button></div>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap"><button class="btn btn-s" type="button" style="flex: 1">Reject non-essential</button><button class="btn btn-p" type="button" style="flex: 1">Accept all</button></div>
+        <button class="btn btn-t btn-sm" type="button" style="align-self: center">Save my selection</button>
+        <p class="cap">Accept and Reject are equally weighted; no pre-ticked boxes; consent logged with timestamp and policy version. Rendered for EU visitors; CCPA variant for California.</p>
+      </div>
+
+      <div class="sheet" style="padding: 0; display: flex; flex-direction: column; overflow: hidden; max-width: 400px; box-shadow: 0 12px 32px rgba(31,27,23,.16)" role="region" aria-label="Support chat">
+        <div style="display: flex; gap: 12px; align-items: center; padding: 16px 20px; background: #0B4F6C; color: #fff"><span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #E3B9A6; flex: none"></span><div style="flex: 1"><p class="sm" style="font-weight: 600; color: #fff">Havana operations desk</p><p class="cap" style="color: #C9DDE6">Replies in under 15 min · emergencies 24/7</p></div><button type="button" aria-label="Close chat" style="width: 36px; height: 36px; border: 0; background: transparent; color: #fff; cursor: pointer; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #FBF8F3">
+          <div style="align-self: flex-start; max-width: 85%; padding: 10px 14px; background: #fff; border: 1px solid #E8E2D9; border-radius: 12px 12px 12px 4px; font-size: 14px; line-height: 20px">¡Hola Margaret! This is Ana in Havana. I can see booking VX-7K2M9Q. How can I help?</div>
+          <p class="cap" style="text-align: center">Pick a channel. Your booking code is pre-filled.</p>
+          <a class="btn btn-p" href="https://wa.me/" style="gap: 10px; justify-content: flex-start"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12Z"></path></svg>Continue on WhatsApp</a>
+          <a class="btn btn-s" href="#telegram" style="gap: 10px; justify-content: flex-start"><svg class="ic" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"></path></svg>Telegram · works better in Cuba</a>
+          <a class="btn btn-s" href="#inapp" style="gap: 10px; justify-content: flex-start"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v12H7l-3 3V4Z"></path></svg>Message in my account · emailed if offline</a>
+          <a class="btn btn-t" href="tel:+34000000000" style="gap: 10px; justify-content: flex-start; color: #B71C1C"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.9 2.1Z"></path></svg>Emergency · call +34 [number]</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

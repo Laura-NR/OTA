@@ -2,10 +2,19 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import type { TenantConfig } from '@ota/config';
-import type { Document, Reservation, ServiceItem, SupplierProfile, User } from '@ota/db';
+import type {
+  Document,
+  Prisma,
+  Reservation,
+  ReservationPriceLine,
+  ServiceItem,
+  SupplierProfile,
+  User,
+} from '@ota/db';
 import {
   buildInvoiceModel,
   buildVoucherModel,
@@ -16,21 +25,38 @@ import {
   type DocumentBranding,
   type ReservationDocumentInput,
 } from '@ota/documents';
-import { DocumentType, UserRole } from '@ota/domain';
+import { DocumentType, UserRole, referenceAmount } from '@ota/domain';
 import type { DocumentDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { loadOfacGate } from '../compliance/ofac-gate';
 import { PrismaService } from '../prisma/prisma.service';
 import { TENANT_CONFIG } from '../tenant/tenant.tokens';
 import { DOCUMENT_RENDERER, type DocumentRenderer } from './document-renderer';
 import { DOCUMENT_STORAGE, type DocumentStorage } from './document-storage';
+
+const OPS_ROLES: readonly string[] = [
+  UserRole.OperationsAdmin,
+  UserRole.AdministrativeSupport,
+  UserRole.SuperAdmin,
+];
 
 type ReservationForDocuments = Reservation & {
   user: User;
   serviceItems: Array<
     ServiceItem & { supplier: (SupplierProfile & { user: User }) | null }
   >;
+  priceLines: ReservationPriceLine[];
+  /** M10: the booking's confirmed event seats (absent in older test fakes). */
+  eventRequests?: Array<
+    Prisma.EventRequestGetPayload<{ include: typeof EVENT_TICKETS_INCLUDE }>
+  >;
 };
+
+const EVENT_TICKETS_INCLUDE = {
+  event: { include: { nights: { orderBy: { position: 'asc' } } } },
+  category: true,
+} satisfies Prisma.EventRequestInclude;
 
 function toDocumentDto(document: Document): DocumentDto {
   return {
@@ -60,6 +86,7 @@ function toDocumentInput(reservation: ReservationForDocuments): ReservationDocum
       serviceDateStart: item.serviceDateStart.toISOString(),
       serviceDateEnd: item.serviceDateEnd.toISOString(),
       payoutRate: item.payoutRate.toString(),
+      travelerPrice: item.travelerPrice === null ? null : item.travelerPrice.toFixed(2),
       supplier: item.supplier
         ? {
             fullName: item.supplier.user.fullName,
@@ -67,11 +94,46 @@ function toDocumentInput(reservation: ReservationForDocuments): ReservationDocum
           }
         : null,
     })),
+    priceLines: reservation.priceLines.map((line) => ({
+      kind: line.kind,
+      label: line.label,
+      quantity: line.quantity.toString(),
+      amount: line.amount.toFixed(2),
+    })),
+    eventTickets: (reservation.eventRequests ?? []).map((request) => ({
+      eventName: request.event.name,
+      place: request.event.place,
+      categoryName: request.category.name,
+      seats: request.seats,
+      nights: request.event.nights
+        .filter((night) => request.nightIds.includes(night.id))
+        .map((night) => ({
+          date: night.date.toISOString(),
+          label: night.label,
+          venue: night.venue,
+        })),
+    })),
+    displayReference:
+      reservation.displayCurrency &&
+      reservation.displayRate !== null &&
+      reservation.displayRateDate
+        ? {
+            currency: reservation.displayCurrency,
+            rate: reservation.displayRate.toString(),
+            rateDate: reservation.displayRateDate.toISOString().slice(0, 10),
+            amount: referenceAmount(
+              Number(reservation.totalAmount),
+              Number(reservation.displayRate),
+            ).toFixed(2),
+          }
+        : null,
   };
 }
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(DOCUMENT_RENDERER) private readonly renderer: DocumentRenderer,
@@ -99,8 +161,10 @@ export class DocumentsService {
   }
 
   /**
-   * Load a stored document for download. A traveler may only fetch documents
-   * for their own reservations; operations roles may fetch any.
+   * Load a stored document for download. The operations roles may read any
+   * document. Anyone else, a service worker included, may only fetch the
+   * traveler documents of a booking they own, never a supplier work order (it
+   * carries the internal payout rate).
    */
   async read(
     documentId: string,
@@ -113,16 +177,62 @@ export class DocumentsService {
     if (!document) {
       throw new NotFoundException(`Document ${documentId} not found`);
     }
-    if (actor.role === UserRole.Traveler && document.reservation.userId !== actor.id) {
-      throw new ForbiddenException('Document belongs to another traveler');
+    if (!OPS_ROLES.includes(actor.role)) {
+      if (document.reservation.userId !== actor.id) {
+        throw new ForbiddenException('Document belongs to another booking');
+      }
+      if (document.type === DocumentType.WorkOrder) {
+        throw new ForbiddenException('Supplier work orders are not traveler documents');
+      }
     }
     return { document, data: await this.storage.read(document.storageKey) };
+  }
+
+  /**
+   * The latest stored file of each requested type, named for an email
+   * attachment (`voucher-<code>.pdf`). Types never issued, and files that
+   * cannot be read, are left out (and logged), so a missing file never stops
+   * the email; the supplier work orders are never asked for here.
+   */
+  async attachments(
+    reservationId: string,
+    types: readonly DocumentType[],
+  ): Promise<{ type: DocumentType; filename: string; content: Uint8Array }[]> {
+    const documents = await this.prisma.document.findMany({
+      where: { reservationId, type: { in: [...types] } },
+      orderBy: { generatedAt: 'desc' },
+      include: { reservation: { select: { bookingCode: true } } },
+    });
+    const latest = types
+      .map((type) => documents.find((document) => document.type === type))
+      .filter((document): document is (typeof documents)[number] => Boolean(document));
+    const files = await Promise.all(
+      latest.map(async (document) => {
+        try {
+          return {
+            type: document.type as DocumentType,
+            filename: `${document.type.toLowerCase()}-${document.reservation.bookingCode}.pdf`,
+            content: await this.storage.read(document.storageKey),
+          };
+        } catch (error) {
+          this.logger.warn(
+            `Document ${document.id} could not be read for an email: ${
+              error instanceof Error ? error.message : 'unknown error'
+            }`,
+          );
+          return null;
+        }
+      }),
+    );
+    return files.filter((file): file is NonNullable<typeof file> => file !== null);
   }
 
   /**
    * Compile the legal document set for a reservation: traveler voucher, one
    * supplier work order per assigned service, and an invoice. Each PDF is
    * stored and recorded; the caller (or the CONFIRMED transition) invokes this.
+   * While a US traveler has no OFAC certification (M3 D3) the voucher and work
+   * orders are held: only the invoice is issued, and the hold is audited.
    */
   async generate(reservationId: string, actor: AuthUser | null): Promise<DocumentDto[]> {
     const reservation = await this.prisma.reservation.findUnique({
@@ -130,6 +240,12 @@ export class DocumentsService {
       include: {
         user: true,
         serviceItems: { include: { supplier: { include: { user: true } } } },
+        priceLines: { orderBy: { position: 'asc' } },
+        eventRequests: {
+          where: { status: 'CONFIRMED' },
+          orderBy: { confirmedAt: 'asc' },
+          include: EVENT_TICKETS_INCLUDE,
+        },
       },
     });
     if (!reservation) {
@@ -138,15 +254,21 @@ export class DocumentsService {
 
     const input = toDocumentInput(reservation);
     const branding = this.branding();
+    const gate = await loadOfacGate(this.prisma, reservationId);
+    const held = gate.missing.length > 0;
     const artifacts: Array<{ type: DocumentType; html: string }> = [
-      {
-        type: DocumentType.Voucher,
-        html: renderVoucherHtml(buildVoucherModel(input), branding),
-      },
-      ...buildWorkOrderModels(input).map((model) => ({
-        type: DocumentType.WorkOrder,
-        html: renderWorkOrderHtml(model, branding),
-      })),
+      ...(held
+        ? []
+        : [
+            {
+              type: DocumentType.Voucher,
+              html: renderVoucherHtml(buildVoucherModel(input), branding),
+            },
+            ...buildWorkOrderModels(input).map((model) => ({
+              type: DocumentType.WorkOrder,
+              html: renderWorkOrderHtml(model, branding),
+            })),
+          ]),
       {
         type: DocumentType.Invoice,
         html: renderInvoiceHtml(buildInvoiceModel(input), branding),
@@ -173,6 +295,20 @@ export class DocumentsService {
         metadata: { count: created.length },
       },
     });
+    if (held) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorUserId: actor?.id ?? null,
+          action: 'documents.held',
+          entityType: 'Reservation',
+          entityId: reservationId,
+          metadata: {
+            reason: 'ofac_certification_missing',
+            travelers: gate.missing.length,
+          },
+        },
+      });
+    }
 
     return created;
   }

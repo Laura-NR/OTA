@@ -28,11 +28,11 @@ export function ReservationActions({
   const options = nextStatuses(status);
 
   if (!canManage) {
-    return <p className="text-sm text-muted-foreground">{t('viewOnly')}</p>;
+    return <p className="text-body-sm text-muted">{t('viewOnly')}</p>;
   }
 
   if (options.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t('terminal')}</p>;
+    return <p className="text-body-sm text-muted">{t('terminal')}</p>;
   }
 
   async function transition(to: ReservationStatus) {
@@ -59,7 +59,7 @@ export function ReservationActions({
           <Button
             key={to}
             size="sm"
-            variant={to === 'CANCELLED' ? 'destructive' : 'outline'}
+            variant={to === 'CANCELLED' ? 'destructive' : 'secondary'}
             disabled={busy}
             onClick={() => transition(to)}
           >

@@ -1,4 +1,11 @@
 import { ApiError, messageFromBody } from './errors';
+import { DESK_LOCKED_EVENT, lockedRefusal } from './idle-lock';
+
+/**
+ * Dispatched on `window` when the API refuses an action for the operator's
+ * role (403), so the desk's T-Events shell can report the denied state.
+ */
+export const DESK_DENIED_EVENT = 'ota:desk-denied';
 
 /** Same-origin URL used by client components for OTA API calls. */
 export function browserApiUrl(path: string): string {
@@ -30,6 +37,15 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   }
 
   if (!response.ok) {
+    if (response.status === 403) {
+      window.dispatchEvent(new Event(DESK_DENIED_EVENT));
+    }
+    const locked = response.status === 401 ? lockedRefusal(body) : null;
+    if (locked) {
+      window.dispatchEvent(
+        new CustomEvent(DESK_LOCKED_EVENT, { detail: locked.minutes }),
+      );
+    }
     throw new ApiError(
       response.status,
       messageFromBody(body, response.statusText || `Request failed (${response.status})`),

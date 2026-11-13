@@ -1,0 +1,222 @@
+# ADR 0007 — Worker app: native Android (Expo), sideloaded, with Cuba's SMS rules
+
+- **Date:** 2026-10-14
+- **Status:** Accepted; amended 2026-10-14 (design resolutions), 2026-11-08 (supplier
+  confirmations wait for this app) and 2026-11-09 (first slice built), see the end
+- **Deciders:** Project owner, lead engineer
+- **Context:** `docs/adr/0001-stack.md` (Mobile: Expo React Native + expo-sqlite), spec §5 and
+  §7.2, `docs/design-v1.1-plan.md` Q7 and Q10, design boards W-* (`design/vereda-v1.1/project/`),
+  research `UI_UX - 11` and `UI_UX - 14`
+
+## Context
+
+The design plan reopened ADR 0001's mobile choice (Q7). The UI_UX research argues for a
+PWA-first approach: app stores are restricted for Cuba, Google push (FCM) is unreliable there,
+and a native app costs mobile data. Two things decided it the other way:
+
+- The ADR's own reason, "PWA-only mobile — insufficient offline and push guarantees for field
+  work", still holds.
+- The design relies on what only a native app can do. W-Job's emergency button sends the
+  worker's location by SMS without mobile data. Spec §7.2 resends queued actions from a
+  background worker when the connection returns.
+
+A phone-originated SMS to a Cuban number is domestic, so Cubacel's rules for international
+senders do not apply to it.
+
+Research on 2026-10-14 also established the rules for SMS sent *to* Cuban phones by any
+platform (sources at the end):
+
+- **Sender.** An alphanumeric sender ("Vereda") must be registered with Cubacel. Registration
+  takes about 60 days to 6 months, and the company name must match the sender. The form asks
+  for the CEO's nationality and passport, so it needs the legal entity.
+- **Traffic.** Only notification and one-time-code traffic is allowed. Banks, fintechs and
+  e-wallets are rejected.
+- **Format.** Messages are one-way (recipients cannot reply) and should fit one 160-character
+  GSM-7 segment.
+- **Providers.** Twilio stopped delivering to Cuba on 15 September 2025.
+
+## Decision
+
+**Keep ADR 0001's choice for the worker app: Expo React Native, Android first.** Expo is
+approved as a dependency for it. Pin a release at least two weeks old when it is added
+(Phase 7).
+
+- **Device-side control in native code.** The app sends SMS from the worker's phone (the
+  emergency location; optionally accept or decline when there is no data), runs background
+  resend of the `sync_queue` (spec §7.2), and stores data offline in SQLite. Expo's standard
+  `expo-sms` only opens the composer, so silent sending, reading the sign-in code and any
+  background connection need custom Android modules in an Expo development build.
+- **Distribution outside the stores.**
+  - Approved workers receive a link, by SMS and email from the A-Suppliers approval, plus a
+    QR code at the Havana desk. The link opens a Spanish download page on `vereda.travel`
+    that shows illustrated install steps (including what the "unknown app" warning looks
+    like), the version, the size and the signing-certificate fingerprint.
+  - The page serves split-ABI APKs (arm64 by default, 32-bit for older phones) and supports
+    resumable downloads.
+  - Phone-to-phone sharing is expected; Android installs an update only over the same
+    signature.
+- **Updates.** The app checks a version endpoint and offers new APKs in the app. JavaScript-only
+  changes ship through `expo-updates` from a self-hosted update server, not EAS Update. Builds
+  run on our own machines, not EAS Build. The signing key is backed up in two places; losing it
+  forces every worker to reinstall and lose offline data.
+- **Server-to-phone SMS** (the sign-in code, the reminder for an unanswered offer) goes
+  through a non-US provider behind a channel interface with a console mock, with a second
+  provider as failover.
+  - Shortlist: LINK Mobility, Messente or Bird. Aggregators such as Messaggio and BudgetSMS
+    are fallbacks.
+  - The owner tests providers with real Cuban numbers and starts sender registration as soon
+    as the legal entity exists.
+
+## Consequences
+
+- **Design.** The design assumed store distribution ("store assets"). The download page, the
+  install steps and the in-app update prompt are not drawn yet; that is a change-request item.
+  The traveler flows that ask for an SMS reply (S-Messages: morning check-in "Reply OK", payment
+  "Reply HOLD", disruption "reply A/B/C/D") cannot work on Cuban SIMs, including the CubacelTur
+  tourist SIM. They need signed links plus the desk call; that is also a change-request item.
+- **Ops Lite** (staff) can stay phone-sized screens in the back-office, which already has their
+  sign-in, roles and sockets. The traveler companion starts as the mobile web (M-*), as the
+  design says.
+- **Open items:**
+  - Google's developer verification. It has been enforced since 30 Sep 2026 in Brazil,
+    Indonesia, Singapore and Thailand, and is announced for all apps on certified Android
+    devices in 2027. Register Vereda as a verified developer once the legal entity exists;
+    whether Google verifies a developer whose app is used in Cuba is unconfirmed.
+  - iPhone workers cannot sideload. Either require Android or give them a reduced web
+    fallback; the share is to be measured.
+  - Apklis (Cuba's store) reportedly needs a Cuban national ID and would need a partner and a
+    legal check. It is optional.
+  - A field test with two or three workers (install, offline queue, SMS delivery time) comes
+    before building all W-* screens.
+
+## Rejected alternatives
+
+- **PWA for the worker app** (the plan's first recommendation). It is lighter to ship and
+  update, but it cannot send the worker's own SMS or resend in the background, both of which
+  the design relies on.
+- **Google Play distribution.** It is not reachable for Cuban workers.
+- **EAS Build, EAS Update and Expo push.** They are US-hosted services, which raises a sanctions
+  question for a Cuba-facing app. The same work runs on our own machines.
+
+## Amendment, 2026-10-14: design resolutions
+
+The design boards assume store distribution, two-way SMS and push. The owner asked
+the build team to resolve these items itself rather than return them to the design
+team (change request 02, A2–A5). The screens below are built from the existing W-*
+and DS components; nothing here adds a token.
+
+- **No SMS asks for a reply (A2).** The sender "Vereda" is alphanumeric, which no
+  network lets anyone reply to, and Cuba is one-way. Every traveler SMS carries one
+  signed link (`vereda.travel/<purpose>/<token>`, short and single-purpose), and the
+  fallback stays the desk call. The links replace the replies:
+  - morning check-in → `/c/<token>`, a page with "All good" and "I need help";
+  - payment window → `/pay/<code>`, which offers the one 24 h hold as a button;
+  - disruption options → `/o/<token>`, the options page already drawn.
+  The acknowledgements ("Thanks, logged", "Option A noted") become that page's
+  confirmation state, not an SMS. Copy rules (C-Spec §04, applied to S-Messages as
+  well): one GSM-7 segment, no á í ó ú, never the word "reply". The templates ship
+  with the notification channel (design plan Phase 6).
+- **Worker app distribution screens (A3)**, Spanish, built in Phase 7:
+  - a download page on the agency site: what the app is, version, size and date,
+    the signing-certificate fingerprint, the arm64 download and an "older phone"
+    32-bit link, the desk phone, and an "Android only" state for iPhones;
+  - illustrated install steps: allowing installs from Chrome, the Play Protect
+    warning, and what to do when the install fails;
+  - the approval SMS (one segment, the link) and email, plus a QR card for the desk;
+  - an in-app update prompt: optional ("Más tarde" / "Actualizar") or required
+    (offers wait, an active job never does), download progress, the hand-off to
+    the Android installer, and a "no data" state;
+  - first run: splash, then location, SMS and notification permissions, each with
+    its reason and a "no" path. Store listings are dropped. The adaptive icon
+    layers are still a brand export (T-Signoff §03).
+- **Emergency SMS from W-Job (A4).** It goes to a separate configuration value,
+  the desk's *mobile* line (`[desk SMS number]`), not the 24/7 voice line: the drawn
+  `+53 7 …` number is a Havana landline, which cannot receive SMS. The body is one
+  GSM-7 segment with no accents: `VEREDA SOS {job code} {type} {lat},{lon} ±{m} m
+  {hh:mm}`. After sending, W-Job shows "sent, wait for the call" or "could not
+  send: call 104 / 106 / 105 and the desk". An SMS-only emergency appears on
+  A-Dashboard once the app syncs. **Open with the owner:** a Cubacel mobile line
+  that someone watches 24/7.
+- **No push (A5).** The worker hears of an offer by SMS at T+0, plus the in-app
+  notice whenever the app has data; the desk calls at amber (75 %), and red
+  re-dispatches. The SMS is at T+0 rather than T+60 because a short-notice offer
+  lasts 30 minutes. Its delay is a threshold (default 0) that becomes a runtime
+  setting with M9, so the owner can trade cost for speed. Ops Lite alerts are
+  browser notifications while the desk page is open, backed by the existing
+  sockets and the amber/red call rules.
+
+## Amendment, 2026-11-08: supplier confirmations wait for this app
+
+Today only the worker accepts an offer (`POST /service-items/:id/accept`), and no screen calls
+it, so a service item cannot reach ACCEPTED. The owner chose to wait for this app rather than
+add a desk "confirmed by phone" action first. Phase 7 starts once the owner approves Expo (a
+new dependency) and picks two or three suppliers for the field test. If the app is not in
+field test when the trial server is rented (deployment plan D1), the desk action is the
+fallback: small, and with no new dependency. It also stays useful later for suppliers without
+a smartphone or mobile data.
+
+## Amendment, 2026-11-09: the first slice
+
+The owner approved Expo on 2026-11-09, with three choices (`docs/worker-app-plan.md` W1, W3,
+W7): sign-in by phone and a six-digit code sent by SMS or read out by the desk; Better Auth's
+bearer conversion for the app, limited to sessions the worker code opened; and Expo's web
+target for screenshots and the e2e only. Expo SDK 58.0.19 is pinned (2026-10-23).
+
+Built: `apps/worker-app` (sign-in, home, offer accept/decline, answers saved on the phone and
+resent), `GET /worker/home`, `POST /worker/sign-out`, the desk's `POST /suppliers/:id/sign-in-code`,
+and an SMS channel that logs in development and sends nothing in production until a provider
+exists. No migration. Not built yet: the APK and the field test, background resend, W-Calendar,
+W-Credentials, W-Earnings, W-Job and its SMS SOS, distribution. Until the field test, the desk
+"confirmed by phone" fallback of the 2026-11-08 amendment stays unbuilt.
+
+## Amendment, 2026-11-10: the desk signs a worker out
+
+The owner chose the desk's sign-out as the next item. "Sign out of the worker app…" on the
+supplier page (Operations Admin, Super Admin; `POST /suppliers/:id/worker-sign-out`) ends every
+session a worker code opened for that worker and voids any open code, replacing the runbook's
+hand fix for a lost phone. It ends only worker-code sessions, which are the only ones the app's
+bearer token can carry (W3). No migration, no new dependency.
+
+## Amendment, 2026-11-11: W-Calendar
+
+The owner chose W-Calendar over background resend, built on what exists and with a migration
+document for the rest. A worker sees their month (jobs, open offers, blocked days), blocks or
+frees a day or a range of up to 62 days from today to the end of the twelfth month ahead, and a
+driver declares the fuel reserve weekly. Job and offer days are never changed from the app.
+More than 14 blocked days in a row from today on is shown to the worker and on the desk's
+supplier page. No migration: the availability rows already existed, and the fuel reserve is
+written to `supplier_resources` through the desk's own write path with the `WORKER_APP` channel
+the M6 schema already had. The block reasons ("Motivo") need a column and wait on
+`docs/schema-w-calendar-reasons.md`. No new dependency.
+
+## Amendment, 2026-11-11 (later): W-Calendar's block reasons
+
+The owner approved `docs/schema-w-calendar-reasons.md` as recommended (K1a–K6a): a nullable
+`availabilities.block_reason` enum (Familia, Carro en taller, Otro trabajo, Otro), "Otro" when
+the worker blocks without picking, the same chips on a range, no reason on a block the desk
+sets, the reason shown to the worker and on the desk's calendar, and no backfill. Migration
+`20261111171409_w_calendar_block_reasons`, additive; no new dependency. The reason does not
+change dispatch, which skips any blocked day.
+
+## Amendment, 2026-11-11 (evening): W-Earnings, read-only
+
+The owner chose a read-only W-Earnings on the existing tables over W-Credentials (which needs a
+migration first), background resend and W-Job. The worker sees their reliability as the desk's
+floor reads it (every offer, the live floor and minimum), what they are owed and have been paid
+for finished jobs (taken, ended, booking not cancelled), and their latest 20 finished jobs; the
+desk's supplier page shows the same payouts. No migration, no new dependency, one route (`GET
+/worker/earnings`). The build found that nothing records a payout (no code sets `SETTLED`) and
+that a review rates the booking, not a worker, so recording payouts, the paid date, method,
+receipts, the next pay day and ratings wait on `docs/schema-w-earnings.md`.
+
+## Sources (read 2026-10-14)
+
+- Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms
+- LINK Mobility, Cuba sender ID (updated 30 Apr 2026): https://docs.linkmobility.com/regulatory-guidelines/sender-id/cuba
+- Bird, Cuba destination: https://bird.com/products/sms/destinations/cuba
+- Plivo, Cuba coverage: https://www.plivo.com/sms/coverage/cu/
+- Telnyx, Cuba guidelines: https://support.telnyx.com/en/articles/6665126-cuba-sms-guidelines
+- ClickSend, Cuba (+53): https://help.clicksend.com/article/7ax8gictom-cuba-53
+- Messente, Cuba regulations: https://support.messente.com/cuba-sms-regulations
+- Android developer verification: https://developer.android.com/developer-verification
+- Apklis (older reports): https://www.cubanet.org/apklis-nueva-plataforma-aplicaciones-cubanas-pretende-competir-google-play/

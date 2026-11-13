@@ -1,14 +1,22 @@
 import {
   Alert,
+  buttonClassName,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@ota/ui';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
+import { TrackEvent } from '@/components/telemetry/track-event';
 import { Link } from '@/i18n/navigation';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('checkout');
+  return { title: t('mockTitle') };
+}
 
 /**
  * Mock gateway landing page (ADR 0003 open item). It deliberately has no
@@ -25,21 +33,19 @@ export default async function MockCheckoutPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
+      <TrackEvent event="payment_window_viewed" params={{ method: 'card' }} />
       <Card>
         <CardHeader>
           <CardTitle>{t('mockTitle')}</CardTitle>
           <CardDescription>{t('mockDescription')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 text-body-sm">
           <p>
-            <span className="text-muted-foreground">{t('reference')}:</span>{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5">{reference}</code>
+            <span className="text-muted">{t('reference')}:</span>{' '}
+            <code className="rounded bg-sunken px-1.5 py-0.5">{reference}</code>
           </p>
           <Alert>{t('mockNotice')}</Alert>
-          <Link
-            href="/account"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
+          <Link href="/account" className={buttonClassName({ variant: 'secondary' })}>
             {t('backToAccount')}
           </Link>
         </CardContent>

@@ -11,8 +11,11 @@ test.describe('storefront traveler account', () => {
       callbackPath: '/en/account',
     });
 
-    await expect(page.getByRole('heading', { name: 'My trips' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'E2E0001' })).toBeVisible();
+    // The account opens on its overview; trips are a section of it.
+    await expect(page.getByRole('heading', { level: 1, name: /^Hola/ })).toBeVisible();
+    await page.getByRole('link', { name: /^My trips/ }).click();
+    await expect(page).toHaveURL(/\/en\/account\?tab=trips$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'My trips' })).toBeVisible();
 
     await page.getByRole('link', { name: 'E2E0001' }).click();
     await expect(page).toHaveURL(/\/account\/reservations\/[0-9a-f-]+$/);
@@ -23,7 +26,7 @@ test.describe('storefront traveler account', () => {
   test('sends a message to operations from the booking page', async ({ page }) => {
     await signIn(page, 'traveler@example.test', {
       origin: STOREFRONT_URL,
-      callbackPath: '/en/account',
+      callbackPath: '/en/account?tab=trips',
     });
     await page.getByRole('link', { name: 'E2E0001' }).click();
     await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();

@@ -3,6 +3,9 @@ export {
   buildInvoiceModel,
   buildVoucherModel,
   buildWorkOrderModels,
+  type DocumentDisplayReference,
+  type DocumentEventTickets,
+  type DocumentPriceLine,
   type DocumentServiceItem,
   type DocumentSupplier,
   type InvoiceModel,
@@ -13,3 +16,9 @@ export {
 } from './data';
 export { renderInvoiceHtml, renderVoucherHtml, renderWorkOrderHtml } from './templates';
 export { closePdfRenderer, renderHtmlToPdf } from './pdf';
+export {
+  proposalPdfLocale,
+  renderProposalHtml,
+  type ProposalPdfLocale,
+  type ProposalPdfModel,
+} from './proposal';

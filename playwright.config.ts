@@ -1,12 +1,21 @@
 import { defineConfig } from '@playwright/test';
 
+import { consentCookieValue } from './e2e/consent';
+import { TELEMETRY_SINK_FILE } from './e2e/telemetry';
+
 const BACKOFFICE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3002';
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:3001';
+const WORKER_APP_URL = process.env.E2E_WORKER_APP_URL ?? 'http://localhost:3003';
+
+/** DS 07's test widths; 320 is the floor below which a page may scroll sideways. */
+const DS07_WIDTHS = [320, 375, 414, 768, 1024, 1440];
+const RESPONSIVE_SPEC = /responsive\.spec\.ts/;
 
 /**
  * End-to-end tests drive the back-office in a real browser against the running
- * stack (Docker + `pnpm dev`). The suite is serial: it shares one database and
- * one Mailpit inbox, and magic-link sign-in is single-use.
+ * stack (Docker + `pnpm dev`, plus the worker app's web preview). The suite is
+ * serial: it shares one database and one Mailpit inbox, and magic-link sign-in
+ * is single-use.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -22,16 +31,70 @@ export default defineConfig({
     baseURL: BACKOFFICE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-  },
-  webServer: {
-    command: 'pnpm dev',
-    url: `${API_URL}/health`,
-    timeout: 180_000,
-    reuseExistingServer: !process.env.CI,
-    // Raise the rate limits so the suite's many session checks never throttle.
-    env: {
-      RATE_LIMIT_MAX: '100000',
-      RATE_LIMIT_AUTH_MAX: '100000',
+    // Every spec starts with the cookie choice made (analytics refused), so
+    // the storefront's DS 04 banner does not cover the pages under test;
+    // storefront-telemetry.spec.ts clears it to drive the banner. EUR is the
+    // display currency too: Playwright's en-US would otherwise default to USD
+    // (docs/schema-m9-display-currencies.md C2); display-currencies.spec.ts
+    // picks its own.
+    storageState: {
+      cookies: [
+        {
+          name: 'ota_consent',
+          value: consentCookieValue(false),
+          domain: 'localhost',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+        {
+          name: 'ota_currency',
+          value: 'EUR',
+          domain: 'localhost',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+      ],
+      origins: [],
     },
   },
+  // The behaviour specs run once at Playwright's default viewport; the DS 07
+  // layout spec runs once per test width.
+  projects: [
+    { name: 'default', testIgnore: RESPONSIVE_SPEC },
+    ...DS07_WIDTHS.map((width) => ({
+      name: `ds07-${width}`,
+      testMatch: RESPONSIVE_SPEC,
+      use: { viewport: { width, height: 900 } },
+    })),
+  ],
+  webServer: [
+    {
+      command: 'pnpm dev',
+      url: `${API_URL}/health`,
+      timeout: 180_000,
+      reuseExistingServer: !process.env.CI,
+      // Raise the rate limits so the suite's many session checks never throttle;
+      // the mock analytics sink also writes its events where specs can read them.
+      env: {
+        RATE_LIMIT_MAX: '100000',
+        RATE_LIMIT_AUTH_MAX: '100000',
+        TELEMETRY_SINK_FILE,
+      },
+    },
+    {
+      // The worker app's web preview (worker-app.spec.ts): its web export,
+      // served with the API routes proxied on the same origin.
+      command: 'pnpm --filter @ota/worker-app run preview',
+      url: `${WORKER_APP_URL}/`,
+      timeout: 300_000,
+      reuseExistingServer: !process.env.CI,
+      env: { API_URL },
+    },
+  ],
 });

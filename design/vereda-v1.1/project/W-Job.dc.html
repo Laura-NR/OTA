@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>App de colaboradores · trabajo activo sin conexión · pasos · emergencia en el lugar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Inter:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FBF8F3;color:#1F1B17;font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:#0B4F6C}
+.ov{font:700 12px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0B4F6C;margin:0}
+.disp{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cap{font:500 12px/16px Inter,system-ui,sans-serif;color:#6E665E;margin:0}
+.p{margin:0;font-size:15px;line-height:22px;color:#4A433D}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 18px;border-radius:10px;font:600 16px/22px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid transparent;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn-p{background:#0B4F6C;color:#fff}
+.btn-s{background:#fff;color:#083B50;border-color:#D6CEC3}
+.btn-t{background:transparent;color:#0B4F6C;height:44px;padding:0 10px}
+.btn-d{background:#C62828;color:#fff}
+.btn:focus-visible,.rb:focus-visible,.inp:focus-visible,.bn a:focus-visible{outline:2px solid #0B4F6C;outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.card{background:#fff;border:1px solid #E8E2D9;border-radius:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font:600 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;background:#F3EEE6;color:#4A433D;font:500 12px/16px Inter,system-ui,sans-serif;white-space:nowrap}
+.dl{display:grid;grid-template-columns:86px 1fr;gap:8px 12px;font-size:14px;line-height:20px;margin:0}
+.dl dt{color:#6E665E}.dl dd{margin:0}
+.step{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid #E8E2D9}
+.step:first-child{border-top:0;padding-top:0}
+.step .n{width:28px;height:28px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font:700 13px/16px Inter,system-ui,sans-serif;flex:none}
+.rb{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid #D6CEC3;border-radius:10px;background:#fff;cursor:pointer;font-size:15px}
+.rb input{width:22px;height:22px;accent-color:#C62828;margin:0;flex:none}
+.inp{height:48px;padding:0 12px;border:1px solid #D6CEC3;border-radius:10px;font:400 15px/22px Inter,system-ui,sans-serif;color:#1F1B17;background:#fff;box-sizing:border-box;width:100%}
+.tel{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:10px;border:1px solid #D6CEC3;background:#fff;color:#083B50;text-decoration:none;font:600 13px/18px Inter,system-ui,sans-serif;white-space:nowrap}
+.ph{position:relative;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;border-radius:12px}
+.ph .alt{font:500 11px/14px Inter,system-ui,sans-serif;color:#4A433D;background:rgba(255,255,255,.85);padding:3px 6px;border-radius:4px}
+.msg{display:flex;flex-direction:column;gap:2px;max-width:82%;padding:8px 12px;border-radius:12px;font-size:14px;line-height:20px}
+.msg .m{font-size:11px;line-height:14px;color:#6E665E}
+.bn{display:flex;border-top:1px solid #E8E2D9;background:#fff;height:64px;padding-bottom:4px}
+.bn a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E665E;font:500 11px/14px Inter,system-ui,sans-serif;position:relative}
+.bn a.on{color:#083B50;font-weight:700}
+.bn .dot{position:absolute;top:8px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:9999px;background:#C62828;color:#fff;font:700 10px/16px Inter,system-ui,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box}
+</style>
+</helmet>
+
+<div style="width: 390px; min-height: 844px; position: relative; display: flex; flex-direction: column; box-sizing: border-box; background: #FBF8F3">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 14px 20px 4px">
+    <h1 class="disp" style="font-size: 24px; line-height: 30px; flex: 1">Trabajo de hoy</h1>
+    <span class="pill" style="background: #1F1B17; color: #fff"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M12 20h.01"/></svg>Sin conexión · guardado 14:20</span>
+  </header>
+
+  <main style="display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 24px; flex: 1">
+
+    <!-- Emergencia (siempre arriba, un toque) -->
+    <sc-if value="{{emNone}}" hint-placeholder-val="{{ true }}">
+      <button class="btn btn-d" type="button" onClick="{{emOpen}}" style="height: 56px; font-size: 17px"><svg class="ic" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>Reportar emergencia en el lugar</button>
+    </sc-if>
+    <sc-if value="{{emSheet}}" hint-placeholder-val="{{ false }}">
+      <div class="card" role="dialog" aria-labelledby="emt" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-color: #C62828; box-shadow: 0 12px 32px rgba(31,27,23,.14)">
+        <h2 id="emt" style="margin: 0; font-size: 18px; line-height: 24px; color: #B71C1C">Emergencia · ¿qué pasa?</h2>
+        <div role="radiogroup" aria-label="Tipo de emergencia" style="display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{emTypes}}" as="t" hint-placeholder-count="4"><label class="rb" style="border-color: {{t.bd}}"><input type="radio" name="em" checked="{{t.on}}" onChange="{{t.pick}}"><span>{{t.label}}</span></label></sc-for>
+        </div>
+        <a class="btn btn-d" href="tel:+5372042516"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg>Llamar a la central 24/7</a>
+        <button class="btn btn-p" type="button" onClick="{{emSend}}">Avisar a la central con mi ubicación</button>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap"><a class="tel" href="tel:104">Ambulancia 104</a><a class="tel" href="tel:106">Policía 106</a><a class="tel" href="tel:105">Bomberos 105</a></div>
+        <button class="btn btn-t" type="button" onClick="{{emClose}}">Cancelar</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{emSent}}" hint-placeholder-val="{{ false }}">
+      <div class="card" role="alert" style="padding: 14px; display: flex; gap: 12px; align-items: flex-start; border-color: #C62828; background: #FDECEA; color: #B71C1C"><svg class="ic" style="margin-top: 2px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><div style="display: flex; flex-direction: column; gap: 4px"><strong style="font-size: 16px; line-height: 22px">Central avisada · 14:36 · {{emLabel}}</strong><span style="font-size: 14px; line-height: 20px">Ubicación enviada por SMS (sin datos). Ana te llama en menos de 2 minutos. Si no llega la llamada, marca el 104 / 106 según el caso.</span><a href="tel:+5372042516" style="font-weight: 600; color: #B71C1C">Llamar ahora</a></div></div>
+    </sc-if>
+
+    <!-- Trabajo activo -->
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-color: #0B4F6C">
+      <div style="display: flex; align-items: center; gap: 8px"><span class="pill" style="background: #E6F0F4; color: #083B50">{{stepLabel}}</span><span class="mono" style="margin-left: auto; font-weight: 500; color: #083B50">15:50</span></div>
+      <h2 class="disp" style="font-size: 20px; line-height: 26px">Aeropuerto José Martí T3 → Casa Lis, Vedado</h2>
+      <dl class="dl">
+        <dt>Viajeros</dt><dd><strong>Ingrid +1</strong> · hablan español e inglés · 2 maletas</dd>
+        <dt>Vuelo</dt><dd>IB 6621 desde Madrid · llega <strong>16:35</strong> · <span class="tag">a tiempo · visto 14:20</span></dd>
+        <dt>Recogida</dt><dd>Llegadas T3, salida principal · cartel «Vereda · Nakamura» · espera incluida hasta 60 min</dd>
+        <dt>Destino</dt><dd>Casa Lis · Calle 21 e/ K y L, Vedado · timbre 2 · anfitriona Lis</dd>
+        <dt>Pago</dt><dd><strong class="mono">€ 25</strong> · se añade al pago del 10 oct</dd>
+      </dl>
+      <div class="ph" role="img" aria-label="Mapa guardado sin conexión: aeropuerto a Vedado por la Avenida de Rancho Boyeros" style="aspect-ratio: 16/9; background: #DCE6D5"><span class="alt">mapa guardado · T3 → Vedado · 32 min</span></div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><a class="tel" href="tel:+5353147709"><svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.9 2Z"/></svg>Lis (anfitriona)</a><a class="tel" href="tel:+5372042516">Central 24/7</a><a class="tel" href="#chat">Mensaje a la central</a></div>
+      <p class="cap">Ves solo el nombre, el idioma y los teléfonos locales de contacto. Los datos de pago y la dirección del viajero en su país nunca llegan a esta app.</p>
+    </div>
+
+    <!-- Pasos -->
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">Pasos del servicio</p>
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{steps}}" as="st" hint-placeholder-count="4">
+          <div class="step"><span class="n" style="background: {{st.bg}}; color: {{st.fg}}">{{st.n}}</span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px; font-weight: {{st.w}}">{{st.label}}</span><span class="cap">{{st.note}}</span></div><sc-if value="{{st.isNext}}" hint-placeholder-val="{{ false }}"><button class="btn btn-p" type="button" onClick="{{st.go}}" style="height: 44px; padding: 0 14px; font-size: 14px">{{st.cta}}</button></sc-if></div>
+        </sc-for>
+      </div>
+      <p class="cap">Cada paso se guarda con la hora en el teléfono y se envía al volver la señal; la central y los viajeros ven «en camino» y «entregado».</p>
+    </div>
+
+    <!-- Chat con la central -->
+    <div id="chat" class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <p class="ov">Central · hoy</p>
+      <div class="msg" style="background: #F3EEE6; align-self: flex-start"><span>Vuelo IB 6621 a tiempo. ¿Cartel listo? Ingrid lleva bastón, ayúdala con las maletas.</span><span class="m">Ana · 13:40</span></div>
+      <div class="msg" style="background: #E6F0F4; align-self: flex-end"><span>Listo, salgo a las 15:30. Combustible ok.</span><span class="m">Tú · 13:52 · enviado</span></div>
+      <div style="display: flex; gap: 8px"><input class="inp" type="text" placeholder="Escribe a la central…" aria-label="Mensaje a la central"><button class="btn btn-p" type="button" style="padding: 0 14px" aria-label="Enviar"><svg class="ic" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/></svg></button></div>
+      <p class="cap">Sin conexión el mensaje espera en cola; si es urgente, llama.</p>
+    </div>
+
+    <!-- Próximos -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <p class="ov">Próximos</p>
+      <div class="card" style="display: flex; flex-direction: column">
+        <div style="display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid #E8E2D9"><span class="mono" style="width: 48px; font-size: 13px; color: #083B50">Jue 8</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px">Aeropuerto → Vedado · 21:40</span><span class="cap">Luis +3 · familia · € 25</span></span><span class="tag">Asignado</span></div>
+        <div style="display: flex; gap: 12px; align-items: center; padding: 12px 14px"><span class="mono" style="width: 48px; font-size: 13px; color: #083B50">Sáb 10</span><span style="display: flex; flex-direction: column; gap: 2px; flex: 1"><span style="font-size: 15px; line-height: 20px">La Habana → Playa Larga · 08:00</span><span class="cap">Klaus +1 · € 90 · confirma combustible el jue 8</span></span><span class="tag">Asignado</span></div>
+      </div>
+    </section>
+    <div style="height: 72px"></div>
+  </main>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 844px; border-top: 1px dashed #A83E24; pointer-events: none"><span style="position: absolute; right: 8px; top: 2px; font: 500 10px/14px Inter, system-ui, sans-serif; color: #A83E24">primer viewport · 844</span></div>
+  <nav class="bn" aria-label="Principal" style="position: absolute; left: 0; right: 0; top: 780px; box-shadow: 0 -4px 12px rgba(31,27,23,.06)">
+    <a href="W-Home.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/><path d="M9 21v-6h6v6"/></svg>Inicio</a>
+    <a href="W-Offer.dc.html"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>Ofertas<span class="dot">1</span></a>
+    <a href="W-Calendar.dc.html"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Calendario</a>
+    <a href="W-Job.dc.html" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7h18v12H3z"/><path d="M8 7V5h8v2M3 12h18"/></svg>Trabajos</a>
+    <a href="W-Earnings.dc.html"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1560}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 0, em: 'none', emType: 'med' };
+  }
+  renderVals() {
+    const s = this.state;
+    const defs = [['En camino', 'Salida prevista 15:30 · avisa a la central si sales tarde', 'Salgo ahora'], ['He llegado', 'Llegadas T3 · 16:20 recomendado', 'He llegado'], ['Pasajeros a bordo', 'Comprueba nombres y maletas', 'A bordo'], ['Entregado', 'En Casa Lis · Lis confirma la llegada', 'Entregado']];
+    const times = ['15:28', '16:21', '16:52', '17:30'];
+    const steps = defs.map(([label, note, cta], i) => {
+      const done = i < s.step, isNext = i === s.step;
+      return { n: done ? '✓' : String(i + 1), label, cta, w: isNext ? 700 : 500, note: done ? 'Hecho · ' + times[i] + ' · guardado sin conexión' : note, bg: done ? '#2E7D32' : isNext ? '#0B4F6C' : '#E8E2D9', fg: done || isNext ? '#fff' : '#6E665E', isNext, go: () => this.setState({ step: i + 1 }) };
+    });
+    const labels = ['Asignado · hoy', 'En camino', 'En el aeropuerto', 'Con los pasajeros', 'Entregado · gracias'];
+    const T = [['med', 'Médica · alguien necesita atención'], ['mec', 'Mecánica · el vehículo no puede seguir'], ['seg', 'Seguridad · robo, agresión, accidente'], ['otra', 'Otra · lo explico por teléfono']];
+    const emTypes = T.map(([k, label]) => ({ key: k, label, on: s.emType === k, bd: s.emType === k ? '#C62828' : '#D6CEC3', pick: () => this.setState({ emType: k }) }));
+    const found = T.filter((x) => x[0] === s.emType)[0];
+    return {
+      steps, stepLabel: labels[s.step], emNone: s.em === 'none', emSheet: s.em === 'sheet', emSent: s.em === 'sent', emTypes, emLabel: found ? found[1].split(' · ')[0].toLowerCase() : '',
+      emOpen: () => this.setState({ em: 'sheet' }), emClose: () => this.setState({ em: 'none' }), emSend: () => this.setState({ em: 'sent' })
+    };
+  }
+}
+</script>
+</body>
+</html>

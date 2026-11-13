@@ -1,0 +1,361 @@
+{
+  "status": "placeholder",
+  "updated": "2026-10-03",
+  "provinces": [
+    {
+      "code": "CU01",
+      "region": "west",
+      "network": "active",
+      "casas": 11,
+      "hotels": 0,
+      "guides": 4,
+      "drivers": 3,
+      "experiences": 6,
+      "advisoryLevel": 2,
+      "powerCuts": {
+        "min": 6,
+        "max": 8
+      },
+      "fuel": "queues",
+      "kmFromHavana": -180,
+      "nights": 3,
+      "label": {
+        "x": 147.3,
+        "y": 87.1
+      }
+    },
+    {
+      "code": "CU15",
+      "region": "west",
+      "network": "active",
+      "casas": 3,
+      "hotels": 0,
+      "guides": 1,
+      "drivers": 1,
+      "experiences": 2,
+      "advisoryLevel": 1,
+      "powerCuts": {
+        "min": 6,
+        "max": 6
+      },
+      "fuel": "ok",
+      "kmFromHavana": -75,
+      "nights": 1,
+      "label": {
+        "x": 230.2,
+        "y": 62.1
+      }
+    },
+    {
+      "code": "CU03",
+      "region": "west",
+      "network": "active",
+      "casas": 14,
+      "hotels": 0,
+      "guides": 6,
+      "drivers": 5,
+      "experiences": 9,
+      "advisoryLevel": 1,
+      "powerCuts": {
+        "min": 2,
+        "max": 4
+      },
+      "fuel": "ok",
+      "kmFromHavana": 0,
+      "nights": 3,
+      "label": {
+        "x": 267.5,
+        "y": 21.1
+      }
+    },
+    {
+      "code": "CU16",
+      "region": "west",
+      "network": "none",
+      "casas": 0,
+      "hotels": 0,
+      "guides": 0,
+      "drivers": 0,
+      "experiences": 0,
+      "advisoryLevel": 1,
+      "powerCuts": {
+        "min": 8,
+        "max": 8
+      },
+      "fuel": "ok",
+      "kmFromHavana": 50,
+      "nights": 0,
+      "label": {
+        "x": 304.3,
+        "y": 62.8
+      }
+    },
+    {
+      "code": "CU04",
+      "region": "west",
+      "network": "active",
+      "casas": 10,
+      "hotels": 0,
+      "guides": 3,
+      "drivers": 3,
+      "experiences": 5,
+      "advisoryLevel": 1,
+      "powerCuts": {
+        "min": 6,
+        "max": 6
+      },
+      "fuel": "ok",
+      "kmFromHavana": 150,
+      "nights": 2,
+      "label": {
+        "x": 359.9,
+        "y": 69.7
+      }
+    },
+    {
+      "code": "CU06",
+      "region": "centre",
+      "network": "active",
+      "casas": 5,
+      "hotels": 0,
+      "guides": 1,
+      "drivers": 2,
+      "experiences": 2,
+      "advisoryLevel": 2,
+      "powerCuts": {
+        "min": 8,
+        "max": 8
+      },
+      "fuel": "ok",
+      "kmFromHavana": 250,
+      "nights": 1,
+      "label": {
+        "x": 427.4,
+        "y": 109.9
+      }
+    },
+    {
+      "code": "CU05",
+      "region": "centre",
+      "network": "active",
+      "casas": 4,
+      "hotels": 0,
+      "guides": 1,
+      "drivers": 1,
+      "experiences": 2,
+      "advisoryLevel": 2,
+      "powerCuts": {
+        "min": 8,
+        "max": 8
+      },
+      "fuel": "ok",
+      "kmFromHavana": 280,
+      "nights": 1,
+      "label": {
+        "x": 471.0,
+        "y": 85.6
+      }
+    },
+    {
+      "code": "CU07",
+      "short": "S. Spíritus",
+      "region": "centre",
+      "network": "active",
+      "casas": 8,
+      "hotels": 0,
+      "guides": 3,
+      "drivers": 2,
+      "experiences": 4,
+      "advisoryLevel": 2,
+      "powerCuts": {
+        "min": 8,
+        "max": 8
+      },
+      "fuel": "queues",
+      "kmFromHavana": 320,
+      "nights": 3,
+      "label": {
+        "x": 515.3,
+        "y": 138.2
+      }
+    },
+    {
+      "code": "CU08",
+      "region": "centre",
+      "network": "limited",
+      "casas": 0,
+      "hotels": 1,
+      "guides": 0,
+      "drivers": 1,
+      "experiences": 1,
+      "advisoryLevel": 2,
+      "powerCuts": {
+        "min": 10,
+        "max": 10
+      },
+      "fuel": "ok",
+      "kmFromHavana": 430,
+      "nights": 2,
+      "label": {
+        "x": 575.8,
+        "y": 134.1
+      }
+    },
+    {
+      "code": "CU09",
+      "region": "centre",
+      "network": "active",
+      "casas": 3,
+      "hotels": 0,
+      "guides": 1,
+      "drivers": 1,
+      "experiences": 1,
+      "advisoryLevel": 2,
+      "powerCuts": {
+        "min": 10,
+        "max": 10
+      },
+      "fuel": "queues",
+      "kmFromHavana": 530,
+      "nights": 1,
+      "label": {
+        "x": 642.2,
+        "y": 188.6
+      }
+    },
+    {
+      "code": "CU10",
+      "region": "east",
+      "network": "none",
+      "casas": 0,
+      "hotels": 0,
+      "guides": 0,
+      "drivers": 0,
+      "experiences": 0,
+      "advisoryLevel": 3,
+      "powerCuts": {
+        "min": 12,
+        "max": 12
+      },
+      "fuel": "scarce",
+      "kmFromHavana": 660,
+      "nights": 0,
+      "label": {
+        "x": 720.9,
+        "y": 215.7
+      }
+    },
+    {
+      "code": "CU11",
+      "region": "east",
+      "network": "limited",
+      "casas": 2,
+      "hotels": 0,
+      "guides": 1,
+      "drivers": 0,
+      "experiences": 0,
+      "advisoryLevel": 3,
+      "powerCuts": {
+        "min": 12,
+        "max": null
+      },
+      "fuel": "scarce",
+      "kmFromHavana": 740,
+      "nights": 2,
+      "label": {
+        "x": 794.8,
+        "y": 237.0
+      }
+    },
+    {
+      "code": "CU12",
+      "region": "east",
+      "network": "limited",
+      "casas": 1,
+      "hotels": 0,
+      "guides": 0,
+      "drivers": 0,
+      "experiences": 0,
+      "advisoryLevel": 3,
+      "powerCuts": {
+        "min": 12,
+        "max": null
+      },
+      "fuel": "scarce",
+      "kmFromHavana": 760,
+      "nights": 1,
+      "label": {
+        "x": 731.9,
+        "y": 278.6
+      }
+    },
+    {
+      "code": "CU13",
+      "short": "Santiago",
+      "region": "east",
+      "network": "active",
+      "casas": 5,
+      "hotels": 0,
+      "guides": 2,
+      "drivers": 2,
+      "experiences": 3,
+      "advisoryLevel": 3,
+      "powerCuts": {
+        "min": 12,
+        "max": null
+      },
+      "fuel": "scarce",
+      "kmFromHavana": 870,
+      "nights": 3,
+      "label": {
+        "x": 794.9,
+        "y": 293.9
+      }
+    },
+    {
+      "code": "CU14",
+      "region": "east",
+      "network": "limited",
+      "casas": 3,
+      "hotels": 0,
+      "guides": 1,
+      "drivers": 1,
+      "experiences": 2,
+      "advisoryLevel": 3,
+      "powerCuts": {
+        "min": 12,
+        "max": null
+      },
+      "fuel": "scarce",
+      "kmFromHavana": 930,
+      "nights": 3,
+      "label": {
+        "x": 888.7,
+        "y": 291.9
+      }
+    },
+    {
+      "code": "CU99",
+      "short": "I. Juventud",
+      "region": "isle",
+      "network": "none",
+      "casas": 0,
+      "hotels": 0,
+      "guides": 0,
+      "drivers": 0,
+      "experiences": 0,
+      "advisoryLevel": 2,
+      "powerCuts": {
+        "min": 8,
+        "max": 8
+      },
+      "fuel": "ok",
+      "kmFromHavana": 0,
+      "nights": 0,
+      "label": {
+        "x": 224.3,
+        "y": 156.4
+      }
+    }
+  ]
+}
