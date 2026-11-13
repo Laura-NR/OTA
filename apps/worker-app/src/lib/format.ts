@@ -168,3 +168,9 @@ export function dayShort(day: string): string {
   const { date, month } = dayParts(day);
   return `${date} ${month.slice(0, 3)}`;
 }
+
+/** "Sáb 14 nov" (W-Earnings' "Próximo pago"). */
+export function payDay(day: string): string {
+  const { weekday, date, month } = dayParts(day);
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1, 3)} ${date} ${month.slice(0, 3)}`;
+}

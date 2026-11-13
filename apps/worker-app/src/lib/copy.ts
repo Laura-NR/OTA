@@ -214,11 +214,25 @@ export const copy = {
     jobs: (count: number) =>
       count === 1 ? '1 trabajo terminado' : `${count} trabajos terminados`,
     thisMonth: 'Este mes',
-    paidYear: (year: number) => `Pagado · trabajos de ${year}`,
+    paidYear: (year: number) => `Pagado en ${year}`,
     count: (count: number) => (count === 1 ? '1 trabajo' : `${count} trabajos`),
     issue: (amount: string, count: number) =>
       `${amount} con incidencia en el pago (${count === 1 ? '1 trabajo' : `${count} trabajos`}). Llama a la central.`,
-    howPaid: 'La central te dice cuándo y dónde cobras cada trabajo.',
+    method: {
+      CASH_OFFICE: (office: string | null) =>
+        office ? `Efectivo EUR · ${office}` : 'Efectivo EUR',
+      BANK_TRANSFER: 'Transferencia bancaria',
+    },
+    methodNotSet: 'La central aún no ha anotado cómo cobras.',
+    changeMethod: 'Llamar a la central para cambiarla',
+    nextPay: 'Próximo pago',
+    nextPayLine: (day: string, from: string, to: string, cash: boolean) =>
+      `${day} ${from}–${to}${cash ? ' · trae tu carnet' : ''}`,
+    howPaid: (days: number) =>
+      `Cada trabajo se paga ${days === 1 ? '1 día hábil' : `${days} días hábiles`} después de terminarlo. Firmas un recibo por cada pago.`,
+    paidOn: (day: string) => `Pagado ${day}`,
+    receipts: 'Recibos',
+    noReceipts: 'Aún no hay pagos registrados.',
     history: 'Historial',
     noHistory: 'Aún no tienes trabajos terminados.',
     state: { PENDING: 'Pendiente', PAID: 'Pagado', ISSUE: 'Incidencia' },

@@ -3,10 +3,12 @@ import type {
   PayoutTotalDto,
   WorkerEarningsDto,
   WorkerEarningsJobDto,
+  WorkerPaymentDto,
 } from '@ota/schemas';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -15,10 +17,13 @@ import {
 } from 'react-native';
 
 import { ApiError, type WorkerApi } from '../lib/api';
+import { settings } from '../lib/config';
 import { copy } from '../lib/copy';
 import {
   categoryLabel,
+  dayShort,
   money,
+  payDay,
   serviceLabel,
   shortDate,
   travelerLine,
@@ -33,10 +38,11 @@ const STATE_STYLE: Record<WorkerPayoutState, { color: string; backgroundColor: s
   };
 
 /**
- * W-Earnings, read-only: the worker's reliability as the desk's floor reads
- * it, what they are owed and have been paid, and their latest finished jobs.
- * The payout method, the next pay day, receipts and ratings wait
- * (`docs/schema-w-earnings.md`). It needs a connection, like the calendar.
+ * W-Earnings: the worker's reliability as the desk's floor reads it, how they
+ * are paid and when next, what they are owed and have been paid, their latest
+ * finished jobs and their payments (`docs/schema-w-earnings.md`). The desk
+ * records payments and changes the method (E3); ratings wait (E6). It needs a
+ * connection, like the calendar.
  */
 export function EarningsScreen({
   api,
@@ -154,11 +160,31 @@ export function EarningsScreen({
         <Text accessibilityRole="header" style={type.heading}>
           {copy.earnings.payouts}
         </Text>
+        <Text style={[type.body, styles.strong]}>
+          {payouts.method === 'CASH_OFFICE'
+            ? copy.earnings.method.CASH_OFFICE(payouts.office)
+            : payouts.method === 'BANK_TRANSFER'
+              ? copy.earnings.method.BANK_TRANSFER
+              : copy.earnings.methodNotSet}
+        </Text>
         <Text style={type.small}>{copy.earnings.pending}</Text>
         <Text style={[styles.amount, type.figure]}>
           {money(payouts.pending.amount, payouts.currency)}
         </Text>
         <Text style={type.small}>{copy.earnings.jobs(payouts.pending.jobs)}</Text>
+        {payouts.nextPayDay ? (
+          <View style={styles.stat}>
+            <Text style={type.caption}>{copy.earnings.nextPay}</Text>
+            <Text style={[type.body, styles.strong]}>
+              {copy.earnings.nextPayLine(
+                payDay(payouts.nextPayDay.day),
+                payouts.nextPayDay.from,
+                payouts.nextPayDay.to,
+                payouts.method !== 'BANK_TRANSFER',
+              )}
+            </Text>
+          </View>
+        ) : null}
         <View style={styles.stats}>
           <Total
             label={copy.earnings.thisMonth}
@@ -179,7 +205,16 @@ export function EarningsScreen({
             )}
           </Notice>
         ) : null}
-        <Text style={type.small}>{copy.earnings.howPaid}</Text>
+        <Text style={type.small}>{copy.earnings.howPaid(payouts.businessDays)}</Text>
+        {settings.deskPhone ? (
+          <Button
+            label={copy.earnings.changeMethod}
+            variant="secondary"
+            onPress={() =>
+              void Linking.openURL(`tel:${settings.deskPhone!.replace(/\s/g, '')}`)
+            }
+          />
+        ) : null}
       </Card>
 
       <Text accessibilityRole="header" style={type.heading}>
@@ -191,6 +226,19 @@ export function EarningsScreen({
       {data.history.map((job) => (
         <HistoryRow key={job.serviceItemId} job={job} />
       ))}
+
+      <Text accessibilityRole="header" style={type.heading}>
+        {copy.earnings.receipts}
+      </Text>
+      {data.payments.length === 0 ? (
+        <Text style={type.small}>{copy.earnings.noReceipts}</Text>
+      ) : (
+        <Card>
+          {data.payments.map((payment) => (
+            <PaymentRow key={payment.id} payment={payment} office={payouts.office} />
+          ))}
+        </Card>
+      )}
 
       <View style={styles.footer}>
         <Button label={copy.earnings.back} variant="secondary" onPress={onBack} />
@@ -228,8 +276,36 @@ function Total({
   );
 }
 
+function PaymentRow({
+  payment,
+  office,
+}: {
+  payment: WorkerPaymentDto;
+  office: string | null;
+}) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.grow}>
+        <Text style={[type.body, styles.strong]}>{dayShort(payment.paidAt)}</Text>
+        <Text style={type.small}>
+          {payment.method === 'CASH_OFFICE'
+            ? copy.earnings.method.CASH_OFFICE(office)
+            : copy.earnings.method.BANK_TRANSFER}{' '}
+          · {copy.earnings.count(payment.jobs)}
+        </Text>
+      </View>
+      <Text style={[type.body, styles.strong, type.figure]}>
+        {money(payment.amount, payment.currency)}
+      </Text>
+    </View>
+  );
+}
+
 function HistoryRow({ job }: { job: WorkerEarningsJobDto }) {
-  const state = copy.earnings.state[job.payoutState];
+  const state =
+    job.payoutState === 'PAID' && job.paidAt
+      ? copy.earnings.paidOn(dayShort(job.paidAt))
+      : copy.earnings.state[job.payoutState];
   return (
     <Card>
       <View style={styles.row}>
