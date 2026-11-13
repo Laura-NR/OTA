@@ -337,3 +337,33 @@ describe('ticket concierge terms (M10 D8)', () => {
     expect(() => parseTenantConfig({ ...minimal, concierge: { maxSeats: 9 } })).toThrow();
   });
 });
+
+describe('worker payout sessions (W-Earnings E4)', () => {
+  it('defaults to no office and no sessions, so no next pay day is shown', () => {
+    expect(parseTenantConfig(minimal).workerPayouts).toEqual({
+      status: 'placeholder',
+      office: null,
+      sessions: [],
+    });
+  });
+
+  it('refuses a session on a day that is not a weekday number or that ends before it starts', () => {
+    const at = (session: object) => ({
+      ...minimal,
+      workerPayouts: { sessions: [session] },
+    });
+    expect(
+      parseTenantConfig(at({ weekday: 6, from: '10:00', to: '13:00' })).workerPayouts
+        .sessions,
+    ).toHaveLength(1);
+    expect(() =>
+      parseTenantConfig(at({ weekday: 0, from: '10:00', to: '13:00' })),
+    ).toThrow();
+    expect(() =>
+      parseTenantConfig(at({ weekday: 6, from: '13:00', to: '10:00' })),
+    ).toThrow();
+    expect(() =>
+      parseTenantConfig(at({ weekday: 6, from: '9:00', to: '13:00' })),
+    ).toThrow();
+  });
+});

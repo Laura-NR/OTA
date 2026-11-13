@@ -26,6 +26,7 @@ export {
   refundApprovalSchema,
   slugifyTenantId,
   tenantConfigSchema,
+  workerPayoutsSchema,
 } from './tenant';
 export type {
   BankTransferDetails,
@@ -44,6 +45,7 @@ export type {
   ProposalsConfig,
   TenantConfig,
   TenantManifestOptions,
+  WorkerPayoutsConfig,
 } from './tenant';
 export {
   destinationDataSchema,
