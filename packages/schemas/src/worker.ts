@@ -7,9 +7,11 @@ import {
 import { z } from 'zod';
 
 import { serviceTypeSchema } from './dispatch';
+import { workerPaymentSchema } from './payouts';
 import {
   blockReasonSchema,
   blockedRunSchema,
+  calendarDaySchema,
   supplierCategorySchema,
   supplierPayoutsSchema,
   verificationStatusSchema,
@@ -89,15 +91,6 @@ export const workerSignOutSchema = z.object({
 });
 
 export type WorkerSignOutDto = z.infer<typeof workerSignOutSchema>;
-
-/** A calendar day, `YYYY-MM-DD`, that exists (no 30 February). */
-const calendarDaySchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine(
-    (day) => new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) === day,
-    'Not a calendar day',
-  );
 
 export const workerDayStateSchema = z.enum([...WORKER_DAY_STATES] as [
   WorkerDayState,
@@ -188,13 +181,15 @@ export const workerPayoutStateSchema = z.enum([...WORKER_PAYOUT_STATES] as [
 /** A finished job in W-Earnings' "Historial", with where its payout stands. */
 export const workerEarningsJobSchema = workerJobSchema.extend({
   payoutState: workerPayoutStateSchema,
+  /** The day it was paid, `YYYY-MM-DD`; null until paid. */
+  paidAt: z.string().nullable(),
 });
 
 export type WorkerEarningsJobDto = z.infer<typeof workerEarningsJobSchema>;
 
 /**
- * W-Earnings, read-only: who the worker is, their reliability as the desk's
- * floor reads it, their payouts and their latest finished jobs.
+ * W-Earnings: who the worker is, their reliability as the desk's floor reads
+ * it, their payouts and pay day, their latest finished jobs and payments.
  */
 export const workerEarningsSchema = z.object({
   worker: z.object({
@@ -215,6 +210,8 @@ export const workerEarningsSchema = z.object({
   }),
   payouts: supplierPayoutsSchema,
   history: z.array(workerEarningsJobSchema),
+  /** The latest payments, newest first, each with its receipt. */
+  payments: z.array(workerPaymentSchema),
 });
 
 export type WorkerEarningsDto = z.infer<typeof workerEarningsSchema>;

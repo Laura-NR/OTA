@@ -42,6 +42,7 @@ function makeSupplier(
     credentialExpiresAt: null,
     verificationStatus: 'PENDING_AUDIT',
     isAvailable: true,
+    payoutMethod: null,
     createdAt: new Date('2026-09-20T10:00:00Z'),
     updatedAt: new Date('2026-09-20T10:00:00Z'),
     user: { email: 'supplier@example.test', fullName: 'Supplier Name' },
@@ -341,6 +342,36 @@ describe('suppliers', () => {
       paidThisYear: { amount: '0.00', jobs: 0 },
     });
     expect(guide.body.payouts.pending).toEqual({ amount: '0.00', jobs: 0 });
+  });
+
+  it('lets the desk set and clear how a worker is paid, audited (W-Earnings E2)', async () => {
+    const set = await request(app.getHttpServer())
+      .put(`/suppliers/${DRIVER_ID}/payout-method`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ method: 'BANK_TRANSFER' });
+
+    expect(set.status).toBe(200);
+    expect(set.body.payouts.method).toBe('BANK_TRANSFER');
+    expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        actorUserId: SUPER_ADMIN.id,
+        action: 'supplier.payout_method_set',
+        entityId: DRIVER_ID,
+        metadata: { previous: null, next: 'BANK_TRANSFER' },
+      }),
+    });
+
+    const cleared = await request(app.getHttpServer())
+      .put(`/suppliers/${DRIVER_ID}/payout-method`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ method: null });
+    expect(cleared.body.payouts.method).toBeNull();
+
+    const invalid = await request(app.getHttpServer())
+      .put(`/suppliers/${DRIVER_ID}/payout-method`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ method: 'CHEQUE' });
+    expect(invalid.status).toBe(400);
   });
 
   it('returns 404 for an unknown supplier', async () => {

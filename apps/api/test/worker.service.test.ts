@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { parseTenantConfig } from '@ota/config';
 import { Prisma } from '@ota/db';
 import { WORKER_CODE_MAX_FAILURES, workerCodeSms } from '@ota/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -11,6 +12,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { AuthUser } from '../src/common/auth/auth-user';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import type { SmsChannel, SmsMessage } from '../src/sms/sms.channel';
+import type { DocumentRenderer } from '../src/documents/document-renderer';
+import { SupplierPayoutsService } from '../src/suppliers/supplier-payouts.service';
 import { SuppliersService } from '../src/suppliers/suppliers.service';
 import type { ObjectStorage } from '@ota/storage';
 import {
@@ -432,6 +435,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
       prisma as unknown as PrismaService,
       fakeOperatingSettings({ amberPercent: 75 }),
       {} as SuppliersService,
+      {} as SupplierPayoutsService,
     );
   }
 
@@ -637,11 +641,13 @@ describe("the worker app's calendar (W-Calendar)", () => {
       prisma as unknown as PrismaService,
       {} as ObjectStorage,
       settings,
+      {} as SupplierPayoutsService,
     );
     const service = new WorkerService(
       prisma as unknown as PrismaService,
       settings,
       suppliers,
+      {} as SupplierPayoutsService,
     );
     return { service, rows, audit, resources };
   }
@@ -870,7 +876,7 @@ describe("the worker app's calendar (W-Calendar)", () => {
   });
 });
 
-describe("the worker app's earnings (W-Earnings, read-only)", () => {
+describe("the worker app's earnings (W-Earnings)", () => {
   const WORKER: AuthUser = {
     id: 'u-reinier',
     email: 'driver@example.test',
@@ -881,8 +887,18 @@ describe("the worker app's earnings (W-Earnings, read-only)", () => {
     id: 'supplier-reinier',
     category: 'PRIVATE_DRIVER',
     provincesActive: ['La Habana', 'Pinar del Río'],
+    payoutMethod: 'CASH_OFFICE',
     user: { fullName: 'Reinier  Sosa ' },
   };
+  // The board's office: Saturdays 10:00–13:00.
+  const TENANT = parseTenantConfig({
+    tenantId: 'vereda',
+    branding: { agencyName: 'Vereda', licenseNumber: 'MINTUR-TEST' },
+    workerPayouts: {
+      office: 'oficina Vedado',
+      sessions: [{ weekday: 6, from: '10:00', to: '13:00' }],
+    },
+  });
   function item(
     id: string,
     endsAt: string,
@@ -901,6 +917,7 @@ describe("the worker app's earnings (W-Earnings, read-only)", () => {
       dispatchDeadline: null,
       payoutRate: new Prisma.Decimal(payout),
       payoutStatus,
+      payout: null,
       reservation: {
         bookingCode: 'VX4WQ7EB',
         partySize: 3,
@@ -911,6 +928,16 @@ describe("the worker app's earnings (W-Earnings, read-only)", () => {
     };
   }
   const reads: Array<{ where: Record<string, unknown> }> = [];
+  const PAYMENT = {
+    id: '7b0d7c3e-4f7a-4d63-9a1c-2f1f6a6d8e01',
+    method: 'CASH_OFFICE',
+    currency: 'EUR',
+    amount: new Prisma.Decimal('180.00'),
+    paidAt: new Date('2026-09-28T00:00:00Z'),
+    createdAt: new Date('2026-09-28T15:00:00Z'),
+    recordedBy: { fullName: 'Marta Ops', email: 'ops@example.test' },
+    _count: { serviceItems: 1 },
+  };
 
   function earnings(profile: Record<string, unknown> | null, items: unknown[]) {
     reads.length = 0;
@@ -933,11 +960,27 @@ describe("the worker app's earnings (W-Earnings, read-only)", () => {
             }),
           ),
       },
+      supplierPayout: {
+        findMany: async (args: { where: Record<string, unknown>; take: number }) => {
+          reads.push(args);
+          return [PAYMENT];
+        },
+      },
     };
+    const settings = fakeOperatingSettings({
+      reliabilityFloorPercent: 85,
+      reliabilityMinAnswered: 5,
+    });
     return new WorkerService(
       prisma as unknown as PrismaService,
-      fakeOperatingSettings({ reliabilityFloorPercent: 85, reliabilityMinAnswered: 5 }),
+      settings,
       {} as SuppliersService,
+      new SupplierPayoutsService(
+        prisma as unknown as PrismaService,
+        settings,
+        TENANT,
+        {} as DocumentRenderer,
+      ),
     );
   }
 
@@ -945,7 +988,9 @@ describe("the worker app's earnings (W-Earnings, read-only)", () => {
     const service = earnings(PROFILE, [
       item('item-oct', '2026-10-03T20:00:00Z', '90.10', 'ACCRUED'),
       item('item-nov', '2026-11-05T20:00:00Z', '25.20', 'PROCESSING'),
-      item('item-paid', '2026-09-21T20:00:00Z', '180.00', 'SETTLED'),
+      item('item-paid', '2026-09-21T20:00:00Z', '180.00', 'SETTLED', {
+        payout: { paidAt: PAYMENT.paidAt },
+      }),
       item('item-failed', '2026-11-01T20:00:00Z', '60.00', 'FAILED'),
       // The read narrows to finished jobs; these prove the rule decides anyway.
       item('item-coming', '2026-11-20T20:00:00Z', '500.00', 'ACCRUED'),
@@ -988,13 +1033,34 @@ describe("the worker app's earnings (W-Earnings, read-only)", () => {
       paidThisYear: { amount: '180.00', jobs: 1 },
       issue: { amount: '60.00', jobs: 1 },
       year: 2026,
+      method: 'CASH_OFFICE',
+      office: 'oficina Vedado',
+      businessDays: 5,
+      // October's job fell due long ago; the next Saturday session pays it.
+      nextPayDay: { day: '2026-11-14', from: '10:00', to: '13:00' },
     });
-    expect(result.history.map((job) => [job.serviceItemId, job.payoutState])).toEqual([
-      ['item-nov', 'PENDING'],
-      ['item-failed', 'ISSUE'],
-      ['item-oct', 'PENDING'],
-      ['item-paid', 'PAID'],
+    expect(
+      result.history.map((job) => [job.serviceItemId, job.payoutState, job.paidAt]),
+    ).toEqual([
+      ['item-nov', 'PENDING', null],
+      ['item-failed', 'ISSUE', null],
+      ['item-oct', 'PENDING', null],
+      ['item-paid', 'PAID', '2026-09-28'],
     ]);
+    // The worker's payments, without who on the desk recorded them.
+    expect(result.payments).toEqual([
+      {
+        id: PAYMENT.id,
+        method: 'CASH_OFFICE',
+        currency: 'EUR',
+        amount: '180.00',
+        paidAt: '2026-09-28',
+        jobs: 1,
+      },
+    ]);
+    expect(reads.find((read) => 'take' in read)?.where).toEqual({
+      supplierId: 'supplier-reinier',
+    });
     expect(result.history[0]).toMatchObject({
       payout: '25.20',
       currency: 'EUR',

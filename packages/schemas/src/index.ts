@@ -147,6 +147,8 @@ export {
   expiringSuppliersQuerySchema,
   generatorAccessSchema,
   listSuppliersQuerySchema,
+  calendarDaySchema,
+  payoutMethodSchema,
   payoutTotalSchema,
   resourceChannelSchema,
   setAvailabilitySchema,
@@ -183,6 +185,20 @@ export {
   type VehicleDetailsDto,
   type VehicleDetailsRequest,
 } from './supplier';
+export {
+  payableJobSchema,
+  recordSupplierPayoutSchema,
+  setPayoutMethodSchema,
+  supplierPaymentSchema,
+  supplierPayoutLedgerSchema,
+  workerPaymentSchema,
+  type PayableJobDto,
+  type RecordSupplierPayoutRequest,
+  type SetPayoutMethodRequest,
+  type SupplierPaymentDto,
+  type SupplierPayoutLedgerDto,
+  type WorkerPaymentDto,
+} from './payouts';
 export {
   acknowledgeAlertSchema,
   alertAcknowledgementSchema,

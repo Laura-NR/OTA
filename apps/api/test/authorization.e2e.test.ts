@@ -264,8 +264,9 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/worker/calendar', allowed: 'worker' },
   { method: 'put', path: '/worker/availability', allowed: 'worker' },
   { method: 'put', path: '/worker/fuel', allowed: 'worker' },
-  // W-Earnings: the worker's own reliability and payouts, read-only.
+  // W-Earnings: the worker's own reliability and payouts, and their receipts.
   { method: 'get', path: '/worker/earnings', allowed: 'worker' },
+  { method: 'get', path: `/worker/payouts/${PAYMENT}/receipt`, allowed: 'worker' },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',
@@ -328,6 +329,15 @@ const ROUTES: Route[] = [
   // M6: support reads the resources on the inspector; only the desk writes them.
   { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/vehicle`, allowed: 'opsWrite' },
+  // W-Earnings payouts (docs/schema-w-earnings.md E7): support reads, ops record.
+  { method: 'put', path: `/suppliers/${SUPPLIER}/payout-method`, allowed: 'opsWrite' },
+  { method: 'get', path: `/suppliers/${SUPPLIER}/payouts`, allowed: 'opsRead' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/payouts`, allowed: 'opsWrite' },
+  {
+    method: 'get',
+    path: `/suppliers/${SUPPLIER}/payouts/${PAYMENT}/receipt`,
+    allowed: 'opsRead',
+  },
   { method: 'post', path: `/suppliers/${SUPPLIER}/verification`, allowed: 'opsWrite' },
 
   // Imports, applications, quality.

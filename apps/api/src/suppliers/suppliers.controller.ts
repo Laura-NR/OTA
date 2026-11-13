@@ -17,7 +17,9 @@ import {
   confirmResourcesSchema,
   expiringSuppliersQuerySchema,
   listSuppliersQuerySchema,
+  recordSupplierPayoutSchema,
   setAvailabilitySchema,
+  setPayoutMethodSchema,
   setVerificationSchema,
   uploadCredentialSchema,
   vehicleDetailsInputSchema,
@@ -26,10 +28,13 @@ import {
   type ConfirmResourcesRequest,
   type ExpiringSuppliersQuery,
   type ListSuppliersQuery,
+  type RecordSupplierPayoutRequest,
   type SetAvailabilityRequest,
+  type SetPayoutMethodRequest,
   type SetVerificationRequest,
   type SupplierDetailDto,
   type SupplierDto,
+  type SupplierPayoutLedgerDto,
   type SupplierRowDto,
   type UploadCredentialRequest,
   type VehicleDetailsRequest,
@@ -41,6 +46,8 @@ import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { sendPdf } from '../proposals/proposal-pdf';
+import { SupplierPayoutsService } from './supplier-payouts.service';
 import { SuppliersService } from './suppliers.service';
 
 const READ_ROLES = [
@@ -52,7 +59,10 @@ const READ_ROLES = [
 @Capability('suppliers')
 @Controller('suppliers')
 export class SuppliersController {
-  constructor(private readonly suppliers: SuppliersService) {}
+  constructor(
+    private readonly suppliers: SuppliersService,
+    private readonly payouts: SupplierPayoutsService,
+  ) {}
 
   @Get()
   @Roles(...READ_ROLES)
@@ -132,6 +142,50 @@ export class SuppliersController {
     @CurrentUser() actor: AuthUser,
   ): Promise<SupplierDetailDto> {
     return this.suppliers.setVehicle(id, body, actor);
+  }
+
+  /** W-Earnings E2, E3: how the worker is paid; the app only shows it. */
+  @Put(':id/payout-method')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  setPayoutMethod(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(setPayoutMethodSchema)) body: SetPayoutMethodRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.suppliers.setPayoutMethod(id, body.method, actor);
+  }
+
+  /** W-Earnings: the finished jobs not yet paid and the payments made. */
+  @Get(':id/payouts')
+  @Roles(...READ_ROLES)
+  payoutLedger(@Param('id', ParseUUIDPipe) id: string): Promise<SupplierPayoutLedgerDto> {
+    return this.payouts.ledger(id);
+  }
+
+  /** W-Earnings E1, E7: record a payment made to the worker. */
+  @Post(':id/payouts')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  recordPayout(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(recordSupplierPayoutSchema))
+    body: RecordSupplierPayoutRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierPayoutLedgerDto> {
+    return this.payouts.record(id, body, actor);
+  }
+
+  /** W-Earnings E5: a payment's receipt, printed for the worker to sign. */
+  @Get(':id/payouts/:payoutId/receipt')
+  @Roles(...READ_ROLES)
+  async payoutReceipt(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('payoutId', ParseUUIDPipe) payoutId: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { body, filename } = await this.payouts.receipt(payoutId, id);
+    sendPdf(response, body, filename);
   }
 
   @Post(':id/verification')

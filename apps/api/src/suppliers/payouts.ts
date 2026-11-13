@@ -2,7 +2,10 @@ import type { Prisma } from '@ota/db';
 import {
   JOB_STATUSES,
   ReservationStatus,
+  nextPayDay,
   type EarningsTotal,
+  type PayoutMethod,
+  type PayoutRule,
   type WorkerEarnings,
   type WorkerEarningsJob,
 } from '@ota/domain';
@@ -28,6 +31,35 @@ export function finishedJobsWhere(
   };
 }
 
+/** What a finished job's payout is read with: its booking's state and the payment that settled it. */
+export const PAYOUT_JOB_SELECT = {
+  status: true,
+  serviceDateEnd: true,
+  payoutRate: true,
+  payoutStatus: true,
+  reservation: { select: { status: true } },
+  payout: { select: { paidAt: true } },
+} satisfies Prisma.ServiceItemSelect;
+
+type PayoutJobRow = Prisma.ServiceItemGetPayload<{ select: typeof PAYOUT_JOB_SELECT }>;
+
+/** A service item as the domain's earnings rules read it. */
+export function toEarningsJob(item: PayoutJobRow): WorkerEarningsJob {
+  return {
+    status: item.status,
+    reservationStatus: item.reservation.status,
+    endsAt: item.serviceDateEnd,
+    payoutCents: payoutCents(item.payoutRate),
+    payoutStatus: item.payoutStatus,
+    paidAt: item.payout?.paidAt ?? null,
+  };
+}
+
+/** The pay rule (E4) and where cash is collected. */
+export interface PayoutTerms extends PayoutRule {
+  office: string | null;
+}
+
 /** A `Decimal(10,2)` payout in whole cents, so sums stay exact. */
 export function payoutCents(rate: Prisma.Decimal): number {
   return rate.mul(100).round().toNumber();
@@ -41,8 +73,16 @@ function toTotal(total: EarningsTotal): PayoutTotalDto {
   return { amount: centsText(total.cents), jobs: total.jobs };
 }
 
+/**
+ * The totals, the worker's method and the next pay day: the same figures on
+ * the desk's inspector and in the worker app.
+ */
 export function toPayoutsDto<T extends WorkerEarningsJob>(
   earnings: WorkerEarnings<T>,
+  jobs: readonly WorkerEarningsJob[],
+  method: PayoutMethod | null,
+  terms: PayoutTerms,
+  now: Date,
 ): SupplierPayoutsDto {
   return {
     currency: PAYOUT_CURRENCY,
@@ -51,5 +91,9 @@ export function toPayoutsDto<T extends WorkerEarningsJob>(
     paidThisYear: toTotal(earnings.paidThisYear),
     issue: toTotal(earnings.issue),
     year: earnings.year,
+    method,
+    office: terms.office,
+    businessDays: terms.businessDays,
+    nextPayDay: nextPayDay(jobs, now, terms),
   };
 }

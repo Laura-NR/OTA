@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  Res,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
@@ -26,11 +27,13 @@ import {
   type WorkerSignInCodeDto,
   type WorkerSignOutDto,
 } from '@ota/schemas';
+import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { sendPdf } from '../proposals/proposal-pdf';
 import { WorkerCodesService } from './worker-codes.service';
 import { WorkerService } from './worker.service';
 
@@ -72,11 +75,23 @@ export class WorkerController {
     return this.worker.setDays(actor, body);
   }
 
-  /** W-Earnings: reliability, payouts and the latest finished jobs, read-only. */
+  /** W-Earnings: reliability, payouts, pay day, the latest finished jobs and payments. */
   @Get('earnings')
   @Roles(UserRole.ServiceWorker)
   earnings(@CurrentUser() actor: AuthUser): Promise<WorkerEarningsDto> {
     return this.worker.earnings(actor);
+  }
+
+  /** W-Earnings E5: the receipt of one of the worker's own payments. */
+  @Get('payouts/:id/receipt')
+  @Roles(UserRole.ServiceWorker)
+  async receipt(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { body, filename } = await this.worker.receipt(actor, id);
+    sendPdf(response, body, filename);
   }
 
   /** A driver's weekly fuel declaration. */

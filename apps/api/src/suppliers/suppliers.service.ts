@@ -26,8 +26,8 @@ import {
   longBlockedRun,
   resourcesIssue,
   supplierPower,
-  workerEarnings,
   workerToday,
+  type PayoutMethod,
   type PowerFacts,
   type ResourceChannel,
   type ResourcesIssue,
@@ -46,7 +46,6 @@ import type {
   SupplierDetailDto,
   SupplierDto,
   SupplierLastJobDto,
-  SupplierPayoutsDto,
   SupplierResourcesDto,
   SupplierRowDto,
   UploadCredentialRequest,
@@ -58,7 +57,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { OBJECT_STORAGE } from '../storage/storage.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
-import { finishedJobsWhere, payoutCents, toPayoutsDto } from './payouts';
+import { SupplierPayoutsService } from './supplier-payouts.service';
 
 type SupplierWithUser = SupplierProfile & {
   user: Pick<User, 'email' | 'fullName'>;
@@ -255,6 +254,7 @@ export class SuppliersService {
     private readonly prisma: PrismaService,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
     private readonly settings: OperatingSettingsService,
+    private readonly payoutsService: SupplierPayoutsService,
   ) {}
 
   /**
@@ -342,37 +342,45 @@ export class SuppliersService {
         blocked.map((row) => row.date.toISOString().slice(0, 10)),
         today,
       ),
-      payouts: await this.payouts(id, now),
+      payouts: await this.payoutsService.summary(
+        id,
+        supplier.payoutMethod as PayoutMethod | null,
+        now,
+      ),
     };
   }
 
   /**
-   * The worker's payouts over their finished jobs (W-Earnings): what the
-   * inspector shows and the worker app's totals.
+   * Set or clear how the worker is paid (W-Earnings E2, E3): the desk changes
+   * it, the app only shows it. Audited as `supplier.payout_method_set`.
    */
-  async payouts(supplierId: string, now: Date = new Date()): Promise<SupplierPayoutsDto> {
-    const items = await this.prisma.serviceItem.findMany({
-      where: finishedJobsWhere(supplierId, now),
-      select: {
-        status: true,
-        serviceDateEnd: true,
-        payoutRate: true,
-        payoutStatus: true,
-        reservation: { select: { status: true } },
-      },
+  async setPayoutMethod(
+    id: string,
+    method: PayoutMethod | null,
+    actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    const supplier = await this.prisma.supplierProfile.findUnique({
+      where: { id },
+      select: { payoutMethod: true },
     });
-    return toPayoutsDto(
-      workerEarnings(
-        items.map((item) => ({
-          status: item.status,
-          reservationStatus: item.reservation.status,
-          endsAt: item.serviceDateEnd,
-          payoutCents: payoutCents(item.payoutRate),
-          payoutStatus: item.payoutStatus,
-        })),
-        now,
-      ),
-    );
+    if (!supplier) {
+      throw new NotFoundException(`Supplier ${id} not found`);
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.supplierProfile.update({ where: { id }, data: { payoutMethod: method } });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          action: 'supplier.payout_method_set',
+          entityType: 'SupplierProfile',
+          entityId: id,
+          metadata: { previous: supplier.payoutMethod, next: method },
+        },
+      });
+    });
+
+    return this.getById(id);
   }
 
   /**

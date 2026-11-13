@@ -1,6 +1,7 @@
 import {
   DESK_RESOURCE_CHANNELS,
   GENERATOR_ACCESS,
+  PAYOUT_METHODS,
   POWER_KINDS,
   RESOURCE_CHANNELS,
   ServiceType,
@@ -8,11 +9,21 @@ import {
   VerificationStatus,
   WORKER_BLOCK_REASONS,
   type GeneratorAccess,
+  type PayoutMethod,
   type PowerKind,
   type ResourceChannel,
   type WorkerBlockReason,
 } from '@ota/domain';
 import { z } from 'zod';
+
+/** A calendar day, `YYYY-MM-DD`, that exists (no 30 February). */
+export const calendarDaySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(
+    (day) => new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) === day,
+    'Not a calendar day',
+  );
 
 export const supplierCategorySchema = z.enum([
   SupplierCategory.TourGuide,
@@ -289,6 +300,12 @@ export const payoutTotalSchema = z.object({
 
 export type PayoutTotalDto = z.infer<typeof payoutTotalSchema>;
 
+/** How a worker is paid (`docs/schema-w-earnings.md` E2). */
+export const payoutMethodSchema = z.enum([...PAYOUT_METHODS] as [
+  PayoutMethod,
+  ...PayoutMethod[],
+]);
+
 /**
  * A worker's payouts over their finished jobs (W-Earnings), the same figures
  * on the desk's inspector and in the worker app.
@@ -299,11 +316,19 @@ export const supplierPayoutsSchema = z.object({
   pending: payoutTotalSchema,
   /** Finished this month in Havana, whatever the payout state. */
   thisMonth: payoutTotalSchema,
-  /** Paid, over jobs that ended in `year`; there is no paid date yet. */
+  /** Paid this year, by the day of the payment. */
   paidThisYear: payoutTotalSchema,
   /** Payouts that failed. */
   issue: payoutTotalSchema,
   year: z.number().int(),
+  /** The worker's method; null until the desk sets it (E2). */
+  method: payoutMethodSchema.nullable(),
+  /** Where cash is collected, from the tenant manifest. */
+  office: z.string().nullable(),
+  /** Business days after a job ends before it is paid (E4). */
+  businessDays: z.number().int(),
+  /** The next office session that pays a pending job; null when none (E4). */
+  nextPayDay: z.object({ day: z.string(), from: z.string(), to: z.string() }).nullable(),
 });
 
 export type SupplierPayoutsDto = z.infer<typeof supplierPayoutsSchema>;
