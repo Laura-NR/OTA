@@ -93,6 +93,16 @@ describe('the worker app API client (W1, W3, W5)', () => {
     );
   });
 
+  it('points a receipt at the worker’s own receipt route, not the desk’s', () => {
+    const api = createWorkerApi('http://api.test', recorder().fetcher);
+    expect(api.receiptUrl('5d3c2b1a-0000-4000-8000-000000000001')).toBe(
+      'http://api.test/worker/payouts/5d3c2b1a-0000-4000-8000-000000000001/receipt',
+    );
+    expect(createWorkerApi('', recorder().fetcher).receiptUrl('p-1')).toBe(
+      '/worker/payouts/p-1/receipt',
+    );
+  });
+
   it('reports no connection as a null status', async () => {
     const api = createWorkerApi('', (async () => {
       throw new TypeError('Network request failed');

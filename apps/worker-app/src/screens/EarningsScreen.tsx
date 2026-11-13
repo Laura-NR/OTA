@@ -18,6 +18,7 @@ import {
 
 import { ApiError, type WorkerApi } from '../lib/api';
 import { settings } from '../lib/config';
+import { openReceipt } from '../lib/open-receipt';
 import { copy } from '../lib/copy';
 import {
   categoryLabel,
@@ -40,9 +41,9 @@ const STATE_STYLE: Record<WorkerPayoutState, { color: string; backgroundColor: s
 /**
  * W-Earnings: the worker's reliability as the desk's floor reads it, how they
  * are paid and when next, what they are owed and have been paid, their latest
- * finished jobs and their payments (`docs/schema-w-earnings.md`). The desk
- * records payments and changes the method (E3); ratings wait (E6). It needs a
- * connection, like the calendar.
+ * finished jobs and their payments, each with its receipt to open
+ * (`docs/schema-w-earnings.md`). The desk records payments and changes the
+ * method (E3); ratings wait (E6). It needs a connection, like the calendar.
  */
 export function EarningsScreen({
   api,
@@ -58,6 +59,10 @@ export function EarningsScreen({
   const [data, setData] = useState<WorkerEarningsDto | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [opening, setOpening] = useState<string | null>(null);
+  const [receiptError, setReceiptError] = useState<{ id: string; text: string } | null>(
+    null,
+  );
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -82,6 +87,31 @@ export function EarningsScreen({
   useEffect(() => {
     void load();
   }, [load]);
+
+  const showReceipt = useCallback(
+    async (paymentId: string) => {
+      setOpening(paymentId);
+      setReceiptError(null);
+      try {
+        await openReceipt(api.receiptUrl(paymentId), token, copy.earnings.receiptTitle);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          onSignedOut();
+          return;
+        }
+        setReceiptError({
+          id: paymentId,
+          text:
+            error instanceof ApiError && error.status === null
+              ? copy.login.noConnection
+              : copy.earnings.receiptFailed,
+        });
+      } finally {
+        setOpening(null);
+      }
+    },
+    [api, token, onSignedOut],
+  );
 
   if (!data) {
     return (
@@ -235,7 +265,15 @@ export function EarningsScreen({
       ) : (
         <Card>
           {data.payments.map((payment) => (
-            <PaymentRow key={payment.id} payment={payment} office={payouts.office} />
+            <PaymentRow
+              key={payment.id}
+              payment={payment}
+              office={payouts.office}
+              opening={opening === payment.id}
+              disabled={opening !== null}
+              error={receiptError?.id === payment.id ? receiptError.text : null}
+              onOpen={() => void showReceipt(payment.id)}
+            />
           ))}
         </Card>
       )}
@@ -279,24 +317,43 @@ function Total({
 function PaymentRow({
   payment,
   office,
+  opening,
+  disabled,
+  error,
+  onOpen,
 }: {
   payment: WorkerPaymentDto;
   office: string | null;
+  opening: boolean;
+  disabled: boolean;
+  error: string | null;
+  onOpen: () => void;
 }) {
   return (
-    <View style={styles.row}>
-      <View style={styles.grow}>
-        <Text style={[type.body, styles.strong]}>{dayShort(payment.paidAt)}</Text>
-        <Text style={type.small}>
-          {payment.method === 'CASH_OFFICE'
-            ? copy.earnings.method.CASH_OFFICE(office)
-            : copy.earnings.method.BANK_TRANSFER}{' '}
-          · {copy.earnings.count(payment.jobs)}
+    <View style={styles.payment}>
+      <View style={styles.row}>
+        <View style={styles.grow}>
+          <Text style={[type.body, styles.strong]}>{dayShort(payment.paidAt)}</Text>
+          <Text style={type.small}>
+            {payment.method === 'CASH_OFFICE'
+              ? copy.earnings.method.CASH_OFFICE(office)
+              : copy.earnings.method.BANK_TRANSFER}{' '}
+            · {copy.earnings.count(payment.jobs)}
+          </Text>
+        </View>
+        <Text style={[type.body, styles.strong, type.figure]}>
+          {money(payment.amount, payment.currency)}
         </Text>
       </View>
-      <Text style={[type.body, styles.strong, type.figure]}>
-        {money(payment.amount, payment.currency)}
-      </Text>
+      <Button
+        label={copy.earnings.openReceipt}
+        accessibilityLabel={copy.earnings.openReceiptFor(dayShort(payment.paidAt))}
+        variant="quiet"
+        busy={opening}
+        disabled={disabled}
+        onPress={onOpen}
+      />
+      {error ? <Notice tone="warning">{error}</Notice> : null}
     </View>
   );
 }
@@ -341,6 +398,7 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   stat: { flexGrow: 1, flexBasis: 96, gap: 2 },
   nextPay: { gap: 2 },
+  payment: { gap: space.xs },
   chip: {
     borderRadius: radius.sm,
     borderWidth: 1,

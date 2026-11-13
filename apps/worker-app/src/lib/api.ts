@@ -32,6 +32,8 @@ export interface WorkerApi {
   declareFuel(token: string, litres: number): Promise<WorkerFuelDto>;
   /** W-Earnings: reliability, payouts and the latest finished jobs. */
   earnings(token: string): Promise<WorkerEarningsDto>;
+  /** E5: where one of the worker's own receipts is served, behind their bearer. */
+  receiptUrl(paymentId: string): string;
 }
 
 export function createWorkerApi(
@@ -123,6 +125,9 @@ export function createWorkerApi(
       return (await (
         await request('/worker/earnings', { token })
       ).json()) as WorkerEarningsDto;
+    },
+    receiptUrl(paymentId) {
+      return `${baseUrl}/worker/payouts/${encodeURIComponent(paymentId)}/receipt`;
     },
   };
 }

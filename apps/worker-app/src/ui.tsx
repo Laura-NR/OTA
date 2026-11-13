@@ -38,17 +38,21 @@ export function Button({
   variant = 'primary',
   disabled = false,
   busy = false,
+  accessibilityLabel,
 }: {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
   busy?: boolean;
+  /** For a label repeated down a list, e.g. "Abrir recibo" on each payment. */
+  accessibilityLabel?: string;
 }) {
   const inactive = disabled || busy;
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: inactive, busy }}
       disabled={inactive}
       onPress={onPress}

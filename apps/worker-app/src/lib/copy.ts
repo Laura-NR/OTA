@@ -229,9 +229,14 @@ export const copy = {
     nextPayLine: (day: string, from: string, to: string, cash: boolean) =>
       `${day} ${from}–${to}${cash ? ' · trae tu carnet' : ''}`,
     howPaid: (days: number) =>
-      `Cada trabajo se paga ${days === 1 ? '1 día hábil' : `${days} días hábiles`} después de terminarlo. Firmas un recibo por cada pago.`,
+      `Cada trabajo se paga ${days === 1 ? '1 día hábil' : `${days} días hábiles`} después de terminarlo. Firmas un recibo por cada pago; aquí guardas la copia.`,
     paidOn: (day: string) => `Pagado ${day}`,
-    receipts: 'Recibos',
+    receipts: 'Recibos (PDF)',
+    openReceipt: 'Abrir recibo',
+    openReceiptFor: (day: string) => `Abrir el recibo del ${day}`,
+    receiptTitle: 'Recibo de pago',
+    receiptFailed:
+      'No se pudo abrir el recibo. Inténtalo de nuevo o pide la copia en la central.',
     noReceipts: 'Aún no hay pagos registrados.',
     history: 'Historial',
     noHistory: 'Aún no tienes trabajos terminados.',
