@@ -1790,3 +1790,19 @@ design team, with existing tokens and components:
 - **Receipt.** The shared A4 document shell (agency header with the MINTUR licence, footer),
   in Spanish, with the jobs table, the total and two signature lines.
 
+
+## Amendment, 2026-11-13 (evening): the receipt in the app
+
+The owner chose option (a) for opening a payout receipt on the phone. Built without asking the
+design team, with existing tokens and components:
+
+- **App.** The board has one tertiary "Recibos (PDF)" button beside the method button and does
+  not say which receipt it opens. The build keeps the payments card, now titled with the
+  board's "Recibos (PDF)", and gives each payment a quiet "Abrir recibo" button (the app's
+  48 dp `Button`, its 16 px 600 label in the primary colour, full width under the row), with a per-row screen-reader
+  label ("Abrir el recibo del 13 nov"). While one receipt downloads its button shows the
+  spinner and the others are disabled; a failure shows a warning `Notice` under that row. The
+  board's "aquí guardas la copia" returns to the pay rule, since it is true again.
+- **Android.** The PDF opens through the system share sheet (`expo-sharing`), where a PDF
+  viewer, Drive or a messaging app takes it; there is no in-app viewer. The web preview saves
+  the file instead.

@@ -421,7 +421,9 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   Payouts → "Record payout", tick the jobs paid, the method and the day. The API sums the
   jobs' payouts; nothing moves money. It is audited as `supplier.payout_recorded`.
 - Print "Receipt (PDF)" from the payments list for the worker to sign; the office keeps the
-  signed paper. The receipt is rendered on demand from the payment (the API's Chromium).
+  signed paper. The receipt is rendered on demand from the payment (the API's Chromium). The
+  worker can open the same PDF (unsigned) in the app: Fiabilidad y pagos → Recibos (PDF) →
+  "Abrir recibo".
 - A payment recorded by mistake cannot be undone from the desk: there is no route for it yet.
 - "409 A picked job was paid meanwhile": another desk recorded it; reload the page.
 - The method (cash at the office or bank transfer) is set on the same panel; bank details are

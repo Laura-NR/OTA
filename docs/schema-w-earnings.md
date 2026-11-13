@@ -185,11 +185,12 @@ order). No new dependency.
   "Receipt (PDF)" (en/es/fr).
 - App: the method ("Efectivo EUR · oficina Vedado"), "Llamar a la central para cambiarla" (E3),
   "Próximo pago … · trae tu carnet", the rule, "Pagado 28 sep" chips in Historial and a
-  "Recibos" list. **The receipt PDF is not opened from the app:** on Android it needs a file
-  or share module (a new dependency) or a signed link (an authentication decision); the
-  route exists for when the owner picks one. Ratings stay hidden (E6c).
+  "Recibos (PDF)" list. Since 2026-11-13 (the owner's option (a)) each payment has "Abrir
+  recibo": the app downloads `GET /worker/payouts/:id/receipt` with the bearer into its cache
+  (`expo-file-system`) and opens Android's share sheet (`expo-sharing`); the web preview saves
+  the file. A 401 signs the worker out. Ratings stay hidden (E6c).
 - Tests: domain 13, config 2, schemas 3, documents 3, API 10 (record, refusals, the 409, both
   receipts, the method) plus the earnings test, the live `supplier-payouts.integration.test.ts`
   (the transaction and two desks paying one job at once), worker app 1, e2e
   `worker-app.spec.ts`'s sixth test (the desk sets the method, records, prints the receipt;
-  the app reads it).
+  the app reads it and downloads its receipt).

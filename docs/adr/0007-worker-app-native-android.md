@@ -223,6 +223,18 @@ paid days and its payments. It does not open the receipt PDF: on Android that ne
 share module (a new dependency) or a signed link (an authentication decision), which the owner
 decides; the worker's receipt route exists for it.
 
+## Amendment, 2026-11-13 (evening): the receipt in the app
+
+The owner chose (a) of the three ways to open a payout receipt on the phone: two new
+dependencies, Expo's own SDK 58 modules `expo-file-system` 58.0.11 and `expo-sharing` 58.0.20
+(the exact pins in `expo/bundledNativeModules.json`), over a short-lived signed link the
+phone's browser opens (a new public route deciding access by an HMAC token) or no PDF in the
+app. The app downloads `GET /worker/payouts/:id/receipt` with the worker's bearer into its
+private cache and hands the file to Android's share sheet through `expo-sharing`'s
+non-exported FileProvider; the bearer stays the only key and no route changed.
+`expo-sharing`'s incoming-share config plugin is not enabled, so the app gains no intent
+filters. Not run on a device: the share sheet itself is only exercised once an APK exists.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms
