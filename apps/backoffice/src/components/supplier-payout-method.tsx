@@ -55,7 +55,7 @@ export function SupplierPayoutMethod({
         <Field
           id={`${id}-method`}
           label={t('method')}
-          className="min-w-0 flex-1 sm:max-w-xs"
+          className="w-full min-w-0 sm:w-auto sm:max-w-xs sm:flex-1"
         >
           {(control) => (
             <Select
