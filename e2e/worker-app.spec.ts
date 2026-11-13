@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import { PrismaClient } from '@ota/db';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
@@ -533,11 +535,21 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     await expect(app.getByText(`Pagado en ${year}`)).toBeVisible();
     await expect(app.getByText(`Pagado ${paidOn}`, { exact: true })).toBeVisible();
     await expect(app.getByText('Pendiente', { exact: true })).toHaveCount(2);
-    await expect(app.getByRole('heading', { name: 'Recibos' })).toBeVisible();
+    await expect(app.getByRole('heading', { name: 'Recibos (PDF)' })).toBeVisible();
     await expect(app.getByText(paidOn, { exact: true })).toBeVisible();
     await expect(
       app.getByText('Efectivo EUR · oficina Vedado · 1 trabajo'),
     ).toBeVisible();
+
+    // E5: the worker keeps a copy of the receipt they signed (the preview
+    // saves it where the phone hands it to the share sheet).
+    const [download] = await Promise.all([
+      app.waitForEvent('download'),
+      app.getByRole('button', { name: `Abrir el recibo del ${paidOn}` }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/^recibo-PG-[0-9A-F]{8}\.pdf$/);
+    const copy = await readFile((await download.path())!);
+    expect(copy.subarray(0, 5).toString()).toBe('%PDF-');
     await app.context().close();
   });
 });
