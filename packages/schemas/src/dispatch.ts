@@ -34,6 +34,21 @@ export const reassignServiceItemSchema = z.object({
 
 export type ReassignServiceItemRequest = z.infer<typeof reassignServiceItemSchema>;
 
+/** Where a desk action came from: the desk itself or Ops Lite on a phone. */
+export const deskChannelSchema = z.enum(['desk', 'ops_lite']);
+
+export type DeskChannel = z.infer<typeof deskChannelSchema>;
+
+/**
+ * `?channel=` on the dispatch writes (re-dispatch, acknowledge, mute, unmute),
+ * recorded in their audit rows; the desk is the default.
+ */
+export const deskChannelQuerySchema = z.object({
+  channel: deskChannelSchema.default('desk'),
+});
+
+export type DeskChannelQuery = z.infer<typeof deskChannelQuerySchema>;
+
 export const dispatchServiceItemSchema = z.object({
   id: z.string().uuid(),
   serviceType: serviceTypeSchema,

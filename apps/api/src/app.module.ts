@@ -23,6 +23,7 @@ import { OverrideAuditInterceptor } from './overrides/override-audit.interceptor
 import { PermissionOverridesModule } from './overrides/permission-overrides.module';
 import { MeModule } from './me/me.module';
 import { MessagesModule } from './messages/messages.module';
+import { OpsLiteModule } from './ops-lite/ops-lite.module';
 import { PackagesModule } from './packages/packages.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -93,6 +94,7 @@ export const httpLoggerOptions = {
     RegulatoryModule,
     AssistantModule,
     QualityModule,
+    OpsLiteModule,
     ReportsModule,
     RetentionModule,
     ContactModule,

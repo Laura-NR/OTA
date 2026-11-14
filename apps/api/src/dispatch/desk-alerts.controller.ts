@@ -8,13 +8,16 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
   acknowledgeAlertSchema,
+  deskChannelQuerySchema,
   type AcknowledgeAlertRequest,
   type AlertAcknowledgementDto,
   type DeskAlertMuteStateDto,
+  type DeskChannelQuery,
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
@@ -40,9 +43,10 @@ export class DeskAlertsController {
   acknowledge(
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(acknowledgeAlertSchema)) body: AcknowledgeAlertRequest,
+    @Query(new ZodValidationPipe(deskChannelQuerySchema)) query: DeskChannelQuery,
     @CurrentUser() actor: AuthUser,
   ): Promise<AlertAcknowledgementDto> {
-    return this.alerts.acknowledge(id, body.offeredAt, actor);
+    return this.alerts.acknowledge(id, body.offeredAt, actor, query.channel);
   }
 
   @Get('dispatch/alert-mute')
@@ -54,13 +58,19 @@ export class DeskAlertsController {
   @Post('dispatch/alert-mute')
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
-  startMute(@CurrentUser() actor: AuthUser): Promise<DeskAlertMuteStateDto> {
-    return this.alerts.mute(actor);
+  startMute(
+    @Query(new ZodValidationPipe(deskChannelQuerySchema)) query: DeskChannelQuery,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<DeskAlertMuteStateDto> {
+    return this.alerts.mute(actor, query.channel);
   }
 
   @Delete('dispatch/alert-mute')
   @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
-  endMute(@CurrentUser() actor: AuthUser): Promise<DeskAlertMuteStateDto> {
-    return this.alerts.unmute(actor);
+  endMute(
+    @Query(new ZodValidationPipe(deskChannelQuerySchema)) query: DeskChannelQuery,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<DeskAlertMuteStateDto> {
+    return this.alerts.unmute(actor, query.channel);
   }
 }

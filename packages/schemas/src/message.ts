@@ -18,3 +18,10 @@ export const messageSchema = z.object({
 });
 
 export type MessageDto = z.infer<typeof messageSchema>;
+
+/** `POST /reservations/:id/messages/read`: how many traveler messages were marked read. */
+export const messagesReadSchema = z.object({
+  read: z.number().int().nonnegative(),
+});
+
+export type MessagesReadDto = z.infer<typeof messagesReadSchema>;

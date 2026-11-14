@@ -276,6 +276,13 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/dispatch/alert-mute', allowed: 'opsRead' },
   { method: 'post', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
   { method: 'delete', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
+  { method: 'get', path: '/ops-lite/pipeline', allowed: 'opsRead' },
+  { method: 'get', path: '/ops-lite/inbox', allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/reservations/${RESERVATION}/messages/read`,
+    allowed: 'opsRead',
+  },
 
   // Inventory / CMS / pricing.
   { method: 'get', path: '/inventory', allowed: 'opsRead' },

@@ -204,6 +204,8 @@ export {
   alertAcknowledgementSchema,
   declineServiceItemSchema,
   deskAlertMuteSchema,
+  deskChannelQuerySchema,
+  deskChannelSchema,
   deskAlertMuteStateSchema,
   dispatchBoardItemSchema,
   dispatchBoardRowSchema,
@@ -219,6 +221,8 @@ export {
   type DeclineServiceItemRequest,
   type DeskAlertMuteDto,
   type DeskAlertMuteStateDto,
+  type DeskChannel,
+  type DeskChannelQuery,
   type DispatchBoardItemDto,
   type DispatchBoardRowDto,
   type DispatchCandidateDto,
@@ -295,8 +299,10 @@ export { documentSchema, documentTypeSchema, type DocumentDto } from './document
 export {
   messageSchema,
   messageSenderSchema,
+  messagesReadSchema,
   sendMessageSchema,
   type MessageDto,
+  type MessagesReadDto,
   type SendMessageRequest,
 } from './message';
 export {
@@ -790,3 +796,19 @@ export {
   type WorkerSignInCodeDto,
   type WorkerSignOutDto,
 } from './worker';
+export {
+  opsLiteClockSchema,
+  opsLiteInboxSchema,
+  opsLiteInboxThreadSchema,
+  opsLiteMovementSchema,
+  opsLitePipelineRowSchema,
+  opsLitePipelineSchema,
+  opsLitePipelineStateSchema,
+  type OpsLiteClockDto,
+  type OpsLiteInboxDto,
+  type OpsLiteInboxThreadDto,
+  type OpsLiteMovementDto,
+  type OpsLitePipelineDto,
+  type OpsLitePipelineRowDto,
+  type OpsLitePipelineStateDto,
+} from './ops-lite';

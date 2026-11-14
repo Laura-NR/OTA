@@ -9,7 +9,7 @@ import type { TenantConfig } from '@ota/config';
 import type { Message } from '@ota/db';
 import { UserRole } from '@ota/domain';
 import { newMessageEmail, type Mailer } from '@ota/email';
-import type { MessageDto } from '@ota/schemas';
+import type { MessageDto, MessagesReadDto } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { MAILER } from '../email/email.module';
@@ -61,6 +61,25 @@ export class MessagesService {
       orderBy: { createdAt: 'asc' },
     });
     return messages.map(toDto);
+  }
+
+  /**
+   * The desk opened the thread, so the traveler's messages are read (AL-Inbox's
+   * "New" and its unread count). The route is the operations roles' alone.
+   */
+  async markRead(reservationId: string): Promise<MessagesReadDto> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: { id: true },
+    });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation ${reservationId} not found`);
+    }
+    const { count } = await this.prisma.message.updateMany({
+      where: { reservationId, sender: 'TRAVELER', readAt: null },
+      data: { readAt: new Date() },
+    });
+    return { read: count };
   }
 
   /**

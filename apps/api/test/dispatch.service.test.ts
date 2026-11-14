@@ -128,7 +128,7 @@ interface Store {
   serviceItems: ServiceItem[];
   suppliers: SupplierProfile[];
   offers: DispatchOffer[];
-  audits: { action: string }[];
+  audits: { action: string; metadata?: Record<string, unknown> }[];
   /** Blocked calendar days (spec §5.2), as `supplierId` + `YYYY-MM-DD`. */
   blocked?: { supplierId: string; day: string }[];
   /** The desk's red-alert acknowledgements, as the board reads them. */
@@ -317,8 +317,10 @@ function createFakePrisma(store: Store) {
       },
     },
     auditLog: {
-      create: async (args: { data: { action: string } }) => {
-        store.audits.push({ action: args.data.action });
+      create: async (args: {
+        data: { action: string; metadata?: Record<string, unknown> };
+      }) => {
+        store.audits.push({ action: args.data.action, metadata: args.data.metadata });
         return args.data;
       },
       findMany: async (args: { where: { entityId: { in: string[] } } }) =>
@@ -534,6 +536,23 @@ describe('DispatchService', () => {
 
     expect(view.serviceItems[0]?.supplierId).toBe(GUIDE_TWO);
     expect(store.offers).toHaveLength(2);
+    expect(
+      store.audits.find((row) => row.action === 'dispatch.reassign')?.metadata,
+    ).toEqual({ preferredSupplierId: null, channel: 'desk' });
+  });
+
+  it('records a re-dispatch from Ops Lite as such', async () => {
+    store.suppliers = [
+      makeSupplier({ id: GUIDE_ONE }),
+      makeSupplier({ id: GUIDE_TWO, userId: 'user-worker-2' }),
+    ];
+    await service.startDispatch(RESERVATION_ID, OPERATOR);
+
+    await service.reassign(ITEM_ID, { supplierId: GUIDE_TWO }, OPERATOR, 'ops_lite');
+
+    expect(
+      store.audits.find((row) => row.action === 'dispatch.reassign')?.metadata,
+    ).toEqual({ preferredSupplierId: GUIDE_TWO, channel: 'ops_lite' });
   });
 
   it('rejects dispatch from a terminal reservation', async () => {
