@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  WORKER_BACKGROUND_RESEND_MINUTES,
+  needsBackgroundResend,
   queueWorkerAnswer,
   workerAnswerOutcome,
   workerAnswerRetryDelayMs,
@@ -49,5 +51,15 @@ describe('the worker app answer queue (spec §7.2)', () => {
       5_000, 15_000, 60_000, 300_000, 300_000,
     ]);
     expect(workerAnswerRetryDelayMs(0)).toBe(5_000);
+  });
+
+  it('resends in the background only while answers wait for a signed-in worker', () => {
+    expect(needsBackgroundResend(1, true)).toBe(true);
+    expect(needsBackgroundResend(0, true)).toBe(false);
+    expect(needsBackgroundResend(2, false)).toBe(false);
+  });
+
+  it("waits at least Android's fifteen minutes between background resends", () => {
+    expect(WORKER_BACKGROUND_RESEND_MINUTES).toBe(15);
   });
 });

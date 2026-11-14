@@ -768,6 +768,8 @@ export {
 } from './worker/sign-in';
 export { SMS_SEGMENT_CHARACTERS, fitsOneSmsSegment } from './worker/sms';
 export {
+  WORKER_BACKGROUND_RESEND_MINUTES,
+  needsBackgroundResend,
   queueWorkerAnswer,
   workerAnswerOutcome,
   workerAnswerRetryDelayMs,

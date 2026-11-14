@@ -59,3 +59,20 @@ export function workerAnswerRetryDelayMs(attempts: number): number {
   const index = Math.min(Math.max(attempts - 1, 0), RESEND_DELAYS_MS.length - 1);
   return RESEND_DELAYS_MS[index]!;
 }
+
+/**
+ * Android's floor for a background job, in minutes. With the app closed or in
+ * the background, the phone resends no sooner than this after the app left the
+ * screen, and only once it has a connection (spec §7.2).
+ */
+export const WORKER_BACKGROUND_RESEND_MINUTES = 15;
+
+/**
+ * Whether the phone should keep a background resend scheduled: only while
+ * answers wait and the worker is signed in, so an empty queue or a closed
+ * session costs no wake-ups. A signed-out worker's answers wait for the next
+ * sign-in, which the background cannot do.
+ */
+export function needsBackgroundResend(pending: number, signedIn: boolean): boolean {
+  return signedIn && pending > 0;
+}
