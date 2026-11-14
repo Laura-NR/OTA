@@ -2364,8 +2364,8 @@
       "available": "Disponible pour la répartition : {value}",
       "yes": "oui",
       "no": "non",
-      "credentialDocument": "Document justificatif",
-      "credentialDescription": "Justificatif Formatur, licence d'exploitation de transport ou carte RTN.",
+      "credentialDocument": "Justificatifs",
+      "credentialDescription": "Chaque document requis pour la catégorie : la version en vigueur, un téléversement en attente de vérification et l’expiration qui suspend la répartition automatique.",
       "availability": "Calendrier de disponibilité",
       "availabilityDescription": "Disponibilité en un tap et blocage granulaire. La répartition automatique et la liste de réaffectation écartent un prestataire un jour bloqué (spec §5.2).",
       "longBlockTitle": "{days} jours bloqués d’affilée",
@@ -2507,7 +2507,8 @@
           "none": "Aucun téléphone n’était connecté en tant que {name}. Tout code pas encore utilisé a cessé de fonctionner.",
           "failed": "Le prestataire n’a pas pu être déconnecté"
         }
-      }
+      },
+      "approvalBlocked": "Vérifiez ces documents avant d’approuver : {documents}."
     },
     "reports": {
       "title": "Rapports",
@@ -2864,17 +2865,65 @@
       "uploading": "Téléversement…",
       "uploadImage": "Téléverser l'image"
     },
-    "credential": {
+    "credentials": {
+      "kinds": {
+        "TRANSPORT_LICENCE": "Licence d'exploitation de transport",
+        "TECHNICAL_INSPECTION": "Contrôle technique (somatón)",
+        "LIABILITY_INSURANCE": "Assurance responsabilité civile",
+        "GUIDE_LICENCE": "Licence de guide",
+        "HOST_LICENCE": "Licence d'hébergeur (casa particular)",
+        "IDENTITY_CARD": "Carte d'identité"
+      },
+      "state": {
+        "VALID": "Valide",
+        "EXPIRING": "Répartition automatique en pause",
+        "EXPIRED": "Expiré",
+        "MISSING": "Manquant"
+      },
+      "channels": {
+        "PHONE": "Téléphone",
+        "WHATSAPP": "WhatsApp",
+        "VISIT": "Visite",
+        "WORKER_APP": "Application prestataires"
+      },
+      "pendingBadge": "En attente d'audit",
+      "missingTitle": "Documents à vérifier",
+      "missing": "Pas encore de version vérifiée : {documents}. Le prestataire ne peut pas être approuvé tant que chacun n'est pas vérifié.",
+      "none": "Aucune version vérifiée au dossier.",
+      "number": "Numéro",
+      "issuer": "Délivré par",
+      "issued": "Délivré le",
+      "expires": "Expire le",
+      "pauseFrom": "Répartition automatique en pause à partir du",
+      "uploaded": "Téléversé",
+      "uploadedValue": "{date} · {channel}",
+      "checked": "Vérifié",
+      "checkedValue": "{date} · {name}",
+      "pending": "Nouveau téléversement en attente de vérification · {date} · {channel}",
+      "showFile": "Afficher le document (journalisé)",
+      "hideFile": "Masquer le document",
+      "openFull": "Ouvrir en taille réelle (journalisé)",
+      "fileAlt": "{name}, document téléversé",
+      "approveForm": "Approuver {name}",
+      "expiresHint": "Tel qu’indiqué sur le document.",
+      "approve": "Approuver · VERIFIED",
+      "rejectForm": "Rejeter {name}",
+      "reason": "Motif pour le prestataire",
+      "reasonHint": "Affiché dans l'application du prestataire, p. ex. reflet sur le numéro, refaire la photo.",
+      "reject": "Rejeter · demander un nouveau téléversement",
+      "rejected": "Rejeté le {date} : {reason}",
+      "uploadLabel": "Téléverser {name}",
+      "via": "Reçu par",
+      "upload": "Téléverser",
+      "uploading": "Téléversement…",
       "choose": "Choisissez un fichier à téléverser.",
       "useFileType": "Utilisez un fichier JPEG, PNG, WebP ou PDF.",
-      "uploadFailed": "Échec du téléversement",
-      "alt": "Justificatif du fournisseur",
-      "openTab": "Ouvrir dans un nouvel onglet",
-      "none": "Aucun justificatif au dossier.",
-      "uploadLabel": "Téléverser un justificatif (Formatur / licence / RTN)",
-      "expiresOn": "Expire le (facultatif)",
-      "uploading": "Téléversement…",
-      "upload": "Téléverser"
+      "failed": "La modification n'a pas été enregistrée. Réessayez.",
+      "identityNone": "Pas encore vérifiée. Aucune photo n'est conservée : vérifiez-la en personne ou en visioconférence.",
+      "identityChecked": "Vérifiée en personne le {date} par {name}. Aucune photo n'est conservée.",
+      "identityNoFile": "Vérifiée en personne. Aucune photo n'est conservée.",
+      "identityHint": "Notez que vous avez vu la carte originale, en personne ou en visioconférence.",
+      "recordIdentity": "Noter vérifiée en personne"
     },
     "availability": {
       "loadFailed": "Impossible de charger la disponibilité",

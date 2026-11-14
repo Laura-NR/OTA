@@ -2364,8 +2364,8 @@
       "available": "Available for dispatch: {value}",
       "yes": "yes",
       "no": "no",
-      "credentialDocument": "Credential document",
-      "credentialDescription": "Formatur credential, transport operating licence, or RTN card.",
+      "credentialDocument": "Credentials",
+      "credentialDescription": "Each document the category needs: the current version, an upload waiting for review, and the expiry that pauses auto-dispatch.",
       "availability": "Availability calendar",
       "availabilityDescription": "Single-tap availability and granular blocking. Auto-dispatch and the re-dispatch list skip a worker on a blocked day (spec §5.2).",
       "longBlockTitle": "{days} days blocked in a row",
@@ -2507,7 +2507,8 @@
           "none": "No phone was signed in as {name}. Any code not yet used has stopped working.",
           "failed": "The worker could not be signed out"
         }
-      }
+      },
+      "approvalBlocked": "Verify these documents before approving: {documents}."
     },
     "reports": {
       "title": "Reports",
@@ -2864,17 +2865,65 @@
       "uploading": "Uploading…",
       "uploadImage": "Upload image"
     },
-    "credential": {
+    "credentials": {
+      "kinds": {
+        "TRANSPORT_LICENCE": "Transport operating licence",
+        "TECHNICAL_INSPECTION": "Technical inspection (somatón)",
+        "LIABILITY_INSURANCE": "Civil liability insurance",
+        "GUIDE_LICENCE": "Guide licence",
+        "HOST_LICENCE": "Host licence (casa particular)",
+        "IDENTITY_CARD": "Identity card"
+      },
+      "state": {
+        "VALID": "Valid",
+        "EXPIRING": "Auto-dispatch paused",
+        "EXPIRED": "Expired",
+        "MISSING": "Missing"
+      },
+      "channels": {
+        "PHONE": "Phone",
+        "WHATSAPP": "WhatsApp",
+        "VISIT": "Visit",
+        "WORKER_APP": "Worker app"
+      },
+      "pendingBadge": "Pending audit",
+      "missingTitle": "Documents to verify",
+      "missing": "No verified version yet: {documents}. The supplier cannot be approved until each one is verified.",
+      "none": "No verified version on file.",
+      "number": "Number",
+      "issuer": "Issued by",
+      "issued": "Issued",
+      "expires": "Expires",
+      "pauseFrom": "Auto-dispatch pauses from",
+      "uploaded": "Uploaded",
+      "uploadedValue": "{date} · {channel}",
+      "checked": "Checked",
+      "checkedValue": "{date} · {name}",
+      "pending": "New upload waiting for review · {date} · {channel}",
+      "showFile": "Show document (logged)",
+      "hideFile": "Hide document",
+      "openFull": "Open full size (logged)",
+      "fileAlt": "{name}, uploaded document",
+      "approveForm": "Approve {name}",
+      "expiresHint": "As printed on the document.",
+      "approve": "Approve · VERIFIED",
+      "rejectForm": "Reject {name}",
+      "reason": "Reason for the worker",
+      "reasonHint": "Shown in the worker app, e.g. glare over the number, please retake the photo.",
+      "reject": "Reject · request new upload",
+      "rejected": "Rejected {date}: {reason}",
+      "uploadLabel": "Upload {name}",
+      "via": "Received by",
+      "upload": "Upload",
+      "uploading": "Uploading…",
       "choose": "Choose a file to upload.",
       "useFileType": "Use a JPEG, PNG, WebP, or PDF file.",
-      "uploadFailed": "Upload failed",
-      "alt": "Supplier credential",
-      "openTab": "Open in a new tab",
-      "none": "No credential document on file.",
-      "uploadLabel": "Upload credential (Formatur / licence / RTN)",
-      "expiresOn": "Expires on (optional)",
-      "uploading": "Uploading…",
-      "upload": "Upload"
+      "failed": "The change was not saved. Try again.",
+      "identityNone": "Not checked yet. No photo of it is kept: check it in person or on a video call.",
+      "identityChecked": "Checked in person on {date} by {name}. No photo is kept.",
+      "identityNoFile": "Checked in person. No photo is kept.",
+      "identityHint": "Record that you saw the original card, in person or on a video call.",
+      "recordIdentity": "Record checked in person"
     },
     "availability": {
       "loadFailed": "Could not load availability",

@@ -2364,8 +2364,8 @@
       "available": "Disponible para despacho: {value}",
       "yes": "sí",
       "no": "no",
-      "credentialDocument": "Documento de credencial",
-      "credentialDescription": "Credencial Formatur, licencia de operación de transporte o tarjeta RTN.",
+      "credentialDocument": "Credenciales",
+      "credentialDescription": "Cada documento que la categoría necesita: la versión vigente, una subida pendiente de revisión y el vencimiento que pausa el despacho automático.",
       "availability": "Calendario de disponibilidad",
       "availabilityDescription": "Disponibilidad con un toque y bloqueo granular. El auto-despacho y la lista de reasignación omiten a un trabajador en un día bloqueado (spec §5.2).",
       "longBlockTitle": "{days} días bloqueados seguidos",
@@ -2507,7 +2507,8 @@
           "none": "Ningún teléfono tenía abierta la sesión de {name}. Cualquier código aún sin usar ha dejado de servir.",
           "failed": "No se pudo cerrar la sesión del colaborador"
         }
-      }
+      },
+      "approvalBlocked": "Verifica estos documentos antes de aprobar: {documents}."
     },
     "reports": {
       "title": "Informes",
@@ -2864,17 +2865,65 @@
       "uploading": "Subiendo…",
       "uploadImage": "Subir imagen"
     },
-    "credential": {
+    "credentials": {
+      "kinds": {
+        "TRANSPORT_LICENCE": "Licencia de operación de transporte",
+        "TECHNICAL_INSPECTION": "Inspección técnica (somatón)",
+        "LIABILITY_INSURANCE": "Seguro de responsabilidad civil",
+        "GUIDE_LICENCE": "Licencia de guía",
+        "HOST_LICENCE": "Licencia de arrendador (casa particular)",
+        "IDENTITY_CARD": "Carnet de identidad"
+      },
+      "state": {
+        "VALID": "Vigente",
+        "EXPIRING": "Despacho automático en pausa",
+        "EXPIRED": "Vencido",
+        "MISSING": "Falta"
+      },
+      "channels": {
+        "PHONE": "Teléfono",
+        "WHATSAPP": "WhatsApp",
+        "VISIT": "Visita",
+        "WORKER_APP": "App de colaboradores"
+      },
+      "pendingBadge": "Pendiente de auditoría",
+      "missingTitle": "Documentos por verificar",
+      "missing": "Aún sin versión verificada: {documents}. El proveedor no puede aprobarse hasta verificar cada uno.",
+      "none": "No hay versión verificada.",
+      "number": "Número",
+      "issuer": "Emitido por",
+      "issued": "Emitido",
+      "expires": "Vence",
+      "pauseFrom": "El despacho automático se pausa desde",
+      "uploaded": "Subido",
+      "uploadedValue": "{date} · {channel}",
+      "checked": "Revisado",
+      "checkedValue": "{date} · {name}",
+      "pending": "Nueva subida pendiente de revisión · {date} · {channel}",
+      "showFile": "Ver documento (queda registrado)",
+      "hideFile": "Ocultar documento",
+      "openFull": "Abrir a tamaño completo (queda registrado)",
+      "fileAlt": "{name}, documento subido",
+      "approveForm": "Aprobar {name}",
+      "expiresHint": "Tal como figura en el documento.",
+      "approve": "Aprobar · VERIFIED",
+      "rejectForm": "Rechazar {name}",
+      "reason": "Motivo para el colaborador",
+      "reasonHint": "Se muestra en la app del colaborador; p. ej., reflejo sobre el número, repite la foto.",
+      "reject": "Rechazar · pedir nueva subida",
+      "rejected": "Rechazado el {date}: {reason}",
+      "uploadLabel": "Subir {name}",
+      "via": "Recibido por",
+      "upload": "Subir",
+      "uploading": "Subiendo…",
       "choose": "Elige un archivo para subir.",
       "useFileType": "Usa un archivo JPEG, PNG, WebP o PDF.",
-      "uploadFailed": "Falló la subida",
-      "alt": "Credencial del proveedor",
-      "openTab": "Abrir en una pestaña nueva",
-      "none": "No hay documento de credencial.",
-      "uploadLabel": "Subir credencial (Formatur / licencia / RTN)",
-      "expiresOn": "Vence el (opcional)",
-      "uploading": "Subiendo…",
-      "upload": "Subir"
+      "failed": "No se guardó el cambio. Inténtalo de nuevo.",
+      "identityNone": "Aún no comprobado. No se guarda foto: compruébalo en persona o por videollamada.",
+      "identityChecked": "Comprobado en persona el {date} por {name}. No se guarda foto.",
+      "identityNoFile": "Comprobado en persona. No se guarda foto.",
+      "identityHint": "Registra que viste el carnet original, en persona o por videollamada.",
+      "recordIdentity": "Registrar comprobado en persona"
     },
     "availability": {
       "loadFailed": "No se pudo cargar la disponibilidad",

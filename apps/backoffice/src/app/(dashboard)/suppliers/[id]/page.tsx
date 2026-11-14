@@ -7,6 +7,7 @@ import {
   meetsReliabilityFloor,
 } from '@ota/domain';
 import type {
+  SupplierCredentialsDto,
   SupplierDetailDto,
   SupplierPayoutLedgerDto,
   SupplierReliabilityDto,
@@ -20,7 +21,7 @@ import type { ReactNode } from 'react';
 import { OverrideNotice } from '@/components/override-notice';
 import { deskAccess } from '@/lib/overrides';
 import { AvailabilityCalendar } from '@/components/availability-calendar';
-import { SupplierCredential } from '@/components/supplier-credential';
+import { SupplierCredentials } from '@/components/supplier-credentials';
 import { SupplierPayoutMethod } from '@/components/supplier-payout-method';
 import { SupplierPayoutRecord } from '@/components/supplier-payout-record';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
@@ -89,6 +90,7 @@ export default async function SupplierDetailPage({
 }) {
   const { id } = await params;
   const t = await getTranslations('backoffice.supplierDetail');
+  const credentialsT = await getTranslations('backoffice.credentials');
   const serviceTypeT = await getTranslations('status.serviceType');
   const locale = await getLocale();
   const session = await getServerSession();
@@ -107,6 +109,9 @@ export default async function SupplierDetailPage({
     },
   );
   const ledger = await apiFetch<SupplierPayoutLedgerDto>(`/suppliers/${id}/payouts`);
+  const credentials = await apiFetch<SupplierCredentialsDto>(
+    `/suppliers/${id}/credentials`,
+  );
   const reliability = await apiFetch<SupplierReliabilityDto[]>(
     '/quality/supplier-reliability',
   )
@@ -283,6 +288,17 @@ export default async function SupplierDetailPage({
               <dd className="mt-1">{supplier.isAvailable ? t('yes') : t('no')}</dd>
             </div>
           </dl>
+          {canVerify &&
+          supplier.verificationStatus !== 'VERIFIED' &&
+          credentials.missing.length > 0 ? (
+            <p className="text-body-sm text-secondary">
+              {t('approvalBlocked', {
+                documents: credentials.missing
+                  .map((kind) => credentialsT(`kinds.${kind}`))
+                  .join(', '),
+              })}
+            </p>
+          ) : null}
           <VerificationActions
             supplierId={supplier.id}
             status={supplier.verificationStatus}
@@ -485,11 +501,11 @@ export default async function SupplierDetailPage({
       ) : null}
 
       <Panel title={t('credentialDocument')} description={t('credentialDescription')}>
-        <SupplierCredential
+        <SupplierCredentials
           supplierId={supplier.id}
-          hasCredential={supplier.hasCredential}
-          contentType={supplier.credentialContentType}
-          canEdit={canEdit}
+          credentials={credentials}
+          canUpload={canEdit}
+          canReview={canVerify}
         />
       </Panel>
 
