@@ -2921,6 +2921,7 @@
       "failed": "No se guardó el cambio. Inténtalo de nuevo.",
       "identityNone": "Aún no comprobado. No se guarda foto: compruébalo en persona o por videollamada.",
       "identityChecked": "Comprobado en persona el {date} por {name}. No se guarda foto.",
+      "identityCheckedOn": "Comprobado en persona el {date}. No se guarda foto.",
       "identityNoFile": "Comprobado en persona. No se guarda foto.",
       "identityHint": "Registra que viste el carnet original, en persona o por videollamada.",
       "recordIdentity": "Registrar comprobado en persona"

@@ -112,12 +112,16 @@ function CredentialSlot({
       {current ? (
         identity ? (
           <p className="text-body-sm text-secondary">
-            {current.reviewedAt
-              ? t('identityChecked', {
-                  date: calendarDate(current.reviewedAt, locale),
-                  name: current.reviewedByName ?? '—',
-                })
-              : t('identityNoFile')}
+            {!current.reviewedAt
+              ? t('identityNoFile')
+              : current.reviewedByName
+                ? t('identityChecked', {
+                    date: calendarDate(current.reviewedAt, locale),
+                    name: current.reviewedByName,
+                  })
+                : t('identityCheckedOn', {
+                    date: calendarDate(current.reviewedAt, locale),
+                  })}
           </p>
         ) : (
           <VersionFacts version={current} pauseFrom={slot.pauseFrom} />

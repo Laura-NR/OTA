@@ -2921,6 +2921,7 @@
       "failed": "The change was not saved. Try again.",
       "identityNone": "Not checked yet. No photo of it is kept: check it in person or on a video call.",
       "identityChecked": "Checked in person on {date} by {name}. No photo is kept.",
+      "identityCheckedOn": "Checked in person on {date}. No photo is kept.",
       "identityNoFile": "Checked in person. No photo is kept.",
       "identityHint": "Record that you saw the original card, in person or on a video call.",
       "recordIdentity": "Record checked in person"

@@ -2921,6 +2921,7 @@
       "failed": "La modification n'a pas été enregistrée. Réessayez.",
       "identityNone": "Pas encore vérifiée. Aucune photo n'est conservée : vérifiez-la en personne ou en visioconférence.",
       "identityChecked": "Vérifiée en personne le {date} par {name}. Aucune photo n'est conservée.",
+      "identityCheckedOn": "Vérifiée en personne le {date}. Aucune photo n'est conservée.",
       "identityNoFile": "Vérifiée en personne. Aucune photo n'est conservée.",
       "identityHint": "Notez que vous avez vu la carte originale, en personne ou en visioconférence.",
       "recordIdentity": "Noter vérifiée en personne"
