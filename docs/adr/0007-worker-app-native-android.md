@@ -265,6 +265,21 @@ screen to send again; it is not queued like an answer. The review's outcome goes
 by the SMS channel, which logs in development and sends nothing until a provider exists. Seven
 routes (`GET|POST /worker/credentials` and five on `/suppliers/:id/credentials…`); the old
 single-file download is gone.
+
+## Amendment, 2026-11-14 (evening): background resend
+
+The owner approved `expo-background-task` 58.0.11 and `expo-task-manager` 58.0.12 (Expo's SDK
+58 pins; they bring `unimodules-app-loader` 58.0.2). Spec §7.2's background resend is a task
+defined when the bundle loads and run by Android's WorkManager, which waits for a connection
+and runs no sooner than 15 minutes after the app left the screen. The app schedules it while
+answers wait for a signed-in worker and cancels it when the queue empties or the worker signs
+out. It sends the queue as the open app does, one flush at a time, so the two never send an
+answer twice. What it sent or the API refused is shown on the next open: the "sent" tick and
+the existing refusal notice. There is no notification while the app is closed, which would need
+a notification dependency. A phone that restricts background work keeps the resend on open, on
+return to the foreground and by timer while open. The modules add no runtime permission (a job
+service and a boot receiver only). The web preview has no background, so this is unit-tested
+until the APK; it is not a custom Android module. No migration, no API change.
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

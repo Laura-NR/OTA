@@ -191,12 +191,23 @@ W-Credentials (2026-11-14, approved V1–V8, migration `20261114143342_w_credent
 `src/lib/credentials.ts`, `src/lib/pick-photo.ts`; `GET|POST /worker/credentials`; the desk's
 document list on the supplier page; the spec's seventh test. `docs/schema-w-credentials.md` §7.
 
+Background resend (2026-11-14, the owner's pick, no migration, no route change):
+`expo-background-task` 58.0.11 and `expo-task-manager` 58.0.12; `src/lib/background.ts` defines
+the task (imported first by `index.ts`) and schedules it while `needsBackgroundResend` holds
+(`packages/domain`), `background.web.ts` does nothing in the preview; `resendInBackground` and
+`takeBackgroundReport` in `src/lib/answers.ts`, where `flushAnswers` now runs one flush at a
+time. W6 otherwise unchanged: Android adds a resend with the app closed, once connected and at
+least 15 minutes after the app left the screen. Unit tests only (the preview has no
+background); the first real run is the APK.
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
-2. Background resend (`expo-background-task`, a new dependency). W-Credentials landed
-   2026-11-14.
-3. W-Job with the offline job screen and the SMS SOS (a custom Android module).
-4. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
-5. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).
+   Its checklist gains the background resend: answer with the phone offline, close the app,
+   turn data back on and note how long the desk waits for the answer (15 minutes at least;
+   Android may wait longer on a phone saving battery).
+2. W-Job with the offline job screen and the SMS SOS (a custom Android module). Background
+   resend landed 2026-11-14.
+3. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
+4. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).

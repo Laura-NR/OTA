@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-14 19:40
+# Handoff — vereda — updated 2026-11-14 22:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -18,7 +18,7 @@ desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnin
 W-Credentials) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite and W-Credentials).
+for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend).
 The worker app:
 `docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Credentials:
 `docs/schema-w-credentials.md` (approved V1–V8 2026-11-14, §7 as built, a migration). W-Earnings' payouts:
@@ -36,6 +36,24 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-14 (evening): background resend** (Phase 7), the owner's pick over W-Job, distribution
+  and the follow-ups (`6de191b`, `1e0828d`). No migration, no API or screen change. Two new
+  dependencies, approved: `expo-background-task` 58.0.11 and `expo-task-manager` 58.0.12 (they
+  bring `unimodules-app-loader` 58.0.2).
+  - Domain `packages/domain/src/worker/answers.ts`: `needsBackgroundResend(pending, signedIn)`
+    and `WORKER_BACKGROUND_RESEND_MINUTES` (15, Android's floor).
+  - App: `src/lib/background.ts` defines the task `ota.worker.resend` at bundle load
+    (`index.ts` imports it first) and schedules or cancels it, one call at a time;
+    `background.web.ts` is a no-op. `App.tsx` schedules after each sync while answers wait,
+    cancels on sign-out. `answers.ts`: `flushAnswers` now runs one flush at a time per JS
+    runtime; `resendInBackground` (no request without a token or a queue) and
+    `takeBackgroundReport` (what the background sent or the API refused, read once on the next
+    sync: the "sent" tick and the existing refusal notice).
+  - Android runs it through WorkManager with a "connected" constraint, no sooner than 15
+    minutes after the app leaves the screen. No new runtime permission. No notification while
+    closed.
+  - Docs: `docs/worker-app-plan.md` §7/§8, ADR 0007's evening amendment, the Progress row. No
+    design resolution, so no ADR 0006 amendment.
 - **2026-11-14 (later): W-Credentials**, the owner's pick, approved V1–V8 as recommended
   (`dac0b4c`…`5886391` and the identity-line fix). One migration,
   `20261114143342_w_credentials` (table `supplier_credentials`, enums `CredentialKind`,
@@ -745,36 +763,37 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-14, W-Credentials; dev stack stopped for the build, restarted after)
-- CI: nothing to fix. `vereda` was pushed at `815ebdb`; PR #1 is merged and no new PR is open,
-  so no CI has run on this session's commits. No `v*` tag, so no Release run. `pnpm audit
-  --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob, minimatch); nothing new.
+## Verified (2026-11-14 evening, background resend; dev stack was not running at the start)
+- CI: nothing to fix. `vereda` was pushed through `b1ac87c`; PR #1 is merged and no new PR is
+  open, so no CI has run since `94c0910`. No `v*` tag, so no Release run (GitHub API, no
+  token). `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob,
+  minimatch); nothing new.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1491 passed / 59 skipped** (was 1446/57);
-  `TURBO_FORCE=true pnpm build` **19/19**.
-- Migration `20261114143342_w_credentials` applied to the dev DB; the backfill made 1 row (the
-  guide's `GUIDE_LICENCE`), and the seed then added the demo suppliers' required documents.
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1497 passed / 59 skipped** (was 1491/59: domain
+  +2, worker app +4); `TURBO_FORCE=true pnpm build` **19/19**.
+- The new lock's test fails with the lock removed (`flushing.then(...)` bypassed) and passes
+  with it. `expo export` for Android contains `ota.worker.resend`, `ExpoBackgroundTask` and
+  `ExpoTaskManager`; the web export contains none of them.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 16
-  `apps/api/test/*.integration.test.ts` files, now with `supplier-credentials`) **58/58**.
-- Full `pnpm e2e` (seven projects, 1.3 h, ports clear and `.next` deleted first): **179
-  passed, 5 failed, 3 skipped, 1 did not run**. Every failure was a late-run stall (see Traps,
-  "late-run flakes"): `display-currencies.spec.ts` GBP deposit (`displayCurrency` null; its
-  serial describe then left `:229` unrun), `storefront-keyboard.spec.ts:89` (trip heading never
-  rendered), `storefront-packages.spec.ts:75` (URL stayed after the click), `[ds07-414]`
-  responsive (`ERR_CONNECTION_RESET`), and the new `worker-app.spec.ts:576` (desk still showed
-  "Pending audit" 15 s after Approve; the failure screenshot shows the approval landed).
-  Re-run alone on fresh stacks: the four `default` tests **4/4**, `[ds07-414]` **1/1**, and
-  the whole `display-currencies.spec.ts` **3/3**. Targeted earlier: `suppliers.spec.ts` +
-  `worker-app.spec.ts` **10/10**.
-- Browser (a temporary spec against fresh dev servers, deleted after; 0 fixture rows left), at
-  390/1024/1280: no sideways scroll; desk pending box border `warning-500` on `accent-50`,
-  "Valid" badge on the success pair, buttons 40 px; app chip "Vence en 55 días" rgb(146,64,14)
-  on rgb(254,243,199) radius 4 px, buttons 48 px; axe 0 violations on both.
-- Owner's dev stack restarted with Task 0's settings and left running (see the closing report).
-- Not run: a real phone camera (the e2e picks from the library through the web file input);
-  native Android build with the expo-image-picker plugin.
+  `apps/api/test/*.integration.test.ts` files) **58/58**.
+- Full `pnpm e2e` (seven projects, 1.2 h, ports clear and `.next` deleted first): **184
+  passed, 1 failed, 3 skipped**, `worker-app.spec.ts` 7/7. The failure was a late-run stall
+  (Traps, "late-run flakes"): `[ds07-414]` responsive `:110`, `page.goto /en/packages` past
+  its 240 s. Re-run alone on fresh stacks: **1/1**.
+- Browser: no screen, copy or style changed, so no new 390/1024/1280 check; the worker app's
+  e2e loads the preview with the new module.
+- Owner's dev stack started with Task 0's settings and left running (see the closing report).
+- Not run: anything on a device. The background task has never run (no APK, no web support).
 
 ## Assumptions & unknowns
+- **Background resend (2026-11-14, evening):** never run on a device; the web preview has no
+  background, so only the unit tests and the Android bundle export (it contains the task and
+  both native modules; the web bundle neither) stand behind it. Assumed: Android starts a
+  headless JS runtime when the app is closed, and `expo-secure-store`, `expo-sqlite`'s kv store
+  and `expo-constants` work there. The one-flush-at-a-time lock is per JS runtime: if Android
+  ran the headless task while a second runtime had the app open, both could send the same
+  answer, and the second would read as refused (the answer itself is recorded). Timing on a
+  battery-saving phone (Doze, makers' task killers) is unknown; the field test should note it.
 - **W-Credentials (2026-11-14):** the required documents per category are placeholders
   (`docs/production-readiness.md` §4, for counsel). A supplier verified before the change
   stays verified with documents missing; only a new approval or a reinstatement is gated. The
@@ -1035,6 +1054,15 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Two flushes in one test (2026-11-14):** `flushAnswers` is serialized module-wide, so a test
+  that starts a background and a foreground flush together cannot know which one sends; assert
+  on the two results combined. The lock's test fails when `flushing.then(...)` is removed.
+- **Checking the Android bundle (2026-11-14):** `expo export` writes Hermes bytecode
+  (`dist/android/…/*.hbc`); its strings are still searchable with `grep -a -F`, which is how
+  this session confirmed the task and `ExpoBackgroundTask` are in it and not in `dist/web`.
+- **`pnpm peers check` (2026-11-14):** it reports `@expo/router-server` 58.0.21 wanting newer
+  `@expo/metro-runtime` and `expo-constants`; that predates background resend (the lockfile at
+  `b1ac87c` already has it) and the app builds and runs.
 - **The API's typecheck skips the tests (2026-11-14):** `apps/api/tsconfig.json` includes
   `src` only, and Vitest strips types, so a fake Prisma whose shape drifts from the code still
   passes `pnpm typecheck`; it fails only when a test reaches it.
@@ -1633,6 +1661,11 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-14: the worker app resends saved answers with the app closed through
+    `expo-background-task` (task `ota.worker.resend`, defined in
+    `apps/worker-app/src/lib/background.ts`, which `index.ts` must import before the App).
+    `flushAnswers` runs one flush at a time; keep every send of the queue going through it.
+    The web preview's `background.web.ts` does nothing, so e2e cannot exercise the background."
   - "2026-11-14: supplier documents live in `supplier_credentials` (migration
     `20261114143342_w_credentials`), one row per uploaded version; only
     `SupplierCredentialsService` writes them. `supplier_profiles.credential_expires_at` is the
@@ -1867,10 +1900,10 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (W-Credentials and its docs are local) and open a new pull request
-   from `vereda` into `main`, so CI runs on W-Earnings' payouts, the receipt, Ops Lite and
-   W-Credentials: PR #1 is merged, and a push to `vereda` alone runs no workflow (none has run
-   since `94c0910`).
+1. Owner: push `vereda` (background resend and its docs are local; W-Credentials was pushed)
+   and open a new pull request from `vereda` into `main`, so CI runs on W-Earnings' payouts,
+   the receipt, Ops Lite, W-Credentials and background resend: PR #1 is merged, and a push to
+   `vereda` alone runs no workflow (none has run since `94c0910`; checked 2026-11-14 evening).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -1878,11 +1911,10 @@ events (T-Events)".
    documents) stays optional.
 3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own signing
    key, backed up twice), the Android id, and two or three suppliers for the field test (also
-   the first real run of "Abrir recibo"'s share sheet). Agent, in order (W-Credentials
-   landed 2026-11-14): background resend (needs the owner's yes to `expo-background-task`
-   58.0.11, `expo-task-manager` 58.0.12 and `unimodules-app-loader` 58.0.2, Expo's own SDK 58
-   pins; no web support, so only unit tests until an APK); W-Job and its SMS SOS (a migration
-   doc first); distribution (download page, update prompt, self-hosted `expo-updates`).
+   the first real runs of "Abrir recibo"'s share sheet and of background resend, whose
+   checklist line is in `docs/worker-app-plan.md` §8). Agent, in order (background resend
+   landed 2026-11-14 evening): W-Job and its SMS SOS (a migration doc first); distribution
+   (download page, update prompt, self-hosted `expo-updates`).
    W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
    form's insurance date, a migration dropping `credential_document_url`. Ops
    Lite (Phase 7 item 2) landed 2026-11-14; its follow-ups are the owner's call: worker
@@ -2565,3 +2597,17 @@ events (T-Events)".
   the identity card's own route; the review SMS without the desk's reason; an unsent photo not
   queued; `SuppliersService` no longer injects storage. Design resolutions are ADR 0006's
   amendment of the day.
+- 2026-11-14 (evening) — the owner chose background resend over W-Job (a migration doc first),
+  distribution and the W-Credentials/Ops Lite follow-ups, approving `expo-background-task`
+  58.0.11 and `expo-task-manager` 58.0.12 (`unimodules-app-loader` 58.0.2 comes with them). The
+  build chose: the task scheduled only while answers wait for a signed-in worker (an empty
+  queue costs no wake-ups) and cancelled when the queue empties or the worker signs out, rather
+  than one always registered while signed in; Android's 15-minute minimum interval; one flush at
+  a time per JS runtime through `flushAnswers` itself rather than a lock only in `App.tsx`;
+  scheduling calls queued the same way, so a sign-out's cancel cannot miss a schedule in
+  flight; the background's sent and refused answers kept in the kv store and shown on the next
+  sync (the "sent" tick, the existing refusal notice) rather than a notification, which would
+  need `expo-notifications`; no copy change, as "se enviará solo cuando vuelva la señal"
+  already promised it; a scheduling failure logged with `console.warn`, since the open app's
+  resend still runs; no `expo-background-task` config plugin entry (it only edits iOS's
+  Info.plist).
