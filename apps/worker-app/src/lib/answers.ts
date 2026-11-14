@@ -48,12 +48,31 @@ export interface FlushResult {
   signedOut: boolean;
 }
 
+/** The flush running now in this JavaScript runtime, if any. */
+let flushing: Promise<unknown> = Promise.resolve();
+
 /**
  * Sends the queued answers in order (spec §7.2). It stops at the first one
  * that gets no answer, since the rest would fail the same way, and counts the
  * try against it so the next resend waits longer.
+ *
+ * One flush at a time: the background task can wake while the app is open
+ * behind another app, and two flushes at once could send the same answer
+ * twice, the API's refusal of the second reading as the offer having gone. A
+ * flush asked for meanwhile starts when the current one ends and reads the
+ * queue it left.
  */
-export async function flushAnswers(
+export function flushAnswers(
+  store: KeyValueStore,
+  api: Pick<WorkerApi, 'answer'>,
+  token: string,
+): Promise<FlushResult> {
+  const run = flushing.then(() => flushQueue(store, api, token));
+  flushing = run.catch(() => undefined);
+  return run;
+}
+
+async function flushQueue(
   store: KeyValueStore,
   api: Pick<WorkerApi, 'answer'>,
   token: string,
@@ -79,5 +98,64 @@ export async function flushAnswers(
     break;
   }
   await saveAnswers(store, result.pending);
+  return result;
+}
+
+const BACKGROUND_KEY = 'ota.worker.answers.background';
+
+/** What background resends did while the worker was away, for the next open. */
+export interface BackgroundReport {
+  /** Offers whose answer the API took. */
+  sent: string[];
+  /** Answers the API refused. */
+  refused: number;
+}
+
+async function loadReport(store: KeyValueStore): Promise<BackgroundReport> {
+  const raw = await store.get(BACKGROUND_KEY);
+  if (!raw) return { sent: [], refused: 0 };
+  try {
+    const parsed = JSON.parse(raw) as Partial<BackgroundReport>;
+    return {
+      sent: Array.isArray(parsed.sent) ? parsed.sent : [],
+      refused: typeof parsed.refused === 'number' ? parsed.refused : 0,
+    };
+  } catch {
+    return { sent: [], refused: 0 };
+  }
+}
+
+/** Reads and clears what background resends did, so the app tells the worker once. */
+export async function takeBackgroundReport(
+  store: KeyValueStore,
+): Promise<BackgroundReport> {
+  const report = await loadReport(store);
+  await store.remove(BACKGROUND_KEY);
+  return report;
+}
+
+/**
+ * The background task (spec §7.2): sends what waits, with no screen to show
+ * the result on, so it adds the result to the report the app reads when it
+ * next opens. With no session or an empty queue it makes no request. A
+ * signed-out worker's answers stay until the next sign-in, as in the app.
+ */
+export async function resendInBackground(
+  store: KeyValueStore,
+  api: Pick<WorkerApi, 'answer'>,
+  token: string | null,
+): Promise<FlushResult | null> {
+  if (!token || (await loadAnswers(store)).length === 0) return null;
+  const result = await flushAnswers(store, api, token);
+  if (result.sent.length > 0 || result.refused.length > 0) {
+    const report = await loadReport(store);
+    await store.set(
+      BACKGROUND_KEY,
+      JSON.stringify({
+        sent: [...report.sent, ...result.sent.map((answer) => answer.serviceItemId)],
+        refused: report.refused + result.refused.length,
+      } satisfies BackgroundReport),
+    );
+  }
   return result;
 }

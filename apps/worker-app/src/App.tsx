@@ -1,12 +1,18 @@
-import { workerAnswerRetryDelayMs } from '@ota/domain';
+import { needsBackgroundResend, workerAnswerRetryDelayMs } from '@ota/domain';
 import type { WorkerHomeDto, WorkerOfferDto } from '@ota/schemas';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { flushAnswers, loadAnswers, saveAnswer } from './lib/answers';
+import {
+  flushAnswers,
+  loadAnswers,
+  saveAnswer,
+  takeBackgroundReport,
+} from './lib/answers';
 import { ApiError, createWorkerApi } from './lib/api';
+import { setBackgroundResend } from './lib/background';
 import { settings } from './lib/config';
 import { copy } from './lib/copy';
 import { kv, tokenStore } from './lib/storage';
@@ -26,6 +32,16 @@ const HOME_KEY = 'ota.worker.home';
 /** How often the countdowns move. */
 const TICK_MS = 15_000;
 
+/**
+ * The background resend comes on top of the resend while the app is open, so
+ * a phone that refuses to schedule it loses only that: the refusal is logged.
+ */
+function keepResendingInBackground(on: boolean) {
+  setBackgroundResend(on).catch((error: unknown) =>
+    console.warn('Background resend not scheduled', error),
+  );
+}
+
 type Screen =
   | { name: 'loading' }
   | { name: 'login' }
@@ -42,8 +58,8 @@ type Screen =
  * The worker app (ADR 0007, Phase 7): sign in with a code, see offers and
  * jobs, answer an offer, block days in the calendar, read their reliability
  * and payouts, keep their documents up to date. Answers are saved on the phone first and resent
- * until the API answers (`docs/worker-app-plan.md` W6); the last home is kept
- * for when there is no signal.
+ * until the API answers (`docs/worker-app-plan.md` W6), in the background too
+ * (spec §7.2); the last home is kept for when there is no signal.
  */
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'loading' });
@@ -60,6 +76,7 @@ export function App() {
   const retry = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const signedOut = useCallback(async (message: string | null) => {
+    keepResendingInBackground(false);
     await tokenStore.clear();
     setToken(null);
     setHome(null);
@@ -73,18 +90,27 @@ export function App() {
       setRefreshing(true);
       try {
         const flushed = await flushAnswers(kv, api, current);
+        // What the background resend did while the worker was away.
+        const away = await takeBackgroundReport(kv);
+        const sent = [
+          ...away.sent,
+          ...flushed.sent.map((answer) => answer.serviceItemId),
+        ];
         setPending(flushed.pending.length);
-        if (flushed.sent.length > 0) {
+        keepResendingInBackground(
+          needsBackgroundResend(flushed.pending.length, !flushed.signedOut),
+        );
+        if (sent.length > 0) {
           setOutcomes((previous) => {
             const next = new Map(previous);
-            for (const answer of flushed.sent) {
-              const known = next.get(answer.serviceItemId);
-              if (known) next.set(answer.serviceItemId, { ...known, delivery: 'sent' });
+            for (const serviceItemId of sent) {
+              const known = next.get(serviceItemId);
+              if (known) next.set(serviceItemId, { ...known, delivery: 'sent' });
             }
             return next;
           });
         }
-        if (flushed.refused.length > 0) setNotice(copy.home.refused);
+        if (flushed.refused.length > 0 || away.refused > 0) setNotice(copy.home.refused);
         if (flushed.signedOut) {
           await signedOut(copy.home.signedOut);
           return;
