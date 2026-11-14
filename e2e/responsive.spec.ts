@@ -148,6 +148,14 @@ test.describe('DS 07 responsive widths', () => {
     }
   });
 
+  test('Ops Lite never scrolls sideways, from a small phone up', async ({ page }) => {
+    await signIn(page);
+    for (const path of ['/lite/alerts', '/lite/pipeline', '/lite/inbox']) {
+      await page.goto(path);
+      await expectFits(page, path, '14px');
+    }
+  });
+
   test('desk pages never scroll sideways from tablet width', async ({ page }) => {
     test.skip(
       (page.viewportSize()?.width ?? 0) < DESK_MIN_WIDTH,
