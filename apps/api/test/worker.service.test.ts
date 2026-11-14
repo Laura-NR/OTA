@@ -15,7 +15,6 @@ import type { SmsChannel, SmsMessage } from '../src/sms/sms.channel';
 import type { DocumentRenderer } from '../src/documents/document-renderer';
 import { SupplierPayoutsService } from '../src/suppliers/supplier-payouts.service';
 import { SuppliersService } from '../src/suppliers/suppliers.service';
-import type { ObjectStorage } from '@ota/storage';
 import {
   WorkerCodesService,
   hashWorkerCode,
@@ -639,7 +638,6 @@ describe("the worker app's calendar (W-Calendar)", () => {
     const settings = fakeOperatingSettings({ amberPercent: 75 });
     const suppliers = new SuppliersService(
       prisma as unknown as PrismaService,
-      {} as ObjectStorage,
       settings,
       {} as SupplierPayoutsService,
     );

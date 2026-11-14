@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import {
   Prisma,
   type Availability,
+  type SupplierCredential,
   type SupplierProfile,
   type SupplierResources,
 } from '@ota/db';
@@ -25,8 +26,15 @@ const TRAVELER = {
   role: 'TRAVELER',
 };
 
+const WORKER = {
+  id: '33333333-3333-4333-8333-333333333333',
+  email: 'driver@example.test',
+  role: 'SERVICE_WORKER',
+};
+
 const GUIDE_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const DRIVER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function makeSupplier(
   overrides: Partial<SupplierProfile> & { id: string },
@@ -69,12 +77,120 @@ interface FakePayoutJob {
   reservation: { status: string };
 }
 
+type StatusFilter = string | { not?: string; in?: string[] } | undefined;
+
+function matchesStatus(status: string, filter: StatusFilter): boolean {
+  if (filter === undefined) return true;
+  if (typeof filter === 'string') return status === filter;
+  if (filter.not !== undefined && status === filter.not) return false;
+  if (filter.in !== undefined && !filter.in.includes(status)) return false;
+  return true;
+}
+
+interface CredentialWhere {
+  id?: string | { in: string[] };
+  supplierId?: string;
+  kind?: string;
+  status?: StatusFilter;
+}
+
+/** W-Credentials' `supplier_credentials`, in memory. */
+function createFakeCredentials(rows: SupplierCredential[]) {
+  const matches = (row: SupplierCredential, where: CredentialWhere) =>
+    (where.id === undefined ||
+      (typeof where.id === 'string'
+        ? row.id === where.id
+        : where.id.in.includes(row.id))) &&
+    (where.supplierId === undefined || row.supplierId === where.supplierId) &&
+    (where.kind === undefined || row.kind === where.kind) &&
+    matchesStatus(row.status, where.status);
+  return {
+    findMany: async ({ where }: { where: CredentialWhere }) =>
+      rows
+        .filter((row) => matches(row, where))
+        .map((row) => ({ ...row, reviewedBy: { fullName: 'Ernesto Valdés' } })),
+    findFirst: async ({ where }: { where: CredentialWhere }) =>
+      rows.find((row) => matches(row, where)) ?? null,
+    create: async ({ data }: { data: Partial<SupplierCredential> }) => {
+      const now = new Date();
+      const row = {
+        id: crypto.randomUUID(),
+        status: 'PENDING_AUDIT',
+        storageKey: null,
+        number: null,
+        issuer: null,
+        issuedOn: null,
+        expiresOn: null,
+        uploadedAt: now,
+        uploadedById: null,
+        reviewedAt: null,
+        reviewedById: null,
+        rejectReason: null,
+        createdAt: now,
+        updatedAt: now,
+        ...data,
+      } as SupplierCredential;
+      rows.push(row);
+      return row;
+    },
+    update: async ({
+      where,
+      data,
+    }: {
+      where: { id: string };
+      data: Partial<SupplierCredential>;
+    }) => {
+      const row = rows.find((candidate) => candidate.id === where.id);
+      if (!row) throw new Error(`Credential ${where.id} not found`);
+      Object.assign(row, data);
+      return row;
+    },
+    updateMany: async ({
+      where,
+      data,
+    }: {
+      where: CredentialWhere;
+      data: Partial<SupplierCredential>;
+    }) => {
+      const hit = rows.filter((row) => matches(row, where));
+      for (const row of hit) Object.assign(row, data);
+      return { count: hit.length };
+    },
+  };
+}
+
+function credential(
+  overrides: Partial<SupplierCredential> &
+    Pick<SupplierCredential, 'supplierId' | 'kind'>,
+): SupplierCredential {
+  const at = new Date('2026-01-15T10:00:00Z');
+  return {
+    id: crypto.randomUUID(),
+    status: 'VERIFIED',
+    storageKey: null,
+    number: null,
+    issuer: null,
+    issuedOn: null,
+    expiresOn: new Date('2027-06-12T00:00:00Z'),
+    uploadedAt: at,
+    uploadedById: null,
+    uploadedVia: 'VISIT',
+    reviewedAt: at,
+    reviewedById: SUPER_ADMIN.id,
+    rejectReason: null,
+    createdAt: at,
+    updatedAt: at,
+    ...overrides,
+  };
+}
+
 function createFakePrisma(
   store: Map<string, ReturnType<typeof makeSupplier>>,
   availability: Map<string, Availability>,
   resources: Map<string, SupplierResources> = new Map(),
   jobs: FakeJob[] = [],
   payoutJobs: FakePayoutJob[] = [],
+  credentials: SupplierCredential[] = [],
 ) {
   const availabilityKey = (supplierId: string, date: Date) =>
     `${supplierId}:${date.toISOString()}`;
@@ -197,8 +313,10 @@ function createFakePrisma(
         }
         return rows.map(withResources);
       },
-      findUnique: async ({ where }: { where: { id: string } }) => {
-        const row = store.get(where.id);
+      findUnique: async ({ where }: { where: { id?: string; userId?: string } }) => {
+        const row = where.id
+          ? store.get(where.id)
+          : [...store.values()].find((candidate) => candidate.userId === where.userId);
         return row ? withResources(row) : null;
       },
       update: async ({
@@ -217,6 +335,7 @@ function createFakePrisma(
         return updated;
       },
     },
+    supplierCredential: createFakeCredentials(credentials),
     auditLog: {
       create: vi.fn(async () => ({})),
     },
@@ -229,7 +348,9 @@ function createFakePrisma(
 const fakeAuthService = {
   getSession: async (headers: Record<string, string | string[] | undefined>) => {
     const email = headers['x-test-user'];
-    const user = [SUPER_ADMIN, TRAVELER].find((candidate) => candidate.email === email);
+    const user = [SUPER_ADMIN, TRAVELER, WORKER].find(
+      (candidate) => candidate.email === email,
+    );
     if (!user) {
       return null;
     }
@@ -247,6 +368,7 @@ describe('suppliers', () => {
   let resources: Map<string, SupplierResources>;
   let jobs: FakeJob[];
   let payoutJobs: FakePayoutJob[];
+  let credentials: SupplierCredential[];
   let fakePrisma: ReturnType<typeof createFakePrisma>;
 
   beforeEach(async () => {
@@ -254,6 +376,7 @@ describe('suppliers', () => {
     resources = new Map();
     jobs = [];
     payoutJobs = [];
+    credentials = [];
     store = new Map([
       [
         GUIDE_ID,
@@ -267,6 +390,7 @@ describe('suppliers', () => {
         DRIVER_ID,
         makeSupplier({
           id: DRIVER_ID,
+          userId: WORKER.id,
           category: 'PRIVATE_DRIVER',
           verificationStatus: 'PENDING_AUDIT',
           provincesActive: ['Matanzas'],
@@ -274,7 +398,14 @@ describe('suppliers', () => {
       ],
     ]);
 
-    fakePrisma = createFakePrisma(store, availability, resources, jobs, payoutJobs);
+    fakePrisma = createFakePrisma(
+      store,
+      availability,
+      resources,
+      jobs,
+      payoutJobs,
+      credentials,
+    );
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
@@ -382,7 +513,16 @@ describe('suppliers', () => {
     expect(response.status).toBe(404);
   });
 
-  it('approves a supplier and records an audit entry', async () => {
+  it('approves a supplier whose required documents are verified, and records an audit entry', async () => {
+    for (const kind of [
+      'TRANSPORT_LICENCE',
+      'TECHNICAL_INSPECTION',
+      'LIABILITY_INSURANCE',
+      'IDENTITY_CARD',
+    ] as const) {
+      credentials.push(credential({ supplierId: DRIVER_ID, kind }));
+    }
+
     const response = await request(app.getHttpServer())
       .post(`/suppliers/${DRIVER_ID}/verification`)
       .set('x-test-user', SUPER_ADMIN.email)
@@ -394,6 +534,39 @@ describe('suppliers', () => {
     expect(fakePrisma.auditLog.create).toHaveBeenCalledOnce();
   });
 
+  it('refuses to approve a supplier while a required document is missing (W-Credentials V3a)', async () => {
+    credentials.push(credential({ supplierId: DRIVER_ID, kind: 'TRANSPORT_LICENCE' }));
+    credentials.push(
+      credential({
+        supplierId: DRIVER_ID,
+        kind: 'LIABILITY_INSURANCE',
+        status: 'PENDING_AUDIT',
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .post(`/suppliers/${DRIVER_ID}/verification`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'VERIFIED' });
+
+    expect(response.status).toBe(409);
+    expect(response.body.message).toContain(
+      'TECHNICAL_INSPECTION, LIABILITY_INSURANCE, IDENTITY_CARD',
+    );
+    expect(store.get(DRIVER_ID)?.verificationStatus).toBe('PENDING_AUDIT');
+    expect(fakePrisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('still suspends a supplier with missing documents', async () => {
+    const response = await request(app.getHttpServer())
+      .post(`/suppliers/${GUIDE_ID}/verification`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({ status: 'SUSPENDED', reason: 'Licence seized' });
+
+    expect(response.status).toBe(200);
+    expect(store.get(GUIDE_ID)?.verificationStatus).toBe('SUSPENDED');
+  });
+
   it('returns 403 for a traveler', async () => {
     const response = await request(app.getHttpServer())
       .get('/suppliers')
@@ -402,34 +575,222 @@ describe('suppliers', () => {
     expect(response.status).toBe(403);
   });
 
-  it('uploads a credential and serves it back to the inspector', async () => {
-    const contentBase64 = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]).toString(
-      'base64',
-    );
+  describe('W-Credentials', () => {
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]).toString('base64');
 
-    const upload = await request(app.getHttpServer())
-      .post(`/suppliers/${GUIDE_ID}/credential`)
-      .set('x-test-user', SUPER_ADMIN.email)
-      .send({ filename: 'formatur.png', contentType: 'image/png', contentBase64 });
+    function upload(supplierId: string, kind: string, user = SUPER_ADMIN.email) {
+      return request(app.getHttpServer())
+        .post(`/suppliers/${supplierId}/credential`)
+        .set('x-test-user', user)
+        .send({
+          kind,
+          filename: 'licencia.png',
+          contentType: 'image/png',
+          contentBase64: png,
+          via: 'WHATSAPP',
+        });
+    }
 
-    expect(upload.status).toBe(200);
-    expect(upload.body.hasCredential).toBe(true);
-    expect(upload.body.credentialContentType).toBe('image/png');
+    it('lists each required document with the version waiting for review, and serves its file audited', async () => {
+      const uploaded = await upload(GUIDE_ID, 'GUIDE_LICENCE');
 
-    const download = await request(app.getHttpServer())
-      .get(`/suppliers/${GUIDE_ID}/credential`)
-      .set('x-test-user', SUPER_ADMIN.email);
+      expect(uploaded.status).toBe(200);
+      expect(uploaded.body.slots.map((slot: { kind: string }) => slot.kind)).toEqual([
+        'GUIDE_LICENCE',
+        'IDENTITY_CARD',
+      ]);
+      expect(uploaded.body.missing).toEqual(['GUIDE_LICENCE', 'IDENTITY_CARD']);
+      const pending = uploaded.body.slots[0].pending;
+      expect(pending).toMatchObject({
+        status: 'PENDING_AUDIT',
+        uploadedVia: 'WHATSAPP',
+        hasFile: true,
+        contentType: 'image/png',
+      });
+      expect(uploaded.body.slots[0].state).toBe('MISSING');
 
-    expect(download.status).toBe(200);
-    expect(download.headers['content-type']).toContain('image/png');
-  });
+      const file = await request(app.getHttpServer())
+        .get(`/suppliers/${GUIDE_ID}/credentials/${pending.id}/file`)
+        .set('x-test-user', SUPER_ADMIN.email);
 
-  it('returns 404 when no credential is on file', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/suppliers/${GUIDE_ID}/credential`)
-      .set('x-test-user', SUPER_ADMIN.email);
+      expect(file.status).toBe(200);
+      expect(file.headers['content-type']).toContain('image/png');
+      expect(fakePrisma.auditLog.create).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({
+          action: 'supplier.credential_viewed',
+          entityId: GUIDE_ID,
+          metadata: { credentialId: pending.id, kind: 'GUIDE_LICENCE' },
+        }),
+      });
+    });
 
-    expect(response.status).toBe(404);
+    it('returns 404 for a version with no file kept', async () => {
+      const row = credential({ supplierId: GUIDE_ID, kind: 'IDENTITY_CARD' });
+      credentials.push(row);
+
+      const response = await request(app.getHttpServer())
+        .get(`/suppliers/${GUIDE_ID}/credentials/${row.id}/file`)
+        .set('x-test-user', SUPER_ADMIN.email);
+
+      expect(response.status).toBe(404);
+    });
+
+    it('approves a renewal: the old version is superseded and the expiry dispatch reads is the earliest current one', async () => {
+      credentials.push(
+        credential({
+          supplierId: DRIVER_ID,
+          kind: 'TRANSPORT_LICENCE',
+          expiresOn: new Date('2026-12-01T00:00:00Z'),
+        }),
+        credential({
+          supplierId: DRIVER_ID,
+          kind: 'LIABILITY_INSURANCE',
+          expiresOn: new Date('2027-01-31T00:00:00Z'),
+        }),
+      );
+      const uploaded = await upload(DRIVER_ID, 'TRANSPORT_LICENCE');
+      const pendingId = uploaded.body.slots[0].pending.id;
+      const future = new Date(Date.now() + 800 * DAY_MS).toISOString().slice(0, 10);
+
+      const approved = await request(app.getHttpServer())
+        .post(`/suppliers/${DRIVER_ID}/credentials/${pendingId}/approve`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({
+          number: 'LOT-MTZ-2026-00042',
+          issuedOn: '2026-01-10',
+          expiresOn: future,
+        });
+
+      expect(approved.status).toBe(200);
+      expect(approved.body.slots[0].current).toMatchObject({
+        id: pendingId,
+        number: 'LOT-MTZ-2026-00042',
+        expiresOn: future,
+        reviewedByName: 'Ernesto',
+      });
+      expect(approved.body.slots[0].pending).toBeNull();
+      expect(
+        credentials.filter(
+          (row) => row.kind === 'TRANSPORT_LICENCE' && row.status === 'SUPERSEDED',
+        ),
+      ).toHaveLength(1);
+      expect(store.get(DRIVER_ID)?.credentialExpiresAt).toEqual(
+        new Date('2027-01-31T00:00:00Z'),
+      );
+      expect(fakePrisma.auditLog.create).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({ action: 'supplier.credential_approved' }),
+      });
+
+      const again = await request(app.getHttpServer())
+        .post(`/suppliers/${DRIVER_ID}/credentials/${pendingId}/approve`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ expiresOn: future });
+      expect(again.status).toBe(409);
+    });
+
+    it('needs the expiry read off the document to approve it', async () => {
+      const uploaded = await upload(GUIDE_ID, 'GUIDE_LICENCE');
+
+      const response = await request(app.getHttpServer())
+        .post(
+          `/suppliers/${GUIDE_ID}/credentials/${uploaded.body.slots[0].pending.id}/approve`,
+        )
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ number: 'FMT-001' });
+
+      expect(response.status).toBe(422);
+      expect(credentials[0]?.status).toBe('PENDING_AUDIT');
+    });
+
+    it('rejects an upload with a reason the worker sees, and removes its file', async () => {
+      const uploaded = await upload(GUIDE_ID, 'GUIDE_LICENCE');
+      const pendingId = uploaded.body.slots[0].pending.id;
+
+      const rejected = await request(app.getHttpServer())
+        .post(`/suppliers/${GUIDE_ID}/credentials/${pendingId}/reject`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ reason: 'Hay un reflejo sobre el número; repite la foto.' });
+
+      expect(rejected.status).toBe(200);
+      expect(rejected.body.slots[0].rejected).toMatchObject({
+        id: pendingId,
+        rejectReason: 'Hay un reflejo sobre el número; repite la foto.',
+        hasFile: false,
+      });
+      expect(rejected.body.slots[0].pending).toBeNull();
+    });
+
+    it('keeps one upload waiting per document: a new one replaces it', async () => {
+      await upload(GUIDE_ID, 'GUIDE_LICENCE');
+      const second = await upload(GUIDE_ID, 'GUIDE_LICENCE');
+
+      expect(credentials.filter((row) => row.status === 'PENDING_AUDIT')).toHaveLength(1);
+      expect(second.body.slots[0].pending.id).toBe(
+        credentials.find((row) => row.status === 'PENDING_AUDIT')?.id,
+      );
+    });
+
+    it('refuses a photo of the identity card and a document the category does not need', async () => {
+      expect((await upload(GUIDE_ID, 'IDENTITY_CARD')).status).toBe(422);
+      expect((await upload(GUIDE_ID, 'TRANSPORT_LICENCE')).status).toBe(422);
+      expect(credentials).toHaveLength(0);
+    });
+
+    it('records the identity card checked in person, with no file', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/suppliers/${GUIDE_ID}/credentials/identity-card`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ via: 'VISIT' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.slots[1]).toMatchObject({
+        kind: 'IDENTITY_CARD',
+        state: 'VALID',
+        current: { status: 'VERIFIED', hasFile: false, uploadedVia: 'VISIT' },
+      });
+      expect(response.body.missing).toEqual(['GUIDE_LICENCE']);
+    });
+
+    it('shows the worker their documents and takes their photo as a WORKER_APP upload', async () => {
+      credentials.push(
+        credential({
+          supplierId: DRIVER_ID,
+          kind: 'TECHNICAL_INSPECTION',
+          expiresOn: new Date(Date.now() + 10 * DAY_MS),
+        }),
+      );
+      store.set(DRIVER_ID, { ...store.get(DRIVER_ID)!, verificationStatus: 'VERIFIED' });
+
+      const listed = await request(app.getHttpServer())
+        .get('/worker/credentials')
+        .set('x-test-user', WORKER.email);
+
+      expect(listed.status).toBe(200);
+      expect(listed.body.summary).toMatchObject({ state: 'EXPIRING', autoOffers: false });
+      expect(listed.body.summary.nextExpiry.kind).toBe('TECHNICAL_INSPECTION');
+      expect(listed.body.slots).toHaveLength(4);
+
+      const uploaded = await request(app.getHttpServer())
+        .post('/worker/credentials')
+        .set('x-test-user', WORKER.email)
+        .send({
+          kind: 'TECHNICAL_INSPECTION',
+          filename: 'somaton.jpg',
+          contentType: 'image/jpeg',
+          contentBase64: png,
+        });
+
+      expect(uploaded.status).toBe(200);
+      expect(uploaded.body.summary.state).toBe('IN_REVIEW');
+      expect(uploaded.body.slots[1].pending).toMatchObject({
+        uploadedVia: 'WORKER_APP',
+        contentType: 'image/jpeg',
+      });
+      expect(credentials.at(-1)).toMatchObject({
+        supplierId: DRIVER_ID,
+        uploadedById: WORKER.id,
+      });
+    });
   });
 
   it('flags suppliers whose credential is within the expiry window', async () => {

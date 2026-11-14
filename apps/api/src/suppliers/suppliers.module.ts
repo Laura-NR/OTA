@@ -4,6 +4,7 @@ import { DocumentsModule } from '../documents/documents.module';
 import { BullmqExpiryAlertScheduler } from './bullmq-expiry-alert.scheduler';
 import { COMPLIANCE_SCHEDULER, NoopComplianceScheduler } from './expiry-alert.scheduler';
 import { ExpiryAlertService } from './expiry-alert.service';
+import { SupplierCredentialsService } from './supplier-credentials.service';
 import { SupplierPayoutsService } from './supplier-payouts.service';
 import { SuppliersController } from './suppliers.controller';
 import { SuppliersService } from './suppliers.service';
@@ -15,6 +16,7 @@ import { SuppliersService } from './suppliers.service';
   providers: [
     SuppliersService,
     SupplierPayoutsService,
+    SupplierCredentialsService,
     ExpiryAlertService,
     {
       provide: COMPLIANCE_SCHEDULER,
@@ -28,7 +30,7 @@ import { SuppliersService } from './suppliers.service';
     },
   ],
   // The worker app's fuel declaration writes through the desk's resources path,
-  // and W-Earnings reads the same payouts.
-  exports: [SuppliersService, SupplierPayoutsService],
+  // W-Earnings reads the same payouts, and W-Credentials the same documents.
+  exports: [SuppliersService, SupplierPayoutsService, SupplierCredentialsService],
 })
 export class SuppliersModule {}

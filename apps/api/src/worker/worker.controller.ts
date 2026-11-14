@@ -16,16 +16,19 @@ import {
   declareWorkerFuelSchema,
   setWorkerDaysSchema,
   workerCalendarQuerySchema,
+  workerUploadCredentialSchema,
   type DeclareWorkerFuelRequest,
   type SetWorkerDaysRequest,
   type WorkerCalendarDto,
   type WorkerCalendarQuery,
+  type WorkerCredentialsDto,
   type WorkerDaysResultDto,
   type WorkerEarningsDto,
   type WorkerFuelDto,
   type WorkerHomeDto,
   type WorkerSignInCodeDto,
   type WorkerSignOutDto,
+  type WorkerUploadCredentialRequest,
 } from '@ota/schemas';
 import type { Response } from 'express';
 
@@ -34,13 +37,17 @@ import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { sendPdf } from '../proposals/proposal-pdf';
+import { SupplierCredentialsService } from '../suppliers/supplier-credentials.service';
 import { WorkerCodesService } from './worker-codes.service';
 import { WorkerService } from './worker.service';
 
 /** The worker app's own routes (`docs/worker-app-plan.md` W5). */
 @Controller('worker')
 export class WorkerController {
-  constructor(private readonly worker: WorkerService) {}
+  constructor(
+    private readonly worker: WorkerService,
+    private readonly credentials: SupplierCredentialsService,
+  ) {}
 
   @Get('home')
   @Roles(UserRole.ServiceWorker)
@@ -92,6 +99,25 @@ export class WorkerController {
   ): Promise<void> {
     const { body, filename } = await this.worker.receipt(actor, id);
     sendPdf(response, body, filename);
+  }
+
+  /** W-Credentials: the worker's own documents and what they mean for offers. */
+  @Get('credentials')
+  @Roles(UserRole.ServiceWorker)
+  credentialList(@CurrentUser() actor: AuthUser): Promise<WorkerCredentialsDto> {
+    return this.credentials.forWorker(actor);
+  }
+
+  /** A photo of a document or its renewal; it waits for the desk's review. */
+  @Post('credentials')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ServiceWorker)
+  uploadCredential(
+    @Body(new ZodValidationPipe(workerUploadCredentialSchema))
+    body: WorkerUploadCredentialRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<WorkerCredentialsDto> {
+    return this.credentials.uploadForWorker(actor, body);
   }
 
   /** A driver's weekly fuel declaration. */

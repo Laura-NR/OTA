@@ -13,25 +13,32 @@ import {
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
+  approveCredentialSchema,
   availabilityQuerySchema,
+  checkIdentityCardSchema,
   confirmResourcesSchema,
   expiringSuppliersQuerySchema,
   listSuppliersQuerySchema,
   recordSupplierPayoutSchema,
+  rejectCredentialSchema,
   setAvailabilitySchema,
   setPayoutMethodSchema,
   setVerificationSchema,
   uploadCredentialSchema,
   vehicleDetailsInputSchema,
+  type ApproveCredentialRequest,
   type AvailabilityDayDto,
   type AvailabilityQuery,
+  type CheckIdentityCardRequest,
   type ConfirmResourcesRequest,
   type ExpiringSuppliersQuery,
   type ListSuppliersQuery,
   type RecordSupplierPayoutRequest,
+  type RejectCredentialRequest,
   type SetAvailabilityRequest,
   type SetPayoutMethodRequest,
   type SetVerificationRequest,
+  type SupplierCredentialsDto,
   type SupplierDetailDto,
   type SupplierDto,
   type SupplierPayoutLedgerDto,
@@ -47,6 +54,7 @@ import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { sendPdf } from '../proposals/proposal-pdf';
+import { SupplierCredentialsService } from './supplier-credentials.service';
 import { SupplierPayoutsService } from './supplier-payouts.service';
 import { SuppliersService } from './suppliers.service';
 
@@ -62,6 +70,7 @@ export class SuppliersController {
   constructor(
     private readonly suppliers: SuppliersService,
     private readonly payouts: SupplierPayoutsService,
+    private readonly credentials: SupplierCredentialsService,
   ) {}
 
   @Get()
@@ -88,13 +97,29 @@ export class SuppliersController {
     return this.suppliers.getById(id);
   }
 
-  @Get(':id/credential')
+  /** W-Credentials: each required document with its current, pending and rejected version. */
+  @Get(':id/credentials')
   @Roles(...READ_ROLES)
-  async credential(
+  credentialList(
     @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.forSupplier(id);
+  }
+
+  /** One version's file, inline; every read is audited. */
+  @Get(':id/credentials/:credentialId/file')
+  @Roles(...READ_ROLES)
+  async credentialFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('credentialId', ParseUUIDPipe) credentialId: string,
+    @CurrentUser() actor: AuthUser,
     @Res() response: Response,
   ): Promise<void> {
-    const { data, contentType } = await this.suppliers.readCredential(id);
+    const { data, contentType } = await this.credentials.readFile(
+      id,
+      credentialId,
+      actor,
+    );
     response.setHeader('content-type', contentType);
     response.setHeader('content-disposition', 'inline');
     response.send(Buffer.from(data));
@@ -199,6 +224,7 @@ export class SuppliersController {
     return this.suppliers.setVerification(id, body, actor);
   }
 
+  /** A document received by visit, phone or WhatsApp; it waits for review like the worker's. */
   @Post(':id/credential')
   @HttpCode(HttpStatus.OK)
   @Roles(...READ_ROLES)
@@ -206,7 +232,43 @@ export class SuppliersController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(uploadCredentialSchema)) body: UploadCredentialRequest,
     @CurrentUser() actor: AuthUser,
-  ): Promise<SupplierDto> {
-    return this.suppliers.uploadCredential(id, body, actor);
+  ): Promise<SupplierCredentialsDto> {
+    const { via, ...upload } = body;
+    return this.credentials.uploadForDesk(id, upload, via, actor);
+  }
+
+  @Post(':id/credentials/identity-card')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  checkIdentityCard(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(checkIdentityCardSchema)) body: CheckIdentityCardRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.checkIdentityCard(id, body, actor);
+  }
+
+  @Post(':id/credentials/:credentialId/approve')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  approveCredential(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('credentialId', ParseUUIDPipe) credentialId: string,
+    @Body(new ZodValidationPipe(approveCredentialSchema)) body: ApproveCredentialRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.approve(id, credentialId, body, actor);
+  }
+
+  @Post(':id/credentials/:credentialId/reject')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  rejectCredential(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('credentialId', ParseUUIDPipe) credentialId: string,
+    @Body(new ZodValidationPipe(rejectCredentialSchema)) body: RejectCredentialRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.reject(id, credentialId, body, actor);
   }
 }

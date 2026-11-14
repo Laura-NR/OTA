@@ -69,9 +69,8 @@ export const supplierSchema = z.object({
   rtnLicenseNumber: z.string(),
   verificationStatus: verificationStatusSchema,
   isAvailable: z.boolean(),
+  /** The earliest expiry of the current documents (W-Credentials V3). */
   credentialExpiresAt: z.string().nullable(),
-  hasCredential: z.boolean(),
-  credentialContentType: z.string().nullable(),
 });
 
 export type SupplierDto = z.infer<typeof supplierSchema>;
@@ -84,15 +83,6 @@ export const credentialContentTypeSchema = z.enum([
   'image/webp',
   'application/pdf',
 ]);
-
-export const uploadCredentialSchema = z.object({
-  filename: z.string().trim().min(1).max(255),
-  contentType: credentialContentTypeSchema,
-  contentBase64: z.string().min(1),
-  expiresAt: z.coerce.date().optional(),
-});
-
-export type UploadCredentialRequest = z.infer<typeof uploadCredentialSchema>;
 
 export const expiringSuppliersQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(365).default(30),

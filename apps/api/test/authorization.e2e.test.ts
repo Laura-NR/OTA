@@ -71,6 +71,7 @@ const STAFF_USER = '0d0d0d0d-0d0d-4d0d-8d0d-0d0d0d0d0d0d';
 const EVENT = '1e1e1e1e-1e1e-4e1e-8e1e-1e1e1e1e1e1e';
 const EVENT_REQUEST = '2f2f2f2f-2f2f-4f2f-8f2f-2f2f2f2f2f2f';
 const OVERRIDE = '3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a';
+const CREDENTIAL = '4b4b4b4b-4b4b-4b4b-8b4b-4b4b4b4b4b4b';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -267,6 +268,9 @@ const ROUTES: Route[] = [
   // W-Earnings: the worker's own reliability and payouts, and their receipts.
   { method: 'get', path: '/worker/earnings', allowed: 'worker' },
   { method: 'get', path: `/worker/payouts/${PAYMENT}/receipt`, allowed: 'worker' },
+  // W-Credentials: the worker's own documents and uploads.
+  { method: 'get', path: '/worker/credentials', allowed: 'worker' },
+  { method: 'post', path: '/worker/credentials', allowed: 'worker' },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',
@@ -326,8 +330,29 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/suppliers', allowed: 'opsRead' },
   { method: 'get', path: '/suppliers/expiring', allowed: 'opsRead' },
   { method: 'get', path: `/suppliers/${SUPPLIER}`, allowed: 'opsRead' },
-  { method: 'get', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
   { method: 'post', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
+  // W-Credentials: support reads and uploads; ops review.
+  { method: 'get', path: `/suppliers/${SUPPLIER}/credentials`, allowed: 'opsRead' },
+  {
+    method: 'get',
+    path: `/suppliers/${SUPPLIER}/credentials/${CREDENTIAL}/file`,
+    allowed: 'opsRead',
+  },
+  {
+    method: 'post',
+    path: `/suppliers/${SUPPLIER}/credentials/identity-card`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/suppliers/${SUPPLIER}/credentials/${CREDENTIAL}/approve`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/suppliers/${SUPPLIER}/credentials/${CREDENTIAL}/reject`,
+    allowed: 'opsWrite',
+  },
   { method: 'get', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsRead' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsWrite' },
   // The desk's worker sign-in code (W1) and sign-out: no permission override reaches them.
