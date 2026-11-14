@@ -1051,7 +1051,11 @@
         "traveler": "Voyageur"
       },
       "passkeys": "Clés d'accès",
-      "skip": "Aller au contenu"
+      "skip": "Aller au contenu",
+      "opsLite": {
+        "pointer": "Sur un téléphone ? Ops Lite est le tri du bureau, conçu pour lui.",
+        "open": "Ouvrir Ops Lite"
+      }
     },
     "paymentsLedger": {
       "title": "Paiements",
@@ -3205,6 +3209,197 @@
       "ended": "Votre dernière dérogation pour ceci a pris fin.",
       "lapsed": "Votre dernière demande a expiré : aucun Super Admin n'a répondu en 24 heures.",
       "failed": "Cela n'a pas abouti."
+    },
+    "opsLite": {
+      "skip": "Aller à l’écran",
+      "nav": {
+        "label": "Ops Lite",
+        "alerts": "Alertes",
+        "pipeline": "Pipeline",
+        "inbox": "Messages",
+        "desk": "Bureau",
+        "withCount": "{tab} ({count})"
+      },
+      "push": {
+        "title": "Ops Lite · alerte rouge"
+      },
+      "sound": {
+        "on": "Son activé",
+        "onLabel": "Son activé, touchez pour couper 15 minutes",
+        "muted": "Son coupé · {time}",
+        "mutedLabel": "Son coupé jusqu’à {time} par {name} (journalisé).",
+        "tapToUnmute": "Touchez pour rétablir le son.",
+        "turnOn": "Activer le son",
+        "someone": "quelqu’un du bureau"
+      },
+      "alerts": {
+        "title": "Ops Lite · Alertes",
+        "summary": "Alertes par type",
+        "pills": {
+          "red": "Rouges {count}",
+          "amber": "Orange {count}",
+          "approvals": "Validations {count}",
+          "payments": "Paiements {count}"
+        },
+        "push": {
+          "enable": "M’avertir sur ce téléphone",
+          "blocked": "Les notifications de ce site sont bloquées dans les réglages du navigateur."
+        },
+        "sound": {
+          "locked": "Le navigateur retient le son jusqu’à ce que vous touchiez l’écran une fois."
+        },
+        "offered": "<strong>Proposé à {name} · {time}</strong> · {service} de {code}, avec un nouveau délai · journalisé au nom de {you} (Ops Lite).",
+        "dismiss": "Fermer",
+        "noWorker": "aucun prestataire",
+        "someone": "quelqu’un du bureau",
+        "call": "Appeler {name}",
+        "openBooking": "Ouvrir la réservation",
+        "elapsed": "{percent} % du délai écoulé",
+        "red": {
+          "declined": "{service} refusé · {worker}",
+          "timedOut": "{service} sans réponse · {worker}",
+          "since": "rouge depuis {time}",
+          "audio": "son toutes les 60 s",
+          "acknowledged": "pris en compte par {name} · {time}",
+          "acknowledging": "pris en compte",
+          "offeredAt": "Proposé à {time}",
+          "declinedAt": "refusé à {time}",
+          "deadline": "échéance {time}",
+          "redispatch": "Relancer le dispatch · choisir un remplaçant",
+          "also": "Aussi en rouge sur cette réservation : {what} · {time}",
+          "redispatchService": "Relancer le dispatch : {service}",
+          "acknowledge": "Prendre en compte · couper le son"
+        },
+        "amber": {
+          "title": "{service} à {percent} % du délai · {left} restant",
+          "redispatch": "Relancer le dispatch plus tôt"
+        },
+        "approvals": {
+          "title": "Remboursement de {amount} · validation requise",
+          "requestedBy": "demandé par {name}",
+          "approved": "Validé par {name} · {time}",
+          "rejected": "Refusé par {name} · {time}"
+        },
+        "payments": {
+          "windowExpired": "Délai de paiement dépassé",
+          "balanceOverdue": "Solde en retard",
+          "body": "{code} · {traveler} · {amount} · dû {due}",
+          "extend": "Donner 24 h de plus",
+          "extending": "Prolongation…",
+          "extended": "Prolongé : désormais dû {when}.",
+          "failed": "{code} : le paiement n’a pas pu être prolongé. {message}",
+          "nothingDue": "Plus rien n’est dû sur cette réservation."
+        },
+        "credentials": {
+          "title": "Justificatif bientôt expiré · {name}",
+          "body": "Expire le {date} · pour le bureau, pas urgent"
+        },
+        "empty": "Tout est en ordre : aucune offre en rouge ou en orange, aucune validation ni aucun paiement en retard.",
+        "note": "Ops Lite sert au tri : appeler, relancer le dispatch, prendre en compte, valider. Les prix, les documents et le reste attendent le bureau. Les relances, prises en compte et coupures du son faites ici sont journalisées comme Ops Lite."
+      },
+      "redispatch": {
+        "rule": "Vérifiés, libres chaque jour du service, licence valide au-delà de {days} jours.",
+        "offer": "Proposer",
+        "offerTo": "Proposer à {name}",
+        "cancel": "Annuler"
+      },
+      "pipeline": {
+        "title": "Ops Lite · Pipeline",
+        "subtitle": "{total} réservations · {open} en cours · actualisé à {time}",
+        "unavailable": "Le pipeline est indisponible",
+        "live": "En direct",
+        "loadError": "Le pipeline n’a pas pu être lu. Réessayez dans un instant.",
+        "clock": {
+          "expired": "Expiré",
+          "today": "aujourd’hui",
+          "inDays": "dans {days} j",
+          "day": "jour {day}",
+          "minutes": "{count} min",
+          "hours": "{count} h",
+          "days": "{count} j"
+        },
+        "party": "{name} +{more}",
+        "accepted": "{accepted} sur {total} acceptés",
+        "call": "Appeler {name}",
+        "ground": {
+          "title": "Sur place maintenant",
+          "travelers": "{count, plural, one {# voyageur} other {# voyageurs}}",
+          "none": "Aucun voyage en cours.",
+          "trips": "{count, plural, one {# voyage en cours} other {# voyages en cours}}",
+          "province": "{province} {count}",
+          "provinceCase": "{province} {count} · {scenario}",
+          "case": "Perturbation {reference} · {severity}"
+        },
+        "scenarios": {
+          "outage": "coupure",
+          "hurricane": "ouragan",
+          "fuel": "carburant",
+          "casa": "casa",
+          "flight": "vol"
+        },
+        "severities": {
+          "MINOR": "mineure",
+          "MAJOR": "majeure",
+          "EMERGENCY": "urgence"
+        },
+        "states": {
+          "title": "Machine d’états · touchez un état",
+          "spec": "spéc. §4.2",
+          "empty": "Aucune réservation dans cet état.",
+          "more": "+{count} de plus sur le bureau"
+        },
+        "who": {
+          "ITINERARY_SUBMITTED": "En attente du lancement du dispatch ou d’une proposition par le bureau",
+          "DISPATCH_IN_PROGRESS": "Les prestataires répondent dans leur appli · délais d’offre en cours",
+          "ASSEMBLY_AND_ESCALATION": "Veille orange · réaffecter les services refusés · appeler les prestataires",
+          "ACTION_REQUIRED": "Rouge · relancer le dispatch depuis l’onglet Alertes",
+          "SECURED_AND_INVOICED": "Tous les services acceptés · lien de paiement à suivre",
+          "PENDING_PAYMENT": "Délai de paiement en cours · justificatifs vérifiés au bureau",
+          "CONFIRMED": "Documents émis · le voyage est à venir",
+          "IN_PROGRESS": "En voyage · incidents et cas de perturbation",
+          "COMPLETED": "Demande d’avis · paiements des prestataires · délai de conservation",
+          "CANCELLED": "Politique appliquée · remboursements au bureau"
+        },
+        "movements": {
+          "title": "Mouvements du jour",
+          "none": "Aucune arrivée, aucun départ ni aucune échéance de paiement aujourd’hui.",
+          "allDay": "auj.",
+          "PAYMENT_DUE": "Paiement dû sur {code} · {who}",
+          "ARRIVAL": "{who} commencent leur voyage · {code}",
+          "DEPARTURE": "{who} terminent leur voyage · {code}",
+          "open": "Ouvrir la réservation"
+        },
+        "note": "Une vue en lecture seule du pipeline. Transitions, factures et documents restent au bureau ; d’ici on appelle, et on relance le dispatch depuis Alertes."
+      },
+      "inbox": {
+        "title": "Ops Lite · Messages",
+        "subtitle": "Conversations avec les voyageurs, les urgentes d’abord",
+        "loadError": "Les messages n’ont pas pu être lus. Réessayez dans un instant.",
+        "filters": "Afficher",
+        "filter": {
+          "all": "Toutes",
+          "urgent": "Urgentes",
+          "unread": "Non lues"
+        },
+        "empty": "Aucune conversation pour l’instant.",
+        "noneHere": "Aucune conversation ne correspond à ce filtre.",
+        "threads": "Conversations",
+        "you": "Vous : {body}",
+        "kind": "Voyageur · {code}",
+        "urgent": "Urgent",
+        "new": "{count, plural, one {Nouveau} other {# nouveaux}}",
+        "partyOf": "groupe de {count}",
+        "call": "Appeler {name}",
+        "callShort": "Appeler",
+        "messages": "Messages",
+        "fromDesk": "Bureau · {time}",
+        "fromTraveler": "{name} · {time}",
+        "placeholder": "Répondre à {name} · appli + e-mail",
+        "reply": "Réponse",
+        "send": "Envoyer",
+        "urgentNote": "Urgent : le cas de perturbation {reference} est ouvert sur cette réservation. L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail.",
+        "note": "L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail."
+      }
     }
   },
   "conditions": {

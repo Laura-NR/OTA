@@ -1,7 +1,7 @@
 'use client';
 
 import type { RefundDto } from '@ota/schemas';
-import { Alert, Badge, Button, Input, type BadgeVariant } from '@ota/ui';
+import { Alert, Badge, Button, Input, type BadgeVariant, type ButtonSize } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -29,15 +29,18 @@ const VARIANTS: Record<RefundDto['status'], BadgeVariant> = {
  * once an approved transfer refund has gone out. A card refund is sent through
  * the gateway as soon as it is approved. A permission override never votes
  * (`docs/schema-m9-permission-overrides.md` O3), so `canVote` can be narrower.
+ * Ops Lite asks for `md` buttons, the phone's touch size.
  */
 export function RefundActions({
   refund,
   canManage,
   canVote = canManage,
+  size = 'sm',
 }: {
   refund: RefundDto;
   canManage: boolean;
   canVote?: boolean;
+  size?: ButtonSize;
 }) {
   const t = useTranslations('backoffice.payments');
   const why = useTranslations('backoffice.unavailable');
@@ -93,11 +96,11 @@ export function RefundActions({
       </div>
       {canVote && refund.status === 'REQUESTED' && mode === 'idle' ? (
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" disabled={busy} onClick={() => post('approve', {})}>
+          <Button size={size} disabled={busy} onClick={() => post('approve', {})}>
             {t('approve')}
           </Button>
           <Button
-            size="sm"
+            size={size}
             variant="secondary"
             disabled={busy}
             onClick={() => setMode('reject')}
@@ -111,7 +114,7 @@ export function RefundActions({
       refund.rail !== 'CARD' &&
       mode === 'idle' ? (
         <Button
-          size="sm"
+          size={size}
           className="self-start"
           disabled={busy}
           onClick={() => setMode('sent')}
@@ -140,7 +143,7 @@ export function RefundActions({
           />
           <Button
             type="submit"
-            size="sm"
+            size={size}
             variant={mode === 'reject' ? 'destructive' : 'primary'}
             disabled={busy}
             unavailableReason={
@@ -155,7 +158,7 @@ export function RefundActions({
           </Button>
           <Button
             type="button"
-            size="sm"
+            size={size}
             variant="tertiary"
             onClick={() => setMode('idle')}
           >

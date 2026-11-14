@@ -1,3 +1,5 @@
+import { isStaffRole } from '@ota/domain';
+import { Icon } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -42,7 +44,8 @@ function initials(name: string): string {
  * signed-in person at the foot. Below `lg` the sidebar stacks above the
  * content as a wrapping row of links (DS 07 §03). A skip link, the first stop,
  * jumps past the sidebar to the page (WCAG 2.4.1). The page starts with the
- * desk's dispatch alert strip on every page but the dashboard.
+ * desk's dispatch alert strip on every page but the dashboard. Below 560 px
+ * staff are pointed to Ops Lite, the desk's phone screens (DS 07).
  */
 export async function AppShell({ user, agencyName, children }: AppShellProps) {
   const t = await getTranslations('backoffice.shell');
@@ -109,6 +112,16 @@ export async function AppShell({ user, agencyName, children }: AppShellProps) {
         <SectionNav />
         <main id="main" tabIndex={-1} className="flex-1 bg-page p-6 focus:outline-none">
           <AlertAnnouncements />
+          {isStaffRole(user.role) ? (
+            <Link
+              href="/lite/alerts"
+              className="mb-6 flex items-center gap-3 rounded-md border bg-surface px-4 py-3 text-body-sm min-[560px]:hidden"
+            >
+              <Icon name="alert-triangle" className="text-primary-600" />
+              <span className="flex-1">{t('opsLite.pointer')}</span>
+              <span className="font-semibold text-primary-600">{t('opsLite.open')}</span>
+            </Link>
+          ) : null}
           <ShellAlertStrip />
           {children}
         </main>

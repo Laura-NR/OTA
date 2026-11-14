@@ -1051,7 +1051,11 @@
         "traveler": "Viajero"
       },
       "passkeys": "Llaves de acceso",
-      "skip": "Saltar al contenido"
+      "skip": "Saltar al contenido",
+      "opsLite": {
+        "pointer": "¿En un móvil? Ops Lite es el triaje del escritorio hecho para él.",
+        "open": "Abrir Ops Lite"
+      }
     },
     "paymentsLedger": {
       "title": "Pagos",
@@ -3205,6 +3209,197 @@
       "ended": "Su última excepción para esto terminó.",
       "lapsed": "Su última solicitud caducó: ningún Super Admin respondió en 24 horas.",
       "failed": "No se pudo completar."
+    },
+    "opsLite": {
+      "skip": "Saltar a la pantalla",
+      "nav": {
+        "label": "Ops Lite",
+        "alerts": "Alertas",
+        "pipeline": "Embudo",
+        "inbox": "Mensajes",
+        "desk": "Escritorio",
+        "withCount": "{tab} ({count})"
+      },
+      "push": {
+        "title": "Ops Lite · alerta roja"
+      },
+      "sound": {
+        "on": "Sonido activo",
+        "onLabel": "Sonido activo, toca para silenciar 15 minutos",
+        "muted": "Silenciado · {time}",
+        "mutedLabel": "Silenciado hasta las {time} por {name} (registrado).",
+        "tapToUnmute": "Toca para reactivar el sonido.",
+        "turnOn": "Activar sonido",
+        "someone": "alguien del escritorio"
+      },
+      "alerts": {
+        "title": "Ops Lite · Alertas",
+        "summary": "Alertas por tipo",
+        "pills": {
+          "red": "Rojas {count}",
+          "amber": "Ámbar {count}",
+          "approvals": "Aprobaciones {count}",
+          "payments": "Pagos {count}"
+        },
+        "push": {
+          "enable": "Avisarme en este móvil",
+          "blocked": "Las notificaciones de este sitio están bloqueadas en los ajustes del navegador."
+        },
+        "sound": {
+          "locked": "El navegador retiene el sonido hasta que toques la pantalla una vez."
+        },
+        "offered": "<strong>Ofrecido a {name} · {time}</strong> · {service} de {code}, con un plazo nuevo · registrado como {you} (Ops Lite).",
+        "dismiss": "Cerrar",
+        "noWorker": "sin colaborador",
+        "someone": "alguien del escritorio",
+        "call": "Llamar a {name}",
+        "openBooking": "Abrir reserva",
+        "elapsed": "{percent} % del plazo transcurrido",
+        "red": {
+          "declined": "{service} rechazado · {worker}",
+          "timedOut": "{service} sin respuesta · {worker}",
+          "since": "en rojo desde las {time}",
+          "audio": "sonido cada 60 s",
+          "acknowledged": "recibo acusado por {name} · {time}",
+          "acknowledging": "recibo acusado",
+          "offeredAt": "Ofrecido a las {time}",
+          "declinedAt": "rechazado a las {time}",
+          "deadline": "plazo a las {time}",
+          "redispatch": "Redespachar · elegir un sustituto",
+          "also": "También en rojo en esta reserva: {what} · {time}",
+          "redispatchService": "Redespachar {service}",
+          "acknowledge": "Acusar recibo · parar el sonido"
+        },
+        "amber": {
+          "title": "{service} al {percent} % del plazo · quedan {left}",
+          "redispatch": "Redespachar antes"
+        },
+        "approvals": {
+          "title": "Reembolso de {amount} · requiere aprobación",
+          "requestedBy": "pedido por {name}",
+          "approved": "Aprobado por {name} · {time}",
+          "rejected": "Rechazado por {name} · {time}"
+        },
+        "payments": {
+          "windowExpired": "Plazo de pago vencido",
+          "balanceOverdue": "Saldo vencido",
+          "body": "{code} · {traveler} · {amount} · vence {due}",
+          "extend": "Dar 24 h más",
+          "extending": "Ampliando…",
+          "extended": "Ampliado: ahora vence {when}.",
+          "failed": "{code}: no se pudo ampliar el pago. {message}",
+          "nothingDue": "Ya no queda nada por pagar en esta reserva."
+        },
+        "credentials": {
+          "title": "Credencial a punto de vencer · {name}",
+          "body": "Vence el {date} · para el escritorio, no es urgente"
+        },
+        "empty": "Todo en orden: no hay ofertas en rojo ni en ámbar, aprobaciones ni pagos atrasados.",
+        "note": "Ops Lite sirve para el triaje: llamar, redespachar, acusar recibo, aprobar. Precios, documentos y todo lo demás esperan al escritorio. Los redespachos, acuses de recibo y silencios hechos aquí se registran como Ops Lite."
+      },
+      "redispatch": {
+        "rule": "Verificados, libres todos los días del servicio, con licencia válida más allá de {days} días.",
+        "offer": "Ofrecer",
+        "offerTo": "Ofrecer a {name}",
+        "cancel": "Cancelar"
+      },
+      "pipeline": {
+        "title": "Ops Lite · Embudo",
+        "subtitle": "{total} reservas · {open} en curso · actualizado a las {time}",
+        "unavailable": "El embudo no está disponible",
+        "live": "En vivo",
+        "loadError": "No se pudo leer el embudo. Inténtalo de nuevo en un momento.",
+        "clock": {
+          "expired": "Vencido",
+          "today": "hoy",
+          "inDays": "en {days} d",
+          "day": "día {day}",
+          "minutes": "{count} min",
+          "hours": "{count} h",
+          "days": "{count} d"
+        },
+        "party": "{name} +{more}",
+        "accepted": "{accepted} de {total} aceptados",
+        "call": "Llamar a {name}",
+        "ground": {
+          "title": "Ahora en destino",
+          "travelers": "{count, plural, one {# viajero} other {# viajeros}}",
+          "none": "No hay ningún viaje en curso.",
+          "trips": "{count, plural, one {# viaje en curso} other {# viajes en curso}}",
+          "province": "{province} {count}",
+          "provinceCase": "{province} {count} · {scenario}",
+          "case": "Interrupción {reference} · {severity}"
+        },
+        "scenarios": {
+          "outage": "apagón",
+          "hurricane": "huracán",
+          "fuel": "combustible",
+          "casa": "casa",
+          "flight": "vuelo"
+        },
+        "severities": {
+          "MINOR": "leve",
+          "MAJOR": "grave",
+          "EMERGENCY": "emergencia"
+        },
+        "states": {
+          "title": "Máquina de estados · toca un estado",
+          "spec": "espec. §4.2",
+          "empty": "Ninguna reserva en este estado.",
+          "more": "+{count} más en el escritorio"
+        },
+        "who": {
+          "ITINERARY_SUBMITTED": "A la espera de que el escritorio inicie el despacho o envíe una propuesta",
+          "DISPATCH_IN_PROGRESS": "Los colaboradores responden en su app · plazos de oferta en marcha",
+          "ASSEMBLY_AND_ESCALATION": "Vigilancia ámbar · reasignar servicios rechazados · llamar a colaboradores",
+          "ACTION_REQUIRED": "Rojo · redespachar desde la pestaña Alertas",
+          "SECURED_AND_INVOICED": "Todos los servicios aceptados · falta el enlace de pago",
+          "PENDING_PAYMENT": "Plazo de pago en marcha · justificantes revisados en el escritorio",
+          "CONFIRMED": "Documentos emitidos · el viaje está por llegar",
+          "IN_PROGRESS": "De viaje · incidencias y casos de interrupción",
+          "COMPLETED": "Petición de opinión · pagos a colaboradores · plazo de conservación",
+          "CANCELLED": "Política aplicada · reembolsos en el escritorio"
+        },
+        "movements": {
+          "title": "Movimientos de hoy",
+          "none": "Hoy no hay llegadas, salidas ni vencimientos de pago.",
+          "allDay": "hoy",
+          "PAYMENT_DUE": "Pago que vence en {code} · {who}",
+          "ARRIVAL": "{who} empiezan su viaje · {code}",
+          "DEPARTURE": "{who} terminan su viaje · {code}",
+          "open": "Abrir reserva"
+        },
+        "note": "Vista de solo lectura del embudo. Las transiciones, facturas y documentos siguen en el escritorio; desde aquí se llama, y se redespacha desde Alertas."
+      },
+      "inbox": {
+        "title": "Ops Lite · Mensajes",
+        "subtitle": "Conversaciones con viajeros, las urgentes primero",
+        "loadError": "No se pudieron leer los mensajes. Inténtalo de nuevo en un momento.",
+        "filters": "Mostrar",
+        "filter": {
+          "all": "Todas",
+          "urgent": "Urgentes",
+          "unread": "Sin leer"
+        },
+        "empty": "Todavía no hay conversaciones.",
+        "noneHere": "Ninguna conversación coincide con este filtro.",
+        "threads": "Conversaciones",
+        "you": "Tú: {body}",
+        "kind": "Viajero · {code}",
+        "urgent": "Urgente",
+        "new": "{count, plural, one {Nuevo} other {# nuevos}}",
+        "partyOf": "grupo de {count}",
+        "call": "Llamar a {name}",
+        "callShort": "Llamar",
+        "messages": "Mensajes",
+        "fromDesk": "Escritorio · {time}",
+        "fromTraveler": "{name} · {time}",
+        "placeholder": "Responder a {name} · en la app + correo",
+        "reply": "Respuesta",
+        "send": "Enviar",
+        "urgentNote": "Urgente: el caso de interrupción {reference} está abierto en esta reserva. La app es el registro; el viajero también recibe una copia por correo.",
+        "note": "La app es el registro; el viajero también recibe una copia por correo."
+      }
     }
   },
   "conditions": {

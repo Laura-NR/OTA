@@ -1,20 +1,19 @@
 'use client';
 
 import { editedRatio } from '@ota/domain';
-import type { MessageDto } from '@ota/schemas';
 import { Alert, Button, Input } from '@ota/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
-import { useDeskLocked } from '@/components/desk-idle-lock';
 import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
-import { connectConversation, type MessageSocketEvent } from '@/lib/socket';
+import { useMessageThread } from '@/lib/use-message-thread';
 
 /**
  * Traveler↔operations thread (spec §3.5). Loads history over HTTP, follows the
- * `/conversations` socket for realtime, and posts through the same endpoint the
+ * `/conversations` socket for realtime (`useMessageThread`, which also marks
+ * the traveler's messages read), and posts through the same endpoint the
  * email fallback hangs off. "Draft with AI" shows only while the AI assistant
  * is in force (A4).
  */
@@ -27,11 +26,13 @@ export function MessageThread({
 }) {
   const t = useTranslations('backoffice.messageThread');
   const why = useTranslations('backoffice.unavailable');
-  const [messages, setMessages] = useState<MessageDto[]>([]);
+  const {
+    messages,
+    connected,
+    loadError,
+    send: post,
+  } = useMessageThread(reservationId, t('loadFailed'));
   const [body, setBody] = useState('');
-  const [connected, setConnected] = useState(false);
-  /** The idle lock: the feed closes until the desk is unlocked. */
-  const locked = useDeskLocked();
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,38 +41,7 @@ export function MessageThread({
   const draftBody = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  function upsert(message: MessageDto) {
-    setMessages((current) =>
-      current.some((existing) => existing.id === message.id)
-        ? current
-        : [...current, message].sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
-    );
-  }
-
-  useEffect(() => {
-    setMessages([]);
-    setError(null);
-    apiRequest<MessageDto[]>(`/reservations/${reservationId}/messages`)
-      .then(setMessages)
-      .catch((loadError: unknown) =>
-        setError(loadError instanceof Error ? loadError.message : t('loadFailed')),
-      );
-  }, [reservationId]);
-
-  useEffect(() => {
-    if (locked) return;
-    const socket = connectConversation(reservationId);
-    socket.on('connect', () => setConnected(true));
-    socket.on('disconnect', () => setConnected(false));
-    socket.on('message', (event: MessageSocketEvent) => {
-      if (event.reservationId === reservationId) {
-        upsert(event.message);
-      }
-    });
-    return () => {
-      socket.close();
-    };
-  }, [reservationId, locked]);
+  useEffect(() => setError(null), [reservationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -86,11 +56,7 @@ export function MessageThread({
     setBusy(true);
     setError(null);
     try {
-      const message = await apiRequest<MessageDto>(
-        `/reservations/${reservationId}/messages`,
-        { method: 'POST', body: JSON.stringify({ body: trimmed }) },
-      );
-      upsert(message);
+      await post(trimmed);
       if (draftBody.current !== null) {
         track('ai_draft_used', {
           context: 'reply',
@@ -135,7 +101,9 @@ export function MessageThread({
         {connected ? t('live') : t('offline')}
       </div>
 
-      {error ? <Alert variant="destructive">{error}</Alert> : null}
+      {(error ?? loadError) ? (
+        <Alert variant="destructive">{error ?? loadError}</Alert>
+      ) : null}
 
       <div className="max-h-96 space-y-3 overflow-y-auto rounded-md border p-4">
         {messages.length === 0 ? (

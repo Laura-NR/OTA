@@ -15,6 +15,7 @@ import {
 import type {
   AlertAcknowledgementDto,
   DeskAlertMuteDto,
+  DeskChannel,
   DeskAlertMuteStateDto,
   DispatchBoardItemDto,
   DispatchBoardRowDto,
@@ -129,6 +130,8 @@ export interface DeskAlertsProps {
   serverNow: number;
   amberThreshold: number;
   canManage: boolean;
+  /** Where the acknowledgements and mutes come from, for the audit and T-Events. */
+  channel?: DeskChannel;
   children: ReactNode;
 }
 
@@ -152,6 +155,7 @@ export function DeskAlerts({
   serverNow,
   amberThreshold,
   canManage,
+  channel = 'desk',
   children,
 }: DeskAlertsProps) {
   const t = useTranslations('backoffice.dashboard');
@@ -393,7 +397,7 @@ export function DeskAlerts({
       pending.items.map(async (item) => {
         try {
           await apiRequest<AlertAcknowledgementDto>(
-            `/service-items/${item.id}/acknowledge-alert`,
+            `/service-items/${item.id}/acknowledge-alert?channel=${channel}`,
             {
               method: 'POST',
               body: JSON.stringify({ offeredAt: item.offeredAt }),
@@ -405,7 +409,7 @@ export function DeskAlerts({
             seconds_to_ack: item.raisedAt
               ? Math.max(0, Math.round((Date.now() - item.raisedAt.getTime()) / 1000))
               : 0,
-            channel: 'desk',
+            channel,
           });
         } catch (error) {
           // 409: the alert changed meanwhile (offered again, or no longer red).
@@ -431,12 +435,13 @@ export function DeskAlerts({
     setMuteBusy(true);
     setAlertError(null);
     try {
-      const state = await apiRequest<DeskAlertMuteStateDto>('/dispatch/alert-mute', {
-        method: on ? 'POST' : 'DELETE',
-      });
+      const state = await apiRequest<DeskAlertMuteStateDto>(
+        `/dispatch/alert-mute?channel=${channel}`,
+        { method: on ? 'POST' : 'DELETE' },
+      );
       setMute(state.mute);
       if (on && state.mute) {
-        track('alert_muted', { muted_for_s: ALERT_MUTE_MS / 1000, channel: 'desk' });
+        track('alert_muted', { muted_for_s: ALERT_MUTE_MS / 1000, channel });
       }
     } catch (error) {
       setAlertError(

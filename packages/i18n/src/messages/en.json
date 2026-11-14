@@ -1051,7 +1051,11 @@
         "traveler": "Traveler"
       },
       "passkeys": "Passkeys",
-      "skip": "Skip to content"
+      "skip": "Skip to content",
+      "opsLite": {
+        "pointer": "On a phone? Ops Lite is the desk's triage, made for it.",
+        "open": "Open Ops Lite"
+      }
     },
     "paymentsLedger": {
       "title": "Payments",
@@ -3205,6 +3209,197 @@
       "ended": "Your last override for this has ended.",
       "lapsed": "Your last request lapsed: no Super Admin answered within 24 hours.",
       "failed": "That did not go through."
+    },
+    "opsLite": {
+      "skip": "Skip to the screen",
+      "nav": {
+        "label": "Ops Lite",
+        "alerts": "Alerts",
+        "pipeline": "Pipeline",
+        "inbox": "Inbox",
+        "desk": "Desk",
+        "withCount": "{tab} ({count})"
+      },
+      "push": {
+        "title": "Ops Lite · red alert"
+      },
+      "sound": {
+        "on": "Sound on",
+        "onLabel": "Sound on, tap to mute 15 minutes",
+        "muted": "Muted · {time}",
+        "mutedLabel": "Muted until {time} by {name} (logged).",
+        "tapToUnmute": "Tap to unmute.",
+        "turnOn": "Turn on sound",
+        "someone": "someone on the desk"
+      },
+      "alerts": {
+        "title": "Ops Lite · Alerts",
+        "summary": "Alerts by kind",
+        "pills": {
+          "red": "Red {count}",
+          "amber": "Amber {count}",
+          "approvals": "Approvals {count}",
+          "payments": "Payments {count}"
+        },
+        "push": {
+          "enable": "Notify me on this phone",
+          "blocked": "Notifications are blocked for this site in the browser's settings."
+        },
+        "sound": {
+          "locked": "The browser holds the sound back until you tap the screen once."
+        },
+        "offered": "<strong>Offered to {name} · {time}</strong> · {service} on {code}, with a new timer · logged as {you} (Ops Lite).",
+        "dismiss": "Dismiss",
+        "noWorker": "no worker",
+        "someone": "someone on the desk",
+        "call": "Call {name}",
+        "openBooking": "Open booking",
+        "elapsed": "{percent} % of the timer elapsed",
+        "red": {
+          "declined": "{service} declined · {worker}",
+          "timedOut": "{service} timed out · {worker}",
+          "since": "red since {time}",
+          "audio": "audio every 60 s",
+          "acknowledged": "acknowledged by {name} · {time}",
+          "acknowledging": "acknowledged",
+          "offeredAt": "Offered {time}",
+          "declinedAt": "declined {time}",
+          "deadline": "deadline {time}",
+          "redispatch": "Re-dispatch · pick a fallback",
+          "also": "Also red on this booking: {what} · {time}",
+          "redispatchService": "Re-dispatch {service}",
+          "acknowledge": "Acknowledge · stop the audio"
+        },
+        "amber": {
+          "title": "{service} at {percent} % of timer · {left} left",
+          "redispatch": "Re-dispatch early"
+        },
+        "approvals": {
+          "title": "Refund {amount} · needs approval",
+          "requestedBy": "requested by {name}",
+          "approved": "Approved by {name} · {time}",
+          "rejected": "Rejected by {name} · {time}"
+        },
+        "payments": {
+          "windowExpired": "Payment window expired",
+          "balanceOverdue": "Balance overdue",
+          "body": "{code} · {traveler} · {amount} · due {due}",
+          "extend": "Extend 24 h",
+          "extending": "Extending…",
+          "extended": "Extended: now due {when}.",
+          "failed": "{code}: the payment could not be extended. {message}",
+          "nothingDue": "Nothing is due on this booking any more."
+        },
+        "credentials": {
+          "title": "Credential expiring · {name}",
+          "body": "Expires {date} · for the desk, not urgent"
+        },
+        "empty": "All clear: no red or amber offers, approvals or late payments.",
+        "note": "Ops Lite is for triage: call, re-dispatch, acknowledge, approve. Prices, documents and everything else wait for the desk. Re-dispatches, acknowledgements and mutes made here are logged as Ops Lite."
+      },
+      "redispatch": {
+        "rule": "Verified, free on every day of the service, licence valid beyond {days} days.",
+        "offer": "Offer",
+        "offerTo": "Offer to {name}",
+        "cancel": "Cancel"
+      },
+      "pipeline": {
+        "title": "Ops Lite · Pipeline",
+        "subtitle": "{total} bookings · {open} in pipeline · refreshed {time}",
+        "unavailable": "The pipeline is unavailable",
+        "live": "Live",
+        "loadError": "The pipeline could not be read. Try again in a moment.",
+        "clock": {
+          "expired": "Expired",
+          "today": "today",
+          "inDays": "in {days} d",
+          "day": "day {day}",
+          "minutes": "{count} min",
+          "hours": "{count} h",
+          "days": "{count} d"
+        },
+        "party": "{name} +{more}",
+        "accepted": "{accepted} of {total} accepted",
+        "call": "Call {name}",
+        "ground": {
+          "title": "On the ground now",
+          "travelers": "{count, plural, one {# traveler} other {# travelers}}",
+          "none": "No trip is under way.",
+          "trips": "{count, plural, one {# trip under way} other {# trips under way}}",
+          "province": "{province} {count}",
+          "provinceCase": "{province} {count} · {scenario}",
+          "case": "Disruption {reference} · {severity}"
+        },
+        "scenarios": {
+          "outage": "outage",
+          "hurricane": "hurricane",
+          "fuel": "fuel",
+          "casa": "casa",
+          "flight": "flight"
+        },
+        "severities": {
+          "MINOR": "minor",
+          "MAJOR": "major",
+          "EMERGENCY": "emergency"
+        },
+        "states": {
+          "title": "State machine · tap a state",
+          "spec": "spec §4.2",
+          "empty": "No booking in this state.",
+          "more": "+{count} more on the desk"
+        },
+        "who": {
+          "ITINERARY_SUBMITTED": "Waiting for the desk to start dispatch or send a proposal",
+          "DISPATCH_IN_PROGRESS": "Workers answering in their app · offer timers running",
+          "ASSEMBLY_AND_ESCALATION": "Amber watch · re-route declined items · call workers",
+          "ACTION_REQUIRED": "Red · re-dispatch from the Alerts tab",
+          "SECURED_AND_INVOICED": "Every service accepted · payment link next",
+          "PENDING_PAYMENT": "Payment window running · proofs matched on the desk",
+          "CONFIRMED": "Documents issued · the trip is ahead",
+          "IN_PROGRESS": "On the trip · incidents and disruption cases",
+          "COMPLETED": "Review prompt · payouts · retention clock",
+          "CANCELLED": "Policy applied · refunds on the desk"
+        },
+        "movements": {
+          "title": "Today's movements",
+          "none": "No arrival, departure or payment deadline today.",
+          "allDay": "today",
+          "PAYMENT_DUE": "Payment due on {code} · {who}",
+          "ARRIVAL": "{who} start their trip · {code}",
+          "DEPARTURE": "{who} end their trip · {code}",
+          "open": "Open booking"
+        },
+        "note": "A read-only view of the pipeline. Transitions, invoices and documents stay on the desk; from here you call, and re-dispatch from Alerts."
+      },
+      "inbox": {
+        "title": "Ops Lite · Inbox",
+        "subtitle": "Travelers' threads, urgent first",
+        "loadError": "The inbox could not be read. Try again in a moment.",
+        "filters": "Show",
+        "filter": {
+          "all": "All",
+          "urgent": "Urgent",
+          "unread": "Unread"
+        },
+        "empty": "No conversation yet.",
+        "noneHere": "No thread matches this filter.",
+        "threads": "Threads",
+        "you": "You: {body}",
+        "kind": "Traveler · {code}",
+        "urgent": "Urgent",
+        "new": "{count, plural, one {New} other {# new}}",
+        "partyOf": "party of {count}",
+        "call": "Call {name}",
+        "callShort": "Call",
+        "messages": "Messages",
+        "fromDesk": "Desk · {time}",
+        "fromTraveler": "{name} · {time}",
+        "placeholder": "Reply to {name} · in-app + email",
+        "reply": "Reply",
+        "send": "Send",
+        "urgentNote": "Urgent: disruption case {reference} is open on this booking. In-app is the record; the traveler also gets an email copy.",
+        "note": "In-app is the record; the traveler also gets an email copy."
+      }
     }
   },
   "conditions": {
