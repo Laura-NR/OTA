@@ -13,6 +13,10 @@ const prisma = new PrismaClient();
 const WORKER_APP_URL = process.env.E2E_WORKER_APP_URL ?? 'http://localhost:3003';
 const BOOKING_CODE = 'E2EWRK01';
 
+// A valid 1x1 PNG, as a phone's gallery would hand it to the web preview.
+const PNG_1X1 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
 /** A worker of the spec's own, so no other spec's offer shows on their home. */
 const WORKER = {
   email: 'e2e-worker@example.test',
@@ -149,9 +153,25 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     await prisma.auditLog.deleteMany({
       where: { entityId: supplierId, action: { startsWith: 'supplier.payout_' } },
     });
+    // W-Credentials: the documents, the expiry an approval rewrote, the status.
+    await prisma.supplierCredential.deleteMany({ where: { supplierId } });
+    await prisma.auditLog.deleteMany({
+      where: {
+        entityId: supplierId,
+        OR: [
+          { action: { startsWith: 'supplier.credential_' } },
+          { action: { in: ['supplier.identity_checked', 'supplier.verification'] } },
+        ],
+      },
+    });
     await prisma.supplierProfile.update({
       where: { id: supplierId },
-      data: { category: 'TOUR_GUIDE', payoutMethod: null },
+      data: {
+        category: 'TOUR_GUIDE',
+        payoutMethod: null,
+        verificationStatus: 'VERIFIED',
+        credentialExpiresAt: new Date('2027-12-31T00:00:00Z'),
+      },
     });
     const user = await prisma.user.findUniqueOrThrow({ where: { email: WORKER.email } });
     await prisma.session.deleteMany({ where: { userId: user.id } });
@@ -550,6 +570,94 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     expect(download.suggestedFilename()).toMatch(/^recibo-PG-[0-9A-F]{8}\.pdf$/);
     const copy = await readFile((await download.path())!);
     expect(copy.subarray(0, 5).toString()).toBe('%PDF-');
+    await app.context().close();
+  });
+
+  test('sends a photo of a document from the app, the desk approves it, and approval needs every document', async ({
+    page,
+    browser,
+  }) => {
+    const code = await codeFromDesk(page);
+    const app = await signInOnApp(browser, code);
+
+    await app.getByRole('button', { name: 'Mis credenciales' }).click();
+    await expect(app.getByRole('heading', { name: 'Mis credenciales' })).toBeVisible();
+    await expect(app.getByRole('heading', { name: 'Licencia de guía' })).toBeVisible();
+    await expect(
+      app.getByText('Comprobado por la central', { exact: false }),
+    ).toHaveCount(0);
+    await app.getByRole('button', { name: 'Subir la foto: Licencia de guía' }).click();
+    const chooser = app.waitForEvent('filechooser');
+    await app.getByRole('button', { name: 'Elegir de la galería' }).click();
+    await (
+      await chooser
+    ).setFiles({
+      name: 'licencia.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(PNG_1X1, 'base64'),
+    });
+    await expect(app.getByLabel('Foto de Licencia de guía')).toBeVisible();
+    await expect(
+      app.getByText('Sin reflejos sobre el número', { exact: false }),
+    ).toBeVisible();
+    await app.getByRole('button', { name: 'Enviar a revisión' }).click();
+    await expect(app.getByText('Enviada · en revisión')).toBeVisible();
+    const pending = await prisma.supplierCredential.findFirstOrThrow({
+      where: { supplierId, kind: 'GUIDE_LICENCE', status: 'PENDING_AUDIT' },
+    });
+    expect(pending.uploadedVia).toBe('WORKER_APP');
+
+    // The desk reviews it: the file only on request, then approve with the expiry.
+    await page.reload();
+    const approve = page.getByRole('form', { name: 'Approve Guide licence' });
+    await expect(page.getByText('Pending audit', { exact: true })).toBeVisible();
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Show document (logged)' }).click();
+      await expect(page.getByAltText('Guide licence, uploaded document')).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass();
+    await approve.getByLabel('Number').fill('GUIA-HAB-2026-0042');
+    await approve.getByLabel(/^Expires/).fill('2028-06-12');
+    await approve.getByRole('button', { name: 'Approve · VERIFIED' }).click();
+    await expect(page.getByText('Pending audit', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('GUIA-HAB-2026-0042')).toBeVisible();
+    const profile = await prisma.supplierProfile.findUniqueOrThrow({
+      where: { id: supplierId },
+    });
+    expect(profile.credentialExpiresAt).toEqual(new Date('2028-06-12T00:00:00Z'));
+    expect(
+      await prisma.auditLog.count({
+        where: { entityId: supplierId, action: 'supplier.credential_viewed' },
+      }),
+    ).toBeGreaterThan(0);
+
+    // The app shows the verified licence once reopened.
+    await app.getByRole('button', { name: 'Volver al inicio' }).click();
+    await app.getByRole('button', { name: 'Mis credenciales' }).click();
+    await expect(app.getByText('Número GUIA-HAB-2026-0042')).toBeVisible();
+    await expect(app.getByText(/^Vence 12 jun 2028 · \d+ días$/)).toBeVisible();
+    await expect(app.getByText('Verificada', { exact: true })).toBeVisible();
+
+    // Approval needs every document: the identity card is still unchecked.
+    await page.getByRole('button', { name: 'Suspend' }).click();
+    await expect(
+      page.getByText('Verify these documents before approving: Identity card.'),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Reinstate' }).click();
+    await expect(
+      page.getByText(/Verify these documents before approving the supplier/),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Record checked in person' }).click();
+    await expect(
+      page.getByText(/Checked in person on .+\. No photo is kept\./),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Reinstate' }).click();
+    await expect(page.getByRole('button', { name: 'Suspend' })).toBeVisible();
+    expect(
+      (await prisma.supplierProfile.findUniqueOrThrow({ where: { id: supplierId } }))
+        .verificationStatus,
+    ).toBe('VERIFIED');
     await app.context().close();
   });
 });

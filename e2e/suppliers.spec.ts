@@ -35,18 +35,28 @@ test.describe('supplier compliance', () => {
     ).toBeVisible();
   });
 
-  test('uploads a credential and shows it in the inspector', async ({ page }) => {
+  test('uploads a credential for review and shows it in the inspector', async ({
+    page,
+  }) => {
     await page.getByRole('link', { name: 'Example Guide' }).click();
     await expect(page.getByRole('heading', { name: 'Example Guide' })).toBeVisible();
 
-    await page.getByLabel(/Upload credential/).setInputFiles({
+    await page.getByLabel('Upload Guide licence').setInputFiles({
       name: 'formatur.png',
       mimeType: 'image/png',
       buffer: Buffer.from(PNG_1X1, 'base64'),
     });
+    await page.getByLabel('Received by').first().selectOption('VISIT');
     await page.getByRole('button', { name: 'Upload', exact: true }).click();
 
-    await expect(page.getByAltText('Supplier credential')).toBeVisible();
+    await expect(page.getByText('Pending audit', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(/New upload waiting for review · .+ · Visit/),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Show document (logged)' }).last().click();
+    await expect(
+      page.getByAltText('Guide licence, uploaded document').last(),
+    ).toBeVisible();
   });
 
   test('blocks and reopens a worker availability day', async ({ page }) => {

@@ -65,6 +65,10 @@ export default async function globalSetup(): Promise<void> {
       where: { id: guide.supplierProfile.id },
       data: { verificationStatus: 'VERIFIED', isAvailable: true },
     });
+    // W-Credentials: drop the guide's unreviewed uploads (suppliers.spec.ts adds one).
+    await prisma.supplierCredential.deleteMany({
+      where: { supplierId: guide.supplierProfile.id, status: { not: 'VERIFIED' } },
+    });
 
     // Inventory CMS fixtures: drop items the e2e run created (media rows
     // cascade) and any availability override it left on the seeded guide.
