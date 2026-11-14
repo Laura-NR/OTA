@@ -1,4 +1,6 @@
 import {
+  CredentialKind,
+  CredentialStatus,
   GeneratorAccess,
   InventoryType,
   PrismaClient,
@@ -147,6 +149,54 @@ async function main(): Promise<void> {
           confirmedAt: new Date(),
           confirmedById: superAdmin.id,
           confirmedVia: ResourceChannel.PHONE,
+        },
+      });
+    }
+  }
+
+  // W-Credentials: every required document of the seeded suppliers, verified
+  // with placeholder numbers (dev data only; the sets mirror the domain's
+  // REQUIRED_CREDENTIALS). The identity card is checked in person, so it has no
+  // file or number. A re-seed keeps whatever the desk reviewed since.
+  const seededDocuments: Record<SupplierCategory, CredentialKind[]> = {
+    [SupplierCategory.TOUR_GUIDE]: [
+      CredentialKind.GUIDE_LICENCE,
+      CredentialKind.IDENTITY_CARD,
+    ],
+    [SupplierCategory.HOMESTAY_HOST]: [
+      CredentialKind.HOST_LICENCE,
+      CredentialKind.IDENTITY_CARD,
+    ],
+    [SupplierCategory.PRIVATE_DRIVER]: [
+      CredentialKind.TRANSPORT_LICENCE,
+      CredentialKind.TECHNICAL_INSPECTION,
+      CredentialKind.LIABILITY_INSURANCE,
+      CredentialKind.IDENTITY_CARD,
+    ],
+    [SupplierCategory.TRANSLATOR]: [CredentialKind.IDENTITY_CARD],
+  };
+  const seededSuppliers = await prisma.supplierProfile.findMany({
+    where: {
+      rtnLicenseNumber: { in: ['RTN-DEMO-0001', 'RTN-DEMO-0002', 'RTN-DEMO-0003'] },
+    },
+  });
+  for (const supplier of seededSuppliers) {
+    for (const kind of seededDocuments[supplier.category]) {
+      const current = await prisma.supplierCredential.findFirst({
+        where: { supplierId: supplier.id, kind, status: CredentialStatus.VERIFIED },
+      });
+      if (current) continue;
+      const identity = kind === CredentialKind.IDENTITY_CARD;
+      await prisma.supplierCredential.create({
+        data: {
+          supplierId: supplier.id,
+          kind,
+          status: CredentialStatus.VERIFIED,
+          number: identity ? null : `${supplier.rtnLicenseNumber}-${kind.slice(0, 3)}`,
+          expiresOn: identity ? null : new Date('2027-12-31T00:00:00Z'),
+          uploadedVia: ResourceChannel.VISIT,
+          reviewedAt: new Date(),
+          reviewedById: superAdmin.id,
         },
       });
     }
