@@ -119,6 +119,24 @@ enum PayoutMethod {
   BANK_TRANSFER
 }
 
+/// W-Credentials: a supplier's document kinds (docs/schema-w-credentials.md V2).
+enum CredentialKind {
+  TRANSPORT_LICENCE
+  TECHNICAL_INSPECTION
+  LIABILITY_INSURANCE
+  GUIDE_LICENCE
+  HOST_LICENCE
+  IDENTITY_CARD
+}
+
+/// W-Credentials: one uploaded version's review state (V1).
+enum CredentialStatus {
+  PENDING_AUDIT
+  VERIFIED
+  REJECTED
+  SUPERSEDED
+}
+
 // M4 payment schedule (docs/schema-m4-payment-schedule.md)
 enum InstalmentKind {
   DEPOSIT
@@ -481,6 +499,9 @@ model User {
   overridesEnded      PermissionOverride[] @relation("PermissionOverrideEndedBy")
   // W-Earnings
   payoutsRecorded     SupplierPayout[]     @relation("SupplierPayoutRecordedBy")
+  // W-Credentials
+  credentialsUploaded SupplierCredential[] @relation("SupplierCredentialUploadedBy")
+  credentialsReviewed SupplierCredential[] @relation("SupplierCredentialReviewedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -574,7 +595,9 @@ model SupplierProfile {
   provincesActive       String[]           @map("provinces_active")
   vehicleDetails        Json?              @map("vehicle_details")
   rtnLicenseNumber      String             @unique @map("rtn_license_number")
+  /// Superseded by `supplier_credentials` (W-Credentials V8); no longer written or read.
   credentialDocumentUrl String?            @map("credential_document_url")
+  /// The earliest expiry of the current documents, rewritten on every review (W-Credentials V3).
   credentialExpiresAt   DateTime?          @map("credential_expires_at")
   verificationStatus    VerificationStatus @default(PENDING_AUDIT) @map("verification_status")
   isAvailable           Boolean            @default(true) @map("is_available")
@@ -586,6 +609,7 @@ model SupplierProfile {
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceItems ServiceItem[]
   payouts      SupplierPayout[]
+  credentials  SupplierCredential[]
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
   inventoryItems InventoryItem[]
@@ -1248,6 +1272,39 @@ model SupplierPayout {
 
   @@index([supplierId, paidAt])
   @@map("supplier_payouts")
+}
+
+/// W-Credentials: one uploaded version of a supplier's document
+/// (docs/schema-w-credentials.md V1). A kind's current document is its one
+/// VERIFIED row; a renewal is a PENDING_AUDIT row beside it. The service keeps
+/// at most one of each per kind (no partial unique index: Prisma 6 cannot declare one).
+model SupplierCredential {
+  id           String           @id @default(uuid()) @db.Uuid
+  supplierId   String           @map("supplier_id") @db.Uuid
+  kind         CredentialKind
+  status       CredentialStatus @default(PENDING_AUDIT)
+  /// Null for an identity card checked in person (V5), and once a file is removed (V7).
+  storageKey   String?          @map("storage_key")
+  number       String?          @db.VarChar(60)
+  issuer       String?          @db.VarChar(120)
+  issuedOn     DateTime?        @map("issued_on") @db.Date
+  expiresOn    DateTime?        @map("expires_on") @db.Date
+  uploadedAt   DateTime         @default(now()) @map("uploaded_at")
+  uploadedById String?          @map("uploaded_by_id") @db.Uuid
+  uploadedVia  ResourceChannel  @map("uploaded_via")
+  reviewedAt   DateTime?        @map("reviewed_at")
+  reviewedById String?          @map("reviewed_by_id") @db.Uuid
+  rejectReason String?          @map("reject_reason") @db.VarChar(500)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  supplier   SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  uploadedBy User?           @relation("SupplierCredentialUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  reviewedBy User?           @relation("SupplierCredentialReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([supplierId, kind, status])
+  @@index([status])
+  @@map("supplier_credentials")
 }
 
 // Ledger of every dispatch offer, including superseded and re-routed ones.

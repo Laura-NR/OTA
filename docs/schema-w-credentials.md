@@ -1,6 +1,7 @@
 # W-Credentials: schema diff for review
 
-**Status:** proposed 2026-11-14, awaiting the owner's approval (V1–V8).
+**Status:** proposed 2026-11-14; **approved 2026-11-14, V1–V8 as recommended** (V1a, V2a, V3a,
+V4a, V5a, V6a, V7a, V8a).
 **Date:** 2026-11-14
 **Scope:** the W-Credentials board (`design/vereda-v1.2/project/W-Credentials.dc.html`), its
 edge state in `A-States` ("Credencial suspendida"), W-Home's credential line, and the
