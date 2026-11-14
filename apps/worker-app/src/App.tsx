@@ -11,6 +11,7 @@ import { settings } from './lib/config';
 import { copy } from './lib/copy';
 import { kv, tokenStore } from './lib/storage';
 import { CalendarScreen } from './screens/CalendarScreen';
+import { CredentialsScreen } from './screens/CredentialsScreen';
 import { EarningsScreen } from './screens/EarningsScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -31,6 +32,7 @@ type Screen =
   | { name: 'home' }
   | { name: 'calendar' }
   | { name: 'earnings' }
+  | { name: 'credentials' }
   | {
       name: 'offer';
       offer: WorkerOfferDto;
@@ -39,7 +41,7 @@ type Screen =
 /**
  * The worker app (ADR 0007, Phase 7): sign in with a code, see offers and
  * jobs, answer an offer, block days in the calendar, read their reliability
- * and payouts. Answers are saved on the phone first and resent
+ * and payouts, keep their documents up to date. Answers are saved on the phone first and resent
  * until the API answers (`docs/worker-app-plan.md` W6); the last home is kept
  * for when there is no signal.
  */
@@ -235,6 +237,15 @@ export function App() {
           <EarningsScreen
             api={api}
             token={token}
+            onOpenCredentials={() => setScreen({ name: 'credentials' })}
+            onBack={() => setScreen({ name: 'home' })}
+            onSignedOut={() => void signedOut(copy.home.signedOut)}
+          />
+        ) : screen.name === 'credentials' && token ? (
+          <CredentialsScreen
+            api={api}
+            token={token}
+            now={serverNow}
             onBack={() => setScreen({ name: 'home' })}
             onSignedOut={() => void signedOut(copy.home.signedOut)}
           />
@@ -259,6 +270,7 @@ export function App() {
             onOpenOffer={(offer) => setScreen({ name: 'offer', offer })}
             onOpenCalendar={() => setScreen({ name: 'calendar' })}
             onOpenEarnings={() => setScreen({ name: 'earnings' })}
+            onOpenCredentials={() => setScreen({ name: 'credentials' })}
             onSignOut={() => void signOut()}
           />
         )}

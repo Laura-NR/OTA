@@ -27,7 +27,19 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'light',
   platforms: ['android', 'web'],
   android: { package: androidPackage },
-  plugins: ['expo-secure-store', 'expo-sqlite'],
+  plugins: [
+    'expo-secure-store',
+    'expo-sqlite',
+    // W-Credentials: the camera for a document's photo (Android asks once).
+    [
+      'expo-image-picker',
+      {
+        cameraPermission: 'La app usa la cámara para fotografiar tus documentos.',
+        photosPermission: false,
+        microphonePermission: false,
+      },
+    ],
+  ],
   extra: {
     apiUrl: process.env.WORKER_API_URL ?? 'http://localhost:3001',
     agencyName: tenant.branding.agencyName,

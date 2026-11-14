@@ -103,6 +103,29 @@ describe('the worker app API client (W1, W3, W5)', () => {
     );
   });
 
+  it('reads the worker’s documents and posts a photo as the signed-in worker (W-Credentials)', async () => {
+    const { calls, fetcher } = recorder(200, { slots: [] });
+    const api = createWorkerApi('http://api.test', fetcher);
+    await api.credentials('t');
+    await api.uploadCredential('t', {
+      kind: 'TECHNICAL_INSPECTION',
+      filename: 'documento.jpg',
+      contentType: 'image/jpeg',
+      contentBase64: 'AAAA',
+    });
+    expect(calls.map((call) => [call.init.method, call.url])).toEqual([
+      ['GET', 'http://api.test/worker/credentials'],
+      ['POST', 'http://api.test/worker/credentials'],
+    ]);
+    expect(JSON.parse(String(calls[1]!.init.body))).toMatchObject({
+      kind: 'TECHNICAL_INSPECTION',
+      contentBase64: 'AAAA',
+    });
+    expect((calls[1]!.init.headers as Record<string, string>).authorization).toBe(
+      'Bearer t',
+    );
+  });
+
   it('reports no connection as a null status', async () => {
     const api = createWorkerApi('', (async () => {
       throw new TypeError('Network request failed');

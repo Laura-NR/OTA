@@ -48,11 +48,14 @@ const STATE_STYLE: Record<WorkerPayoutState, { color: string; backgroundColor: s
 export function EarningsScreen({
   api,
   token,
+  onOpenCredentials,
   onBack,
   onSignedOut,
 }: {
   api: WorkerApi;
   token: string;
+  /** The profile's settings row "Mis credenciales" (W-Earnings board). */
+  onOpenCredentials: () => void;
   onBack: () => void;
   onSignedOut: () => void;
 }) {
@@ -279,6 +282,11 @@ export function EarningsScreen({
       )}
 
       <View style={styles.footer}>
+        <Button
+          label={copy.credentials.open}
+          variant="secondary"
+          onPress={onOpenCredentials}
+        />
         <Button label={copy.earnings.back} variant="secondary" onPress={onBack} />
       </View>
     </ScrollView>

@@ -244,6 +244,83 @@ export const copy = {
     refused: 'No se pudo cargar. Inténtalo de nuevo o llama a la central.',
     back: 'Volver al inicio',
   },
+  credentials: {
+    open: 'Mis credenciales',
+    title: 'Mis credenciales',
+    state: {
+      ACTIVE: 'Estado: activa',
+      IN_REVIEW: 'Estado: en revisión',
+      EXPIRING: 'Estado: vence pronto',
+      SUSPENDED: 'Estado: suspendida',
+    },
+    offers: (auto: boolean) =>
+      auto ? 'recibes ofertas automáticas' : 'sin ofertas automáticas',
+    allVerified: 'Todo verificado por la central.',
+    next: (kind: string, day: string) => `Siguiente vencimiento: ${kind}, ${day}.`,
+    number: (number: string) => `Número ${number}`,
+    expires: (day: string, days: number) =>
+      days < 0
+        ? `Venció ${day}`
+        : `Vence ${day} · ${days === 1 ? '1 día' : `${days} días`}`,
+    reviewed: (day: string, name: string | null) =>
+      name ? `Revisada ${day} · ${name} (central)` : `Revisada ${day}`,
+    rule: (day: string, window: number) =>
+      `Desde el ${day} (${window} días antes) dejas de recibir ofertas automáticas hasta subir la nueva.`,
+    ruleLabel: 'Regla',
+    missing: 'Aún no la tenemos. Súbela para que la central la revise.',
+    vehicle: (model: string, plate: string, seats: number, airConditioning: boolean) =>
+      `Vehículo ${model} · ${plate} · ${seats} plazas${airConditioning ? ' · aire acondicionado' : ''}`,
+    identityChecked:
+      'Comprobado por la central. No guardamos la foto. Solo se usa para comprobar que los documentos son tuyos; nunca se muestra a los viajeros.',
+    identityMissing:
+      'Enséñalo en la central o por videollamada. No se sube por la app: no guardamos la foto.',
+    uploadRenewal: 'Subir renovación o nueva foto',
+    uploadFirst: 'Subir la foto',
+    takePhoto: 'Hacer foto',
+    fromGallery: 'Elegir de la galería',
+    preview: (size: string) => `vista previa · ${size}`,
+    checks: [
+      'Las cuatro esquinas se ven',
+      'Sin reflejos sobre el número',
+      'Fecha de vencimiento legible: compruébala tú también',
+    ],
+    send: 'Enviar a revisión',
+    retake: 'Repetir',
+    cancel: 'Cancelar',
+    pending: 'Enviada · en revisión',
+    pendingExplain: (stillValid: boolean) =>
+      stillValid
+        ? 'La central la revisa en 1–2 días laborables. Sigues activo porque la actual no ha vencido. Te avisamos por SMS.'
+        : 'La central la revisa en 1–2 días laborables. Te avisamos por SMS.',
+    rejected: (reason: string) => `La central no la aceptó: ${reason}`,
+    tooBig: 'La foto pesa más de 5 MB. Repítela o elige otra.',
+    noImage: 'No se pudo leer la foto. Repítela o elige otra.',
+    cameraDenied:
+      'Sin permiso para la cámara. Elige la foto de la galería o da el permiso en los ajustes del teléfono.',
+    offline: 'Sin conexión. La foto sigue aquí: envíala cuando vuelva la señal.',
+    refusedUpload: 'La central no aceptó el envío. Repite la foto o llama a la central.',
+    how: 'Cómo funciona',
+    legend: (window: number) => [
+      {
+        state: 'Activa',
+        text: 'Documentos verificados y vigentes. Ofertas automáticas.',
+      },
+      {
+        state: 'En revisión',
+        text: 'Subiste algo nuevo; la central lo comprueba en 1–2 días.',
+      },
+      {
+        state: 'Vence pronto',
+        text: `Menos de ${window} días: sin ofertas automáticas, la central puede asignarte a mano.`,
+      },
+      {
+        state: 'Suspendida',
+        text: 'Documento vencido o rechazado. Nunca se emite un bono con un colaborador sin licencia.',
+      },
+    ],
+    refused: 'No se pudo cargar. Inténtalo de nuevo o llama a la central.',
+    back: 'Volver al inicio',
+  },
 } as const;
 
 /** W-Offer's decline reasons, in the board's order. */

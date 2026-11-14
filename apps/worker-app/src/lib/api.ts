@@ -2,10 +2,12 @@ import type { WorkerAnswer } from '@ota/domain';
 import type {
   SetWorkerDaysRequest,
   WorkerCalendarDto,
+  WorkerCredentialsDto,
   WorkerDaysResultDto,
   WorkerEarningsDto,
   WorkerFuelDto,
   WorkerHomeDto,
+  WorkerUploadCredentialRequest,
 } from '@ota/schemas';
 
 /** A refused request; `status` is null when no response came back at all. */
@@ -34,6 +36,12 @@ export interface WorkerApi {
   earnings(token: string): Promise<WorkerEarningsDto>;
   /** E5: where one of the worker's own receipts is served, behind their bearer. */
   receiptUrl(paymentId: string): string;
+  /** W-Credentials: the worker's documents and what they mean for offers. */
+  credentials(token: string): Promise<WorkerCredentialsDto>;
+  uploadCredential(
+    token: string,
+    upload: WorkerUploadCredentialRequest,
+  ): Promise<WorkerCredentialsDto>;
 }
 
 export function createWorkerApi(
@@ -128,6 +136,16 @@ export function createWorkerApi(
     },
     receiptUrl(paymentId) {
       return `${baseUrl}/worker/payouts/${encodeURIComponent(paymentId)}/receipt`;
+    },
+    async credentials(token) {
+      return (await (
+        await request('/worker/credentials', { token })
+      ).json()) as WorkerCredentialsDto;
+    },
+    async uploadCredential(token, upload) {
+      return (await (
+        await request('/worker/credentials', { method: 'POST', token, body: upload })
+      ).json()) as WorkerCredentialsDto;
     },
   };
 }
