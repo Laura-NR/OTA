@@ -207,3 +207,32 @@ SELECT gen_random_uuid(), sp.id,
 FROM supplier_profiles sp
 WHERE sp.credential_document_url IS NOT NULL;
 ```
+
+## 7. As built (2026-11-14)
+
+- Migration `20261114143342_w_credentials` (§6 plus the backfill), applied to the dev DB: one
+  backfilled row (the seeded guide's licence, `VERIFIED`, file kept). The seed adds the rest of
+  each demo supplier's required documents.
+- Domain `packages/domain/src/supplier/credentials.ts`: `REQUIRED_CREDENTIALS`,
+  `credentialUploadRefusal`, `credentialSlots` (current, pending, and the latest rejection
+  until something newer is uploaded), `currentCredentialExpiry`, `missingCredentials`,
+  `credentialState` (a document is valid through its expiry day), `credentialPauseFrom`,
+  `credentialSummary`, `credentialApprovalRefusal` and the review SMS.
+- API `SupplierCredentialsService` (`apps/api/src/suppliers/`): `GET|POST /worker/credentials`
+  (service worker); `GET /suppliers/:id/credentials`, `GET
+  /suppliers/:id/credentials/:credentialId/file` (audited as `supplier.credential_viewed`) and
+  `POST /suppliers/:id/credential` with `kind` and `via` (operations roles and support); `POST
+  /suppliers/:id/credentials/:credentialId/approve|reject` and `POST
+  /suppliers/:id/credentials/identity-card` (Operations Admin, Super Admin). `GET
+  /suppliers/:id/credential` and `SupplierDto.hasCredential`/`credentialContentType` are gone.
+  `POST /suppliers/:id/verification` answers 409 with the missing kinds before approving.
+  RBAC matrix +7 (the old download removed); live
+  `supplier-credentials.integration.test.ts` (the backfill SQL in a rolled-back transaction,
+  upload → approve → supersede → expiry).
+- Worker app: "Mis credenciales" (`CredentialsScreen.tsx`) from W-Home and from "Fiabilidad y
+  pagos"; `src/lib/credentials.ts` (pure, tested) and `src/lib/pick-photo.ts`
+  (`expo-image-picker` 58.0.10, which brings `expo-image-loader` 58.0.3).
+- Desk: the supplier page's "Credentials" panel (`supplier-credentials.tsx`, en/es/fr) and a
+  line under the verification actions naming what blocks approval.
+- e2e: `worker-app.spec.ts`'s seventh test (photo from the app, the desk's review, the gate and
+  the identity check); `suppliers.spec.ts`' desk upload.

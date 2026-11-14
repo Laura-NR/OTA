@@ -104,7 +104,11 @@
 - the M10 supplementary-invoice question;
 - the legal basis for desk and server telemetry;
 - Plausible data retention;
-- fiscal retention of PDFs.
+- fiscal retention of PDFs;
+- the documents each supplier category must hold before approval (`REQUIRED_CREDENTIALS`,
+  W-Credentials 2026-11-14: a driver's transport licence, technical inspection, liability
+  insurance and identity card; a guide's or host's licence and identity card; a translator's
+  identity card), and whether a photo of the identity card may be kept (today: none is).
 
 **Business and finance values (all placeholders today):**
 - child bands, the €25 tourist card and the €100 service fee;

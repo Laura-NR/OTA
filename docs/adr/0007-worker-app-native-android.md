@@ -248,6 +248,23 @@ into their audit rows, and the analytics channel says `ops_lite`. Two read route
 /reservations/:id/messages/read` marks a traveler's messages read when the desk opens the
 thread, on the desk too. No migration, no new dependency.
 
+
+## Amendment, 2026-11-14 (later): W-Credentials
+
+The owner approved `docs/schema-w-credentials.md` V1–V8 as recommended. A supplier's documents
+are uploaded versions in `supplier_credentials` (migration `20261114143342_w_credentials`):
+each upload, the worker's from the app or the desk's from a visit, call or WhatsApp, waits for
+an Operations or Super Admin. Approving supersedes the old version, removes its file and
+rewrites `credential_expires_at` as the earliest expiry of the current documents, so dispatch
+is unchanged. The desk cannot approve a supplier while a required document is missing. No
+photo of the identity card is kept: the desk records it as checked in person. The app adds "Mis
+credenciales" with the camera or the gallery through `expo-image-picker` 58.0.10 (Expo's SDK
+58 pin, approved; it brings `expo-image-loader` 58.0.3). Its config plugin asks for the camera
+only (no photo-library or microphone permission). A photo that could not be sent stays on
+screen to send again; it is not queued like an answer. The review's outcome goes to the worker
+by the SMS channel, which logs in development and sends nothing until a provider exists. Seven
+routes (`GET|POST /worker/credentials` and five on `/suppliers/:id/credentials…`); the old
+single-file download is gone.
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

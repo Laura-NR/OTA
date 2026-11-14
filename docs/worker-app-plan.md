@@ -71,8 +71,9 @@ Android JavaScript (Hermes bytecode); no APK is built here.
 - W-Offer's "Queda menos de un cuarto del tiempo" becomes "Queda poco tiempo …", shown from
   the desk's amber threshold (`hurryFrom`), which is a runtime setting rather than a fixed
   quarter.
-- W-Home's credential line names the credential generically ("Credencial vigente · vence …"),
-  since a profile holds one credential date, not a licence and an insurance.
+- W-Home's credential line names the credential generically ("Credencial vigente · vence …"):
+  it reads the profile's one date, which since W-Credentials (2026-11-14) is the earliest
+  expiry of the current documents; "Mis credenciales" lists each one.
 - W-Offer's route ("Aeropuerto → Viñales"), flight and pickup notes are not in the data yet;
   the offer shows the service, province, start and end, travelers, payout and booking code.
 - Offer cards, the reasons list and the outcome states use the DS radii (4/10/20), the 48 dp
@@ -185,11 +186,17 @@ worker's own receipt with the bearer into the cache and opens the share sheet,
 `open-receipt.web.ts` saves it in the preview; "Abrir recibo" on each payment; the spec's sixth
 test downloads it.
 
+W-Credentials (2026-11-14, approved V1–V8, migration `20261114143342_w_credentials`):
+`expo-image-picker` 58.0.10; `CredentialsScreen.tsx` from W-Home and "Fiabilidad y pagos";
+`src/lib/credentials.ts`, `src/lib/pick-photo.ts`; `GET|POST /worker/credentials`; the desk's
+document list on the supplier page; the spec's seventh test. `docs/schema-w-credentials.md` §7.
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
-2. Background resend (`expo-background-task`, a new dependency), W-Credentials.
+2. Background resend (`expo-background-task`, a new dependency). W-Credentials landed
+   2026-11-14.
 3. W-Job with the offline job screen and the SMS SOS (a custom Android module).
 4. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
 5. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).

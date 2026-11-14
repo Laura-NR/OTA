@@ -1861,3 +1861,42 @@ build decided:
   read; a tapped thread opens under the list with "Call", the bubbles (`neutral-100` in,
   `primary-100` out) and a 48 px reply field with an `arrow-right` send button (the sprite has
   no send icon). Replies go in-app with the email copy; there is no SMS.
+
+## Amendment, 2026-11-14 (later): W-Credentials
+
+The owner chose W-Credentials (Phase 7) and approved `docs/schema-w-credentials.md` V1–V8 as
+recommended. Built from W-Credentials, A-States' "Credencial suspendida" and A-Suppliers'
+credential inspector without asking the design team, on the existing tokens and components.
+Where the boards were silent or ask for what does not exist, the build decided:
+
+- **Chips.** A document's chip says "Verificada" or "Verificado" after the document's gender,
+  "Vence en N días" (warning pair) from twice the expiry window, which is the board's "Vence en
+  55 días" at a 30-day window, "Vencida"/"Vencido" and "Falta" (danger pair), and "En revisión"
+  for a first upload under review (info pair).
+- **Summary.** "Estado: activa · recibes ofertas automáticas" is a notice in the state's tone
+  (active success, in review info, expiring soon warning, suspended danger). "Todo verificado
+  por la central." shows only when every document is current and none waits for review;
+  "Siguiente vencimiento: …" names the document that expires first.
+- **The rule.** The board's "Regla" line sits on the document that expires first only, as the
+  board shows it on the inspection.
+- **Upload.** "Subir renovación o nueva foto" (or "Subir la foto" when none is verified) opens
+  "Hacer foto" and "Elegir de la galería". The preview shows the photo's real size: the
+  board's "se comprime a 300 KB" would need a second dependency (V6a). The three checks are
+  reminders with a ✓, not boxes to tick. "Enviar a revisión" and "Repetir" (the camera again)
+  are the board's; "Cancelar" is added. A photo that could not be sent stays on screen with
+  "Sin conexión. La foto sigue aquí: envíala cuando vuelva la señal."
+- **Identity card.** No upload. The board's "Guardado cifrado en la central" becomes
+  "Comprobado por la central. No guardamos la foto. …" (V5a).
+- **Insurance.** The vehicle line comes from the desk's vehicle form. "Subir nuevo seguro" is
+  the same upload button as the other documents, and "Cambiar de vehículo" is not built (the
+  vehicle stays the desk's form).
+- **Desk.** The credential inspector becomes one list of the category's documents. Each shows
+  the board's facts (Number, Issued by, Issued, Expires, Uploaded, Checked) plus "Auto-dispatch
+  pauses from", and its state as a badge (Valid, Auto-dispatch paused, Expired, Missing), with
+  "Pending audit" in the attention variant. The upload under review sits in the amber pair Ops
+  Lite uses (`warning-500` border on `accent-50`). "Approve · VERIFIED" takes the number,
+  issuer and dates read off the file. "Reject with reason" and "Request new upload" are one
+  action, "Reject · request new upload", whose reason the worker reads. The file stays hidden
+  until "Show document (logged)", and "Open full size (logged)" opens it in a tab: each read
+  is audited. Missing documents are a warning alert in the panel and a line under the
+  verification actions. The identity card has "Record checked in person" with the channel.

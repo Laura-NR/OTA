@@ -105,6 +105,18 @@ Object storage is behind `packages/storage`: MinIO/S3 when `S3_ENDPOINT` +
 credentials are set, otherwise an in-memory fallback (dev only, lost on
 restart). For a persistent environment, verify the S3 endpoint and bucket.
 
+### Supplier documents (W-Credentials)
+
+- The worker uploads a photo in the app; the desk uploads on the supplier page ("Credentials").
+  Both wait for review there: an Operations or Super Admin approves with the number and expiry
+  read off the file, or rejects with a reason the worker sees in the app.
+- Approving rewrites the supplier's expiry (the earliest of the current documents), which the
+  expiry scan and auto-dispatch read. "Verify" or "Reinstate" answers 409 while a required
+  document is missing; the panel names it.
+- The identity card is never uploaded: record it as checked in person.
+- Every file view is in the audit log as `supplier.credential_viewed`. The review SMS is
+  logged in development and not sent until an SMS provider exists.
+
 ### GDPR retention actions
 
 - Ops view: back-office `/retention`, or `GET /retention/pending` (ops role).

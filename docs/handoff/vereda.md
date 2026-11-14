@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-14 14:20
+# Handoff — vereda — updated 2026-11-14 19:40
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -14,12 +14,14 @@ display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 th
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
-2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite) and
+2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
+W-Credentials) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite).
+for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite and W-Credentials).
 The worker app:
-`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Earnings' payouts:
+`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Credentials:
+`docs/schema-w-credentials.md` (approved V1–V8 2026-11-14, §7 as built, a migration). W-Earnings' payouts:
 `docs/schema-w-earnings.md` (approved E1–E8 2026-11-13, §7 the read-only slice, §8 the payouts
 as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
 (approved K1a–K6a 2026-11-11, §7 as built, a migration). Staff passkeys:
@@ -34,6 +36,34 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-14 (later): W-Credentials**, the owner's pick, approved V1–V8 as recommended
+  (`dac0b4c`…`5886391` and the identity-line fix). One migration,
+  `20261114143342_w_credentials` (table `supplier_credentials`, enums `CredentialKind`,
+  `CredentialStatus`, a backfill of each old credential file; applied to the dev DB, one row).
+  One new dependency, `expo-image-picker` 58.0.10 (brings `expo-image-loader` 58.0.3).
+  - Domain `packages/domain/src/supplier/credentials.ts`: the six kinds, `REQUIRED_CREDENTIALS`
+    per category (placeholders for counsel), current/pending/rejected per kind, the earliest
+    current expiry, missing kinds, document state (valid through its day), the pause day, the
+    worker's summary, the approval refusals, the review SMS.
+  - API `SupplierCredentialsService`: `GET|POST /worker/credentials`; `GET
+    /suppliers/:id/credentials`, `GET …/credentials/:credentialId/file` (audited), `POST
+    /suppliers/:id/credential` (now with `kind`, `via`; lands `PENDING_AUDIT`), `POST
+    …/:credentialId/approve|reject`, `POST …/credentials/identity-card`. Approval supersedes
+    the old version, deletes its file, rewrites `supplier_profiles.credential_expires_at`
+    (dispatch, the expiry scan, Ops Lite and W-Home read it unchanged). `POST
+    /suppliers/:id/verification` to `VERIFIED` is 409 while a required kind has no verified
+    version. `GET /suppliers/:id/credential` and `SupplierDto.hasCredential` /
+    `credentialContentType` are removed; `credential_document_url` is no longer written or read
+    (a later migration drops it). RBAC matrix +7.
+  - App: "Mis credenciales" from W-Home and "Fiabilidad y pagos": summary, one card per
+    document with the rule on the first to expire, camera or gallery, preview, send; an unsent
+    photo stays on screen (not queued). Desk: the supplier page's "Credentials" panel replaces
+    the single-file inspector (en/es/fr). Seed: every demo supplier's documents.
+  - e2e: `worker-app.spec.ts` seventh test; `suppliers.spec.ts`' desk upload rewritten;
+    `global-setup.ts` drops the seeded guide's unreviewed uploads.
+  - Not built: the worker changing vehicle, aligning the vehicle form's insurance date with the
+    insurance document, a retention path for supplier documents (PII G5), W-Login's banner
+    before sign-in, push.
 - **2026-11-14: Ops Lite** (Phase 7 item 2), the owner's pick over background resend, W-Job
   and a W-Credentials doc (`688ac84`…`c832167`). No migration, no new dependency, three routes.
   - Domain `packages/domain/src/ops-lite/`: `OPS_LITE_STATES` (§4.2 without DRAFT,
@@ -715,34 +745,43 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-14, Ops Lite; dev stack stopped for the build, restarted after)
-- CI: PR #1 merged into `main` (merge `d2657e4`); CI on the merge (run 43500560560) green,
-  nothing to fix. No `v*` tag, so no Release run. `pnpm audit --prod`: the same 4 settled
-  advisories (deepmerge-ts, uuid, glob, minimatch); nothing new.
+## Verified (2026-11-14, W-Credentials; dev stack stopped for the build, restarted after)
+- CI: nothing to fix. `vereda` was pushed at `815ebdb`; PR #1 is merged and no new PR is open,
+  so no CI has run on this session's commits. No `v*` tag, so no Release run. `pnpm audit
+  --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob, minimatch); nothing new.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1446 passed / 57 skipped** (was 1424/55);
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1491 passed / 59 skipped** (was 1446/57);
   `TURBO_FORCE=true pnpm build` **19/19**.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 15
-  `apps/api/test/*.integration.test.ts` files, now with `ops-lite`) **56/56**.
-- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **182
-  passed, 2 failed, 3 skipped**, including `ops-lite.spec.ts` (3), the axe audit of the three
-  `/lite` pages and "Ops Lite never scrolls sideways" at all six DS 07 widths. Both failures
-  are storefront dev-compile stalls, not Ops Lite: `[ds07-414]` "customer pages never scroll
-  sideways" (`goto` timeout, now on `/en/blog/power-outages-in-cuba`; known) and `[default]`
-  `storefront-content.spec.ts` "links the content pages…" (stayed on `/en/packages` 15 s after
-  the Travel info click). Re-run alone on a clean stack: **8 passed, 1 skipped** (the content
-  test took 36.8 s).
+- Migration `20261114143342_w_credentials` applied to the dev DB; the backfill made 1 row (the
+  guide's `GUIDE_LICENCE`), and the seed then added the demo suppliers' required documents.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 16
+  `apps/api/test/*.integration.test.ts` files, now with `supplier-credentials`) **58/58**.
+- Full `pnpm e2e` (seven projects, 1.3 h, ports clear and `.next` deleted first): **179
+  passed, 5 failed, 3 skipped, 1 did not run**. Every failure was a late-run stall (see Traps,
+  "late-run flakes"): `display-currencies.spec.ts` GBP deposit (`displayCurrency` null; its
+  serial describe then left `:229` unrun), `storefront-keyboard.spec.ts:89` (trip heading never
+  rendered), `storefront-packages.spec.ts:75` (URL stayed after the click), `[ds07-414]`
+  responsive (`ERR_CONNECTION_RESET`), and the new `worker-app.spec.ts:576` (desk still showed
+  "Pending audit" 15 s after Approve; the failure screenshot shows the approval landed).
+  Re-run alone on fresh stacks: the four `default` tests **4/4**, `[ds07-414]` **1/1**, and
+  the whole `display-currencies.spec.ts` **3/3**. Targeted earlier: `suppliers.spec.ts` +
+  `worker-app.spec.ts` **10/10**.
 - Browser (a temporary spec against fresh dev servers, deleted after; 0 fixture rows left), at
-  390/1024/1280: header `primary-700`, title Inter 16 px 700 white, nav 64 px; red card border
-  `error-600` on `error-100`, amber border `warning-500` on `accent-50`; primary actions 48 px
-  full width, `md` buttons 40 px (44 on touch); no sideways scroll; axe 0 violations on Alerts
-  and on an open thread.
-- Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
-  desk `/login` 200 (:3002), storefront 200 (:3000). Nothing left on :3003.
-- Not run: a real phone browser (the notification while the page is hidden, the cue after a
-  first tap).
+  390/1024/1280: no sideways scroll; desk pending box border `warning-500` on `accent-50`,
+  "Valid" badge on the success pair, buttons 40 px; app chip "Vence en 55 días" rgb(146,64,14)
+  on rgb(254,243,199) radius 4 px, buttons 48 px; axe 0 violations on both.
+- Owner's dev stack restarted with Task 0's settings and left running (see the closing report).
+- Not run: a real phone camera (the e2e picks from the library through the web file input);
+  native Android build with the expo-image-picker plugin.
 
 ## Assumptions & unknowns
+- **W-Credentials (2026-11-14):** the required documents per category are placeholders
+  (`docs/production-readiness.md` §4, for counsel). A supplier verified before the change
+  stays verified with documents missing; only a new approval or a reinstatement is gated. The
+  camera, the permission prompt and the JPEG size (quality 0.6, assumed near 1 MB) are not run
+  on a device; the web preview's file input stands in for both buttons. The review SMS is
+  logged in development and not sent in production (no provider). Approving does not change the
+  vehicle form's own `insuranceUntil`.
 - **Ops Lite (2026-11-14):** urgent means a traveler waiting for a reply on a booking with an
   open case (the board's note); nothing else (an OFAC hold, an arrival today) raises a thread.
   A trip's province today is where the party sleeps (the stay covering tonight), else any
@@ -996,6 +1035,18 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **The API's typecheck skips the tests (2026-11-14):** `apps/api/tsconfig.json` includes
+  `src` only, and Vitest strips types, so a fake Prisma whose shape drifts from the code still
+  passes `pnpm typecheck`; it fails only when a test reaches it.
+- **`credential_expires_at` is derived now (2026-11-14):** the seed and e2e fixtures still
+  write it directly, which works until the next credential approval rewrites it from
+  `supplier_credentials`. `worker-app.spec.ts`' `afterEach` resets it to 2027-12-31.
+- **`expo-image-picker` on the web (2026-11-14):** both `launchCameraAsync` and
+  `launchImageLibraryAsync` open a file input, and the permission calls answer granted. The
+  e2e clicks "Elegir de la galería" inside `app.waitForEvent('filechooser')`. The web asset's
+  `base64` has no data-URL prefix and keeps the file's type; native returns JPEG.
+- **Border tokens (2026-11-14):** the preset's `borderColor` has only `DEFAULT` and `input`;
+  `divide-subtle` builds to nothing. Use `divide-y` (the default border) or a palette step.
 - **`hidden` loses to a display utility (2026-11-14):** `<div hidden className="flex …">`
   stays visible: Tailwind's `.flex` beats the browser's `[hidden] { display: none }`. Every
   Ops Lite state panel showed at once until the panels switched to `cn(open ? 'flex' :
@@ -1098,6 +1149,11 @@ events (T-Events)".
   "CONFIRMED" text can show before the rate-locking write is visible to the spec's Prisma read.
   2026-11-14: a third late-run storefront stall, `storefront-content.spec.ts`'s Travel info
   click (the URL stayed on `/en/packages` for 15 s); it passed alone in 36.8 s.
+  2026-11-14 (W-Credentials run): five late-run stalls, all passing alone — `display-currencies`
+  GBP deposit again, `storefront-keyboard.spec.ts:89`, `storefront-packages.spec.ts:75`,
+  `[ds07-414]` responsive (`ERR_CONNECTION_RESET`) and `worker-app.spec.ts:576` (the desk's
+  refresh after Approve took over 15 s). A serial describe (`display-currencies`) leaves its
+  later tests unrun after a failure: rerun the whole file, not just the failed line.
 - **Better Auth bearer (2026-11-09):** the stock `bearer()` plugin's after-hook puts every new
   session's token in a readable `set-auth-token` header (staff ones too), so only its
   before-hook is used. User hooks run before plugin hooks, so the session gate never sees a
@@ -1577,6 +1633,13 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-14: supplier documents live in `supplier_credentials` (migration
+    `20261114143342_w_credentials`), one row per uploaded version; only
+    `SupplierCredentialsService` writes them. `supplier_profiles.credential_expires_at` is the
+    earliest expiry of the VERIFIED versions, rewritten on each approval; dispatch keeps reading
+    it. Approving a supplier needs a verified version of each `REQUIRED_CREDENTIALS` kind (409).
+    No identity-card photo is kept. Each desk file read is audited
+    (`supplier.credential_viewed`)."
   - "2026-11-14: Ops Lite is the back-office's `/lite` (AL-Alerts, AL-Pipeline, AL-Inbox),
     behind `deskGate()` (`apps/backoffice/src/lib/desk-gate.ts`, shared with the dashboard
     layout) and `DeskAlerts` with `channel="ops_lite"`. Its reads are `GET /ops-lite/pipeline`
@@ -1804,9 +1867,10 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (Ops Lite and its docs are local; W-Earnings' payouts and the receipt
-   are pushed but unchecked) and open a new pull request from `vereda` into `main`, so CI runs
-   on them: PR #1 is merged, and a push to `vereda` alone runs no workflow.
+1. Owner: push `vereda` (W-Credentials and its docs are local) and open a new pull request
+   from `vereda` into `main`, so CI runs on W-Earnings' payouts, the receipt, Ops Lite and
+   W-Credentials: PR #1 is merged, and a push to `vereda` alone runs no workflow (none has run
+   since `94c0910`).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -1814,12 +1878,13 @@ events (T-Events)".
    documents) stays optional.
 3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own signing
    key, backed up twice), the Android id, and two or three suppliers for the field test (also
-   the first real run of "Abrir recibo"'s share sheet). Agent, in order (the receipt in the app
-   landed 2026-11-13): background resend (needs the owner's yes to `expo-background-task`
+   the first real run of "Abrir recibo"'s share sheet). Agent, in order (W-Credentials
+   landed 2026-11-14): background resend (needs the owner's yes to `expo-background-task`
    58.0.11, `expo-task-manager` 58.0.12 and `unimodules-app-loader` 58.0.2, Expo's own SDK 58
-   pins; no web support, so only unit tests until an APK); W-Credentials (needs a migration doc
-   first: four documents per worker, a renewal under review beside the current one); W-Job and
-   its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`). Ops
+   pins; no web support, so only unit tests until an APK); W-Job and its SMS SOS (a migration
+   doc first); distribution (download page, update prompt, self-hosted `expo-updates`).
+   W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
+   form's insurance date, a migration dropping `credential_document_url`. Ops
    Lite (Phase 7 item 2) landed 2026-11-14; its follow-ups are the owner's call: worker
    threads in AL-Inbox (with W-Job, a migration), push to a closed page (a service worker and
    a push service), the board's refund nudge and withdraw, quick replies.
@@ -2488,3 +2553,15 @@ events (T-Events)".
   polling (30 s screens, 60 s unread count) rather than a new all-bookings socket room, which
   would change who may join `/conversations`; browser notifications only while the page is
   open (A5). The rest of the design resolutions are ADR 0006's amendment of the day.
+- 2026-11-14 — the owner chose W-Credentials (a migration doc first) over background resend,
+  W-Job and Ops Lite's follow-ups, then approved `docs/schema-w-credentials.md` V1–V8 as
+  recommended: one row per uploaded version, six kinds with per-category required sets as a
+  domain rule, the derived earliest expiry plus an approval gate (not a dispatch pause), every
+  upload reviewed by Operations/Super Admin who types the number and dates, no identity-card
+  photo, `expo-image-picker` 58.0.10, old files deleted and reads audited, the backfill. The
+  build chose: one-pending-per-kind enforced in the service (Prisma 6 cannot declare a partial
+  unique index); the desk's upload keeps `POST /suppliers/:id/credential` and adds `via`; the
+  file hidden until "Show document (logged)"; "Reject" and "Request new upload" as one action;
+  the identity card's own route; the review SMS without the desk's reason; an unsent photo not
+  queued; `SuppliersService` no longer injects storage. Design resolutions are ADR 0006's
+  amendment of the day.
