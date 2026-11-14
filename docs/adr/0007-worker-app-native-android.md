@@ -235,6 +235,19 @@ non-exported FileProvider; the bearer stays the only key and no route changed.
 `expo-sharing`'s incoming-share config plugin is not enabled, so the app gains no intent
 filters. Not run on a device: the share sheet itself is only exercised once an APK exists.
 
+## Amendment, 2026-11-14: Ops Lite
+
+Ops Lite is built as the Consequences say: phone-sized screens in the back-office at `/lite`
+(alerts, pipeline, inbox), behind the desk's own checks (session age, IP allowlist, idle lock,
+passkey rule) and for staff only. It carries the desk's live alerts, cue and mute, so a mute
+or an acknowledgement on the phone holds for the desk. Its alerts are browser notifications
+while the page is open, as A5 settles; there is no service worker and no push to a closed
+page. Re-dispatches, acknowledgements, mutes and unmutes made there carry `?channel=ops_lite`
+into their audit rows, and the analytics channel says `ops_lite`. Two read routes serve it
+(`GET /ops-lite/pipeline`, `GET /ops-lite/inbox`, operations roles) and `POST
+/reservations/:id/messages/read` marks a traveler's messages read when the desk opens the
+thread, on the desk too. No migration, no new dependency.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

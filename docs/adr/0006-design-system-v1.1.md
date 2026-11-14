@@ -1806,3 +1806,58 @@ design team, with existing tokens and components:
 - **Android.** The PDF opens through the system share sheet (`expo-sharing`), where a PDF
   viewer, Drive or a messaging app takes it; there is no in-app viewer. The web preview saves
   the file instead.
+
+
+## Amendment, 2026-11-14: Ops Lite
+
+The owner chose Ops Lite (Phase 7 item 2) over background resend, W-Job and a W-Credentials doc.
+Built from AL-Alerts, AL-Pipeline and AL-Inbox without asking the design team, on the existing
+tokens and components; every board colour is a token (`#C98A00`, the PENDING_PAYMENT dot, has
+none and takes `accent-600`). Where the boards were silent or ask for what does not exist, the
+build decided:
+
+- **Frame.** Phone screens in the back-office at `/lite` (ADR 0007): one column, at most 30 rem
+  wide and centred on a larger screen, on the warm page. Each screen's header is the board's
+  primary 700 band with a 16 px Inter bold title (the global `h1` display face is overridden,
+  as the board's `strong`) and a primary 200 caption; the board's brand mark is left out. The
+  bottom bar is 64 px with sprite icons: `alert-triangle`, `columns` (the board's lines icon
+  is not in the sprite), `message-circle`, `layout-dashboard` (no `monitor`). Its 11 px labels
+  and 10 px count dots take the 12 px caption, as A3 leaves those sizes uncovered.
+- **The desk under 560.** Staff now see a pointer at the top of every desk page below 560 px,
+  "On a phone? Ops Lite is the desk's triage, made for it. Open Ops Lite" (DS 07).
+- **Push.** The board's lock-screen push is a browser notification for each red crossing
+  while an Ops Lite page is open but out of sight, after "Notify me on this phone" (ADR 0007
+  A5). In view, the cue, the live region and the cards say it already.
+- **Alerts.** The pills are the desk's `Badge` variants (timeout, attention, accent,
+  secondary), counting items as the desk's strip does. A red card is one booking, led by its
+  oldest red item and titled "Guide timed out · Osvaldo Ruiz" or "… declined …"; it is
+  `error-100` until acknowledged, then white, and only the first card starts open. The
+  board's "Message" (to the worker) becomes "Open booking", since no worker thread exists.
+  Re-dispatch lists the desk's candidates inside the card, each with a 44 px call icon and
+  "Offer"; once offered, the card leaves the red list, so "Offered to … · logged as … (Ops
+  Lite)" is an info notice above the cards until dismissed. "Also red on this booking" keeps
+  its `error-100` box with a secondary "Re-dispatch <service>". Acknowledge is the desk's,
+  with its 6 s undo toast. Amber drops "Watch" (nothing to stop, as on 2026-10-29) for a
+  secondary "Re-dispatch early". The refund card reuses the desk's approve and reject, at
+  `md`; "Nudge Dayana" (push and SMS) and "Withdraw" are not built, as neither channel nor a
+  withdraw route exists. "Extend 24 h + new link (reason)" is the desk's "Extend 24 h" (the
+  link is unchanged, there is no reason field), and "Let it cancel" is dropped: nothing
+  cancels a booking automatically. The low card lists credentials expiring within the
+  threshold and opens the supplier page. The footer says which actions are logged as Ops
+  Lite.
+- **Pipeline.** "On the ground now" counts the trips under way and their party sizes, placed
+  in the province where they sleep tonight; a province with an open case wears the
+  `warning-100` pair and the scenario, and the link opens the most severe open case. The board's
+  check-in bar is left out: no check-in is recorded. The state list shows the stored status
+  keys in mono (the board's `&` is the enum's `AND`), each with its pressing bookings (up to
+  three) and a "+N more on the desk" link. Clocks read "3 min", "22 h", "48 d" for a wait,
+  "1:38" for time left, "Expired" in red, "today" in green, "day 3" in info. Today's
+  movements are payment deadlines (by time), then trips starting and ending today (by date:
+  no flight data exists). "Live" re-reads the screen every 30 s.
+- **Inbox.** The filters are All, Urgent and Unread: no worker thread exists, so the Workers
+  filter and the translation chip are left out, and so is the board's amber worker avatar.
+  Urgent is a traveler awaiting a reply on a booking with an open case. Quick-reply chips are
+  not built (canned replies need content). No thread opens by itself, since opening marks it
+  read; a tapped thread opens under the list with "Call", the bubbles (`neutral-100` in,
+  `primary-100` out) and a 48 px reply field with an `arrow-right` send button (the sprite has
+  no send icon). Replies go in-app with the email copy; there is no SMS.

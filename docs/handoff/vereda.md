@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-13 22:30
+# Handoff — vereda — updated 2026-11-14 14:20
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -14,10 +14,10 @@ display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 th
 "about" lines, on 2026-11-06 the package editor's refusals, on 2026-11-07 "Keep building the
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
-2026-11-13 W-Earnings' payouts and the receipt in the app) and
+2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app).
+for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite).
 The worker app:
 `docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Earnings' payouts:
 `docs/schema-w-earnings.md` (approved E1–E8 2026-11-13, §7 the read-only slice, §8 the payouts
@@ -34,6 +34,34 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-14: Ops Lite** (Phase 7 item 2), the owner's pick over background resend, W-Job
+  and a W-Credentials doc (`688ac84`…`c832167`). No migration, no new dependency, three routes.
+  - Domain `packages/domain/src/ops-lite/`: `OPS_LITE_STATES` (§4.2 without DRAFT,
+    ACTION_REQUIRED after the dispatch steps), `pipelineClock`, `provinceToday` (where the
+    party sleeps tonight), `onTheGround`, `todaysMovements` (payments due today by time, then
+    trips starting and ending today by date: no flight data), the inbox's `isUrgentThread`
+    (awaiting a reply on a booking with an open case), order and filters, and `redAlertCards`
+    (one card a booking, its oldest red item first). Telemetry admits `ops_lite` as
+    `redispatch_triggered.from` and as the acknowledge/mute `channel`, and the screens
+    `AL-Alerts`/`AL-Pipeline`/`AL-Inbox`.
+  - API `apps/api/src/ops-lite/`: `GET /ops-lite/pipeline` (counts, each state's three most
+    pressing rows, ground, cases, movements) and `GET /ops-lite/inbox` (the 100 latest threads
+    plus every unread or open-case one), operations roles; `POST
+    /reservations/:id/messages/read` (operations roles) sets `readAt` on the traveler's
+    messages. Re-dispatch, acknowledge, mute and unmute take `?channel=ops_lite` (default
+    `desk`) into their audit metadata. RBAC matrix +3; live `ops-lite.integration.test.ts`.
+  - Back-office `/lite` (`app/(lite)/lite`, `components/ops-lite/`): the layout runs the desk's
+    checks through the new `lib/desk-gate.ts` (the dashboard layout uses it too) and mounts
+    `DeskAlerts` with `channel="ops_lite"`. Alerts (red cards with call, inline re-dispatch,
+    acknowledge; amber; refunds to vote; late payments with Extend 24 h; expiring credentials;
+    sound pill; browser notifications while the page is hidden), Pipeline (re-read every
+    30 s) and Inbox (filters, a tapped thread with call and reply). `lib/use-message-thread.ts`
+    is the thread logic for the desk and Ops Lite, and opening a thread marks it read on both.
+    Below 560 px every desk page points staff to Ops Lite. en/es/fr.
+  - e2e: `ops-lite.spec.ts` (3 tests at 390 px), Ops Lite added to the axe desk audit and a new
+    DS 07 test at every width.
+  - Not built: worker threads (no model), push to a closed page, the board's nudge and
+    withdraw, quick replies, check-ins, flight times; see ADR 0006's amendment.
 - **2026-11-13 (evening): the receipt in the app**, the owner's pick of Next 3's option (a)
   (`e07aefe`, `2f3ce80`). Two new dependencies, Expo's SDK 58 pins: `expo-file-system`
   58.0.11 and `expo-sharing` 58.0.20. No migration, no route change, no desk change.
@@ -69,8 +97,11 @@ events (T-Events)".
   - App: method, "Llamar a la central para cambiarla", "Próximo pago … · trae tu carnet", the
     rule, "Pagado 28 sep" chips, a "Recibos" list. **No PDF in the app** (Next 3).
   - e2e: `worker-app.spec.ts`'s sixth test; live `supplier-payouts.integration.test.ts`.
-- **2026-11-13: the pull request's CI is green** on `94c0910` (run 43444026337). No `v*` tag
-  yet, so the Release workflow has not run.
+- **2026-11-14: pull request #1 is merged into `main`** (merge commit `d2657e4`, head
+  `94c0910`; CI on the merge, run 43500560560, green). The handoff was not graduated in that
+  merge. `vereda` is pushed through `acea71e`; W-Earnings' payouts, the receipt in the app and
+  Ops Lite are not in `main`, and CI runs only on a pull request and on pushes to `main`, so
+  nothing has checked them on GitHub yet (Next 1). No `v*` tag, so no Release run.
 - **2026-11-11 (evening): W-Earnings, read-only**, the owner's pick over W-Credentials,
   background resend and W-Job (`93b7ccb`…`a5e9c39`). No migration, no new dependency, one
   route.
@@ -684,31 +715,44 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-13 evening, the receipt in the app; dev stack stopped for the build, restarted after)
-- CI: the pull request's last run (43444026337 on `94c0910`, the last pushed head) is green;
+## Verified (2026-11-14, Ops Lite; dev stack stopped for the build, restarted after)
+- CI: PR #1 merged into `main` (merge `d2657e4`); CI on the merge (run 43500560560) green,
   nothing to fix. No `v*` tag, so no Release run. `pnpm audit --prod`: the same 4 settled
   advisories (deepmerge-ts, uuid, glob, minimatch); nothing new.
-- `pnpm lint`, `pnpm format:check` green (re-run on the final tree). `TURBO_FORCE=true pnpm
-  typecheck` **34/34**; `TURBO_FORCE=true pnpm test` **31/31 tasks, 1424 passed / 55 skipped**
-  (was 1420/55; worker app 25); `TURBO_FORCE=true pnpm build` **19/19**. The worker app's
-  Android export carries `downloadFileAsync`/`ExpoSharing`; its web export carries neither.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 14
-  `apps/api/test/*.integration.test.ts` files) **54/54**.
-- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **174
-  passed, 1 failed, 3 skipped**, including `worker-app.spec.ts`'s sixth test with the receipt
-  download. The failure: `[ds07-414]` "customer pages never scroll sideways", a first-compile
-  `goto` timeout on `/en/events` (known); alone on a clean stack **3 passed, 1 skipped**.
-- Browser (a temporary spec against fresh dev servers and the preview on :3003, deleted after
-  with its fixture worker; 0 fixture rows left): at 390/1024/1280 "Abrir recibo" is 48 px high,
-  full width (324/958/1214 px), transparent, label 16 px 600 `rgb(11, 79, 108)`, aria-label
-  "Abrir el recibo del 10 nov"; a 500 shows the warning notice under that row only (14 px
-  `rgb(146, 64, 14)` on `rgb(254, 243, 199)`), and a retry downloads `recibo-PG-….pdf` and
-  clears it. No sideways scroll.
+- `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1446 passed / 57 skipped** (was 1424/55);
+  `TURBO_FORCE=true pnpm build` **19/19**.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 15
+  `apps/api/test/*.integration.test.ts` files, now with `ops-lite`) **56/56**.
+- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **182
+  passed, 2 failed, 3 skipped**, including `ops-lite.spec.ts` (3), the axe audit of the three
+  `/lite` pages and "Ops Lite never scrolls sideways" at all six DS 07 widths. Both failures
+  are storefront dev-compile stalls, not Ops Lite: `[ds07-414]` "customer pages never scroll
+  sideways" (`goto` timeout, now on `/en/blog/power-outages-in-cuba`; known) and `[default]`
+  `storefront-content.spec.ts` "links the content pages…" (stayed on `/en/packages` 15 s after
+  the Travel info click). Re-run alone on a clean stack: **8 passed, 1 skipped** (the content
+  test took 36.8 s).
+- Browser (a temporary spec against fresh dev servers, deleted after; 0 fixture rows left), at
+  390/1024/1280: header `primary-700`, title Inter 16 px 700 white, nav 64 px; red card border
+  `error-600` on `error-100`, amber border `warning-500` on `accent-50`; primary actions 48 px
+  full width, `md` buttons 40 px (44 on touch); no sideways scroll; axe 0 violations on Alerts
+  and on an open thread.
 - Owner's dev stack restarted with Task 0's settings and left running: `/health` 200 (:3001),
   desk `/login` 200 (:3002), storefront 200 (:3000). Nothing left on :3003.
-- Not run: an APK or any Android device (the share sheet itself).
+- Not run: a real phone browser (the notification while the page is hidden, the cue after a
+  first tap).
 
 ## Assumptions & unknowns
+- **Ops Lite (2026-11-14):** urgent means a traveler waiting for a reply on a booking with an
+  open case (the board's note); nothing else (an OFAC hold, an arrival today) raises a thread.
+  A trip's province today is where the party sleeps (the stay covering tonight), else any
+  service that day, else the last service started. The pipeline's ACTION_REQUIRED clock counts
+  from `updatedAt` (the closest thing to "entered the state"; no state timestamp exists), as do
+  SECURED_AND_INVOICED and CANCELLED. Each state lists three bookings picked from its first 50
+  by the database order. Browser notifications are untested in a real phone browser (headless
+  Chromium reports them denied); Android Chrome shows them only while the tab is alive. The
+  inbox count in the bottom bar is re-read every minute and on each screen change. Opening a
+  thread on the desk now also marks it read (the same hook).
 - **The receipt in the app (2026-11-13, evening):** not run on a device. Assumed: Android's
   share sheet lists a PDF viewer (Drive or the phone's own) for most workers' phones; there is
   no in-app viewer and no `ACTION_VIEW` intent. The PDF stays in the app's private cache until
@@ -952,6 +996,20 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **`hidden` loses to a display utility (2026-11-14):** `<div hidden className="flex …">`
+  stays visible: Tailwind's `.flex` beats the browser's `[hidden] { display: none }`. Every
+  Ops Lite state panel showed at once until the panels switched to `cn(open ? 'flex' :
+  'hidden', …)`. Toggle the class, not the attribute, on an element with a display utility.
+- **Opening a thread marks it read (2026-11-14):** `useMessageThread` posts
+  `/messages/read` as soon as the history loads. An inbox that opens its first thread by
+  itself clears that thread's "New" before anyone reads it; Ops Lite opens a thread only on a
+  tap or `?thread=`.
+- **The global `h1` is the display face (2026-11-14):** `packages/ui/styles.css` sets every
+  `h1` to Fraunces 600 with tightened tracking. Ops Lite's header title (the board's Inter 16
+  bold) needs `font-sans … tracking-normal` explicitly.
+- **CI after the merge (2026-11-14):** with PR #1 merged, a push to `vereda` runs no workflow
+  (`ci.yml` runs on `pull_request` and on pushes to `main`). The next CI run needs a new pull
+  request from `vereda`, or a merge.
 - **Expo native modules in the worker app (2026-11-13):** pin the exact version in
   `expo/bundledNativeModules.json` (the `~` floor, e.g. `expo-sharing` 58.0.20), as the others
   are. `expo-sharing` 58 ships an incoming-share config plugin: do not list it in
@@ -1038,6 +1096,8 @@ events (T-Events)".
   `display-currencies.spec.ts`'s GBP deposit read `displayCurrency` as null right after Mark
   paid in the full run and passed alone (3/3); if it fails again, look at whether the desk's
   "CONFIRMED" text can show before the rate-locking write is visible to the spec's Prisma read.
+  2026-11-14: a third late-run storefront stall, `storefront-content.spec.ts`'s Travel info
+  click (the URL stayed on `/en/packages` for 15 s); it passed alone in 36.8 s.
 - **Better Auth bearer (2026-11-09):** the stock `bearer()` plugin's after-hook puts every new
   session's token in a readable `set-auth-token` header (staff ones too), so only its
   before-hook is used. User hooks run before plugin hooks, so the session gate never sees a
@@ -1517,6 +1577,13 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-14: Ops Lite is the back-office's `/lite` (AL-Alerts, AL-Pipeline, AL-Inbox),
+    behind `deskGate()` (`apps/backoffice/src/lib/desk-gate.ts`, shared with the dashboard
+    layout) and `DeskAlerts` with `channel="ops_lite"`. Its reads are `GET /ops-lite/pipeline`
+    and `GET /ops-lite/inbox` (operations roles); the rules live in
+    `packages/domain/src/ops-lite`. Dispatch writes take `?channel=ops_lite|desk` into their
+    audit metadata. `POST /reservations/:id/messages/read` is the only writer of
+    `messages.read_at`; `useMessageThread` calls it when a thread opens."
   - "2026-11-11: W-Earnings is `GET /worker/earnings` (`SERVICE_WORKER`, own profile) and the
     supplier inspector's `payouts`; both reduce through `workerEarnings` in
     `packages/domain/src/worker/earnings.ts`. A job is finished when its service has ended (no
@@ -1737,8 +1804,9 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` again (W-Earnings' payouts, the receipt in the app and their docs are
-   local) and check the pull request's CI; the last run (on `94c0910`) was green.
+1. Owner: push `vereda` (Ops Lite and its docs are local; W-Earnings' payouts and the receipt
+   are pushed but unchecked) and open a new pull request from `vereda` into `main`, so CI runs
+   on them: PR #1 is merged, and a push to `vereda` alone runs no workflow.
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -1752,7 +1820,9 @@ events (T-Events)".
    pins; no web support, so only unit tests until an APK); W-Credentials (needs a migration doc
    first: four documents per worker, a renewal under review beside the current one); W-Job and
    its SMS SOS; distribution (download page, update prompt, self-hosted `expo-updates`). Ops
-   Lite (Phase 7 item 2) not started.
+   Lite (Phase 7 item 2) landed 2026-11-14; its follow-ups are the owner's call: worker
+   threads in AL-Inbox (with W-Job, a migration), push to a closed page (a service worker and
+   a push service), the board's refund nudge and withdraw, quick replies.
 4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (also the AI provider and sanctions question), the business values, the
    tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
@@ -1762,8 +1832,9 @@ events (T-Events)".
 6. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
    the desktop cookie banner, a real screen-reader run, manifest editing beyond flags, PII purge
    Tiers 2–3, the load test (D24), SMS.
-7. Before the merge into `main`: graduate this handoff (facts → AGENTS.md §C via the owner,
-   decisions → ADRs/PR) and delete it in the merge; merge with a merge commit.
+7. Before the next merge into `main`: graduate this handoff (facts → AGENTS.md §C via the
+   owner, decisions → ADRs/PR) and delete it in the merge; merge with a merge commit. PR #1 was
+   merged on 2026-11-13 without this step, so `main` carries the handoff file as of `94c0910`.
 
 ## Decisions (append-only)
 - 2026-10-12 — the canvas ranks above the UI_UX research docs where they conflict (HANDOFF §1).
@@ -2405,3 +2476,15 @@ events (T-Events)".
   rather than an in-app viewer; the file in the cache, overwritten on reopening, not deleted
   after sharing (the receiving app may still read it); the web preview saving the file so the
   e2e can check it; no change to the API, whose worker route already scoped the receipt.
+- 2026-11-14 — the owner chose Ops Lite (Phase 7 item 2) over background resend, W-Job with a
+  migration doc and a W-Credentials doc. The build chose: `/lite` inside the back-office with
+  the desk's checks and live alerts (ADR 0007) rather than a separate app; the alerts screen
+  reuses the desk's feed, cue, acknowledgement and mute, so the phone and the desk share them;
+  the channel as a `?channel=` query on the four dispatch writes (uniform, `DELETE` included)
+  rather than body fields; refunds and payment extensions from Ops Lite audited as on the desk
+  (no channel); an inbox without worker threads (no model) and without SMS; urgency as
+  "awaiting a reply on an open case"; read state through the existing `messages.read_at` with a
+  new ops-only route, set when a thread opens (on the desk too); no thread opening by itself;
+  polling (30 s screens, 60 s unread count) rather than a new all-bookings socket room, which
+  would change who may join `/conversations`; browser notifications only while the page is
+  open (A5). The rest of the design resolutions are ADR 0006's amendment of the day.
