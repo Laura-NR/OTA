@@ -4791,5 +4791,35 @@
     "packages": "Ver viajes",
     "about": "Sobre nosotros",
     "contact": "Contacte con nosotros"
+  },
+  "workerApp": {
+    "title": "App de colaboradores",
+    "lede": "Las ofertas, tu calendario y tus trabajos en tu teléfono Android. Funciona sin conexión: tus respuestas se guardan y se envían cuando vuelve la señal.",
+    "notPublished": "La app aún no está publicada. La central te avisa cuando puedas descargarla.",
+    "iphoneTitle": "Solo para Android",
+    "iphoneText": "La app de colaboradores funciona solo en teléfonos Android. Si usas un iPhone, llama a la central y te explican cómo trabajar con nosotros.",
+    "version": "Versión {version}",
+    "meta": "{size} · publicada el {date}",
+    "download": "Descargar la app",
+    "downloadHint": "Para la mayoría de los teléfonos. Mejor con wifi: la descarga gasta datos.",
+    "older": "¿Teléfono antiguo? Descarga la versión de 32 bits ({size})",
+    "certificateTitle": "Certificado de firma (SHA-256)",
+    "certificateText": "Android solo actualiza la app con otra firmada con este mismo certificado. Si alguien te pasa la app de teléfono a teléfono, compara esta huella en Ajustes → Apps → Colaboradores.",
+    "stepsTitle": "Cómo instalarla",
+    "steps": {
+      "download": "Toca «Descargar la app» y espera a que termine la descarga.",
+      "open": "Abre el archivo desde la notificación de Chrome o desde «Descargas».",
+      "allow": "Si Android dice que Chrome no puede instalar apps, toca «Configuración», activa «Permitir de esta fuente» y vuelve atrás.",
+      "protect": "Si Play Protect avisa de una app desconocida, toca «Más detalles» y después «Instalar de todas formas».",
+      "signIn": "Abre «Colaboradores» y entra con tu número de teléfono."
+    },
+    "failTitle": "Si la instalación falla",
+    "fail": {
+      "space": "«Espacio insuficiente»: libera espacio y vuelve a abrir el archivo.",
+      "corrupt": "«Error al analizar el paquete»: la descarga se cortó. Descárgala otra vez.",
+      "conflict": "«La app no se instaló»: si ya tienes otra copia que no vino de esta página, avisa a la central antes de desinstalarla, porque se pierde lo guardado en el teléfono.",
+      "old": "En un teléfono antiguo, prueba la versión de 32 bits."
+    },
+    "desk": "¿Dudas? Llama a la central: {phone}"
   }
 }

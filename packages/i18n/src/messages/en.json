@@ -4791,5 +4791,35 @@
     "packages": "Browse trips",
     "about": "About us",
     "contact": "Contact us"
+  },
+  "workerApp": {
+    "title": "Partner app",
+    "lede": "Offers, your calendar and your jobs on your Android phone. It works offline: your answers are saved and sent when the signal returns.",
+    "notPublished": "The app is not published yet. The desk tells you when you can download it.",
+    "iphoneTitle": "Android only",
+    "iphoneText": "The partner app works on Android phones only. If you use an iPhone, call the desk and they will explain how to work with us.",
+    "version": "Version {version}",
+    "meta": "{size} · published on {date}",
+    "download": "Download the app",
+    "downloadHint": "For most phones. Better on Wi-Fi: the download uses data.",
+    "older": "Older phone? Download the 32-bit version ({size})",
+    "certificateTitle": "Signing certificate (SHA-256)",
+    "certificateText": "Android only updates the app with one signed by this same certificate. If someone passes you the app phone to phone, compare this fingerprint in Settings → Apps → Partners.",
+    "stepsTitle": "How to install it",
+    "steps": {
+      "download": "Tap “Download the app” and wait for the download to finish.",
+      "open": "Open the file from Chrome's notification or from “Downloads”.",
+      "allow": "If Android says Chrome cannot install apps, tap “Settings”, turn on “Allow from this source” and go back.",
+      "protect": "If Play Protect warns about an unknown app, tap “More details” and then “Install anyway”.",
+      "signIn": "Open “Partners” and sign in with your phone number."
+    },
+    "failTitle": "If the install fails",
+    "fail": {
+      "space": "“Not enough storage”: free some space and open the file again.",
+      "corrupt": "“There was a problem parsing the package”: the download was cut. Download it again.",
+      "conflict": "“App not installed”: if you already have another copy that did not come from this page, tell the desk before uninstalling it, because what the phone saved is lost.",
+      "old": "On an older phone, try the 32-bit version."
+    },
+    "desk": "Questions? Call the desk: {phone}"
   }
 }

@@ -4791,5 +4791,35 @@
     "packages": "Voir les voyages",
     "about": "À propos",
     "contact": "Nous contacter"
+  },
+  "workerApp": {
+    "title": "Application partenaires",
+    "lede": "Les offres, votre calendrier et vos missions sur votre téléphone Android. Elle fonctionne hors ligne : vos réponses sont enregistrées et envoyées au retour du réseau.",
+    "notPublished": "L'application n'est pas encore publiée. Le bureau vous prévient quand vous pourrez la télécharger.",
+    "iphoneTitle": "Android uniquement",
+    "iphoneText": "L'application partenaires fonctionne uniquement sur les téléphones Android. Si vous utilisez un iPhone, appelez le bureau, qui vous expliquera comment travailler avec nous.",
+    "version": "Version {version}",
+    "meta": "{size} · publiée le {date}",
+    "download": "Télécharger l'application",
+    "downloadHint": "Pour la plupart des téléphones. De préférence en Wi-Fi : le téléchargement consomme des données.",
+    "older": "Téléphone ancien ? Téléchargez la version 32 bits ({size})",
+    "certificateTitle": "Certificat de signature (SHA-256)",
+    "certificateText": "Android ne met à jour l'application qu'avec une version signée par ce même certificat. Si quelqu'un vous transmet l'application de téléphone à téléphone, comparez cette empreinte dans Paramètres → Applications → Partenaires.",
+    "stepsTitle": "Comment l'installer",
+    "steps": {
+      "download": "Touchez « Télécharger l'application » et attendez la fin du téléchargement.",
+      "open": "Ouvrez le fichier depuis la notification de Chrome ou depuis « Téléchargements ».",
+      "allow": "Si Android indique que Chrome ne peut pas installer d'applications, touchez « Paramètres », activez « Autoriser cette source » et revenez en arrière.",
+      "protect": "Si Play Protect signale une application inconnue, touchez « Plus de détails » puis « Installer quand même ».",
+      "signIn": "Ouvrez « Partenaires » et connectez-vous avec votre numéro de téléphone."
+    },
+    "failTitle": "Si l'installation échoue",
+    "fail": {
+      "space": "« Espace de stockage insuffisant » : libérez de l'espace et rouvrez le fichier.",
+      "corrupt": "« Erreur d'analyse du package » : le téléchargement a été interrompu. Téléchargez-la de nouveau.",
+      "conflict": "« Application non installée » : si vous avez déjà une autre copie qui ne vient pas de cette page, prévenez le bureau avant de la désinstaller, car les données enregistrées sur le téléphone sont perdues.",
+      "old": "Sur un téléphone ancien, essayez la version 32 bits."
+    },
+    "desk": "Des questions ? Appelez le bureau : {phone}"
   }
 }
