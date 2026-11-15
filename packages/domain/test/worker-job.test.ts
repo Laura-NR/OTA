@@ -9,6 +9,7 @@ import {
   jobNightHost,
   jobStepRefusal,
   jobStepsFor,
+  jobStepsOpen,
   type JobStepTimes,
 } from '../src';
 
@@ -100,6 +101,15 @@ describe('the steps of a job (docs/schema-w-job.md J2, J3)', () => {
         times: NONE,
       }),
     ).toBe('not_for_type');
+  });
+
+  it('takes steps only on a paid booking that is not over', () => {
+    expect(['CONFIRMED', 'IN_PROGRESS'].every(jobStepsOpen)).toBe(true);
+    expect(
+      ['SECURED_AND_INVOICED', 'PENDING_PAYMENT', 'COMPLETED', 'CANCELLED'].some(
+        jobStepsOpen,
+      ),
+    ).toBe(false);
   });
 
   it('finishes the job only on the last step', () => {

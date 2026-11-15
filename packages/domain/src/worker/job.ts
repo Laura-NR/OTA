@@ -75,6 +75,18 @@ export function jobStepRefusal(input: {
   return null;
 }
 
+/**
+ * The booking states in which a job's steps are taken: paid and under way.
+ * Before payment the job may still be withdrawn; after completion or a
+ * cancellation there is nothing left to do.
+ */
+export const JOB_STEP_BOOKING_STATES: readonly string[] = ['CONFIRMED', 'IN_PROGRESS'];
+
+/** Whether a booking in this state takes a job's steps. */
+export function jobStepsOpen(reservationStatus: string): boolean {
+  return JOB_STEP_BOOKING_STATES.includes(reservationStatus);
+}
+
 /** The last step finishes the job (J3): the item becomes `FULFILLED`. */
 export function finishesJob(step: JobStep): boolean {
   return step === 'FINISHED';
