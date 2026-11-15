@@ -1,7 +1,15 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 
+import type { TenantConfig } from '@ota/config';
 import type { Prisma, SupplierApplication } from '@ota/db';
-import { VerificationStatus } from '@ota/domain';
+import { VerificationStatus, normalizeWorkerPhone, workerAppLinkSms } from '@ota/domain';
+import { workerAppInviteEmail, type Mailer } from '@ota/email';
 import type {
   CreateSupplierApplicationRequest,
   ListSupplierApplicationsQuery,
@@ -10,7 +18,12 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { MAILER } from '../email/email.module';
 import { PrismaService } from '../prisma/prisma.service';
+import type { SmsChannel } from '../sms/sms.channel';
+import { SMS_CHANNEL } from '../sms/sms.module';
+import { TENANT_CONFIG } from '../tenant/tenant.tokens';
+import { workerAppPublicUrl } from '../worker-app/worker-app.service';
 
 function toDto(application: SupplierApplication): SupplierApplicationDto {
   return {
@@ -36,7 +49,14 @@ function toDto(application: SupplierApplication): SupplierApplicationDto {
  */
 @Injectable()
 export class SupplierApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(SupplierApplicationsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(MAILER) private readonly mailer: Mailer,
+    @Inject(SMS_CHANNEL) private readonly sms: SmsChannel,
+    @Inject(TENANT_CONFIG) private readonly tenant: TenantConfig,
+  ) {}
 
   async submit(input: CreateSupplierApplicationRequest): Promise<SupplierApplicationDto> {
     const pending = await this.prisma.supplierApplication.findFirst({
@@ -145,7 +165,42 @@ export class SupplierApplicationsService {
       return result;
     });
 
+    await this.sendAppLink(application);
     return toDto(updated);
+  }
+
+  /**
+   * U6a: the new worker receives the download page by email and SMS (none
+   * leaves in production until an SMS provider exists). Best-effort: the
+   * approval stands, and the desk's QR card carries the same link.
+   */
+  private async sendAppLink(application: SupplierApplication): Promise<void> {
+    const url = workerAppPublicUrl();
+    try {
+      await this.mailer.send(
+        workerAppInviteEmail({
+          to: application.email,
+          phone: application.phone,
+          url,
+          locale: this.tenant.primaryLocale,
+          branding: this.tenant.branding,
+        }),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Approval ${application.id}: the app link could not be emailed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    const phone = normalizeWorkerPhone(application.phone);
+    const body = workerAppLinkSms(url);
+    if (!phone || !body) return;
+    try {
+      await this.sms.send({ to: phone, body });
+    } catch (error) {
+      this.logger.warn(
+        `Approval ${application.id}: the app link could not be texted: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   async reject(

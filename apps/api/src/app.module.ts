@@ -44,6 +44,7 @@ import { TelemetryModule } from './telemetry/telemetry.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TravelersModule } from './travelers/travelers.module';
 import { WorkerModule } from './worker/worker.module';
+import { WorkerAppModule } from './worker-app/worker-app.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
@@ -110,6 +111,7 @@ export const httpLoggerOptions = {
     PermissionOverridesModule,
     SmsModule,
     WorkerModule,
+    WorkerAppModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },

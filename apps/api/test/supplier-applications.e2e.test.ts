@@ -1,12 +1,16 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { SupplierApplication, User } from '@ota/db';
+import type { EmailMessage } from '@ota/email';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
+import { MAILER } from '../src/email/email.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import type { SmsMessage } from '../src/sms/sms.channel';
+import { SMS_CHANNEL } from '../src/sms/sms.module';
 import { withNoSettingsVersion } from './fixtures/operating-settings';
 
 const SUPER_ADMIN = {
@@ -137,8 +141,12 @@ const fakeAuthService = {
 describe('supplier applications', () => {
   let app: INestApplication;
   let state: Parameters<typeof createFakePrisma>[0];
+  let emails: EmailMessage[];
+  let texts: SmsMessage[];
 
   beforeEach(async () => {
+    emails = [];
+    texts = [];
     state = {
       applications: new Map(),
       users: [],
@@ -151,6 +159,13 @@ describe('supplier applications', () => {
       .useValue(withNoSettingsVersion(createFakePrisma(state)))
       .overrideProvider(AuthService)
       .useValue(fakeAuthService)
+      .overrideProvider(MAILER)
+      .useValue({ send: async (message: EmailMessage) => void emails.push(message) })
+      .overrideProvider(SMS_CHANNEL)
+      .useValue({
+        delivers: true,
+        send: async (message: SmsMessage) => void texts.push(message),
+      })
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -228,6 +243,30 @@ describe('supplier applications', () => {
     });
   });
 
+  // docs/worker-app-distribution-plan.md U6a.
+  it('sends the new worker the app’s download page by email and SMS', async () => {
+    await request(app.getHttpServer())
+      .post('/supplier-applications')
+      .send(VALID_APPLICATION);
+    const id = [...state.applications.keys()][0]!;
+    expect(emails).toHaveLength(0);
+
+    await request(app.getHttpServer())
+      .post(`/supplier-applications/${id}/approve`)
+      .set('x-test-user', SUPER_ADMIN.email);
+
+    expect(emails).toHaveLength(1);
+    expect(emails[0]?.to).toBe(VALID_APPLICATION.email);
+    expect(emails[0]?.text).toContain('http://localhost:3000/app');
+    expect(emails[0]?.text).toContain(VALID_APPLICATION.phone);
+    expect(texts).toEqual([
+      {
+        to: '+5355551234',
+        body: expect.stringContaining('http://localhost:3000/app'),
+      },
+    ]);
+  });
+
   it('rejects an application without creating an account', async () => {
     await request(app.getHttpServer())
       .post('/supplier-applications')
@@ -242,6 +281,8 @@ describe('supplier applications', () => {
     expect(response.status).toBe(200);
     expect(response.body.status).toBe('REJECTED');
     expect(state.users).toHaveLength(0);
+    expect(emails).toHaveLength(0);
+    expect(texts).toHaveLength(0);
   });
 
   it('returns 404 when approving an unknown application', async () => {

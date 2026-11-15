@@ -857,3 +857,11 @@ export {
   type OpsLitePipelineRowDto,
   type OpsLitePipelineStateDto,
 } from './ops-lite';
+export {
+  workerAppAbiSchema,
+  workerAppLatestSchema,
+  workerAppPathSegmentSchema,
+  workerAppReleasesSchema,
+  type WorkerAppLatestDto,
+  type WorkerAppReleases,
+} from './worker-app';

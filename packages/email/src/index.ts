@@ -44,6 +44,7 @@ export type {
   TravelAdvisoryEmailInput,
 } from './templates/travel-advisory';
 export { staffInviteEmail } from './templates/staff-invite';
+export { workerAppInviteEmail } from './templates/worker-app-invite';
 export {
   passkeyChangeEmail,
   type PasskeyChangeEmailInput,
@@ -59,6 +60,7 @@ export {
   type PermissionOverrideRequestEmailInput,
 } from './templates/permission-override-request';
 export type { StaffInviteEmailInput } from './templates/staff-invite';
+export type { WorkerAppInviteEmailInput } from './templates/worker-app-invite';
 export { eventRequestEmail } from './templates/event-request';
 export type {
   EventRequestEmailInput,

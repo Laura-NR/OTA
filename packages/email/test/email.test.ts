@@ -24,6 +24,7 @@ import {
   disruptionOptionsEmail,
   travelAdvisoryEmail,
   tripReconfirmEmail,
+  workerAppInviteEmail,
   type EmailBranding,
 } from '../src';
 
@@ -931,5 +932,34 @@ describe('permissionOverrideRequestEmail (docs/schema-m9-permission-overrides.md
     expect(
       permissionOverrideRequestEmail({ ...base, capability: 'somethingElse' }).text,
     ).toContain('"somethingElse"');
+  });
+});
+
+describe('workerAppInviteEmail', () => {
+  it('links the download page and names the phone the worker signs in with', () => {
+    const message = workerAppInviteEmail({
+      to: 'yoel@example.com',
+      phone: '+53 5 555 0101',
+      url: 'https://app.example.com',
+      locale: 'es',
+      branding: { ...branding, supportPhone: '+53 5 555 0000' },
+    });
+    expect(message.to).toBe('yoel@example.com');
+    expect(message.subject).toContain('app de colaboradores');
+    expect(message.text).toContain('https://app.example.com');
+    expect(message.text).toContain('(+53 5 555 0101)');
+    expect(message.text).toContain('La central: +53 5 555 0000.');
+    expect(message.html).toContain('href="https://app.example.com"');
+  });
+
+  it('leaves the desk line out when the tenant has no support phone', () => {
+    const message = workerAppInviteEmail({
+      to: 'yoel@example.com',
+      phone: '+53 5 555 0101',
+      url: 'https://app.example.com',
+      branding: { ...branding, supportPhone: null },
+    });
+    expect(message.text).toContain('Download the app');
+    expect(message.text).not.toContain('The desk:');
   });
 });

@@ -769,6 +769,22 @@ describe('authorization matrix', () => {
     const contact = await request(app.getHttpServer()).post('/contact').send({});
     expect(contact.status).toBe(400);
 
+    // The worker app's release, APKs and update check are public: the download
+    // page and a signed-out phone read them (docs/worker-app-distribution-plan.md U1a).
+    expect((await request(app.getHttpServer()).get('/worker-app/latest')).status).toBe(
+      200,
+    );
+    expect(
+      (await request(app.getHttpServer()).get('/worker-app/apk/none.apk')).status,
+    ).toBe(404);
+    expect(
+      (await request(app.getHttpServer()).get('/worker-app/updates/manifest')).status,
+    ).toBe(400);
+    expect(
+      (await request(app.getHttpServer()).get('/worker-app/updates/0.1.0/x/assets/y'))
+        .status,
+    ).toBe(404);
+
     // The T-Events intake is public (signed-out visitors browse too); an empty
     // batch fails validation (400), not auth.
     const telemetry = await request(app.getHttpServer())
