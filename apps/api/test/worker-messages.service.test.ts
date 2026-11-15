@@ -43,14 +43,14 @@ const SUPPLIERS = {
   'supplier-reinier': {
     id: 'supplier-reinier',
     userId: 'u-reinier',
-    category: 'DRIVER',
+    category: 'PRIVATE_DRIVER',
     primaryPhone: '+5352413388',
     user: { fullName: 'Reinier Soto', email: 'driver@example.test' },
   },
   'supplier-lazaro': {
     id: 'supplier-lazaro',
     userId: 'u-lazaro',
-    category: 'DRIVER',
+    category: 'PRIVATE_DRIVER',
     primaryPhone: '+5358800000',
     user: { fullName: 'Lázaro Pérez', email: 'lazaro@example.test' },
   },

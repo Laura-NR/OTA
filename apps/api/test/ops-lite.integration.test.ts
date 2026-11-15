@@ -1,9 +1,12 @@
+import type { TenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import { zonedCalendarDay } from '@ota/domain';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { NoopEscalationPublisher } from '../src/escalation/escalation.publisher';
 import { OpsLiteService } from '../src/ops-lite/ops-lite.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { WorkerMessagesService } from '../src/worker-messages/worker-messages.service';
 
 // Prisma Client auto-loads packages/db/.env, so DATABASE_URL is present; require
 // an explicit opt-in so the default unit suite stays database-free.
@@ -44,7 +47,15 @@ describe.skipIf(!runIntegration)('OpsLiteService (live Postgres)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient();
-    service = new OpsLiteService(prisma as unknown as PrismaService);
+    service = new OpsLiteService(
+      prisma as unknown as PrismaService,
+      new WorkerMessagesService(
+        prisma as unknown as PrismaService,
+        new NoopEscalationPublisher(),
+        { send: async () => undefined },
+        {} as TenantConfig,
+      ),
+    );
     const now = Date.now();
     const today = zonedCalendarDay(new Date());
 

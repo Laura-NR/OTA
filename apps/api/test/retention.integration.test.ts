@@ -30,6 +30,8 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
   let userId = '';
   let reservationId = '';
   let disruptionCaseId = '';
+  let supplierId = '';
+  let workerUserId = '';
   let keptAffidavitId = '';
   let expiredAffidavitId = '';
   const email = `retention-e2e-${Date.now()}@example.test`;
@@ -151,6 +153,37 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     await prisma.review.create({
       data: { reservationId, rating: 5, comment: 'PII review comment' },
     });
+    // Worker messages M8: one about this booking's job goes; one about no job stays.
+    const workerUser = await prisma.user.create({
+      data: {
+        email: `retention-worker-${Date.now()}@example.test`,
+        role: 'SERVICE_WORKER',
+      },
+    });
+    workerUserId = workerUser.id;
+    supplierId = (
+      await prisma.supplierProfile.create({
+        data: {
+          userId: workerUser.id,
+          category: 'TOUR_GUIDE',
+          primaryPhone: '+53 5 555 0100',
+          provincesActive: ['La Habana'],
+          rtnLicenseNumber: `RTN-RET-${Date.now()}`,
+        },
+      })
+    ).id;
+    const [guide] = await prisma.serviceItem.findMany({ where: { reservationId } });
+    await prisma.workerMessage.createMany({
+      data: [
+        {
+          supplierId,
+          sender: 'OPERATIONS',
+          body: 'PII: Ingrid lleva bastón',
+          serviceItemId: guide!.id,
+        },
+        { supplierId, sender: 'WORKER', body: 'Mañana no puedo.' },
+      ],
+    });
     await prisma.incident.create({
       data: {
         reservationId,
@@ -238,7 +271,12 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     await prisma.consentRecord.deleteMany({ where: { reservationId } });
     // Messages, reviews, incidents, travelers and service items cascade with the booking.
     await prisma.reservation.deleteMany({ where: { id: reservationId } });
-    await prisma.user.deleteMany({ where: { id: userId } });
+    // Worker messages cascade with the supplier.
+    if (supplierId)
+      await prisma.supplierProfile.deleteMany({ where: { id: supplierId } });
+    await prisma.user.deleteMany({
+      where: { id: { in: [userId, workerUserId].filter(Boolean) } },
+    });
     await prisma.$disconnect();
   });
 
@@ -360,6 +398,14 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
       where: { reservationId },
     });
     expect(serviceItem.declineReason).toBeNull();
+    const workerMessages = await prisma.workerMessage.findMany({
+      where: { supplierId },
+      orderBy: { body: 'asc' },
+    });
+    expect(workerMessages.map((row) => row.body).sort()).toEqual([
+      'Mañana no puedo.',
+      '[redacted]',
+    ]);
     expect([
       serviceItem.meetingPoint,
       serviceItem.dropOff,
