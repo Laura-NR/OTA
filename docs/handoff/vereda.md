@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-15 20:30
+# Handoff — vereda — updated 2026-11-15 23:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -804,35 +804,43 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-15, background resend and W-Job; dev stack stopped for the verify, restarted after)
-- CI: nothing to fix. `vereda` is pushed through `b1ac87c`; PR #1 is merged and no new PR is
-  open, so no CI has run since `94c0910`. No `v*` tag, so no Release run (GitHub API, no
-  token). `pnpm audit --prod`: the same 4 settled advisories; nothing new.
+## Verified (2026-11-15, worker app distribution; dev stack stopped for the verify, restarted after)
+- CI: nothing to fix. `origin/vereda` is still `b1ac87c`; PR #1 is the only pull request
+  (merged); the last CI runs are green (`d2657e4` on `main`); no `v*` tag, no Release run
+  (GitHub API, no token). `pnpm audit --prod`: the same 4 settled advisories, also after the
+  three new modules.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1539 passed / 61 skipped** (1491/59 before
-  background resend); `TURBO_FORCE=true pnpm build` **19/19**.
-- Migration `20261115100000_w_job` applied to the dev DB (`prisma migrate deploy`; status up to
-  date). Background resend's lock test fails with the lock removed. `expo export`: the Android
-  bundle holds the resend task, `ExpoBackgroundTask`, `ExpoTaskManager` and `ExpoLocation`; the
-  web bundle none of the native modules. `expo config --type introspect`: fine and coarse
-  location only, no background location.
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1566 passed / 61 skipped** (1539/61 before);
+  `TURBO_FORCE=true pnpm build` **19/19**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 17
-  `apps/api/test/*.integration.test.ts` files, now with `jobs`; `retention` covers the brief and
-  the position) **60/60**.
-- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **181 passed,
-  4 failed, 3 skipped, 1 did not run**. The failures were the known flakes (Traps, "late-run
-  flakes"): `display-currencies.spec.ts` GBP deposit (rate never shown on the desk; its serial
-  describe then left `:229` unrun) and three 240 s navigation timeouts in `responsive.spec.ts`
-  (`[ds07-414]` `:110`, `[ds07-1440]` `:110` and `:118`). Re-run alone on fresh stacks: the
-  whole `display-currencies.spec.ts` **3/3**; the four 414/1440 customer tests **4/4**.
-  `worker-app.spec.ts` **8/8** in the full run and alone.
-- Browser (a temporary spec, deleted after; fixtures removed, 0 rows left) at 390/1024/1280: no
-  sideways scroll on the booking page or Ops Lite; the emergency card `rgb(198,40,40)` with
-  white text (5.62:1), its buttons 32 px like the strip's; the brief dialog a bottom sheet at
-  390. The app's job screen seen at 390 (e2e screenshot). Found and fixed: Ops Lite said "All
-  clear" beside an emergency (`9e0c348`).
-- Owner's dev stack restarted with Task 0's settings and left running (see the closing report).
-- Not run: anything on a device (background task, position prompt, SMS composer, a real fix).
+  `apps/api/test/*.integration.test.ts` files) **60/60**.
+- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **188 passed,
+  2 failed, 3 skipped**. The failures were known late-run flakes: `storefront-packages.spec.ts:75`
+  (the "Check availability" click not navigating) and `[ds07-375]` `responsive.spec.ts:118` (a
+  240 s `page.goto` timeout). Re-run alone on a fresh stack: `storefront-packages.spec.ts` 2/2,
+  `[ds07-375]` responsive 4/4 (one skipped as always). The new and changed tests passed in the
+  full run (`worker-app-distribution.spec.ts` 3, the update prompt, the recruitment Mailpit
+  check); the distribution spec again 3/3 after the column fix.
+- The release tool, run here with fake `apksigner`/`aapt2`: APK mode wrote split codes 12/11
+  and the fingerprint; it refused a repeated version code, a missing certificate, a wrong key
+  and a native-module change. The dev API served its output: ranged APK (206) directly and
+  through the storefront rewrite, the multipart manifest whose signature `openssl dgst -verify`
+  accepted against the certificate, the bundle whose SHA-256 matched the manifest.
+- `expo prebuild --platform android` (with a throwaway certificate, output deleted): the split
+  block, `REQUEST_INSTALL_PACKAGES`, the certificate, `NEVER`, the self-hosted URL. `expo
+  export`: the Android bundle holds `ExpoUpdates`, `ExpoIntentLauncher`, `ExpoApplication`; the
+  web bundle none (its one `ExpoUpdates` string is expo-constants' optional lookup).
+- Caddy 2.11.9 `validate` on the Caddyfile; the `app.` block alone, proxied to the dev stack,
+  routed `/`, `/app`, the phone's routes and `/api/ota/worker-app/*` as intended and redirected
+  `/reservations`, `/catalog`, `/api/auth/get-session` and `/service-items/<id>/candidates`.
+- Browser (a temporary spec, deleted after) at 390/1024/1280: no sideways scroll on `/app` or
+  the desk card; the download button 48 px, primary on white; the certificate monospace,
+  `break-all`, inside the viewport; the desk card 342/448/448 px. Found and fixed: the page's
+  column was not capped at 1280 (now 768 px, aligned with the logo). The app's required
+  prompt seen at 390 (no sideways scroll).
+- Owner's dev stack restarted with Task 0's settings and left running.
+- Not run: anything on a device (Gradle, the split APKs, the installer, an update's download
+  and signature check, the 204 answer), the smoke script against a real `app.<domain>`.
 
 ## Assumptions & unknowns
 - **W-Job (2026-11-15):** nothing ran on a device; the e2e drives the web preview, where
