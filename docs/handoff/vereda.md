@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-14 22:00
+# Handoff — vereda — updated 2026-11-15 10:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -36,6 +36,9 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-15: W-Job proposed, not built.** `docs/schema-w-job.md` (J1–J9, a migration on
+  `service_items` and `incidents`, `expo-location` if J7 (a)) waits for the owner's decisions.
+  No code, no migration.
 - **2026-11-14 (evening): background resend** (Phase 7), the owner's pick over W-Job, distribution
   and the follow-ups (`6de191b`, `1e0828d`). No migration, no API or screen change. Two new
   dependencies, approved: `expo-background-task` 58.0.11 and `expo-task-manager` 58.0.12 (they
@@ -1913,7 +1916,8 @@ events (T-Events)".
    key, backed up twice), the Android id, and two or three suppliers for the field test (also
    the first real runs of "Abrir recibo"'s share sheet and of background resend, whose
    checklist line is in `docs/worker-app-plan.md` §8). Agent, in order (background resend
-   landed 2026-11-14 evening): W-Job and its SMS SOS (a migration doc first); distribution
+   landed 2026-11-14 evening): W-Job and its SMS SOS (`docs/schema-w-job.md` proposed
+   2026-11-15, awaiting J1–J9); distribution
    (download page, update prompt, self-hosted `expo-updates`).
    W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
    form's insurance date, a migration dropping `credential_document_url`. Ops
