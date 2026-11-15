@@ -131,6 +131,8 @@ const config: ExpoConfig = {
   ],
   extra: {
     apiUrl,
+    // The web preview's stand-in for the APK's own version code (`app-version.web.ts`).
+    versionCode,
     agencyName: tenant.branding.agencyName,
     deskPhone: tenant.branding.supportPhone ?? tenant.emergencyContacts[0]?.phone ?? null,
     colors: {
