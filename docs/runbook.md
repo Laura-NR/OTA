@@ -117,6 +117,21 @@ restart). For a persistent environment, verify the S3 endpoint and bucket.
 - Every file view is in the audit log as `supplier.credential_viewed`. The review SMS is
   logged in development and not sent until an SMS provider exists.
 
+### On-site emergency from a worker (W-Job)
+
+- A worker's report raises a red card at the top of every desk page and Ops Lite's alerts
+  ("On-site emergency · booking"), with the red cue. Call the worker first ("Call …"); the
+  position, when sent, is in the card ("Open position" opens it in the device's maps).
+- "I have it" stops the alert for every desk and records who took it
+  (`incident.acknowledged`). Resolve the incident on the booking's duty-of-care card once it is
+  over.
+- With no data, the worker's phone sends an SMS to the desk's 24/7 number (`supportPhone` in
+  the manifest) instead; the system does not read it. Log it on the booking's duty-of-care card
+  with "Where it came from: Worker's SMS" and the service; the app's own copy arrives when the
+  phone has data again and shows as a second, app-sourced incident.
+- The steps a worker taps show under each service on the booking ("On the way · 15:28"). A
+  step phoned in is recorded with "Record step…"; it is audited as the desk's.
+
 ### GDPR retention actions
 
 - Ops view: back-office `/retention`, or `GET /retention/pending` (ops role).

@@ -208,3 +208,57 @@ model Incident {
 The text columns are capped at 500 characters by the request schemas, not the database, as
 elsewhere. With J1 (b), J2 (b), J5 (b) or J9 (b) the diff changes accordingly, and this section
 is rewritten before the migration.
+
+## 7. As built (2026-11-15)
+
+Approved J1–J9 as recommended. One migration, `20261115100000_w_job` (applied to the dev DB),
+exactly §6's diff. One new dependency, `expo-location` 58.0.19.
+
+- **Domain** `packages/domain/src/worker/job.ts`: `JOB_STEPS`, `jobStepsFor` (a host has only
+  `STARTED` and `FINISHED`), `currentJobStep`, `jobStepRefusal` (not for the type, ahead of the
+  API clock by more than two minutes, before acceptance, a later step already in; a step
+  already in is not refused), `jobStepsOpen` (`CONFIRMED`, `IN_PROGRESS`), `jobStepsDue` (from
+  the service's first day), `finishesJob`, `EMERGENCY_CATEGORIES`, `emergencySms` (one GSM-7
+  segment; the name is cut first), `jobNightHost` (the stay covering the job's first day,
+  `+53` only), `queueJobAction` (reports ahead of steps; a step keeps its first tap).
+- **API**: `POST /worker/jobs/:id/steps`, `POST /worker/jobs/:id/emergency` (the worker's own
+  taken jobs; a report is idempotent on `clientRef`, also under a race, through the unique
+  index); `PATCH /service-items/:id/brief`, `POST /service-items/:id/steps` (operations and
+  Super Admin, `bookings` capability); `GET /incidents/emergencies` (operations read) and
+  `POST /incidents/:id/acknowledge` (operations write). The step write is guarded on the column
+  being empty; the audit names the channel (`app`, `desk`). A report and an acknowledgement go
+  out on `/ops` (`incident.emergency`, `incident.acknowledged`). W-Home's jobs carry `brief`,
+  `steps`, `stepsOpen` and `nightHost` (optional fields) and read `ACCEPTED` and `FULFILLED`,
+  so a finished job stays listed until its day ends. Both reservation views carry
+  `currentStep`; the desk's adds `brief` and `steps`. `POST /reservations/:id/incidents` takes
+  `source: WORKER_SMS` and a `serviceItemId` from the booking (422 otherwise), filed as
+  acknowledged by the person entering it. The retention purge clears the three brief fields and
+  the report's position. The work order prints the meeting point, drop-off and notes. RBAC +6.
+- **App**: W-Job from W-Home's job cards and the new "Trabajos" tab; the bottom bar "Inicio ·
+  Calendario · Trabajos · Perfil" replaces the calendar and earnings buttons. Steps and reports
+  live in `ota.worker.jobActions`, flushed with the answers under one lock: reports, then
+  answers, then steps. The emergency sheet asks the type, takes one fix (10 s cap, last known
+  position as a fallback), saves and sends the report, and opens the SMS composer when the
+  report is still on the phone after the sync. The position permission is asked the first
+  time a job opens.
+- **Desk**: the emergency is a red alert in `DeskAlerts` (its own read, cued and announced like
+  dispatch reds, acknowledged at once) shown by `EmergencyAlerts` at the top of the alert strip
+  on every desk page and on Ops Lite's alerts, and counted in Ops Lite's alerts badge. A
+  booking's services show the latest step, "Brief…" and "Record step…". The duty-of-care card
+  shows a report's source, reporter, time, position and acknowledgement and logs a report that
+  came by SMS. Reports' incident table names the source when there is no description.
+- **Storefront**: the trip page's status cell adds "Your driver is on the way", "Delivered" and
+  the like, per service type (en/es/fr).
+
+Resolutions made in the build (also ADR 0006's and ADR 0007's amendments of the day):
+
+- Two lists on the phone rather than one: answers keep their own (a deadline each), job actions
+  their own (reports first). One lock covers both.
+- `stepsOpen` and `jobStepsDue` were added so the app offers steps only on a paid booking and
+  from the service's day; the API enforces the booking state only.
+- The board's "Ofertas" tab is dropped: offers are on Inicio, with their count.
+- No worker name on the traveler's step line; the trip page times it as the row's dates are.
+- The emergency acknowledgement has no undo, unlike a dispatch red's six seconds.
+- The app's emergency state shows "Central avisada" whether the report went through the API or
+  the composer opened; the second says to press Send and that the app will also send it.
+- A host's own job shows no night host.

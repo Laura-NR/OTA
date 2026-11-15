@@ -280,6 +280,21 @@ a notification dependency. A phone that restricts background work keeps the rese
 return to the foreground and by timer while open. The modules add no runtime permission (a job
 service and a boot receiver only). The web preview has no background, so this is unit-tested
 until the APK; it is not a custom Android module. No migration, no API change.
+
+## Amendment, 2026-11-15: W-Job
+
+The owner approved `docs/schema-w-job.md` J1–J9 as recommended (migration
+`20261115100000_w_job`, `expo-location` 58.0.19). The job screen reads the desk's brief, the
+steps and the night's host from the home the phone keeps, so it works with no signal. Steps
+and emergency reports are queued like answers and resent in the background; a report goes
+first. The emergency SMS opens the phone's composer to the desk's 24/7 number with one
+GSM-7 segment (booking, type, position, time, first name); the worker taps Send. That replaces
+this ADR's silent send for now: silent sending needs a custom Android module and the machine
+with the Android SDK, and it can replace the composer later with no migration. The position
+uses foreground permission only (fine and coarse location, no background location), one fix
+per report. The desk's 24/7 phone is a person's phone: the system does not read the SMS until
+an inbound SMS provider exists, and the desk can log it as `WORKER_SMS`. Worker ↔ desk
+messages are deferred (J9).
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

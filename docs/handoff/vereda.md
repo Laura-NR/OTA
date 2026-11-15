@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-15 10:00
+# Handoff — vereda — updated 2026-11-15 18:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -15,12 +15,13 @@ display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 th
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
-W-Credentials) and
+W-Credentials, on 2026-11-15 W-Job) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend).
+for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job).
 The worker app:
-`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Credentials:
+`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Job: `docs/schema-w-job.md`
+(approved J1–J9 2026-11-15, §7 as built, a migration). W-Credentials:
 `docs/schema-w-credentials.md` (approved V1–V8 2026-11-14, §7 as built, a migration). W-Earnings' payouts:
 `docs/schema-w-earnings.md` (approved E1–E8 2026-11-13, §7 the read-only slice, §8 the payouts
 as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reasons.md`
@@ -36,9 +37,25 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
-- **2026-11-15: W-Job proposed, not built.** `docs/schema-w-job.md` (J1–J9, a migration on
-  `service_items` and `incidents`, `expo-location` if J7 (a)) waits for the owner's decisions.
-  No code, no migration.
+- **2026-11-15: W-Job** (Phase 7), the owner's pick after background resend, approved J1–J9 as
+  recommended (`18fe059`…`9e0c348`). One migration, `20261115100000_w_job` (service_items: the
+  brief's three text columns and four step times; incidents: a worker's report and its
+  acknowledgement, enum `IncidentSource`; applied to the dev DB). One new dependency,
+  `expo-location` 58.0.19 (foreground only). `docs/schema-w-job.md` §7 lists everything.
+  - Domain `packages/domain/src/worker/job.ts`: the steps per type and their refusals,
+    `jobStepsOpen`/`jobStepsDue`, the SOS SMS, the night's host (`+53` only),
+    `queueJobAction` (reports first).
+  - API `JobsService` (`apps/api/src/jobs/`): worker steps and emergency reports, the desk's
+    brief and steps; `QualityService` gains the open emergencies and the acknowledgement;
+    `/ops` gets `incident.emergency`/`incident.acknowledged`. W-Home's jobs carry brief, steps,
+    `stepsOpen`, `nightHost` and keep a finished job listed. RBAC +6.
+  - App: W-Job, "Trabajos", the bottom bar (Inicio · Calendario · Trabajos · Perfil), the
+    emergency sheet with one fix and the SMS composer; job actions queued beside the answers.
+  - Desk (en/es/fr): `EmergencyAlerts` in the alert strip and Ops Lite; the booking's step
+    line, "Brief…", "Record step…"; the duty-of-care card's report details and its "Worker's
+    SMS" source. Storefront trip page: the step line. Work order: the brief.
+  - Not built: worker ↔ desk messages (J9), the silent SMS module, flight status, the saved
+    map, push.
 - **2026-11-14 (evening): background resend** (Phase 7), the owner's pick over W-Job, distribution
   and the follow-ups (`6de191b`, `1e0828d`). No migration, no API or screen change. Two new
   dependencies, approved: `expo-background-task` 58.0.11 and `expo-task-manager` 58.0.12 (they
@@ -766,29 +783,45 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-14 evening, background resend; dev stack was not running at the start)
-- CI: nothing to fix. `vereda` was pushed through `b1ac87c`; PR #1 is merged and no new PR is
+## Verified (2026-11-15, background resend and W-Job; dev stack stopped for the verify, restarted after)
+- CI: nothing to fix. `vereda` is pushed through `b1ac87c`; PR #1 is merged and no new PR is
   open, so no CI has run since `94c0910`. No `v*` tag, so no Release run (GitHub API, no
-  token). `pnpm audit --prod`: the same 4 settled advisories (deepmerge-ts, uuid, glob,
-  minimatch); nothing new.
+  token). `pnpm audit --prod`: the same 4 settled advisories; nothing new.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1497 passed / 59 skipped** (was 1491/59: domain
-  +2, worker app +4); `TURBO_FORCE=true pnpm build` **19/19**.
-- The new lock's test fails with the lock removed (`flushing.then(...)` bypassed) and passes
-  with it. `expo export` for Android contains `ota.worker.resend`, `ExpoBackgroundTask` and
-  `ExpoTaskManager`; the web export contains none of them.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 16
-  `apps/api/test/*.integration.test.ts` files) **58/58**.
-- Full `pnpm e2e` (seven projects, 1.2 h, ports clear and `.next` deleted first): **184
-  passed, 1 failed, 3 skipped**, `worker-app.spec.ts` 7/7. The failure was a late-run stall
-  (Traps, "late-run flakes"): `[ds07-414]` responsive `:110`, `page.goto /en/packages` past
-  its 240 s. Re-run alone on fresh stacks: **1/1**.
-- Browser: no screen, copy or style changed, so no new 390/1024/1280 check; the worker app's
-  e2e loads the preview with the new module.
-- Owner's dev stack started with Task 0's settings and left running (see the closing report).
-- Not run: anything on a device. The background task has never run (no APK, no web support).
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1539 passed / 61 skipped** (1491/59 before
+  background resend); `TURBO_FORCE=true pnpm build` **19/19**.
+- Migration `20261115100000_w_job` applied to the dev DB (`prisma migrate deploy`; status up to
+  date). Background resend's lock test fails with the lock removed. `expo export`: the Android
+  bundle holds the resend task, `ExpoBackgroundTask`, `ExpoTaskManager` and `ExpoLocation`; the
+  web bundle none of the native modules. `expo config --type introspect`: fine and coarse
+  location only, no background location.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 17
+  `apps/api/test/*.integration.test.ts` files, now with `jobs`; `retention` covers the brief and
+  the position) **60/60**.
+- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **181 passed,
+  4 failed, 3 skipped, 1 did not run**. The failures were the known flakes (Traps, "late-run
+  flakes"): `display-currencies.spec.ts` GBP deposit (rate never shown on the desk; its serial
+  describe then left `:229` unrun) and three 240 s navigation timeouts in `responsive.spec.ts`
+  (`[ds07-414]` `:110`, `[ds07-1440]` `:110` and `:118`). Re-run alone on fresh stacks: the
+  whole `display-currencies.spec.ts` **3/3**; the four 414/1440 customer tests **4/4**.
+  `worker-app.spec.ts` **8/8** in the full run and alone.
+- Browser (a temporary spec, deleted after; fixtures removed, 0 rows left) at 390/1024/1280: no
+  sideways scroll on the booking page or Ops Lite; the emergency card `rgb(198,40,40)` with
+  white text (5.62:1), its buttons 32 px like the strip's; the brief dialog a bottom sheet at
+  390. The app's job screen seen at 390 (e2e screenshot). Found and fixed: Ops Lite said "All
+  clear" beside an emergency (`9e0c348`).
+- Owner's dev stack restarted with Task 0's settings and left running (see the closing report).
+- Not run: anything on a device (background task, position prompt, SMS composer, a real fix).
 
 ## Assumptions & unknowns
+- **W-Job (2026-11-15):** nothing ran on a device; the e2e drives the web preview, where
+  `expo-location` is the browser's geolocation and the composer path (no data) is not taken.
+  Assumed: Android's `sms:` link opens the default SMS app with the body filled; a fix indoors
+  may take the full 10 s and fall back to the last known position. A report the desk logs from
+  an SMS and the app's later copy are two incidents (no shared id), and the app's copy raises
+  a second red alert. A step's time is the phone's corrected by the last home's clock; a phone
+  that never synced uses its own clock. The emergency numbers 104/106/105 are Cuba's
+  (ambulance, police, fire) and the desk number is the manifest's placeholder.
 - **Background resend (2026-11-14, evening):** never run on a device; the web preview has no
   background, so only the unit tests and the Android bundle export (it contains the task and
   both native modules; the web bundle neither) stand behind it. Assumed: Android starts a
@@ -1057,6 +1090,18 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Steps vs `ACCEPTED` filters (2026-11-15):** the last step sets a service `FULFILLED`.
+  Earnings, payouts and the calendar read `JOB_STATUSES` (both); W-Home read `ACCEPTED` only and
+  was changed. Any new query of "the worker's jobs" must use `JOB_STATUSES`.
+- **Prisma format (2026-11-15):** `prisma format` realigns the whole schema file; edit by hand.
+  `prisma migrate dev` is interactive here: write the SQL with `prisma migrate diff
+  --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma
+  --script` into a new migration folder, then `prisma migrate deploy` and `prisma generate`.
+- **Trip page times (2026-11-15):** the account reservation page's `when()` formats with no
+  time zone (the server's); a W-Job step line follows it so a row reads in one zone. Whether
+  those dates should be Havana time is open (not changed).
+- **English times in e2e (2026-11-15):** the storefront's `/en` pages print "06:46 AM"; match
+  `\d\d:\d\d( [AP]M)?`, not 24-hour.
 - **Two flushes in one test (2026-11-14):** `flushAnswers` is serialized module-wide, so a test
   that starts a background and a foreground flush together cannot know which one sends; assert
   on the two results combined. The lock's test fails when `flushing.then(...)` is removed.
@@ -1664,6 +1709,13 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-15: W-Job rides on migration `20261115100000_w_job`. A worker's steps are the
+    `service_items` columns `en_route_at`…`finished_at`, written only by `JobsService` (guarded
+    on the column being empty; `FINISHED` sets the item `FULFILLED`, pay is unchanged). A
+    worker's on-site emergency is an `incidents` row with `source` `WORKER_APP` (or
+    `WORKER_SMS` entered by the desk), idempotent on `client_ref`; it is a red alert until
+    `POST /incidents/:id/acknowledge`. The brief (`meeting_point`, `drop_off`,
+    `worker_brief`) and the report's position are cleared by the retention purge."
   - "2026-11-14: the worker app resends saved answers with the app closed through
     `expo-background-task` (task `ota.worker.resend`, defined in
     `apps/worker-app/src/lib/background.ts`, which `index.ts` must import before the App).
@@ -1915,10 +1967,12 @@ events (T-Events)".
 3. Phase 7, owner: a machine with the Android SDK and a JDK for the first APK (our own signing
    key, backed up twice), the Android id, and two or three suppliers for the field test (also
    the first real runs of "Abrir recibo"'s share sheet and of background resend, whose
-   checklist line is in `docs/worker-app-plan.md` §8). Agent, in order (background resend
-   landed 2026-11-14 evening): W-Job and its SMS SOS (`docs/schema-w-job.md` proposed
-   2026-11-15, awaiting J1–J9); distribution
-   (download page, update prompt, self-hosted `expo-updates`).
+   checklist lines are in `docs/worker-app-plan.md` §8, W-Job's SOS SMS and position
+   included). Agent, in order (W-Job landed 2026-11-15): distribution (download page, update
+   prompt, self-hosted `expo-updates`; a short plan first, `expo-updates` is a new
+   dependency). W-Job's follow-ups are the owner's call: worker ↔ desk messages (J9b, a
+   migration, also Ops Lite's worker threads), the silent SMS module (after the APK machine),
+   a shared id between an SMS-logged report and the app's copy.
    W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
    form's insurance date, a migration dropping `credential_document_url`. Ops
    Lite (Phase 7 item 2) landed 2026-11-14; its follow-ups are the owner's call: worker
@@ -2615,3 +2669,19 @@ events (T-Events)".
   already promised it; a scheduling failure logged with `console.warn`, since the open app's
   resend still runs; no `expo-background-task` config plugin entry (it only edits iOS's
   Info.plist).
+- 2026-11-15 — the owner chose W-Job (a migration doc first) after background resend and
+  approved `docs/schema-w-job.md` J1–J9 as recommended: the brief as three text columns, the
+  steps as four timestamps, the last step setting `FULFILLED` with pay and the booking's state
+  unchanged, the desk and the traveler seeing the steps, reports in `incidents`, the SMS
+  composer now (silent module later), `expo-location` 58.0.19 foreground only, the night's host
+  with a Cuban phone, no worker messages yet. The build chose: two lists on the phone under one
+  lock (reports, answers, steps) rather than one mixed list; `stepsOpen` and `jobStepsDue` so
+  the app offers steps only on a paid booking from its day (the API enforces the booking
+  state); the composer opening only when the report is still on the phone after the sync, with
+  "Enviar también por SMS" otherwise; no undo on "I have it", which also refreshes the page
+  behind; emergencies as one more red alert in `DeskAlerts` (own read, same cue and mute)
+  rather than a separate feed; the board's "Ofertas" tab dropped; no worker name on the
+  traveler's step line, timed as the row's dates are; all three brief fields purged, not only
+  the notes; a host's own job without a night host; the work order's rendezvous naming the
+  meeting point. Design resolutions are ADR 0006's amendment of the day.
+

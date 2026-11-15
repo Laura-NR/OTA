@@ -1900,3 +1900,44 @@ Where the boards were silent or ask for what does not exist, the build decided:
   until "Show document (logged)", and "Open full size (logged)" opens it in a tab: each read
   is audited. Missing documents are a warning alert in the panel and a line under the
   verification actions. The identity card has "Record checked in person" with the channel.
+
+## Amendment, 2026-11-15: W-Job
+
+The owner approved `docs/schema-w-job.md` J1–J9 as recommended. Built from W-Job and W-Home's
+bottom bar without asking the design team, on the existing tokens and components. Where the
+board was silent or asks for what does not exist, the build decided:
+
+- **Bottom bar.** "Inicio · Calendario · Trabajos · Perfil", 48 dp tabs, the current one in
+  `primary` with a 3 dp mark and `selected` for screen readers. The board's "Ofertas" tab is
+  dropped: the offers are on Inicio, with their count, and a second tab to the same screen
+  would mislead. It replaces the "Calendario y disponibilidad" and "Fiabilidad y pagos" buttons;
+  "Perfil" opens "Fiabilidad y pagos".
+- **Job screen.** "Trabajo de hoy" on any day the service runs, else "Trabajo del …". The sync
+  chip is the home's ("Sincronizado", "Sin conexión · guardado HH:MM"). The state line under
+  the emergency button names the latest step ("En camino", "En el lugar", "En servicio",
+  "Terminado · gracias"), "Asignado" before any. The board's flight status, luggage count and
+  saved map are not built; the desk's notes carry the flight. "Mensaje a la central" becomes
+  the desk's call (J9a). The contacts card calls the night's host ("Lis · casa de esta
+  noche") and the desk.
+- **Steps.** Numbered rows with the board's labels for a transfer; a guide or an activity says
+  "Con el grupo · Empezamos" and "Terminado"; a host has "Huéspedes llegaron" and "Salida".
+  Only the steps after the latest are offered, the next one as the primary button. A done step
+  reads "Hecho · HH:MM", or "Guardado · HH:MM · se enviará al volver la señal" while on the
+  phone. Before the service's day, or on a booking not yet paid, a notice says when they open.
+- **Emergency.** The board's red is the `danger` token (`timeout-600`, #C62828, 5.6:1 with
+  white) on the button, the sheet's 2 dp border and the selected type. The four types are
+  radios. "Avisar a la central con mi ubicación" shows "Buscando tu ubicación…" while it waits
+  for a fix. The sent state is "Central avisada · HH:MM · médica" with "La central te llamará.
+  Si no llega la llamada, marca el 104 / 106 según el caso." (the board's named operator and
+  two-minute promise are not the app's to make), "Llamar ahora", and "Enviar también por SMS"
+  when the report went through the API; with no data it says the SMS composer opened.
+- **Desk.** A worker's emergency is a card in the red strip's colours (`error-600`, white)
+  above the alert strip on every desk page and Ops Lite's alerts: who, when, the type, the
+  position with its accuracy, "Call …", "Open position" (`geo:`), "Open booking" and "I have
+  it". It plays the red cue and is announced in the assertive region; "I have it" has no undo
+  and refreshes the page behind. Ops Lite counts it in the alerts badge and no longer says
+  "All clear" beside it. A booking's services show "On the way · HH:MM" under the status,
+  "Brief written"/"No brief" under the service, and "Brief…" and "Record step…" (dialogs, a
+  bottom sheet at phone width).
+- **Traveler.** The trip page's status cell adds "Your driver is on the way", "Delivered" and
+  the like per service type, without the worker's name, timed as the row's own dates are.

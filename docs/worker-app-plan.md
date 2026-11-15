@@ -200,14 +200,20 @@ time. W6 otherwise unchanged: Android adds a resend with the app closed, once co
 least 15 minutes after the app left the screen. Unit tests only (the preview has no
 background); the first real run is the APK.
 
+W-Job (2026-11-15, approved J1–J9, migration `20261115100000_w_job`, `expo-location` 58.0.19):
+`JobScreen.tsx` and `JobsScreen.tsx`, the bottom bar (`TabBar` in `ui.tsx`), `src/lib/position.ts`;
+steps and reports in the phone's queue beside the answers (`answers.ts`); the spec's eighth
+test. `docs/schema-w-job.md` §7.
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
    Its checklist gains the background resend: answer with the phone offline, close the app,
    turn data back on and note how long the desk waits for the answer (15 minutes at least;
-   Android may wait longer on a phone saving battery).
-2. W-Job with the offline job screen and the SMS SOS (a custom Android module). Background
-   resend landed 2026-11-14.
-3. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
-4. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).
+   Android may wait longer on a phone saving battery). And W-Job's: the position prompt on the
+   first job, a fix indoors and outdoors, the SOS with no data (the composer opens to the
+   desk's number; the desk's phone receives one segment), the steps offline.
+2. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
+   W-Job landed 2026-11-15; its silent SMS module (ADR 0007) waits for the APK machine.
+3. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).
