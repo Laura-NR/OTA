@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { disruptionSeveritySchema } from './disruption';
 import { messageSenderSchema } from './message';
 import { reservationStatusSchema } from './reservation';
+import { supplierCategorySchema } from './supplier';
+import { workerThreadJobSchema, workerThreadLastSchema } from './worker-message';
 
 const toneSchema = z.enum(['default', 'warning', 'error', 'success', 'info', 'muted']);
 
@@ -117,13 +119,41 @@ export const opsLiteInboxThreadSchema = bookingContextSchema.extend({
 
 export type OpsLiteInboxThreadDto = z.infer<typeof opsLiteInboxThreadSchema>;
 
-/** `GET /ops-lite/inbox` (AL-Inbox): urgent first, then unread, then the latest. */
+/** A worker's thread on AL-Inbox (`docs/schema-w-messages.md` M6): one per worker. */
+export const opsLiteWorkerThreadSchema = z.object({
+  supplierId: z.string().uuid(),
+  workerName: z.string(),
+  category: supplierCategorySchema,
+  phone: z.string(),
+  /** The worker's current or next job, for the thread's line; null when none. */
+  job: workerThreadJobSchema.nullable(),
+  lastMessage: workerThreadLastSchema,
+  /** The worker's messages nobody on the desk has opened yet. */
+  unread: z.number().int().nonnegative(),
+  /** The worker wrote last. */
+  awaitingReply: z.boolean(),
+  /** Awaiting a reply about a job that runs today. */
+  urgent: z.boolean(),
+  /** The latest message names a job that runs today (`jobRunsToday`). */
+  jobToday: z.boolean(),
+});
+
+export type OpsLiteWorkerThreadDto = z.infer<typeof opsLiteWorkerThreadSchema>;
+
+/**
+ * `GET /ops-lite/inbox` (AL-Inbox): travelers' threads urgent first, then
+ * unread, then the latest; workers' threads in the same order. The screen
+ * merges the two lists.
+ */
 export const opsLiteInboxSchema = z.object({
   threads: z.array(opsLiteInboxThreadSchema),
+  workers: z.array(opsLiteWorkerThreadSchema),
   counts: z.object({
     all: z.number().int().nonnegative(),
     urgent: z.number().int().nonnegative(),
     unread: z.number().int().nonnegative(),
+    travelers: z.number().int().nonnegative(),
+    workers: z.number().int().nonnegative(),
   }),
 });
 

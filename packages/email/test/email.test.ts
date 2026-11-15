@@ -25,6 +25,7 @@ import {
   travelAdvisoryEmail,
   tripReconfirmEmail,
   workerAppInviteEmail,
+  workerMessageEmail,
   type EmailBranding,
 } from '../src';
 
@@ -961,5 +962,38 @@ describe('workerAppInviteEmail', () => {
     });
     expect(message.text).toContain('Download the app');
     expect(message.text).not.toContain('The desk:');
+  });
+});
+
+describe('workerMessageEmail', () => {
+  it("copies a worker's message to the desk, naming the booking and escaping the text", () => {
+    const email = workerMessageEmail({
+      to: 'desk@example.test',
+      workerName: 'Reinier <b>',
+      bookingCode: 'VX-7K2M9Q',
+      body: 'Listo\n<script>x</script>',
+      threadUrl: 'http://localhost:3002/suppliers/s-1#worker-thread',
+      branding,
+    });
+    expect(email.to).toBe('desk@example.test');
+    expect(email.subject).toBe('Worker message from Reinier <b> about booking VX-7K2M9Q');
+    expect(email.html).toContain('Reinier &lt;b&gt;');
+    expect(email.html).toContain('&lt;script&gt;');
+    expect(email.html).not.toContain('<script>');
+    expect(email.text).toContain(
+      'Reply at http://localhost:3002/suppliers/s-1#worker-thread',
+    );
+  });
+
+  it('leaves the booking out when the message names no job', () => {
+    const email = workerMessageEmail({
+      to: 'desk@example.test',
+      workerName: 'Yamilé',
+      bookingCode: null,
+      body: 'Mañana no puedo.',
+      threadUrl: 'http://localhost:3002/suppliers/s-2#worker-thread',
+      branding,
+    });
+    expect(email.subject).toBe('Worker message from Yamilé');
   });
 });

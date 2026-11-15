@@ -5,6 +5,10 @@ export type { EmailBranding, MagicLinkEmailInput } from './templates/magic-link'
 export { contactMessageEmail } from './templates/contact-message';
 export type { ContactMessageEmailInput } from './templates/contact-message';
 export { newMessageEmail } from './templates/new-message';
+export {
+  workerMessageEmail,
+  type WorkerMessageEmailInput,
+} from './templates/worker-message';
 export type { NewMessageEmailInput } from './templates/new-message';
 export { retentionNoticeEmail } from './templates/retention-notice';
 export type { RetentionNoticeEmailInput } from './templates/retention-notice';

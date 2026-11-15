@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { serviceTypeSchema } from './dispatch';
 import { jobBriefSchema, jobContactSchema, jobStepTimesSchema } from './job';
 import { workerPaymentSchema } from './payouts';
+import { workerThreadSchema } from './worker-message';
 import {
   blockReasonSchema,
   blockedRunSchema,
@@ -78,6 +79,11 @@ export const workerHomeSchema = z.object({
   }),
   offers: z.array(workerOfferSchema),
   jobs: z.array(workerJobSchema),
+  /**
+   * The thread with the desk: its latest messages and the desk's unread ones
+   * (`docs/schema-w-messages.md` M5). Optional, so an app built before it reads the home.
+   */
+  messages: workerThreadSchema.optional(),
   /** The API's clock, so the app counts down without trusting the phone's. */
   serverTime: z.string(),
 });
