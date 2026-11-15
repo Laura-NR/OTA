@@ -9,6 +9,7 @@ import {
   jobNightHost,
   jobStepRefusal,
   jobStepsFor,
+  jobStepsDue,
   jobStepsOpen,
   queueJobAction,
   type JobStepTimes,
@@ -111,6 +112,14 @@ describe('the steps of a job (docs/schema-w-job.md J2, J3)', () => {
         jobStepsOpen,
       ),
     ).toBe(false);
+  });
+
+  it("offers the steps from the service's day in Havana, not before", () => {
+    const evening = new Date('2026-11-16T02:00:00Z'); // 21:00 on the 15th in Havana
+    expect(jobStepsDue(new Date('2026-11-15T00:00:00Z'), evening)).toBe(true);
+    expect(jobStepsDue(new Date('2026-11-16T00:00:00Z'), evening)).toBe(false);
+    expect(jobStepsDue(new Date('2026-11-15T20:50:00Z'), evening)).toBe(true);
+    expect(jobStepsDue(new Date('2026-11-16T14:00:00Z'), evening)).toBe(false);
   });
 
   it('finishes the job only on the last step', () => {

@@ -48,6 +48,8 @@ export const workerJobSchema = z.object({
    */
   brief: jobBriefSchema.optional(),
   steps: jobStepTimesSchema.optional(),
+  /** Whether the booking takes steps now: paid and not over (`jobStepsOpen`). */
+  stepsOpen: z.boolean().optional(),
   nightHost: jobContactSchema.nullable().optional(),
 });
 

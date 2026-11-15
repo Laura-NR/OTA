@@ -404,7 +404,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
     arrivedAt: null,
     startedAt: null,
     finishedAt: null,
-    reservation: { ...ITEM.reservation, serviceItems: [] },
+    reservation: { ...ITEM.reservation, status: 'CONFIRMED', serviceItems: [] },
   };
   const calls: Array<{ where: Record<string, unknown> }> = [];
   const deleted: unknown[] = [];
@@ -524,6 +524,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
           finishedAt: new Date('2026-11-13T22:30:00Z'),
           reservation: {
             ...ITEM.reservation,
+            status: 'IN_PROGRESS',
             serviceItems: [
               {
                 serviceDateStart: new Date('2026-11-13T00:00:00Z'),
@@ -554,6 +555,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
         FINISHED: '2026-11-13T22:30:00.000Z',
       },
       nightHost: { firstName: 'Lis', phone: '+5352413388' },
+      stepsOpen: true,
     });
   });
 

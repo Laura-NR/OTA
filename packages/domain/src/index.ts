@@ -779,6 +779,7 @@ export {
   jobNightHost,
   jobStepRefusal,
   jobStepsFor,
+  jobStepsDue,
   jobStepsOpen,
   queueJobAction,
   type EmergencyCategory,

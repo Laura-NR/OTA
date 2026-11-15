@@ -15,6 +15,7 @@ import {
   daysBetween,
   isResourcesStale,
   jobNightHost,
+  jobStepsOpen,
   longBlockedRun,
   monthDays,
   planWorkerDays,
@@ -96,6 +97,7 @@ const HOME_JOB_SELECT = {
   reservation: {
     select: {
       ...ITEM_SELECT.reservation.select,
+      status: true,
       serviceItems: {
         where: { serviceType: 'ACCOMMODATION', status: { in: [...JOB_STATUSES] } },
         select: {
@@ -606,6 +608,7 @@ export class WorkerService {
         workerBrief: item.workerBrief,
       },
       steps: toJobStepTimesDto(jobStepTimes(item)),
+      stepsOpen: jobStepsOpen(item.reservation.status),
       // A host's own stay has no other host to call.
       nightHost:
         item.serviceType === 'ACCOMMODATION'

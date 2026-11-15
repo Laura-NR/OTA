@@ -5,7 +5,7 @@
  */
 
 import { serviceCalendarDay } from '../dispatch/availability';
-import { zonedWallClock } from '../time/ops-calendar';
+import { zonedCalendarDay, zonedWallClock } from '../time/ops-calendar';
 import { fitsOneSmsSegment } from './sms';
 import { normalizeWorkerPhone } from './sign-in';
 
@@ -85,6 +85,15 @@ export const JOB_STEP_BOOKING_STATES: readonly string[] = ['CONFIRMED', 'IN_PROG
 /** Whether a booking in this state takes a job's steps. */
 export function jobStepsOpen(reservationStatus: string): boolean {
   return JOB_STEP_BOOKING_STATES.includes(reservationStatus);
+}
+
+/**
+ * Whether the app offers a job's steps yet: from the service's first day
+ * (stored dates as calendar days, times read in Havana), so a tap on a job
+ * next week cannot start it by mistake.
+ */
+export function jobStepsDue(startsAt: Date, now: Date): boolean {
+  return serviceCalendarDay(startsAt) <= serviceCalendarDay(zonedCalendarDay(now));
 }
 
 /** The last step finishes the job (J3): the item becomes `FULFILLED`. */
