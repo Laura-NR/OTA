@@ -11,6 +11,7 @@ const prisma = new PrismaClient();
 
 /** The worker app's web preview (`pnpm --filter @ota/worker-app run preview`). */
 const WORKER_APP_URL = process.env.E2E_WORKER_APP_URL ?? 'http://localhost:3003';
+const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
 const BOOKING_CODE = 'E2EWRK01';
 
 // A valid 1x1 PNG, as a phone's gallery would hand it to the web preview.
@@ -95,12 +96,20 @@ async function codeFromDesk(page: Page): Promise<string> {
   return code;
 }
 
-/** Signs in on the worker app at phone width, as a phone with no desk cookies. */
-async function signInOnApp(browser: Browser, code: string): Promise<Page> {
+/**
+ * Signs in on the worker app at phone width, as a phone with no desk cookies;
+ * with `geolocation`, the phone has granted the position (W-Job J7).
+ */
+async function signInOnApp(
+  browser: Browser,
+  code: string,
+  geolocation?: { latitude: number; longitude: number; accuracy: number },
+): Promise<Page> {
   const phone = await browser.newContext({
     viewport: { width: 390, height: 844 },
     locale: 'es-ES',
     storageState: { cookies: [], origins: [] },
+    ...(geolocation ? { geolocation, permissions: ['geolocation'] } : {}),
   });
   const app = await phone.newPage();
   await app.goto(WORKER_APP_URL);
@@ -146,6 +155,14 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
   });
 
   test.afterEach(async () => {
+    // W-Job: a report's audit rows name the incident, which goes with the booking.
+    const incidents = await prisma.incident.findMany({
+      where: { reservation: { bookingCode: BOOKING_CODE } },
+      select: { id: true },
+    });
+    await prisma.auditLog.deleteMany({
+      where: { entityType: 'Incident', entityId: { in: incidents.map(({ id }) => id) } },
+    });
     await deleteReservationFixture(prisma, BOOKING_CODE);
     await prisma.availability.deleteMany({ where: { supplierId } });
     await prisma.supplierResources.deleteMany({ where: { supplierId } });
@@ -659,5 +676,116 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
         .verificationStatus,
     ).toBe('VERIFIED');
     await app.context().close();
+  });
+
+  test('W-Job: the brief, a step sent after the signal returns, the SOS on the desk', async ({
+    page,
+    browser,
+  }) => {
+    // The offered guide job, taken an hour ago, today, on a paid booking.
+    const now = Date.now();
+    const item = await prisma.serviceItem.update({
+      where: { id: serviceItemId },
+      data: {
+        status: 'ACCEPTED',
+        respondedAt: new Date(now - 60 * 60 * 1000),
+        serviceDateStart: new Date(now - 30 * 60 * 1000),
+        serviceDateEnd: new Date(now + 3 * 60 * 60 * 1000),
+      },
+    });
+    await prisma.reservation.update({
+      where: { id: item.reservationId },
+      data: { status: 'CONFIRMED' },
+    });
+
+    // The desk writes the brief on the booking.
+    const code = await codeFromDesk(page);
+    await page.goto(`/bookings/${item.reservationId}`);
+    const brief = page.getByRole('dialog', { name: 'Brief for the worker' });
+    await expect(async () => {
+      await page.getByRole('button', { name: /^Brief for the worker · / }).click();
+      await expect(brief).toBeVisible({ timeout: 2_000 });
+    }).toPass();
+    await brief.getByLabel('Meeting point').fill('Hotel Inglaterra, recepción');
+    await brief.getByLabel('Notes for the worker').fill('Cartel «Vereda · Prueba»');
+    await brief.getByRole('button', { name: 'Save brief' }).click();
+    await expect(brief).toBeHidden();
+    await expect(page.getByText('Brief written')).toBeVisible();
+
+    // The worker opens the job and reads it.
+    const app = await signInOnApp(browser, code, {
+      latitude: 23.113612,
+      longitude: -82.366581,
+      accuracy: 12,
+    });
+    await app.getByRole('button', { name: /^Ver el trabajo: E2EWRK01/ }).click();
+    await expect(app.getByRole('heading', { name: 'Trabajo de hoy' })).toBeVisible();
+    await expect(app.getByText('Hotel Inglaterra, recepción')).toBeVisible();
+    await expect(app.getByText('Cartel «Vereda · Prueba»')).toBeVisible();
+
+    // With no signal the step waits on the phone, then goes once it returns.
+    await app.context().setOffline(true);
+    await app.getByRole('button', { name: 'Salgo ahora' }).click();
+    await expect(app.getByText(/^Guardado · \d\d:\d\d · se enviará/)).toBeVisible();
+    await app.context().setOffline(false);
+    await expect(app.getByText(/^Hecho · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
+    // The state line and the step's own name.
+    await expect(app.getByText('En camino', { exact: true })).toHaveCount(2);
+
+    // The emergency, with the phone's position.
+    await app.getByRole('button', { name: 'Reportar emergencia en el lugar' }).click();
+    await app
+      .getByRole('radio', { name: 'Mecánica · el vehículo no puede seguir' })
+      .click();
+    await app
+      .getByRole('button', { name: 'Avisar a la central con mi ubicación' })
+      .click();
+    await expect(app.getByText(/^Central avisada · \d\d:\d\d · mecánica$/)).toBeVisible();
+    await expect(app.getByText('La central te llamará.', { exact: false })).toBeVisible();
+    const incident = await prisma.incident.findFirstOrThrow({
+      where: { serviceItemId },
+    });
+    expect(incident).toMatchObject({ source: 'WORKER_APP', category: 'MECHANICAL' });
+
+    // The desk sees the red alert on the booking, with the position, and takes it.
+    await page.reload();
+    const alert = page.getByRole('listitem').filter({
+      hasText: 'On-site emergency · E2EWRK01',
+    });
+    await expect(alert).toBeVisible();
+    await expect(alert).toContainText('Reinier Prueba reported an emergency at');
+    await expect(alert).toContainText('mechanical');
+    await expect(alert).toContainText('Position 23.11361, -82.36658 ± 12 m');
+    await expect(
+      alert.getByRole('link', { name: 'Call Reinier Prueba' }),
+    ).toHaveAttribute('href', 'tel:+5359990001');
+    await expect(page.getByText(/^On the way · \d\d:\d\d$/)).toBeVisible();
+    await alert
+      .getByRole('button', { name: 'I have it · emergency on E2EWRK01' })
+      .click();
+    await expect(alert).toBeHidden();
+    await expect(
+      page.getByText(/Worker’s app · Reported by Reinier Prueba/),
+    ).toBeVisible();
+    await expect(page.getByText(/Acknowledged by .* at \d\d:\d\d/)).toBeVisible();
+
+    // A step phoned in: the desk records the end of the tour.
+    const stepDialog = page.getByRole('dialog', { name: 'Record a step from a call' });
+    await page.getByRole('button', { name: /^Record a step · / }).click();
+    await stepDialog.getByLabel('Step').selectOption({ label: 'Finished' });
+    await stepDialog.getByRole('button', { name: 'Record step' }).click();
+    await expect(stepDialog).toBeHidden();
+    await expect(page.getByText(/^Finished · \d\d:\d\d$/)).toBeVisible();
+    expect(
+      (await prisma.serviceItem.findUniqueOrThrow({ where: { id: serviceItemId } }))
+        .status,
+    ).toBe('FULFILLED');
+
+    // The traveler's trip page says so.
+    await signIn(page, 'traveler@example.test', {
+      origin: STOREFRONT_URL,
+      callbackPath: `/en/account/reservations/${item.reservationId}`,
+    });
+    await expect(page.getByText(/^Tour finished · \d\d:\d\d( [AP]M)?$/)).toBeVisible();
   });
 });
