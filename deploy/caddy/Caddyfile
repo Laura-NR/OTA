@@ -47,6 +47,36 @@ www.{$SITE_DOMAIN} {
 	reverse_proxy desk:3002
 }
 
+# The worker app (docs/worker-app-distribution-plan.md U1a), outside the trial
+# gate so approved workers can install and sign in. Only the download page and
+# the phone's own token-authenticated calls get through (D8); any other path
+# goes to the main site, gate included.
+app.{$SITE_DOMAIN} {
+	import headers
+	header X-Frame-Options "DENY"
+	header X-Robots-Tag "noindex, nofollow"
+	encode zstd gzip
+	@phone path /worker/* /worker-app/* /api/auth/sign-in/worker-code /api/auth/sign-in/worker-code/send
+	handle @phone {
+		reverse_proxy api:3001
+	}
+	@answer path_regexp ^/service-items/[^/]+/(accept|decline)$
+	handle @answer {
+		reverse_proxy api:3001
+	}
+	handle / {
+		rewrite * /app
+		reverse_proxy storefront:3000
+	}
+	@page path /app /en/app /fr/app /_next/* /api/ota/worker-app/*
+	handle @page {
+		reverse_proxy storefront:3000
+	}
+	handle {
+		redir https://{$SITE_DOMAIN}{uri}
+	}
+}
+
 {$ANALYTICS_DOMAIN} {
 	import headers
 	import gate

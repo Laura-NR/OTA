@@ -127,11 +127,14 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_APP_USER:-ota_app}:${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-ota}
       REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
       DOCUMENTS_DIR: /data/documents
+      # The worker app's releases, copied from the APK machine (runbook "Releasing the worker app").
+      WORKER_APP_DIR: /srv/worker-app
       # Scheduled jobs run on Cuban time (D19); timestamps stay UTC in the database.
       TZ: America/Havana
       TRUST_PROXY: '1'
     volumes:
       - documents:/data/documents
+      - ./worker-app:/srv/worker-app:ro
     # Chromium renders PDFs; the default 64 MB /dev/shm is too small for it.
     shm_size: 256m
     healthcheck:
