@@ -176,7 +176,8 @@ export function LiteAlerts({
   );
   const pending = refunds.filter((refund) => refund.status === 'REQUESTED');
   const nothing =
-    cards.length +
+    alerts.emergencies.length +
+      cards.length +
       amber.length +
       pending.length +
       payments.length +
