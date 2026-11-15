@@ -1769,7 +1769,35 @@
         "call": "Call",
         "acknowledgeFor": "Acknowledge red alert · {service} · {code}",
         "startHint": "Offers each service to the next qualified worker.",
-        "rule": "States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer and writes it to the audit log. Payout rates are the supplier's net; the traveler never sees this column."
+        "rule": "States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer and writes it to the audit log. Payout rates are the supplier's net; the traveler never sees this column.",
+        "stepLine": "{step} · {time}",
+        "steps": {
+          "EN_ROUTE": "On the way",
+          "ARRIVED": "Arrived",
+          "STARTED": "In service",
+          "FINISHED": "Finished"
+        },
+        "brief": "Brief…",
+        "briefFor": "Brief for the worker · {service} · {code}",
+        "briefTitle": "Brief for the worker",
+        "briefDescription": "The worker reads this in the app, also with no signal. Write only what the job needs: it is cleared with the traveler’s data.",
+        "meetingPoint": "Meeting point",
+        "dropOff": "Drop-off",
+        "workerBrief": "Notes for the worker",
+        "workerBriefHint": "Flight, sign text, mobility, luggage. 500 characters at most.",
+        "briefSave": "Save brief",
+        "briefWritten": "Brief written",
+        "briefMissing": "No brief",
+        "recordStep": "Record step…",
+        "recordStepFor": "Record a step · {service} · {code}",
+        "stepTitle": "Record a step from a call",
+        "stepDescription": "When the worker phones in a step. It is audited as the desk’s.",
+        "stepField": "Step",
+        "stepTime": "When (Havana time)",
+        "stepSave": "Record step",
+        "cancel": "Cancel",
+        "close": "Close",
+        "failed": "Could not save: {message}"
       },
       "payments": "Payments",
       "paymentsDescription": "Links are created once the booking is SECURED_AND_INVOICED; the first payment received (the deposit or the full amount) confirms it, and a balance is paid after.",
@@ -1957,7 +1985,20 @@
       "failed": "Could not log incident",
       "resolving": "Resolving…",
       "resolve": "Resolve",
-      "resolveFailed": "Could not resolve"
+      "resolveFailed": "Could not resolve",
+      "source": "Where it came from",
+      "sources": {
+        "DESK": "Logged by the desk",
+        "WORKER_APP": "Worker’s app",
+        "WORKER_SMS": "Worker’s SMS"
+      },
+      "service": "Service",
+      "serviceNone": "Not about one service",
+      "reportedBy": "Reported by {name}",
+      "reportedAt": "Reported at {time}",
+      "position": "Position {lat}, {lng}",
+      "acknowledgedBy": "Acknowledged by {name} at {time}",
+      "notAcknowledged": "Not acknowledged yet"
     },
     "payments": {
       "none": "No payment links yet.",
@@ -2312,6 +2353,28 @@
         "toast": "Alert acknowledged · audio off for {code}",
         "undo": "Undo",
         "failed": "The acknowledgement for {code} was not recorded: {message}"
+      },
+      "emergency": {
+        "listLabel": "On-site emergencies",
+        "title": "On-site emergency · {code}",
+        "body": "{worker} reported an emergency at {time}: {category}.",
+        "categories": {
+          "MEDICAL": "medical",
+          "MECHANICAL": "mechanical",
+          "SECURITY": "security",
+          "OTHER": "other, they explain by phone"
+        },
+        "someone": "The worker",
+        "call": "Call {worker}",
+        "position": "Position {lat}, {lng}",
+        "accuracy": "± {accuracy} m",
+        "noPosition": "No position sent: call the worker.",
+        "openPosition": "Open position",
+        "openBooking": "Open booking",
+        "acknowledge": "I have it",
+        "acknowledgeFor": "I have it · emergency on {code}",
+        "failed": "Could not acknowledge the emergency on {code}: {message}",
+        "announce": "On-site emergency. Booking {code}: {worker}, {category}, at {time}."
       }
     },
     "messages": {

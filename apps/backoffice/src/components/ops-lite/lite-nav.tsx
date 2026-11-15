@@ -51,12 +51,14 @@ export function LiteNav({ initialUnread }: { initialUnread: number }) {
     return () => clearInterval(timer);
   }, [pathname, locked]);
 
+  // A booking with a worker's on-site emergency counts once, as a red one does.
   const redBookings = alerts
-    ? new Set(
-        alerts.red
+    ? new Set([
+        ...alerts.red
           .filter((entry) => !alerts.isAcknowledged(entry.item))
           .map((entry) => entry.row.reservationId),
-      ).size
+        ...alerts.emergencies.map((incident) => incident.reservationId),
+      ]).size
     : 0;
   const counts: Partial<Record<(typeof TABS)[number]['key'], number>> = {
     alerts: redBookings,

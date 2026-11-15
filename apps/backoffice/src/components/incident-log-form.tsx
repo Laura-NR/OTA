@@ -10,8 +10,19 @@ import { apiRequest } from '@/lib/client-api';
 
 const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
 
-/** Log an incident against a booking (spec §4.9.4 duty of care). */
-export function IncidentLogForm({ reservationId }: { reservationId: string }) {
+/**
+ * Log an incident against a booking (spec §4.9.4 duty of care). A worker's
+ * emergency that reached the desk only by SMS is entered here as such, on the
+ * service it concerns (W-Job J6); the API files it as already in hand.
+ */
+export function IncidentLogForm({
+  reservationId,
+  services,
+}: {
+  reservationId: string;
+  /** The booking's services, for "Service". */
+  services: ReadonlyArray<{ id: string; label: string }>;
+}) {
   const t = useTranslations('backoffice.incidents');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -31,6 +42,10 @@ export function IncidentLogForm({ reservationId }: { reservationId: string }) {
           category: form.get('category'),
           description: form.get('description'),
           severity: form.get('severity') || 'MEDIUM',
+          source: form.get('source') || 'DESK',
+          ...(form.get('serviceItemId')
+            ? { serviceItemId: form.get('serviceItemId') }
+            : {}),
         }),
       });
       element.reset();
@@ -61,6 +76,26 @@ export function IncidentLogForm({ reservationId }: { reservationId: string }) {
             {SEVERITIES.map((severity) => (
               <option key={severity} value={severity}>
                 {severity}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="incident-source">{t('source')}</Label>
+          <Select id="incident-source" name="source" defaultValue="DESK">
+            <option value="DESK">{t('sources.DESK')}</option>
+            <option value="WORKER_SMS">{t('sources.WORKER_SMS')}</option>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="incident-service">{t('service')}</Label>
+          <Select id="incident-service" name="serviceItemId" defaultValue="">
+            <option value="">{t('serviceNone')}</option>
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.label}
               </option>
             ))}
           </Select>

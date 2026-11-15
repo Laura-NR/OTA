@@ -1769,7 +1769,35 @@
         "call": "Appeler",
         "acknowledgeFor": "Prendre en compte l’alerte rouge · {service} · {code}",
         "startHint": "Propose chaque service au prochain prestataire qualifié.",
-        "rule": "États d'un service : UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un nouveau dispatch retire l'offre ouverte et l'inscrit au journal d'audit. Les rémunérations sont le net du prestataire ; le voyageur ne voit jamais cette colonne."
+        "rule": "États d'un service : UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un nouveau dispatch retire l'offre ouverte et l'inscrit au journal d'audit. Les rémunérations sont le net du prestataire ; le voyageur ne voit jamais cette colonne.",
+        "stepLine": "{step} · {time}",
+        "steps": {
+          "EN_ROUTE": "En route",
+          "ARRIVED": "Arrivé",
+          "STARTED": "En service",
+          "FINISHED": "Terminé"
+        },
+        "brief": "Consignes…",
+        "briefFor": "Consignes pour le prestataire · {service} · {code}",
+        "briefTitle": "Consignes pour le prestataire",
+        "briefDescription": "Le prestataire les lit dans l’app, même sans réseau. N’écrivez que ce dont la prestation a besoin : elles sont effacées avec les données du voyageur.",
+        "meetingPoint": "Point de rendez-vous",
+        "dropOff": "Destination",
+        "workerBrief": "Notes pour le prestataire",
+        "workerBriefHint": "Vol, texte de la pancarte, mobilité, bagages. 500 caractères au plus.",
+        "briefSave": "Enregistrer les consignes",
+        "briefWritten": "Consignes rédigées",
+        "briefMissing": "Pas de consignes",
+        "recordStep": "Enregistrer une étape…",
+        "recordStepFor": "Enregistrer une étape · {service} · {code}",
+        "stepTitle": "Enregistrer une étape après un appel",
+        "stepDescription": "Quand le prestataire signale une étape par téléphone. Elle est journalisée comme venant du bureau.",
+        "stepField": "Étape",
+        "stepTime": "Quand (heure de La Havane)",
+        "stepSave": "Enregistrer l’étape",
+        "cancel": "Annuler",
+        "close": "Fermer",
+        "failed": "Enregistrement impossible : {message}"
       },
       "payments": "Paiements",
       "paymentsDescription": "Les liens sont créés une fois la réservation SECURED_AND_INVOICED ; le premier paiement reçu (l'acompte ou le montant total) la confirme, et le solde est réglé ensuite.",
@@ -1957,7 +1985,20 @@
       "failed": "Impossible d'enregistrer l'incident",
       "resolving": "Résolution…",
       "resolve": "Résoudre",
-      "resolveFailed": "Impossible de résoudre"
+      "resolveFailed": "Impossible de résoudre",
+      "source": "Origine",
+      "sources": {
+        "DESK": "Saisi par le bureau",
+        "WORKER_APP": "App du prestataire",
+        "WORKER_SMS": "SMS du prestataire"
+      },
+      "service": "Prestation",
+      "serviceNone": "Pas liée à une prestation",
+      "reportedBy": "Signalé par {name}",
+      "reportedAt": "Signalé à {time}",
+      "position": "Position {lat}, {lng}",
+      "acknowledgedBy": "Confirmé par {name} à {time}",
+      "notAcknowledged": "Pas encore confirmé"
     },
     "payments": {
       "none": "Aucun lien de paiement pour l'instant.",
@@ -2312,6 +2353,28 @@
         "toast": "Alerte prise en compte · son coupé pour {code}",
         "undo": "Annuler",
         "failed": "La prise en compte de {code} n’a pas été enregistrée : {message}"
+      },
+      "emergency": {
+        "listLabel": "Urgences sur place",
+        "title": "Urgence sur place · {code}",
+        "body": "{worker} a signalé une urgence à {time} : {category}.",
+        "categories": {
+          "MEDICAL": "médicale",
+          "MECHANICAL": "mécanique",
+          "SECURITY": "sécurité",
+          "OTHER": "autre, explication par téléphone"
+        },
+        "someone": "Le prestataire",
+        "call": "Appeler {worker}",
+        "position": "Position {lat}, {lng}",
+        "accuracy": "± {accuracy} m",
+        "noPosition": "Aucune position envoyée : appelez le prestataire.",
+        "openPosition": "Ouvrir la position",
+        "openBooking": "Ouvrir la réservation",
+        "acknowledge": "Je m’en occupe",
+        "acknowledgeFor": "Je m’en occupe · urgence sur {code}",
+        "failed": "Impossible de confirmer l’urgence sur {code} : {message}",
+        "announce": "Urgence sur place. Réservation {code} : {worker}, {category}, à {time}."
       }
     },
     "messages": {

@@ -42,6 +42,7 @@ import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { EVENT_REQUEST_BADGE } from '@/lib/events';
+import { MATRIX_COLUMNS } from '@/lib/matrix-columns';
 import { bookingDates, money, opsDate, opsTime, percent } from '@/lib/ops-format';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -84,6 +85,8 @@ export default async function BookingPage({
   const t = await getTranslations('backoffice.reservation');
   const traveler = await getTranslations('status.traveler');
   const requestsT = await getTranslations('eventRequestsDesk');
+  const incidentT = await getTranslations('backoffice.incidents');
+  const servicesT = await getTranslations('backoffice.dashboard.matrix.columns');
   const locale = await getLocale();
   const session = await getServerSession();
   const [access, dispatchAccess, paymentsAccess, customersAccess] = await Promise.all([
@@ -466,12 +469,61 @@ export default async function BookingPage({
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-muted">{incident.description}</p>
+                  {incident.description ? (
+                    <p className="mt-1 text-muted">{incident.description}</p>
+                  ) : null}
+                  {incident.source === 'DESK' ? null : (
+                    <p className="mt-1 text-caption text-muted">
+                      {[
+                        incidentT(`sources.${incident.source}`),
+                        incident.supplierName
+                          ? incidentT('reportedBy', { name: incident.supplierName })
+                          : null,
+                        incidentT('reportedAt', {
+                          time: opsTime(
+                            incident.occurredAt ?? incident.createdAt,
+                            locale,
+                          ),
+                        }),
+                        incident.position
+                          ? incidentT('position', {
+                              lat: incident.position.latitude.toFixed(5),
+                              lng: incident.position.longitude.toFixed(5),
+                            })
+                          : null,
+                        incident.acknowledgedAt
+                          ? incidentT('acknowledgedBy', {
+                              name: incident.acknowledgedBy ?? '—',
+                              time: opsTime(incident.acknowledgedAt, locale),
+                            })
+                          : incidentT('notAcknowledged'),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
           )}
-          {canManage ? <IncidentLogForm reservationId={reservation.id} /> : null}
+          {canManage ? (
+            <IncidentLogForm
+              reservationId={reservation.id}
+              services={reservation.serviceItems.map((item) => ({
+                id: item.id,
+                label: [
+                  servicesT(
+                    MATRIX_COLUMNS.find((column) => column.type === item.serviceType)!
+                      .key,
+                  ),
+                  item.supplierName,
+                  bookingDates(item.serviceDateStart, item.serviceDateEnd, locale),
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+              }))}
+            />
+          ) : null}
         </div>
       </Section>
 

@@ -15,6 +15,7 @@ import { bookingDates, countdown, money, opsDate, opsTime } from '@/lib/ops-form
 
 import { RefundActions } from '../refund-actions';
 import { useDeskAlerts, type FlaggedItem } from '../desk-alerts';
+import { EmergencyAlerts } from '../emergency-alerts';
 import { OPEN_ITEM_STATUSES } from '../service-item-status';
 import { LiteRedispatch } from './lite-redispatch';
 
@@ -292,6 +293,7 @@ export function LiteAlerts({
 
   return (
     <div className="flex flex-col gap-3 px-5 pb-6 pt-3.5">
+      <EmergencyAlerts />
       <ul aria-label={t('summary')} className="flex flex-wrap gap-1.5">
         <li>
           <Badge variant="timeout">{t('pills.red', { count: red.length })}</Badge>

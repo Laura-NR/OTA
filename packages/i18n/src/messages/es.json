@@ -1769,7 +1769,35 @@
         "call": "Llamar",
         "acknowledgeFor": "Acusar recibo de la alerta roja · {service} · {code}",
         "startHint": "Ofrece cada servicio al siguiente trabajador cualificado.",
-        "rule": "Estados de cada servicio: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un redespacho retira la oferta abierta y lo anota en el registro de auditoría. Las tarifas de pago son el neto del proveedor; el viajero nunca ve esta columna."
+        "rule": "Estados de cada servicio: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un redespacho retira la oferta abierta y lo anota en el registro de auditoría. Las tarifas de pago son el neto del proveedor; el viajero nunca ve esta columna.",
+        "stepLine": "{step} · {time}",
+        "steps": {
+          "EN_ROUTE": "En camino",
+          "ARRIVED": "Llegó",
+          "STARTED": "En servicio",
+          "FINISHED": "Terminado"
+        },
+        "brief": "Indicaciones…",
+        "briefFor": "Indicaciones para el colaborador · {service} · {code}",
+        "briefTitle": "Indicaciones para el colaborador",
+        "briefDescription": "El colaborador lo lee en la app, también sin señal. Escribe solo lo que el trabajo necesita: se borra con los datos del viajero.",
+        "meetingPoint": "Punto de recogida",
+        "dropOff": "Destino",
+        "workerBrief": "Notas para el colaborador",
+        "workerBriefHint": "Vuelo, texto del cartel, movilidad, equipaje. 500 caracteres como máximo.",
+        "briefSave": "Guardar indicaciones",
+        "briefWritten": "Con indicaciones",
+        "briefMissing": "Sin indicaciones",
+        "recordStep": "Registrar paso…",
+        "recordStepFor": "Registrar un paso · {service} · {code}",
+        "stepTitle": "Registrar un paso por teléfono",
+        "stepDescription": "Cuando el colaborador avisa un paso por teléfono. Queda auditado como de la central.",
+        "stepField": "Paso",
+        "stepTime": "Cuándo (hora de La Habana)",
+        "stepSave": "Registrar paso",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "failed": "No se pudo guardar: {message}"
       },
       "payments": "Pagos",
       "paymentsDescription": "Los enlaces se crean cuando la reserva está SECURED_AND_INVOICED; el primer pago recibido (el depósito o el importe completo) la confirma, y el resto se paga después.",
@@ -1957,7 +1985,20 @@
       "failed": "No se pudo registrar la incidencia",
       "resolving": "Resolviendo…",
       "resolve": "Resolver",
-      "resolveFailed": "No se pudo resolver"
+      "resolveFailed": "No se pudo resolver",
+      "source": "Origen",
+      "sources": {
+        "DESK": "Registrado por la central",
+        "WORKER_APP": "App del colaborador",
+        "WORKER_SMS": "SMS del colaborador"
+      },
+      "service": "Servicio",
+      "serviceNone": "No es de un servicio",
+      "reportedBy": "Avisó {name}",
+      "reportedAt": "Aviso a las {time}",
+      "position": "Ubicación {lat}, {lng}",
+      "acknowledgedBy": "Confirmado por {name} a las {time}",
+      "notAcknowledged": "Sin confirmar"
     },
     "payments": {
       "none": "Aún no hay enlaces de pago.",
@@ -2312,6 +2353,28 @@
         "toast": "Recibo acusado · sonido apagado para {code}",
         "undo": "Deshacer",
         "failed": "No se registró el acuse de recibo de {code}: {message}"
+      },
+      "emergency": {
+        "listLabel": "Emergencias en el lugar",
+        "title": "Emergencia en el lugar · {code}",
+        "body": "{worker} avisó de una emergencia a las {time}: {category}.",
+        "categories": {
+          "MEDICAL": "médica",
+          "MECHANICAL": "mecánica",
+          "SECURITY": "seguridad",
+          "OTHER": "otra, lo explica por teléfono"
+        },
+        "someone": "El colaborador",
+        "call": "Llamar a {worker}",
+        "position": "Ubicación {lat}, {lng}",
+        "accuracy": "± {accuracy} m",
+        "noPosition": "Sin ubicación: llama al colaborador.",
+        "openPosition": "Abrir la ubicación",
+        "openBooking": "Abrir la reserva",
+        "acknowledge": "Me ocupo",
+        "acknowledgeFor": "Me ocupo · emergencia en {code}",
+        "failed": "No se pudo confirmar la emergencia de {code}: {message}",
+        "announce": "Emergencia en el lugar. Reserva {code}: {worker}, {category}, a las {time}."
       }
     },
     "messages": {
