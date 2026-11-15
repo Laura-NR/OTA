@@ -25,8 +25,8 @@ import { JobCard } from './JobsScreen';
 /**
  * W-Home: who is signed in, whether the phone is in sync, the open offers
  * with their time left, the coming jobs (each opens W-Job), and the way to
- * the credentials; the bottom bar leads to the calendar and to reliability
- * and payouts. `now` is the API's clock as the app tracks it, so
+ * the credentials, and a newer version of the app when one is published;
+ * the bottom bar leads to the calendar and to reliability and payouts. `now` is the API's clock as the app tracks it, so
  * a phone set to the wrong time still counts down right.
  */
 export function HomeScreen({
@@ -42,6 +42,8 @@ export function HomeScreen({
   onOpenJob,
   onOpenCredentials,
   onSignOut,
+  update,
+  onOpenUpdate,
 }: {
   home: WorkerHomeDto;
   now: number;
@@ -56,6 +58,9 @@ export function HomeScreen({
   onOpenJob: (job: WorkerJobDto) => void;
   onOpenCredentials: () => void;
   onSignOut: () => void;
+  /** A newer APK (U3a): offered, or required once the job under way is over. */
+  update: { kind: 'optional' | 'after-job'; versionName: string } | null;
+  onOpenUpdate: () => void;
 }) {
   const { worker } = home;
   const offers = home.offers.filter(
@@ -92,6 +97,22 @@ export function HomeScreen({
       </View>
 
       {notice ? <Notice tone="warning">{notice}</Notice> : null}
+
+      {update?.kind === 'optional' ? (
+        <Card>
+          <Text style={[type.body, styles.strong]}>
+            {copy.update.title(update.versionName)}
+          </Text>
+          <Text style={type.small}>{copy.update.data}</Text>
+          <Button
+            label={copy.update.install}
+            variant="secondary"
+            onPress={onOpenUpdate}
+          />
+        </Card>
+      ) : update?.kind === 'after-job' ? (
+        <Notice tone="info">{copy.update.afterJob(update.versionName)}</Notice>
+      ) : null}
 
       <Text style={type.small}>
         {copy.home.credential(

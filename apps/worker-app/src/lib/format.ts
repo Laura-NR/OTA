@@ -95,6 +95,11 @@ export function calendarDate(iso: string): string {
   });
 }
 
+/** A download's size in megabytes, the way the update prompt and the download page say it. */
+export function megabytes(bytes: number): string {
+  return `${(bytes / 1_000_000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} MB`;
+}
+
 /**
  * Time left to answer as hours and minutes, "1:52" or "0:29" (W-Home,
  * W-Offer); never below "0:00".

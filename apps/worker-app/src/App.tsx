@@ -1,13 +1,24 @@
 import {
   emergencySms,
+  installedWorkerApp,
   needsBackgroundResend,
   workerAnswerRetryDelayMs,
+  workerAppApkFor,
+  workerAppSnoozedUntil,
+  workerAppUpdate,
+  workerJobActive,
+  workerJsUpdateCheckDue,
   type EmergencyCategory,
   type EmergencyPosition,
   type JobAction,
   type JobStep,
 } from '@ota/domain';
-import type { WorkerHomeDto, WorkerJobDto, WorkerOfferDto } from '@ota/schemas';
+import type {
+  WorkerAppLatestDto,
+  WorkerHomeDto,
+  WorkerJobDto,
+  WorkerOfferDto,
+} from '@ota/schemas';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-native';
@@ -24,9 +35,11 @@ import {
   waiting,
 } from './lib/answers';
 import { ApiError, createWorkerApi } from './lib/api';
+import { installedVersionCode } from './lib/app-version';
 import { setBackgroundResend } from './lib/background';
 import { settings } from './lib/config';
 import { copy } from './lib/copy';
+import { fetchJsUpdate } from './lib/js-update';
 import { askForPosition, emergencyPosition } from './lib/position';
 import { kv, tokenStore } from './lib/storage';
 import { CalendarScreen } from './screens/CalendarScreen';
@@ -37,6 +50,7 @@ import { JobScreen, type EmergencyOutcome } from './screens/JobScreen';
 import { JobsScreen } from './screens/JobsScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { OfferScreen, type OfferOutcome } from './screens/OfferScreen';
+import { UpdateScreen } from './screens/UpdateScreen';
 import { TabBar, colors, type Tab } from './ui';
 
 const api = createWorkerApi(settings.apiUrl);
@@ -46,6 +60,40 @@ const HOME_KEY = 'ota.worker.home';
 
 /** How often the countdowns move. */
 const TICK_MS = 15_000;
+
+/** When "Más tarde" hides an optional update until, and the last JS update check (U3a, U5a). */
+const UPDATE_SNOOZE_KEY = 'ota.worker.updateSnoozedUntil';
+const JS_CHECK_KEY = 'ota.worker.jsUpdateCheckedAt';
+
+/** The release and split this APK is (U8). */
+const installed = installedWorkerApp(installedVersionCode());
+
+/** Whether a job is under way, from the home and the steps still on the phone (U3a). */
+function jobUnderWay(
+  jobs: readonly WorkerJobDto[],
+  queued: readonly JobAction[],
+  now: Date,
+): boolean {
+  const date = (value: string | null) => (value ? new Date(value) : null);
+  return (
+    queued.some((action) => action.kind === 'step' && action.step !== 'FINISHED') ||
+    workerJobActive(
+      jobs.map((job) => ({
+        startsAt: new Date(job.startsAt),
+        endsAt: new Date(job.endsAt),
+        steps: job.steps
+          ? {
+              EN_ROUTE: date(job.steps.EN_ROUTE),
+              ARRIVED: date(job.steps.ARRIVED),
+              STARTED: date(job.steps.STARTED),
+              FINISHED: date(job.steps.FINISHED),
+            }
+          : null,
+      })),
+      now,
+    )
+  );
+}
 
 /**
  * The background resend comes on top of the resend while the app is open, so
@@ -65,6 +113,7 @@ type Screen =
   | { name: 'earnings' }
   | { name: 'credentials' }
   | { name: 'jobs' }
+  | { name: 'update' }
   | { name: 'job'; serviceItemId: string }
   | {
       name: 'offer';
@@ -90,7 +139,8 @@ const SCREEN_TAB: Partial<Record<Screen['name'], Tab>> = {
 /**
  * The worker app (ADR 0007, Phase 7): sign in with a code, see offers and
  * jobs, answer an offer, block days in the calendar, read their reliability
- * and payouts, keep their documents up to date. Answers are saved on the phone first and resent
+ * and payouts, keep their documents up to date, and update the app outside the
+ * stores. Answers are saved on the phone first and resent
  * until the API answers (`docs/worker-app-plan.md` W6), in the background too
  * (spec §7.2); the last home is kept for when there is no signal.
  */
@@ -112,6 +162,38 @@ export function App() {
   const [skew, setSkew] = useState(0);
   const [now, setNow] = useState(Date.now());
   const retry = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The published APK (U3a) and when "Más tarde" stops hiding it.
+  const [latest, setLatest] = useState<WorkerAppLatestDto | null>(null);
+  const [snoozedUntil, setSnoozedUntil] = useState<Date | null>(null);
+
+  /**
+   * Reads the published APK and, once a day with no job under way, fetches a
+   * signed JS update for the next start (U3a, U5a). Neither is needed to
+   * work: with no signal they wait for the next sync.
+   */
+  const checkForUpdates = useCallback(async (jobActive: boolean) => {
+    try {
+      setLatest(await api.latestRelease());
+    } catch {
+      // No signal or no answer: the prompt keeps what it last knew.
+    }
+    const checkedAt = await kv.get(JS_CHECK_KEY);
+    if (
+      !workerJsUpdateCheckDue(
+        checkedAt ? new Date(checkedAt) : null,
+        jobActive,
+        new Date(),
+      )
+    ) {
+      return;
+    }
+    try {
+      await fetchJsUpdate();
+      await kv.set(JS_CHECK_KEY, new Date().toISOString());
+    } catch (error) {
+      console.warn('JS update not checked', error);
+    }
+  }, []);
 
   const signedOut = useCallback(async (message: string | null) => {
     keepResendingInBackground(false);
@@ -169,6 +251,7 @@ export function App() {
         setNow(Date.now());
         setOffline(false);
         await kv.set(HOME_KEY, JSON.stringify(fresh));
+        void checkForUpdates(jobUnderWay(fresh.jobs, flushed.jobs.pending, new Date()));
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           await signedOut(copy.home.signedOut);
@@ -181,7 +264,7 @@ export function App() {
         setRefreshing(false);
       }
     },
-    [signedOut],
+    [signedOut, checkForUpdates],
   );
 
   const inFlight = useRef<Promise<void> | null>(null);
@@ -211,9 +294,12 @@ export function App() {
 
   useEffect(() => {
     void (async () => {
+      const snoozed = await kv.get(UPDATE_SNOOZE_KEY);
+      if (snoozed) setSnoozedUntil(new Date(snoozed));
       const saved = await tokenStore.get();
       if (!saved) {
         setScreen({ name: 'login' });
+        await checkForUpdates(false);
         return;
       }
       setToken(saved);
@@ -225,7 +311,7 @@ export function App() {
       setScreen({ name: 'home' });
       await sync(saved);
     })();
-  }, [sync]);
+  }, [sync, checkForUpdates]);
 
   useEffect(() => {
     if (!token) return;
@@ -350,18 +436,52 @@ export function App() {
     setScreen(TAB_SCREEN[tab]);
   }
 
+  async function snoozeUpdate() {
+    const until = workerAppSnoozedUntil(new Date());
+    setSnoozedUntil(until);
+    await kv.set(UPDATE_SNOOZE_KEY, until.toISOString());
+    setScreen({ name: 'home' });
+  }
+
   const serverNow = now + skew;
   const openedJob =
     screen.name === 'job'
       ? (home?.jobs.find((job) => job.serviceItemId === screen.serviceItemId) ?? null)
       : null;
-  const tab = token ? (SCREEN_TAB[screen.name] ?? null) : null;
+  const release = latest?.release ?? null;
+  const update = workerAppUpdate({
+    installedVersionCode: installed.versionCode,
+    release,
+    jobActive: jobUnderWay(home?.jobs ?? [], jobActions, new Date(serverNow)),
+    snoozedUntil,
+    now: new Date(serverNow),
+  });
+  const updateApk = release ? workerAppApkFor(release.apks, installed.abi) : null;
+  // A required update stands in front of everything, offers included (U3a).
+  const updateScreen =
+    release && updateApk && latest && (update === 'required' || screen.name === 'update')
+      ? { release, apk: updateApk, downloadUrl: latest.downloadUrl }
+      : null;
+  const tab = token && update !== 'required' ? (SCREEN_TAB[screen.name] ?? null) : null;
 
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
       <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-        {screen.name === 'loading' || (screen.name !== 'login' && !home) ? (
+        {screen.name === 'loading' ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : updateScreen ? (
+          <UpdateScreen
+            release={updateScreen.release}
+            apk={updateScreen.apk}
+            apkUrl={api.apkUrl(updateScreen.apk.path)}
+            downloadUrl={updateScreen.downloadUrl}
+            required={update === 'required'}
+            onLater={() => void snoozeUpdate()}
+          />
+        ) : screen.name !== 'login' && !home ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.primary} />
           </View>
@@ -433,6 +553,12 @@ export function App() {
             onOpenJob={openJob}
             onOpenCredentials={() => setScreen({ name: 'credentials' })}
             onSignOut={() => void signOut()}
+            update={
+              update === 'optional' || update === 'after-job'
+                ? { kind: update, versionName: release!.versionName }
+                : null
+            }
+            onOpenUpdate={() => setScreen({ name: 'update' })}
           />
         )}
         {tab ? (

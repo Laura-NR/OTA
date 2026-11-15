@@ -7,6 +7,7 @@ import type {
   WorkerEarningsDto,
   WorkerFuelDto,
   WorkerHomeDto,
+  WorkerAppLatestDto,
   WorkerUploadCredentialRequest,
 } from '@ota/schemas';
 
@@ -44,6 +45,10 @@ export interface WorkerApi {
     token: string,
     upload: WorkerUploadCredentialRequest,
   ): Promise<WorkerCredentialsDto>;
+  /** The published APK, read signed out too (`docs/worker-app-distribution-plan.md` U3a). */
+  latestRelease(): Promise<WorkerAppLatestDto>;
+  /** Where an APK the release lists is downloaded from. */
+  apkUrl(path: string): string;
 }
 
 export function createWorkerApi(
@@ -165,6 +170,12 @@ export function createWorkerApi(
       return (await (
         await request('/worker/credentials', { method: 'POST', token, body: upload })
       ).json()) as WorkerCredentialsDto;
+    },
+    async latestRelease() {
+      return (await (await request('/worker-app/latest')).json()) as WorkerAppLatestDto;
+    },
+    apkUrl(path) {
+      return `${baseUrl}${path}`;
     },
   };
 }

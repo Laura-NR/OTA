@@ -115,6 +115,31 @@ export const copy = {
     home: 'Volver al inicio',
   },
   /** The bottom bar (W-Home's board; "Ofertas" lives on Inicio, with its count). */
+  update: {
+    title: (version: string) => `Nueva versión ${version}`,
+    requiredTitle: 'Actualiza la app para seguir',
+    requiredLead: (version: string) =>
+      `La central pide la versión ${version}. Las ofertas esperan a que la instales; tus respuestas guardadas no se pierden.`,
+    optionalLead: 'Hay una versión nueva de la app de colaboradores.',
+    size: (size: string, date: string) => `${size} · publicada el ${date}`,
+    data: 'Mejor con wifi: la descarga gasta datos.',
+    afterJob: (version: string) =>
+      `Hay una versión obligatoria (${version}). Te la pedimos al terminar el trabajo.`,
+    later: 'Más tarde',
+    install: 'Actualizar',
+    downloading: (done: string, total: string) => `Descargando… ${done} de ${total}`,
+    permission:
+      'Android te pedirá permitir instalar apps de «Colaboradores» la primera vez, y después confirmar la actualización.',
+    noData:
+      'Sin conexión. La descarga necesita datos o wifi; inténtalo cuando vuelva la señal.',
+    incomplete: 'La descarga llegó incompleta. Inténtalo otra vez.',
+    notInstalled:
+      'La actualización no se instaló. Inténtalo otra vez, o descárgala desde la página de la app.',
+    retry: 'Reintentar',
+    page: 'Abrir la página de descarga',
+    desk: (phone: string) => `¿Problemas? Llama a la central: ${phone}`,
+    back: 'Volver',
+  },
   nav: {
     label: 'Secciones',
     home: 'Inicio',
