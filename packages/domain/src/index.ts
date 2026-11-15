@@ -794,6 +794,17 @@ export {
   type JobStepTimes,
 } from './worker/job';
 export {
+  WORKER_HOME_MESSAGES,
+  WORKER_MESSAGE_MAX_LENGTH,
+  jobRunsToday,
+  messageArrivedLate,
+  queueWorkerMessage,
+  workerMessageRefusal,
+  type WorkerMessageDraft,
+  type WorkerMessageJob,
+  type WorkerMessageRefusal,
+} from './worker/messages';
+export {
   WORKER_APP_ABIS,
   WORKER_APP_JOB_LEAD_HOURS,
   WORKER_APP_JS_CHECK_HOURS,
@@ -899,6 +910,7 @@ export {
   isUrgentThread,
   matchesInboxFilter,
   type InboxFilter,
+  type InboxThreadKind,
   type InboxThreadInput,
 } from './ops-lite/inbox';
 export { redAlertCards, type RedAlertCard, type RedAlertEntry } from './ops-lite/alerts';

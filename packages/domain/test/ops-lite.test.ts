@@ -256,10 +256,12 @@ describe('todaysMovements', () => {
 describe('AL-Inbox threads', () => {
   function thread(overrides: Partial<InboxThreadInput> = {}): InboxThreadInput {
     return {
+      kind: 'traveler',
       lastSender: 'TRAVELER',
       lastAt: new Date('2026-11-14T14:00:00Z'),
       unread: 0,
       openDisruption: false,
+      jobToday: false,
       ...overrides,
     };
   }
@@ -272,12 +274,31 @@ describe('AL-Inbox threads', () => {
     expect(isUrgentThread(thread())).toBe(false);
   });
 
+  it("is urgent while a worker waits for a reply about today's job (M6)", () => {
+    const worker = thread({ kind: 'worker', lastSender: 'WORKER' });
+    expect(isUrgentThread({ ...worker, jobToday: true })).toBe(true);
+    expect(isUrgentThread(worker)).toBe(false);
+    expect(isUrgentThread({ ...worker, jobToday: true, lastSender: 'OPERATIONS' })).toBe(
+      false,
+    );
+    // A disruption case is a traveler's urgency, not a worker's.
+    expect(isUrgentThread({ ...worker, openDisruption: true })).toBe(false);
+  });
+
   it('filters by urgency and by unread messages', () => {
     const unread = thread({ unread: 2 });
     expect(matchesInboxFilter(unread, 'unread')).toBe(true);
     expect(matchesInboxFilter(unread, 'urgent')).toBe(false);
     expect(matchesInboxFilter(thread(), 'unread')).toBe(false);
     expect(matchesInboxFilter(thread(), 'all')).toBe(true);
+  });
+
+  it('filters travelers apart from workers', () => {
+    const worker = thread({ kind: 'worker', lastSender: 'WORKER' });
+    expect(matchesInboxFilter(worker, 'workers')).toBe(true);
+    expect(matchesInboxFilter(worker, 'travelers')).toBe(false);
+    expect(matchesInboxFilter(thread(), 'travelers')).toBe(true);
+    expect(matchesInboxFilter(thread(), 'workers')).toBe(false);
   });
 
   it('orders urgent, then unread, then the latest message first', () => {

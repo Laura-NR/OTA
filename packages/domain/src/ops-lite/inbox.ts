@@ -1,30 +1,37 @@
-/** AL-Inbox's filters. Worker threads do not exist yet, so there is no Workers filter. */
-export const INBOX_FILTERS = ['all', 'urgent', 'unread'] as const;
+/** AL-Inbox's filters: the board's four, plus Unread, which the desk already uses. */
+export const INBOX_FILTERS = ['all', 'urgent', 'unread', 'travelers', 'workers'] as const;
 
 export type InboxFilter = (typeof INBOX_FILTERS)[number];
 
+/** A traveler's thread (one per booking) or a worker's (one per worker, M2). */
+export type InboxThreadKind = 'traveler' | 'worker';
+
 export interface InboxThreadInput {
+  kind: InboxThreadKind;
   /** Who wrote the thread's latest message. */
-  lastSender: 'TRAVELER' | 'OPERATIONS';
+  lastSender: 'TRAVELER' | 'WORKER' | 'OPERATIONS';
   lastAt: Date;
-  /** The traveler's messages nobody on the desk has opened yet. */
+  /** The traveler's or the worker's messages nobody on the desk has opened yet. */
   unread: number;
-  /** The booking is on an open disruption case. */
+  /** A traveler's booking is on an open disruption case. */
   openDisruption: boolean;
+  /** A worker's latest message is about a job that runs today (`jobRunsToday`). */
+  jobToday: boolean;
 }
 
-/** The traveler wrote last, so the desk owes a reply. */
+/** The traveler or the worker wrote last, so the desk owes a reply. */
 export function awaitsReply(thread: Pick<InboxThreadInput, 'lastSender'>): boolean {
-  return thread.lastSender === 'TRAVELER';
+  return thread.lastSender !== 'OPERATIONS';
 }
 
 /**
- * Urgent on AL-Inbox: the traveler waits for a reply while their booking is
- * on an open disruption case ("Urgent because a disruption case is open on
- * this booking").
+ * Urgent on AL-Inbox: a traveler waits for a reply while their booking is on
+ * an open disruption case ("Urgent because a disruption case is open on this
+ * booking"), or a worker waits for one about a job that runs today (M6).
  */
 export function isUrgentThread(thread: InboxThreadInput): boolean {
-  return thread.openDisruption && awaitsReply(thread);
+  const pressing = thread.kind === 'worker' ? thread.jobToday : thread.openDisruption;
+  return pressing && awaitsReply(thread);
 }
 
 export function matchesInboxFilter(
@@ -36,6 +43,10 @@ export function matchesInboxFilter(
       return isUrgentThread(thread);
     case 'unread':
       return thread.unread > 0;
+    case 'travelers':
+      return thread.kind === 'traveler';
+    case 'workers':
+      return thread.kind === 'worker';
     default:
       return true;
   }
