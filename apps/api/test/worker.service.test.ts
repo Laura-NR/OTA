@@ -21,7 +21,16 @@ import {
   workerCodeIdentifier,
 } from '../src/worker/worker-codes.service';
 import { WorkerService } from '../src/worker/worker.service';
+import type { WorkerMessagesService } from '../src/worker-messages/worker-messages.service';
 import { fakeOperatingSettings } from './fixtures/operating-settings';
+
+/** The thread with the desk W-Home carries (docs/schema-w-messages.md M5). */
+const THREAD = {
+  threadOf: async (supplierId: string) => ({
+    messages: [],
+    unread: supplierId === 'supplier-reinier' ? 1 : 0,
+  }),
+} as unknown as WorkerMessagesService;
 
 const NOW = new Date('2026-11-09T10:00:00Z');
 const later = (seconds: number) => new Date(NOW.getTime() + seconds * 1000);
@@ -447,6 +456,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
       fakeOperatingSettings({ amberPercent: 75 }),
       {} as SuppliersService,
       {} as SupplierPayoutsService,
+      THREAD,
     );
   }
 
@@ -504,6 +514,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
       },
     ]);
     expect(result.jobs.map((job) => job.serviceItemId)).toEqual(['item-job']);
+    expect(result.messages).toEqual({ messages: [], unread: 1 });
     expect(result.serverTime).toBe(NOW.toISOString());
     expect(JSON.stringify(result)).not.toMatch(/Chen|@|userId/);
   });
@@ -709,6 +720,7 @@ describe("the worker app's calendar (W-Calendar)", () => {
       settings,
       suppliers,
       {} as SupplierPayoutsService,
+      THREAD,
     );
     return { service, rows, audit, resources };
   }
@@ -1042,6 +1054,7 @@ describe("the worker app's earnings (W-Earnings)", () => {
         TENANT,
         {} as DocumentRenderer,
       ),
+      THREAD,
     );
   }
 

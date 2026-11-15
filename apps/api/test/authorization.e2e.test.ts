@@ -276,6 +276,18 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/worker/jobs/${SERVICE_ITEM}/emergency`, allowed: 'worker' },
   { method: 'patch', path: `/service-items/${SERVICE_ITEM}/brief`, allowed: 'opsWrite' },
   { method: 'post', path: `/service-items/${SERVICE_ITEM}/steps`, allowed: 'opsWrite' },
+  // Worker ↔ desk messages: the worker's own thread, the desk's side of it.
+  { method: 'get', path: '/worker/messages', allowed: 'worker' },
+  { method: 'post', path: '/worker/messages', allowed: 'worker' },
+  { method: 'post', path: '/worker/messages/read', allowed: 'worker' },
+  { method: 'get', path: `/suppliers/${SUPPLIER}/messages`, allowed: 'opsRead' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/messages`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/messages/read`, allowed: 'opsRead' },
+  {
+    method: 'get',
+    path: `/reservations/${RESERVATION}/worker-threads`,
+    allowed: 'opsRead',
+  },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',

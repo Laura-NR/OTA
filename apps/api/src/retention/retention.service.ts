@@ -604,6 +604,12 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
           where: { serviceItemId: { in: serviceItemIds } },
           data: { declineReason: null },
         });
+        // Worker messages M8: one about these jobs may name the travelers or
+        // their health; a worker's message about no job is the supplier's own.
+        await tx.workerMessage.updateMany({
+          where: { serviceItemId: { in: serviceItemIds } },
+          data: { body: '[redacted]' },
+        });
       }
 
       // M8: the status board's notes about the party go; the case, its

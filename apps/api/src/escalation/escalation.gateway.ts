@@ -18,6 +18,7 @@ import type {
   EmergencyEvent,
   EscalationEvent,
   EscalationPublisher,
+  WorkerMessageEvent,
 } from './escalation.publisher';
 
 const OPS_ROOM = 'ops';
@@ -85,7 +86,13 @@ export class EscalationGateway
     await client.join(OPS_ROOM);
   }
 
-  publish(event: EscalationEvent | DeskAlertEvent | EmergencyEvent): void {
-    this.server?.to(OPS_ROOM).emit('escalation', event);
+  publish(
+    event: EscalationEvent | DeskAlertEvent | EmergencyEvent | WorkerMessageEvent,
+  ): void {
+    // A worker's message is not an alert: the alert strip re-reads on every
+    // `escalation` event, so messages go out under their own name.
+    this.server
+      ?.to(OPS_ROOM)
+      .emit(event.type === 'worker.message' ? 'worker-message' : 'escalation', event);
   }
 }

@@ -47,6 +47,7 @@ import type {
 import type { AuthUser } from '../common/auth/auth-user';
 import { jobStepTimes, toJobStepTimesDto } from '../jobs/job-steps';
 import { PrismaService } from '../prisma/prisma.service';
+import { WorkerMessagesService } from '../worker-messages/worker-messages.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
 import {
   PAYOUT_CURRENCY,
@@ -177,6 +178,7 @@ export class WorkerService {
     private readonly settings: OperatingSettingsService,
     private readonly suppliers: SuppliersService,
     private readonly payouts: SupplierPayoutsService,
+    private readonly workerMessages: WorkerMessagesService,
   ) {}
 
   async home(actor: AuthUser, now: Date = new Date()): Promise<WorkerHomeDto> {
@@ -195,7 +197,7 @@ export class WorkerService {
       throw new ForbiddenException('No supplier profile is linked to this account');
     }
 
-    const [offers, jobs, ledger, thresholds] = await Promise.all([
+    const [offers, jobs, ledger, thresholds, messages] = await Promise.all([
       this.prisma.serviceItem.findMany({
         where: {
           supplierId: profile.id,
@@ -221,6 +223,7 @@ export class WorkerService {
         select: { supplierId: true, status: true, offeredAt: true, respondedAt: true },
       }),
       this.settings.thresholds(),
+      this.workerMessages.threadOf(profile.id),
     ]);
     const [card] = calculateSupplierReliability(ledger);
     const hurryShare = thresholds.amberPercent / 100;
@@ -239,6 +242,7 @@ export class WorkerService {
       },
       offers: offers.flatMap((item) => this.toOffer(item, hurryShare)),
       jobs: jobs.map((item) => this.toHomeJob(item)),
+      messages,
       serverTime: now.toISOString(),
     };
   }

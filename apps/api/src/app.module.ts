@@ -29,6 +29,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProposalsModule } from './proposals/proposals.module';
 import { JobsModule } from './jobs/jobs.module';
+import { WorkerMessagesModule } from './worker-messages/worker-messages.module';
 import { QualityModule } from './quality/quality.module';
 import { RegulatoryModule } from './regulatory/regulatory.module';
 import { ReportsModule } from './reports/reports.module';
@@ -96,6 +97,7 @@ export const httpLoggerOptions = {
     RegulatoryModule,
     AssistantModule,
     JobsModule,
+    WorkerMessagesModule,
     QualityModule,
     OpsLiteModule,
     ReportsModule,

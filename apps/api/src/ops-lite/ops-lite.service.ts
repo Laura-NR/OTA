@@ -9,6 +9,7 @@ import {
   compareInboxThreads,
   cubaProvinceName,
   isUrgentThread,
+  type InboxThreadInput,
   onTheGround,
   pipelineClock,
   provinceToday,
@@ -25,6 +26,7 @@ import type {
 } from '@ota/schemas';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { WorkerMessagesService } from '../worker-messages/worker-messages.service';
 
 /** The bookings AL-Pipeline lists under each state; the count covers the rest. */
 export const OPS_LITE_STATE_ROWS = 3;
@@ -153,7 +155,10 @@ function pipelineRow(row: BookingRow, now: Date): OpsLitePipelineRowDto {
  */
 @Injectable()
 export class OpsLiteService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly workerMessages: WorkerMessagesService,
+  ) {}
 
   async pipeline(now = new Date()): Promise<OpsLitePipelineDto> {
     const [counts, perState, running, openCases, dueOrStarting] = await Promise.all([
@@ -308,7 +313,7 @@ export class OpsLiteService {
    * booking with a message nobody opened or on an open case, so no urgent or
    * unread thread falls off the list.
    */
-  async inbox(): Promise<OpsLiteInboxDto> {
+  async inbox(now = new Date()): Promise<OpsLiteInboxDto> {
     const [latest, pressing] = await Promise.all([
       this.prisma.message.groupBy({
         by: ['reservationId'],
@@ -358,11 +363,13 @@ export class OpsLiteService {
     const threads: OpsLiteInboxThreadDto[] = rows
       .map((row) => {
         const last = row.messages[0]!;
-        const input = {
+        const input: InboxThreadInput = {
+          kind: 'traveler',
           lastSender: last.sender,
           lastAt: last.createdAt,
           unread: row._count.messages,
           openDisruption: row.disruptions.length > 0,
+          jobToday: false,
         };
         return { row, input };
       })
@@ -371,7 +378,7 @@ export class OpsLiteService {
         ...context(row),
         lastMessage: {
           body: row.messages[0]!.body,
-          sender: input.lastSender,
+          sender: row.messages[0]!.sender,
           createdAt: input.lastAt.toISOString(),
         },
         unread: input.unread,
@@ -380,12 +387,17 @@ export class OpsLiteService {
         disruption: row.disruptions[0]?.case ?? null,
       }));
 
+    const workers = await this.workerMessages.inboxThreads(now);
+    const both = [...threads, ...workers];
     return {
       threads,
+      workers,
       counts: {
-        all: threads.length,
-        urgent: threads.filter((thread) => thread.urgent).length,
-        unread: threads.filter((thread) => thread.unread > 0).length,
+        all: both.length,
+        urgent: both.filter((thread) => thread.urgent).length,
+        unread: both.filter((thread) => thread.unread > 0).length,
+        travelers: threads.length,
+        workers: workers.length,
       },
     };
   }

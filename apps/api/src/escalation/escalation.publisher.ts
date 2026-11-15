@@ -40,11 +40,27 @@ export interface EmergencyEvent {
 }
 
 /**
+ * Worker ↔ desk messages M5: a message in a worker's thread, from the worker
+ * or someone on the desk, so open inboxes and threads follow. It goes out as
+ * its own socket event (`worker-message`), not as an alert.
+ */
+export interface WorkerMessageEvent {
+  type: 'worker.message';
+  supplierId: string;
+  messageId: string;
+  sender: 'WORKER' | 'OPERATIONS';
+  serviceItemId: string | null;
+  occurredAt: string;
+}
+
+/**
  * Broadcasts dispatch/escalation events to the operations desk. The dispatch
  * service depends only on this interface, so tests run without a socket server.
  */
 export interface EscalationPublisher {
-  publish(event: EscalationEvent | DeskAlertEvent | EmergencyEvent): void;
+  publish(
+    event: EscalationEvent | DeskAlertEvent | EmergencyEvent | WorkerMessageEvent,
+  ): void;
 }
 
 export class NoopEscalationPublisher implements EscalationPublisher {
