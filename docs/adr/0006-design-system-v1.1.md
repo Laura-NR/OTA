@@ -1941,3 +1941,28 @@ board was silent or asks for what does not exist, the build decided:
   bottom sheet at phone width).
 - **Traveler.** The trip page's status cell adds "Your driver is on the way", "Delivered" and
   the like per service type, without the worker's name, timed as the row's own dates are.
+
+## Amendment, 2026-11-15 (later): worker app distribution
+
+ADR 0007 A3's distribution screens were never drawn. The build resolved them with existing
+tokens and components (`docs/worker-app-distribution-plan.md` §5); no token was added.
+
+- **Download page** (storefront `/app`, en/es/fr). A content page on the standard container,
+  narrowed to `max-w-3xl`: the `h1`/`display-2` title and `body-lg` lede, the release as a
+  `Card` (version `h3`, size and date in `body-sm` tabular figures, the primary `lg` button
+  for arm64, a primary-700 underlined link for the 32-bit split, the certificate in
+  `font-mono` `body-sm` that breaks anywhere), then the install steps as a numbered list and
+  the failures as a bulleted one. A3's illustrated steps are text: the drawings would be a
+  brand export (like the adaptive icon), and screenshots of Android's dialogs differ per
+  maker. An iPhone sees a `warning` `Alert` ("Solo para Android"); with no release, an `info`
+  `Alert`.
+- **Update prompt** (worker app). The optional update is a `Card` on the home with the
+  version, the data note and a secondary "Ver la nueva versión" (the home's "Actualizar"
+  already refreshes it); the update screen, with A3's "Actualizar", reuses the app's
+  title, body, `Card`, `Notice` and `Button`; the progress bar is an 8 dp `line` track filled
+  with `primary` (radius sm). A required update replaces the whole screen and the bottom bar,
+  with no "Más tarde". A job under way turns it into an `info` notice on the home.
+- **Desk card** (`/suppliers/app-card`, en/es/fr). A `Card` capped at `max-w-md`, centred: the
+  agency overline, the heading, the QR at 192 px, the link in `font-mono`, the version and
+  certificate in `caption`; "Print" is a secondary button hidden in print, as is the hint for
+  a missing QR.

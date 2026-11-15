@@ -1,6 +1,7 @@
 # Worker app distribution: plan for review
 
-**Status:** proposed 2026-11-15; awaiting the owner's decisions U1–U8.
+**Status:** proposed 2026-11-15; **approved 2026-11-15, U1–U8 as recommended** (U1a, U2a,
+U3a, U4a, U5a, U6a, U7a, U8: all three modules).
 **Date:** 2026-11-15
 **Scope:** Phase 7, `docs/worker-app-plan.md` §8 item 2: the download page, the in-app update
 prompt and self-hosted `expo-updates`. ADR 0007 settles the frame (sideloaded split-ABI APKs,
@@ -129,3 +130,60 @@ drawings are a brand export, like the adaptive icon); push.
   prompt in the app's web preview.
 - Not verifiable here: the install, the update download and the installer hand-off on a phone
   (the field test's checklist gains them).
+
+## 5. As built (2026-11-15)
+
+Approved U1–U8 as recommended. No migration. Three new dependencies: `expo-updates` 58.0.20,
+`expo-intent-launcher` 58.0.3, `expo-application` 58.1.2.
+
+- **Domain** `packages/domain/src/worker/app-release.ts`: split version codes (release × 10 +
+  2 for arm64, 1 for 32-bit ARM) and the split a phone downloads; `workerJobActive` (a step
+  taken and not finished, or an unfinished job starting within 2 h and not over);
+  `workerAppUpdate` (`required`, `after-job`, `optional`, `none`; "Más tarde" hides an optional
+  one 24 h); the once-a-day JS check, never during a job; `workerJsUpdateRefusal` (no APK,
+  another runtime, a native module changed); the approval SMS (one GSM-7 segment, or none).
+- **API** `apps/api/src/worker-app/`, all `@Public`: `GET /worker-app/latest` (the release
+  without server file names or native modules, and `downloadUrl` from
+  `WORKER_APP_PUBLIC_URL`, default `<storefront>/app`); `GET /worker-app/apk/:file` (only a
+  file the release lists, ranges); `GET /worker-app/updates/manifest` (expo-updates protocol 1:
+  a `multipart/mixed` manifest part with the release tool's `expo-signature`, 204 when nothing
+  is published for the phone's `expo-runtime-version`, 400 unless `expo-platform: android`);
+  `GET /worker-app/updates/:runtime/:id/assets/:file` (cached a year; a `.bundle` is typed as
+  JavaScript so the edge gzips it). Everything is read from `WORKER_APP_DIR` (default
+  `apps/api/.worker-app`, gitignored) on each request; a `releases.json` that does not parse is
+  logged and served as no release. Approving an application emails the worker the link
+  (`workerAppInviteEmail`, en/es/fr, sent in the tenant's primary locale) and sends the SMS;
+  both best-effort. RBAC matrix: the four routes asserted public.
+- **Release tool** `pnpm worker-app:release apk|update` (`tools/worker-app-release.mjs`, the
+  header lists the flags). `apk` checks each APK with `apksigner` and `aapt2` (package, version
+  name, the split's version code, one ABI, one signing certificate, the same certificate as the
+  published release) and refuses a version code that does not rise or a native change without
+  a new version. `update` refuses with no APK, another runtime or a native change, signs the
+  manifest with the private key and checks it against the certificate the APK embeds before
+  writing. Output: `deploy/worker-app/` (gitignored) by default.
+- **App**: `app.config.ts` sets `version` (also the `runtimeVersion`), `android.versionCode`,
+  `REQUEST_INSTALL_PACKAGES`, and `updates` (self-hosted URL, `checkAutomatically: NEVER`,
+  launch wait 0, the certificate `tenant/assets/worker-app/certificate.pem`, or
+  `WORKER_APP_UPDATES_CERTIFICATE`); without the certificate updates are off. An inline config
+  plugin adds the ABI splits and their version codes through `androidComponents` (AGP 9 has no
+  `applicationVariants`). The home's "Nueva versión" card, the update screen (size, date,
+  notes, progress, no data, incomplete, not installed, the page, the desk), a required update
+  in front of every screen including sign-in, the after-job note. `.web.ts` files: the preview
+  reads as a universal build, opens the download page and has no JS updates.
+- **Storefront** `/app` (en/es/fr, `workerApp` namespace): version, size, date, notes, the
+  arm64 download and the 32-bit link through `/api/ota`, the certificate, five install steps,
+  four failures, the desk; "Solo para Android" for an iPhone user agent. No drawings: the
+  steps are text.
+- **Desk** (en/es/fr) `/suppliers/app-card`, linked from Applications: the link, the QR from
+  `tenant/assets/worker-app/qr.svg` when present (else how to add it), the version and the
+  certificate, a Print button.
+- **Deploy**: Caddy `app.{$SITE_DOMAIN}` (no gate, `noindex`): `/` → the storefront's `/app`;
+  `/app`, `/en/app`, `/fr/app`, `/_next/*`, `/api/ota/worker-app/*` → storefront; `/worker/*`,
+  `/worker-app/*`, the worker-code sign-in and `/service-items/<id>/accept|decline` → API;
+  everything else redirects to the main site. The API mounts `deploy/worker-app` read-only at
+  `/srv/worker-app`. `WORKER_APP_PUBLIC_URL` in `deploy/api.env.example`; four smoke checks.
+- **Not built**: resuming an in-app download after a cut (it restarts; the page's link
+  resumes in Chrome), drawn install steps, Google's developer verification, Apklis.
+- **Not run on a device**: the split build and its version codes (`expo prebuild` output
+  checked, Gradle not run), the installer hand-off, an update's download and its signature
+  check by the phone, the 204 "no update" answer.

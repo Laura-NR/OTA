@@ -458,6 +458,40 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
   paid"; the office's place and sessions are `workerPayouts` in the tenant manifest (no
   sessions: no next pay day is shown).
 
+## Releasing the worker app
+
+`docs/worker-app-distribution-plan.md` (approved U1–U8); ADR 0007. Releases are built and
+published on the machine with the Android SDK, never on the server.
+
+- **Once, before the first APK.** Generate the update signing key on that machine, outside the
+  repo: `pnpm --filter @ota/worker-app exec expo-updates codesigning:generate
+  --key-output-directory <outside the repo> --certificate-output-directory
+  ../../tenant/assets/worker-app --certificate-validity-duration-years 10
+  --certificate-common-name "<agency>"`. Commit only `tenant/assets/worker-app/certificate.pem`.
+  Back up the private key in two places beside the APK signing keystore: losing either forces
+  every worker to reinstall. Without the certificate the APK accepts no JS update at all.
+  Make the QR of `https://app.<domain>` once with any QR tool and save it as
+  `tenant/assets/worker-app/qr.svg` (the desk's card).
+- **Server, once.** A DNS record for `app.<domain>` (Caddy gets its certificate);
+  `WORKER_APP_PUBLIC_URL=https://app.<domain>` in `deploy/api.env`; the folder
+  `deploy/worker-app/` exists (the API mounts it read-only).
+- **A new APK** (any native change, or to ship to everyone): bump `version` and `versionCode`
+  in `apps/worker-app/app.config.ts`, build with `WORKER_API_URL=https://app.<domain>` (`expo
+  prebuild` + Gradle, release signing), then `pnpm build && pnpm worker-app:release apk --apk
+  arm64-v8a=<path> --apk armeabi-v7a=<path> [--min-version-code N] [--notes "..."]`. Set
+  `--min-version-code` to the new code only when older APKs must stop (the app then requires
+  the update, never during a job). The tool refuses an APK signed with another certificate.
+- **A JS-only update**: `WORKER_API_URL=https://app.<domain> pnpm --filter @ota/worker-app build`,
+  then `pnpm worker-app:release update --key <private-key.pem> --base-url
+  https://app.<domain>`. It refuses when a native module changed since the published APK:
+  release an APK instead. Phones fetch it at most once a day and run it from the next start.
+- **Publish**: copy `deploy/worker-app/` to the server's `deploy/worker-app/` (for example
+  `rsync -a deploy/worker-app/ <server>:<checkout>/deploy/worker-app/`). It is live at once; no
+  restart. Check `https://app.<domain>/worker-app/latest`. Old APK files may be removed once no
+  phone is mid-download.
+- A `releases.json` that does not parse is logged ("is invalid; serving no release") and the
+  page says no version is published: copy the folder again.
+
 ## Hosts, sign-in and crawling
 
 Deployment plan D7(a), D8(a), D18; build items B6–B8.

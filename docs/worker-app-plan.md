@@ -205,6 +205,13 @@ W-Job (2026-11-15, approved J1–J9, migration `20261115100000_w_job`, `expo-loc
 steps and reports in the phone's queue beside the answers (`answers.ts`); the spec's eighth
 test. `docs/schema-w-job.md` §7.
 
+Distribution (2026-11-15, approved U1–U8, no migration, `expo-updates` 58.0.20,
+`expo-intent-launcher` 58.0.3, `expo-application` 58.1.2): the storefront's `/app` download
+page on `app.<domain>`, the home's "Nueva versión" card and the update screen, a required
+update in front of every screen, signed JS updates once a day, the split APKs' version codes,
+the release tool, the approval email and SMS, the desk's card.
+`docs/worker-app-distribution-plan.md` §5.
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
@@ -214,6 +221,8 @@ test. `docs/schema-w-job.md` §7.
    Android may wait longer on a phone saving battery). And W-Job's: the position prompt on the
    first job, a fix indoors and outdoors, the SOS with no data (the composer opens to the
    desk's number; the desk's phone receives one segment), the steps offline.
-2. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
-   W-Job landed 2026-11-15; its silent SMS module (ADR 0007) waits for the APK machine.
+2. Distribution: built 2026-11-15 (above). The field test adds its checks: install from the
+   page (both splits), the "unknown app" and Play Protect steps, an optional and a required
+   update through the installer, a JS update after a restart. W-Job's silent SMS module
+   (ADR 0007) waits for the APK machine.
 3. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).

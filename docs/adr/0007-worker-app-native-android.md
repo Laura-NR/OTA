@@ -295,6 +295,21 @@ uses foreground permission only (fine and coarse location, no background locatio
 per report. The desk's 24/7 phone is a person's phone: the system does not read the SMS until
 an inbound SMS provider exists, and the desk can log it as `WORKER_SMS`. Worker ↔ desk
 messages are deferred (J9).
+## Amendment, 2026-11-15 (later): distribution
+
+The owner approved `docs/worker-app-distribution-plan.md` U1–U8 as recommended (no migration;
+`expo-updates` 58.0.20, `expo-intent-launcher` 58.0.3, `expo-application` 58.1.2). The phone and
+the download page live on `app.<domain>`, outside the trial gate, which lets only the page and
+the phone's token-authenticated calls through. Releases are a folder the release tool writes on
+the APK machine and the owner copies to the server; there is no table and no upload page. Each
+split APK has its own version code (release × 10 + ABI digit), so the app downloads its own
+split. JS-only updates are code-signed: the private key stays on the APK machine beside the APK
+signing key, and an APK built without the certificate accepts no update. The app checks for
+one at most once a day, never during a job, and applies it at the next start; a new APK is
+offered, or required below the release's minimum, but never while a job is under way.
+Approving a supplier emails and texts the download link; the desk prints a QR card. iPhones see
+"Android only". Not run on a device: the split build, the installer and an update's download.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

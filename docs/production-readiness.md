@@ -67,6 +67,10 @@
       the supplier page), sees offers and jobs, and accepts or declines, also with no signal.
       Still to come: the APK on a machine with the Android SDK and the field test with two or
       three suppliers.
+      *2026-11-15:* distribution is built (`docs/worker-app-distribution-plan.md`): the download
+      page on `app.<domain>`, the in-app update prompt and signed JS updates. Before the first
+      release, on the APK machine and the server: runbook "Releasing the worker app" (the
+      update signing key and its two backups, the QR, the DNS record, `WORKER_APP_PUBLIC_URL`).
 - [x] **A4. Mock AI.** *Done 2026-11-09:* the desk's AI ("Draft with AI" in Messages, the AI
       summary on Reports, translation) now has its own switch, "AI assistant" (Settings ›
       Thresholds › Features, two Super Admins like the other flags). Production also holds it off

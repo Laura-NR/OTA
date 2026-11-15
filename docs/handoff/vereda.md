@@ -15,12 +15,14 @@ display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 th
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
-W-Credentials, on 2026-11-15 W-Job) and
+W-Credentials, on 2026-11-15 W-Job and the worker app's distribution) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
-for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job).
+for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job and
+distribution).
 The worker app:
-`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). W-Job: `docs/schema-w-job.md`
+`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). Distribution:
+`docs/worker-app-distribution-plan.md` (approved U1–U8 2026-11-15, §5 as built, no migration). W-Job: `docs/schema-w-job.md`
 (approved J1–J9 2026-11-15, §7 as built, a migration). W-Credentials:
 `docs/schema-w-credentials.md` (approved V1–V8 2026-11-14, §7 as built, a migration). W-Earnings' payouts:
 `docs/schema-w-earnings.md` (approved E1–E8 2026-11-13, §7 the read-only slice, §8 the payouts
@@ -37,6 +39,25 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-15 (later): worker app distribution** (Phase 7, Next 3's agent item), approved
+  U1–U8 as recommended (`1d501d4`…`86c48de`). No migration. Three new dependencies:
+  `expo-updates` 58.0.20, `expo-intent-launcher` 58.0.3, `expo-application` 58.1.2.
+  `docs/worker-app-distribution-plan.md` §5 lists everything.
+  - Domain `packages/domain/src/worker/app-release.ts`: split version codes, the update rule
+    (`required`/`after-job`/`optional`/`none`), the daily JS check, the JS-update refusal, the
+    approval SMS.
+  - API `apps/api/src/worker-app/` (all public, RBAC asserted): the release, ranged APKs, the
+    expo-updates manifest (pre-signed, 204 when none) and its assets, from `WORKER_APP_DIR`
+    (dev `apps/api/.worker-app`, gitignored). Approval emails and texts the link
+    (`WORKER_APP_PUBLIC_URL`, default `<storefront>/app`).
+  - `pnpm worker-app:release apk|update` (`tools/worker-app-release.mjs`): checks APKs with
+    `apksigner`/`aapt2`, signs update manifests with a key that never reaches the server.
+  - App: version code and runtime in `app.config.ts`, the ABI splits plugin, updates on only
+    with `tenant/assets/worker-app/certificate.pem` (absent in the repo, so off); the home's
+    card, the update screen, a required update in front of sign-in too.
+  - Storefront `/app` (en/es/fr); desk `/suppliers/app-card` (en/es/fr); Caddy
+    `app.{$SITE_DOMAIN}` outside the gate with a path allowlist; four smoke checks.
+  - Not built: in-app download resume, drawn install steps. Nothing run on a device.
 - **2026-11-15: W-Job** (Phase 7), the owner's pick after background resend, approved J1–J9 as
   recommended (`18fe059`…`9e0c348`). One migration, `20261115100000_w_job` (service_items: the
   brief's three text columns and four step times; incidents: a worker's report and its
@@ -1090,6 +1111,31 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **`git stash` breaks `node --watch` (2026-11-15):** stashing a file the dev API watches
+  replaces it, and the watcher stops seeing later edits (the API kept serving old code). `touch`
+  the file to restart it, or restart the stack.
+- **Express `sendFile` refuses dot-directories (2026-11-15):** `send` ignores paths with a
+  `.dir` segment by default, so the dev `apps/api/.worker-app` 404ed while the unit test's temp
+  dir passed. The worker-app routes pass `dotfiles: 'allow'` after their own checks; the test
+  now uses a `.worker-app` folder.
+- **Express adds `charset` to `res.set('content-type')` and string bodies (2026-11-15):** the
+  multipart manifest uses Node's `setHeader` and a Buffer body.
+- **AGP 9 (RN 0.88) has no `applicationVariants`:** per-split version codes go through
+  `androidComponents.onVariants` (`app.config.ts`'s `withAbiSplits`). `ExpoConfig.plugins` only
+  types names, so an inline plugin wraps the config (`export default withAbiSplits(config)`).
+- **expo-updates' certificate path is `path.join(projectRoot, …)`:** `app.config.ts` passes it
+  relative to `apps/worker-app`.
+- **Playwright projects:** `pnpm e2e --project default a.spec.ts` reads the files as projects;
+  use `--project=default`.
+- **Expo web export caches the app config (2026-11-15):** after adding a key to
+  `app.config.ts`'s `extra`, `pnpm build:web` still embedded the old config; `expo export
+  --clear` picked it up. The web export also has no `android` section in
+  `Constants.expoConfig`, hence `extra.versionCode` for the preview.
+- **"Actualizar" already means refresh on the worker app's home:** a second button with that
+  label broke `getByRole` and would confuse a worker; the update card says "Ver la nueva
+  versión".
+- **`pkill -f` with a pattern that is also in your own command line kills your own shell**
+  (2026-11-15): kill by the PIDs `ss -ltnp` prints instead.
 - **Steps vs `ACCEPTED` filters (2026-11-15):** the last step sets a service `FULFILLED`.
   Earnings, payouts and the calendar read `JOB_STATUSES` (both); W-Home read `ACCEPTED` only and
   was changed. Any new query of "the worker's jobs" must use `JOB_STATUSES`.
@@ -1709,6 +1755,14 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-15: worker app releases are files, not rows: `tools/worker-app-release.mjs`
+    writes `releases.json`, the APKs and pre-signed expo-updates manifests into a folder the
+    API reads from `WORKER_APP_DIR` (dev `apps/api/.worker-app`, prod `deploy/worker-app`
+    mounted read-only); the server never holds the update signing key. `/worker-app/*` is
+    public. Caddy's `app.<domain>` is outside the trial gate and lets through only the
+    download page and the phone's routes: a new route the app calls must be added to its
+    allowlist. Bump `version` and `versionCode` in `apps/worker-app/app.config.ts` for every
+    APK; the version is the update runtime."
   - "2026-11-15: W-Job rides on migration `20261115100000_w_job`. A worker's steps are the
     `service_items` columns `en_route_at`…`finished_at`, written only by `JobsService` (guarded
     on the column being empty; `FINISHED` sets the item `FULFILLED`, pay is unchanged). A
@@ -1955,9 +2009,9 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (background resend and its docs are local; W-Credentials was pushed)
-   and open a new pull request from `vereda` into `main`, so CI runs on W-Earnings' payouts,
-   the receipt, Ops Lite, W-Credentials and background resend: PR #1 is merged, and a push to
+1. Owner: push `vereda` (background resend, W-Job and distribution are local; W-Credentials
+   was pushed) and open a new pull request from `vereda` into `main`, so CI runs on W-Earnings'
+   payouts, the receipt, Ops Lite, W-Credentials, background resend, W-Job and distribution: PR #1 is merged, and a push to
    `vereda` alone runs no workflow (none has run since `94c0910`; checked 2026-11-14 evening).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
@@ -1968,10 +2022,11 @@ events (T-Events)".
    key, backed up twice), the Android id, and two or three suppliers for the field test (also
    the first real runs of "Abrir recibo"'s share sheet and of background resend, whose
    checklist lines are in `docs/worker-app-plan.md` §8, W-Job's SOS SMS and position
-   included). Agent, in order (W-Job landed 2026-11-15): distribution (download page, update
-   prompt, self-hosted `expo-updates`). Its plan, `docs/worker-app-distribution-plan.md`
-   (2026-11-15, no migration recommended), waits on the owner's U1–U8, three new Expo modules
-   among them; build nothing before they are answered. W-Job's follow-ups are the owner's call: worker ↔ desk messages (J9b, a
+   included, and distribution's: install from the page, both update kinds, a JS update).
+   Distribution landed 2026-11-15; before the first release, the owner's steps are runbook
+   "Releasing the worker app" (the update signing key with two backups, the QR, DNS for
+   `app.<domain>`, `WORKER_APP_PUBLIC_URL`). The agent's Phase 7 queue is empty until the
+   APK machine; the owner picks the next item. W-Job's follow-ups are the owner's call: worker ↔ desk messages (J9b, a
    migration, also Ops Lite's worker threads), the silent SMS module (after the APK machine),
    a shared id between an SMS-logged report and the app's copy.
    W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
@@ -2685,4 +2740,13 @@ events (T-Events)".
   traveler's step line, timed as the row's dates are; all three brief fields purged, not only
   the notes; a host's own job without a night host; the work order's rendezvous naming the
   meeting point. Design resolutions are ADR 0006's amendment of the day.
-
+- 2026-11-15 (later) — the owner approved the distribution plan's U1–U8 as recommended:
+  `app.<domain>` outside the trial gate, a release folder with no table, `minVersionCode` and
+  never during a job, the in-app installer, code-signed self-hosted updates checked daily,
+  email + SMS on approval with a static QR, Android only, the three Expo modules. The build
+  chose: the API (not Caddy) serves the files with `sendFile` ranges, so dev, e2e and
+  production match; the release tool checks APKs with the SDK's `apksigner`/`aapt2` instead of
+  a typed fingerprint; `runtimeVersion` is the app version, set literally; 204 for "no
+  update"; the storefront page under `[locale]` in three languages (the worker-facing words
+  are Spanish by default); an in-app download that restarts after a cut; the approval message
+  in the tenant's primary locale.
