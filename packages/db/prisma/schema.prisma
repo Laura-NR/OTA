@@ -511,6 +511,7 @@ model User {
   credentialsReviewed SupplierCredential[] @relation("SupplierCredentialReviewedBy")
   // W-Job
   incidentsAcknowledged Incident[] @relation("IncidentAcknowledgedBy")
+  authoredWorkerMessages WorkerMessage[]
 
   // Better Auth relations
   sessions Session[]
@@ -620,6 +621,7 @@ model SupplierProfile {
   payouts      SupplierPayout[]
   credentials  SupplierCredential[]
   incidents    Incident[]
+  workerMessages WorkerMessage[]
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
   inventoryItems InventoryItem[]
@@ -1266,6 +1268,7 @@ model ServiceItem {
   payout      SupplierPayout?  @relation(fields: [payoutId], references: [id], onDelete: SetNull)
   dispatchOffers DispatchOffer[]
   incidents      Incident[]
+  workerMessages WorkerMessage[]
 
   @@index([reservationId])
   @@index([supplierId])
@@ -1785,6 +1788,40 @@ model Message {
 
   @@index([reservationId])
   @@map("messages")
+}
+
+/// Worker <-> desk messages: who wrote a message in a worker's thread
+/// (docs/schema-w-messages.md).
+enum WorkerMessageSender {
+  WORKER
+  OPERATIONS
+}
+
+/// A message in a worker's one thread with the desk (M1, M2). Never a traveler's.
+model WorkerMessage {
+  id            String              @id @default(uuid()) @db.Uuid
+  supplierId    String              @map("supplier_id") @db.Uuid
+  sender        WorkerMessageSender
+  body          String
+  /// The desk person who wrote it (OPERATIONS only).
+  authorId      String?             @map("author_id") @db.Uuid
+  /// The job it is about, when it names one (M2, M8).
+  serviceItemId String?             @map("service_item_id") @db.Uuid
+  /// The phone's time of writing, corrected by the API's clock (M4).
+  writtenAt     DateTime?           @map("written_at")
+  /// The app's id, so a resent message is kept once (M4).
+  clientRef     String?             @unique @map("client_ref")
+  /// When the receiving side opened the thread (M3).
+  readAt        DateTime?           @map("read_at")
+  createdAt     DateTime            @default(now()) @map("created_at")
+
+  supplier    SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  author      User?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  serviceItem ServiceItem?    @relation(fields: [serviceItemId], references: [id], onDelete: SetNull)
+
+  @@index([supplierId, createdAt])
+  @@index([serviceItemId])
+  @@map("worker_messages")
 }
 
 /// W-Calendar: why a worker blocked a day.

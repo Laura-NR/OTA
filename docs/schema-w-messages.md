@@ -1,6 +1,7 @@
 # Worker ↔ desk messages: schema diff for review
 
-**Status:** proposed 2026-11-15.
+**Status:** proposed 2026-11-15; **approved 2026-11-16, M1–M8 as recommended** (M1a, M2a,
+M3a, M4a, M5a, M6a, M7a, M8a).
 **Date:** 2026-11-15
 **Scope:** the thread between a worker and the desk, W-Job's deferred J9
 (`docs/schema-w-job.md`). The worker app's "Mensaje a la central" and its "Central · hoy" thread
