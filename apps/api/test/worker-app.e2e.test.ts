@@ -87,7 +87,7 @@ describe('worker app releases', () => {
     await mkdir(join(update, 'assets'), { recursive: true });
     await writeFile(join(update, 'manifest.json'), MANIFEST);
     await writeFile(join(update, 'manifest.sig'), `${SIGNATURE}\n`);
-    await writeFile(join(update, 'assets', 'bundle-abc.hbc'), 'bytecode');
+    await writeFile(join(update, 'assets', 'bundle-abc.bundle'), 'bytecode');
   });
 
   afterEach(async () => {
@@ -220,9 +220,10 @@ describe('worker app releases', () => {
   it('serves an update’s asset for a year', async () => {
     await publish();
     const response = await request(app.getHttpServer()).get(
-      `/worker-app/updates/0.2.0/${RELEASES.updates['0.2.0'].id}/assets/bundle-abc.hbc`,
+      `/worker-app/updates/0.2.0/${RELEASES.updates['0.2.0'].id}/assets/bundle-abc.bundle`,
     );
     expect(response.status).toBe(200);
     expect(response.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+    expect(response.headers['content-type']).toMatch(/^application\/javascript/);
   });
 });

@@ -113,6 +113,15 @@ export class WorkerAppController {
   ): Promise<void> {
     const path = await this.workerApp.assetPath(runtimeVersion, updateId, file);
     if (!path) throw new NotFoundException();
-    res.sendFile(path, { dotfiles: 'allow', maxAge: '365d', immutable: true });
+    res.sendFile(path, {
+      dotfiles: 'allow',
+      maxAge: '365d',
+      immutable: true,
+      // Typed as JavaScript so the edge compresses it: a JS update is the
+      // whole bundle, paid for in mobile data.
+      headers: file.endsWith('.bundle')
+        ? { 'content-type': 'application/javascript' }
+        : {},
+    });
   }
 }
