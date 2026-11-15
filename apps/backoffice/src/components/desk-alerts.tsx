@@ -24,7 +24,7 @@ import type {
   IncidentDto,
 } from '@ota/schemas';
 import { useLocale, useTranslations } from 'next-intl';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   createContext,
   useContext,
@@ -170,6 +170,7 @@ export function DeskAlerts({
   const t = useTranslations('backoffice.dashboard');
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const onDashboard = pathname === DASHBOARD_PATH;
   const onDashboardRef = useRef(onDashboard);
   onDashboardRef.current = onDashboard;
@@ -527,6 +528,8 @@ export function DeskAlerts({
       );
     }
     await refreshEmergencies();
+    // The page behind may show the incident (a booking's duty-of-care card).
+    router.refresh();
   }
 
   function emergencyCategory(category: string): string {
