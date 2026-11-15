@@ -1,28 +1,43 @@
-import { needsBackgroundResend, workerAnswerRetryDelayMs } from '@ota/domain';
-import type { WorkerHomeDto, WorkerOfferDto } from '@ota/schemas';
+import {
+  emergencySms,
+  needsBackgroundResend,
+  workerAnswerRetryDelayMs,
+  type EmergencyCategory,
+  type EmergencyPosition,
+  type JobAction,
+  type JobStep,
+} from '@ota/domain';
+import type { WorkerHomeDto, WorkerJobDto, WorkerOfferDto } from '@ota/schemas';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   flushAnswers,
   loadAnswers,
+  loadJobActions,
+  newClientRef,
   saveAnswer,
+  saveJobAction,
   takeBackgroundReport,
+  waiting,
 } from './lib/answers';
 import { ApiError, createWorkerApi } from './lib/api';
 import { setBackgroundResend } from './lib/background';
 import { settings } from './lib/config';
 import { copy } from './lib/copy';
+import { askForPosition, emergencyPosition } from './lib/position';
 import { kv, tokenStore } from './lib/storage';
 import { CalendarScreen } from './screens/CalendarScreen';
 import { CredentialsScreen } from './screens/CredentialsScreen';
 import { EarningsScreen } from './screens/EarningsScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { JobScreen, type EmergencyOutcome } from './screens/JobScreen';
+import { JobsScreen } from './screens/JobsScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { OfferScreen, type OfferOutcome } from './screens/OfferScreen';
-import { colors } from './ui';
+import { TabBar, colors, type Tab } from './ui';
 
 const api = createWorkerApi(settings.apiUrl);
 
@@ -49,10 +64,28 @@ type Screen =
   | { name: 'calendar' }
   | { name: 'earnings' }
   | { name: 'credentials' }
+  | { name: 'jobs' }
+  | { name: 'job'; serviceItemId: string }
   | {
       name: 'offer';
       offer: WorkerOfferDto;
     };
+
+/** Where each section of the bottom bar opens; "Perfil" is reliability and payouts. */
+const TAB_SCREEN: Record<Tab, Screen> = {
+  home: { name: 'home' },
+  calendar: { name: 'calendar' },
+  jobs: { name: 'jobs' },
+  profile: { name: 'earnings' },
+};
+
+/** Which section of the bottom bar a screen belongs to; null where the bar is hidden. */
+const SCREEN_TAB: Partial<Record<Screen['name'], Tab>> = {
+  home: 'home',
+  calendar: 'calendar',
+  jobs: 'jobs',
+  earnings: 'profile',
+};
 
 /**
  * The worker app (ADR 0007, Phase 7): sign in with a code, see offers and
@@ -67,6 +100,11 @@ export function App() {
   const [home, setHome] = useState<WorkerHomeDto | null>(null);
   const [offline, setOffline] = useState(false);
   const [pending, setPending] = useState(0);
+  // W-Job's steps and reports still on the phone, shown on the job.
+  const [jobActions, setJobActions] = useState<JobAction[]>([]);
+  // The last report's position, for the SMS (J6).
+  const lastPosition = useRef<EmergencyPosition | null>(null);
+  const positionAsked = useRef(false);
   const [outcomes, setOutcomes] = useState<ReadonlyMap<string, OfferOutcome>>(new Map());
   const [notice, setNotice] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,10 +134,10 @@ export function App() {
           ...away.sent,
           ...flushed.sent.map((answer) => answer.serviceItemId),
         ];
-        setPending(flushed.pending.length);
-        keepResendingInBackground(
-          needsBackgroundResend(flushed.pending.length, !flushed.signedOut),
-        );
+        const left = waiting(flushed);
+        setPending(left.length);
+        setJobActions(flushed.jobs.pending);
+        keepResendingInBackground(needsBackgroundResend(left.length, !flushed.signedOut));
         if (sent.length > 0) {
           setOutcomes((previous) => {
             const next = new Map(previous);
@@ -111,14 +149,17 @@ export function App() {
           });
         }
         if (flushed.refused.length > 0 || away.refused > 0) setNotice(copy.home.refused);
+        if (flushed.jobs.refused.length > 0 || away.jobsRefused > 0) {
+          setNotice(copy.job.stepRefused);
+        }
         if (flushed.signedOut) {
           await signedOut(copy.home.signedOut);
           return;
         }
-        if (flushed.pending.length > 0) {
+        if (left.length > 0) {
           retry.current = setTimeout(
             () => void sync(current),
-            workerAnswerRetryDelayMs(flushed.pending[0]!.attempts),
+            workerAnswerRetryDelayMs(Math.max(...left.map((item) => item.attempts))),
           );
         }
 
@@ -178,7 +219,9 @@ export function App() {
       setToken(saved);
       const cached = await kv.get(HOME_KEY);
       if (cached) setHome(JSON.parse(cached) as WorkerHomeDto);
-      setPending((await loadAnswers(kv)).length);
+      const actions = await loadJobActions(kv);
+      setJobActions(actions);
+      setPending((await loadAnswers(kv)).length + actions.length);
       setScreen({ name: 'home' });
       await sync(saved);
     })();
@@ -235,7 +278,84 @@ export function App() {
     await sync(token);
   }
 
+  /** W-Job: a step saved with its time, then sent (J2). */
+  async function recordStep(job: WorkerJobDto, step: JobStep) {
+    if (!token) return;
+    const actions = await saveJobAction(kv, {
+      kind: 'step',
+      serviceItemId: job.serviceItemId,
+      step,
+      occurredAt: new Date(Date.now() + skew).toISOString(),
+    });
+    setJobActions(actions);
+    await sync(token);
+  }
+
+  function openSms(job: WorkerJobDto, outcome: EmergencyOutcome) {
+    if (!settings.deskPhone) return;
+    const text = emergencySms({
+      bookingCode: job.bookingCode,
+      category: outcome.category,
+      position: lastPosition.current,
+      at: new Date(outcome.at),
+      workerFirstName: home?.worker.firstName ?? null,
+    });
+    void Linking.openURL(
+      `sms:${settings.deskPhone.replace(/\s/g, '')}?body=${encodeURIComponent(text)}`,
+    );
+  }
+
+  /**
+   * W-Job's emergency (J5–J7): the position, the report saved and sent; when
+   * it did not reach the API, the SMS composer opens with the same facts.
+   */
+  async function reportEmergency(
+    job: WorkerJobDto,
+    category: EmergencyCategory,
+  ): Promise<EmergencyOutcome> {
+    const at = new Date(Date.now() + skew).toISOString();
+    const position = await emergencyPosition();
+    lastPosition.current = position;
+    const clientRef = newClientRef();
+    setJobActions(
+      await saveJobAction(kv, {
+        kind: 'emergency',
+        serviceItemId: job.serviceItemId,
+        clientRef,
+        category,
+        occurredAt: at,
+        position,
+      }),
+    );
+    if (token) await sync(token);
+    const stillQueued = (await loadJobActions(kv)).some(
+      (action) => action.kind === 'emergency' && action.clientRef === clientRef,
+    );
+    const outcome = { category, at, delivered: !stillQueued };
+    if (stillQueued) openSms(job, outcome);
+    return outcome;
+  }
+
+  function openJob(job: WorkerJobDto) {
+    if (!positionAsked.current) {
+      positionAsked.current = true;
+      askForPosition().catch((error: unknown) =>
+        console.warn('Position permission not asked', error),
+      );
+    }
+    setScreen({ name: 'job', serviceItemId: job.serviceItemId });
+  }
+
+  function selectTab(tab: Tab) {
+    setScreen(TAB_SCREEN[tab]);
+  }
+
   const serverNow = now + skew;
+  const openedJob =
+    screen.name === 'job'
+      ? (home?.jobs.find((job) => job.serviceItemId === screen.serviceItemId) ?? null)
+      : null;
+  const tab = token ? (SCREEN_TAB[screen.name] ?? null) : null;
 
   return (
     <SafeAreaProvider>
@@ -275,6 +395,22 @@ export function App() {
             onBack={() => setScreen({ name: 'home' })}
             onSignedOut={() => void signedOut(copy.home.signedOut)}
           />
+        ) : screen.name === 'jobs' && home ? (
+          <JobsScreen jobs={home.jobs} onOpenJob={openJob} />
+        ) : screen.name === 'job' && openedJob && home ? (
+          <JobScreen
+            job={openedJob}
+            now={serverNow}
+            offline={offline}
+            savedAt={home.serverTime}
+            queued={jobActions.filter(
+              (action) => action.serviceItemId === openedJob.serviceItemId,
+            )}
+            onStep={(step) => recordStep(openedJob, step)}
+            onEmergency={(category) => reportEmergency(openedJob, category)}
+            onSms={(outcome) => openSms(openedJob, outcome)}
+            onBack={() => setScreen({ name: 'jobs' })}
+          />
         ) : screen.name === 'offer' ? (
           <OfferScreen
             offer={screen.offer}
@@ -294,12 +430,24 @@ export function App() {
             refreshing={refreshing}
             onRefresh={() => token && void sync(token)}
             onOpenOffer={(offer) => setScreen({ name: 'offer', offer })}
-            onOpenCalendar={() => setScreen({ name: 'calendar' })}
-            onOpenEarnings={() => setScreen({ name: 'earnings' })}
+            onOpenJob={openJob}
             onOpenCredentials={() => setScreen({ name: 'credentials' })}
             onSignOut={() => void signOut()}
           />
         )}
+        {tab ? (
+          <TabBar
+            current={tab}
+            labels={{
+              home: copy.nav.home,
+              calendar: copy.nav.calendar,
+              jobs: copy.nav.jobs,
+              profile: copy.nav.profile,
+            }}
+            label={copy.nav.label}
+            onSelect={selectTab}
+          />
+        ) : null}
       </SafeAreaView>
     </SafeAreaProvider>
   );

@@ -39,6 +39,17 @@ const config: ExpoConfig = {
         microphonePermission: false,
       },
     ],
+    // W-Job J7: the position for an emergency report, while the app is open only.
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'La app usa tu ubicación solo para avisar a la central en una emergencia.',
+        isAndroidBackgroundLocationEnabled: false,
+        isAndroidForegroundServiceEnabled: false,
+        motionUsagePermission: false,
+      },
+    ],
   ],
   extra: {
     apiUrl: process.env.WORKER_API_URL ?? 'http://localhost:3001',

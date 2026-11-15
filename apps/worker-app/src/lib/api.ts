@@ -1,4 +1,4 @@
-import type { WorkerAnswer } from '@ota/domain';
+import type { JobAction, WorkerAnswer } from '@ota/domain';
 import type {
   SetWorkerDaysRequest,
   WorkerCalendarDto,
@@ -27,6 +27,8 @@ export interface WorkerApi {
   home(token: string): Promise<WorkerHomeDto>;
   /** The HTTP status of an accept or decline, or null with no connection. */
   answer(token: string, answer: WorkerAnswer): Promise<number | null>;
+  /** W-Job: the HTTP status of a step or an emergency report, or null with no connection. */
+  jobAction(token: string, action: JobAction): Promise<number | null>;
   signOut(token: string): Promise<void>;
   /** W-Calendar: a `YYYY-MM` month, or the current one in Havana. */
   calendar(token: string, month?: string): Promise<WorkerCalendarDto>;
@@ -106,6 +108,23 @@ export function createWorkerApi(
           },
         );
         return response.status;
+      } catch (error) {
+        return error instanceof ApiError ? error.status : null;
+      }
+    },
+    async jobAction(token, action) {
+      const path = `/worker/jobs/${action.serviceItemId}/${action.kind === 'step' ? 'steps' : 'emergency'}`;
+      const body =
+        action.kind === 'step'
+          ? { step: action.step, occurredAt: action.occurredAt }
+          : {
+              category: action.category,
+              occurredAt: action.occurredAt,
+              clientRef: action.clientRef,
+              position: action.position,
+            };
+      try {
+        return (await request(path, { method: 'POST', token, body })).status;
       } catch (error) {
         return error instanceof ApiError ? error.status : null;
       }

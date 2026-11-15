@@ -1,3 +1,5 @@
+import type { EmergencyCategory, JobStep, ServiceType } from '@ota/domain';
+
 /**
  * The worker app's words, in Spanish (ADR 0007: W-* is Spanish only). They
  * follow the W-* boards; where a board's line assumed something the build
@@ -111,6 +113,76 @@ export const copy = {
     sent: 'Enviado.',
     queued: 'Guardado en el teléfono · se enviará solo cuando vuelva la señal.',
     home: 'Volver al inicio',
+  },
+  /** The bottom bar (W-Home's board; "Ofertas" lives on Inicio, with its count). */
+  nav: {
+    label: 'Secciones',
+    home: 'Inicio',
+    calendar: 'Calendario',
+    jobs: 'Trabajos',
+    profile: 'Perfil',
+  },
+  /** W-Job (`docs/schema-w-job.md`, approved J1–J9). */
+  job: {
+    title: 'Trabajo',
+    today: 'Trabajo de hoy',
+    on: (date: string) => `Trabajo del ${date}`,
+    back: 'Volver',
+    list: 'Trabajos',
+    listEmpty: 'No tienes trabajos asignados.',
+    open: 'Ver el trabajo',
+    savedAt: (time: string) => `Sin conexión · guardado ${time}`,
+    synced: 'Sincronizado',
+    state: {
+      none: 'Asignado',
+      EN_ROUTE: 'En camino',
+      ARRIVED: 'En el lugar',
+      STARTED: 'En servicio',
+      FINISHED: 'Terminado · gracias',
+    },
+    travelers: 'Viajeros',
+    meetingPoint: 'Recogida',
+    dropOff: 'Destino',
+    brief: 'Indicaciones de la central',
+    noBrief: 'La central no ha dejado indicaciones. Si te falta algo, llama.',
+    pay: 'Pago',
+    contacts: 'Contactos',
+    host: (name: string | null) =>
+      name ? `${name} · casa de esta noche` : 'Casa de esta noche',
+    desk: 'Central 24/7',
+    call: (who: string) => `Llamar: ${who}`,
+    privacy:
+      'Ves solo el nombre, el idioma y los teléfonos locales de contacto. Los datos de pago y la dirección del viajero en su país nunca llegan a esta app.',
+    steps: 'Pasos del servicio',
+    stepsLater: (date: string) => `Los pasos se activan el ${date}, el día del servicio.`,
+    stepsClosed:
+      'Los pasos se activan cuando el viaje esté confirmado y pagado. Si ya estás en camino, llama a la central.',
+    stepsNote:
+      'Cada paso se guarda con la hora en el teléfono y se envía al volver la señal; la central y los viajeros ven «en camino» y «entregado».',
+    stepDone: (time: string) => `Hecho · ${time}`,
+    stepQueued: (time: string) => `Guardado · ${time} · se enviará al volver la señal`,
+    stepRefused:
+      'La central no aceptó un paso o un aviso guardado: el trabajo cambió o ya había otro registrado. Llama si tienes dudas.',
+    emergency: 'Reportar emergencia en el lugar',
+    emergencyTitle: 'Emergencia · ¿qué pasa?',
+    emergencyCallDesk: 'Llamar a la central 24/7',
+    emergencyNotify: 'Avisar a la central con mi ubicación',
+    emergencyNumbers: [
+      { label: 'Ambulancia 104', phone: '104' },
+      { label: 'Policía 106', phone: '106' },
+      { label: 'Bomberos 105', phone: '105' },
+    ],
+    cancel: 'Cancelar',
+    locating: 'Buscando tu ubicación…',
+    notified: (time: string, kind: string) => `Central avisada · ${time} · ${kind}`,
+    notifiedText:
+      'La central te llamará. Si no llega la llamada, marca el 104 / 106 según el caso.',
+    notifiedSms:
+      'Sin datos: abrimos el SMS a la central con tu ubicación. Pulsa Enviar. El aviso también se enviará por la app al volver la señal.',
+    smsAgain: 'Enviar también por SMS',
+    callNow: 'Llamar ahora',
+    noDeskPhone:
+      'La app no tiene el teléfono de la central. Marca el 104 / 106 según el caso.',
   },
   calendar: {
     title: 'Calendario',
@@ -340,3 +412,53 @@ export function declineReasonText(key: DeclineReasonKey, note: string): string {
   const typed = note.trim();
   return key === 'other' && typed ? `${reason.label}: ${typed}` : reason.label;
 }
+
+type StepWords = { label: string; action: string };
+
+const TRANSPORT_STEPS: Record<JobStep, StepWords> = {
+  EN_ROUTE: { label: 'En camino', action: 'Salgo ahora' },
+  ARRIVED: { label: 'He llegado', action: 'He llegado' },
+  STARTED: { label: 'Pasajeros a bordo', action: 'A bordo' },
+  FINISHED: { label: 'Entregado', action: 'Entregado' },
+};
+
+const GUIDE_STEPS: Record<JobStep, StepWords> = {
+  EN_ROUTE: { label: 'En camino', action: 'Salgo ahora' },
+  ARRIVED: { label: 'He llegado', action: 'He llegado' },
+  STARTED: { label: 'Con el grupo', action: 'Empezamos' },
+  FINISHED: { label: 'Terminado', action: 'Terminado' },
+};
+
+const STAY_STEPS: Record<JobStep, StepWords> = {
+  EN_ROUTE: { label: 'En camino', action: 'Salgo ahora' },
+  ARRIVED: { label: 'He llegado', action: 'He llegado' },
+  STARTED: { label: 'Huéspedes llegaron', action: 'Han llegado' },
+  FINISHED: { label: 'Salida', action: 'Ya se fueron' },
+};
+
+/** A step's name and button for the service type (W-Job; `jobStepsFor` picks the steps). */
+export function stepWords(serviceType: ServiceType, step: JobStep): StepWords {
+  const words =
+    serviceType === 'TRANSPORTATION'
+      ? TRANSPORT_STEPS
+      : serviceType === 'ACCOMMODATION'
+        ? STAY_STEPS
+        : GUIDE_STEPS;
+  return words[step];
+}
+
+/** The board's four emergency types; `short` is how the sent notice names it. */
+export const EMERGENCY_TYPES: ReadonlyArray<{
+  key: EmergencyCategory;
+  label: string;
+  short: string;
+}> = [
+  { key: 'MEDICAL', label: 'Médica · alguien necesita atención', short: 'médica' },
+  {
+    key: 'MECHANICAL',
+    label: 'Mecánica · el vehículo no puede seguir',
+    short: 'mecánica',
+  },
+  { key: 'SECURITY', label: 'Seguridad · robo, agresión, accidente', short: 'seguridad' },
+  { key: 'OTHER', label: 'Otra · lo explico por teléfono', short: 'otra' },
+];

@@ -20,11 +20,13 @@ import {
   travelerLine,
 } from '../lib/format';
 import { Button, Card, Notice, colors, radius, space, type } from '../ui';
+import { JobCard } from './JobsScreen';
 
 /**
  * W-Home: who is signed in, whether the phone is in sync, the open offers
- * with their time left, the coming jobs, and the way to the calendar, to
- * reliability and payouts, and to the credentials. `now` is the API's clock as the app tracks it, so
+ * with their time left, the coming jobs (each opens W-Job), and the way to
+ * the credentials; the bottom bar leads to the calendar and to reliability
+ * and payouts. `now` is the API's clock as the app tracks it, so
  * a phone set to the wrong time still counts down right.
  */
 export function HomeScreen({
@@ -37,8 +39,7 @@ export function HomeScreen({
   refreshing,
   onRefresh,
   onOpenOffer,
-  onOpenCalendar,
-  onOpenEarnings,
+  onOpenJob,
   onOpenCredentials,
   onSignOut,
 }: {
@@ -52,8 +53,7 @@ export function HomeScreen({
   refreshing: boolean;
   onRefresh: () => void;
   onOpenOffer: (offer: WorkerOfferDto) => void;
-  onOpenCalendar: () => void;
-  onOpenEarnings: () => void;
+  onOpenJob: (job: WorkerJobDto) => void;
   onOpenCredentials: () => void;
   onSignOut: () => void;
 }) {
@@ -127,12 +127,10 @@ export function HomeScreen({
       </Text>
       {home.jobs.length === 0 ? <Text style={type.small}>{copy.home.noJobs}</Text> : null}
       {home.jobs.map((job) => (
-        <JobRow key={job.serviceItemId} job={job} />
+        <JobCard key={job.serviceItemId} job={job} onOpen={() => onOpenJob(job)} />
       ))}
 
       <View style={styles.footer}>
-        <Button label={copy.calendar.open} variant="secondary" onPress={onOpenCalendar} />
-        <Button label={copy.earnings.open} variant="secondary" onPress={onOpenEarnings} />
         <Button
           label={copy.credentials.open}
           variant="secondary"
@@ -189,26 +187,6 @@ function OfferCard({
   );
 }
 
-function JobRow({ job }: { job: WorkerJobDto }) {
-  return (
-    <Card>
-      <View style={styles.row}>
-        <Text style={[type.body, styles.strong, type.figure]}>{clock(job.startsAt)}</Text>
-        <Text style={[type.small, styles.grow]}>{shortDate(job.startsAt)}</Text>
-        <Text style={[type.caption, styles.assigned]}>{copy.home.assigned}</Text>
-      </View>
-      <Text style={type.body}>
-        {serviceLabel(job.serviceType)}
-        {job.province ? ` · ${job.province}` : ''}
-      </Text>
-      <Text style={type.small}>
-        {travelerLine(job.traveler)} · {money(job.payout, job.currency)} ·{' '}
-        {job.bookingCode}
-      </Text>
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
   page: { padding: space.lg, gap: space.md, backgroundColor: colors.page, flexGrow: 1 },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
@@ -225,13 +203,5 @@ const styles = StyleSheet.create({
   grow: { flex: 1, minWidth: 0 },
   strong: { fontWeight: '700' },
   hurry: { borderColor: colors.warning },
-  assigned: {
-    color: colors.success,
-    backgroundColor: colors.successSoft,
-    borderRadius: radius.sm,
-    paddingHorizontal: space.sm,
-    paddingVertical: 2,
-    overflow: 'hidden',
-  },
   footer: { gap: space.sm, marginTop: space.md },
 });

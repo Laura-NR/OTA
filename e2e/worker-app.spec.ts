@@ -313,7 +313,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     const dayButton = (day: number) =>
       app.getByRole('button', { name: new RegExp(`^\\S+ ${day} de ${monthName}, `) });
 
-    await app.getByRole('button', { name: 'Calendario y disponibilidad' }).click();
+    await app.getByRole('tab', { name: 'Calendario' }).click();
     await expect(app.getByRole('heading', { name: 'Calendario' })).toBeVisible();
     for (let step = 0; step < ahead; step += 1) {
       await app.getByRole('button', { name: 'Mes siguiente' }).click();
@@ -434,7 +434,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
 
     const code = await codeFromDesk(page);
     const app = await signInOnApp(browser, code);
-    await app.getByRole('button', { name: 'Fiabilidad y pagos' }).click();
+    await app.getByRole('tab', { name: 'Perfil' }).click();
     await expect(app.getByRole('heading', { name: 'Fiabilidad y pagos' })).toBeVisible();
     await expect(app.getByText('Reinier Prueba · Guía · La Habana')).toBeVisible();
 
@@ -545,7 +545,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     const paidOn = `${day} ${MONTHS[month - 1]!.slice(0, 3)}`;
 
     const app = await signInOnApp(browser, code);
-    await app.getByRole('button', { name: 'Fiabilidad y pagos' }).click();
+    await app.getByRole('tab', { name: 'Perfil' }).click();
     await expect(app.getByText('Efectivo EUR · oficina Vedado')).toHaveCount(2);
     // The € 20 job is due five business days after it ended, paid on a Saturday.
     await expect(app.getByText('Próximo pago')).toBeVisible();
