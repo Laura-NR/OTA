@@ -10,6 +10,7 @@ import {
   jobStepRefusal,
   jobStepsFor,
   jobStepsOpen,
+  queueJobAction,
   type JobStepTimes,
 } from '../src';
 
@@ -187,5 +188,38 @@ describe('the local contact on a job (J8)', () => {
     const at = new Date('2026-11-15T20:50:00.000Z');
     expect(jobNightHost(at, [{ ...stay, hostPhone: '+34 600 123 456' }])).toBeNull();
     expect(jobNightHost(at, [{ ...stay, hostPhone: null }])).toBeNull();
+  });
+});
+
+describe('the job actions waiting on the phone (spec §7.2)', () => {
+  const step = (serviceItemId: string, name: 'EN_ROUTE' | 'ARRIVED', at: string) =>
+    ({ kind: 'step', serviceItemId, step: name, occurredAt: at }) as const;
+  const report = {
+    kind: 'emergency',
+    serviceItemId: 'a',
+    clientRef: 'ref-1',
+    category: 'MEDICAL',
+    occurredAt: '2026-11-15T19:36:00Z',
+    position: null,
+  } as const;
+
+  it('keeps steps in the order tapped, and the first tap of a step', () => {
+    let queue = queueJobAction([], step('a', 'EN_ROUTE', '2026-11-15T19:00:00Z'));
+    queue = queueJobAction(queue, step('a', 'ARRIVED', '2026-11-15T19:20:00Z'));
+    queue = queueJobAction(queue, step('a', 'EN_ROUTE', '2026-11-15T19:30:00Z'));
+    expect(queue.map((action) => action.kind === 'step' && action.occurredAt)).toEqual([
+      '2026-11-15T19:00:00Z',
+      '2026-11-15T19:20:00Z',
+    ]);
+    expect(queue.every((action) => action.attempts === 0)).toBe(true);
+  });
+
+  it('puts an emergency report ahead of every waiting step', () => {
+    let queue = queueJobAction([], step('a', 'EN_ROUTE', '2026-11-15T19:00:00Z'));
+    queue = queueJobAction(queue, report);
+    queue = queueJobAction(queue, { ...report, clientRef: 'ref-2' });
+    expect(
+      queue.map((action) => (action.kind === 'step' ? action.step : action.clientRef)),
+    ).toEqual(['ref-1', 'ref-2', 'EN_ROUTE']);
   });
 });

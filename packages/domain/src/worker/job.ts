@@ -186,3 +186,60 @@ export function jobNightHost(
   }
   return null;
 }
+
+/** A step waiting on the phone, with the time it was tapped. */
+export interface JobStepAction {
+  kind: 'step';
+  serviceItemId: string;
+  step: JobStep;
+  /** The tap's time, ISO 8601, corrected by the API's clock. */
+  occurredAt: string;
+  attempts: number;
+}
+
+/** An emergency report waiting on the phone, with the id that keeps it single. */
+export interface JobEmergencyAction {
+  kind: 'emergency';
+  serviceItemId: string;
+  clientRef: string;
+  category: EmergencyCategory;
+  occurredAt: string;
+  position: EmergencyPosition | null;
+  attempts: number;
+}
+
+/**
+ * What the app queues for a job (spec §7.2 `sync_queue`), sent when there is
+ * a connection, in the background too.
+ */
+export type JobAction = JobStepAction | JobEmergencyAction;
+
+type NewJobAction =
+  Omit<JobStepAction, 'attempts'> | Omit<JobEmergencyAction, 'attempts'>;
+
+/**
+ * The queue with this action added. Emergency reports go ahead of every step,
+ * so a report never waits behind a stuck one; a step already waiting for the
+ * same job keeps its first tap, since the API keeps the first time anyway.
+ */
+export function queueJobAction(
+  queue: readonly JobAction[],
+  action: NewJobAction,
+): JobAction[] {
+  if (
+    action.kind === 'step' &&
+    queue.some(
+      (queued) =>
+        queued.kind === 'step' &&
+        queued.serviceItemId === action.serviceItemId &&
+        queued.step === action.step,
+    )
+  ) {
+    return [...queue];
+  }
+  const added: JobAction = { ...action, attempts: 0 };
+  if (added.kind === 'step') return [...queue, added];
+  const reports = queue.filter((queued) => queued.kind === 'emergency');
+  const steps = queue.filter((queued) => queued.kind === 'step');
+  return [...reports, added, ...steps];
+}
