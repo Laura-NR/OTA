@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 import { signIn } from './helpers';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
+const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? 'http://localhost:8025';
 const APPLICANT_EMAIL = 'recruit@example.test';
 const APPLICANT_LICENSE = 'RTN-RECRUIT-E2E';
 
@@ -59,5 +60,24 @@ test.describe('supplier recruitment', () => {
     await expect(
       page.locator('tr', { hasText: APPLICANT_EMAIL }).getByText('APPROVED'),
     ).toBeVisible();
+
+    // The new worker is emailed the app's download page (U6a).
+    await expect(async () => {
+      const search = await fetch(
+        `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${APPLICANT_EMAIL}`)}`,
+      );
+      const { messages } = (await search.json()) as {
+        messages: { ID: string; Subject: string }[];
+      };
+      const invite = messages.find((message) =>
+        message.Subject.includes('app de colaboradores'),
+      );
+      expect(invite).toBeDefined();
+      const detail = (await (
+        await fetch(`${MAILPIT_URL}/api/v1/message/${invite!.ID}`)
+      ).json()) as { Text: string };
+      expect(detail.Text).toContain(`${STOREFRONT_URL}/app`);
+      expect(detail.Text).toContain('+53 5555 9999');
+    }).toPass({ timeout: 15_000 });
   });
 });

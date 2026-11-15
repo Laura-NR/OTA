@@ -97,20 +97,67 @@ async function codeFromDesk(page: Page): Promise<string> {
 }
 
 /**
- * Signs in on the worker app at phone width, as a phone with no desk cookies;
- * with `geolocation`, the phone has granted the position (W-Job J7).
+ * A published APK newer than the preview's (version code 1), as
+ * `GET /worker-app/latest` would serve it (docs/worker-app-distribution-plan.md U3a).
  */
-async function signInOnApp(
+function publishedRelease(minVersionCode: number) {
+  return {
+    downloadUrl: `${STOREFRONT_URL}/app`,
+    release: {
+      versionName: '0.2.0',
+      versionCode: 2,
+      minVersionCode,
+      publishedAt: '2026-11-15T12:00:00.000Z',
+      notes: 'Arreglos para el modo sin conexión.',
+      certificateSha256: Array.from({ length: 32 }, () => 'AB').join(':'),
+      apks: [
+        {
+          abi: 'arm64-v8a',
+          versionCode: 22,
+          sizeBytes: 34_200_000,
+          sha256: 'a'.repeat(64),
+          path: '/worker-app/apk/vereda-0.2.0-arm64-v8a.apk',
+        },
+      ],
+    },
+  };
+}
+
+/** A phone-width context with no desk cookies, seeing `release` as the published APK. */
+async function phoneContext(
   browser: Browser,
-  code: string,
-  geolocation?: { latitude: number; longitude: number; accuracy: number },
-): Promise<Page> {
+  options: {
+    geolocation?: { latitude: number; longitude: number; accuracy: number };
+    release?: ReturnType<typeof publishedRelease>;
+  } = {},
+) {
+  const { geolocation, release } = options;
   const phone = await browser.newContext({
     viewport: { width: 390, height: 844 },
     locale: 'es-ES',
     storageState: { cookies: [], origins: [] },
     ...(geolocation ? { geolocation, permissions: ['geolocation'] } : {}),
   });
+  if (release) {
+    await phone.route('**/worker-app/latest', (route) =>
+      route.fulfill({ json: release }),
+    );
+  }
+  return phone;
+}
+
+/**
+ * Signs in on the worker app at phone width, as a phone with no desk cookies;
+ * with `geolocation`, the phone has granted the position (W-Job J7); with
+ * `release`, a newer APK is published.
+ */
+async function signInOnApp(
+  browser: Browser,
+  code: string,
+  geolocation?: { latitude: number; longitude: number; accuracy: number },
+  release?: ReturnType<typeof publishedRelease>,
+): Promise<Page> {
+  const phone = await phoneContext(browser, { geolocation, release });
   const app = await phone.newPage();
   await app.goto(WORKER_APP_URL);
   await app.getByLabel('Número de teléfono').fill(WORKER.typed);
@@ -231,6 +278,42 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
     await expect(app.getByRole('heading', { name: 'Ofertas' })).toBeVisible();
     await expect(app.getByText(`€ 45 · ${BOOKING_CODE}`, { exact: false })).toBeVisible();
     await app.context().close();
+  });
+
+  // docs/worker-app-distribution-plan.md U3a, U4a: the update prompt.
+  test('offers a new version on the home, and a required one stands in front of sign-in', async ({
+    page,
+    browser,
+  }) => {
+    const code = await codeFromDesk(page);
+    const app = await signInOnApp(browser, code, undefined, publishedRelease(1));
+    const card = app.getByText('Nueva versión 0.2.0');
+    await expect(card).toBeVisible();
+    await app.getByRole('button', { name: 'Ver la nueva versión' }).click();
+    await expect(app.getByRole('heading', { name: 'Nueva versión 0.2.0' })).toBeVisible();
+    await expect(app.getByText('34,2 MB · publicada el 15 nov 2026')).toBeVisible();
+    await expect(app.getByText('Arreglos para el modo sin conexión.')).toBeVisible();
+    // "Más tarde" hides it for a day, and the home is back.
+    await app.getByRole('button', { name: 'Más tarde' }).click();
+    await expect(app.getByRole('heading', { name: '1 oferta esperando' })).toBeVisible();
+    await expect(card).toBeHidden();
+    await app.context().close();
+
+    // Below the minimum, the prompt replaces everything, sign-in included, with
+    // no way to put it off; the preview's "Actualizar" opens the download page.
+    const phone = await phoneContext(browser, { release: publishedRelease(2) });
+    const blocked = await phone.newPage();
+    await blocked.goto(WORKER_APP_URL);
+    await expect(
+      blocked.getByRole('heading', { name: 'Actualiza la app para seguir' }),
+    ).toBeVisible();
+    await expect(blocked.getByText(/La central pide la versión 0\.2\.0/)).toBeVisible();
+    await expect(blocked.getByRole('button', { name: 'Más tarde' })).toHaveCount(0);
+    await expect(blocked.getByLabel('Número de teléfono')).toHaveCount(0);
+    const opened = phone.waitForEvent('page');
+    await blocked.getByRole('button', { name: 'Actualizar' }).click();
+    await expect(await opened).toHaveURL(`${STOREFRONT_URL}/app`);
+    await phone.close();
   });
 
   test('keeps a decline made with no signal and sends it when the signal returns', async ({
