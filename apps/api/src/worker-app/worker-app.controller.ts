@@ -46,6 +46,9 @@ export class WorkerAppController {
     const path = await this.workerApp.apkPath(file);
     if (!path) throw new NotFoundException();
     res.sendFile(path, {
+      // The folder may sit under a dot-directory (`.worker-app` in development);
+      // the path is already checked against the release.
+      dotfiles: 'allow',
       headers: {
         'content-type': 'application/vnd.android.package-archive',
         'content-disposition': `attachment; filename="${file}"`,
@@ -82,16 +85,20 @@ export class WorkerAppController {
         '',
         body,
       ].join('\r\n');
+    // Node's own setHeader and a Buffer body: Express would add a charset
+    // after the boundary.
+    res.setHeader('content-type', `multipart/mixed; boundary=${boundary}`);
     res
       .status(200)
-      .type(`multipart/mixed; boundary=${boundary}`)
       .send(
-        [
-          part('manifest', manifest.body, [`expo-signature: ${manifest.signature}`]),
-          part('extensions', JSON.stringify({ assetRequestHeaders: {} })),
-          `--${boundary}--`,
-          '',
-        ].join('\r\n'),
+        Buffer.from(
+          [
+            part('manifest', manifest.body, [`expo-signature: ${manifest.signature}`]),
+            part('extensions', JSON.stringify({ assetRequestHeaders: {} })),
+            `--${boundary}--`,
+            '',
+          ].join('\r\n'),
+        ),
       );
   }
 
@@ -106,6 +113,6 @@ export class WorkerAppController {
   ): Promise<void> {
     const path = await this.workerApp.assetPath(runtimeVersion, updateId, file);
     if (!path) throw new NotFoundException();
-    res.sendFile(path, { maxAge: '365d', immutable: true });
+    res.sendFile(path, { dotfiles: 'allow', maxAge: '365d', immutable: true });
   }
 }

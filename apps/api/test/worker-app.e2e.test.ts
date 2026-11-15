@@ -50,11 +50,15 @@ const RELEASES = {
 
 describe('worker app releases', () => {
   let app: INestApplication;
+  let root: string;
   let dir: string;
   const previousDir = process.env.WORKER_APP_DIR;
 
   beforeAll(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'ota-worker-app-'));
+    // Under a dot-directory, as in development (`apps/api/.worker-app`).
+    root = await mkdtemp(join(tmpdir(), 'ota-worker-app-'));
+    dir = join(root, '.worker-app');
+    await mkdir(dir);
     process.env.WORKER_APP_DIR = dir;
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
@@ -66,7 +70,7 @@ describe('worker app releases', () => {
 
   afterAll(async () => {
     await app.close();
-    await rm(dir, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true });
     if (previousDir === undefined) delete process.env.WORKER_APP_DIR;
     else process.env.WORKER_APP_DIR = previousDir;
   });
@@ -180,6 +184,9 @@ describe('worker app releases', () => {
     expect(response.headers['expo-protocol-version']).toBe('1');
     expect(response.headers['expo-sfv-version']).toBe('0');
     expect(response.headers['cache-control']).toBe('private, max-age=0');
+    expect(response.headers['content-type']).toMatch(
+      /^multipart\/mixed; boundary=[\w-]+$/,
+    );
     const boundary = /boundary=([^;]+)/.exec(
       response.headers['content-type'] as string,
     )?.[1];
