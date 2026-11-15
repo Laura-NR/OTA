@@ -558,9 +558,15 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         where: { reservationId: { in: reservationIds } },
         data: { comment: null },
       });
+      // W-Job J5: a worker's report keeps its type and times, not where it was.
       await tx.incident.updateMany({
         where: { reservationId: { in: reservationIds } },
-        data: { description: '[redacted]' },
+        data: {
+          description: '[redacted]',
+          latitude: null,
+          longitude: null,
+          locationAccuracyM: null,
+        },
       });
       // M3 D6: the consent log keeps its versioned counts, not who gave them.
       // OFAC affidavits are not touched: they keep their own snapshot for five
@@ -583,9 +589,15 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
           emergencyContactPhone: null,
         },
       });
+      // W-Job J1: the desk's brief may name the travelers or their health.
       await tx.serviceItem.updateMany({
         where: { reservationId: { in: reservationIds } },
-        data: { declineReason: null },
+        data: {
+          declineReason: null,
+          meetingPoint: null,
+          dropOff: null,
+          workerBrief: null,
+        },
       });
       if (serviceItemIds.length > 0) {
         await tx.dispatchOffer.updateMany({

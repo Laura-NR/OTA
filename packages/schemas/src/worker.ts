@@ -7,6 +7,7 @@ import {
 import { z } from 'zod';
 
 import { serviceTypeSchema } from './dispatch';
+import { jobBriefSchema, jobContactSchema, jobStepTimesSchema } from './job';
 import { workerPaymentSchema } from './payouts';
 import {
   blockReasonSchema,
@@ -41,6 +42,13 @@ export const workerJobSchema = z.object({
   payout: z.string(),
   currency: z.string(),
   traveler: workerTravelerSchema,
+  /**
+   * W-Job, on accepted jobs only: the desk's brief, the steps so far and the
+   * night's host. Optional, so an app built before W-Job reads the home.
+   */
+  brief: jobBriefSchema.optional(),
+  steps: jobStepTimesSchema.optional(),
+  nightHost: jobContactSchema.nullable().optional(),
 });
 
 export type WorkerJobDto = z.infer<typeof workerJobSchema>;

@@ -14,6 +14,7 @@ import {
   calculateSupplierReliability,
   daysBetween,
   isResourcesStale,
+  jobNightHost,
   longBlockedRun,
   monthDays,
   planWorkerDays,
@@ -43,6 +44,7 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { jobStepTimes, toJobStepTimesDto } from '../jobs/job-steps';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
 import {
@@ -77,6 +79,38 @@ const ITEM_SELECT = {
 } satisfies Prisma.ServiceItemSelect;
 
 type WorkerItem = Prisma.ServiceItemGetPayload<{ select: typeof ITEM_SELECT }>;
+
+/**
+ * A taken job as W-Home and W-Job read it (`docs/schema-w-job.md`): the
+ * desk's brief, the steps so far and the trip's stays, for the night's host.
+ */
+const HOME_JOB_SELECT = {
+  ...ITEM_SELECT,
+  meetingPoint: true,
+  dropOff: true,
+  workerBrief: true,
+  enRouteAt: true,
+  arrivedAt: true,
+  startedAt: true,
+  finishedAt: true,
+  reservation: {
+    select: {
+      ...ITEM_SELECT.reservation.select,
+      serviceItems: {
+        where: { serviceType: 'ACCOMMODATION', status: { in: [...JOB_STATUSES] } },
+        select: {
+          serviceDateStart: true,
+          serviceDateEnd: true,
+          supplier: {
+            select: { primaryPhone: true, user: { select: { fullName: true } } },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.ServiceItemSelect;
+
+type HomeJobItem = Prisma.ServiceItemGetPayload<{ select: typeof HOME_JOB_SELECT }>;
 
 /** A finished job as W-Earnings reads it: the job plus its payout, payment and booking state. */
 const EARNINGS_SELECT = {
@@ -169,15 +203,16 @@ export class WorkerService {
         orderBy: { dispatchDeadline: 'asc' },
         select: ITEM_SELECT,
       }),
+      // A job finished today (W-Job's last step) stays listed until its day ends.
       this.prisma.serviceItem.findMany({
         where: {
           supplierId: profile.id,
-          status: ServiceItemStatus.Accepted,
+          status: { in: [...JOB_STATUSES] },
           serviceDateEnd: { gte: startOfDay(now) },
         },
         orderBy: { serviceDateStart: 'asc' },
         take: JOBS_SHOWN,
-        select: ITEM_SELECT,
+        select: HOME_JOB_SELECT,
       }),
       this.prisma.dispatchOffer.findMany({
         where: { supplierId: profile.id },
@@ -201,7 +236,7 @@ export class WorkerService {
             : null,
       },
       offers: offers.flatMap((item) => this.toOffer(item, hurryShare)),
-      jobs: jobs.map((item) => this.toJob(item)),
+      jobs: jobs.map((item) => this.toHomeJob(item)),
       serverTime: now.toISOString(),
     };
   }
@@ -559,6 +594,32 @@ export class WorkerService {
         hurryFrom: new Date(item.offeredAt.getTime() + window * hurryShare).toISOString(),
       },
     ];
+  }
+
+  /** A taken job with what W-Job adds: the brief, the steps and the night's host. */
+  private toHomeJob(item: HomeJobItem): WorkerJobDto {
+    return {
+      ...this.toJob(item),
+      brief: {
+        meetingPoint: item.meetingPoint,
+        dropOff: item.dropOff,
+        workerBrief: item.workerBrief,
+      },
+      steps: toJobStepTimesDto(jobStepTimes(item)),
+      // A host's own stay has no other host to call.
+      nightHost:
+        item.serviceType === 'ACCOMMODATION'
+          ? null
+          : jobNightHost(
+              item.serviceDateStart,
+              item.reservation.serviceItems.map((stay) => ({
+                startsAt: stay.serviceDateStart,
+                endsAt: stay.serviceDateEnd,
+                hostFirstName: firstName(stay.supplier?.user.fullName ?? null),
+                hostPhone: stay.supplier?.primaryPhone ?? null,
+              })),
+            ),
+    };
   }
 
   private toJob(item: WorkerItem): WorkerJobDto {

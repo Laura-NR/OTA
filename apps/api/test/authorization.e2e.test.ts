@@ -271,6 +271,11 @@ const ROUTES: Route[] = [
   // W-Credentials: the worker's own documents and uploads.
   { method: 'get', path: '/worker/credentials', allowed: 'worker' },
   { method: 'post', path: '/worker/credentials', allowed: 'worker' },
+  // W-Job: the worker's steps and on-site emergency, the desk's brief and steps.
+  { method: 'post', path: `/worker/jobs/${SERVICE_ITEM}/steps`, allowed: 'worker' },
+  { method: 'post', path: `/worker/jobs/${SERVICE_ITEM}/emergency`, allowed: 'worker' },
+  { method: 'patch', path: `/service-items/${SERVICE_ITEM}/brief`, allowed: 'opsWrite' },
+  { method: 'post', path: `/service-items/${SERVICE_ITEM}/steps`, allowed: 'opsWrite' },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',
@@ -390,6 +395,8 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/incidents', allowed: 'opsRead' },
   { method: 'post', path: `/reservations/${RESERVATION}/incidents`, allowed: 'opsWrite' },
   { method: 'patch', path: `/incidents/${INCIDENT}/resolve`, allowed: 'opsWrite' },
+  { method: 'get', path: '/incidents/emergencies', allowed: 'opsRead' },
+  { method: 'post', path: `/incidents/${INCIDENT}/acknowledge`, allowed: 'opsWrite' },
   { method: 'get', path: '/reviews', allowed: 'opsRead' },
   { method: 'get', path: '/quality/supplier-reliability', allowed: 'opsRead' },
 

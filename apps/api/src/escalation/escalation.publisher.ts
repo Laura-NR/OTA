@@ -28,11 +28,23 @@ export interface DeskAlertEvent {
 }
 
 /**
+ * W-Job J6: a worker's on-site emergency reported, or acknowledged by someone
+ * on the desk, so every open desk raises or clears its alert.
+ */
+export interface EmergencyEvent {
+  type: 'incident.emergency' | 'incident.acknowledged';
+  incidentId: string;
+  reservationId: string;
+  serviceItemId: string | null;
+  occurredAt: string;
+}
+
+/**
  * Broadcasts dispatch/escalation events to the operations desk. The dispatch
  * service depends only on this interface, so tests run without a socket server.
  */
 export interface EscalationPublisher {
-  publish(event: EscalationEvent | DeskAlertEvent): void;
+  publish(event: EscalationEvent | DeskAlertEvent | EmergencyEvent): void;
 }
 
 export class NoopEscalationPublisher implements EscalationPublisher {

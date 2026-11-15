@@ -34,7 +34,24 @@ interface FakeIncident {
   resolvedAt: Date | null;
   createdAt: Date;
   reservation: { bookingCode: string };
+  source: string;
+  serviceItemId: string | null;
+  supplierId: string | null;
+  latitude: { toNumber: () => number } | null;
+  longitude: { toNumber: () => number } | null;
+  locationAccuracyM: number | null;
+  occurredAt: Date | null;
+  clientRef: string | null;
+  acknowledgedAt: Date | null;
+  acknowledgedById: string | null;
+  supplier: {
+    primaryPhone: string;
+    user: { fullName: string | null; email: string };
+  } | null;
+  acknowledgedBy: { fullName: string | null; email: string } | null;
 }
+
+const SERVICE_ITEM_ID = '88888888-8888-4888-8888-888888888888';
 
 function makeIncident(overrides: Partial<FakeIncident> = {}): FakeIncident {
   return {
@@ -46,8 +63,42 @@ function makeIncident(overrides: Partial<FakeIncident> = {}): FakeIncident {
     resolvedAt: null,
     createdAt: new Date('2026-09-20T10:00:00Z'),
     reservation: { bookingCode: 'E2E0001' },
+    source: 'DESK',
+    serviceItemId: null,
+    supplierId: null,
+    latitude: null,
+    longitude: null,
+    locationAccuracyM: null,
+    occurredAt: null,
+    clientRef: null,
+    acknowledgedAt: null,
+    acknowledgedById: null,
+    supplier: null,
+    acknowledgedBy: null,
     ...overrides,
   };
+}
+
+/** A driver's report from the app, waiting for the desk (W-Job J6). */
+function workerReport(overrides: Partial<FakeIncident> = {}): FakeIncident {
+  return makeIncident({
+    id: '99999999-1111-4111-8111-111111111111',
+    category: 'MEDICAL',
+    description: '',
+    severity: 'CRITICAL',
+    source: 'WORKER_APP',
+    serviceItemId: SERVICE_ITEM_ID,
+    supplierId: SUPPLIER_A,
+    latitude: { toNumber: () => 23.11361 },
+    longitude: { toNumber: () => -82.36658 },
+    locationAccuracyM: 12,
+    occurredAt: new Date('2026-09-20T19:36:00Z'),
+    supplier: {
+      primaryPhone: '+5352410000',
+      user: { fullName: 'Lázaro Pérez', email: 'l@x.test' },
+    },
+    ...overrides,
+  });
 }
 
 function createFakePrisma(state: {
@@ -62,14 +113,27 @@ function createFakePrisma(state: {
   const fake = {
     reservation: {
       findUnique: async (args: { where: { id: string } }) =>
-        args.where.id === RESERVATION_ID ? { id: RESERVATION_ID } : null,
+        args.where.id === RESERVATION_ID
+          ? {
+              id: RESERVATION_ID,
+              serviceItems: [{ id: SERVICE_ITEM_ID, supplierId: SUPPLIER_A }],
+            }
+          : null,
     },
     incident: {
       findMany: async (args: {
-        where?: { reservationId?: string; resolvedAt?: unknown };
+        where?: {
+          reservationId?: string;
+          resolvedAt?: unknown;
+          acknowledgedAt?: null;
+          source?: { in: string[] };
+        };
       }) => {
         return state.incidents.filter((incident) => {
           const where = args.where ?? {};
+          if (where.source && !where.source.in.includes(incident.source)) return false;
+          if (where.acknowledgedAt === null && incident.acknowledgedAt !== null)
+            return false;
           if (where.reservationId && incident.reservationId !== where.reservationId) {
             return false;
           }
@@ -88,6 +152,24 @@ function createFakePrisma(state: {
       },
       findUnique: async (args: { where: { id: string } }) =>
         state.incidents.find((incident) => incident.id === args.where.id) ?? null,
+      findUniqueOrThrow: async (args: { where: { id: string } }) => {
+        const incident = state.incidents.find((row) => row.id === args.where.id);
+        if (!incident) throw new Error('not found');
+        return incident;
+      },
+      updateMany: async (args: {
+        where: { id: string; acknowledgedAt: null };
+        data: { acknowledgedAt: Date; acknowledgedById: string };
+      }) => {
+        const incident = state.incidents.find(
+          (row) => row.id === args.where.id && row.acknowledgedAt === null,
+        );
+        if (!incident) return { count: 0 };
+        Object.assign(incident, args.data, {
+          acknowledgedBy: { fullName: 'Super Admin', email: SUPER_ADMIN.email },
+        });
+        return { count: 1 };
+      },
       create: async (args: { data: Partial<FakeIncident> }) => {
         const incident = makeIncident({ ...args.data, resolvedAt: null });
         state.incidents.push(incident);
@@ -230,6 +312,74 @@ describe('quality API', () => {
       .send({ category: 'MEDICAL', description: 'x' });
 
     expect(response.status).toBe(404);
+  });
+
+  it("lists only the workers' reports still waiting for the desk (W-Job J6)", async () => {
+    state.incidents.push(
+      workerReport(),
+      workerReport({
+        id: '99999999-2222-4222-8222-222222222222',
+        acknowledgedAt: new Date('2026-09-20T19:40:00Z'),
+      }),
+    );
+    const response = await request(app.getHttpServer())
+      .get('/incidents/emergencies')
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0]).toMatchObject({
+      source: 'WORKER_APP',
+      supplierName: 'Lázaro Pérez',
+      supplierPhone: '+5352410000',
+      position: { latitude: 23.11361, longitude: -82.36658, accuracyM: 12 },
+      acknowledgedAt: null,
+    });
+  });
+
+  it('acknowledges an emergency once; a second acknowledgement returns the first', async () => {
+    state.incidents.push(workerReport());
+    const first = await request(app.getHttpServer())
+      .post('/incidents/99999999-1111-4111-8111-111111111111/acknowledge')
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(first.status).toBe(200);
+    expect(first.body.acknowledgedBy).toBe('Super Admin');
+    const second = await request(app.getHttpServer())
+      .post('/incidents/99999999-1111-4111-8111-111111111111/acknowledge')
+      .set('x-test-user', SUPER_ADMIN.email);
+    expect(second.status).toBe(200);
+    expect(second.body.acknowledgedAt).toBe(first.body.acknowledgedAt);
+  });
+
+  it("logs a report that came by SMS as already in hand, on one of the booking's services", async () => {
+    const response = await request(app.getHttpServer())
+      .post(`/reservations/${RESERVATION_ID}/incidents`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({
+        category: 'MEDICAL',
+        description: 'SOS por SMS, la central llamó',
+        severity: 'CRITICAL',
+        source: 'WORKER_SMS',
+        serviceItemId: SERVICE_ITEM_ID,
+      });
+    expect(response.status).toBe(201);
+    const logged = state.incidents.at(-1)!;
+    expect(logged).toMatchObject({
+      source: 'WORKER_SMS',
+      serviceItemId: SERVICE_ITEM_ID,
+      supplierId: SUPPLIER_A,
+    });
+    expect(logged.acknowledgedAt).not.toBeNull();
+
+    const elsewhere = await request(app.getHttpServer())
+      .post(`/reservations/${RESERVATION_ID}/incidents`)
+      .set('x-test-user', SUPER_ADMIN.email)
+      .send({
+        category: 'MEDICAL',
+        description: 'x',
+        source: 'WORKER_SMS',
+        serviceItemId: '12121212-1212-4212-8212-121212121212',
+      });
+    expect(elsewhere.status).toBe(422);
   });
 
   it('resolves an incident once and rejects a second resolve', async () => {

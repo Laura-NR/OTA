@@ -394,6 +394,18 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
       user: { fullName: 'Margaret  Chen', locale: 'en' },
     },
   };
+  /** A taken job as W-Job reads it: no brief, no step, no stay yet. */
+  const JOB = {
+    ...ITEM,
+    meetingPoint: null,
+    dropOff: null,
+    workerBrief: null,
+    enRouteAt: null,
+    arrivedAt: null,
+    startedAt: null,
+    finishedAt: null,
+    reservation: { ...ITEM.reservation, serviceItems: [] },
+  };
   const calls: Array<{ where: Record<string, unknown> }> = [];
   const deleted: unknown[] = [];
 
@@ -458,7 +470,7 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
           dispatchDeadline: new Date('2026-11-09T11:00:00Z'),
         },
       ],
-      [{ ...ITEM, id: 'item-job', offeredAt: null, dispatchDeadline: null }],
+      [{ ...JOB, id: 'item-job', offeredAt: null, dispatchDeadline: null }],
     );
     const result = await service.home(WORKER, NOW);
 
@@ -494,6 +506,55 @@ describe("the worker app's home (W-Home, W-Offer)", () => {
     expect(result.jobs.map((job) => job.serviceItemId)).toEqual(['item-job']);
     expect(result.serverTime).toBe(NOW.toISOString());
     expect(JSON.stringify(result)).not.toMatch(/Chen|@|userId/);
+  });
+
+  it("gives a job its brief, its steps and the night's host, and keeps it listed once finished (W-Job)", async () => {
+    const service = home(
+      PROFILE,
+      [],
+      [
+        {
+          ...JOB,
+          id: 'item-job',
+          status: 'FULFILLED',
+          meetingPoint: 'Llegadas T3, salida principal',
+          dropOff: 'Casa Lis, Vedado',
+          workerBrief: 'IB 6621 llega 16:35 · cartel «Vereda»',
+          enRouteAt: new Date('2026-11-13T20:28:00Z'),
+          finishedAt: new Date('2026-11-13T22:30:00Z'),
+          reservation: {
+            ...ITEM.reservation,
+            serviceItems: [
+              {
+                serviceDateStart: new Date('2026-11-13T00:00:00Z'),
+                serviceDateEnd: new Date('2026-11-16T00:00:00Z'),
+                supplier: {
+                  primaryPhone: '5 241 33 88',
+                  user: { fullName: 'Lis Hernández' },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    );
+    const [job] = (await service.home(WORKER, NOW)).jobs;
+
+    expect(calls[1]!.where.status).toEqual({ in: ['ACCEPTED', 'FULFILLED'] });
+    expect(job).toMatchObject({
+      brief: {
+        meetingPoint: 'Llegadas T3, salida principal',
+        dropOff: 'Casa Lis, Vedado',
+        workerBrief: 'IB 6621 llega 16:35 · cartel «Vereda»',
+      },
+      steps: {
+        EN_ROUTE: '2026-11-13T20:28:00.000Z',
+        ARRIVED: null,
+        STARTED: null,
+        FINISHED: '2026-11-13T22:30:00.000Z',
+      },
+      nightHost: { firstName: 'Lis', phone: '+5352413388' },
+    });
   });
 
   it('refuses a worker account with no supplier profile', async () => {

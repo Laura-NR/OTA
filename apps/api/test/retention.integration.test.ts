@@ -84,6 +84,9 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
               province: 'La Habana',
               status: 'DECLINED',
               declineReason: 'PII supplier decline reason',
+              meetingPoint: 'PII meeting point',
+              dropOff: 'PII drop-off',
+              workerBrief: 'PII worker brief',
             },
           ],
         },
@@ -154,6 +157,10 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
         category: 'MEDICAL',
         description: 'PII incident description',
         severity: 'HIGH',
+        source: 'WORKER_APP',
+        latitude: '23.113612',
+        longitude: '-82.366581',
+        locationAccuracyM: 12,
       },
     });
     await prisma.auditLog.create({
@@ -341,11 +348,23 @@ describe.skipIf(!runIntegration)('RetentionService (live Postgres)', () => {
     });
     expect(incident.description).toBe('[redacted]');
     expect(incident.severity).toBe('HIGH');
+    // W-Job J5: the report keeps its source and type, not where it was.
+    expect(incident.source).toBe('WORKER_APP');
+    expect([incident.latitude, incident.longitude, incident.locationAccuracyM]).toEqual([
+      null,
+      null,
+      null,
+    ]);
 
     const serviceItem = await prisma.serviceItem.findFirstOrThrow({
       where: { reservationId },
     });
     expect(serviceItem.declineReason).toBeNull();
+    expect([
+      serviceItem.meetingPoint,
+      serviceItem.dropOff,
+      serviceItem.workerBrief,
+    ]).toEqual([null, null, null]);
 
     // Better Auth tokens for the old address are gone.
     const verifications = await prisma.verification.count({

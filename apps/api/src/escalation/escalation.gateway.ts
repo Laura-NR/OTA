@@ -15,6 +15,7 @@ import { startSocketRecheck } from '../auth/socket-recheck';
 import { SOCKET_ORIGIN_OPTIONS } from '../common/trusted-origins';
 import type {
   DeskAlertEvent,
+  EmergencyEvent,
   EscalationEvent,
   EscalationPublisher,
 } from './escalation.publisher';
@@ -84,7 +85,7 @@ export class EscalationGateway
     await client.join(OPS_ROOM);
   }
 
-  publish(event: EscalationEvent | DeskAlertEvent): void {
+  publish(event: EscalationEvent | DeskAlertEvent | EmergencyEvent): void {
     this.server?.to(OPS_ROOM).emit('escalation', event);
   }
 }

@@ -14,10 +14,16 @@ import {
 import { UserRole } from '@ota/domain';
 import {
   declareWorkerFuelSchema,
+  recordJobStepSchema,
+  reportEmergencySchema,
   setWorkerDaysSchema,
   workerCalendarQuerySchema,
   workerUploadCredentialSchema,
   type DeclareWorkerFuelRequest,
+  type EmergencyReportResultDto,
+  type JobStepTimesDto,
+  type RecordJobStepRequest,
+  type ReportEmergencyRequest,
   type SetWorkerDaysRequest,
   type WorkerCalendarDto,
   type WorkerCalendarQuery,
@@ -37,6 +43,7 @@ import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { sendPdf } from '../proposals/proposal-pdf';
+import { JobsService } from '../jobs/jobs.service';
 import { SupplierCredentialsService } from '../suppliers/supplier-credentials.service';
 import { WorkerCodesService } from './worker-codes.service';
 import { WorkerService } from './worker.service';
@@ -47,6 +54,7 @@ export class WorkerController {
   constructor(
     private readonly worker: WorkerService,
     private readonly credentials: SupplierCredentialsService,
+    private readonly jobs: JobsService,
   ) {}
 
   @Get('home')
@@ -118,6 +126,30 @@ export class WorkerController {
     @CurrentUser() actor: AuthUser,
   ): Promise<WorkerCredentialsDto> {
     return this.credentials.uploadForWorker(actor, body);
+  }
+
+  /** W-Job: a step tapped on one of the worker's jobs, sent from the phone's queue. */
+  @Post('jobs/:id/steps')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ServiceWorker)
+  recordJobStep(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(recordJobStepSchema)) body: RecordJobStepRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<JobStepTimesDto> {
+    return this.jobs.workerStep(actor, id, body);
+  }
+
+  /** W-Job: the on-site emergency, which raises a red alert on the desk. */
+  @Post('jobs/:id/emergency')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ServiceWorker)
+  reportEmergency(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(reportEmergencySchema)) body: ReportEmergencyRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<EmergencyReportResultDto> {
+    return this.jobs.reportEmergency(actor, id, body);
   }
 
   /** A driver's weekly fuel declaration. */
