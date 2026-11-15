@@ -137,6 +137,13 @@ enum CredentialStatus {
   SUPERSEDED
 }
 
+// W-Job J5 (docs/schema-w-job.md): who put an incident in the log.
+enum IncidentSource {
+  DESK
+  WORKER_APP
+  WORKER_SMS
+}
+
 // M4 payment schedule (docs/schema-m4-payment-schedule.md)
 enum InstalmentKind {
   DEPOSIT
@@ -502,6 +509,8 @@ model User {
   // W-Credentials
   credentialsUploaded SupplierCredential[] @relation("SupplierCredentialUploadedBy")
   credentialsReviewed SupplierCredential[] @relation("SupplierCredentialReviewedBy")
+  // W-Job
+  incidentsAcknowledged Incident[] @relation("IncidentAcknowledgedBy")
 
   // Better Auth relations
   sessions Session[]
@@ -610,6 +619,7 @@ model SupplierProfile {
   serviceItems ServiceItem[]
   payouts      SupplierPayout[]
   credentials  SupplierCredential[]
+  incidents    Incident[]
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
   inventoryItems InventoryItem[]
@@ -1239,6 +1249,15 @@ model ServiceItem {
   travelerPrice   Decimal?          @map("traveler_price") @db.Decimal(10, 2)
   /// The payment that settled this job; null until paid (W-Earnings E1).
   payoutId        String?           @map("payout_id") @db.Uuid
+  /// W-Job J1: the desk's brief for the worker.
+  meetingPoint    String?           @map("meeting_point")
+  dropOff         String?           @map("drop_off")
+  workerBrief     String?           @map("worker_brief")
+  /// W-Job J2: the worker's steps, each set once.
+  enRouteAt       DateTime?         @map("en_route_at")
+  arrivedAt       DateTime?         @map("arrived_at")
+  startedAt       DateTime?         @map("started_at")
+  finishedAt      DateTime?         @map("finished_at")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
@@ -1246,6 +1265,7 @@ model ServiceItem {
   supplier    SupplierProfile? @relation(fields: [supplierId], references: [id])
   payout      SupplierPayout?  @relation(fields: [payoutId], references: [id], onDelete: SetNull)
   dispatchOffers DispatchOffer[]
+  incidents      Incident[]
 
   @@index([reservationId])
   @@index([supplierId])
@@ -1813,10 +1833,28 @@ model Incident {
   severity      String
   resolvedAt    DateTime? @map("resolved_at")
   createdAt     DateTime  @default(now()) @map("created_at")
+  // W-Job J5: a worker's on-site report.
+  serviceItemId     String?        @map("service_item_id") @db.Uuid
+  supplierId        String?        @map("supplier_id") @db.Uuid
+  source            IncidentSource @default(DESK)
+  latitude          Decimal?       @db.Decimal(9, 6)
+  longitude         Decimal?       @db.Decimal(9, 6)
+  locationAccuracyM Int?           @map("location_accuracy_m")
+  /// The phone's time of the report, corrected by the API's clock.
+  occurredAt        DateTime?      @map("occurred_at")
+  /// The app's id for the report, so a resent one is not doubled.
+  clientRef         String?        @unique @map("client_ref")
+  acknowledgedAt    DateTime?      @map("acknowledged_at")
+  acknowledgedById  String?        @map("acknowledged_by_id") @db.Uuid
 
-  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservation    Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  serviceItem    ServiceItem?     @relation(fields: [serviceItemId], references: [id], onDelete: SetNull)
+  supplier       SupplierProfile? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  acknowledgedBy User?            @relation("IncidentAcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
 
   @@index([reservationId])
+  @@index([serviceItemId])
+  @@index([acknowledgedAt])
   @@map("incidents")
 }
 

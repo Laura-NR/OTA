@@ -1,6 +1,7 @@
 # W-Job: schema diff for review
 
-**Status:** proposed 2026-11-15, awaiting the owner's decisions J1–J9.
+**Status:** proposed 2026-11-15; **approved 2026-11-15, J1–J9 as recommended** (J1a, J2a, J3a,
+J4a, J5a, J6a, J7a, J8a, J9a).
 **Date:** 2026-11-15
 **Scope:** the W-Job board (`design/vereda-v1.2/project/W-Job.dc.html`): the day's job readable
 with no signal, the service steps, and the one-touch on-site emergency. The worker app's bottom
