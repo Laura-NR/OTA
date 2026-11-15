@@ -896,6 +896,33 @@
       },
       "railOff": "Le paiement par virement bancaire en ligne est désactivé pour le moment. Contactez-nous pour finaliser le paiement.",
       "contactUs": "Nous contacter"
+    },
+    "workerStep": {
+      "line": "{step} · {time}",
+      "TRANSPORTATION": {
+        "EN_ROUTE": "Votre chauffeur est en route",
+        "ARRIVED": "Votre chauffeur est arrivé",
+        "STARTED": "À bord",
+        "FINISHED": "Déposé"
+      },
+      "GUIDE": {
+        "EN_ROUTE": "Votre guide est en route",
+        "ARRIVED": "Votre guide est arrivé",
+        "STARTED": "Visite en cours",
+        "FINISHED": "Visite terminée"
+      },
+      "EXPERIENCE": {
+        "EN_ROUTE": "Votre hôte est en route",
+        "ARRIVED": "Votre hôte est arrivé",
+        "STARTED": "Activité en cours",
+        "FINISHED": "Activité terminée"
+      },
+      "ACCOMMODATION": {
+        "EN_ROUTE": "Votre hôte est en route",
+        "ARRIVED": "Votre hôte est arrivé",
+        "STARTED": "Arrivée à la casa",
+        "FINISHED": "Départ de la casa"
+      }
     }
   },
   "join": {

@@ -896,6 +896,33 @@
       },
       "railOff": "El pago por transferencia bancaria en línea está desactivado por ahora. Contacte con nosotros para completar el pago.",
       "contactUs": "Contacte con nosotros"
+    },
+    "workerStep": {
+      "line": "{step} · {time}",
+      "TRANSPORTATION": {
+        "EN_ROUTE": "Tu conductor está en camino",
+        "ARRIVED": "Tu conductor ha llegado",
+        "STARTED": "A bordo",
+        "FINISHED": "Entregado"
+      },
+      "GUIDE": {
+        "EN_ROUTE": "Tu guía está en camino",
+        "ARRIVED": "Tu guía ha llegado",
+        "STARTED": "Recorrido en marcha",
+        "FINISHED": "Recorrido terminado"
+      },
+      "EXPERIENCE": {
+        "EN_ROUTE": "Tu anfitrión está en camino",
+        "ARRIVED": "Tu anfitrión ha llegado",
+        "STARTED": "Actividad en marcha",
+        "FINISHED": "Actividad terminada"
+      },
+      "ACCOMMODATION": {
+        "EN_ROUTE": "Tu anfitrión está en camino",
+        "ARRIVED": "Tu anfitrión ha llegado",
+        "STARTED": "Registrados en la casa",
+        "FINISHED": "Salida de la casa"
+      }
     }
   },
   "join": {

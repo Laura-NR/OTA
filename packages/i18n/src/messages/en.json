@@ -896,6 +896,33 @@
       },
       "railOff": "Paying by bank transfer online is switched off for now. Contact us to complete the payment.",
       "contactUs": "Contact us"
+    },
+    "workerStep": {
+      "line": "{step} · {time}",
+      "TRANSPORTATION": {
+        "EN_ROUTE": "Your driver is on the way",
+        "ARRIVED": "Your driver has arrived",
+        "STARTED": "On board",
+        "FINISHED": "Delivered"
+      },
+      "GUIDE": {
+        "EN_ROUTE": "Your guide is on the way",
+        "ARRIVED": "Your guide has arrived",
+        "STARTED": "Tour under way",
+        "FINISHED": "Tour finished"
+      },
+      "EXPERIENCE": {
+        "EN_ROUTE": "Your host is on the way",
+        "ARRIVED": "Your host has arrived",
+        "STARTED": "Activity under way",
+        "FINISHED": "Activity finished"
+      },
+      "ACCOMMODATION": {
+        "EN_ROUTE": "Your host is on the way",
+        "ARRIVED": "Your host has arrived",
+        "STARTED": "Checked in",
+        "FINISHED": "Checked out"
+      }
     }
   },
   "join": {
