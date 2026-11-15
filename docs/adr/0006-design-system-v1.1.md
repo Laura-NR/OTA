@@ -1948,7 +1948,7 @@ ADR 0007 A3's distribution screens were never drawn. The build resolved them wit
 tokens and components (`docs/worker-app-distribution-plan.md` §5); no token was added.
 
 - **Download page** (storefront `/app`, en/es/fr). A content page on the standard container,
-  narrowed to `max-w-3xl`: the `h1`/`display-2` title and `body-lg` lede, the release as a
+  its column capped at `max-w-3xl` and aligned with the header: the `h1`/`display-2` title and `body-lg` lede, the release as a
   `Card` (version `h3`, size and date in `body-sm` tabular figures, the primary `lg` button
   for arm64, a primary-700 underlined link for the 32-bit split, the certificate in
   `font-mono` `body-sm` that breaks anywhere), then the install steps as a numbered list and
