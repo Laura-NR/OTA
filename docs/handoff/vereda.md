@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-15 18:00
+# Handoff — vereda — updated 2026-11-15 20:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -1969,8 +1969,9 @@ events (T-Events)".
    the first real runs of "Abrir recibo"'s share sheet and of background resend, whose
    checklist lines are in `docs/worker-app-plan.md` §8, W-Job's SOS SMS and position
    included). Agent, in order (W-Job landed 2026-11-15): distribution (download page, update
-   prompt, self-hosted `expo-updates`; a short plan first, `expo-updates` is a new
-   dependency). W-Job's follow-ups are the owner's call: worker ↔ desk messages (J9b, a
+   prompt, self-hosted `expo-updates`). Its plan, `docs/worker-app-distribution-plan.md`
+   (2026-11-15, no migration recommended), waits on the owner's U1–U8, three new Expo modules
+   among them; build nothing before they are answered. W-Job's follow-ups are the owner's call: worker ↔ desk messages (J9b, a
    migration, also Ops Lite's worker threads), the silent SMS module (after the APK machine),
    a shared id between an SMS-logged report and the app's copy.
    W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
