@@ -2194,7 +2194,7 @@
     },
     "applications": {
       "title": "Candidatures",
-      "description": "Recrutement des fournisseurs. Approuver une candidature crée le compte travailleur et le profil de conformité.",
+      "description": "Recrutement des fournisseurs. Approuver une candidature crée le compte travailleur et le profil de conformité, et envoie au travailleur le lien de téléchargement de l'application.",
       "recruitment": "Recrutement",
       "applicationsCount": "{count} candidature(s)",
       "empty": "Aucune candidature pour l'instant. Le formulaire public est sur /join.",
@@ -3540,6 +3540,19 @@
         "urgentNote": "Urgent : le cas de perturbation {reference} est ouvert sur cette réservation. L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail.",
         "note": "L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail."
       }
+    },
+    "appCard": {
+      "title": "Carte de l'application partenaires",
+      "description": "Imprimez-la pour le bureau : les travailleurs approuvés scannent le QR ou saisissent le lien pour télécharger l'application. Approuver une candidature leur envoie aussi le lien par e-mail et SMS.",
+      "open": "Carte de l'application",
+      "heading": "Application partenaires",
+      "scan": "Scannez le QR ou ouvrez le lien sur un téléphone Android.",
+      "version": "Version {version}, publiée le {date}",
+      "notPublished": "Aucune version n'est encore publiée ; la page de téléchargement l'indique aux travailleurs.",
+      "noQr": "Pas encore de QR. Créez-en un pour ce lien avec n'importe quel outil QR et enregistrez-le sous tenant/assets/worker-app/qr.svg.",
+      "qrAlt": "Code QR de {url}",
+      "fingerprint": "Certificat de signature (SHA-256)",
+      "print": "Imprimer"
     }
   },
   "conditions": {

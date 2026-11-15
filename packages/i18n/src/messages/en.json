@@ -2194,7 +2194,7 @@
     },
     "applications": {
       "title": "Applications",
-      "description": "Supplier recruitment. Approving an application creates the worker account and compliance profile.",
+      "description": "Supplier recruitment. Approving an application creates the worker account and compliance profile, and sends the worker the app's download link.",
       "recruitment": "Recruitment",
       "applicationsCount": "{count} application(s)",
       "empty": "No applications yet. The public form lives at /join.",
@@ -3540,6 +3540,19 @@
         "urgentNote": "Urgent: disruption case {reference} is open on this booking. In-app is the record; the traveler also gets an email copy.",
         "note": "In-app is the record; the traveler also gets an email copy."
       }
+    },
+    "appCard": {
+      "title": "Worker app card",
+      "description": "Print it for the desk: approved workers scan the QR or type the link to download the app. Approving an application also emails and texts them the link.",
+      "open": "Worker app card",
+      "heading": "Partner app",
+      "scan": "Scan the QR or open the link on an Android phone.",
+      "version": "Version {version}, published {date}",
+      "notPublished": "No version is published yet; the download page tells workers so.",
+      "noQr": "No QR yet. Make one for this link with any QR tool and save it as tenant/assets/worker-app/qr.svg.",
+      "qrAlt": "QR code for {url}",
+      "fingerprint": "Signing certificate (SHA-256)",
+      "print": "Print"
     }
   },
   "conditions": {

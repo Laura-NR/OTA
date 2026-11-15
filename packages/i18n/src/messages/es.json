@@ -2194,7 +2194,7 @@
     },
     "applications": {
       "title": "Solicitudes",
-      "description": "Reclutamiento de proveedores. Aprobar una solicitud crea la cuenta de trabajador y el perfil de cumplimiento.",
+      "description": "Reclutamiento de proveedores. Aprobar una solicitud crea la cuenta de trabajador y el perfil de cumplimiento, y envía al trabajador el enlace de descarga de la app.",
       "recruitment": "Reclutamiento",
       "applicationsCount": "{count} solicitud(es)",
       "empty": "Aún no hay solicitudes. El formulario público está en /join.",
@@ -3540,6 +3540,19 @@
         "urgentNote": "Urgente: el caso de interrupción {reference} está abierto en esta reserva. La app es el registro; el viajero también recibe una copia por correo.",
         "note": "La app es el registro; el viajero también recibe una copia por correo."
       }
+    },
+    "appCard": {
+      "title": "Tarjeta de la app de colaboradores",
+      "description": "Imprímala para la mesa: los trabajadores aprobados escanean el QR o escriben el enlace para descargar la app. Al aprobar una solicitud también se les envía el enlace por correo y SMS.",
+      "open": "Tarjeta de la app",
+      "heading": "App de colaboradores",
+      "scan": "Escanea el QR o abre el enlace en un teléfono Android.",
+      "version": "Versión {version}, publicada el {date}",
+      "notPublished": "Aún no hay ninguna versión publicada; la página de descarga se lo indica a los trabajadores.",
+      "noQr": "Aún no hay QR. Genere uno para este enlace con cualquier herramienta de QR y guárdelo como tenant/assets/worker-app/qr.svg.",
+      "qrAlt": "Código QR de {url}",
+      "fingerprint": "Certificado de firma (SHA-256)",
+      "print": "Imprimir"
     }
   },
   "conditions": {
