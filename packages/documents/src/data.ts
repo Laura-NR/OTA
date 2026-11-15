@@ -13,6 +13,10 @@ export interface DocumentServiceItem {
   /** What the traveler pays for this service; absent or null when it is bundled. */
   travelerPrice?: string | null;
   supplier: DocumentSupplier | null;
+  /** W-Job J1: the desk's brief for the worker; absent or null when none is written. */
+  meetingPoint?: string | null;
+  dropOff?: string | null;
+  workerBrief?: string | null;
 }
 
 /** A frozen price line of the booking (M2), in order. */
@@ -89,6 +93,9 @@ export interface WorkOrderModel {
   supplierName: string | null;
   supplierPhone: string | null;
   travelerName: string;
+  meetingPoint: string | null;
+  dropOff: string | null;
+  workerBrief: string | null;
 }
 
 /** A service on the traveler's invoice, with its price unless the package bundles it. */
@@ -150,6 +157,9 @@ export function buildWorkOrderModels(input: ReservationDocumentInput): WorkOrder
       supplierName: item.supplier?.fullName ?? null,
       supplierPhone: item.supplier?.primaryPhone ?? null,
       travelerName: travelerName(input),
+      meetingPoint: item.meetingPoint ?? null,
+      dropOff: item.dropOff ?? null,
+      workerBrief: item.workerBrief ?? null,
     }));
 }
 

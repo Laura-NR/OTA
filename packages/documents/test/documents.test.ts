@@ -231,6 +231,30 @@ describe('document templates', () => {
     expect(html).toContain('Concierge fee — Concierge fee · Jazz');
   });
 
+  it("prints the desk's brief on the work order, escaped, and only what is written (W-Job J1)", () => {
+    const [plain] = buildWorkOrderModels(input);
+    const plainHtml = renderWorkOrderHtml(plain!, branding);
+    expect(plainHtml).toContain('La Habana · ');
+    expect(plainHtml).not.toContain('Drop-off');
+    expect(plainHtml).not.toContain('Notes from the desk');
+
+    const [briefed] = buildWorkOrderModels({
+      ...input,
+      serviceItems: [
+        {
+          ...input.serviceItems[0]!,
+          meetingPoint: 'Llegadas T3',
+          dropOff: 'Casa Lis, Vedado',
+          workerBrief: 'Cartel <Vereda>',
+        },
+      ],
+    });
+    const html = renderWorkOrderHtml(briefed!, branding);
+    expect(html).toContain('Llegadas T3 · ');
+    expect(html).toContain('<th>Drop-off</th><td>Casa Lis, Vedado</td>');
+    expect(html).toContain('Cartel &lt;Vereda&gt;');
+  });
+
   it('adds the emergency protocol to the work order', () => {
     const html = renderWorkOrderHtml(buildWorkOrderModels(input)[0]!, branding);
 
