@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "dev": "turbo run dev",
     "e2e": "playwright test",
-    "create:tenant": "node tools/create-tenant.mjs"
+    "create:tenant": "node tools/create-tenant.mjs",
+    "worker-app:release": "node tools/worker-app-release.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
@@ -24,6 +25,8 @@
     "@eslint/js": "^10.0.1",
     "@ota/config": "workspace:*",
     "@ota/db": "workspace:*",
+    "@ota/domain": "workspace:*",
+    "@ota/schemas": "workspace:*",
     "@playwright/test": "^1.63.0",
     "eslint": "^10.11.0",
     "prettier": "^3.9.8",

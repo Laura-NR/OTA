@@ -48,5 +48,6 @@ deploy/api.env
 # The backup settings file (deploy/backup.env.example).
 deploy/backup.env
 
-# The worker app's releases in development (WORKER_APP_DIR; tools/worker-app-release.mjs)
+# The worker app's releases (WORKER_APP_DIR; tools/worker-app-release.mjs): never committed
 .worker-app/
+deploy/worker-app/
