@@ -794,6 +794,25 @@ export {
   type JobStepTimes,
 } from './worker/job';
 export {
+  WORKER_APP_ABIS,
+  WORKER_APP_JOB_LEAD_HOURS,
+  WORKER_APP_JS_CHECK_HOURS,
+  WORKER_APP_SNOOZE_HOURS,
+  installedWorkerApp,
+  splitVersionCode,
+  workerAppApkFor,
+  workerAppLinkSms,
+  workerAppNativeModules,
+  workerAppSnoozedUntil,
+  workerAppUpdate,
+  workerJobActive,
+  workerJsUpdateCheckDue,
+  workerJsUpdateRefusal,
+  type WorkerAppAbi,
+  type WorkerAppJob,
+  type WorkerAppUpdate,
+} from './worker/app-release';
+export {
   WORKER_BACKGROUND_RESEND_MINUTES,
   needsBackgroundResend,
   queueWorkerAnswer,
