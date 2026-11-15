@@ -308,7 +308,7 @@ export default async function AccountReservationPage({
                   <div key="status" className="flex flex-col items-start gap-1">
                     <Badge variant="secondary">{tsi(item.status)}</Badge>
                     {item.currentStep ? (
-                      // W-Job J4: the worker's latest step, in Havana time.
+                      // W-Job J4: the worker's latest step, timed as the row's dates are.
                       <span className="text-caption text-secondary">
                         {t('workerStep.line', {
                           step: t(
@@ -317,7 +317,6 @@ export default async function AccountReservationPage({
                           time: format.dateTime(new Date(item.currentStep.at), {
                             hour: '2-digit',
                             minute: '2-digit',
-                            timeZone: OPS_TIME_ZONE,
                           }),
                         })}
                       </span>
