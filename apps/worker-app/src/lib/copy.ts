@@ -127,6 +127,8 @@ export const copy = {
       `Hay una versión obligatoria (${version}). Te la pedimos al terminar el trabajo.`,
     later: 'Más tarde',
     install: 'Actualizar',
+    // The home's card: "Actualizar" there already refreshes the home.
+    open: 'Ver la nueva versión',
     downloading: (done: string, total: string) => `Descargando… ${done} de ${total}`,
     permission:
       'Android te pedirá permitir instalar apps de «Colaboradores» la primera vez, y después confirmar la actualización.',

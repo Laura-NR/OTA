@@ -104,11 +104,7 @@ export function HomeScreen({
             {copy.update.title(update.versionName)}
           </Text>
           <Text style={type.small}>{copy.update.data}</Text>
-          <Button
-            label={copy.update.install}
-            variant="secondary"
-            onPress={onOpenUpdate}
-          />
+          <Button label={copy.update.open} variant="secondary" onPress={onOpenUpdate} />
         </Card>
       ) : update?.kind === 'after-job' ? (
         <Notice tone="info">{copy.update.afterJob(update.versionName)}</Notice>
