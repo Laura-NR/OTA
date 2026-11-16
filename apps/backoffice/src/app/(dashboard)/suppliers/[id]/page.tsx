@@ -29,6 +29,7 @@ import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
 import { VerificationActions } from '@/components/verification-actions';
 import { WorkerSignInCode } from '@/components/worker-sign-in-code';
 import { WorkerSignOut } from '@/components/worker-sign-out';
+import { WorkerThread } from '@/components/worker-thread';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
@@ -43,6 +44,12 @@ const EDIT_ROLES: readonly string[] = [
 
 /** Who may issue a worker sign-in code or sign a worker out; no permission override reaches them (W1). */
 const SIGN_IN_CODE_ROLES: readonly string[] = [
+  UserRole.OperationsAdmin,
+  UserRole.SuperAdmin,
+];
+
+/** Who may write to a worker; the support role reads (worker messages M6). */
+const WORKER_MESSAGE_ROLES: readonly string[] = [
   UserRole.OperationsAdmin,
   UserRole.SuperAdmin,
 ];
@@ -78,7 +85,8 @@ function Panel({
  * The supplier inspector (A-Suppliers): the worker's profile, the credential
  * inspector (spec §4.5), the auto-dispatch state, reliability and job history,
  * a casa's backup power or a driver's vehicle and fuel reserve (M6), the
- * worker app sign-in code (`docs/worker-app-plan.md` W1), the payouts the
+ * worker app sign-in code (`docs/worker-app-plan.md` W1), the worker's thread
+ * with the desk (`docs/schema-w-messages.md` M6), the payouts the
  * worker sees in the app with their method, pay day, payments, receipts and
  * "Record payout…" (W-Earnings, `docs/schema-w-earnings.md`) and the
  * availability calendar. Guide specialities wait (M6 D7).
@@ -99,6 +107,7 @@ export default async function SupplierDetailPage({
   const canVerify = access.canManage;
   const canEdit = EDIT_ROLES.includes(role);
   const canIssueSignInCode = SIGN_IN_CODE_ROLES.includes(role);
+  const canMessageWorker = WORKER_MESSAGE_ROLES.includes(role);
 
   const supplier = await apiFetch<SupplierDetailDto>(`/suppliers/${id}`).catch(
     (error: unknown) => {
@@ -253,6 +262,12 @@ export default async function SupplierDetailPage({
               WhatsApp
             </a>
             <a
+              href="#worker-thread"
+              className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+            >
+              {t('workerThread.open')}
+            </a>
+            <a
               href={`mailto:${supplier.email}`}
               className={buttonClassName({ variant: 'secondary', size: 'sm' })}
             >
@@ -328,6 +343,23 @@ export default async function SupplierDetailPage({
           </div>
         </Panel>
       ) : null}
+
+      <div id="worker-thread" className="scroll-mt-4">
+        <Panel
+          title={t('workerThread.title')}
+          description={t('workerThread.description')}
+        >
+          <WorkerThread
+            supplierId={supplier.id}
+            workerName={supplier.fullName ?? supplier.email}
+            phone={supplier.primaryPhone}
+            subtitle={supplier.category.replaceAll('_', ' ')}
+            serviceItemId={null}
+            canWrite={canMessageWorker}
+            headingId="worker-thread-name"
+          />
+        </Panel>
+      </div>
 
       <Panel title={t('reliabilityTitle')} description={t('reliabilityDescription')}>
         {!reliability || reliability.offers === 0 ? (

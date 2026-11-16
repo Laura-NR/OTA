@@ -3,9 +3,11 @@ import {
   featureFlagsOf,
   pipelinePosition,
   travelerStatus,
+  UserRole,
 } from '@ota/domain';
 import type {
   AuditLogEntryDto,
+  BookingWorkerThreadDto,
   DispatchViewDto,
   DocumentDto,
   EventRequestListItemDto,
@@ -27,6 +29,7 @@ import type { ReactNode } from 'react';
 import { OverrideNotice } from '@/components/override-notice';
 import { deskAccess } from '@/lib/overrides';
 import { BookingServices, type ItemOffer } from '@/components/booking-services';
+import { BookingWorkerThreads } from '@/components/booking-worker-threads';
 import { IncidentLogForm } from '@/components/incident-log-form';
 import { IncidentResolveButton } from '@/components/incident-resolve-button';
 import { KpiCard } from '@/components/kpi-card';
@@ -74,7 +77,8 @@ function Section({
 /**
  * One booking on the desk (A-Booking): who, when and how much at the top, its
  * progress through the pipeline, the legal moves, the services with their
- * workers and timers, payments, duty of care, documents and the audit log.
+ * workers and timers, the workers' threads with the desk, payments, duty of
+ * care, documents and the audit log.
  */
 export default async function BookingPage({
   params,
@@ -118,6 +122,7 @@ export default async function BookingPage({
     ofac,
     eventRequests,
     thresholds,
+    workerThreads,
   ] = await Promise.all([
     apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
     apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
@@ -136,7 +141,14 @@ export default async function BookingPage({
       () => [],
     ),
     getThresholds(),
+    apiFetch<BookingWorkerThreadDto[]>(`/reservations/${id}/worker-threads`).catch(
+      () => [],
+    ),
   ]);
+  // Worker messages M6: the support role reads, operations and Super Admin write.
+  const canMessageWorkers =
+    session?.user.role === UserRole.OperationsAdmin ||
+    session?.user.role === UserRole.SuperAdmin;
 
   const now = new Date();
   const currency = reservation.totalCurrency;
@@ -328,6 +340,18 @@ export default async function BookingPage({
           serverNow={now.getTime()}
           clock={deskClock(thresholds)}
           canManage={dispatchAccess.canManage}
+        />
+      </Section>
+
+      <Section
+        id="worker-threads-title"
+        title={t('workerThreads.title')}
+        description={t('workerThreads.description')}
+      >
+        <BookingWorkerThreads
+          threads={workerThreads}
+          bookingCode={reservation.bookingCode}
+          canWrite={canMessageWorkers}
         />
       </Section>
 

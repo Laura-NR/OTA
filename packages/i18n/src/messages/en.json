@@ -1985,6 +1985,18 @@
           "chooseFile": "Choose the scanned form.",
           "tooLarge": "The scan is over 10 MB."
         }
+      },
+      "workerThreads": {
+        "title": "Worker threads",
+        "description": "Worker chats are separate: workers only ever see traveler first names, languages and pickup details.",
+        "none": "No worker holds a service on this booking yet.",
+        "noMessage": "No message about this booking yet.",
+        "open": "Open thread",
+        "close": "Close thread",
+        "new": "{count, plural, one {New} other {# new}}",
+        "you": "You: {body}",
+        "call": "Call {name}",
+        "callShort": "Call"
       }
     },
     "reservationActions": {
@@ -2598,7 +2610,12 @@
           "failed": "The worker could not be signed out"
         }
       },
-      "approvalBlocked": "Verify these documents before approving: {documents}."
+      "approvalBlocked": "Verify these documents before approving: {documents}.",
+      "workerThread": {
+        "open": "Worker app message",
+        "title": "Worker app messages",
+        "description": "The worker's one thread with the desk, apart from the travelers' messages."
+      }
     },
     "reports": {
       "title": "Reports",
@@ -3513,13 +3530,15 @@
       },
       "inbox": {
         "title": "Ops Lite · Inbox",
-        "subtitle": "Travelers' threads, urgent first",
+        "subtitle": "Travelers and workers, urgent first",
         "loadError": "The inbox could not be read. Try again in a moment.",
         "filters": "Show",
         "filter": {
           "all": "All",
           "urgent": "Urgent",
-          "unread": "Unread"
+          "unread": "Unread",
+          "travelers": "Travelers",
+          "workers": "Workers"
         },
         "empty": "No conversation yet.",
         "noneHere": "No thread matches this filter.",
@@ -3538,7 +3557,9 @@
         "reply": "Reply",
         "send": "Send",
         "urgentNote": "Urgent: disruption case {reference} is open on this booking. In-app is the record; the traveler also gets an email copy.",
-        "note": "In-app is the record; the traveler also gets an email copy."
+        "note": "In-app is the record; the traveler also gets an email copy.",
+        "workerKind": "Worker · {category}",
+        "workerJob": "{day} · {code} · {province}"
       }
     },
     "appCard": {
@@ -3553,6 +3574,24 @@
       "qrAlt": "QR code for {url}",
       "fingerprint": "Signing certificate (SHA-256)",
       "print": "Print"
+    },
+    "workerThread": {
+      "loadFailed": "The thread could not be read. Try again in a moment.",
+      "sendFailed": "The message was not sent. Try again.",
+      "messages": "Messages",
+      "empty": "No messages with {name} yet.",
+      "fromWorker": "{name} · {time}",
+      "fromDesk": "{name} · {time}",
+      "desk": "Desk",
+      "arrived": "arrived {time}",
+      "read": "read {time}",
+      "reply": "Write to {name}",
+      "placeholder": "Write to {name} · worker app",
+      "send": "Send",
+      "call": "Call {name}",
+      "callShort": "Call",
+      "readOnly": "Support reads worker threads; operations reply.",
+      "note": "Workers see only first names and local numbers; nothing about billing goes in this thread. A message reaches the worker when they open the app; if it is urgent, call."
     }
   },
   "conditions": {

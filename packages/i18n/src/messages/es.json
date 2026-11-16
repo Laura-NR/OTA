@@ -1985,6 +1985,18 @@
           "chooseFile": "Elige el formulario escaneado.",
           "tooLarge": "El escaneo supera los 10 MB."
         }
+      },
+      "workerThreads": {
+        "title": "Conversaciones con trabajadores",
+        "description": "Las conversaciones con trabajadores van aparte: solo ven el nombre de pila, el idioma y los datos de recogida de los viajeros.",
+        "none": "Ningún trabajador tiene aún un servicio de esta reserva.",
+        "noMessage": "Aún no hay mensajes sobre esta reserva.",
+        "open": "Abrir conversación",
+        "close": "Cerrar conversación",
+        "new": "{count, plural, one {Nuevo} other {# nuevos}}",
+        "you": "Tú: {body}",
+        "call": "Llamar a {name}",
+        "callShort": "Llamar"
       }
     },
     "reservationActions": {
@@ -2598,7 +2610,12 @@
           "failed": "No se pudo cerrar la sesión del colaborador"
         }
       },
-      "approvalBlocked": "Verifica estos documentos antes de aprobar: {documents}."
+      "approvalBlocked": "Verifica estos documentos antes de aprobar: {documents}.",
+      "workerThread": {
+        "open": "Mensaje por la app",
+        "title": "Mensajes de la app de trabajadores",
+        "description": "La única conversación del trabajador con la central, aparte de los mensajes de los viajeros."
+      }
     },
     "reports": {
       "title": "Informes",
@@ -3513,13 +3530,15 @@
       },
       "inbox": {
         "title": "Ops Lite · Mensajes",
-        "subtitle": "Conversaciones con viajeros, las urgentes primero",
+        "subtitle": "Viajeros y trabajadores, urgentes primero",
         "loadError": "No se pudieron leer los mensajes. Inténtalo de nuevo en un momento.",
         "filters": "Mostrar",
         "filter": {
           "all": "Todas",
           "urgent": "Urgentes",
-          "unread": "Sin leer"
+          "unread": "Sin leer",
+          "travelers": "Viajeros",
+          "workers": "Trabajadores"
         },
         "empty": "Todavía no hay conversaciones.",
         "noneHere": "Ninguna conversación coincide con este filtro.",
@@ -3538,7 +3557,9 @@
         "reply": "Respuesta",
         "send": "Enviar",
         "urgentNote": "Urgente: el caso de interrupción {reference} está abierto en esta reserva. La app es el registro; el viajero también recibe una copia por correo.",
-        "note": "La app es el registro; el viajero también recibe una copia por correo."
+        "note": "La app es el registro; el viajero también recibe una copia por correo.",
+        "workerKind": "Trabajador · {category}",
+        "workerJob": "{day} · {code} · {province}"
       }
     },
     "appCard": {
@@ -3553,6 +3574,24 @@
       "qrAlt": "Código QR de {url}",
       "fingerprint": "Certificado de firma (SHA-256)",
       "print": "Imprimir"
+    },
+    "workerThread": {
+      "loadFailed": "No se pudo leer la conversación. Inténtalo de nuevo en un momento.",
+      "sendFailed": "El mensaje no se envió. Inténtalo de nuevo.",
+      "messages": "Mensajes",
+      "empty": "Aún no hay mensajes con {name}.",
+      "fromWorker": "{name} · {time}",
+      "fromDesk": "{name} · {time}",
+      "desk": "Central",
+      "arrived": "llegó {time}",
+      "read": "leído {time}",
+      "reply": "Escribir a {name}",
+      "placeholder": "Escribe a {name} · app de trabajadores",
+      "send": "Enviar",
+      "call": "Llamar a {name}",
+      "callShort": "Llamar",
+      "readOnly": "Soporte lee las conversaciones con trabajadores; operaciones responde.",
+      "note": "Los trabajadores solo ven nombres de pila y teléfonos locales; nada de facturación va en esta conversación. El mensaje le llega al trabajador cuando abre la app; si es urgente, llama."
     }
   },
   "conditions": {

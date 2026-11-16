@@ -1985,6 +1985,18 @@
           "chooseFile": "Choisissez le formulaire numérisé.",
           "tooLarge": "La numérisation dépasse 10 Mo."
         }
+      },
+      "workerThreads": {
+        "title": "Conversations avec les prestataires",
+        "description": "Les conversations avec les prestataires sont séparées : ils ne voient que le prénom, la langue et les détails de prise en charge des voyageurs.",
+        "none": "Aucun prestataire n'a encore de service sur cette réservation.",
+        "noMessage": "Aucun message sur cette réservation pour le moment.",
+        "open": "Ouvrir la conversation",
+        "close": "Fermer la conversation",
+        "new": "{count, plural, one {Nouveau} other {# nouveaux}}",
+        "you": "Vous : {body}",
+        "call": "Appeler {name}",
+        "callShort": "Appeler"
       }
     },
     "reservationActions": {
@@ -2598,7 +2610,12 @@
           "failed": "Le prestataire n’a pas pu être déconnecté"
         }
       },
-      "approvalBlocked": "Vérifiez ces documents avant d’approuver : {documents}."
+      "approvalBlocked": "Vérifiez ces documents avant d’approuver : {documents}.",
+      "workerThread": {
+        "open": "Message par l'app",
+        "title": "Messages de l'app prestataires",
+        "description": "La seule conversation du prestataire avec la centrale, à part des messages des voyageurs."
+      }
     },
     "reports": {
       "title": "Rapports",
@@ -3513,13 +3530,15 @@
       },
       "inbox": {
         "title": "Ops Lite · Messages",
-        "subtitle": "Conversations avec les voyageurs, les urgentes d’abord",
+        "subtitle": "Voyageurs et prestataires, urgents en premier",
         "loadError": "Les messages n’ont pas pu être lus. Réessayez dans un instant.",
         "filters": "Afficher",
         "filter": {
           "all": "Toutes",
           "urgent": "Urgentes",
-          "unread": "Non lues"
+          "unread": "Non lues",
+          "travelers": "Voyageurs",
+          "workers": "Prestataires"
         },
         "empty": "Aucune conversation pour l’instant.",
         "noneHere": "Aucune conversation ne correspond à ce filtre.",
@@ -3538,7 +3557,9 @@
         "reply": "Réponse",
         "send": "Envoyer",
         "urgentNote": "Urgent : le cas de perturbation {reference} est ouvert sur cette réservation. L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail.",
-        "note": "L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail."
+        "note": "L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail.",
+        "workerKind": "Prestataire · {category}",
+        "workerJob": "{day} · {code} · {province}"
       }
     },
     "appCard": {
@@ -3553,6 +3574,24 @@
       "qrAlt": "Code QR de {url}",
       "fingerprint": "Certificat de signature (SHA-256)",
       "print": "Imprimer"
+    },
+    "workerThread": {
+      "loadFailed": "La conversation n'a pas pu être lue. Réessayez dans un instant.",
+      "sendFailed": "Le message n'a pas été envoyé. Réessayez.",
+      "messages": "Messages",
+      "empty": "Aucun message avec {name} pour le moment.",
+      "fromWorker": "{name} · {time}",
+      "fromDesk": "{name} · {time}",
+      "desk": "Centrale",
+      "arrived": "arrivé {time}",
+      "read": "lu {time}",
+      "reply": "Écrire à {name}",
+      "placeholder": "Écrire à {name} · app prestataires",
+      "send": "Envoyer",
+      "call": "Appeler {name}",
+      "callShort": "Appeler",
+      "readOnly": "Le support lit les conversations avec les prestataires ; les opérations répondent.",
+      "note": "Les prestataires ne voient que les prénoms et les numéros locaux ; rien sur la facturation dans cette conversation. Le message arrive quand le prestataire ouvre l'app ; si c'est urgent, appelez."
     }
   },
   "conditions": {

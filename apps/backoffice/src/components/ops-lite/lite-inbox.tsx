@@ -1,13 +1,24 @@
 'use client';
 
-import { INBOX_FILTERS, matchesInboxFilter, type InboxFilter } from '@ota/domain';
-import type { OpsLiteInboxDto, OpsLiteInboxThreadDto } from '@ota/schemas';
+import {
+  INBOX_FILTERS,
+  compareInboxThreads,
+  matchesInboxFilter,
+  type InboxFilter,
+  type InboxThreadInput,
+} from '@ota/domain';
+import type {
+  OpsLiteInboxDto,
+  OpsLiteInboxThreadDto,
+  OpsLiteWorkerThreadDto,
+} from '@ota/schemas';
 import { Alert, Button, buttonClassName, cn, Icon, Input, Tag } from '@ota/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react';
 
 import { useDeskLocked } from '@/components/desk-idle-lock';
+import { WorkerThread } from '@/components/worker-thread';
 import { bookingDates, opsDayMonth, opsTime } from '@/lib/ops-format';
 import { useMessageThread } from '@/lib/use-message-thread';
 
@@ -31,13 +42,26 @@ function when(value: string, locale: string, now: Date): string {
     : opsDayMonth(at, locale);
 }
 
-function Avatar({ name, urgent }: { name: string; urgent: boolean }) {
+function Avatar({
+  name,
+  urgent,
+  worker = false,
+}: {
+  name: string;
+  urgent: boolean;
+  /** A worker's thread wears the board's amber avatar. */
+  worker?: boolean;
+}) {
   return (
     <span
       aria-hidden="true"
       className={cn(
         'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-label font-bold',
-        urgent ? 'bg-error-100 text-error-700' : 'bg-info-100 text-info-700',
+        urgent
+          ? 'bg-error-100 text-error-700'
+          : worker
+            ? 'bg-warning-100 text-warning-700'
+            : 'bg-info-100 text-info-700',
       )}
     >
       {initials(name)}
@@ -45,31 +69,56 @@ function Avatar({ name, urgent }: { name: string; urgent: boolean }) {
   );
 }
 
+/** A thread in the one list: a traveler's (one per booking) or a worker's (one per worker). */
+type Entry =
+  | { kind: 'traveler'; key: string; thread: OpsLiteInboxThreadDto }
+  | { kind: 'worker'; key: string; thread: OpsLiteWorkerThreadDto };
+
+/** A worker thread's key, also what `?thread=` names to open one. */
+function workerKey(supplierId: string): string {
+  return `worker-${supplierId}`;
+}
+
 /**
- * AL-Inbox: the travelers' threads on a phone, urgent first (a traveler on an
- * open disruption case waiting for a reply), then unread, then the latest.
- * Filters narrow the list; a tapped thread opens below it with a call
- * button, the messages and the reply, which goes in-app with the email copy
- * as on the desk. Opening a thread marks it read. Worker threads do not
- * exist yet.
+ * AL-Inbox: travelers' and workers' threads in one list on a phone, urgent
+ * first (a traveler on an open disruption case, or a worker about today's
+ * job, waiting for a reply), then unread, then the latest. Filters narrow
+ * the list; a tapped thread opens below it with a call button, the messages
+ * and the reply: in-app with the email copy for a traveler, in the worker
+ * app for a worker (`docs/schema-w-messages.md` M6). Opening a thread marks
+ * it read.
  */
 export function LiteInbox({
   inbox,
   initialThread,
+  canWriteWorkers,
 }: {
   inbox: OpsLiteInboxDto;
   initialThread: string | null;
+  /** The support role reads worker threads; operations and Super Admin write. */
+  canWriteWorkers: boolean;
 }) {
   const t = useTranslations('backoffice.opsLite.inbox');
   const locale = useLocale();
   const router = useRouter();
   const locked = useDeskLocked();
   const [filter, setFilter] = useState<InboxFilter>('all');
+  const entries: Entry[] = [
+    ...inbox.threads.map<Entry>((thread) => ({
+      kind: 'traveler',
+      key: thread.reservationId,
+      thread,
+    })),
+    ...inbox.workers.map<Entry>((thread) => ({
+      kind: 'worker',
+      key: workerKey(thread.supplierId),
+      thread,
+    })),
+  ];
   // Nothing opens by itself: opening marks a thread read, so only a tap (or
   // a link naming the thread) may do it.
   const [selected, setSelected] = useState<string | null>(
-    initialThread &&
-      inbox.threads.some((thread) => thread.reservationId === initialThread)
+    initialThread && entries.some((entry) => entry.key === initialThread)
       ? initialThread
       : null,
   );
@@ -86,30 +135,47 @@ export function LiteInbox({
     return () => clearInterval(timer);
   }, [locked]);
 
-  const unreadOf = (thread: OpsLiteInboxThreadDto) =>
-    opened.has(thread.reservationId) ? 0 : thread.unread;
-  const input = (thread: OpsLiteInboxThreadDto) => ({
-    lastSender: thread.lastMessage.sender,
-    lastAt: new Date(thread.lastMessage.createdAt),
-    unread: unreadOf(thread),
-    openDisruption: thread.disruption !== null,
+  const unreadOf = (entry: Entry) => (opened.has(entry.key) ? 0 : entry.thread.unread);
+  const input = (entry: Entry): InboxThreadInput => ({
+    kind: entry.kind,
+    lastSender: entry.thread.lastMessage.sender,
+    lastAt: new Date(entry.thread.lastMessage.createdAt),
+    unread: unreadOf(entry),
+    openDisruption: entry.kind === 'traveler' && entry.thread.disruption !== null,
+    jobToday: entry.kind === 'worker' && entry.thread.jobToday,
   });
-  const counts: Record<InboxFilter, number> = {
-    all: inbox.threads.length,
-    urgent: inbox.threads.filter((thread) => thread.urgent).length,
-    unread: inbox.threads.filter((thread) => unreadOf(thread) > 0).length,
-  };
-  const visible = inbox.threads.filter((thread) =>
-    matchesInboxFilter(input(thread), filter),
-  );
-  const current =
-    inbox.threads.find((thread) => thread.reservationId === selected) ?? null;
+  const ordered = [...entries].sort((a, b) => compareInboxThreads(input(a), input(b)));
+  const counts = Object.fromEntries(
+    INBOX_FILTERS.map((key) => [
+      key,
+      entries.filter((entry) => matchesInboxFilter(input(entry), key)).length,
+    ]),
+  ) as Record<InboxFilter, number>;
+  const visible = ordered.filter((entry) => matchesInboxFilter(input(entry), filter));
+  const current = entries.find((entry) => entry.key === selected) ?? null;
 
-  function open(thread: OpsLiteInboxThreadDto) {
-    setSelected(thread.reservationId);
-    setOpened((ids) => new Set(ids).add(thread.reservationId));
+  function open(entry: Entry) {
+    setSelected(entry.key);
+    setOpened((keys) => new Set(keys).add(entry.key));
     // The thread opens below the list; take the reader there.
     requestAnimationFrame(() => threadRef.current?.focus());
+  }
+
+  /** A worker's line: their kind of work and their current or next job. */
+  function workerLine(thread: OpsLiteWorkerThreadDto): string {
+    const job = thread.job;
+    return [
+      t('workerKind', { category: thread.category.replaceAll('_', ' ') }),
+      job
+        ? t('workerJob', {
+            day: opsDayMonth(job.startsAt, locale),
+            code: job.bookingCode,
+            province: job.province ?? '—',
+          })
+        : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
   }
 
   return (
@@ -134,7 +200,7 @@ export function LiteInbox({
         ))}
       </div>
 
-      {inbox.threads.length === 0 ? (
+      {entries.length === 0 ? (
         <p className="rounded-lg border bg-surface p-3.5 text-body-sm text-secondary">
           {t('empty')}
         </p>
@@ -146,39 +212,51 @@ export function LiteInbox({
           {visible.length === 0 ? (
             <li className="p-3.5 text-body-sm text-muted">{t('noneHere')}</li>
           ) : null}
-          {visible.map((thread) => {
-            const name = thread.travelerName || thread.travelerEmail;
-            const on = thread.reservationId === selected;
-            const unread = unreadOf(thread);
+          {visible.map((entry) => {
+            const name =
+              entry.kind === 'worker'
+                ? entry.thread.workerName
+                : entry.thread.travelerName || entry.thread.travelerEmail;
+            const on = entry.key === selected;
+            const unread = unreadOf(entry);
+            const last = entry.thread.lastMessage;
             return (
-              <li key={thread.reservationId} className="border-t first:border-t-0">
+              <li key={entry.key} className="border-t first:border-t-0">
                 <button
                   type="button"
                   aria-pressed={on}
-                  onClick={() => open(thread)}
+                  onClick={() => open(entry)}
                   className={cn(
                     'flex w-full gap-3 px-3.5 py-3 text-left focus-visible:-outline-offset-2',
                     on && 'bg-primary-100',
                   )}
                 >
-                  <Avatar name={name} urgent={thread.urgent} />
+                  <Avatar
+                    name={name}
+                    urgent={entry.thread.urgent}
+                    worker={entry.kind === 'worker'}
+                  />
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="flex items-center gap-2">
                       <strong className="min-w-0 flex-1 truncate text-nav font-semibold">
                         {name}
                       </strong>
                       <span className="text-caption text-muted">
-                        {when(thread.lastMessage.createdAt, locale, now)}
+                        {when(last.createdAt, locale, now)}
                       </span>
                     </span>
                     <span className="truncate text-body-sm text-secondary">
-                      {thread.lastMessage.sender === 'OPERATIONS'
-                        ? t('you', { body: thread.lastMessage.body })
-                        : thread.lastMessage.body}
+                      {last.sender === 'OPERATIONS'
+                        ? t('you', { body: last.body })
+                        : last.body}
                     </span>
                     <span className="flex flex-wrap gap-1.5">
-                      <Tag>{t('kind', { code: thread.bookingCode })}</Tag>
-                      {thread.urgent ? (
+                      <Tag>
+                        {entry.kind === 'worker'
+                          ? workerLine(entry.thread)
+                          : t('kind', { code: entry.thread.bookingCode })}
+                      </Tag>
+                      {entry.thread.urgent ? (
                         <span className="inline-flex h-6 items-center rounded-full bg-error-100 px-2.5 text-caption font-semibold text-error-700">
                           {t('urgent')}
                         </span>
@@ -197,8 +275,20 @@ export function LiteInbox({
         </ul>
       )}
 
-      {current ? (
-        <LiteThread key={current.reservationId} thread={current} headingRef={threadRef} />
+      {current?.kind === 'traveler' ? (
+        <LiteThread key={current.key} thread={current.thread} headingRef={threadRef} />
+      ) : current?.kind === 'worker' ? (
+        <WorkerThread
+          key={current.key}
+          supplierId={current.thread.supplierId}
+          workerName={current.thread.workerName}
+          phone={current.thread.phone}
+          subtitle={workerLine(current.thread)}
+          serviceItemId={null}
+          canWrite={canWriteWorkers}
+          headingId="thread-title"
+          headingRef={threadRef}
+        />
       ) : null}
     </div>
   );
