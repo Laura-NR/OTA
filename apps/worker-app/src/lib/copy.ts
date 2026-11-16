@@ -142,6 +142,41 @@ export const copy = {
     desk: (phone: string) => `¿Problemas? Llama a la central: ${phone}`,
     back: 'Volver',
   },
+  messages: {
+    title: 'Mensajes con la central',
+    back: 'Volver',
+    open: 'Mensajes con la central',
+    openUnread: (count: number) =>
+      `Mensajes con la central · ${count === 1 ? '1 nuevo' : `${count} nuevos`}`,
+    fromDesk: 'Mensaje de la central',
+    read: 'Leer y responder',
+    job: 'Mensaje a la central',
+    about: (code: string) => `Sobre el trabajo ${code}`,
+    empty: 'Aún no hay mensajes. Escribe a la central si necesitas algo.',
+    offline: 'Sin conexión: lo que escribas se envía al volver la señal.',
+    desk: 'Central',
+    you: 'Tú',
+    meta: (
+      who: string,
+      at: string,
+      state: 'sent' | 'queued' | null,
+      bookingCode: string | null,
+    ) =>
+      [
+        who,
+        at,
+        state === 'sent' ? 'enviado' : state === 'queued' ? 'en cola' : null,
+        bookingCode,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    label: 'Mensaje a la central',
+    placeholder: 'Escribe a la central',
+    send: 'Enviar',
+    queueNote: 'Sin conexión el mensaje espera en cola; si es urgente, llama.',
+    refused:
+      'La central no aceptó un mensaje guardado: el trabajo ya no es tuyo o la hora del teléfono está mal. Llama si era importante.',
+  },
   nav: {
     label: 'Secciones',
     home: 'Inicio',

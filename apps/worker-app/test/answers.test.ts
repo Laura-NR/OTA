@@ -6,10 +6,12 @@ import {
   flushAnswers,
   loadAnswers,
   loadJobActions,
+  loadMessages,
   newClientRef,
   resendInBackground,
   saveAnswer,
   saveJobAction,
+  saveMessage,
   takeBackgroundReport,
   waiting,
   type KeyValueStore,
@@ -36,6 +38,11 @@ const noJobs = async (): Promise<number | null> => {
   throw new Error('no job action is queued');
 };
 
+/** For a test with no message to the desk queued. */
+const noMessages = async (): Promise<number | null> => {
+  throw new Error('no message is queued');
+};
+
 describe('answers saved on the phone (docs/worker-app-plan.md W6)', () => {
   it('keeps an answer until the API takes it, in the order given', async () => {
     const store = memoryStore();
@@ -54,6 +61,7 @@ describe('answers saved on the phone (docs/worker-app-plan.md W6)', () => {
           calls.push(`${answer.kind}:${answer.serviceItemId}`);
           return 200;
         },
+        sendMessage: noMessages,
         jobAction: noJobs,
       },
       'token',
@@ -76,6 +84,7 @@ describe('answers saved on the phone (docs/worker-app-plan.md W6)', () => {
           calls += 1;
           return null;
         },
+        sendMessage: noMessages,
         jobAction: noJobs,
       },
       'token',
@@ -98,6 +107,7 @@ describe('answers saved on the phone (docs/worker-app-plan.md W6)', () => {
       store,
       {
         answer: async (_token, answer) => (answer.serviceItemId === 'late' ? 409 : 200),
+        sendMessage: noMessages,
         jobAction: noJobs,
       },
       'token',
@@ -112,7 +122,7 @@ describe('answers saved on the phone (docs/worker-app-plan.md W6)', () => {
     await saveAnswer(store, { serviceItemId: 'a', kind: 'accept', answeredAt: AT });
     const result = await flushAnswers(
       store,
-      { answer: async () => 401, jobAction: noJobs },
+      { answer: async () => 401, sendMessage: noMessages, jobAction: noJobs },
       'token',
     );
     expect(result.signedOut).toBe(true);
@@ -140,6 +150,7 @@ describe('resending with the app closed (spec §7.2)', () => {
         await new Promise((resolve) => setTimeout(resolve, 5));
         return 200;
       },
+      sendMessage: noMessages,
       jobAction: noJobs,
     };
     const [background, foreground] = await Promise.all([
@@ -163,6 +174,7 @@ describe('resending with the app closed (spec §7.2)', () => {
         calls += 1;
         return 200;
       },
+      sendMessage: noMessages,
       jobAction: noJobs,
     };
     expect(await resendInBackground(store, api, 'token')).toBeNull();
@@ -178,6 +190,7 @@ describe('resending with the app closed (spec §7.2)', () => {
     const api = {
       answer: async (_token: string, answer: { serviceItemId: string }) =>
         statuses[answer.serviceItemId]!,
+      sendMessage: noMessages,
       jobAction: noJobs,
     };
     await saveAnswer(store, { serviceItemId: 'a', kind: 'accept', answeredAt: AT });
@@ -189,11 +202,13 @@ describe('resending with the app closed (spec §7.2)', () => {
       sent: ['a', 'c'],
       refused: 1,
       jobsRefused: 0,
+      messagesRefused: 0,
     });
     expect(await takeBackgroundReport(store)).toEqual({
       sent: [],
       refused: 0,
       jobsRefused: 0,
+      messagesRefused: 0,
     });
   });
 
@@ -202,7 +217,7 @@ describe('resending with the app closed (spec §7.2)', () => {
     await saveAnswer(store, { serviceItemId: 'a', kind: 'accept', answeredAt: AT });
     const result = await resendInBackground(
       store,
-      { answer: async () => 401, jobAction: noJobs },
+      { answer: async () => 401, sendMessage: noMessages, jobAction: noJobs },
       'token',
     );
     expect(result?.signedOut).toBe(true);
@@ -211,6 +226,7 @@ describe('resending with the app closed (spec §7.2)', () => {
       sent: [],
       refused: 0,
       jobsRefused: 0,
+      messagesRefused: 0,
     });
   });
 });
@@ -242,6 +258,7 @@ describe("a job's steps and emergency reports on the phone (W-Job, spec §7.2)",
           calls.push(`answer:${answer.serviceItemId}`);
           return 200;
         },
+        sendMessage: noMessages,
         jobAction: async (_token, action) => {
           calls.push(label(action));
           return 200;
@@ -261,7 +278,7 @@ describe("a job's steps and emergency reports on the phone (W-Job, spec §7.2)",
     await saveJobAction(store, step('job', 'ARRIVED'));
     const result = await flushAnswers(
       store,
-      { answer: noJobs, jobAction: async () => null },
+      { answer: noJobs, sendMessage: noMessages, jobAction: async () => null },
       'token',
     );
     expect(result.jobs.pending.map((action) => [label(action), action.attempts])).toEqual(
@@ -289,11 +306,88 @@ describe("a job's steps and emergency reports on the phone (W-Job, spec §7.2)",
     await saveJobAction(store, step('job', 'EN_ROUTE'));
     const result = await resendInBackground(
       store,
-      { answer: noJobs, jobAction: async () => 409 },
+      { answer: noJobs, sendMessage: noMessages, jobAction: async () => 409 },
       'token',
     );
     expect(result?.jobs.refused.map(label)).toEqual(['step:EN_ROUTE']);
     expect(await loadJobActions(store)).toEqual([]);
     expect((await takeBackgroundReport(store)).jobsRefused).toBe(1);
+  });
+});
+
+describe('messages to the desk on the phone (docs/schema-w-messages.md M4)', () => {
+  const draft = (clientRef: string) => ({
+    clientRef,
+    body: 'Listo, salgo a las 15:30.',
+    serviceItemId: 'job',
+    writtenAt: AT,
+  });
+
+  it('sends them after the answers and before the steps, each once', async () => {
+    const store = memoryStore();
+    await saveJobAction(store, {
+      kind: 'step',
+      serviceItemId: 'job',
+      step: 'EN_ROUTE',
+      occurredAt: AT,
+    });
+    await saveMessage(store, draft('m-1'));
+    await saveMessage(store, draft('m-1'));
+    await saveAnswer(store, { serviceItemId: 'offer', kind: 'accept', answeredAt: AT });
+    const calls: string[] = [];
+    const result = await flushAnswers(
+      store,
+      {
+        answer: async () => {
+          calls.push('answer');
+          return 200;
+        },
+        sendMessage: async (_token, message) => {
+          calls.push(`message:${message.clientRef}`);
+          return 200;
+        },
+        jobAction: async () => {
+          calls.push('step');
+          return 200;
+        },
+      },
+      'token',
+    );
+    expect(calls).toEqual(['answer', 'message:m-1', 'step']);
+    expect(result.messages.sent.map((message) => message.clientRef)).toEqual(['m-1']);
+    expect(await loadMessages(store)).toEqual([]);
+  });
+
+  it('keeps a message with no connection, counts the try and holds the steps', async () => {
+    const store = memoryStore();
+    await saveMessage(store, draft('m-1'));
+    await saveJobAction(store, {
+      kind: 'step',
+      serviceItemId: 'job',
+      step: 'ARRIVED',
+      occurredAt: AT,
+    });
+    const result = await flushAnswers(
+      store,
+      { answer: noJobs, sendMessage: async () => null, jobAction: noJobs },
+      'token',
+    );
+    expect(result.messages.pending.map((message) => message.attempts)).toEqual([1]);
+    expect(result.jobs.pending).toHaveLength(1);
+    expect(waiting(result)).toHaveLength(2);
+    expect(await loadMessages(store)).toHaveLength(1);
+  });
+
+  it('sends a message from the background and reports one the API refused', async () => {
+    const store = memoryStore();
+    await saveMessage(store, draft('m-1'));
+    const result = await resendInBackground(
+      store,
+      { answer: noJobs, sendMessage: async () => 422, jobAction: noJobs },
+      'token',
+    );
+    expect(result?.messages.refused).toHaveLength(1);
+    expect(await loadMessages(store)).toEqual([]);
+    expect((await takeBackgroundReport(store)).messagesRefused).toBe(1);
   });
 });

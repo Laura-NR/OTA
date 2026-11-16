@@ -126,6 +126,30 @@ describe('the worker app API client (W1, W3, W5)', () => {
     );
   });
 
+  it('sends a queued message with its id and time, and reads the thread (worker messages M4)', async () => {
+    const { calls, fetcher } = recorder(200, { messages: [], unread: 0 });
+    const api = createWorkerApi('', fetcher);
+    const status = await api.sendMessage('t', {
+      clientRef: 'ref-1',
+      body: 'Listo.',
+      serviceItemId: null,
+      writtenAt: '2026-11-16T13:52:00.000Z',
+      attempts: 2,
+    });
+    expect(status).toBe(200);
+    expect(calls[0]!.url).toBe('/worker/messages');
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({
+      body: 'Listo.',
+      clientRef: 'ref-1',
+      serviceItemId: null,
+      writtenAt: '2026-11-16T13:52:00.000Z',
+    });
+    expect(await api.messages('t')).toEqual({ messages: [], unread: 0 });
+    await api.markMessagesRead('t');
+    expect(calls[2]!.url).toBe('/worker/messages/read');
+    expect(calls[2]!.init.method).toBe('POST');
+  });
+
   it('reports no connection as a null status', async () => {
     const api = createWorkerApi('', (async () => {
       throw new TypeError('Network request failed');

@@ -25,7 +25,7 @@ import { JobCard } from './JobsScreen';
 /**
  * W-Home: who is signed in, whether the phone is in sync, the open offers
  * with their time left, the coming jobs (each opens W-Job), and the way to
- * the credentials, and a newer version of the app when one is published;
+ * the credentials, the thread with the desk (a card when the desk wrote), and a newer version of the app when one is published;
  * the bottom bar leads to the calendar and to reliability and payouts. `now` is the API's clock as the app tracks it, so
  * a phone set to the wrong time still counts down right.
  */
@@ -41,6 +41,7 @@ export function HomeScreen({
   onOpenOffer,
   onOpenJob,
   onOpenCredentials,
+  onOpenMessages,
   onSignOut,
   update,
   onOpenUpdate,
@@ -57,12 +58,21 @@ export function HomeScreen({
   onOpenOffer: (offer: WorkerOfferDto) => void;
   onOpenJob: (job: WorkerJobDto) => void;
   onOpenCredentials: () => void;
+  /** The thread with the desk (`docs/schema-w-messages.md` M5). */
+  onOpenMessages: () => void;
   onSignOut: () => void;
   /** A newer APK (U3a): offered, or required once the job under way is over. */
   update: { kind: 'optional' | 'after-job'; versionName: string } | null;
   onOpenUpdate: () => void;
 }) {
   const { worker } = home;
+  const unread = home.messages?.unread ?? 0;
+  const fromDesk =
+    unread > 0
+      ? ([...(home.messages?.messages ?? [])]
+          .reverse()
+          .find((message) => message.sender === 'OPERATIONS') ?? null)
+      : null;
   const offers = home.offers.filter(
     (offer) => !answered.has(offer.serviceItemId) && Date.parse(offer.deadline) > now,
   );
@@ -110,6 +120,24 @@ export function HomeScreen({
         <Notice tone="info">{copy.update.afterJob(update.versionName)}</Notice>
       ) : null}
 
+      {fromDesk ? (
+        <Card style={styles.fromDesk}>
+          <Text style={[type.body, styles.strong]}>{copy.messages.fromDesk}</Text>
+          <Text style={type.body} numberOfLines={3}>
+            {fromDesk.body}
+          </Text>
+          <Text style={type.caption}>
+            {copy.messages.meta(
+              fromDesk.authorName ?? copy.messages.desk,
+              clock(fromDesk.createdAt),
+              null,
+              fromDesk.bookingCode,
+            )}
+          </Text>
+          <Button label={copy.messages.read} onPress={onOpenMessages} />
+        </Card>
+      ) : null}
+
       <Text style={type.small}>
         {copy.home.credential(
           worker.credentialExpiresAt ? calendarDate(worker.credentialExpiresAt) : null,
@@ -148,6 +176,11 @@ export function HomeScreen({
       ))}
 
       <View style={styles.footer}>
+        <Button
+          label={unread > 0 ? copy.messages.openUnread(unread) : copy.messages.open}
+          variant="secondary"
+          onPress={onOpenMessages}
+        />
         <Button
           label={copy.credentials.open}
           variant="secondary"
@@ -220,5 +253,6 @@ const styles = StyleSheet.create({
   grow: { flex: 1, minWidth: 0 },
   strong: { fontWeight: '700' },
   hurry: { borderColor: colors.warning },
+  fromDesk: { borderColor: colors.primary },
   footer: { gap: space.sm, marginTop: space.md },
 });

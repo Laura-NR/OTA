@@ -12,6 +12,7 @@ import {
   type EmergencyPosition,
   type JobAction,
   type JobStep,
+  type WorkerMessageDraft,
 } from '@ota/domain';
 import type {
   WorkerAppLatestDto,
@@ -28,9 +29,11 @@ import {
   flushAnswers,
   loadAnswers,
   loadJobActions,
+  loadMessages,
   newClientRef,
   saveAnswer,
   saveJobAction,
+  saveMessage,
   takeBackgroundReport,
   waiting,
 } from './lib/answers';
@@ -49,6 +52,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { JobScreen, type EmergencyOutcome } from './screens/JobScreen';
 import { JobsScreen } from './screens/JobsScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { MessagesScreen } from './screens/MessagesScreen';
 import { OfferScreen, type OfferOutcome } from './screens/OfferScreen';
 import { UpdateScreen } from './screens/UpdateScreen';
 import { TabBar, colors, type Tab } from './ui';
@@ -115,6 +119,8 @@ type Screen =
   | { name: 'jobs' }
   | { name: 'update' }
   | { name: 'job'; serviceItemId: string }
+  /** The thread with the desk; from a job, about it (`docs/schema-w-messages.md`). */
+  | { name: 'messages'; serviceItemId: string | null }
   | {
       name: 'offer';
       offer: WorkerOfferDto;
@@ -140,7 +146,7 @@ const SCREEN_TAB: Partial<Record<Screen['name'], Tab>> = {
  * The worker app (ADR 0007, Phase 7): sign in with a code, see offers and
  * jobs, answer an offer, block days in the calendar, read their reliability
  * and payouts, keep their documents up to date, and update the app outside the
- * stores. Answers are saved on the phone first and resent
+ * stores, and write to the desk. Answers and messages are saved on the phone first and resent
  * until the API answers (`docs/worker-app-plan.md` W6), in the background too
  * (spec §7.2); the last home is kept for when there is no signal.
  */
@@ -152,6 +158,9 @@ export function App() {
   const [pending, setPending] = useState(0);
   // W-Job's steps and reports still on the phone, shown on the job.
   const [jobActions, setJobActions] = useState<JobAction[]>([]);
+  // Messages to the desk still on the phone, and those sent since the last home.
+  const [messageDrafts, setMessageDrafts] = useState<WorkerMessageDraft[]>([]);
+  const [delivered, setDelivered] = useState<WorkerMessageDraft[]>([]);
   // The last report's position, for the SMS (J6).
   const lastPosition = useRef<EmergencyPosition | null>(null);
   const positionAsked = useRef(false);
@@ -219,6 +228,10 @@ export function App() {
         const left = waiting(flushed);
         setPending(left.length);
         setJobActions(flushed.jobs.pending);
+        setMessageDrafts(flushed.messages.pending);
+        if (flushed.messages.sent.length > 0) {
+          setDelivered((previous) => [...previous, ...flushed.messages.sent]);
+        }
         keepResendingInBackground(needsBackgroundResend(left.length, !flushed.signedOut));
         if (sent.length > 0) {
           setOutcomes((previous) => {
@@ -234,6 +247,9 @@ export function App() {
         if (flushed.jobs.refused.length > 0 || away.jobsRefused > 0) {
           setNotice(copy.job.stepRefused);
         }
+        if (flushed.messages.refused.length > 0 || away.messagesRefused > 0) {
+          setNotice(copy.messages.refused);
+        }
         if (flushed.signedOut) {
           await signedOut(copy.home.signedOut);
           return;
@@ -247,6 +263,13 @@ export function App() {
 
         const fresh = await api.home(current);
         setHome(fresh);
+        // Sent messages the home now holds need no copy of their own.
+        const held = new Set(
+          fresh.messages?.messages.map((message) => message.clientRef),
+        );
+        setDelivered((previous) =>
+          previous.filter((draft) => !held.has(draft.clientRef)),
+        );
         setSkew(Date.parse(fresh.serverTime) - Date.now());
         setNow(Date.now());
         setOffline(false);
@@ -307,7 +330,9 @@ export function App() {
       if (cached) setHome(JSON.parse(cached) as WorkerHomeDto);
       const actions = await loadJobActions(kv);
       setJobActions(actions);
-      setPending((await loadAnswers(kv)).length + actions.length);
+      const drafts = await loadMessages(kv);
+      setMessageDrafts(drafts);
+      setPending((await loadAnswers(kv)).length + actions.length + drafts.length);
       setScreen({ name: 'home' });
       await sync(saved);
     })();
@@ -422,6 +447,37 @@ export function App() {
     return outcome;
   }
 
+  /** A message to the desk, saved with its time and an id, then sent (M4). */
+  async function sendMessage(body: string, serviceItemId: string | null) {
+    if (!token) return;
+    setMessageDrafts(
+      await saveMessage(kv, {
+        clientRef: newClientRef(),
+        body,
+        serviceItemId,
+        writtenAt: new Date(Date.now() + skew).toISOString(),
+      }),
+    );
+    await sync(token);
+  }
+
+  /** Opening the thread reads the desk's messages (M3); it waits for a signal if there is none. */
+  function openMessages(serviceItemId: string | null) {
+    setScreen({ name: 'messages', serviceItemId });
+    if (token && (home?.messages?.unread ?? 0) > 0) {
+      api
+        .markMessagesRead(token)
+        .then(() =>
+          setHome((current) =>
+            current?.messages
+              ? { ...current, messages: { ...current.messages, unread: 0 } }
+              : current,
+          ),
+        )
+        .catch(() => undefined);
+    }
+  }
+
   function openJob(job: WorkerJobDto) {
     if (!positionAsked.current) {
       positionAsked.current = true;
@@ -445,7 +501,7 @@ export function App() {
 
   const serverNow = now + skew;
   const openedJob =
-    screen.name === 'job'
+    screen.name === 'job' || screen.name === 'messages'
       ? (home?.jobs.find((job) => job.serviceItemId === screen.serviceItemId) ?? null)
       : null;
   const release = latest?.release ?? null;
@@ -529,7 +585,24 @@ export function App() {
             onStep={(step) => recordStep(openedJob, step)}
             onEmergency={(category) => reportEmergency(openedJob, category)}
             onSms={(outcome) => openSms(openedJob, outcome)}
+            onMessage={() => openMessages(openedJob.serviceItemId)}
             onBack={() => setScreen({ name: 'jobs' })}
+          />
+        ) : screen.name === 'messages' && home ? (
+          <MessagesScreen
+            messages={home.messages?.messages ?? []}
+            delivered={delivered}
+            queued={messageDrafts}
+            jobCode={openedJob?.bookingCode ?? null}
+            offline={offline}
+            onSend={(body) => sendMessage(body, openedJob?.serviceItemId ?? null)}
+            onBack={() =>
+              setScreen(
+                openedJob
+                  ? { name: 'job', serviceItemId: openedJob.serviceItemId }
+                  : { name: 'home' },
+              )
+            }
           />
         ) : screen.name === 'offer' ? (
           <OfferScreen
@@ -552,6 +625,7 @@ export function App() {
             onOpenOffer={(offer) => setScreen({ name: 'offer', offer })}
             onOpenJob={openJob}
             onOpenCredentials={() => setScreen({ name: 'credentials' })}
+            onOpenMessages={() => openMessages(null)}
             onSignOut={() => void signOut()}
             update={
               update === 'optional' || update === 'after-job'

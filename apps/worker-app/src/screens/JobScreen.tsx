@@ -40,7 +40,8 @@ function call(phone: string) {
  * W-Job (`docs/schema-w-job.md`): the job readable with no signal, its steps
  * saved on the phone with their time and sent when the signal returns, and
  * the on-site emergency: the desk's call, a report with the position (by the
- * API, or by SMS when there is no data) and the public numbers. `now` is the
+ * API, or by SMS when there is no data) and the public numbers; a message to
+ * the desk about the job opens the thread. `now` is the
  * API's clock as the app tracks it.
  */
 export function JobScreen({
@@ -52,6 +53,7 @@ export function JobScreen({
   onStep,
   onEmergency,
   onSms,
+  onMessage,
   onBack,
 }: {
   job: WorkerJobDto;
@@ -64,6 +66,8 @@ export function JobScreen({
   onStep: (step: JobStep) => Promise<void>;
   onEmergency: (category: EmergencyCategory) => Promise<EmergencyOutcome>;
   onSms: (outcome: EmergencyOutcome) => void;
+  /** The thread with the desk, about this job (`docs/schema-w-messages.md` M2). */
+  onMessage: () => void;
   onBack: () => void;
 }) {
   const [sheet, setSheet] = useState(false);
@@ -266,6 +270,7 @@ export function JobScreen({
             onPress={() => call(settings.deskPhone!)}
           />
         ) : null}
+        <Button label={copy.messages.job} variant="secondary" onPress={onMessage} />
         <Text style={type.caption}>{copy.job.privacy}</Text>
       </Card>
 

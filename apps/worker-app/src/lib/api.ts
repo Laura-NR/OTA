@@ -1,4 +1,4 @@
-import type { JobAction, WorkerAnswer } from '@ota/domain';
+import type { JobAction, WorkerAnswer, WorkerMessageDraft } from '@ota/domain';
 import type {
   SetWorkerDaysRequest,
   WorkerCalendarDto,
@@ -7,6 +7,7 @@ import type {
   WorkerEarningsDto,
   WorkerFuelDto,
   WorkerHomeDto,
+  WorkerThreadDto,
   WorkerAppLatestDto,
   WorkerUploadCredentialRequest,
 } from '@ota/schemas';
@@ -30,6 +31,12 @@ export interface WorkerApi {
   answer(token: string, answer: WorkerAnswer): Promise<number | null>;
   /** W-Job: the HTTP status of a step or an emergency report, or null with no connection. */
   jobAction(token: string, action: JobAction): Promise<number | null>;
+  /** A message to the desk from the phone's queue: the HTTP status, or null with no connection. */
+  sendMessage(token: string, draft: WorkerMessageDraft): Promise<number | null>;
+  /** The thread with the desk (`docs/schema-w-messages.md`). */
+  messages(token: string): Promise<WorkerThreadDto>;
+  /** The worker opened the thread: the desk's messages are read (M3). */
+  markMessagesRead(token: string): Promise<void>;
   signOut(token: string): Promise<void>;
   /** W-Calendar: a `YYYY-MM` month, or the current one in Havana. */
   calendar(token: string, month?: string): Promise<WorkerCalendarDto>;
@@ -133,6 +140,31 @@ export function createWorkerApi(
       } catch (error) {
         return error instanceof ApiError ? error.status : null;
       }
+    },
+    async sendMessage(token, draft) {
+      try {
+        const response = await request('/worker/messages', {
+          method: 'POST',
+          token,
+          body: {
+            body: draft.body,
+            clientRef: draft.clientRef,
+            serviceItemId: draft.serviceItemId,
+            writtenAt: draft.writtenAt,
+          },
+        });
+        return response.status;
+      } catch (error) {
+        return error instanceof ApiError ? error.status : null;
+      }
+    },
+    async messages(token) {
+      return (await (
+        await request('/worker/messages', { token })
+      ).json()) as WorkerThreadDto;
+    },
+    async markMessagesRead(token) {
+      await request('/worker/messages/read', { method: 'POST', token });
     },
     async signOut(token) {
       await request('/worker/sign-out', { method: 'POST', token });

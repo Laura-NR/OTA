@@ -1,10 +1,12 @@
 import {
   queueJobAction,
   queueWorkerAnswer,
+  queueWorkerMessage,
   workerAnswerOutcome,
   type JobAction,
   type WorkerAnswer,
   type WorkerAnswerOutcome,
+  type WorkerMessageDraft,
 } from '@ota/domain';
 
 import type { WorkerApi } from './api';
@@ -19,6 +21,8 @@ export interface KeyValueStore {
 const QUEUE_KEY = 'ota.worker.answers';
 /** W-Job's steps and emergency reports, beside the answers (spec §7.2). */
 const JOBS_KEY = 'ota.worker.jobActions';
+/** Messages to the desk written with no signal (`docs/schema-w-messages.md` M4). */
+const MESSAGES_KEY = 'ota.worker.messages';
 
 async function loadList<T>(store: KeyValueStore, key: string): Promise<T[]> {
   const raw = await store.get(key);
@@ -44,6 +48,20 @@ export function loadJobActions(store: KeyValueStore): Promise<JobAction[]> {
   return loadList<JobAction>(store, JOBS_KEY);
 }
 
+export function loadMessages(store: KeyValueStore): Promise<WorkerMessageDraft[]> {
+  return loadList<WorkerMessageDraft>(store, MESSAGES_KEY);
+}
+
+/** Saves a message to the desk on the phone first (`queueWorkerMessage`). */
+export async function saveMessage(
+  store: KeyValueStore,
+  draft: Omit<WorkerMessageDraft, 'attempts'>,
+): Promise<WorkerMessageDraft[]> {
+  const queue = queueWorkerMessage(await loadMessages(store), draft);
+  await saveList(store, MESSAGES_KEY, queue);
+  return queue;
+}
+
 /** Saves an answer on the phone first, replacing an unsent one for the same offer. */
 export async function saveAnswer(
   store: KeyValueStore,
@@ -55,7 +73,8 @@ export async function saveAnswer(
 }
 
 /**
- * A v4 UUID for an emergency report, so a resent one is kept once (J5). It is
+ * A v4 UUID for an emergency report or a message, so a resent one is kept
+ * once (J5, M4). It is
  * an idempotency key, not a secret: the phone's random source when it has one,
  * else `Math.random`.
  */
@@ -97,6 +116,8 @@ export interface ListFlush<T> {
 export interface FlushResult extends ListFlush<WorkerAnswer> {
   /** W-Job's steps and reports. */
   jobs: ListFlush<JobAction>;
+  /** Messages to the desk. */
+  messages: ListFlush<WorkerMessageDraft>;
   /** The session ended; the rest waits for the worker to sign in again. */
   signedOut: boolean;
 }
@@ -136,10 +157,14 @@ async function sendInOrder<T extends { attempts: number }>(
 /** The flush running now in this JavaScript runtime, if any. */
 let flushing: Promise<unknown> = Promise.resolve();
 
+/** What a flush sends with. */
+type FlushApi = Pick<WorkerApi, 'answer' | 'jobAction' | 'sendMessage'>;
+
 /**
  * Sends what waits on the phone (spec §7.2): emergency reports first, then the
- * offer answers, which have a deadline, then the job steps. Each list goes in
- * order; once one item gets no answer, nothing after it is tried.
+ * offer answers, which have a deadline, then the messages to the desk, then
+ * the job steps, which keep their own time. Each list goes in order; once one
+ * item gets no answer, nothing after it is tried.
  *
  * One flush at a time: the background task can wake while the app is open
  * behind another app, and two flushes at once could send the same answer
@@ -149,7 +174,7 @@ let flushing: Promise<unknown> = Promise.resolve();
  */
 export function flushAnswers(
   store: KeyValueStore,
-  api: Pick<WorkerApi, 'answer' | 'jobAction'>,
+  api: FlushApi,
   token: string,
 ): Promise<FlushResult> {
   const run = flushing.then(() => flushQueue(store, api, token));
@@ -159,12 +184,13 @@ export function flushAnswers(
 
 async function flushQueue(
   store: KeyValueStore,
-  api: Pick<WorkerApi, 'answer' | 'jobAction'>,
+  api: FlushApi,
   token: string,
 ): Promise<FlushResult> {
-  const [answers, actions] = await Promise.all([
+  const [answers, actions, messages] = await Promise.all([
     loadAnswers(store),
     loadJobActions(store),
+    loadMessages(store),
   ]);
   const sendAction = (action: JobAction) => api.jobAction(token, action);
 
@@ -176,10 +202,13 @@ async function flushQueue(
   const answered = reports.stop
     ? { sent: [], refused: [], pending: answers, stop: reports.stop }
     : await sendInOrder(answers, (answer) => api.answer(token, answer));
-  const stepped = answered.stop
-    ? { sent: [], refused: [], pending: steps, stop: answered.stop }
+  const written = answered.stop
+    ? { sent: [], refused: [], pending: messages, stop: answered.stop }
+    : await sendInOrder(messages, (message) => api.sendMessage(token, message));
+  const stepped = written.stop
+    ? { sent: [], refused: [], pending: steps, stop: written.stop }
     : await sendInOrder(steps, sendAction);
-  const stop = reports.stop ?? answered.stop ?? stepped.stop;
+  const stop = reports.stop ?? answered.stop ?? written.stop ?? stepped.stop;
 
   const result: FlushResult = {
     sent: answered.sent,
@@ -190,18 +219,20 @@ async function flushQueue(
       refused: [...reports.refused, ...stepped.refused],
       pending: [...reports.pending, ...stepped.pending],
     },
+    messages: { sent: written.sent, refused: written.refused, pending: written.pending },
     signedOut: stop === 'signed_out',
   };
   await Promise.all([
     saveList(store, QUEUE_KEY, result.pending),
     saveList(store, JOBS_KEY, result.jobs.pending),
+    saveList(store, MESSAGES_KEY, result.messages.pending),
   ]);
   return result;
 }
 
 /** Everything still waiting after a flush: what the sync chip counts. */
 export function waiting(result: FlushResult): Array<{ attempts: number }> {
-  return [...result.jobs.pending, ...result.pending];
+  return [...result.jobs.pending, ...result.pending, ...result.messages.pending];
 }
 
 const BACKGROUND_KEY = 'ota.worker.answers.background';
@@ -214,9 +245,16 @@ export interface BackgroundReport {
   refused: number;
   /** Job steps or reports the API refused. */
   jobsRefused: number;
+  /** Messages to the desk the API refused. */
+  messagesRefused: number;
 }
 
-const EMPTY_REPORT: BackgroundReport = { sent: [], refused: 0, jobsRefused: 0 };
+const EMPTY_REPORT: BackgroundReport = {
+  sent: [],
+  refused: 0,
+  jobsRefused: 0,
+  messagesRefused: 0,
+};
 
 async function loadReport(store: KeyValueStore): Promise<BackgroundReport> {
   const raw = await store.get(BACKGROUND_KEY);
@@ -227,6 +265,8 @@ async function loadReport(store: KeyValueStore): Promise<BackgroundReport> {
       sent: Array.isArray(parsed.sent) ? parsed.sent : [],
       refused: typeof parsed.refused === 'number' ? parsed.refused : 0,
       jobsRefused: typeof parsed.jobsRefused === 'number' ? parsed.jobsRefused : 0,
+      messagesRefused:
+        typeof parsed.messagesRefused === 'number' ? parsed.messagesRefused : 0,
     };
   } catch {
     return EMPTY_REPORT;
@@ -250,20 +290,24 @@ export async function takeBackgroundReport(
  */
 export async function resendInBackground(
   store: KeyValueStore,
-  api: Pick<WorkerApi, 'answer' | 'jobAction'>,
+  api: FlushApi,
   token: string | null,
 ): Promise<FlushResult | null> {
   if (!token) return null;
-  const [answers, actions] = await Promise.all([
+  const [answers, actions, messages] = await Promise.all([
     loadAnswers(store),
     loadJobActions(store),
+    loadMessages(store),
   ]);
-  if (answers.length === 0 && actions.length === 0) return null;
+  if (answers.length === 0 && actions.length === 0 && messages.length === 0) {
+    return null;
+  }
   const result = await flushAnswers(store, api, token);
   if (
     result.sent.length > 0 ||
     result.refused.length > 0 ||
-    result.jobs.refused.length > 0
+    result.jobs.refused.length > 0 ||
+    result.messages.refused.length > 0
   ) {
     const report = await loadReport(store);
     await store.set(
@@ -272,6 +316,7 @@ export async function resendInBackground(
         sent: [...report.sent, ...result.sent.map((answer) => answer.serviceItemId)],
         refused: report.refused + result.refused.length,
         jobsRefused: report.jobsRefused + result.jobs.refused.length,
+        messagesRefused: report.messagesRefused + result.messages.refused.length,
       } satisfies BackgroundReport),
     );
   }
