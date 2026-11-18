@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-18 15:00
+# Handoff — vereda — updated 2026-11-18 18:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -41,6 +41,15 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-18 (evening): the stale price window closed** (the owner's pick). No migration, no
+  dependency, no route or DTO change, no UI (`e1dd302`, `17d2363`). `sameCharge` in
+  `packages/domain/src/packages/booking-price.ts` (total and line for line, to the cent; labels
+  ignored). `PackageBookingService.confirmPrice` runs in `bookPackage`'s claim after
+  `claimPackageChoices`: it locks the package row `FOR SHARE` (last, as a save updates it
+  last), re-reads the package, re-prices the plan's choices with the same `priceChoices` as
+  `plan()`, and throws the existing 409 `PriceChanged` (new total) when a charge or the
+  currency moved. The desk's party edit is unchanged: it re-prices from current rows on every
+  save and no traveler accepted a shown price there.
 - **2026-11-18 (later): the header in Spanish and French** (the owner's pick, the French header
   overflow). No migration, no third-party dependency, no new words (`5501732`, `6be8a0b`,
   `5711e0c`). `COMPACT_HEADER_LOCALES` (`es`, `fr`) in `apps/storefront/src/lib/site-nav.ts`:
@@ -843,32 +852,29 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-18, the header in Spanish and French; dev stack stopped for the verify, restarted after)
+## Verified (2026-11-18, the stale price window; dev stack stopped for the verify, restarted after)
 - CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched); no `v*` tag, so no CI or
   Release run since `94c0910`. `pnpm audit --prod`: the five deferred advisories
   (`deepmerge-ts`, `picomatch`, `uuid`, `glob`, `minimatch`), nothing new.
-- Reproduced first (Playwright script, dev storefront): `/fr` 1024 scrolled 34 px with the row
-  74 px over its box (`/es` 37, no scroll); at 1280 `/fr` 7 px, row 47 over (`/es` 39). The new
-  e2e failed on exactly those before the fix and passes after at all six DS 07 widths.
+- The window, proven failing first: with `confirmPrice` a no-op, the new unit tests (2) and
+  live tests (7) fail; with only the package `FOR SHARE` removed, the live "base-price save
+  waits" test fails (the save lands under the booking). All pass with the fix.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1594 passed / 64 skipped**;
-  `TURBO_FORCE=true pnpm build` **19/19**.
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1600 passed / 67 skipped**, before the live tests
+  moved into `package-booking.integration.test.ts` (afterwards `apps/api` alone: 577 passed /
+  70 skipped); `TURBO_FORCE=true pnpm build` **19/19**. The two changed unit test files
+  typecheck with a one-off tsconfig (the repo does not typecheck tests), apart from two
+  older `send(body: unknown)` errors.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, run from `apps/api` with
-  `pnpm exec vitest run $(ls test/*.integration.test.ts)`, the 18 files) **63/63**.
-- Full `pnpm e2e` (seven projects, 1.8 h, ports clear and `.next` deleted first): **189 passed,
-  8 failed, 3 skipped**; the new test passed in all six DS 07 projects. Every failure was a
-  timeout late in the run, the storefront `next-server` restarted (newer PID): the three
-  storefront specs of the last run (`storefront-builder:65`, `storefront-keep-building:75`,
-  `storefront-keyboard:89`) and `responsive.spec.ts` at ds07-375 (both customer-page tests) and
-  ds07-1440 (both, plus Ops Lite, `ERR_ABORTED`). Re-run of those four files on a fresh stack
-  (`--project=default --project=ds07-375 --project=ds07-1440`): **25 passed, 1 skipped**.
-- Browser (Playwright script, dev storefront) at 390, 1024 and 1280 in en/es/fr: no sideways
-  scroll, header row inside its box; computed `display`: en nav at 1024 and specialist at
-  1280; es/fr menu at 1024, nav at 1280, specialist `none`. `/fr` 320 larger text: search
-  button 228 × 74, `white-space: normal`, centred. Screenshots looked as intended.
+  `pnpm exec vitest run $(ls test/*.integration.test.ts)`, the 18 files) **70/70**.
+- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **196 passed,
+  1 failed, 3 skipped**. The failure was `responsive.spec.ts:144` at ds07-375, a `page.goto`
+  timeout on `/en/events/havana-jazz-festival-2027` after the storefront `next-server`
+  restarted late in the run (newer PID), as on 2026-11-18 (later). Re-run of that file on a
+  fresh stack (`--project=ds07-375`): **5 passed, 1 skipped**.
+- Browser: nothing to check; the change is server-only.
 - Owner's dev stack restarted with Task 0's settings (`setsid nohup pnpm dev`) and left
-  running (API `/health`, storefront `/en`, back-office `/login` 200).
-- Not run: anything on a device (the worker app's field-test items stay in Next 3).
+  running.
 
 ## Assumptions & unknowns
 - **W-Job (2026-11-15):** nothing ran on a device; the e2e drives the web preview, where
@@ -1036,11 +1042,13 @@ events (T-Events)".
   whole transaction, including the affidavit upload; waiting counts against Prisma's 5 s
   interactive timeout. Measured: 20 at once on 8 seats took 207 ms, in-memory storage, not S3. A
   tier or extra removed or withdrawn after the form's checks is a 409 since 2026-11-07.
-- **Stale price window (2026-11-07, not fixed):** `plan()` prices from the package it read
-  before the transaction. A save that changes a kept tier's, extra's or departure's price in
-  place between the two (milliseconds) leaves the booking at the price shown, which the
-  traveler accepted; the claim checks only that the rows still exist and are offered.
-  Re-pricing under the locks would close it, if the owner wants that.
+- **Price under the locks (2026-11-18):** `plan()` still prices before the transaction;
+  `confirmPrice` prices again once the claim holds the departure (`FOR UPDATE`), tier and
+  extras (`FOR SHARE`) and then the package row (`FOR SHARE`). Keep the package lock after the
+  others: `PackagesService.update` locks departures → tiers → extras in `planCollections` and
+  updates the package row last, so taking the package first deadlocks against a save. The
+  storefront shows the 409's `message`, which is the API's English text in every locale (as
+  for a stale `expectedTotal` before); localizing it is not built.
 - `PASSPORT_ENCRYPTION_KEY` is set in `apps/api/.env` (dev); back it up. A production key differs.
 - **Deploys:** keep the orchestrator's kill grace period above `SHUTDOWN_TIMEOUT_MS`. Env from M9:
   `STAFF_SESSION_HOURS` (12), `MAGIC_LINK_EXPIRES_MINUTES` (10), `BACKOFFICE_PUBLIC_URL`;
@@ -1810,13 +1818,20 @@ events (T-Events)".
 - **Raw-SQL fakes (2026-11-07):** `apps/api/test/package-booking.e2e.test.ts` and
   `travelers.e2e.test.ts` answer `$queryRaw` by the table named in the SQL text (departures,
   tiers, extras). A new raw lock in a booking writer makes 18 of their tests fail until the fake
-  answers that table too.
+  answers that table too. `confirmPrice`'s `packages` lock falls to the departures branch and
+  returns nothing, which is fine because the package is re-read with `package.findUnique`; the
+  fake's `savedBetween` changes what that second read returns.
 - **Proving a lock (2026-11-07):** the FOR SHARE test in `packages.integration.test.ts` fails
   with a Prisma FK error when `FOR SHARE` is removed; the race tests in
   `package-booking.integration.test.ts` insert the change with `afterPlanning` (Booking form)
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-18: the Booking form prices twice: `plan()` before the transaction for the
+    form's checks, and `PackageBookingService.confirmPrice` inside it once the departure, tier,
+    extras and then the package row are locked; a moved charge is 409 `PriceChanged`. A new
+    priced field on a package, tier, departure or extra must be read by `priceChoices`, and a
+    save must keep updating the package row after locking its collections."
   - "2026-11-18: the storefront header's layout depends on the locale. Locales in
     `COMPACT_HEADER_LOCALES` (`apps/storefront/src/lib/site-nav.ts`; `es`, `fr`) get
     `data-header="compact"`: the drawer until xl and no specialist button, as with larger
@@ -2113,7 +2128,7 @@ events (T-Events)".
    do not re-ask what it records as decided.
 5. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production holds
    the mock off by itself (A4), so this does not block launch.
-6. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
+6. Deferred, the owner's call: M10 room holds/photos (migration doc),
    the 320 phone header's gutter (Traps, 2026-11-18: the locale pills into the drawer below
    sm, or a tighter row gap for every text size), a real screen-reader run, manifest editing beyond flags, PII purge
    Tiers 2–3, the load test (D24), SMS.
@@ -2848,3 +2863,11 @@ events (T-Events)".
   Spanish included because its row ate 37 of its 40 px gutter at 1024 and was 39 px over from
   1280 without scrolling; Home's search button wrapping below sm, found by the new test; the
   320 phone header's gutter (every locale, English included) left to the owner.
+- 2026-11-18 (evening) — the owner picked the stale price window (over the 320 phone header,
+  Ops Lite's refund nudge and withdraw and W-Credentials' vehicle follow-ups). The build chose:
+  refuse with the existing 409 `PriceChanged` over booking at the new price (the traveler
+  accepted the shown one) or at the old one (no longer offered); compare every line's amounts
+  (`sameCharge`), not only the total, so offsetting changes are caught; ignore labels, so a
+  rename is not a price change; treat a currency change as a price change; lock the package
+  row last to match a save's order; leave the desk's party edit as is; leave the package's
+  status (unpublished in the window) unchecked under the lock, as before.

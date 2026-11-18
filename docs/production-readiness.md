@@ -143,7 +143,6 @@ The domain answers the staff email domain and `PASSKEY_RP_ID` (A6).
 
 **Deferred build items:**
 - M10 room holds and event photos (need a migration doc);
-- the stale-price window from 2026-11-07;
 - a real screen-reader pass;
 - manifest editing beyond the feature flags.
 
