@@ -191,6 +191,7 @@ export {
   departurePlacesLeft,
   isPriceLocked,
   priceBooking,
+  sameCharge,
   travelerKindOn,
   type BookingExtraInput,
   type BookingFeeInput,
