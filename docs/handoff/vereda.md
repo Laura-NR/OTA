@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-18 11:48
+# Handoff — vereda — updated 2026-11-18 15:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -16,7 +16,7 @@ trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, o
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
 W-Credentials, on 2026-11-15 W-Job and the worker app's distribution, on 2026-11-16 worker ↔ desk
-messages, on 2026-11-18 the desktop cookie banner) and
+messages, on 2026-11-18 the desktop cookie banner and the header in Spanish and French) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
 for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job and
@@ -41,6 +41,15 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-18 (later): the header in Spanish and French** (the owner's pick, the French header
+  overflow). No migration, no third-party dependency, no new words (`5501732`, `6be8a0b`,
+  `5711e0c`). `COMPACT_HEADER_LOCALES` (`es`, `fr`) in `apps/storefront/src/lib/site-nav.ts`:
+  `SiteHeader` sets `data-header="compact"` and the nav, menu and specialist take the
+  larger-text layout through `group-data-[header=compact]/header` (drawer until xl, no
+  specialist). Home's search button wraps below sm. `e2e/responsive.spec.ts` gains "Home and its
+  header fit in every language" (every locale × both text sizes per DS 07 width; the header row
+  inside its padded box from md); the root `package.json` takes `@ota/i18n` (workspace) for
+  the locale list. ADR 0006 amendment 2026-11-18 (later). Open: the 320 phone header (Next 6).
 - **2026-11-18: the desktop cookie banner** (the owner's pick from the deferred items). No
   migration, no dependency, no new words. `cookie-choices.tsx` (`compact` replaces
   `compactOnPhone`, plus an `intro` slot) and `cookie-banner.tsx`: the purposes wait behind
@@ -834,35 +843,31 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-18, the desktop cookie banner; dev stack stopped for the verify, restarted after)
-- CI: nothing to fix. `origin/vereda` is still `b1ac87c`; PR #1 is the only pull request
-  (merged); the last CI runs are green (`d2657e4` on `main`); no `v*` tag, no Release run
-  (GitHub API, no token). `pnpm audit --prod`: the four settled advisories plus `picomatch`
-  (high, GHSA-fc5q-39xc-vjpf, no patch; Metro and vitest/vite only), deferred by the owner.
+## Verified (2026-11-18, the header in Spanish and French; dev stack stopped for the verify, restarted after)
+- CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched); no `v*` tag, so no CI or
+  Release run since `94c0910`. `pnpm audit --prod`: the five deferred advisories
+  (`deepmerge-ts`, `picomatch`, `uuid`, `glob`, `minimatch`), nothing new.
+- Reproduced first (Playwright script, dev storefront): `/fr` 1024 scrolled 34 px with the row
+  74 px over its box (`/es` 37, no scroll); at 1280 `/fr` 7 px, row 47 over (`/es` 39). The new
+  e2e failed on exactly those before the fix and passes after at all six DS 07 widths.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
   `TURBO_FORCE=true pnpm test` **31/31 tasks, 1594 passed / 64 skipped**;
   `TURBO_FORCE=true pnpm build` **19/19**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, run from `apps/api` with
   `pnpm exec vitest run $(ls test/*.integration.test.ts)`, the 18 files) **63/63**.
-- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **187 passed,
-  4 failed, 3 skipped**. Every banner test passed (axe closed and opened, the desktop one-row
-  test, the phone test, both telemetry tests). The failures were late-run slowness, with the
-  storefront `next-server` at 6.4 GB: `storefront-builder.spec.ts:65` (a client navigation
-  not done in 15 s), `storefront-keep-building.spec.ts:75` and `storefront-keyboard.spec.ts:89`
-  (the snapshots at failure show the awaited heading, rendered just after the timeout) and
-  `[ds07-375]` `responsive.spec.ts:118` (the known flake). Re-run alone on a fresh stack: **4/4**
-  (`pnpm e2e <files> --project=default --project=ds07-375`; `--project x <files>` swallows the
-  files as project names). The 2026-11-16 session's own full run (worker ↔ desk messages) had
-  6 failures it never recorded; this run covers that work.
-- Browser (Playwright script against the dev storefront) at 390, 768, 1024 and 1280, en (and
-  es/fr at 1024): closed card 1200 × 152 at 1280 × 800 (19 %, was 720 × 480, 62 %), 944 × 172 at
-  1024 (en; 192 es/fr), 720 × 243 at 768, 358 × 287 at 390 (unchanged); Reject/Accept equal
-  (191/191 px en, 240/240 es, 235/235 fr), on one line, white with an 8 px radius; "Choose by
-  purpose" transparent; `--cookie-banner` set (208 px at 1024 es); no sideways scroll except
-  `/fr` at 1024, which is the header's, not the banner's (Traps). Screenshots closed and
-  opened looked as intended.
-- Owner's dev stack restarted with Task 0's settings and left running (API `/health`,
-  storefront `/en`, back-office `/login` 200).
+- Full `pnpm e2e` (seven projects, 1.8 h, ports clear and `.next` deleted first): **189 passed,
+  8 failed, 3 skipped**; the new test passed in all six DS 07 projects. Every failure was a
+  timeout late in the run, the storefront `next-server` restarted (newer PID): the three
+  storefront specs of the last run (`storefront-builder:65`, `storefront-keep-building:75`,
+  `storefront-keyboard:89`) and `responsive.spec.ts` at ds07-375 (both customer-page tests) and
+  ds07-1440 (both, plus Ops Lite, `ERR_ABORTED`). Re-run of those four files on a fresh stack
+  (`--project=default --project=ds07-375 --project=ds07-1440`): **25 passed, 1 skipped**.
+- Browser (Playwright script, dev storefront) at 390, 1024 and 1280 in en/es/fr: no sideways
+  scroll, header row inside its box; computed `display`: en nav at 1024 and specialist at
+  1280; es/fr menu at 1024, nav at 1280, specialist `none`. `/fr` 320 larger text: search
+  button 228 × 74, `white-space: normal`, centred. Screenshots looked as intended.
+- Owner's dev stack restarted with Task 0's settings (`setsid nohup pnpm dev`) and left
+  running (API `/health`, storefront `/en`, back-office `/login` 200).
 - Not run: anything on a device (the worker app's field-test items stay in Next 3).
 
 ## Assumptions & unknowns
@@ -1147,10 +1152,13 @@ events (T-Events)".
   like the owner's dev stack was that run's webServer. Check `ps -eo pid,ppid,cmd | grep
   playwright` before signalling turbo. Its `next dev` also hot-reloads your edits, so a run
   that spans an edit tests mixed code.
-- **A header overflow at 1024 in French (2026-11-18, not fixed):** `/fr` at 1024 × 768 scrolls
-  34 px sideways: the header's `ml-auto` group (a `whitespace-nowrap` link) ends at 1058 px,
-  with or without the cookie banner. The DS 07 responsive spec checks English only, so it
-  does not catch it.
+- **The header per locale (2026-11-18, fixed):** the DS 07 spec's page lists are English; only
+  its "Home and its header" test loads every locale. A new locale or a longer label that
+  overruns the header row fails there: add the locale to `COMPACT_HEADER_LOCALES`. The spec
+  pins each locale with the `NEXT_LOCALE` cookie, since the default locale's path is
+  unprefixed and otherwise follows the browser's en-US. Still open: at 320 the phone header
+  eats 11 px of its 24 px right gutter in every locale (19 px with larger text, no sideways
+  scroll); the test measures the row from md only.
 - **`prisma format` realigns the whole schema (2026-11-16):** run on `schema.prisma` it
   rewrote ~450 lines of column alignment. Add models by hand, then `prisma validate` and
   `prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel
@@ -1496,8 +1504,7 @@ events (T-Events)".
   by a payment confirmation needs `paymentReceipt.count`, `reservation.findUnique` with
   `select` (the lock's) and `exchangeRate`. The header row has no slack at lg–xl: anything
   added there must be measured signed in and in es/fr at 1024 and 1280 (the DS 07 spec checks
-  `/en` only). French already scrolls 30–34 px at 1024 and 3–7 px at 1280 without the currency
-  (pre-existing, not fixed). During long e2e runs the storefront's `next-server` restarts (a
+  `/en` only; Home alone in every locale since 2026-11-18). During long e2e runs the storefront's `next-server` restarts (a
   newer PID than the API's) and later storefront pages time out; rerun those on a fresh stack.
   The live tests build `MeService`, `PaymentsService` and others by hand with positional
   arguments and are skipped by `pnpm test`; a new constructor argument breaks them only under
@@ -1810,6 +1817,11 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-18: the storefront header's layout depends on the locale. Locales in
+    `COMPACT_HEADER_LOCALES` (`apps/storefront/src/lib/site-nav.ts`; `es`, `fr`) get
+    `data-header="compact"`: the drawer until xl and no specialist button, as with larger
+    text. `e2e/responsive.spec.ts` checks Home in every locale; a new locale or longer nav label
+    that overruns the row fails there."
   - "2026-11-15: worker app releases are files, not rows: `tools/worker-app-release.mjs`
     writes `releases.json`, the APKs and pre-signed expo-updates manifests into a folder the
     API reads from `WORKER_APP_DIR` (dev `apps/api/.worker-app`, prod `deploy/worker-app`
@@ -2064,8 +2076,8 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (background resend, W-Job, distribution, worker ↔ desk messages and
-   the desktop cookie banner are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
+1. Owner: push `vereda` (background resend, W-Job, distribution, worker ↔ desk messages, the
+   desktop cookie banner and the header in Spanish and French are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
    so CI runs on W-Earnings' payouts, the receipt, Ops Lite, W-Credentials, background resend,
    W-Job, distribution and worker messages: PR #1 is merged, and a push to `vereda` alone runs
    no workflow (none has run since `94c0910`; checked 2026-11-18: still nothing pushed, no
@@ -2102,7 +2114,8 @@ events (T-Events)".
 5. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production holds
    the mock off by itself (A4), so this does not block launch.
 6. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
-   the French header overflow at 1024 (Traps, 2026-11-18), a real screen-reader run, manifest editing beyond flags, PII purge
+   the 320 phone header's gutter (Traps, 2026-11-18: the locale pills into the drawer below
+   sm, or a tighter row gap for every text size), a real screen-reader run, manifest editing beyond flags, PII purge
    Tiers 2–3, the load test (D24), SMS.
 7. Before the next merge into `main`: graduate this handoff (facts → AGENTS.md §C via the
    owner, decisions → ADRs/PR) and delete it in the merge; merge with a merge commit. PR #1 was
@@ -2827,3 +2840,11 @@ events (T-Events)".
   the rows shown; a one-row bar as wide as the page column from lg (stacked in the 720 px card
   between md and lg); Reject/Accept as equal grid columns rather than a flex row; opened, the
   banner stacks so the focus order follows the reading order.
+- 2026-11-18 (later) — the owner picked the French header overflow (over the stale price
+  window, Ops Lite's nudge and withdraw and W-Credentials' vehicle follow-ups). The build chose:
+  Spanish and French take ADR 0006's larger-text header (drawer until xl, no specialist; Support
+  carries it) over tightening the link and row gaps, which would change English's DS 07 spacing
+  and still not fit French at 1024; a locale list read on the server over a `:lang()` selector;
+  Spanish included because its row ate 37 of its 40 px gutter at 1024 and was 39 px over from
+  1280 without scrolling; Home's search button wrapping below sm, found by the new test; the
+  320 phone header's gutter (every locale, English included) left to the owner.
