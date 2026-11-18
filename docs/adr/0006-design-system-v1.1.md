@@ -2024,3 +2024,28 @@ and no words changed.
   in the page). Opened it is about 60 % of the window again, as the visitor asked for it.
 - **Unchanged.** The phone banner (287 px at 390 × 844), the measured `--cookie-banner` that
   keeps focus clear of it (WCAG 2.4.11), the region role, the Legal › Cookie settings page.
+
+## Amendment, 2026-11-18 (later): the header in Spanish and French
+
+The owner picked the French header overflow (Traps, 2026-11-18). DS 07 draws the header in
+English only, and its labels are longer in Spanish and French: at 1024 the French row was 74 px
+over its padded box (`/fr` scrolled 34 px sideways) and the Spanish one 37 px over (its right
+gutter 3 px instead of 40); from 1280, where the row is 1200 px at every width, French was
+47 px and Spanish 39 px over, with "Talk to a specialist" 230 px in Spanish and 201 px in
+French against 176 px in English. The build resolved it without asking the design team, on
+the existing tokens; no token was added and no words changed.
+
+- **The larger-text header.** A locale whose labels do not fit takes the layout this ADR
+  settled for larger text on 2026-10-24: the drawer until xl, then the six links without "Talk
+  to a specialist", which Support carries. `COMPACT_HEADER_LOCALES` (`es`, `fr`) in the
+  storefront's `site-nav.ts` names them, and the header carries `data-header="compact"`.
+  Tightening the link and row gaps instead would have changed English's DS 07 spacing and
+  still not fitted French at 1024.
+- **English unchanged.** The links from lg and the specialist from xl, as DS 07 draws them.
+- **Home's search button on a phone.** Below sm its label wraps instead of widening the
+  search card ("Trouvez votre voyage à Cuba" scrolled `/fr` 16 px at 320, 63 px with larger
+  text), keeping the lg button's 48 px minimum.
+- **Open.** At 320 the phone header (wordmark, locale pills, menu) eats 11 px of its 24 px
+  right gutter in every locale, 19 px with larger text; the page does not scroll. Fitting it
+  needs a choice (the pills into the drawer below sm, or a tighter gap for every text size),
+  left to the owner.
