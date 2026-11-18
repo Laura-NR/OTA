@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-18 18:00
+# Handoff — vereda — updated 2026-11-18 22:00
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -16,7 +16,8 @@ trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, o
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
 W-Credentials, on 2026-11-15 W-Job and the worker app's distribution, on 2026-11-16 worker ↔ desk
-messages, on 2026-11-18 the desktop cookie banner and the header in Spanish and French) and
+messages, on 2026-11-18 the desktop cookie banner, the header in Spanish and French and the 320
+phone header) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
 for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job and
@@ -41,6 +42,18 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-18 (night): the 320 phone header** (the owner's pick). No migration, no dependency,
+  no route change (`c670c0c`, `8423852`, `8ad4656`, `9e670a5`, `0d9f1a0`). `LocaleSwitcher`
+  takes `variant` (`pills`, the header's codes; `list`, 48 px rows named in each language) and `onNavigate`;
+  `SiteHeader` hides the pills below sm (`hidden sm:flex`); `SiteMenu`'s drawer gains a
+  "Language" section (`nav.language`, en/es/fr) above the currency, in both menu instances
+  (header and bottom bar). `e2e/responsive.spec.ts`' header test measures the row at every
+  width (the `HEADER_ROW_MIN_WIDTH` guard is gone); `e2e/storefront-i18n.spec.ts` switches
+  language from the drawer at 390; `storefront-keyboard.spec.ts`' touch test checks the
+  drawer's language row (≥ 44 px) at 390 and the pill's extended tap at 768. Found on the way:
+  `cookie-banner.tsx` sets its scroll container's `scroll-padding-bottom` to the sticky
+  actions' measured height + 8 px (`data-sticky-actions` in `cookie-choices.tsx`), so a switch
+  reached with Shift+Tab is no longer under the actions (WCAG 2.4.11).
 - **2026-11-18 (evening): the stale price window closed** (the owner's pick). No migration, no
   dependency, no route or DTO change, no UI (`e1dd302`, `17d2363`). `sameCharge` in
   `packages/domain/src/packages/booking-price.ts` (total and line for line, to the cent; labels
@@ -58,7 +71,8 @@ events (T-Events)".
   specialist). Home's search button wraps below sm. `e2e/responsive.spec.ts` gains "Home and its
   header fit in every language" (every locale × both text sizes per DS 07 width; the header row
   inside its padded box from md); the root `package.json` takes `@ota/i18n` (workspace) for
-  the locale list. ADR 0006 amendment 2026-11-18 (later). Open: the 320 phone header (Next 6).
+  the locale list. ADR 0006 amendment 2026-11-18 (later). The 320 phone header followed that
+  night.
 - **2026-11-18: the desktop cookie banner** (the owner's pick from the deferred items). No
   migration, no dependency, no new words. `cookie-choices.tsx` (`compact` replaces
   `compactOnPhone`, plus an `intro` slot) and `cookie-banner.tsx`: the purposes wait behind
@@ -852,27 +866,33 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-18, the stale price window; dev stack stopped for the verify, restarted after)
-- CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched); no `v*` tag, so no CI or
-  Release run since `94c0910`. `pnpm audit --prod`: the five deferred advisories
-  (`deepmerge-ts`, `picomatch`, `uuid`, `glob`, `minimatch`), nothing new.
-- The window, proven failing first: with `confirmPrice` a no-op, the new unit tests (2) and
-  live tests (7) fail; with only the package `FOR SHARE` removed, the live "base-price save
-  waits" test fails (the save lands under the booking). All pass with the fix.
-- `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1600 passed / 67 skipped**, before the live tests
-  moved into `package-booking.integration.test.ts` (afterwards `apps/api` alone: 577 passed /
-  70 skipped); `TURBO_FORCE=true pnpm build` **19/19**. The two changed unit test files
-  typecheck with a one-off tsconfig (the repo does not typecheck tests), apart from two
-  older `send(body: unknown)` errors.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, run from `apps/api` with
-  `pnpm exec vitest run $(ls test/*.integration.test.ts)`, the 18 files) **70/70**.
-- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **196 passed,
-  1 failed, 3 skipped**. The failure was `responsive.spec.ts:144` at ds07-375, a `page.goto`
-  timeout on `/en/events/havana-jazz-festival-2027` after the storefront `next-server`
-  restarted late in the run (newer PID), as on 2026-11-18 (later). Re-run of that file on a
-  fresh stack (`--project=ds07-375`): **5 passed, 1 skipped**.
-- Browser: nothing to check; the change is server-only.
+## Verified (2026-11-18 night, the 320 phone header; dev stack stopped for the verify, restarted after)
+- CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched); no `v*` tag on the remote,
+  so no CI or Release run since `94c0910`. `pnpm audit --prod`: four of the five deferred
+  advisories (`deepmerge-ts`, `uuid`, `glob`, `minimatch`); `picomatch` no longer reported;
+  nothing new.
+- The gutter, reproduced first on the dev stack (a Playwright script measuring the header row
+  per width × locale × text size): at 320 the row was 11 px over its padded box in every
+  locale, 19 px with larger text; 375–768 at 0. After the fix: 0 at every width and both text
+  sizes.
+- `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**,
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1600 passed / 71 skipped**, `TURBO_FORCE=true
+  pnpm build` **19/19**, all before the banner fix (`9e670a5`); after it, the storefront's
+  forced typecheck, lint and format check only (the full build not re-run).
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, from `apps/api`, the 18
+  `test/*.integration.test.ts` files) **70/70**.
+- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **192
+  passed, 6 failed, 3 skipped**. Two failures were this change: the touch test still measured
+  the phone header's pill (spec updated), and the phone banner walk reached the covered switch
+  (fixed, `9e670a5`). Four were late-run navigation timeouts (builder, keep building,
+  packages, ds07-375 larger text). Re-run on a fresh stack (keyboard, i18n, builder, keep
+  building, packages and responsive; default, ds07-320, ds07-375): 27 passed, 2 skipped, only
+  the banner walk failing; after the fix, on the owner's restarted stack, keyboard + i18n +
+  telemetry **20 passed** and accessibility's cookie banner test **1 passed**.
+- Browser (390, 1024, 1280, also 320 and 640; screenshots and computed styles): pills
+  `display:none` below sm, `flex` from 640; the drawer's "Language"/"Idioma"/"Langue" overline
+  (12 px, 13.5 px larger), rows 48 px (54 px larger), the current one 600 weight in
+  primary-700; 1024 (es, compact) and 1280 (en) headers unchanged.
 - Owner's dev stack restarted with Task 0's settings (`setsid nohup pnpm dev`) and left
   running.
 
@@ -1164,9 +1184,14 @@ events (T-Events)".
   its "Home and its header" test loads every locale. A new locale or a longer label that
   overruns the header row fails there: add the locale to `COMPACT_HEADER_LOCALES`. The spec
   pins each locale with the `NEXT_LOCALE` cookie, since the default locale's path is
-  unprefixed and otherwise follows the browser's en-US. Still open: at 320 the phone header
-  eats 11 px of its 24 px right gutter in every locale (19 px with larger text, no sideways
-  scroll); the test measures the row from md only.
+  unprefixed and otherwise follows the browser's en-US. The row is measured at every width
+  since 2026-11-18 (night): below sm the header is the wordmark and the menu, the language is
+  in the drawer, so a new header item below sm must fit 272 px at 320.
+- **A fixed-length focus walk moves with the page (2026-11-18, night):**
+  `storefront-keyboard.spec.ts`' `walk(page, key, 45)` covers 45 stops from where it starts;
+  removing three header stops let the phone banner walk reach the banner's switch, a covered
+  stop it had always ended short of. When a spec's walk fails after an unrelated removal, log
+  each stop (the session used a one-off script) before suspecting the change.
 - **`prisma format` realigns the whole schema (2026-11-16):** run on `schema.prisma` it
   rewrote ~450 lines of column alignment. Add models by hand, then `prisma validate` and
   `prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel
@@ -2092,7 +2117,8 @@ events (T-Events)".
 
 ## Next
 1. Owner: push `vereda` (background resend, W-Job, distribution, worker ↔ desk messages, the
-   desktop cookie banner and the header in Spanish and French are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
+   desktop cookie banner, the header in Spanish and French, the stale price window and the 320
+   phone header are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
    so CI runs on W-Earnings' payouts, the receipt, Ops Lite, W-Credentials, background resend,
    W-Job, distribution and worker messages: PR #1 is merged, and a push to `vereda` alone runs
    no workflow (none has run since `94c0910`; checked 2026-11-18: still nothing pushed, no
@@ -2128,10 +2154,8 @@ events (T-Events)".
    do not re-ask what it records as decided.
 5. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production holds
    the mock off by itself (A4), so this does not block launch.
-6. Deferred, the owner's call: M10 room holds/photos (migration doc),
-   the 320 phone header's gutter (Traps, 2026-11-18: the locale pills into the drawer below
-   sm, or a tighter row gap for every text size), a real screen-reader run, manifest editing beyond flags, PII purge
-   Tiers 2–3, the load test (D24), SMS.
+6. Deferred, the owner's call: M10 room holds/photos (migration doc), a real screen-reader
+   run, manifest editing beyond flags, PII purge Tiers 2–3, the load test (D24), SMS.
 7. Before the next merge into `main`: graduate this handoff (facts → AGENTS.md §C via the
    owner, decisions → ADRs/PR) and delete it in the merge; merge with a merge commit. PR #1 was
    merged on 2026-11-13 without this step, so `main` carries the handoff file as of `94c0910`.
@@ -2871,3 +2895,13 @@ events (T-Events)".
   rename is not a price change; treat a currency change as a price change; lock the package
   row last to match a save's order; leave the desk's party edit as is; leave the package's
   status (unpublished in the window) unchecked under the lock, as before.
+- 2026-11-18 (night) — the owner picked the 320 phone header (over Ops Lite's refund Withdraw
+  and W-Credentials' vehicle follow-ups). The build chose: the locale pills into the drawer
+  below sm (DS-Mobile-Patterns: "language and currency in the drawer"), over a tighter row gap
+  for every text size, which would change English's DS 07 spacing; sm as the breakpoint, since
+  the row fits from 375 with the pills but the design keeps a phone header clean; the drawer's
+  language as 48 px link rows in each language's own name (the nav rows' style, not radios: a
+  locale is a page, not a setting), shown at every width below lg like the currency. This
+  supersedes 2026-10-29's "kept the language links in the phone header" below sm. Also fixed
+  the banner switch hidden under the sticky actions (found by the longer walk) with a measured
+  scroll padding, over shortening the walk, which would have hidden it again.
