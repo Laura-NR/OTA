@@ -122,6 +122,7 @@ export function CookieChoices({
         })}
       </ul>
       <div
+        data-sticky-actions={stickyActions || undefined}
         className={cn(
           'flex flex-wrap gap-3',
           stickyActions && 'sticky -bottom-5 -mb-5 border-t bg-surface pb-5 pt-3',
