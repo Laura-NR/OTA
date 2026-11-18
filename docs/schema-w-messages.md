@@ -191,3 +191,49 @@ model WorkerMessage {
 The body's 2000 characters are capped by the request schemas, not the database, as elsewhere.
 With M1 (b), M2 (b), M3 (b) or M4 (b) the diff changes accordingly, and this section is
 rewritten before the migration.
+
+## 7. As built (2026-11-16)
+
+Approved M1–M8 as recommended. One migration, `20261115230915_worker_messages` (applied to the
+dev DB), exactly §6's diff. No new dependency.
+
+- **Domain** `packages/domain/src/worker/messages.ts`: `WORKER_MESSAGE_MAX_LENGTH` (2000),
+  `WORKER_HOME_MESSAGES` (20), `workerMessageRefusal` (`in_future` past the steps' two-minute
+  tolerance; `not_your_job` for a service never offered to or held by the worker),
+  `messageArrivedLate`, `jobRunsToday` (Havana's day, first to last), `queueWorkerMessage`
+  (in writing order, one per `clientRef`). `ops-lite/inbox.ts`: a thread `kind`, the filters
+  All · Urgent · Unread · Travelers · Workers, and a worker's urgency (wrote last about a job
+  that runs today).
+- **API** `apps/api/src/worker-messages/`: `GET`/`POST /worker/messages` and `POST
+  /worker/messages/read` (the worker's own thread; a resend returns the first, also under a
+  race, through the unique index; another worker's `clientRef` is a 409); `GET`/`POST
+  /suppliers/:id/messages` and `POST /suppliers/:id/messages/read` (support reads, operations
+  and Super Admin write); `GET /reservations/:id/worker-threads` (the booking's card). W-Home
+  carries `messages` (the latest 20 and the desk's unread count). `GET /ops-lite/inbox` gains
+  `workers` and the counts `travelers`/`workers`; `all`/`urgent`/`unread` count both kinds.
+  Each message goes out on `/ops` as `worker-message`; a worker's is copied to
+  `OPS_NOTIFY_EMAIL` (`workerMessageEmail`, linking the supplier page's thread). The purge
+  redacts messages naming the traveler's service items. RBAC +7.
+- **App**: a third list on the phone (`ota.worker.messages`), flushed after reports and answers
+  and before steps, in the background too; a refused message is dropped with a notice. The
+  Messages screen (bubbles, "en cola" / "enviado", the field, the board's queue note, the
+  desk's line) opens from W-Home's card "Mensaje de la central" (when the desk wrote), the
+  home's "Mensajes con la central · N nuevos" and W-Job's "Mensaje a la central" (which names
+  the job). Opening it marks the desk's messages read.
+- **Desk** (en/es/fr): one `WorkerThread` (live on `/ops`, marks the worker's messages read):
+  the supplier page's "Worker app messages" panel and the header's "Worker app message" link;
+  the booking's "Worker threads" section (each worker, their latest message about the
+  booking, Call, the thread in place); AL-Inbox's worker threads with the amber avatar, the
+  worker's kind and current or next job, and the two new filters.
+
+Resolutions made in the build (also ADR 0006's and ADR 0007's amendments of the day):
+
+- The booking's card reads its own route rather than a field on the booking view.
+- A reply from the booking names the worker's first service on it; from the supplier page or
+  Ops Lite it names none.
+- The thread opens from W-Home and W-Job, not from the Perfil tab (W-Earnings is unchanged).
+- The worker sees no read mark (the board draws none); the desk sees "read 14:02" on its
+  messages and "arrived 15:05" on a worker's that waited on the phone.
+- Messages are not audited, as travelers' are not; the desk's routes carry no capability.
+- The supplier's category shows as the stored key with spaces, as on the supplier page.
+- The desk's thread shows the latest 200 messages; the phone keeps the latest 20.

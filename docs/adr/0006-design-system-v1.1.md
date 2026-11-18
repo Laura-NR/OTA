@@ -1966,3 +1966,34 @@ tokens and components (`docs/worker-app-distribution-plan.md` §5); no token was
   agency overline, the heading, the QR at 192 px, the link in `font-mono`, the version and
   certificate in `caption`; "Print" is a secondary button hidden in print, as is the hint for
   a missing QR.
+
+## Amendment, 2026-11-16: worker ↔ desk messages
+
+The owner approved `docs/schema-w-messages.md` M1–M8 as recommended (migration
+`20261115230915_worker_messages`). Built from W-Job's "Mensaje a la central" and "Central · hoy",
+AL-Inbox's worker threads, A-Booking's "Worker threads" and A-Suppliers' "Worker app message"
+without asking the design team, on the existing tokens and components; no token was added.
+
+- **Worker app.** The Messages screen reuses the app's title, `Card`, `Notice` and `Button`:
+  the desk's bubbles on `page`, the worker's on `primarySoft` (radius md, 85 % wide), each with
+  a `caption` line "Ana · lun 16 nov 13:40" or "Tú · … · en cola / enviado", the booking code
+  added when it is another job's; the field is a 96 dp multiline input with the login's border
+  and radius. W-Home shows a `Card` outlined in `primary` ("Mensaje de la central", three
+  lines of the message, "Leer y responder") only while the desk's messages are unread, and a
+  secondary "Mensajes con la central · N nuevos" in the footer. W-Job's contacts card gains a
+  secondary "Mensaje a la central" under the desk's call. The board's inline "Central · hoy"
+  thread on W-Job is the separate screen: the job screen stays one scroll.
+- **Desk.** One `WorkerThread`: the board's amber avatar (`warning-100`/`warning-700`), the
+  name as an `h3` (plain text on the supplier page, whose `h1` already names the worker), the
+  line under it, a secondary "Call"; bubbles as AL-Inbox's traveler thread
+  (`neutral-100` in, `primary-100` out), each `caption` naming the writer and time, "arrived"
+  when the message waited on the phone, "read" on the desk's, and a `Tag` with another
+  booking's code; the 48 px field with the `arrow-right` send; the board's note on what workers
+  see. The support role sees "Support reads worker threads; operations reply." instead of the
+  field. The booking's "Worker threads" is a `Section` with a row per worker (name, kind, a
+  `New` pill, the latest message quoted, Call, "Open thread"); the thread opens below the
+  rows. The supplier page's header gains a secondary "Worker app message" link to its new
+  panel. AL-Inbox adds the board's Travelers and Workers chips after Unread (kept) and its
+  worker line "Worker · TOUR GUIDE · 16 Nov · E2EWRK01 · La Habana"; the translation chip and
+  quick replies stay out (no real model, no canned content), and so do the board's system
+  lines (offers, SMS fallbacks).

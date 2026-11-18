@@ -310,6 +310,18 @@ offered, or required below the release's minimum, but never while a job is under
 Approving a supplier emails and texts the download link; the desk prints a QR card. iPhones see
 "Android only". Not run on a device: the split build, the installer and an update's download.
 
+## Amendment, 2026-11-16: worker ↔ desk messages
+
+The owner approved `docs/schema-w-messages.md` M1–M8 as recommended (migration
+`20261115230915_worker_messages`, no new dependency). A worker has one thread with the desk,
+kept in its own table so it never reaches a traveler. Messages written with no signal wait on
+the phone in a third list, sent after emergency reports and answers and before steps, in the
+background too, each with an id that keeps a resend single and the time it was written. The
+worker reads the desk's replies at the next sync, since this ADR still has no push; nor is
+there an SMS to the worker until an SMS provider exists. The desk sees each message live on
+`/ops`, gets an email copy of a worker's, and answers from the booking, the supplier page or
+Ops Lite.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms
