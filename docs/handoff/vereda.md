@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-16 11:11
+# Handoff — vereda — updated 2026-11-18 11:48
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -16,7 +16,7 @@ trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, o
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
 W-Credentials, on 2026-11-15 W-Job and the worker app's distribution, on 2026-11-16 worker ↔ desk
-messages) and
+messages, on 2026-11-18 the desktop cookie banner) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
 for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job and
@@ -41,6 +41,16 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-18: the desktop cookie banner** (the owner's pick from the deferred items). No
+  migration, no dependency, no new words. `cookie-choices.tsx` (`compact` replaces
+  `compactOnPhone`, plus an `intro` slot) and `cookie-banner.tsx`: the purposes wait behind
+  "Choose by purpose" at every width; from lg the closed banner is one row as wide as the page
+  column (`max-w-container`, `lg:px-10`) with Reject/Accept as two equal grid columns. 1280 × 800:
+  152 px, 19 % (was 720 × 480, 62 %); 1024 × 768: 22 % en, 25 % es/fr; 768: 24 % (was 50 %);
+  the phone unchanged (287 px). Opened, it stacks as before. ADR 0006 amendment 2026-11-18.
+  E2E: `storefront-keyboard` (desktop one-row test at 1024 and 1280, opened walk),
+  `storefront-telemetry` (opens the disclosure before checking no pre-ticked boxes),
+  `accessibility` (axe on the opened banner).
 - **2026-11-16: worker ↔ desk messages** (Phase 7, W-Job's J9b, the owner's pick), approved
   M1–M8 as recommended (`19f7abc`…`72e7610` and the e2e). One migration,
   `20261115230915_worker_messages` (table `worker_messages`, enum `WorkerMessageSender`;
@@ -824,43 +834,36 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-15, worker app distribution; dev stack stopped for the verify, restarted after)
+## Verified (2026-11-18, the desktop cookie banner; dev stack stopped for the verify, restarted after)
 - CI: nothing to fix. `origin/vereda` is still `b1ac87c`; PR #1 is the only pull request
   (merged); the last CI runs are green (`d2657e4` on `main`); no `v*` tag, no Release run
-  (GitHub API, no token). `pnpm audit --prod`: the same 4 settled advisories, also after the
-  three new modules.
+  (GitHub API, no token). `pnpm audit --prod`: the four settled advisories plus `picomatch`
+  (high, GHSA-fc5q-39xc-vjpf, no patch; Metro and vitest/vite only), deferred by the owner.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**;
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1566 passed / 61 skipped** (1539/61 before);
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1594 passed / 64 skipped**;
   `TURBO_FORCE=true pnpm build` **19/19**.
-- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, the 17
-  `apps/api/test/*.integration.test.ts` files) **60/60**.
-- Full `pnpm e2e` (seven projects, 1.4 h, ports clear and `.next` deleted first): **188 passed,
-  2 failed, 3 skipped**. The failures were known late-run flakes: `storefront-packages.spec.ts:75`
-  (the "Check availability" click not navigating) and `[ds07-375]` `responsive.spec.ts:118` (a
-  240 s `page.goto` timeout). Re-run alone on a fresh stack: `storefront-packages.spec.ts` 2/2,
-  `[ds07-375]` responsive 4/4 (one skipped as always). The new and changed tests passed in the
-  full run (`worker-app-distribution.spec.ts` 3, the update prompt, the recruitment Mailpit
-  check); the distribution spec again 3/3 after the column fix.
-- The release tool, run here with fake `apksigner`/`aapt2`: APK mode wrote split codes 12/11
-  and the fingerprint; it refused a repeated version code, a missing certificate, a wrong key
-  and a native-module change. The dev API served its output: ranged APK (206) directly and
-  through the storefront rewrite, the multipart manifest whose signature `openssl dgst -verify`
-  accepted against the certificate, the bundle whose SHA-256 matched the manifest.
-- `expo prebuild --platform android` (with a throwaway certificate, output deleted): the split
-  block, `REQUEST_INSTALL_PACKAGES`, the certificate, `NEVER`, the self-hosted URL. `expo
-  export`: the Android bundle holds `ExpoUpdates`, `ExpoIntentLauncher`, `ExpoApplication`; the
-  web bundle none (its one `ExpoUpdates` string is expo-constants' optional lookup).
-- Caddy 2.11.9 `validate` on the Caddyfile; the `app.` block alone, proxied to the dev stack,
-  routed `/`, `/app`, the phone's routes and `/api/ota/worker-app/*` as intended and redirected
-  `/reservations`, `/catalog`, `/api/auth/get-session` and `/service-items/<id>/candidates`.
-- Browser (a temporary spec, deleted after) at 390/1024/1280: no sideways scroll on `/app` or
-  the desk card; the download button 48 px, primary on white; the certificate monospace,
-  `break-all`, inside the viewport; the desk card 342/448/448 px. Found and fixed: the page's
-  column was not capped at 1280 (now 768 px, aligned with the logo). The app's required
-  prompt seen at 390 (no sideways scroll).
-- Owner's dev stack restarted with Task 0's settings and left running.
-- Not run: anything on a device (Gradle, the split APKs, the installer, an update's download
-  and signature check, the 204 answer), the smoke script against a real `app.<domain>`.
+- Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, run from `apps/api` with
+  `pnpm exec vitest run $(ls test/*.integration.test.ts)`, the 18 files) **63/63**.
+- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **187 passed,
+  4 failed, 3 skipped**. Every banner test passed (axe closed and opened, the desktop one-row
+  test, the phone test, both telemetry tests). The failures were late-run slowness, with the
+  storefront `next-server` at 6.4 GB: `storefront-builder.spec.ts:65` (a client navigation
+  not done in 15 s), `storefront-keep-building.spec.ts:75` and `storefront-keyboard.spec.ts:89`
+  (the snapshots at failure show the awaited heading, rendered just after the timeout) and
+  `[ds07-375]` `responsive.spec.ts:118` (the known flake). Re-run alone on a fresh stack: **4/4**
+  (`pnpm e2e <files> --project=default --project=ds07-375`; `--project x <files>` swallows the
+  files as project names). The 2026-11-16 session's own full run (worker ↔ desk messages) had
+  6 failures it never recorded; this run covers that work.
+- Browser (Playwright script against the dev storefront) at 390, 768, 1024 and 1280, en (and
+  es/fr at 1024): closed card 1200 × 152 at 1280 × 800 (19 %, was 720 × 480, 62 %), 944 × 172 at
+  1024 (en; 192 es/fr), 720 × 243 at 768, 358 × 287 at 390 (unchanged); Reject/Accept equal
+  (191/191 px en, 240/240 es, 235/235 fr), on one line, white with an 8 px radius; "Choose by
+  purpose" transparent; `--cookie-banner` set (208 px at 1024 es); no sideways scroll except
+  `/fr` at 1024, which is the header's, not the banner's (Traps). Screenshots closed and
+  opened looked as intended.
+- Owner's dev stack restarted with Task 0's settings and left running (API `/health`,
+  storefront `/en`, back-office `/login` 200).
+- Not run: anything on a device (the worker app's field-test items stay in Next 3).
 
 ## Assumptions & unknowns
 - **W-Job (2026-11-15):** nothing ran on a device; the e2e drives the web preview, where
@@ -1139,6 +1142,15 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **An ended session can leave `pnpm e2e` running (2026-11-18):** the previous session
+  started a detached `pnpm e2e` at 09:30 (parent PID 1, log in its own scratchpad) and ended; what looked
+  like the owner's dev stack was that run's webServer. Check `ps -eo pid,ppid,cmd | grep
+  playwright` before signalling turbo. Its `next dev` also hot-reloads your edits, so a run
+  that spans an edit tests mixed code.
+- **A header overflow at 1024 in French (2026-11-18, not fixed):** `/fr` at 1024 × 768 scrolls
+  34 px sideways: the header's `ml-auto` group (a `whitespace-nowrap` link) ends at 1058 px,
+  with or without the cookie banner. The DS 07 responsive spec checks English only, so it
+  does not catch it.
 - **`prisma format` realigns the whole schema (2026-11-16):** run on `schema.prisma` it
   rewrote ~450 lines of column alignment. Add models by hand, then `prisma validate` and
   `prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel
@@ -2052,11 +2064,12 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (background resend, W-Job, distribution and worker ↔ desk messages
-   are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
+1. Owner: push `vereda` (background resend, W-Job, distribution, worker ↔ desk messages and
+   the desktop cookie banner are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
    so CI runs on W-Earnings' payouts, the receipt, Ops Lite, W-Credentials, background resend,
    W-Job, distribution and worker messages: PR #1 is merged, and a push to `vereda` alone runs
-   no workflow (none has run since `94c0910`; checked 2026-11-16: still nothing pushed).
+   no workflow (none has run since `94c0910`; checked 2026-11-18: still nothing pushed, no
+   `v*` tag).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -2089,7 +2102,7 @@ events (T-Events)".
 5. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production holds
    the mock off by itself (A4), so this does not block launch.
 6. Deferred, the owner's call: M10 room holds/photos (migration doc), the stale price window,
-   the desktop cookie banner, a real screen-reader run, manifest editing beyond flags, PII purge
+   the French header overflow at 1024 (Traps, 2026-11-18), a real screen-reader run, manifest editing beyond flags, PII purge
    Tiers 2–3, the load test (D24), SMS.
 7. Before the next merge into `main`: graduate this handoff (facts → AGENTS.md §C via the
    owner, decisions → ADRs/PR) and delete it in the merge; merge with a merge commit. PR #1 was
@@ -2807,3 +2820,10 @@ events (T-Events)".
   booking reply names the worker's first service on it, elsewhere none; the thread opens from
   W-Home and W-Job (not Perfil); no worker-side read mark; no audit rows and no capability, as
   traveler threads; messages emitted as `worker-message`, not `escalation`.
+- 2026-11-18 — the owner picked the desktop cookie banner (over Ops Lite's refund nudge and
+  withdraw, W-Credentials' vehicle follow-ups and the stale-price window) and deferred the new
+  `picomatch` advisory (high, no patch; build and test tooling only) like the other four. The
+  build chose: the phone's "Choose by purpose" at every width over a desktop-only layout with
+  the rows shown; a one-row bar as wide as the page column from lg (stacked in the 720 px card
+  between md and lg); Reject/Accept as equal grid columns rather than a flex row; opened, the
+  banner stacks so the focus order follows the reading order.
