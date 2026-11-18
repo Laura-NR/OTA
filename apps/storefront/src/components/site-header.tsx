@@ -52,7 +52,9 @@ export async function SiteHeader({
         </Link>
         <PrimaryNav />
         <div className="ml-auto flex items-center gap-2">
-          <LocaleSwitcher />
+          {/* Below sm the language is in the drawer (DS-Mobile-Patterns): at 320 px the
+              pills beside the menu ran 11 px into the row's 24 px gutter. */}
+          <LocaleSwitcher className="hidden sm:flex" />
           {/* The currency fits here only while the links are in the drawer: below md it is
               in the drawer (DS-Mobile-Patterns), from lg in the footer. */}
           <CurrencyMenu className="hidden md:block lg:hidden" />
