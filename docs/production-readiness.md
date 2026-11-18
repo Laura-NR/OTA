@@ -51,6 +51,10 @@
         `glob` 13 → 14 and `minimatch` 10 → 11, used only by Expo's build-time command line on
         our own files, never in the app or a server. You chose to leave them too until Expo
         updates them.
+      - **Decided 2026-11-18:** a fifth, `picomatch` (high, GHSA-fc5q-39xc-vjpf, ReDoS), has
+        no patched version yet. It comes only through build and test tooling (Expo's Metro
+        bundler, vitest/vite under Better Auth), never a server. You chose to leave it like the
+        other four and re-check when a patch ships.
 - [ ] **A2. Deployment build B1–B13** (`docs/deployment-plan.md` §6), all approved, rehearsed
       as a production-like stack on the dev machine before any server exists. *2026-11-08:
       B1–B11 and B13 are built and rehearsed on `*.localhost` (B3's workflow first runs on
@@ -140,7 +144,6 @@ The domain answers the staff email domain and `PASSKEY_RP_ID` (A6).
 **Deferred build items:**
 - M10 room holds and event photos (need a migration doc);
 - the stale-price window from 2026-11-07;
-- the desktop cookie banner (covers about 61 % of a 1280 px window);
 - a real screen-reader pass;
 - manifest editing beyond the feature flags.
 

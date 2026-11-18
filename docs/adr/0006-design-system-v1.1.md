@@ -1997,3 +1997,30 @@ without asking the design team, on the existing tokens and components; no token 
   worker line "Worker · TOUR GUIDE · 16 Nov · E2EWRK01 · La Habana"; the translation chip and
   quick replies stay out (no real model, no canned content), and so do the board's system
   lines (offers, SMS fallbacks).
+
+## Amendment, 2026-11-18: the desktop cookie banner
+
+The owner picked the desktop cookie banner (deferred since T-Events) as the next item. From md
+the banner showed every purpose in a 720 px card capped at 60vh: 720 × 480 px, the bottom 62 %
+of a 1280 × 800 window and 50 % at 768 × 1024. DS 04 draws the banner's content (the three
+rows, Reject and Accept equal, "Save my selection") but not its placement at desktop, so the
+build resolved it without asking the design team, on the existing tokens; no token was added
+and no words changed.
+
+- **Compact at every width.** The phone's resolution of 2026-10-29 now applies everywhere:
+  the purposes and "Save my selection" wait behind "Choose by purpose" (a disclosure,
+  `aria-expanded`, chevron), placed before the rows it opens. Choosing by purpose is one
+  click away and nothing is pre-ticked.
+- **One row from lg.** The banner is as wide as the page column (`max-w-container` with the
+  pages' `lg:px-10`), the heading, words, privacy link and disclosure on the left and "Reject
+  non-essential" and "Accept all" on the right, aligned to the row's foot, as two equal grid
+  columns (equal in every locale, unlike a flex row whose longer label would win). 152 px,
+  19 % of a 1280 × 800 window; 172 px (22 %) at 1024 × 768 in English, 192 px (25 %) in
+  Spanish and French where the words take three lines. Between md and lg the closed banner
+  stacks in the 720 px card (243 px, 24 % of 768 × 1024).
+- **Opened.** The row gives way to the stacked banner the storefront already showed from md: the
+  disclosure, the rows, then the sticky action bar with "Save my selection", so the reading
+  order and the focus order stay the same (the actions never sit above rows that follow them
+  in the page). Opened it is about 60 % of the window again, as the visitor asked for it.
+- **Unchanged.** The phone banner (287 px at 390 × 844), the measured `--cookie-banner` that
+  keeps focus clear of it (WCAG 2.4.11), the region role, the Legal › Cookie settings page.
