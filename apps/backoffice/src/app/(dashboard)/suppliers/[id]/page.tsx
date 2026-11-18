@@ -357,6 +357,7 @@ export default async function SupplierDetailPage({
             serviceItemId={null}
             canWrite={canMessageWorker}
             headingId="worker-thread-name"
+            nameAsHeading={false}
           />
         </Panel>
       </div>

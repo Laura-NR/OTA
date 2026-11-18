@@ -35,6 +35,7 @@ export function WorkerThread({
   canWrite,
   headingId,
   headingRef,
+  nameAsHeading = true,
 }: {
   supplierId: string;
   workerName: string;
@@ -48,6 +49,12 @@ export function WorkerThread({
   canWrite: boolean;
   headingId: string;
   headingRef?: RefObject<HTMLHeadingElement | null>;
+  /**
+   * The name is a heading where nothing else names the worker (Ops Lite, the
+   * booking); on the supplier page the `h1` already does, so it is plain text
+   * that still labels the thread.
+   */
+  nameAsHeading?: boolean;
 }) {
   const t = useTranslations('backoffice.workerThread');
   const locale = useLocale();
@@ -123,14 +130,20 @@ export function WorkerThread({
             .join('')}
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h3
-            id={headingId}
-            ref={headingRef}
-            tabIndex={-1}
-            className="text-body font-semibold focus:outline-none"
-          >
-            {workerName}
-          </h3>
+          {nameAsHeading ? (
+            <h3
+              id={headingId}
+              ref={headingRef}
+              tabIndex={-1}
+              className="text-body font-semibold focus:outline-none"
+            >
+              {workerName}
+            </h3>
+          ) : (
+            <p id={headingId} className="text-body font-semibold">
+              {workerName}
+            </p>
+          )}
           {subtitle ? <p className="text-caption text-muted">{subtitle}</p> : null}
         </div>
         <a
