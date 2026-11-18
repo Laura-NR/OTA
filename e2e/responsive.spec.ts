@@ -12,9 +12,6 @@ import { signIn } from './helpers';
  */
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL ?? 'http://localhost:3000';
 const DESK_MIN_WIDTH = 768;
-// From md the link row, sign-in and the specialist compete for the header row;
-// below it the header holds only the wordmark, the locale pills and the menu.
-const HEADER_ROW_MIN_WIDTH = 768;
 
 const prisma = new PrismaClient();
 
@@ -157,7 +154,7 @@ test.describe('DS 07 responsive widths', () => {
     page,
   }) => {
     // The pages above are English; the header's labels are longest in Spanish and French.
-    const checkRow = (page.viewportSize()?.width ?? 0) >= HEADER_ROW_MIN_WIDTH;
+    // The row is checked at every width: at 320 the locale pills once ran into its gutter.
     for (const largeText of [false, true]) {
       if (largeText) {
         await page
@@ -174,7 +171,7 @@ test.describe('DS 07 responsive widths', () => {
         await page.goto(`${STOREFRONT_URL}/${locale}`);
         await expect(page.locator('html')).toHaveAttribute('lang', locale);
         const { overflow } = await measure(page);
-        const overrun = checkRow ? Math.max(0, await headerOverrun(page)) : 0;
+        const overrun = Math.max(0, await headerOverrun(page));
         expect
           .soft({ locale, largeText, overflow, overrun }, `/${locale} header`)
           .toEqual({ locale, largeText, overflow: 0, overrun: 0 });
