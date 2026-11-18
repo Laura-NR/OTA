@@ -26,6 +26,7 @@
     "@ota/config": "workspace:*",
     "@ota/db": "workspace:*",
     "@ota/domain": "workspace:*",
+    "@ota/i18n": "workspace:*",
     "@ota/schemas": "workspace:*",
     "@playwright/test": "^1.63.0",
     "eslint": "^10.11.0",

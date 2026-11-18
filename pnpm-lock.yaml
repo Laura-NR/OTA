@@ -190,6 +190,9 @@ importers:
       '@ota/domain':
         specifier: workspace:*
         version: link:packages/domain
+      '@ota/i18n':
+        specifier: workspace:*
+        version: link:packages/i18n
       '@ota/schemas':
         specifier: workspace:*
         version: link:packages/schemas
