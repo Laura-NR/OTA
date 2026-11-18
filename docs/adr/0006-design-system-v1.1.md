@@ -2049,3 +2049,30 @@ the existing tokens; no token was added and no words changed.
   right gutter in every locale, 19 px with larger text; the page does not scroll. Fitting it
   needs a choice (the pills into the drawer below sm, or a tighter gap for every text size),
   left to the owner.
+
+## Amendment, 2026-11-18 (evening): the 320 phone header
+
+The owner picked the 320 phone header, left open by the amendment above. At 320 the header row
+(wordmark, locale pills, menu button) needed about 283 px of its 272 px padded box, so it ran
+11 px into its 24 px right gutter in every locale, 19 px with larger text; the page did not
+scroll. The build resolved it without asking the design team, on the existing tokens; no token
+was added.
+
+- **Language in the drawer below sm.** DS-Mobile-Patterns draws the phone header as logo and
+  menu, with "language and currency in the drawer so the header stays clean". Below sm the
+  locale pills are hidden; from sm they stay in the header as before. The drawer gains a
+  "Language" section (`nav.language`, en/es/fr) between the links and the currency: each
+  language in its own name, the current one marked, in the links' 48 px rows under the
+  sections' overline heading. The drawer shows it at every width below lg, as it does the
+  currency.
+- **Not chosen: a tighter row gap.** It would have changed English's DS 07 spacing for every
+  text size and still left the pills crowding the menu button.
+- **The cookie banner's switches, reached backwards.** With the pills gone, the phone banner
+  test's Shift+Tab walk went three stops further and found a defect it had stopped short of:
+  with the purposes open, Shift+Tab from "Reject non-essential" scrolled the Analytics switch
+  under the banner's sticky actions (WCAG 2.4.11). The actions' measured height is now the
+  banner's bottom scroll padding (plus 8 px for the focus ring), as the banner's own height
+  already is the page's.
+- **Tested.** The DS 07 header test measures the row at every width (it started at md); the
+  locale spec switches language from the drawer at 390; the touch test checks the drawer's
+  language row at 44 px or more on a phone and the pill's extended tap from 768.
