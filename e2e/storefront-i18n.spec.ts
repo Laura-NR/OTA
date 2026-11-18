@@ -39,10 +39,9 @@ test.describe('storefront locales', () => {
       await header.getByRole('button', { name: 'Abrir el menú' }).click();
       await expect(language).toBeVisible({ timeout: 2_000 });
     }).toPass();
-    await expect(language.getByRole('link', { name: 'Español', exact: true })).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    await expect(
+      language.getByRole('link', { name: 'Español', exact: true }),
+    ).toHaveAttribute('aria-current', 'true');
 
     await language.getByRole('link', { name: 'Français', exact: true }).click();
     await expect(page).toHaveURL(/\/fr\/destinations$/);

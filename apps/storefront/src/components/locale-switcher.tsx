@@ -57,7 +57,9 @@ export function LocaleSwitcher({
             ? cn(
                 // On a touch screen taps land 12 px above and below the 20 px pill (44 px).
                 'relative rounded px-1.5 py-0.5 transition-colors pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-3 pointer-coarse:after:content-[""]',
-                current ? 'bg-action-primary text-on-primary' : 'text-muted hover:text-default',
+                current
+                  ? 'bg-action-primary text-on-primary'
+                  : 'text-muted hover:text-default',
               )
             : cn(
                 'flex h-12 items-center px-1 text-body',
