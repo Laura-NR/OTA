@@ -137,14 +137,45 @@ test.describe('storefront on a touch phone (DS 05)', () => {
 });
 
 test.describe('the cookie banner leaves room, and tables keep their columns (DS 04–05)', () => {
-  test('at desktop width focus never goes behind the banner', async ({ page }) => {
+  test('at desktop width the banner is one short row, and focus never goes behind it', async ({
+    page,
+  }) => {
     await page.context().clearCookies({ name: 'ota_consent' });
-    await page.goto(`${STOREFRONT_URL}/en/support`);
     const banner = page.getByRole('region', { name: 'Cookies, your choice' });
-    await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeVisible();
-    await expect(banner.getByRole('button', { name: 'Choose by purpose' })).toBeHidden();
-    await page.waitForLoadState('networkidle');
+    for (const [width, height] of [
+      [1024, 768],
+      [1280, 800],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      await page.goto(`${STOREFRONT_URL}/en/support`);
+      await expect(banner).toBeVisible();
+      await page.waitForLoadState('networkidle');
+
+      // The purposes wait behind a disclosure; the two choices sit beside the
+      // words, side by side and equal, and the banner leaves the page in view.
+      await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeHidden();
+      const intro = await banner.getByRole('heading').boundingBox();
+      const reject = await banner
+        .getByRole('button', { name: 'Reject non-essential' })
+        .boundingBox();
+      const accept = await banner
+        .getByRole('button', { name: 'Accept all' })
+        .boundingBox();
+      expect(reject!.y).toBe(accept!.y);
+      expect(Math.abs(reject!.width - accept!.width)).toBeLessThan(1);
+      expect(reject!.x).toBeGreaterThan(intro!.x + intro!.width);
+      expect((await banner.boundingBox())!.height).toBeLessThan(height * 0.25);
+    }
     expect(await walk(page, 'Tab', 45)).toEqual([]);
+
+    const choose = banner.getByRole('button', { name: 'Choose by purpose' });
+    await choose.click();
+    await expect(choose).toHaveAttribute('aria-expanded', 'true');
+    await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'Save my selection' })).toBeVisible();
+    // The taller banner still leaves the end of the page reachable.
+    await page.locator('footer a').last().focus();
+    expect(await walk(page, 'Shift+Tab', 45)).toEqual([]);
   });
 
   test('from sm up a data table shows its header row, not the phone labels', async ({

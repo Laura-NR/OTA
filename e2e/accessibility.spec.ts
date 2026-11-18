@@ -148,6 +148,19 @@ test.describe('accessibility audit (WCAG 2.2 AA, axe)', () => {
         .soft(await duplicateIds(page), `the banner at ${width} px repeats ids`)
         .toEqual([]);
     }
+    // The purposes behind "Choose by purpose", opened at desktop width.
+    await page.context().clearCookies({ name: 'ota_display' });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(`${STOREFRONT_URL}/en`);
+    const banner = page.getByRole('region', { name: 'Cookies, your choice' });
+    await expect(async () => {
+      await banner.getByRole('button', { name: 'Choose by purpose' }).click();
+      await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass();
+    await page.waitForLoadState('networkidle');
+    expect.soft(await audit(page), 'the opened banner has axe violations').toEqual([]);
   });
 
   test('the traveler account, a trip, a booking and the builder', async ({ page }) => {
