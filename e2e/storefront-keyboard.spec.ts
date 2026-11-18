@@ -124,8 +124,23 @@ test.describe('storefront on a touch phone (DS 05)', () => {
     expect(heights.button).toBeGreaterThanOrEqual(44);
     expect(heights.footer).toBeGreaterThanOrEqual(44);
 
-    // The locale pill keeps its look; a tap 10 px above it still lands on it.
-    const english = page.getByRole('link', { name: 'English', exact: true });
+    // Below sm the language is a drawer row (retried: the menu may not be hydrated yet).
+    const language = page.getByRole('region', { name: 'Language' });
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Open menu' }).click();
+      await expect(language).toBeVisible({ timeout: 2_000 });
+    }).toPass();
+    const row = await language
+      .getByRole('link', { name: 'English', exact: true })
+      .boundingBox();
+    expect(row?.height).toBeGreaterThanOrEqual(44);
+
+    // From sm the locale pill keeps its look; a tap 10 px above it still lands on it.
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(`${STOREFRONT_URL}/en/support`);
+    const english = page
+      .getByRole('banner')
+      .getByRole('link', { name: 'English', exact: true });
     const box = await english.boundingBox();
     expect(box?.height).toBeLessThan(44);
     const tapped = await page.evaluate(
