@@ -211,6 +211,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
       where: { entityType: 'Incident', entityId: { in: incidents.map(({ id }) => id) } },
     });
     await deleteReservationFixture(prisma, BOOKING_CODE);
+    await prisma.workerMessage.deleteMany({ where: { supplierId } });
     await prisma.availability.deleteMany({ where: { supplierId } });
     await prisma.supplierResources.deleteMany({ where: { supplierId } });
     await prisma.supplierPayout.deleteMany({ where: { supplierId } });
@@ -870,5 +871,106 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
       callbackPath: `/en/account/reservations/${item.reservationId}`,
     });
     await expect(page.getByText(/^Tour finished · \d\d:\d\d( [AP]M)?$/)).toBeVisible();
+  });
+
+  test('worker messages: the desk writes from the booking, the worker answers with no signal, AL-Inbox shows it', async ({
+    page,
+    browser,
+  }) => {
+    // The offered guide job, taken an hour ago, running today.
+    const now = Date.now();
+    const item = await prisma.serviceItem.update({
+      where: { id: serviceItemId },
+      data: {
+        status: 'ACCEPTED',
+        respondedAt: new Date(now - 60 * 60 * 1000),
+        serviceDateStart: new Date(now - 30 * 60 * 1000),
+        serviceDateEnd: new Date(now + 3 * 60 * 60 * 1000),
+      },
+    });
+    await prisma.reservation.update({
+      where: { id: item.reservationId },
+      data: { status: 'CONFIRMED' },
+    });
+
+    // The desk writes to the worker from the booking's "Worker threads".
+    const code = await codeFromDesk(page);
+    await page.goto(`/bookings/${item.reservationId}`);
+    const card = page.getByRole('region', { name: 'Worker threads' });
+    await expect(card.getByText('No message about this booking yet.')).toBeVisible();
+    const toDesk = card.getByRole('textbox', { name: 'Write to Reinier' });
+    await expect(async () => {
+      const toggle = card.getByRole('button', { name: /^(Open|Close) thread$/ });
+      if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+      await expect(toDesk).toBeVisible({ timeout: 2_000 });
+    }).toPass();
+    await toDesk.fill('¿Cartel listo? Ingrid lleva bastón.');
+    await card.getByRole('button', { name: 'Send' }).click();
+    await expect(
+      card.getByRole('list', { name: 'Messages' }).getByText('¿Cartel listo?', {
+        exact: false,
+      }),
+    ).toBeVisible();
+
+    // The worker reads it on the home, which marks it read.
+    const app = await signInOnApp(browser, code);
+    await expect(app.getByText('Mensaje de la central')).toBeVisible();
+    await expect(app.getByText('¿Cartel listo? Ingrid lleva bastón.')).toBeVisible();
+    await app.getByRole('button', { name: 'Leer y responder' }).click();
+    await expect(
+      app.getByRole('heading', { name: 'Mensajes con la central' }),
+    ).toBeVisible();
+    await expect
+      .poll(async () =>
+        prisma.workerMessage.count({
+          where: { supplierId, sender: 'OPERATIONS', readAt: null },
+        }),
+      )
+      .toBe(0);
+
+    // From the job, with no signal: the answer waits on the phone, then goes.
+    await app.getByRole('button', { name: '‹ Volver' }).click();
+    await app.getByRole('button', { name: /^Ver el trabajo: E2EWRK01/ }).click();
+    await app.getByRole('button', { name: 'Mensaje a la central' }).click();
+    await expect(app.getByText('Sobre el trabajo E2EWRK01')).toBeVisible();
+    await app.context().setOffline(true);
+    await app
+      .getByRole('textbox', { name: 'Mensaje a la central' })
+      .fill('Listo, salgo a las 15:30.');
+    await app.getByRole('button', { name: 'Enviar' }).click();
+    await expect(app.getByText(/^Tú · .* · en cola$/)).toBeVisible();
+    await app.context().setOffline(false);
+    await expect(app.getByText(/^Tú · .* · enviado$/)).toBeVisible({ timeout: 30_000 });
+    const answer = await prisma.workerMessage.findFirstOrThrow({
+      where: { supplierId, sender: 'WORKER' },
+    });
+    expect(answer).toMatchObject({ serviceItemId, body: 'Listo, salgo a las 15:30.' });
+    expect(answer.writtenAt!.getTime()).toBeLessThanOrEqual(answer.createdAt.getTime());
+
+    // AL-Inbox lists it under Workers, urgent: about today's job, awaiting a reply.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/lite/inbox');
+    await page.getByRole('button', { name: /^Workers/ }).click();
+    const thread = page.getByRole('button').filter({ hasText: 'Reinier Prueba' });
+    await expect(thread).toContainText('Listo, salgo a las 15:30.');
+    await expect(thread).toContainText('Urgent');
+    await expect(thread).toContainText('Worker · TOUR GUIDE');
+    await expect(async () => {
+      await thread.click({ timeout: 1_000 });
+      await expect(thread).toHaveAttribute('aria-pressed', 'true', { timeout: 1_000 });
+    }).toPass();
+    await expect(page.getByRole('heading', { name: 'Reinier Prueba' })).toBeVisible();
+    await expect
+      .poll(async () =>
+        prisma.workerMessage.count({
+          where: { supplierId, sender: 'WORKER', readAt: null },
+        }),
+      )
+      .toBe(0);
+
+    // The booking's card shows the answer about it.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/bookings/${item.reservationId}`);
+    await expect(card).toContainText('“Listo, salgo a las 15:30.”');
   });
 });
