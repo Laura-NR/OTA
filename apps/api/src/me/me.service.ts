@@ -435,6 +435,7 @@ export class MeService {
           tierId: plan.tierId,
           packageExtraIds: plan.extras.map((extra) => extra.packageExtraId),
         });
+        await this.bookings.confirmPrice(tx, plan, input);
       },
       // Ids and counts only: no names, dates of birth or passport numbers.
       auditMetadata: {

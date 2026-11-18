@@ -58,7 +58,8 @@ const tenant = parseTenantConfig({
  * Live proof of the Booking form's write against Postgres: one transaction
  * stores the booking, its rooms, travelers (passport as ciphertext), extras,
  * frozen price lines, the US certification and the consents, with every
- * foreign key real; a refused booking writes nothing. Run with
+ * foreign key real; a refused booking writes nothing, including one whose price
+ * a save changed after the form's checks (`confirmPrice`). Run with
  * `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest run
  * test/package-booking.integration.test.ts` against a migrated dev database.
  */
@@ -502,6 +503,179 @@ describe.skipIf(!runIntegration)('Booking form write (live Postgres)', () => {
         where: { id: booked.id },
       });
       expect(row.tierId).toBe(tierId);
+    });
+  });
+
+  describe('a price changed in place after the checks', () => {
+    const bookingCount = () => prisma.reservation.count({ where: { userId: actor.id } });
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
+
+    it.each([
+      [
+        "the tier's delta",
+        () =>
+          prisma.packageTier.update({
+            where: { id: tierId },
+            data: { priceDelta: '150.00' },
+          }),
+        () =>
+          prisma.packageTier.update({
+            where: { id: tierId },
+            data: { priceDelta: '120.00' },
+          }),
+      ],
+      [
+        "the extra's price",
+        () =>
+          prisma.packageExtra.update({
+            where: { id: extraId },
+            data: { price: '40.00' },
+          }),
+        () =>
+          prisma.packageExtra.update({
+            where: { id: extraId },
+            data: { price: '35.00' },
+          }),
+      ],
+      [
+        "the departure's price",
+        () =>
+          prisma.packageDeparture.update({
+            where: { id: departureId },
+            data: { price: '1100.00' },
+          }),
+        () =>
+          prisma.packageDeparture.update({
+            where: { id: departureId },
+            data: { price: null },
+          }),
+      ],
+      [
+        "the package's base price",
+        () =>
+          prisma.package.update({
+            where: { id: packageId },
+            data: { basePrice: '1050.00' },
+          }),
+        () =>
+          prisma.package.update({
+            where: { id: packageId },
+            data: { basePrice: '1000.00' },
+          }),
+      ],
+      [
+        "the package's currency",
+        () =>
+          prisma.package.update({ where: { id: packageId }, data: { currency: 'USD' } }),
+        () =>
+          prisma.package.update({ where: { id: packageId }, data: { currency: 'EUR' } }),
+      ],
+    ])(
+      'refuses a booking when a save changed %s after the form was checked',
+      async (_, change, restore) => {
+        const before = await bookingCount();
+        afterPlanning(async () => {
+          await change();
+        });
+
+        try {
+          await expect(me.bookPackage(actor, request(), client)).rejects.toMatchObject({
+            status: 409,
+            response: { error: 'PriceChanged' },
+          });
+          expect(await bookingCount()).toBe(before);
+        } finally {
+          await restore();
+        }
+      },
+    );
+
+    it('waits for a save still holding the tier, then refuses at its new price', async () => {
+      let locked = () => {};
+      let release = () => {};
+      const tierLocked = new Promise<void>((resolve) => (locked = resolve));
+      const released = new Promise<void>((resolve) => (release = resolve));
+      let save: Promise<unknown> = Promise.resolve();
+      // What a package save does to a kept tier: lock the package's tiers, update in place.
+      afterPlanning(async () => {
+        save = prisma.$transaction(async (tx) => {
+          await tx.$queryRaw`SELECT id FROM package_tiers WHERE package_id = ${packageId}::uuid FOR UPDATE`;
+          await tx.packageTier.update({
+            where: { id: tierId },
+            data: { priceDelta: '130.00' },
+          });
+          locked();
+          await released;
+        });
+        await tierLocked;
+      });
+
+      try {
+        const booking = me
+          .bookPackage(actor, request(), client)
+          .catch((error: unknown) => error);
+        await tierLocked;
+        await pause();
+        release();
+        await save;
+
+        expect(await booking).toMatchObject({
+          status: 409,
+          response: { error: 'PriceChanged' },
+        });
+      } finally {
+        release();
+        await prisma.packageTier.update({
+          where: { id: tierId },
+          data: { priceDelta: '120.00' },
+        });
+      }
+    });
+
+    it('holds the package for a booking it priced, so a base-price save waits and both land', async () => {
+      const departure = await prisma.packageDeparture.create({
+        data: { packageId, startDate: new Date('2027-06-05T00:00:00Z'), capacity: 4 },
+      });
+      let confirmed = () => {};
+      let release = () => {};
+      const priceConfirmed = new Promise<void>((resolve) => (confirmed = resolve));
+      const released = new Promise<void>((resolve) => (release = resolve));
+      let shown = 0;
+      const confirm = bookings.confirmPrice.bind(bookings);
+      vi.spyOn(bookings, 'confirmPrice').mockImplementation(async (tx, plan, input) => {
+        await confirm(tx, plan, input);
+        shown = plan.price.total;
+        confirmed();
+        await released;
+      });
+
+      try {
+        const booking = me.bookPackage(
+          actor,
+          request({ departureId: departure.id }),
+          client,
+        );
+        await priceConfirmed;
+        let saveLanded = false;
+        const save = prisma.package
+          .update({ where: { id: packageId }, data: { basePrice: '1060.00' } })
+          .finally(() => (saveLanded = true));
+        await pause();
+        expect(saveLanded).toBe(false);
+        release();
+        const [booked] = await Promise.all([booking, save]);
+
+        const row = await prisma.reservation.findUniqueOrThrow({
+          where: { id: booked.id },
+        });
+        expect(Number(row.totalAmount)).toBe(shown);
+      } finally {
+        release();
+        await prisma.package.update({
+          where: { id: packageId },
+          data: { basePrice: '1000.00' },
+        });
+      }
     });
   });
 });
