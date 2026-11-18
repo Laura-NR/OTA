@@ -1,5 +1,5 @@
 import { buttonClassName, cn } from '@ota/ui';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 
 import { CurrencyMenu } from '@/components/currency/currency-menu';
@@ -9,13 +9,16 @@ import { SiteMenu } from '@/components/site-menu';
 import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
 import { TOUCH_ROW } from '@/lib/button';
+import { COMPACT_HEADER_LOCALES } from '@/lib/site-nav';
 
 /**
  * The Home header (DS 07): sticky on the cream page. From `lg` the link row
  * and sign-in sit beside the 28 px wordmark, and "Talk to a specialist" joins
  * them as a secondary button from `xl` (DS 07 also draws it as a text button at
  * `lg`, where the six links leave no room for it); below `lg` a menu button
- * opens the drawer, and sign-in stays in the header from `md`.
+ * opens the drawer, and sign-in stays in the header from `md`. With larger
+ * text, or in a locale whose labels are too long (`data-header="compact"`), the
+ * drawer stays until `xl` and the specialist button is left out.
  */
 export async function SiteHeader({
   agencyName,
@@ -25,9 +28,13 @@ export async function SiteHeader({
   signedIn: boolean;
 }) {
   const t = await getTranslations('nav');
+  const compact = COMPACT_HEADER_LOCALES.has(await getLocale());
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-page">
+    <header
+      data-header={compact ? 'compact' : undefined}
+      className="group/header sticky top-0 z-30 border-b bg-page"
+    >
       <div className="mx-auto flex h-16 max-w-container items-center gap-6 px-6 max-sm:[[data-text-size=large]_&]:gap-3 md:px-8 lg:h-[72px] lg:px-10">
         <Link
           href="/"
@@ -62,16 +69,16 @@ export async function SiteHeader({
             href="/support"
             className={cn(
               buttonClassName({ variant: 'secondary' }),
-              'hidden xl:inline-flex xl:[[data-text-size=large]_&]:hidden',
+              'hidden xl:inline-flex xl:[[data-text-size=large]_&]:hidden xl:group-data-[header=compact]/header:hidden',
             )}
           >
             {t('specialist')}
           </Link>
-          {/* Larger text: the menu drawer stands in for the nav until xl. */}
+          {/* Larger text or long labels: the menu drawer stands in for the nav until xl. */}
           <SiteMenu
             signedIn={signedIn}
             variant="header"
-            className="lg:hidden lg:[[data-text-size=large]_&]:inline-flex xl:[[data-text-size=large]_&]:hidden"
+            className="lg:hidden lg:[[data-text-size=large]_&]:inline-flex xl:[[data-text-size=large]_&]:hidden lg:group-data-[header=compact]/header:inline-flex xl:group-data-[header=compact]/header:hidden"
           />
         </div>
       </div>
