@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-15 23:30
+# Handoff — vereda — updated 2026-11-16 11:11
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -15,13 +15,15 @@ display currencies, on 2026-11-02 the Super Admin IP allowlist, on 2026-11-04 th
 trip", on 2026-11-09 the AI assistant flag and the worker app's first screens, on 2026-11-10 the
 desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnings, on
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
-W-Credentials, on 2026-11-15 W-Job and the worker app's distribution) and
+W-Credentials, on 2026-11-15 W-Job and the worker app's distribution, on 2026-11-16 worker ↔ desk
+messages) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
 for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job and
-distribution).
+distribution, 2026-11-16 for worker ↔ desk messages).
 The worker app:
-`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). Distribution:
+`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). Worker ↔ desk messages:
+`docs/schema-w-messages.md` (approved M1–M8 2026-11-16, §7 as built, a migration). Distribution:
 `docs/worker-app-distribution-plan.md` (approved U1–U8 2026-11-15, §5 as built, no migration). W-Job: `docs/schema-w-job.md`
 (approved J1–J9 2026-11-15, §7 as built, a migration). W-Credentials:
 `docs/schema-w-credentials.md` (approved V1–V8 2026-11-14, §7 as built, a migration). W-Earnings' payouts:
@@ -39,6 +41,24 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-16: worker ↔ desk messages** (Phase 7, W-Job's J9b, the owner's pick), approved
+  M1–M8 as recommended (`19f7abc`…`72e7610` and the e2e). One migration,
+  `20261115230915_worker_messages` (table `worker_messages`, enum `WorkerMessageSender`;
+  applied to the dev DB). No new dependency. `docs/schema-w-messages.md` §7 lists everything.
+  - Domain `packages/domain/src/worker/messages.ts` (refusals, `messageArrivedLate`,
+    `jobRunsToday`, `queueWorkerMessage`); `ops-lite/inbox.ts` gains a thread `kind`, the
+    Travelers/Workers filters and a worker's urgency.
+  - API `apps/api/src/worker-messages/`: the worker's thread (`/worker/messages`, idempotent
+    on `clientRef`), the desk's (`/suppliers/:id/messages`, support reads, ops+super write),
+    the booking's card (`/reservations/:id/worker-threads`); W-Home's `messages`; Ops Lite's
+    `workers`; `worker-message` on `/ops`; the email copy; the purge (messages naming the
+    traveler's jobs). RBAC +7; live `worker-messages.integration.test.ts`, the purge in
+    `retention.integration.test.ts`.
+  - App: the third list on the phone (`ota.worker.messages`, after reports and answers, before
+    steps), the Messages screen, W-Home's card and button, W-Job's "Mensaje a la central".
+  - Desk (en/es/fr): `WorkerThread` on the supplier page, the booking's "Worker threads" and
+    AL-Inbox.
+  - Not built: translation, quick replies, system lines, push or SMS to the worker.
 - **2026-11-15 (later): worker app distribution** (Phase 7, Next 3's agent item), approved
   U1–U8 as recommended (`1d501d4`…`86c48de`). No migration. Three new dependencies:
   `expo-updates` 58.0.20, `expo-intent-launcher` 58.0.3, `expo-application` 58.1.2.
@@ -1119,6 +1139,21 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **`prisma format` realigns the whole schema (2026-11-16):** run on `schema.prisma` it
+  rewrote ~450 lines of column alignment. Add models by hand, then `prisma validate` and
+  `prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel
+  prisma/schema.prisma` ("No difference detected" once migrated).
+- **API tests are not type-checked (2026-11-16):** `apps/api/tsconfig.json` includes `src`
+  only, so a new constructor argument compiles while a skipped live test (`new
+  OpsLiteService(prisma)`) breaks at runtime. After changing a service's constructor, grep
+  `new <Service>(` in `apps/api/test`.
+- **A live test that crashes in `beforeAll` leaves rows (2026-11-16):** an `afterAll` that
+  deletes by an id still `''` throws a Prisma UUID error before the rest of the clean-up, and
+  the leftover traveler then fails the next retention run. Guard each id in `afterAll`; this
+  session removed its own leftovers (four `retention-*` users and two bookings).
+- **Every `/ops` `escalation` event re-reads the alert strip (2026-11-16):** `DeskAlerts`
+  refreshes on any `escalation`, so a non-alert event goes out under its own name (worker
+  messages: `worker-message`).
 - **`git stash` breaks `node --watch` (2026-11-15):** stashing a file the dev API watches
   replaces it, and the watcher stops seeing later edits (the API kept serving old code). `touch`
   the file to restart it, or restart the stack.
@@ -2017,10 +2052,11 @@ events (T-Events)".
     same order. Keep both orders when adding a lock."
 
 ## Next
-1. Owner: push `vereda` (background resend, W-Job and distribution are local; W-Credentials
-   was pushed) and open a new pull request from `vereda` into `main`, so CI runs on W-Earnings'
-   payouts, the receipt, Ops Lite, W-Credentials, background resend, W-Job and distribution: PR #1 is merged, and a push to
-   `vereda` alone runs no workflow (none has run since `94c0910`; checked 2026-11-14 evening).
+1. Owner: push `vereda` (background resend, W-Job, distribution and worker ↔ desk messages
+   are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
+   so CI runs on W-Earnings' payouts, the receipt, Ops Lite, W-Credentials, background resend,
+   W-Job, distribution and worker messages: PR #1 is merged, and a push to `vereda` alone runs
+   no workflow (none has run since `94c0910`; checked 2026-11-16: still nothing pushed).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -2033,15 +2069,19 @@ events (T-Events)".
    included, and distribution's: install from the page, both update kinds, a JS update).
    Distribution landed 2026-11-15; before the first release, the owner's steps are runbook
    "Releasing the worker app" (the update signing key with two backups, the QR, DNS for
-   `app.<domain>`, `WORKER_APP_PUBLIC_URL`). The agent's Phase 7 queue is empty until the
-   APK machine; the owner picks the next item. W-Job's follow-ups are the owner's call: worker ↔ desk messages (J9b, a
-   migration, also Ops Lite's worker threads), the silent SMS module (after the APK machine),
-   a shared id between an SMS-logged report and the app's copy.
+   `app.<domain>`, `WORKER_APP_PUBLIC_URL`). The field test also covers worker ↔ desk
+   messages (written with no signal, sent from the background, the desk's reply at the next
+   open). The agent's Phase 7 queue is empty until the APK machine; the owner picks the next
+   item. W-Job's follow-ups are the owner's call: the silent SMS module (after the APK
+   machine), a shared id between an SMS-logged report and the app's copy. Worker messages'
+   follow-ups are the owner's call: translation (needs the AI provider), quick replies (need
+   content), push or SMS to the worker for a desk reply (needs a push service or the SMS
+   provider).
    W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
    form's insurance date, a migration dropping `credential_document_url`. Ops
-   Lite (Phase 7 item 2) landed 2026-11-14; its follow-ups are the owner's call: worker
-   threads in AL-Inbox (with W-Job, a migration), push to a closed page (a service worker and
-   a push service), the board's refund nudge and withdraw, quick replies.
+   Lite (Phase 7 item 2) landed 2026-11-14 and its worker threads 2026-11-16; its follow-ups
+   are the owner's call: push to a closed page (a service worker and a push service), the
+   board's refund nudge and withdraw, quick replies.
 4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (also the AI provider and sanctions question), the business values, the
    tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
@@ -2758,3 +2798,12 @@ events (T-Events)".
   update"; the storefront page under `[locale]` in three languages (the worker-facing words
   are Spanish by default); an in-app download that restarts after a cut; the approval message
   in the tenant's primary locale.
+- 2026-11-16 — the owner picked worker ↔ desk messages (J9b) over Ops Lite's small follow-ups,
+  W-Credentials' follow-ups and the deferred items, and approved `docs/schema-w-messages.md`
+  M1–M8 as recommended: their own table, one thread per worker with an optional job, one read
+  time, the offline queue with the time of writing, live `/ops` plus the email copy for the
+  desk and the next sync for the worker, the desk's three places, text only, purged with the
+  traveler when it names their job. The build chose: the booking's card on its own route; a
+  booking reply names the worker's first service on it, elsewhere none; the thread opens from
+  W-Home and W-Job (not Perfil); no worker-side read mark; no audit rows and no capability, as
+  traveler threads; messages emitted as `worker-message`, not `escalation`.
