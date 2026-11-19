@@ -418,6 +418,7 @@ export default async function BookingPage({
               status={reservation.status}
               canManage={paymentsAccess.canManage}
               canVote={paymentsAccess.byRole}
+              viewerEmail={session?.user.email}
               schedule={schedule}
               features={featureFlagsOf(thresholds)}
               now={new Date().toISOString()}

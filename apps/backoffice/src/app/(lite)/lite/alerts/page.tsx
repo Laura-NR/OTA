@@ -87,6 +87,7 @@ export default async function OpsLiteAlertsPage() {
         canPay={payAccess.canManage}
         canVote={payAccess.byRole}
         you={name}
+        viewerEmail={session?.user.email}
       />
     </>
   );

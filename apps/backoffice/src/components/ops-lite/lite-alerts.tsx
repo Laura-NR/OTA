@@ -110,8 +110,9 @@ function Card({ className, children }: { className?: string; children: ReactNode
  * AL-Alerts: the desk's triage on a phone. Red offers come first, one card a
  * booking led by its oldest red item, with the call, an inline re-dispatch
  * and the acknowledgement that stops the cue; then amber offers, refunds
- * waiting for an approval, first payments and balances past due (with "Extend
- * 24 h"), and credentials running out. The red and amber feed is the desk's
+ * waiting for an approval (once yours is in, nudge the others by email or
+ * withdraw it), first payments and balances past due (with "Extend 24 h"),
+ * and credentials running out. The red and amber feed is the desk's
  * own (`DeskAlerts`); the rest is read by the page.
  */
 export function LiteAlerts({
@@ -122,6 +123,7 @@ export function LiteAlerts({
   canPay,
   canVote,
   you,
+  viewerEmail,
 }: {
   payments: LitePaymentAlert[];
   refunds: RefundDto[];
@@ -133,6 +135,8 @@ export function LiteAlerts({
   canVote: boolean;
   /** The signed-in person's name, for "logged as". */
   you: string;
+  /** The signed-in person's email, to tell their own refund approval apart. */
+  viewerEmail?: string;
 }) {
   const t = useTranslations('backoffice.opsLite.alerts');
   const columns = useTranslations('backoffice.dashboard.matrix.columns');
@@ -563,6 +567,7 @@ export function LiteAlerts({
             refund={refund}
             canManage={canVote}
             canVote={canVote}
+            viewerEmail={viewerEmail}
             size="md"
           />
         </Card>

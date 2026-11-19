@@ -1,19 +1,32 @@
 'use client';
 
-import type { RefundDto } from '@ota/schemas';
-import { Alert, Badge, Button, Input, type BadgeVariant, type ButtonSize } from '@ota/ui';
-import { useTranslations } from 'next-intl';
+import { REFUND_NUDGE_COOLDOWN_MINUTES } from '@ota/domain';
+import type { RefundDto, RefundNudgeResultDto } from '@ota/schemas';
+import {
+  Alert,
+  Badge,
+  Button,
+  Dialog,
+  Input,
+  type BadgeVariant,
+  type ButtonSize,
+} from '@ota/ui';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useDeskTelemetry } from '@/components/telemetry/desk-telemetry';
 import { apiRequest } from '@/lib/client-api';
+import { moneyExact, opsTime } from '@/lib/ops-format';
 
 /** The actions that decide an approval (T-Events `approval_decided`). */
 const DECISIONS: Readonly<Record<string, 'approved' | 'rejected'>> = {
   approve: 'approved',
   reject: 'rejected',
 };
+
+/** Beyond this many, a nudge's confirmation counts the approvers instead of naming them. */
+const NAMED_RECIPIENTS = 3;
 
 const VARIANTS: Record<RefundDto['status'], BadgeVariant> = {
   REQUESTED: 'warning',
@@ -29,27 +42,35 @@ const VARIANTS: Record<RefundDto['status'], BadgeVariant> = {
  * once an approved transfer refund has gone out. A card refund is sent through
  * the gateway as soon as it is approved. A permission override never votes
  * (`docs/schema-m9-permission-overrides.md` O3), so `canVote` can be narrower.
+ * Once the viewer has approved a refund that still waits (AL-Alerts), they
+ * may nudge the approvers left by email or withdraw their approval instead.
  * Ops Lite asks for `md` buttons, the phone's touch size.
  */
 export function RefundActions({
   refund,
   canManage,
   canVote = canManage,
+  viewerEmail,
   size = 'sm',
 }: {
   refund: RefundDto;
   canManage: boolean;
   canVote?: boolean;
+  /** The signed-in person, to tell their own approval apart. */
+  viewerEmail?: string;
   size?: ButtonSize;
 }) {
   const t = useTranslations('backoffice.payments');
   const why = useTranslations('backoffice.unavailable');
+  const locale = useLocale();
   const router = useRouter();
   const track = useDeskTelemetry();
   const [mode, setMode] = useState<'idle' | 'reject' | 'sent'>('idle');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nudged, setNudged] = useState<RefundNudgeResultDto | null>(null);
+  const [confirmWithdraw, setConfirmWithdraw] = useState(false);
 
   async function post(path: string, body: unknown) {
     setBusy(true);
@@ -65,6 +86,24 @@ export function RefundActions({
       }
       setMode('idle');
       setText('');
+      setConfirmWithdraw(false);
+      router.refresh();
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : t('actionFailed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function nudge() {
+    setBusy(true);
+    setError(null);
+    try {
+      setNudged(
+        await apiRequest<RefundNudgeResultDto>(`/refunds/${refund.id}/nudge`, {
+          method: 'POST',
+        }),
+      );
       router.refresh();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : t('actionFailed'));
@@ -74,6 +113,20 @@ export function RefundActions({
   }
 
   const pending = refund.decision.state === 'PENDING' ? refund.decision : null;
+  const viewer = viewerEmail?.toLowerCase();
+  const approvedByViewer =
+    viewer !== undefined &&
+    refund.approvals.some(
+      (approval) => approval.approve && approval.approverEmail?.toLowerCase() === viewer,
+    );
+  const lastNudgedAt = nudged?.nudgedAt ?? refund.lastNudgedAt ?? null;
+  const nextNudgeAt = lastNudgedAt
+    ? new Date(new Date(lastNudgedAt).getTime() + REFUND_NUDGE_COOLDOWN_MINUTES * 60_000)
+    : null;
+  const nudgeWait =
+    nextNudgeAt && nextNudgeAt.getTime() > Date.now()
+      ? t('nudgeWait', { time: opsTime(nextNudgeAt, locale) })
+      : undefined;
 
   return (
     <div className="flex flex-col gap-2">
@@ -94,7 +147,88 @@ export function RefundActions({
           </span>
         ) : null}
       </div>
-      {canVote && refund.status === 'REQUESTED' && mode === 'idle' ? (
+      {canVote && refund.status === 'REQUESTED' && approvedByViewer && pending ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-caption text-muted">
+            {pending.superAdmin ? t('youApprovedSuper') : t('youApprovedAnother')}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size={size}
+              disabled={busy}
+              unavailableReason={nudgeWait}
+              onClick={() => void nudge()}
+            >
+              {t('nudge')}
+            </Button>
+            <Button
+              size={size}
+              variant="tertiary"
+              disabled={busy}
+              onClick={() => setConfirmWithdraw(true)}
+            >
+              {t('withdraw')}
+            </Button>
+          </div>
+          {nudged ? (
+            <Alert variant="success">
+              {nudged.recipients.length > NAMED_RECIPIENTS
+                ? t('nudgedMany', {
+                    count: nudged.recipients.length,
+                    time: opsTime(nudged.nudgedAt, locale),
+                  })
+                : t('nudged', {
+                    names: new Intl.ListFormat(locale, {
+                      style: 'long',
+                      type: 'conjunction',
+                    }).format(nudged.recipients),
+                    time: opsTime(nudged.nudgedAt, locale),
+                  })}
+            </Alert>
+          ) : lastNudgedAt && !nudgeWait ? (
+            <p className="text-caption text-muted">
+              {t('lastNudged', { time: opsTime(lastNudgedAt, locale) })}
+            </p>
+          ) : null}
+          <Dialog
+            open={confirmWithdraw}
+            onClose={() => setConfirmWithdraw(false)}
+            title={t('withdrawTitle')}
+            closeLabel={t('close')}
+            size="sm"
+            footer={
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setConfirmWithdraw(false)}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  loading={busy}
+                  onClick={() => void post('withdraw', {})}
+                >
+                  {t('withdrawConfirm')}
+                </Button>
+              </>
+            }
+          >
+            <p>
+              {t('withdrawExplain', {
+                amount: moneyExact(Number(refund.amount), refund.currency, locale),
+                code: refund.bookingCode,
+              })}
+            </p>
+          </Dialog>
+        </div>
+      ) : null}
+      {canVote &&
+      refund.status === 'REQUESTED' &&
+      !approvedByViewer &&
+      mode === 'idle' ? (
         <div className="flex flex-wrap gap-2">
           <Button size={size} disabled={busy} onClick={() => post('approve', {})}>
             {t('approve')}
