@@ -8,6 +8,9 @@ import {
   depositEligible,
   paymentAlert,
   refundDecision,
+  refundNudge,
+  refundWithdrawal,
+  REFUND_NUDGE_COOLDOWN_MINUTES,
   type CancellationBand,
 } from '../src';
 
@@ -184,5 +187,82 @@ describe('payment alert', () => {
     expect(paymentAlert({ kind: 'TICKETS', dueAt: past }, 'CONFIRMED', now)).toBe(
       'BALANCE_OVERDUE',
     );
+  });
+});
+
+describe('refund nudge and withdrawal (AL-Alerts)', () => {
+  const ana = { id: 'ana', role: 'OPERATIONS_ADMIN' };
+  const ernesto = { id: 'ernesto', role: 'OPERATIONS_ADMIN' };
+  const dayana = { id: 'dayana', role: 'SUPER_ADMIN' };
+  const approvers = [ana, ernesto, dayana];
+  const anaApproved = [{ approverId: 'ana', role: 'OPERATIONS_ADMIN', approve: true }];
+  const nudgeAt = new Date('2026-11-19T14:34:00Z');
+
+  it('reaches every approver who has not voted, never the one nudging', () => {
+    const result = refundNudge({
+      decision: { state: 'PENDING', missing: 1, superAdmin: false },
+      votes: anaApproved,
+      approvers,
+      actorId: 'ana',
+      lastNudgedAt: null,
+      now: nudgeAt,
+    });
+    expect(result).toEqual({ ok: true, recipients: ['ernesto', 'dayana'] });
+  });
+
+  it('reaches only Super Admins when the refund waits on one', () => {
+    const result = refundNudge({
+      decision: { state: 'PENDING', missing: 1, superAdmin: true },
+      votes: anaApproved,
+      approvers,
+      actorId: 'ana',
+      lastNudgedAt: null,
+      now: nudgeAt,
+    });
+    expect(result).toEqual({ ok: true, recipients: ['dayana'] });
+  });
+
+  it('refuses a refund that no longer waits, or that no one else can approve', () => {
+    const base = { votes: anaApproved, actorId: 'ana', lastNudgedAt: null, now: nudgeAt };
+    expect(refundNudge({ ...base, decision: { state: 'APPROVED' }, approvers })).toEqual({
+      ok: false,
+      refusal: 'NOT_PENDING',
+    });
+    expect(
+      refundNudge({
+        ...base,
+        decision: { state: 'PENDING', missing: 1, superAdmin: true },
+        approvers: [ana, ernesto],
+      }),
+    ).toEqual({ ok: false, refusal: 'NO_ONE_LEFT' });
+  });
+
+  it('sends one nudge per cooldown, whoever sends it', () => {
+    const base = {
+      decision: { state: 'PENDING', missing: 1, superAdmin: false } as const,
+      votes: anaApproved,
+      approvers,
+      actorId: 'ernesto',
+    };
+    const minute = 60_000;
+    const retryAt = new Date(nudgeAt.getTime() + REFUND_NUDGE_COOLDOWN_MINUTES * minute);
+    expect(
+      refundNudge({
+        ...base,
+        lastNudgedAt: nudgeAt,
+        now: new Date(retryAt.getTime() - minute),
+      }),
+    ).toEqual({ ok: false, refusal: 'TOO_SOON', retryAt });
+    expect(refundNudge({ ...base, lastNudgedAt: nudgeAt, now: retryAt })).toEqual({
+      ok: true,
+      recipients: ['dayana'],
+    });
+  });
+
+  it('lets a person take back only their own approval, and only while it waits', () => {
+    expect(refundWithdrawal('REQUESTED', anaApproved, 'ana')).toBeNull();
+    expect(refundWithdrawal('REQUESTED', anaApproved, 'ernesto')).toBe('NO_APPROVAL');
+    expect(refundWithdrawal('APPROVED', anaApproved, 'ana')).toBe('NOT_PENDING');
+    expect(refundWithdrawal('REJECTED', anaApproved, 'ana')).toBe('NOT_PENDING');
   });
 });

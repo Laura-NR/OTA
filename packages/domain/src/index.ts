@@ -381,9 +381,14 @@ export {
 export {
   cancellationRefund,
   refundDecision,
+  refundNudge,
+  refundWithdrawal,
+  REFUND_NUDGE_COOLDOWN_MINUTES,
   type CancellationBand,
   type CancellationQuote,
+  type RefundApprover,
   type RefundDecision,
+  type RefundNudge,
   type RefundThresholds,
   type RefundVote,
 } from './payments/refunds';
