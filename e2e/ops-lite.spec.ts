@@ -9,6 +9,8 @@ process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 const RED = 'E2ELITE1';
 const THREAD = 'E2ELITE2';
+const REFUND = 'E2ELITE3';
+const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? 'http://localhost:8025';
 const HOUR = 60 * 60 * 1000;
 
 /** A guide offer that timed out 20 minutes ago: a red alert on the desk and in Ops Lite. */
@@ -38,6 +40,59 @@ async function timedOut(bookingCode: string): Promise<string> {
   return serviceItem.id;
 }
 
+/**
+ * A paid € 1,000 booking with a € 600 goodwill refund the signed-in Super
+ * Admin already approved: between the € 500 and € 2,000 limits, it waits on a
+ * second, different approver.
+ */
+async function refundAwaitingSecond(bookingCode: string): Promise<string> {
+  const { reservation } = await createDispatchableReservation(prisma, bookingCode);
+  const admin = await prisma.user.findUniqueOrThrow({
+    where: { email: 'admin@example.test' },
+    select: { id: true },
+  });
+  const receipt = await prisma.paymentReceipt.create({
+    data: {
+      reservationId: reservation.id,
+      rail: 'OPEN_BANKING_SEPA',
+      amount: '1000.00',
+      status: 'PAID',
+    },
+  });
+  const refund = await prisma.refund.create({
+    data: {
+      reservationId: reservation.id,
+      receiptId: receipt.id,
+      amount: '600.00',
+      reason: 'GOODWILL',
+      note: 'E2E gesture',
+      requestedById: admin.id,
+      approvals: { create: { approverId: admin.id, approve: true } },
+    },
+  });
+  return refund.id;
+}
+
+/** The newest Mailpit message to `email` whose subject holds `text`, waiting for it. */
+async function mailTo(email: string, text: string): Promise<{ Subject: string }> {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const response = await fetch(`${MAILPIT_URL}/api/v1/messages?limit=200`);
+    const { messages } = (await response.json()) as {
+      messages: { Subject: string; To?: { Address: string }[] }[];
+    };
+    const found = messages.find(
+      (message) =>
+        message.Subject.includes(text) &&
+        message.To?.some((recipient) => recipient.Address === email),
+    );
+    if (found) {
+      return found;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`No email to ${email} about ${text}`);
+}
+
 /** The red card of a booking, opened. */
 async function openRedCard(page: Page, bookingCode: string) {
   const card = page.locator('section').filter({ hasText: bookingCode });
@@ -55,8 +110,8 @@ async function openRedCard(page: Page, bookingCode: string) {
  * Ops Lite (AL-*, Phase 7 item 2) on a 390 px phone: a red alert
  * acknowledged and re-dispatched from the alert's card, both logged as Ops
  * Lite; the pipeline's states and today's movements; an unread thread
- * opened, marked read and answered; and the desk pointing a phone to Ops
- * Lite.
+ * opened, marked read and answered; a refund you approved nudged and
+ * withdrawn; and the desk pointing a phone to Ops Lite.
  */
 test.describe.serial('Ops Lite on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 } });
@@ -68,6 +123,7 @@ test.describe.serial('Ops Lite on a phone', () => {
   test.afterAll(async () => {
     await deleteReservationFixture(prisma, RED);
     await deleteReservationFixture(prisma, THREAD);
+    await deleteReservationFixture(prisma, REFUND);
     await prisma.$disconnect();
   });
 
@@ -208,6 +264,55 @@ test.describe.serial('Ops Lite on a phone', () => {
         where: { reservationId: reservation.id, sender: 'OPERATIONS' },
       }),
     ).toBe(1);
+  });
+
+  test('a refund you approved: nudge the other approvers by email, then withdraw', async ({
+    page,
+  }) => {
+    const refundId = await refundAwaitingSecond(REFUND);
+    await page.goto('/lite/alerts');
+    const card = page.locator('section').filter({ hasText: REFUND });
+    await expect(
+      card.getByRole('heading', { name: 'Refund €600 · needs approval' }),
+    ).toBeVisible();
+    await expect(
+      card.getByText('You approved. Another approver must give the next one'),
+    ).toBeVisible();
+    // Your vote is in, so the card no longer offers one.
+    await expect(card.getByRole('button', { name: 'Approve' })).toHaveCount(0);
+
+    const nudge = card.getByRole('button', { name: 'Nudge by email' });
+    await expect(async () => {
+      await nudge.click({ timeout: 1_000 });
+      await expect(card.getByText(/^Emailed .+ at \d\d:\d\d\./)).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass();
+    // The other seeded Super Admin is asked, in the email's own words.
+    expect((await mailTo('founder@example.test', REFUND)).Subject).toMatch(
+      new RegExp(`${REFUND}`),
+    );
+    // One nudge per cooldown: the button stays, saying when it can go again.
+    await expect(nudge).toHaveAttribute('aria-disabled', 'true');
+    await expect(card.getByText(/^Nudged; again from \d\d:\d\d$/)).toBeVisible();
+
+    await card.getByRole('button', { name: 'Withdraw my approval' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Withdraw your approval?' });
+    await expect(dialog).toContainText(`The refund of €600.00 on ${REFUND}`);
+    await dialog.getByRole('button', { name: 'Withdraw approval' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(card.getByRole('button', { name: 'Approve' })).toBeVisible();
+    await expect(card.getByRole('button', { name: 'Nudge by email' })).toHaveCount(0);
+
+    expect(await prisma.refundApproval.count({ where: { refundId } })).toBe(0);
+    const actions = await prisma.auditLog.findMany({
+      where: { metadata: { path: ['refundId'], equals: refundId } },
+      select: { action: true },
+    });
+    expect(actions.map((row) => row.action).sort()).toEqual([
+      'refund.approval_withdrawn',
+      'refund.nudged',
+    ]);
   });
 
   test('the desk points a phone to Ops Lite, and a wide screen not', async ({ page }) => {
