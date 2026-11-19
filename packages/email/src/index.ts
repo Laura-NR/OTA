@@ -63,6 +63,10 @@ export {
   permissionOverrideRequestEmail,
   type PermissionOverrideRequestEmailInput,
 } from './templates/permission-override-request';
+export {
+  refundApprovalNudgeEmail,
+  type RefundApprovalNudgeEmailInput,
+} from './templates/refund-approval-nudge';
 export type { StaffInviteEmailInput } from './templates/staff-invite';
 export type { WorkerAppInviteEmailInput } from './templates/worker-app-invite';
 export { eventRequestEmail } from './templates/event-request';

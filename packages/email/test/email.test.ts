@@ -7,6 +7,7 @@ import {
   passkeyChangeEmail,
   newDeviceSignInEmail,
   permissionOverrideRequestEmail,
+  refundApprovalNudgeEmail,
   ConsoleMailer,
   SmtpMailer,
   bookingReceivedEmail,
@@ -933,6 +934,50 @@ describe('permissionOverrideRequestEmail (docs/schema-m9-permission-overrides.md
     expect(
       permissionOverrideRequestEmail({ ...base, capability: 'somethingElse' }).text,
     ).toContain('"somethingElse"');
+  });
+});
+
+describe('refundApprovalNudgeEmail (AL-Alerts nudge)', () => {
+  const base = {
+    to: 'dayana@vereda.travel',
+    nudgerName: 'Ana Rodríguez',
+    bookingCode: 'VX8TL2VN',
+    amount: '1310.00',
+    currency: 'EUR',
+    reason: 'FORCE_MAJEURE',
+    approvedBy: ['Ana Rodríguez'],
+    superAdmin: false,
+    url: 'http://localhost:3002/payments#refunds-title',
+    branding,
+  };
+
+  it('names the booking, the amount, the reason, who approved and where to decide', () => {
+    const message = refundApprovalNudgeEmail(base);
+    expect(message.to).toBe('dayana@vereda.travel');
+    expect(message.subject).toBe('A refund on VX8TL2VN is waiting for your approval');
+    expect(message.text).toContain(
+      'Ana Rodríguez asks you to decide on a refund of €1,310.00 on booking VX8TL2VN.',
+    );
+    expect(message.text).toContain('Reason: Force majeure');
+    expect(message.text).toContain('Already approved by Ana Rodríguez');
+    expect(message.text).not.toContain('Super Admin.');
+    expect(message.html).toContain('http://localhost:3002/payments#refunds-title');
+  });
+
+  it('says when only a Super Admin can complete it, and writes Spanish and French', () => {
+    expect(refundApprovalNudgeEmail({ ...base, superAdmin: true }).text).toContain(
+      'it needs a Super Admin.',
+    );
+    const es = refundApprovalNudgeEmail({ ...base, locale: 'es' });
+    expect(es.subject).toBe('Un reembolso de VX8TL2VN espera su aprobación');
+    expect(es.text).toContain('Motivo: Fuerza mayor');
+    expect(es.text).toContain('1310,00 €');
+    expect(refundApprovalNudgeEmail({ ...base, locale: 'fr' }).subject).toBe(
+      'Un remboursement sur VX8TL2VN attend votre approbation',
+    );
+    expect(
+      refundApprovalNudgeEmail({ ...base, approvedBy: [], reason: 'OTHER' }).text,
+    ).not.toContain('Already approved');
   });
 });
 
