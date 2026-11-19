@@ -15,6 +15,7 @@ import {
   refundVoteSchema,
   rejectRefundSchema,
   type RefundDto,
+  type RefundNudgeResultDto,
   type RefundQueueQuery,
   type RefundSentRequest,
   type RefundVoteRequest,
@@ -65,6 +66,30 @@ export class RefundsController {
     @CurrentUser() actor: AuthUser,
   ): Promise<RefundDto> {
     return this.refunds.vote(id, false, body.note, actor);
+  }
+
+  /** AL-Alerts: take back one's own approval while the refund still waits. */
+  @Post(':id/withdraw')
+  @NotOverridable()
+  @HttpCode(HttpStatus.OK)
+  @Roles(...PAYMENT_WRITE_ROLES)
+  withdraw(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<RefundDto> {
+    return this.refunds.withdrawApproval(id, actor);
+  }
+
+  /** AL-Alerts: email the approvers who have not voted on a pending refund. */
+  @Post(':id/nudge')
+  @NotOverridable()
+  @HttpCode(HttpStatus.OK)
+  @Roles(...PAYMENT_WRITE_ROLES)
+  nudge(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<RefundNudgeResultDto> {
+    return this.refunds.nudge(id, actor);
   }
 
   @Post(':id/sent')

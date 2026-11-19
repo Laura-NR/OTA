@@ -116,9 +116,20 @@ export const refundSchema = z.object({
   approvals: z.array(refundApprovalSchema),
   /** While REQUESTED, who still has to approve. */
   decision: refundDecisionSchema,
+  /** The refund queue only (`GET /refunds`): when the last nudge went out. */
+  lastNudgedAt: z.string().nullable().optional(),
 });
 
 export type RefundDto = z.infer<typeof refundSchema>;
+
+/** `POST /refunds/:id/nudge` (AL-Alerts): when it went out and to whom. */
+export const refundNudgeResultSchema = z.object({
+  nudgedAt: z.string(),
+  /** Each recipient's name, or their email when they have none. */
+  recipients: z.array(z.string()),
+});
+
+export type RefundNudgeResultDto = z.infer<typeof refundNudgeResultSchema>;
 
 /** What the traveler may choose before the first payment link exists. */
 export const paymentOptionsSchema = z.object({

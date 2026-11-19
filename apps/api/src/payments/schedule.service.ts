@@ -25,7 +25,7 @@ import { toReceiptDto } from './payments.service';
 export const REFUND_INCLUDE = {
   approvals: {
     orderBy: { createdAt: 'asc' as const },
-    include: { approver: { select: { email: true, role: true } } },
+    include: { approver: { select: { email: true, fullName: true, role: true } } },
   },
   requestedBy: { select: { email: true } },
   receipt: { select: { rail: true } },

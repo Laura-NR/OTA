@@ -240,6 +240,8 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/proposals/${PROPOSAL}/versions`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/approve`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/reject`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/withdraw`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/nudge`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/sent`, allowed: 'opsWrite' },
 
   // Dispatch / escalation — ops control; worker responds.
@@ -828,6 +830,8 @@ describe('authorization matrix', () => {
       // O3: refund votes stay with the roles that hold them.
       ['post', `/refunds/${REFUND}/approve`],
       ['post', `/refunds/${REFUND}/reject`],
+      ['post', `/refunds/${REFUND}/withdraw`],
+      ['post', `/refunds/${REFUND}/nudge`],
       // Another row.
       ['post', '/reservations'],
       ['post', `/reservations/${RESERVATION}/dispatch`],

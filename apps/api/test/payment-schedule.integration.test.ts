@@ -1,5 +1,6 @@
 import { parseTenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
+import type { EmailMessage, Mailer } from '@ota/email';
 import { MockPaymentProvider, BankTransferProvider } from '@ota/payments';
 import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -67,6 +68,12 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
   let packageId = '';
   let reservationId = '';
   const stamp = Date.now();
+  const sent: EmailMessage[] = [];
+  const mailer: Mailer = {
+    send: async (message) => {
+      sent.push(message);
+    },
+  };
 
   beforeAll(async () => {
     prisma = new PrismaClient();
@@ -103,7 +110,7 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
     );
     schedule = new ScheduleService(db, tenant, fakeOperatingSettings());
     proofs = new ProofsService(db, new InMemoryObjectStorage());
-    refunds = new RefundsService(db, tenant, providers, fakeOperatingSettings());
+    refunds = new RefundsService(db, tenant, providers, fakeOperatingSettings(), mailer);
 
     const user = (role: string, name: string) =>
       prisma.user.create({
@@ -226,6 +233,78 @@ describe.skipIf(!runIntegration)('M4 payment schedule (live Postgres)', () => {
       ['BALANCE', 'PAID'],
     ]);
     expect(view.receipts[0]!.proofs[0]).toMatchObject({ status: 'ACCEPTED' });
+  });
+
+  it('withdraws an approval and nudges the rest, never approving on a withdrawn vote', async () => {
+    const balance = await prisma.paymentReceipt.findFirstOrThrow({
+      where: { reservationId, status: 'PAID', refunds: { none: {} } },
+    });
+    // € 510 is between the € 500 and € 2,000 limits: two different approvers.
+    const request = () =>
+      refunds.create(
+        reservationId,
+        { receiptId: balance.id, reason: 'GOODWILL', note: 'Gesture', amount: 510 },
+        ops,
+      );
+
+    // A withdrawal racing the second approval: the refund row is locked, so
+    // either the vote sees the withdrawal (one approval, still waiting) or
+    // the withdrawal sees an approved refund (refused) — never approved on one.
+    for (let run = 0; run < 3; run += 1) {
+      const raced = await request();
+      await refunds.vote(raced.id, true, undefined, ops);
+      const [withdrawn, voted] = await Promise.allSettled([
+        refunds.withdrawApproval(raced.id, ops),
+        refunds.vote(raced.id, true, undefined, ops2),
+      ]);
+      expect(voted.status).toBe('fulfilled');
+      const after = await prisma.refund.findUniqueOrThrow({
+        where: { id: raced.id },
+        include: { approvals: true },
+      });
+      if (after.status === 'APPROVED') {
+        expect(withdrawn.status).toBe('rejected');
+        expect(after.approvals).toHaveLength(2);
+      } else {
+        expect(withdrawn.status).toBe('fulfilled');
+        expect(after.status).toBe('REQUESTED');
+        expect(after.approvals.map((approval) => approval.approverId)).toEqual([ops2.id]);
+      }
+    }
+
+    const refund = await request();
+    await refunds.vote(refund.id, true, undefined, ops);
+    const withdrawn = await refunds.withdrawApproval(refund.id, ops);
+    expect(withdrawn).toMatchObject({
+      status: 'REQUESTED',
+      approvals: [],
+      decision: { state: 'PENDING', missing: 2 },
+    });
+    await expect(refunds.withdrawApproval(refund.id, ops)).rejects.toThrow(
+      'no approval on this refund',
+    );
+    await refunds.vote(refund.id, true, undefined, ops);
+
+    sent.length = 0;
+    const nudged = await refunds.nudge(refund.id, ops);
+    const to = sent.map((message) => message.to);
+    expect(to).toContain(ops2.email);
+    expect(to).not.toContain(ops.email);
+    expect(nudged.recipients).toContain(ops2.email);
+    expect(sent.find((message) => message.to === ops2.email)?.subject).toContain(
+      `M4${String(stamp).slice(-6)}`,
+    );
+    // One nudge per cooldown, whoever asks.
+    await expect(refunds.nudge(refund.id, ops2)).rejects.toThrow('nudged less than');
+    const queued = await refunds.queue({ limit: 200 });
+    expect(queued.find((row) => row.id === refund.id)?.lastNudgedAt).toBe(
+      nudged.nudgedAt,
+    );
+
+    expect((await refunds.vote(refund.id, true, undefined, ops2)).status).toBe(
+      'APPROVED',
+    );
+    await expect(refunds.nudge(refund.id, ops)).rejects.toThrow('already APPROVED');
   });
 
   it('keeps a refunded receipt, but deletes everything with its booking', async () => {
