@@ -187,6 +187,10 @@ export {
   supplierSchema,
   vehicleDetailsInputSchema,
   vehicleDetailsSchema,
+  pendingVehicleSchema,
+  rejectVehicleSchema,
+  vehicleRejectionSchema,
+  vehicleRequestSchema,
   verificationStatusSchema,
   type AvailabilityDayDto,
   type AvailabilityQuery,
@@ -206,6 +210,10 @@ export {
   type SupplierRowDto,
   type VehicleDetailsDto,
   type VehicleDetailsRequest,
+  type PendingVehicleDto,
+  type RejectVehicleRequest,
+  type VehicleRejectionDto,
+  type VehicleRequest,
 } from './supplier';
 export {
   approveCredentialSchema,

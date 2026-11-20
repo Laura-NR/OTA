@@ -10,7 +10,9 @@ import {
   calendarDaySchema,
   credentialContentTypeSchema,
   deskResourceChannelSchema,
+  pendingVehicleSchema,
   resourceChannelSchema,
+  vehicleRejectionSchema,
 } from './supplier';
 
 /** W-Credentials (`docs/schema-w-credentials.md`). */
@@ -92,6 +94,10 @@ export const workerCredentialsSchema = z.object({
       airConditioning: z.boolean(),
     })
     .nullable(),
+  /** The vehicle change waiting for the desk (`docs/schema-w-vehicle.md` X1a). */
+  vehicleRequest: pendingVehicleSchema.nullable(),
+  /** The last change the desk refused, until the worker asks again. */
+  vehicleRejection: vehicleRejectionSchema.nullable(),
 });
 
 export type WorkerCredentialsDto = z.infer<typeof workerCredentialsSchema>;
