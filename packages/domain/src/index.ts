@@ -648,6 +648,15 @@ export {
   type TicketCharges,
 } from './events/concierge';
 export {
+  EVENT_HOLD_REMINDER_DAYS,
+  eventBuilderStart,
+  eventHoldReminderDue,
+  eventHoldShows,
+  eventPhotoIssues,
+  type EventPhoto,
+  type EventPhotoIssue,
+} from './events/holds';
+export {
   DEFAULT_DISPLAY_PREFERENCES,
   DISPLAY_COOKIE,
   SLOW_CONNECTION_KBPS,
