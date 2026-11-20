@@ -32,22 +32,29 @@ export async function generateMetadata(): Promise<Metadata> {
  * styles and sample rates from the manifest's `customBuilder` block. Closed,
  * before sign-in, while the builder is switched off (M9 D8b). With
  * `?edit=<proposal id>` it reopens the traveler's own request ("Keep building
- * the trip") until the desk has sent the priced proposal.
+ * the trip") until the desk has sent the priced proposal. An event page's link
+ * adds `?from=&to=&province=` (`docs/schema-m10-holds-photos.md` H3a): a new
+ * request then opens with those dates and that province placed.
  */
 export default async function CustomPage({
   searchParams,
 }: {
-  searchParams: Promise<{ edit?: string }>;
+  searchParams: Promise<{ edit?: string; from?: string; to?: string; province?: string }>;
 }) {
   if (!(await getFeatures()).customItineraryBuilder) {
     return <FeatureOff feature="customItineraryBuilder" />;
   }
-  const { edit } = await searchParams;
+  const { edit, from, to, province } = await searchParams;
   const locale = await getLocale();
   const session = await getServerSession();
   if (!session) {
     const prefix = locale === DEFAULT_LOCALE ? '' : `/${locale}`;
-    const back = `${prefix}/custom${edit ? `?edit=${encodeURIComponent(edit)}` : ''}`;
+    const query = new URLSearchParams(
+      Object.entries({ edit, from, to, province }).flatMap(([key, value]) =>
+        typeof value === 'string' ? [[key, value]] : [],
+      ),
+    ).toString();
+    const back = `${prefix}/custom${query ? `?${query}` : ''}`;
     redirect(`${prefix}/login?next=${encodeURIComponent(back)}`);
   }
 
@@ -94,6 +101,19 @@ export default async function CustomPage({
         ]
       : [];
   });
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const isDay = (value: string | undefined): value is string =>
+    typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  // An event's dates and province, when they still make a valid start.
+  const start =
+    isDay(from) &&
+    isDay(to) &&
+    from >= todayIso &&
+    to > from &&
+    province &&
+    served.has(province)
+      ? { from, to, province }
+      : null;
   const languageNames = new Intl.DisplayNames([locale], { type: 'language' });
   const locales = tenant.supportedLocales.map((code) => ({
     code,
@@ -148,12 +168,13 @@ export default async function CustomPage({
               }
             : null
         }
+        start={start}
         provinces={provinces}
         activities={activities}
         builder={tenant.customBuilder}
         countries={countryOptions(locale)}
         locales={locales}
-        todayIso={new Date().toISOString().slice(0, 10)}
+        todayIso={todayIso}
       />
     </div>
   );

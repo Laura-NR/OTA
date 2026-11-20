@@ -11,6 +11,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import { Breadcrumb } from '@/components/breadcrumb';
+import { Photo } from '@/components/display/photo';
 import { EventRequestForm } from '@/components/events/event-request-form';
 import { Link } from '@/i18n/navigation';
 import { apiFetch, getServerSession } from '@/lib/api';
@@ -19,7 +20,7 @@ import { getDisplayCurrency } from '@/lib/currency';
 import { countryOptions } from '@/lib/countries';
 import { browsingPrice } from '@/lib/display-money';
 import { eventDateLine, nightLabel } from '@/lib/event-dates';
-import { getEvent } from '@/lib/events';
+import { eventBuilderHref, eventMediaUrl, getEvent } from '@/lib/events';
 import { plainSpaces } from '@/lib/format';
 import { getGeography, provinceName } from '@/lib/geography';
 import { getTenantConfig } from '@/lib/tenant';
@@ -37,7 +38,10 @@ export async function generateMetadata({
 /**
  * One event (Concierge / M-Concierge boards, M10): the dates, the access, the
  * three steps and the request behind sign-in. A guide-only event takes no
- * seats; it points to the custom builder instead.
+ * seats; it points to the custom builder instead. The first photo is the
+ * hero, and a room the desk holds at a casa shows as the board's line through
+ * its last day (`docs/schema-m10-holds-photos.md` H1a, P1a); every builder
+ * link opens with the event's dates and province (H3a).
  */
 export default async function EventPage({
   params,
@@ -80,6 +84,8 @@ export default async function EventPage({
         ])
       : [null, { bookings: [], customRequests: [] }];
   const showForm = Boolean(takesRequests && session && me);
+  const builderHref = eventBuilderHref(event);
+  const [hero, ...gallery] = event.media;
   const afterOptions = (getGeography()?.provinces ?? [])
     .filter((province) => province.network !== 'none')
     .sort((a, b) => a.kmFromHavana - b.kmFromHavana)
@@ -100,6 +106,34 @@ export default async function EventPage({
         <Alert variant="info" title={t('sampleTitle')}>
           {t('sampleText', { agency: tenant.branding.agencyName })}
         </Alert>
+      ) : null}
+
+      {hero ? (
+        <div className="flex flex-col gap-3">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-lg bg-sunken sm:aspect-[21/9]">
+            <Photo
+              src={eventMediaUrl(hero.id)}
+              alt={hero.altText}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
+          {gallery.length > 0 ? (
+            <ul className="hidden grid-cols-4 gap-3 md:grid">
+              {gallery.slice(0, 4).map((photo) => (
+                <li
+                  key={photo.id}
+                  className="relative aspect-[4/3] overflow-hidden rounded-md bg-sunken"
+                >
+                  <Photo
+                    src={eventMediaUrl(photo.id)}
+                    alt={photo.altText}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       ) : null}
 
       <header className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
@@ -182,6 +216,39 @@ export default async function EventPage({
         </section>
       ) : null}
 
+      {event.hold ? (
+        <aside
+          aria-label={t('holdLabel')}
+          className="flex flex-col gap-4 rounded-lg border bg-surface p-5 md:flex-row md:items-center md:p-6"
+        >
+          <p className="max-w-prose flex-1 text-body text-secondary">
+            {t('hold', {
+              casa: event.hold.note
+                ? `${event.hold.casa} (${event.hold.note})`
+                : event.hold.casa,
+              date: plainSpaces(
+                new Intl.DateTimeFormat(locale, {
+                  timeZone: 'UTC',
+                  dateStyle: 'long',
+                }).format(new Date(event.hold.until)),
+              ),
+              province: cubaProvinceName(event.province),
+            })}
+          </p>
+          {builderHref ? (
+            <Link
+              href={builderHref}
+              className={cn(
+                buttonClassName({ variant: 'secondary' }),
+                'self-start md:self-auto',
+              )}
+            >
+              {t('holdCta')}
+            </Link>
+          ) : null}
+        </aside>
+      ) : null}
+
       <section
         id="request"
         aria-labelledby="request-title"
@@ -194,7 +261,7 @@ export default async function EventPage({
           <>
             <p className="max-w-prose text-body text-secondary">{t('guideText')}</p>
             <Link
-              href="/custom"
+              href={builderHref ?? '/custom'}
               className={cn(buttonClassName({ variant: 'primary' }), 'self-start')}
             >
               {t('planTrip')}

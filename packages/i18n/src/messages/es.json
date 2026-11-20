@@ -4795,7 +4795,8 @@
       "nothingCharged": "Aún no se cobra nada."
     },
     "hold": "Las casas se llenan pronto en semana de festival. Reservamos una habitación en {casa} para solicitudes del conserje hasta el {date}; el constructor a medida se abre con estas fechas y {province} ya colocada.",
-    "holdCta": "Crear el viaje con estas fechas"
+    "holdCta": "Crear el viaje con estas fechas",
+    "holdLabel": "Habitación reservada para la semana del festival"
   },
   "display": {
     "title": "Visualización",

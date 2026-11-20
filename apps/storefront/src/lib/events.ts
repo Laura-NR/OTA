@@ -33,3 +33,18 @@ export async function getEvent(slug: string): Promise<PublicEventDto | null> {
     return null;
   }
 }
+
+/** An event photo through the same-origin API rewrite (P2: published events only). */
+export function eventMediaUrl(mediaId: string): string {
+  return `/api/ota/catalog/events/media/${mediaId}`;
+}
+
+/**
+ * The custom builder opened with the event's dates and province placed
+ * (`docs/schema-m10-holds-photos.md` H3a); null once the event is over.
+ */
+export function eventBuilderHref(event: PublicEventDto): string | null {
+  if (!event.builderStart) return null;
+  const { from, to, province } = event.builderStart;
+  return `/custom?${new URLSearchParams({ from, to, province }).toString()}`;
+}

@@ -4795,7 +4795,8 @@
       "nothingCharged": "Nothing is charged yet."
     },
     "hold": "Festival-week casas fill early. We hold a room at {casa} for concierge requests until {date}; the custom builder opens with these dates and {province} already placed.",
-    "holdCta": "Build the trip with these dates"
+    "holdCta": "Build the trip with these dates",
+    "holdLabel": "Room held for festival week"
   },
   "display": {
     "title": "Display",

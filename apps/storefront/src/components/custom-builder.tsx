@@ -92,10 +92,13 @@ export interface EditedRequest {
  * and an estimate from the tenant's rates (a range, never a price).
  * Submitting creates a CustomRequest — not a booking — for the desk to price.
  * With `editing` it starts from that request's answers and saves over it
- * instead; the funnel events are not sent again for an edit.
+ * instead; the funnel events are not sent again for an edit. With `start`
+ * (an event page's link, `docs/schema-m10-holds-photos.md` H3a) it opens with
+ * those dates and that province placed, all of which the traveler can change.
  */
 export function CustomBuilder({
   editing = null,
+  start = null,
   provinces,
   activities,
   builder,
@@ -104,6 +107,8 @@ export function CustomBuilder({
   todayIso,
 }: {
   editing?: EditedRequest | null;
+  /** Where a new request starts: arrival, departure (YYYY-MM-DD) and a province code. */
+  start?: { from: string; to: string; province: string } | null;
   provinces: BuilderProvince[];
   activities: BuilderActivity[];
   /** The tenant's styles and sample rates; null offers no styles or estimate. */
@@ -130,7 +135,13 @@ export function CustomBuilder({
     track('builder_started');
   }, [track, editing]);
   const before = editing?.payload;
-  const [arrival, setArrival] = useState(before ? before.startDate.slice(0, 10) : '');
+  const opening = before ? null : start;
+  const openingNights = opening
+    ? Math.round((Date.parse(opening.to) - Date.parse(opening.from)) / DAY_MS)
+    : 0;
+  const [arrival, setArrival] = useState(
+    before ? before.startDate.slice(0, 10) : (opening?.from ?? ''),
+  );
   const [nightsTotal, setNightsTotal] = useState(() =>
     before
       ? Math.max(
@@ -139,14 +150,21 @@ export function CustomBuilder({
             (Date.parse(before.endDate) - Date.parse(before.startDate)) / DAY_MS,
           ),
         )
-      : 10,
+      : openingNights > 0
+        ? openingNights
+        : 10,
   );
   const [adults, setAdults] = useState(before?.adults ?? 2);
   const [children, setChildren] = useState(before?.children ?? 0);
   // A stop the tenant no longer serves drops out; the nights check then asks
   // the traveler to place them again.
   const [route, setRoute] = useState<Stop[]>(() =>
-    (before?.route ?? []).flatMap((stop) =>
+    (
+      before?.route ??
+      (opening && openingNights > 0
+        ? [{ province: opening.province, nights: openingNights, stay: null }]
+        : [])
+    ).flatMap((stop) =>
       provinces.some((province) => province.code === stop.province)
         ? [
             {

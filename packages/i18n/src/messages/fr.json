@@ -4795,7 +4795,8 @@
       "nothingCharged": "Rien n’est encore débité."
     },
     "hold": "En semaine de festival, les casas se remplissent vite. Nous réservons une chambre chez {casa} pour les demandes de conciergerie jusqu’au {date} ; le créateur sur mesure s’ouvre avec ces dates et {province} déjà placée.",
-    "holdCta": "Créer le voyage avec ces dates"
+    "holdCta": "Créer le voyage avec ces dates",
+    "holdLabel": "Chambre réservée pour la semaine du festival"
   },
   "display": {
     "title": "Affichage",
