@@ -67,6 +67,17 @@ export const eventCategoryInputSchema = z.object({
 });
 
 /**
+ * A room held at a casa for concierge requests (`docs/schema-m10-holds-photos.md`
+ * H1a): an active ACCOMMODATION catalog item, the last day the line shows, and
+ * a short note in the source locale ("balcony rooms, battery 8 h").
+ */
+export const eventHoldInputSchema = z.object({
+  inventoryItemId: z.string().uuid(),
+  until: dateSchema,
+  note: z.string().trim().min(1).max(160).nullable().default(null),
+});
+
+/**
  * An event's editable document (D1, D2). Saving sends the whole document:
  * nights and categories with an id are updated, new ones added, missing ones
  * removed unless a request holds them.
@@ -86,6 +97,7 @@ export const eventWriteSchema = z
     notes: z.string().trim().min(1).max(2000).nullable().default(null),
     nights: z.array(eventNightInputSchema).max(31).default([]),
     categories: z.array(eventCategoryInputSchema).max(8).default([]),
+    hold: eventHoldInputSchema.nullable().default(null),
   })
   .refine((value) => value.endsOn >= value.startsOn, {
     message: 'endsOn must be on or after startsOn',
@@ -115,6 +127,10 @@ export const eventTranslationWriteSchema = z.object({
       z.object({ name: overlayText(80), description: overlayText(240) }),
     )
     .default({}),
+  /** H1a: the hold's note in this locale. */
+  holdNote: overlayText(160),
+  /** P1a: each photo's alt text in this locale, keyed by the photo's id. */
+  mediaAlt: z.record(z.string().uuid(), z.string().trim().min(1).max(300)).default({}),
   published: z.boolean(),
 });
 
@@ -156,6 +172,8 @@ export const eventTranslationSchema = z.object({
     z.string(),
     z.object({ name: z.string().nullable(), description: z.string().nullable() }),
   ),
+  holdNote: z.string().nullable(),
+  mediaAlt: z.record(z.string(), z.string()),
   published: z.boolean(),
   /** The source changed after this overlay was last saved. */
   stale: z.boolean(),
@@ -163,6 +181,38 @@ export const eventTranslationSchema = z.object({
 });
 
 export type EventTranslationDto = z.infer<typeof eventTranslationSchema>;
+
+/** An event's photo on the desk (P1a); the consent reference stays internal. */
+export const eventMediaSchema = z.object({
+  id: z.string().uuid(),
+  altText: z.string(),
+  position: z.number().int(),
+  showsPeople: z.boolean(),
+  hasConsent: z.boolean(),
+});
+
+export type EventMediaDto = z.infer<typeof eventMediaSchema>;
+
+/** Upload one event photo (P2): JPEG, PNG or WebP, up to 5 MB. */
+export const eventMediaUploadSchema = z.object({
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  contentBase64: z.string().min(1),
+  altText: z.string().trim().min(1).max(300),
+  showsPeople: z.boolean().default(false),
+  consentReference: z.string().trim().max(200).optional(),
+});
+
+export type EventMediaUploadRequest = z.infer<typeof eventMediaUploadSchema>;
+
+/** Change a photo's words or consent, or move it (`position` 0 is the hero). */
+export const eventMediaUpdateSchema = z.object({
+  altText: z.string().trim().min(1).max(300).optional(),
+  showsPeople: z.boolean().optional(),
+  consentReference: z.string().trim().max(200).nullable().optional(),
+  position: z.number().int().min(0).max(50).optional(),
+});
+
+export type EventMediaUpdateRequest = z.infer<typeof eventMediaUpdateSchema>;
 
 export const eventListItemSchema = z.object({
   id: z.string().uuid(),
@@ -178,6 +228,12 @@ export const eventListItemSchema = z.object({
   openRequestCount: z.number().int(),
   publishedAt: z.string().nullable(),
   updatedAt: z.string(),
+  /** H1a: the casa holding a room and the last day the line shows. */
+  hold: z
+    .object({ inventoryItemId: z.string().uuid(), casa: z.string(), until: z.string() })
+    .nullable(),
+  /** H2a: the hold ends within the reminder window (the desk's dashboard task). */
+  holdReminderDue: z.boolean(),
 });
 
 export type EventListItemDto = z.infer<typeof eventListItemSchema>;
@@ -191,6 +247,9 @@ export const eventSchema = eventListItemSchema.extend({
   nights: z.array(eventNightSchema),
   categories: z.array(eventCategorySchema),
   translations: z.array(eventTranslationSchema),
+  holdNote: z.string().nullable(),
+  /** P1a: the first is the page's hero, the rest follow in order. */
+  media: z.array(eventMediaSchema),
   /** Why it cannot be published now; empty when it can. */
   publishIssues: z.array(z.string()),
 });
@@ -216,6 +275,16 @@ export const publicEventSchema = z.object({
   answerHours: z.number().int(),
   nights: z.array(eventNightSchema.omit({ position: true })),
   categories: z.array(eventCategorySchema.omit({ position: true })),
+  /** H1a: shown through its last day; null otherwise. */
+  hold: z
+    .object({ casa: z.string(), until: z.string(), note: z.string().nullable() })
+    .nullable(),
+  /** P1a: in order, the first is the hero; alt text in `locale`. */
+  media: z.array(z.object({ id: z.string().uuid(), altText: z.string() })),
+  /** H3a: where the custom builder starts for this event; null once it is over. */
+  builderStart: z
+    .object({ from: z.string(), to: z.string(), province: z.string() })
+    .nullable(),
 });
 
 export type PublicEventDto = z.infer<typeof publicEventSchema>;
