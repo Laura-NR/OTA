@@ -486,6 +486,10 @@ const ROUTES: Route[] = [
   { method: 'put', path: `/events/${EVENT}/translations/es`, allowed: 'opsWrite' },
   { method: 'post', path: `/events/${EVENT}/publish`, allowed: 'opsWrite' },
   { method: 'post', path: `/events/${EVENT}/archive`, allowed: 'opsWrite' },
+  { method: 'get', path: `/events/media/${EVENT}`, allowed: 'opsRead' },
+  { method: 'post', path: `/events/${EVENT}/media`, allowed: 'opsWrite' },
+  { method: 'patch', path: `/events/${EVENT}/media/${EVENT}`, allowed: 'opsWrite' },
+  { method: 'delete', path: `/events/${EVENT}/media/${EVENT}`, allowed: 'opsWrite' },
   // M10 concierge requests: the desk's queue, and the traveler's own requests.
   { method: 'get', path: '/event-requests', allowed: 'opsRead' },
   { method: 'get', path: `/event-requests/${EVENT_REQUEST}`, allowed: 'opsRead' },
@@ -611,6 +615,7 @@ const fakePrisma = {
   $queryRaw: async () => [{ '?column?': 1 }],
   advisory: { findMany: async () => [] },
   event: { findMany: async () => [], findFirst: async () => null },
+  eventMedia: { findUnique: async () => null },
   // M9: no stored rate (the mock provider's write is dropped), so the rates read is empty.
   exchangeRate: {
     findFirst: async () => null,
@@ -775,6 +780,10 @@ describe('authorization matrix', () => {
     expect((await request(app.getHttpServer()).get('/catalog/events')).status).toBe(200);
     expect(
       (await request(app.getHttpServer()).get('/catalog/events/no-such-event')).status,
+    ).toBe(404);
+    // An event photo is public too; an unknown one is a 404, not a 401.
+    expect(
+      (await request(app.getHttpServer()).get(`/catalog/events/media/${EVENT}`)).status,
     ).toBe(404);
 
     // The display rates are public: the storefront converts browsing prices with them.
