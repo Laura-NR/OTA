@@ -8,14 +8,20 @@ const TRAVELER_EMAIL = 'traveler@example.test';
 const BOOKING = 'E2EEVT01';
 const EVENT_SLUG = 'havana-jazz-festival-2027';
 const DESK_EVENT = 'E2E Concierge Festival';
+const HOLD_EVENT = 'E2E Concierge Hold Fest';
+const HOLD_CASA = 'E2E Concierge Casa';
+// A valid 1x1 PNG.
+const PNG_1X1 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 process.env.DATABASE_URL ??= 'postgresql://ota:ota@localhost:5432/ota_dev';
 const prisma = new PrismaClient();
 
 /**
- * Everything this spec owns: the desk's "E2E Concierge…" events, the
- * traveler's event requests (with the custom requests the BUILD path derived
- * and their audit rows) and the E2EEVT01 booking.
+ * Everything this spec owns: the desk's "E2E Concierge…" events (with their
+ * photos) and the "E2E Concierge…" casa they hold, the traveler's event
+ * requests (with the custom requests the BUILD path derived and their audit
+ * rows) and the E2EEVT01 booking.
  */
 async function cleanup() {
   const traveler = await prisma.user.findUnique({ where: { email: TRAVELER_EMAIL } });
@@ -42,6 +48,9 @@ async function cleanup() {
   });
   await prisma.event.deleteMany({
     where: { id: { in: deskEvents.map((event) => event.id) } },
+  });
+  await prisma.inventoryItem.deleteMany({
+    where: { name: { startsWith: 'E2E Concierge' } },
   });
   const booking = await prisma.reservation.findUnique({
     where: { bookingCode: BOOKING },
@@ -127,6 +136,110 @@ test.describe('M10 events and the ticket concierge', () => {
 
     await page.goto('/content/events');
     await expect(page.getByRole('link', { name: DESK_EVENT })).toBeVisible();
+  });
+
+  test('the desk holds a room at a casa and adds photos; the page shows both and opens the builder on its dates', async ({
+    page,
+  }) => {
+    test.setTimeout(150_000);
+    await prisma.inventoryItem.create({
+      data: {
+        type: 'ACCOMMODATION',
+        name: HOLD_CASA,
+        province: 'La Habana',
+        basePrice: 55,
+      },
+    });
+    // The hold ends in two days in Havana, so the dashboard reminds the desk.
+    const havanaToday = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Havana',
+    }).format(new Date());
+    const holdUntil = new Date(Date.parse(`${havanaToday}T00:00:00Z`) + 2 * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    await signIn(page);
+    const created = await page.request.post('/api/ota/events', {
+      data: {
+        access: 'GUIDE_ONLY',
+        province: 'CU03',
+        startsOn: '2027-04-10',
+        endsOn: '2027-04-12',
+        datesConfirmed: true,
+        sourceLocale: 'en',
+        name: HOLD_EVENT,
+        place: 'Malecón',
+        summary: 'Free concerts on the seafront.',
+      },
+    });
+    expect(created.ok()).toBe(true);
+    const { id, slug } = (await created.json()) as { id: string; slug: string };
+
+    // H1a: the casa, the last day and the note.
+    await page.goto(`/content/events/${id}`);
+    await expect(async () => {
+      await page.getByLabel('Casa', { exact: true }).selectOption({ label: HOLD_CASA });
+      await expect(page.getByLabel('Casa', { exact: true })).not.toHaveValue('', {
+        timeout: 2_000,
+      });
+    }).toPass();
+    await page.getByLabel('Held until').fill(holdUntil);
+    await page.getByLabel('Note', { exact: true }).fill('balcony rooms');
+    await page.getByRole('button', { name: 'Save event' }).click();
+    await expect(page.getByLabel('Held until')).toHaveValue(holdUntil);
+
+    // P1a: two photos; the second is made the hero.
+    for (const alt of ['The stage at dusk', 'Dancers by the sea wall']) {
+      await page.getByLabel('Photo', { exact: true }).setInputFiles({
+        name: 'photo.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from(PNG_1X1, 'base64'),
+      });
+      await page.getByLabel('Alt text', { exact: true }).fill(alt);
+      await page.getByRole('button', { name: 'Upload photo' }).click();
+      await expect(page.getByAltText(alt)).toBeVisible();
+    }
+    await page
+      .getByRole('listitem')
+      .filter({ has: page.getByAltText('Dancers by the sea wall') })
+      .getByRole('button', { name: 'Make hero' })
+      .click();
+    await expect(
+      page
+        .getByRole('listitem')
+        .filter({ has: page.getByAltText('Dancers by the sea wall') })
+        .getByText('Hero', { exact: true }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Publish' }).click();
+    await expect(page.getByText(new RegExp(`Live at /events/${slug}`))).toBeVisible();
+
+    // H2a: the dashboard task while the hold ends within three days.
+    await page.goto('/dashboard');
+    await expect(
+      page.getByText(new RegExp(`^Room hold at ${HOLD_CASA} ends`)),
+    ).toBeVisible();
+    await expect(page.getByText(`For ${HOLD_EVENT}.`, { exact: false })).toBeVisible();
+
+    // The storefront: the hero, the hold line, and the builder link with the dates.
+    await page.goto(`${STOREFRONT_URL}/en/events/${slug}`);
+    await expect(page.getByAltText('Dancers by the sea wall').first()).toBeVisible();
+    const hold = page.getByRole('complementary', { name: 'Room held for festival week' });
+    await expect(hold).toContainText(`We hold a room at ${HOLD_CASA} (balcony rooms)`);
+    const build = hold.getByRole('link', { name: 'Build the trip with these dates' });
+    await expect(build).toHaveAttribute(
+      'href',
+      '/en/custom?from=2027-04-10&to=2027-04-13&province=CU03',
+    );
+    await page.goto(`${STOREFRONT_URL}/en/events`);
+    await expect(page.getByAltText('Dancers by the sea wall')).toBeVisible();
+
+    // H3a: signed in, the builder starts on those dates with Havana placed.
+    await signIn(page, TRAVELER_EMAIL, {
+      origin: STOREFRONT_URL,
+      callbackPath: '/en/custom?from=2027-04-10&to=2027-04-13&province=CU03',
+    });
+    await expect(page.getByLabel('Arrival in Cuba')).toHaveValue('2027-04-10');
+    await expect(page.getByText('Your route · 3 of 3 nights placed')).toBeVisible();
   });
 
   test('a traveler requests seats, and the desk confirms them onto a locked booking', async ({
