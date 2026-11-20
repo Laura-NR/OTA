@@ -238,9 +238,10 @@ export default async function EventPage({
           {builderHref ? (
             <Link
               href={builderHref}
+              // Below sm it spans the card and wraps, so larger text never widens the page.
               className={cn(
                 buttonClassName({ variant: 'secondary' }),
-                'self-start md:self-auto',
+                'self-start max-sm:h-auto max-sm:min-h-11 max-sm:w-full max-sm:whitespace-normal max-sm:py-2 max-sm:text-center md:self-auto',
               )}
             >
               {t('holdCta')}
