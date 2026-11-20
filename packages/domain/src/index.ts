@@ -168,6 +168,15 @@ export {
   type SupplierPower,
 } from './supplier/resources';
 export {
+  VEHICLE_BOUND_CREDENTIALS,
+  credentialsSupersededByVehicle,
+  normalizePlate,
+  vehicleInsuranceUntil,
+  vehicleRequestRefusal,
+  vehicleReviewSms,
+  type VehicleRequestRefusal,
+} from './supplier/vehicle';
+export {
   PricingRuleKind,
   calculatePrice,
   isRuleActiveOn,
