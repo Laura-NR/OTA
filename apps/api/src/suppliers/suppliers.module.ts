@@ -6,6 +6,7 @@ import { COMPLIANCE_SCHEDULER, NoopComplianceScheduler } from './expiry-alert.sc
 import { ExpiryAlertService } from './expiry-alert.service';
 import { SupplierCredentialsService } from './supplier-credentials.service';
 import { SupplierPayoutsService } from './supplier-payouts.service';
+import { SupplierVehicleService } from './supplier-vehicle.service';
 import { SuppliersController } from './suppliers.controller';
 import { SuppliersService } from './suppliers.service';
 
@@ -17,6 +18,7 @@ import { SuppliersService } from './suppliers.service';
     SuppliersService,
     SupplierPayoutsService,
     SupplierCredentialsService,
+    SupplierVehicleService,
     ExpiryAlertService,
     {
       provide: COMPLIANCE_SCHEDULER,
@@ -30,7 +32,13 @@ import { SuppliersService } from './suppliers.service';
     },
   ],
   // The worker app's fuel declaration writes through the desk's resources path,
-  // W-Earnings reads the same payouts, and W-Credentials the same documents.
-  exports: [SuppliersService, SupplierPayoutsService, SupplierCredentialsService],
+  // W-Earnings reads the same payouts, W-Credentials the same documents, and
+  // the app's vehicle change goes through the desk's review.
+  exports: [
+    SuppliersService,
+    SupplierPayoutsService,
+    SupplierCredentialsService,
+    SupplierVehicleService,
+  ],
 })
 export class SuppliersModule {}

@@ -25,20 +25,22 @@ import {
   missingCredentials,
   resourcesIssue,
   supplierPower,
+  vehicleInsuranceUntil,
   workerToday,
+  type CredentialKind,
   type PayoutMethod,
   type PowerFacts,
   type ResourceChannel,
   type ResourcesIssue,
   type SupplierJob,
 } from '@ota/domain';
-import { vehicleDetailsSchema } from '@ota/schemas';
 import type {
   AvailabilityDayDto,
   AvailabilityQuery,
   ConfirmResourcesRequest,
   ExpiringSuppliersQuery,
   ListSuppliersQuery,
+  PendingVehicleDto,
   SetAvailabilityRequest,
   SetVerificationRequest,
   SupplierDetailDto,
@@ -54,6 +56,7 @@ import type { AuthUser } from '../common/auth/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
 import { SupplierPayoutsService } from './supplier-payouts.service';
+import { readVehicleJson, writeVehicleJson } from './vehicle-json';
 
 type SupplierWithUser = SupplierProfile & {
   user: Pick<User, 'email' | 'fullName'>;
@@ -189,12 +192,6 @@ function toRowDto(
   };
 }
 
-/** The stored vehicle, or null when there is none or it does not match the shape. */
-function storedVehicle(value: Prisma.JsonValue | null): VehicleDetailsDto | null {
-  const parsed = vehicleDetailsSchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
-}
-
 /** The resources row's values, as the audit log records them before and after (D8). */
 function resourcesValues(
   resources: SupplierResources | Omit<ConfirmResourcesRequest, 'via'> | null,
@@ -302,7 +299,7 @@ export class SuppliersService {
       ...toRowDto(supplier, jobs, now, staleDays),
       resources: resources ? toResourcesDto(resources, now, staleDays) : null,
       jobs12m: jobsInWindow(jobs, now),
-      vehicle: storedVehicle(supplier.vehicleDetails),
+      ...(await this.vehicleOf(id, supplier.vehicleDetails)),
       longBlock: longBlockedRun(
         blocked.map((row) => row.date.toISOString().slice(0, 10)),
         today,
@@ -312,6 +309,36 @@ export class SuppliersService {
         supplier.payoutMethod as PayoutMethod | null,
         now,
       ),
+    };
+  }
+
+  /**
+   * A driver's vehicle as the inspector shows it: the stored fields with the
+   * verified insurance document's expiry (X3a), and the change waiting for
+   * the desk (X1a).
+   */
+  private async vehicleOf(
+    supplierId: string,
+    value: Prisma.JsonValue | null,
+  ): Promise<{
+    vehicle: VehicleDetailsDto | null;
+    pendingVehicle: PendingVehicleDto | null;
+  }> {
+    const stored = readVehicleJson(value);
+    if (!stored.current) return { vehicle: null, pendingVehicle: stored.pending };
+    const insurance = await this.prisma.supplierCredential.findMany({
+      where: { supplierId, kind: 'LIABILITY_INSURANCE', status: 'VERIFIED' },
+      select: { kind: true, status: true, expiresOn: true, uploadedAt: true },
+    });
+    const until = vehicleInsuranceUntil(
+      insurance.map((row) => ({ ...row, kind: row.kind as CredentialKind })),
+    );
+    return {
+      vehicle: {
+        ...stored.current,
+        insuranceUntil: until ? until.toISOString().slice(0, 10) : null,
+      },
+      pendingVehicle: stored.pending,
     };
   }
 
@@ -351,35 +378,36 @@ export class SuppliersService {
   /**
    * Replace a driver's vehicle (M6 D7(b)) in the profile's `vehicle_details`
    * JSON and audit the previous and new values as `supplier.vehicle_updated`.
-   * The insurance date is informational: it does not pause dispatch, which
-   * follows the credential rules only. Other categories get a 422.
+   * A change the worker asked for stays waiting beside it. The vehicle has no
+   * insurance date of its own: it shows the insurance document's
+   * (`docs/schema-w-vehicle.md` X3a). Other categories get a 422.
    */
   async setVehicle(
     id: string,
     input: VehicleDetailsRequest,
     actor: AuthUser,
   ): Promise<SupplierDetailDto> {
-    const supplier = await this.prisma.supplierProfile.findUnique({
-      where: { id },
-      select: { category: true, vehicleDetails: true },
-    });
-    if (!supplier) {
-      throw new NotFoundException(`Supplier ${id} not found`);
-    }
-    if (supplier.category !== SupplierCategory.PrivateDriver) {
-      throw new UnprocessableEntityException('Vehicle details are recorded for drivers');
-    }
-    const vehicle: VehicleDetailsDto = {
-      ...input,
-      insuranceUntil: input.insuranceUntil
-        ? input.insuranceUntil.toISOString().slice(0, 10)
-        : null,
-    };
-
     await this.prisma.$transaction(async (tx) => {
+      // Locked, so a worker's request arriving now is kept rather than overwritten.
+      await tx.$queryRaw`SELECT id FROM supplier_profiles WHERE id = ${id}::uuid FOR UPDATE`;
+      const supplier = await tx.supplierProfile.findUnique({
+        where: { id },
+        select: { category: true, vehicleDetails: true },
+      });
+      if (!supplier) {
+        throw new NotFoundException(`Supplier ${id} not found`);
+      }
+      if (supplier.category !== SupplierCategory.PrivateDriver) {
+        throw new UnprocessableEntityException(
+          'Vehicle details are recorded for drivers',
+        );
+      }
+      const stored = readVehicleJson(supplier.vehicleDetails);
+      const next = writeVehicleJson({ ...stored, current: input });
+
       await tx.supplierProfile.update({
         where: { id },
-        data: { vehicleDetails: vehicle },
+        data: { vehicleDetails: next },
       });
       await tx.auditLog.create({
         data: {
@@ -388,8 +416,8 @@ export class SuppliersService {
           entityType: 'SupplierProfile',
           entityId: id,
           metadata: {
-            previous: supplier.vehicleDetails ?? null,
-            next: vehicle,
+            previous: stored.current,
+            next: input,
           } as Prisma.InputJsonValue,
         },
       });

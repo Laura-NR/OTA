@@ -18,6 +18,7 @@ import {
   reportEmergencySchema,
   setWorkerDaysSchema,
   workerCalendarQuerySchema,
+  vehicleRequestSchema,
   workerUploadCredentialSchema,
   type DeclareWorkerFuelRequest,
   type EmergencyReportResultDto,
@@ -25,6 +26,7 @@ import {
   type RecordJobStepRequest,
   type ReportEmergencyRequest,
   type SetWorkerDaysRequest,
+  type VehicleRequest,
   type WorkerCalendarDto,
   type WorkerCalendarQuery,
   type WorkerCredentialsDto,
@@ -45,6 +47,7 @@ import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { sendPdf } from '../proposals/proposal-pdf';
 import { JobsService } from '../jobs/jobs.service';
 import { SupplierCredentialsService } from '../suppliers/supplier-credentials.service';
+import { SupplierVehicleService } from '../suppliers/supplier-vehicle.service';
 import { WorkerCodesService } from './worker-codes.service';
 import { WorkerService } from './worker.service';
 
@@ -54,6 +57,7 @@ export class WorkerController {
   constructor(
     private readonly worker: WorkerService,
     private readonly credentials: SupplierCredentialsService,
+    private readonly vehicles: SupplierVehicleService,
     private readonly jobs: JobsService,
   ) {}
 
@@ -126,6 +130,17 @@ export class WorkerController {
     @CurrentUser() actor: AuthUser,
   ): Promise<WorkerCredentialsDto> {
     return this.credentials.uploadForWorker(actor, body);
+  }
+
+  /** "Cambiar de vehículo": a change the desk reviews (`docs/schema-w-vehicle.md` X1a). */
+  @Post('vehicle')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ServiceWorker)
+  requestVehicle(
+    @Body(new ZodValidationPipe(vehicleRequestSchema)) body: VehicleRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<WorkerCredentialsDto> {
+    return this.vehicles.request(actor, body);
   }
 
   /** W-Job: a step tapped on one of the worker's jobs, sent from the phone's queue. */

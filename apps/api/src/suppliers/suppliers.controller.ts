@@ -21,6 +21,7 @@ import {
   listSuppliersQuerySchema,
   recordSupplierPayoutSchema,
   rejectCredentialSchema,
+  rejectVehicleSchema,
   setAvailabilitySchema,
   setPayoutMethodSchema,
   setVerificationSchema,
@@ -35,6 +36,7 @@ import {
   type ListSuppliersQuery,
   type RecordSupplierPayoutRequest,
   type RejectCredentialRequest,
+  type RejectVehicleRequest,
   type SetAvailabilityRequest,
   type SetPayoutMethodRequest,
   type SetVerificationRequest,
@@ -56,6 +58,7 @@ import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { sendPdf } from '../proposals/proposal-pdf';
 import { SupplierCredentialsService } from './supplier-credentials.service';
 import { SupplierPayoutsService } from './supplier-payouts.service';
+import { SupplierVehicleService } from './supplier-vehicle.service';
 import { SuppliersService } from './suppliers.service';
 
 const READ_ROLES = [
@@ -71,6 +74,7 @@ export class SuppliersController {
     private readonly suppliers: SuppliersService,
     private readonly payouts: SupplierPayoutsService,
     private readonly credentials: SupplierCredentialsService,
+    private readonly vehicles: SupplierVehicleService,
   ) {}
 
   @Get()
@@ -167,6 +171,29 @@ export class SuppliersController {
     @CurrentUser() actor: AuthUser,
   ): Promise<SupplierDetailDto> {
     return this.suppliers.setVehicle(id, body, actor);
+  }
+
+  /** The vehicle change the worker asked for becomes the vehicle (`docs/schema-w-vehicle.md` X1a). */
+  @Post(':id/vehicle/approve')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  approveVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.vehicles.approve(id, actor);
+  }
+
+  /** The change is refused; the worker reads the reason in the app. */
+  @Post(':id/vehicle/reject')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  rejectVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(rejectVehicleSchema)) body: RejectVehicleRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.vehicles.reject(id, body, actor);
   }
 
   /** W-Earnings E2, E3: how the worker is paid; the app only shows it. */

@@ -30,7 +30,6 @@ import {
   type VerificationStatus,
 } from '@ota/domain';
 import type { ObjectStorage } from '@ota/storage';
-import { vehicleDetailsSchema } from '@ota/schemas';
 import type {
   ApproveCredentialRequest,
   CheckIdentityCardRequest,
@@ -48,6 +47,7 @@ import { OperatingSettingsService } from '../settings/operating-settings.service
 import type { SmsChannel } from '../sms/sms.channel';
 import { SMS_CHANNEL } from '../sms/sms.module';
 import { OBJECT_STORAGE } from '../storage/storage.module';
+import { readVehicleJson } from './vehicle-json';
 
 const MAX_CREDENTIAL_BYTES = 5 * 1024 * 1024;
 
@@ -162,7 +162,7 @@ export class SupplierCredentialsService {
       now,
       windowDays,
     );
-    const vehicle = vehicleDetailsSchema.safeParse(profile.vehicleDetails);
+    const vehicle = readVehicleJson(profile.vehicleDetails);
     return {
       summary: {
         state: summary.state,
@@ -176,14 +176,16 @@ export class SupplierCredentialsService {
       },
       windowDays,
       slots: slots.map((slot) => this.toSlot(slot, now, windowDays)),
-      vehicle: vehicle.success
+      vehicle: vehicle.current
         ? {
-            model: vehicle.data.model,
-            plate: vehicle.data.plate,
-            seats: vehicle.data.seats,
-            airConditioning: vehicle.data.airConditioning,
+            model: vehicle.current.model,
+            plate: vehicle.current.plate,
+            seats: vehicle.current.seats,
+            airConditioning: vehicle.current.airConditioning,
           }
         : null,
+      vehicleRequest: vehicle.pending,
+      vehicleRejection: vehicle.pending ? null : vehicle.rejection,
     };
   }
 
@@ -450,6 +452,31 @@ export class SupplierCredentialsService {
     await this.removeFiles(replaced.map((row) => row.storageKey));
   }
 
+  /**
+   * A new vehicle's approval (`docs/schema-w-vehicle.md` X2a): the verified
+   * versions of these kinds are superseded and the expiry recomputed, inside
+   * the caller's transaction. Returns their storage keys, for `removeFiles`
+   * once the transaction commits. A pending upload stays: it may already be
+   * the new car's.
+   */
+  async supersedeVerified(
+    tx: Prisma.TransactionClient,
+    supplierId: string,
+    kinds: readonly CredentialKind[],
+  ): Promise<{ id: string; storageKey: string | null }[]> {
+    if (kinds.length === 0) return [];
+    const previous = await tx.supplierCredential.findMany({
+      where: { supplierId, kind: { in: [...kinds] }, status: 'VERIFIED' },
+      select: { id: true, storageKey: true },
+    });
+    await tx.supplierCredential.updateMany({
+      where: { id: { in: previous.map((row) => row.id) } },
+      data: { status: 'SUPERSEDED', storageKey: null },
+    });
+    await this.recomputeExpiry(tx, supplierId);
+    return previous;
+  }
+
   /** V3a: the earliest expiry of the current documents, as dispatch reads it. */
   private async recomputeExpiry(
     tx: Prisma.TransactionClient,
@@ -472,7 +499,8 @@ export class SupplierCredentialsService {
     });
   }
 
-  private async removeFiles(keys: readonly (string | null)[]): Promise<void> {
+  /** Best-effort: a file left behind is unreachable once its row has no key. */
+  async removeFiles(keys: readonly (string | null)[]): Promise<void> {
     for (const key of keys) {
       if (key) await this.storage.delete(key).catch(() => undefined);
     }

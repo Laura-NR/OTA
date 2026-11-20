@@ -273,6 +273,7 @@ const ROUTES: Route[] = [
   // W-Credentials: the worker's own documents and uploads.
   { method: 'get', path: '/worker/credentials', allowed: 'worker' },
   { method: 'post', path: '/worker/credentials', allowed: 'worker' },
+  { method: 'post', path: '/worker/vehicle', allowed: 'worker' },
   // W-Job: the worker's steps and on-site emergency, the desk's brief and steps.
   { method: 'post', path: `/worker/jobs/${SERVICE_ITEM}/steps`, allowed: 'worker' },
   { method: 'post', path: `/worker/jobs/${SERVICE_ITEM}/emergency`, allowed: 'worker' },
@@ -380,6 +381,8 @@ const ROUTES: Route[] = [
   // M6: support reads the resources on the inspector; only the desk writes them.
   { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/vehicle`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/vehicle/approve`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/vehicle/reject`, allowed: 'opsWrite' },
   // W-Earnings payouts (docs/schema-w-earnings.md E7): support reads, ops record.
   { method: 'put', path: `/suppliers/${SUPPLIER}/payout-method`, allowed: 'opsWrite' },
   { method: 'get', path: `/suppliers/${SUPPLIER}/payouts`, allowed: 'opsRead' },

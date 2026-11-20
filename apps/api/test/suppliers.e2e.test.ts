@@ -89,7 +89,7 @@ function matchesStatus(status: string, filter: StatusFilter): boolean {
 interface CredentialWhere {
   id?: string | { in: string[] };
   supplierId?: string;
-  kind?: string;
+  kind?: string | { in: string[] };
   status?: StatusFilter;
 }
 
@@ -101,7 +101,10 @@ function createFakeCredentials(rows: SupplierCredential[]) {
         ? row.id === where.id
         : where.id.in.includes(row.id))) &&
     (where.supplierId === undefined || row.supplierId === where.supplierId) &&
-    (where.kind === undefined || row.kind === where.kind) &&
+    (where.kind === undefined ||
+      (typeof where.kind === 'string'
+        ? row.kind === where.kind
+        : where.kind.in.includes(row.kind))) &&
     matchesStatus(row.status, where.status);
   return {
     findMany: async ({ where }: { where: CredentialWhere }) =>
@@ -339,6 +342,8 @@ function createFakePrisma(
       create: vi.fn(async () => ({})),
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
+    // Row locks (`SELECT … FOR UPDATE`): one request at a time here anyway.
+    $queryRaw: async () => [],
   };
 
   return fake;
@@ -1110,7 +1115,6 @@ describe('suppliers', () => {
       extras: 'Child seat on request',
       plate: 'P 207 913',
       insurance: 'Civil liability',
-      insuranceUntil: '2027-01-31',
       routes: ['HAV ⇄ Viñales', 'Zapata'],
     };
 
@@ -1121,7 +1125,8 @@ describe('suppliers', () => {
         .send(vehicle);
 
       expect(response.status).toBe(200);
-      expect(response.body.vehicle).toEqual(vehicle);
+      expect(response.body.vehicle).toEqual({ ...vehicle, insuranceUntil: null });
+      expect(response.body.pendingVehicle).toBeNull();
       expect(store.get(DRIVER_ID)?.vehicleDetails).toEqual(vehicle);
       expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -1130,6 +1135,25 @@ describe('suppliers', () => {
           metadata: { previous: null, next: vehicle },
         }),
       });
+    });
+
+    it("shows the insurance document's expiry as the vehicle's, and drops a date the form still sends (X3a)", async () => {
+      credentials.push(
+        credential({
+          supplierId: DRIVER_ID,
+          kind: 'LIABILITY_INSURANCE',
+          expiresOn: new Date('2027-01-31T00:00:00Z'),
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ ...vehicle, insuranceUntil: '2099-12-31' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.vehicle.insuranceUntil).toBe('2027-01-31');
+      expect(store.get(DRIVER_ID)?.vehicleDetails).not.toHaveProperty('insuranceUntil');
     });
 
     it('refuses a vehicle on a guide and an invalid body', async () => {
@@ -1158,6 +1182,172 @@ describe('suppliers', () => {
         .set('x-test-user', SUPER_ADMIN.email);
 
       expect(response.body.vehicle).toBeNull();
+    });
+  });
+
+  describe("a worker's vehicle change (docs/schema-w-vehicle.md)", () => {
+    const current = {
+      model: 'Peugeot 5008',
+      seats: 7,
+      airConditioning: true,
+      extras: 'Child seat on request',
+      plate: 'P 207 913',
+      insurance: 'Civil liability',
+      routes: ['Zapata'],
+    };
+    const next = {
+      model: 'Hyundai H1',
+      plate: 'P 311 004',
+      seats: 9,
+      airConditioning: true,
+    };
+
+    beforeEach(() => {
+      store.set(DRIVER_ID, { ...store.get(DRIVER_ID)!, vehicleDetails: current });
+    });
+
+    const ask = (body: Record<string, unknown> = next) =>
+      request(app.getHttpServer())
+        .post('/worker/vehicle')
+        .set('x-test-user', WORKER.email)
+        .send(body);
+    const decide = (action: 'approve' | 'reject', body: Record<string, unknown> = {}) =>
+      request(app.getHttpServer())
+        .post(`/suppliers/${DRIVER_ID}/vehicle/${action}`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send(body);
+
+    it('keeps the current vehicle while the request waits, on the app and the inspector', async () => {
+      const asked = await ask();
+
+      expect(asked.status).toBe(200);
+      expect(asked.body.vehicle).toMatchObject({ model: 'Peugeot 5008' });
+      expect(asked.body.vehicleRequest).toMatchObject(next);
+      expect(asked.body.vehicleRejection).toBeNull();
+
+      const inspector = await request(app.getHttpServer())
+        .get(`/suppliers/${DRIVER_ID}`)
+        .set('x-test-user', SUPER_ADMIN.email);
+      expect(inspector.body.vehicle).toMatchObject(current);
+      expect(inspector.body.pendingVehicle).toMatchObject(next);
+      expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ action: 'supplier.vehicle_requested' }),
+      });
+    });
+
+    it("keeps a waiting request when the desk saves the vehicle's other fields", async () => {
+      await ask();
+      const saved = await request(app.getHttpServer())
+        .put(`/suppliers/${DRIVER_ID}/vehicle`)
+        .set('x-test-user', SUPER_ADMIN.email)
+        .send({ ...current, extras: null });
+
+      expect(saved.body.vehicle.extras).toBeNull();
+      expect(saved.body.pendingVehicle).toMatchObject(next);
+    });
+
+    it('approves a new plate: the desk fields carry over, the old car’s documents go and offers pause (X2a)', async () => {
+      const kept = credential({ supplierId: DRIVER_ID, kind: 'TRANSPORT_LICENCE' });
+      const insurance = credential({
+        supplierId: DRIVER_ID,
+        kind: 'LIABILITY_INSURANCE',
+      });
+      const inspection = credential({
+        supplierId: DRIVER_ID,
+        kind: 'TECHNICAL_INSPECTION',
+        expiresOn: new Date('2027-02-01T00:00:00Z'),
+      });
+      const newInsurance = credential({
+        supplierId: DRIVER_ID,
+        kind: 'LIABILITY_INSURANCE',
+        status: 'PENDING_AUDIT',
+        uploadedAt: new Date(),
+      });
+      credentials.push(kept, insurance, inspection, newInsurance);
+      await ask();
+
+      const approved = await decide('approve');
+
+      expect(approved.status).toBe(200);
+      expect(approved.body.vehicle).toEqual({
+        ...current,
+        ...next,
+        insuranceUntil: null,
+      });
+      expect(approved.body.pendingVehicle).toBeNull();
+      expect(insurance.status).toBe('SUPERSEDED');
+      expect(inspection.status).toBe('SUPERSEDED');
+      expect(kept.status).toBe('VERIFIED');
+      // An upload sent after the request may already be the new car's.
+      expect(newInsurance.status).toBe('PENDING_AUDIT');
+      expect(store.get(DRIVER_ID)?.credentialExpiresAt).toEqual(kept.expiresOn);
+      expect(fakePrisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'supplier.vehicle_approved',
+          metadata: expect.objectContaining({
+            superseded: [insurance.id, inspection.id],
+          }),
+        }),
+      });
+
+      const worker = await request(app.getHttpServer())
+        .get('/worker/credentials')
+        .set('x-test-user', WORKER.email);
+      expect(worker.body.summary.autoOffers).toBe(false);
+      expect(worker.body.vehicle).toMatchObject({
+        model: 'Hyundai H1',
+        plate: 'P 311 004',
+      });
+    });
+
+    it('approves a correction of the same car without touching its documents', async () => {
+      const insurance = credential({
+        supplierId: DRIVER_ID,
+        kind: 'LIABILITY_INSURANCE',
+      });
+      credentials.push(insurance);
+      await ask({ ...next, plate: 'p207913' });
+
+      const approved = await decide('approve');
+
+      expect(approved.status).toBe(200);
+      expect(insurance.status).toBe('VERIFIED');
+      expect(approved.body.vehicle.insuranceUntil).toBe('2027-06-12');
+    });
+
+    it('rejects with a reason the worker reads until they ask again', async () => {
+      await ask();
+      const rejected = await decide('reject', {
+        reason: 'We have not seen this car yet',
+      });
+
+      expect(rejected.status).toBe(200);
+      expect(rejected.body.pendingVehicle).toBeNull();
+      expect(rejected.body.vehicle).toMatchObject(current);
+
+      const worker = await request(app.getHttpServer())
+        .get('/worker/credentials')
+        .set('x-test-user', WORKER.email);
+      expect(worker.body.vehicleRequest).toBeNull();
+      expect(worker.body.vehicleRejection).toMatchObject({
+        plate: 'P 311 004',
+        reason: 'We have not seen this car yet',
+      });
+
+      const again = await ask();
+      expect(again.body.vehicleRejection).toBeNull();
+      expect(again.body.vehicleRequest).toMatchObject(next);
+    });
+
+    it('refuses a decision with nothing waiting, an empty reason, and a worker who is not a driver', async () => {
+      expect((await decide('approve')).status).toBe(409);
+      expect((await decide('reject', { reason: 'No' })).status).toBe(409);
+      await ask();
+      expect((await decide('reject', { reason: '' })).status).toBe(400);
+      expect((await ask({ ...next, seats: 0 })).status).toBe(400);
+
+      store.set(DRIVER_ID, { ...store.get(DRIVER_ID)!, category: 'TOUR_GUIDE' });
+      expect((await ask()).status).toBe(422);
     });
   });
 });
