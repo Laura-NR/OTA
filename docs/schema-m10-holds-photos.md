@@ -1,7 +1,7 @@
 # M10 follow-ups: festival room holds and event photos (schema diff for review)
 
-**Status:** Draft for review, 2026-11-20. **A migration** (additive: nullable columns, one new
-table).
+**Status:** **Approved 2026-11-20 as recommended (H1a, H2a, H3a, P1a, P2) and built the same
+day** (§7). **A migration** (additive: nullable columns, one new table).
 **Scope:** the two items `docs/schema-m10-events.md` §4 deferred. First, the Concierge board's
 line "Festival week casas in Vedado fill early. We hold a room at Casa Lis (balcony rooms,
 battery 8 h) for concierge requests until [hold date]; the custom builder opens with these dates
@@ -119,3 +119,39 @@ model EventMedia {
   @@map("event_media")
 }
 ```
+
+## 7. As built (2026-11-20)
+
+- Migration `20261120102556_m10_holds_and_photos` (§6), applied to the dev DB. The seed adds
+  the placeholder stay "Casa Lis" (La Habana) and a hold on the sample jazz festival until
+  10 Jan 2027, with es/fr notes, set only when the event has no hold. **Not seeded:** a
+  placeholder photo. The seed has no access to the API's object storage, and a stored key
+  without its file would serve a 404, so photos come from the desk.
+- Domain `packages/domain/src/events/holds.ts`: `eventHoldShows` (through the last day in
+  Havana), `eventHoldReminderDue` (from 3 days before to the day after,
+  `EVENT_HOLD_REMINDER_DAYS`), `eventBuilderStart` (arrival on the first day or today, leaving
+  the morning after the last night, at most 30 nights, null once over), `eventPhotoIssues` (alt
+  text, consent for people).
+- API: the editor's `hold` ({ casa, last day, note }, or null) must name an **active
+  ACCOMMODATION** item (422 otherwise). The list carries `hold` and `holdReminderDue`, the
+  editor `holdNote` and `media`, the public event `hold` (only while it shows), `media` (alt in
+  the locale) and `builderStart`. Translations take `holdNote` and `mediaAlt`. Photo routes:
+  `POST /events/:id/media`, `PATCH|DELETE /events/:id/media/:mediaId` (ops write; PATCH
+  changes the alt text, people and consent, or the position, the others closing up),
+  `GET /events/media/:id` (ops read) and `GET /catalog/events/media/:id` (public, published
+  events only). Publishing adds `MEDIA_ALT_REQUIRED` and `MEDIA_CONSENT_REQUIRED`. Deleting an
+  event removes its photo files best-effort. Audited as `event.media_added`, `…_updated` and
+  `…_deleted`, with the hold in `event.updated`. RBAC matrix +4, and the public route asserted.
+- Desk (en/es/fr): the editor's "Room hold for concierge requests" card (a deactivated casa
+  keeps its place in the list), the event page's Photos card (upload, Make hero, Edit,
+  Remove; support only sees them), the translations' hold note and alt text per photo, and a
+  dashboard task per hold ending ("Room hold at … ends …", "Open event").
+- Storefront (en/es/fr): the event page's hero (a 3:2 box below sm, 21:9 from sm) and up to
+  four more photos from md, the hold line as an aside ("Room held for festival week") with
+  "Build the trip with these dates", the guide-only "Plan a trip around it" link with the same
+  dates, and the first photo on each events-list card. Low-bandwidth mode keeps photos on tap
+  (`Photo`). `/custom` reads `from`, `to` and `province` (a valid day from today, a later
+  departure, a served province). A new request opens with them placed, and sign-in keeps them.
+- Tests: domain unit tests, `events.integration.test.ts` (hold, reminder, builder start, photo
+  order, consent at publish, a draft's photos kept private), and `events.spec.ts` (the desk's
+  hold and photos, the dashboard task, the storefront line and hero, the builder on the dates).

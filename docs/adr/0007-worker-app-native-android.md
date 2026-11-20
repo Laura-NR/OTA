@@ -322,6 +322,19 @@ there an SMS to the worker until an SMS provider exists. The desk sees each mess
 `/ops`, gets an email copy of a worker's, and answers from the booking, the supplier page or
 Ops Lite.
 
+## Amendment, 2026-11-20: changing vehicle
+
+The owner approved `docs/schema-w-vehicle.md` X1a–X3a (no migration, no new dependency). On
+W-Credentials' insurance card, "Cambiar de vehículo" asks for the new car's model, plate, seats
+and air conditioning and sends them for the desk to review. The request waits beside the
+current vehicle, which stays on file and in dispatch until the desk approves. Like a document
+photo, an unsent request stays on screen rather than being queued, since the desk has to see
+the car. Approving a different plate supersedes the verified inspection and insurance, which
+named the old car, so the app asks for both and auto-offers pause until they are approved.
+Each decision goes out by SMS, as a document review does, and a refusal's reason shows on the
+card until the worker asks again. The vehicle's insurance date is now the insurance
+document's, not a date the desk types.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

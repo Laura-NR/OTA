@@ -2109,3 +2109,36 @@ dependency was added.
 - **Tested.** Domain rules, the email in three languages, the API with the RBAC matrix (both
   routes write-roles only and never through a permission override), a live test with the race,
   and `ops-lite.spec.ts` at 390 px (nudge, the email in Mailpit, the cooldown, withdraw).
+
+## Amendment, 2026-11-20: the vehicle review and M10's holds and photos
+
+The owner approved `docs/schema-w-vehicle.md` and `docs/schema-m10-holds-photos.md` as
+recommended. Neither has an admin board for its desk surfaces, so the build resolved them
+without asking the design team, on the existing tokens and components; no token was added.
+
+- **A vehicle change on the supplier page.** The request sits at the top of the vehicle card,
+  boxed in a `warning-500` border (the colour the desk uses for something waiting on it), with
+  the requested car on one line, when it was asked, and "the current vehicle stays on file
+  until you approve". "Review and approve…" opens a DS 06 dialog that says, before anyone
+  confirms, when the new plate sets aside the inspection and the insurance (an amber alert) or
+  that the documents stay. Rejecting is the credential panel's inline reason form, since the
+  worker reads the reason in the app. The form's insurance date is read-only, mono, with "From
+  the verified liability insurance document." as its hint, in place of the date field.
+- **The app's form** follows W-Credentials' draft: the board's "Cambiar de vehículo" as a
+  secondary button under the insurance card, 48 px fields and a switch for the air
+  conditioning, the note about new documents above them, and the info notice "Cambio de
+  vehículo en revisión" while it waits. The vehicle line now shows even without a current
+  insurance, so a driver whose documents were set aside still sees the car.
+- **The hold line.** The board's sentence is an `aside` ("Room held for festival week") in the
+  page's surface card between the programme and the request, with "Build the trip with these
+  dates" as a secondary button. "Vedado" in the board becomes the event's province, since the
+  hold stores a casa, not a neighbourhood, and the note goes in brackets after the casa's name.
+  It shows through the hold's last day in Havana.
+- **Event photos.** The first photo is the event page's hero: 3:2 below sm and 21:9 from sm,
+  `bg-sunken` behind, then up to four more in a row from md, as the package page's gallery
+  hides its small photos on a phone. Each events-list card leads with its first photo at 3:2.
+  Low-bandwidth mode keeps them behind "Load photo". On the desk the Photos card follows the
+  package editor's, adding "Make hero" and an in-place Edit.
+- **The hold reminder** is one dashboard task per hold, in the existing list ("Room hold at …
+  ends …", "Open event"), from three days before its last day to the day after.
+
