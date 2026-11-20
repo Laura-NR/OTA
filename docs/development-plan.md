@@ -2,8 +2,8 @@
 
 **Status:** Living plan. Originally approved 2026-09-20 as the baseline; the
 **Current status** section immediately below supersedes the historical phase
-prose in §8–§10 (those are kept as the original rationale). The authoritative
-per-session snapshot, with the full evidence list, is `docs/handoff/main.md`.
+prose in §8–§10 (those are kept as the original rationale). Its status stops at
+2026-09-26; the live status is `docs/production-readiness.md`.
 **Owners:** Project founders / lead engineer
 **Source material:** `OTA - Specifications Document.pdf` / `.docx`, `resources/index.html`
 (SVG Cuba map), `resources/cuban_map_svg - Pinar del Rio.svg`, `START-HERE.md`,
@@ -90,7 +90,7 @@ typecheck, test, build green.
   reviews/NPS, richer e2e for worker accept/decline and timeout firing, passkey
   sign-in coverage.
 - **Authorization-matrix gaps:** several live routes are not yet asserted in
-  `apps/api/test/authorization.e2e.test.ts` (see the handoff's "Not verified").
+  `apps/api/test/authorization.e2e.test.ts` (see the 2026-09 handoff's "Not verified", in git history).
 - **Design increments that need no decision** (tokens/alert semantics — see
   below); typography, palette *identity*, and elevation need the owner decision
   above.
@@ -336,7 +336,7 @@ a handoff in `docs/handoff/`.
 Two waves were recommended. Wave 1 was deliberately independent of payment rails,
 which kept the one unresolved external blocker off the critical path. Status
 annotations below reflect 2026-09-26; the detailed evidence is in **Current
-status** above and in `docs/handoff/main.md`.
+status** above, and the live status in `docs/production-readiness.md`.
 
 | Wave | Phases | Scope | Status |
 |---|---|---|---|
@@ -434,5 +434,4 @@ Phase 7 (`docs/design-v1.1-plan.md`).
 5. Run the verification loop: green CI and a deliberate-failure check. ✅
 6. Payments/sanctions spike → ADR 0003/ADR 0005. ✅
 
-For the live "next" list, read the **Current status** section above and
-`docs/handoff/main.md` §Next.
+For the live "next" list, read `docs/production-readiness.md` §5 and §7.
