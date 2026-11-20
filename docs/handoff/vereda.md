@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-18 22:00
+# Handoff — vereda — updated 2026-11-20 09:56
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -17,7 +17,7 @@ desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnin
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
 W-Credentials, on 2026-11-15 W-Job and the worker app's distribution, on 2026-11-16 worker ↔ desk
 messages, on 2026-11-18 the desktop cookie banner, the header in Spanish and French and the 320
-phone header) and
+phone header, on 2026-11-19 the refund card's Nudge and Withdraw) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
 for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job and
@@ -42,6 +42,23 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-19: the refund card's Nudge and Withdraw** (the owner's pick: AL-Alerts' last
+  unbuilt actions). No migration, no dependency (`703ea8a`, `81c3aa9`, `89b80aa`, `ae61ce3`,
+  `c7e4ff3`). Domain `packages/domain/src/payments/refunds.ts`: `refundNudge` (every approver
+  who has not voted, never the actor, only Super Admins when one is needed; one per
+  `REFUND_NUDGE_COOLDOWN_MINUTES` = 30, whoever sends it) and `refundWithdrawal` (your own
+  approval, only while REQUESTED). Email `refundApprovalNudgeEmail` (en/es/fr, the
+  recipient's `locale`, else the tenant's). API: `POST /refunds/:id/nudge` (→ `{ nudgedAt,
+  recipients }`, names) and `POST /refunds/:id/withdraw` (→ `RefundDto`), write roles,
+  `@NotOverridable`, audited `refund.nudged` (count only) / `refund.approval_withdrawn`;
+  `GET /refunds` adds an optional `lastNudgedAt` read from the audit log (the booking's schedule
+  does not carry it). `vote`, `withdrawApproval` and `nudge` lock the refund row (`SELECT … FOR
+  UPDATE`) and read the approvals inside the transaction; mail goes out after commit. RBAC
+  matrix +2 (and both in the override test's "votes stay with their roles"). Desk:
+  `RefundActions` takes `viewerEmail`; once your approval is in it shows the caption, "Nudge by
+  email" (unavailable with "Nudged; again from HH:MM" in the cooldown) and "Withdraw my
+  approval" behind a DS 06 dialog, instead of a second vote; in Ops Lite, the refund queue and
+  a booking's payments. e2e: `ops-lite.spec.ts`' fourth test (E2ELITE3).
 - **2026-11-18 (night): the 320 phone header** (the owner's pick). No migration, no dependency,
   no route change (`c670c0c`, `8423852`, `8ad4656`, `9e670a5`, `0d9f1a0`). `LocaleSwitcher`
   takes `variant` (`pills`, the header's codes; `list`, 48 px rows named in each language) and `onNavigate`;
@@ -866,37 +883,40 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-18 night, the 320 phone header; dev stack stopped for the verify, restarted after)
-- CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched); no `v*` tag on the remote,
-  so no CI or Release run since `94c0910`. `pnpm audit --prod`: four of the five deferred
-  advisories (`deepmerge-ts`, `uuid`, `glob`, `minimatch`); `picomatch` no longer reported;
-  nothing new.
-- The gutter, reproduced first on the dev stack (a Playwright script measuring the header row
-  per width × locale × text size): at 320 the row was 11 px over its padded box in every
-  locale, 19 px with larger text; 375–768 at 0. After the fix: 0 at every width and both text
-  sizes.
+## Verified (2026-11-19/20, the refund nudge and withdraw; dev stack stopped for the verify, restarted after)
+- CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched 2026-11-19), no `v*` tag, no
+  new PR ref, so no CI or Release run. `pnpm audit --prod`: four deferred advisories
+  (`deepmerge-ts`, `uuid`, `glob`, `minimatch`), nothing new.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**,
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1600 passed / 71 skipped**, `TURBO_FORCE=true
-  pnpm build` **19/19**, all before the banner fix (`9e670a5`); after it, the storefront's
-  forced typecheck, lint and format check only (the full build not re-run).
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1609 passed / 72 skipped** (+9 new, +1 skipped:
+  the new live test), `TURBO_FORCE=true pnpm build` **19/19**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, from `apps/api`, the 18
-  `test/*.integration.test.ts` files) **70/70**.
-- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **192
-  passed, 6 failed, 3 skipped**. Two failures were this change: the touch test still measured
-  the phone header's pill (spec updated), and the phone banner walk reached the covered switch
-  (fixed, `9e670a5`). Four were late-run navigation timeouts (builder, keep building,
-  packages, ds07-375 larger text). Re-run on a fresh stack (keyboard, i18n, builder, keep
-  building, packages and responsive; default, ds07-320, ds07-375): 27 passed, 2 skipped, only
-  the banner walk failing; after the fix, on the owner's restarted stack, keyboard + i18n +
-  telemetry **20 passed** and accessibility's cookie banner test **1 passed**.
-- Browser (390, 1024, 1280, also 320 and 640; screenshots and computed styles): pills
-  `display:none` below sm, `flex` from 640; the drawer's "Language"/"Idioma"/"Langue" overline
-  (12 px, 13.5 px larger), rows 48 px (54 px larger), the current one 600 weight in
-  primary-700; 1024 (es, compact) and 1280 (en) headers unchanged.
-- Owner's dev stack restarted with Task 0's settings (`setsid nohup pnpm dev`) and left
-  running.
+  `test/*.integration.test.ts` files) **71/71**. The lock: with `lockRow`'s `FOR UPDATE`
+  removed, `payment-schedule.integration.test.ts`' race failed 4 of 4 runs (APPROVED with the
+  withdrawal also accepted); restored, it passed every run.
+- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **197
+  passed, 2 failed, 3 skipped**. Both were `page.goto` timeouts, not this change: keep building
+  (default) passed alone on a fresh stack; ds07-375 "customer pages … larger text" failed twice
+  more on a stack the previous spec had grown (storefront `next dev` 3.8 GB, Traps 2026-10-31),
+  then passed after `kill -9`, ports free and `.next` deleted (2.0 min). `ops-lite.spec.ts`
+  4/4 in the full run.
+- Browser (390 Ops Lite; 1024 and 1280 the desk's refund queue; screenshots and computed
+  styles): caption 12/16 px muted; Nudge primary and Withdraw tertiary at Ops Lite's `md`
+  (40 px, 16 px type), `sm` on the desk (32 px, 14 px); in the cooldown Nudge is
+  `aria-disabled` with "Nudged; again from HH:MM"; the success alert in success-100/700; the
+  DS 06 dialog at 390 (sheet) and 1280; no horizontal overflow at any width.
+- Owner's dev stack restarted with Task 0's settings (`setsid nohup pnpm dev`; API, desk and
+  storefront answer 200) and left running.
 
 ## Assumptions & unknowns
+- **Refund nudge (2026-11-19):** email stands in for push/SMS; a send failure is logged and
+  the nudge (and its cooldown) stands. Approvers are found by role (`OPERATIONS_ADMIN`,
+  `SUPER_ADMIN`, active), so in dev the list is long: the dev DB has seven active Super Admins
+  left by earlier runs (including one named "Traveler Two"), hence the "Emailed 7 approvers"
+  form. Not confirmed with the owner: 30 minutes as the cooldown (a constant in the domain,
+  not a setting). Found, not changed: a traveler's `GET /me/reservations/:id/schedule` returns
+  `RefundDto` with `requestedByEmail` and each approval's `approverEmail` (staff addresses in
+  the traveler's JSON; the storefront does not show them).
 - **W-Job (2026-11-15):** nothing ran on a device; the e2e drives the web preview, where
   `expo-location` is the browser's geolocation and the composer path (no data) is not taken.
   Assumed: Android's `sms:` link opens the default SMS app with the body filled; a fix indoors
@@ -1175,6 +1195,13 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **Refund fixtures (2026-11-19):** above the dual limit a Super Admin's approval completes a
+  refund on its own, so a hand-made REQUESTED refund above € 2,000 with a Super Admin's
+  approval is really approved and the card shows no action (the first visual check failed
+  that way); e2e signs in as a Super Admin, so its fixture is € 600 (between the limits). A
+  `-t` filter on `payment-schedule.integration.test.ts` skips its first test, which creates the
+  receipts the later ones use. The fake Prisma in `payment-schedule.e2e.test.ts` answers
+  `$queryRaw` (the refund lock) with `[]`.
 - **An ended session can leave `pnpm e2e` running (2026-11-18):** the previous session
   started a detached `pnpm e2e` at 09:30 (parent PID 1, log in its own scratchpad) and ended; what looked
   like the owner's dev stack was that run's webServer. Check `ps -eo pid,ppid,cmd | grep
@@ -1852,6 +1879,11 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-19: refund votes, withdrawals and nudges lock the refund row (`SELECT … FOR
+    UPDATE` in `RefundsService.lockRow`) and read the approvals inside that transaction; a new
+    write to `refund_approvals` must do the same, or a withdrawal can race a second approval
+    into a refund approved on one vote. The last nudge is the newest `refund.nudged` audit row
+    (metadata `refundId`), not a column."
   - "2026-11-18: the Booking form prices twice: `plan()` before the transaction for the
     form's checks, and `PackageBookingService.confirmPrice` inside it once the departure, tier,
     extras and then the package row are locked; a moved charge is 409 `PriceChanged`. A new
@@ -2117,12 +2149,12 @@ events (T-Events)".
 
 ## Next
 1. Owner: push `vereda` (background resend, W-Job, distribution, worker ↔ desk messages, the
-   desktop cookie banner, the header in Spanish and French, the stale price window and the 320
-   phone header are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
+   desktop cookie banner, the header in Spanish and French, the stale price window, the 320
+   phone header and the refund nudge/withdraw are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
    so CI runs on W-Earnings' payouts, the receipt, Ops Lite, W-Credentials, background resend,
    W-Job, distribution and worker messages: PR #1 is merged, and a push to `vereda` alone runs
-   no workflow (none has run since `94c0910`; checked 2026-11-18: still nothing pushed, no
-   `v*` tag).
+   no workflow (none has run since `94c0910`; checked 2026-11-19: `origin/vereda` still
+   `b1ac87c`, no `v*` tag).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
    first real run; runbook "Release images"). On the server: `docker login ghcr.io` with a
@@ -2146,8 +2178,10 @@ events (T-Events)".
    W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
    form's insurance date, a migration dropping `credential_document_url`. Ops
    Lite (Phase 7 item 2) landed 2026-11-14 and its worker threads 2026-11-16; its follow-ups
-   are the owner's call: push to a closed page (a service worker and a push service), the
-   board's refund nudge and withdraw, quick replies.
+   are the owner's call: push to a closed page (a service worker and a push service), quick
+   replies (the refund card's nudge and withdraw landed 2026-11-19). Also the owner's call,
+   found 2026-11-19: drop staff emails from the traveler's schedule JSON (Assumptions), and
+   whether 30 minutes is the right nudge cooldown.
 4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (also the AI provider and sanctions question), the business values, the
    tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
@@ -2905,3 +2939,14 @@ events (T-Events)".
   supersedes 2026-10-29's "kept the language links in the phone header" below sm. Also fixed
   the banner switch hidden under the sticky actions (found by the longer walk) with a measured
   scroll padding, over shortening the walk, which would have hidden it again.
+- 2026-11-19 — the owner picked the refund card's Nudge and Withdraw (over W-Credentials'
+  vehicle follow-ups, a `credential_document_url` drop doc and the M10 room holds doc). The
+  build chose: email over push/SMS (neither exists); every eligible approver over one named
+  person (the design's "Dayana"), as the override request asks every Super Admin; a 30-minute
+  cooldown per refund, whoever nudges, kept in the audit log rather than a column (no
+  migration); withdraw as taking back your own approval (deleting your `refund_approvals` row)
+  over withdrawing the refund, which would need a status; the actions in the shared
+  `RefundActions`, so the desk's queue and a booking's payments get them too; hiding a second
+  vote from someone who already voted (the API refused it with 409); locking the refund row in
+  vote as well, since a withdrawal racing the second approval reproduced a dual-limit refund
+  approved on one vote; the recipients named up to three, counted beyond.

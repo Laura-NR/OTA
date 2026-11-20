@@ -2076,3 +2076,36 @@ was added.
 - **Tested.** The DS 07 header test measures the row at every width (it started at md); the
   locale spec switches language from the drawer at 390; the touch test checks the drawer's
   language row at 44 px or more on a phone and the pill's extended tap from 768.
+
+## Amendment, 2026-11-19: the refund card's Nudge and Withdraw
+
+The owner picked AL-Alerts' refund card actions, left unbuilt by the Ops Lite amendment
+(2026-11-14) because neither push nor SMS nor a withdraw route existed. The build resolved them
+without asking the design team, on the existing tokens and components; no token, migration or
+dependency was added.
+
+- **When the card offers them.** The design's card ("You already gave the first approval…") is
+  the viewer's own: once their approval is in and the refund still waits, Approve and Reject
+  give way to a caption naming who must decide next (another approver, or a Super Admin above
+  the dual limit), a primary "Nudge by email" and a tertiary "Withdraw my approval". Before,
+  the card offered a second vote that the API refused with a 409. The same actions sit in the
+  desk's refund queue and a booking's payments, since all three render `RefundActions`.
+- **Nudge is email.** "Nudge Dayana" (push and SMS) becomes "Nudge by email": every active
+  approver who has not voted, never the one nudging, and only Super Admins when one is needed,
+  in their own language (the tenant's when they have none). The design names one person; with
+  several possible approvers the build asks them all, as the override request does. One nudge
+  per refund every 30 minutes, whoever sends it: the button stays in the tab order and says
+  when it can go again. The confirmation names up to three people ("Emailed … at 14:34. The
+  refund goes out the moment the last approval is in.") and counts beyond. It drops the
+  design's "the traveler is told either way": nothing tells the traveler about a refund today.
+- **Withdraw takes back your approval**, not the refund: only your own, only while the refund
+  waits, behind the DS 06 confirmation dialog (as declining a proposal and withdrawing an event
+  request are). The refund stays requested with the approvals left. Withdrawing the request
+  itself would need a status the schema does not have.
+- **Logged.** `refund.nudged` (with the number of people asked, not their addresses) and
+  `refund.approval_withdrawn`, on the booking. A vote, a withdrawal and a nudge each lock the
+  refund row, so a withdrawal racing the second approval cannot leave a dual-limit refund
+  approved on one vote (a live test reproduced that without the lock).
+- **Tested.** Domain rules, the email in three languages, the API with the RBAC matrix (both
+  routes write-roles only and never through a permission override), a live test with the race,
+  and `ops-lite.spec.ts` at 390 px (nudge, the email in Mailpit, the cooldown, withdraw).
