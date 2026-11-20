@@ -605,8 +605,6 @@ model SupplierProfile {
   provincesActive       String[]           @map("provinces_active")
   vehicleDetails        Json?              @map("vehicle_details")
   rtnLicenseNumber      String             @unique @map("rtn_license_number")
-  /// Superseded by `supplier_credentials` (W-Credentials V8); no longer written or read.
-  credentialDocumentUrl String?            @map("credential_document_url")
   /// The earliest expiry of the current documents, rewritten on every review (W-Credentials V3).
   credentialExpiresAt   DateTime?          @map("credential_expires_at")
   verificationStatus    VerificationStatus @default(PENDING_AUDIT) @map("verification_status")

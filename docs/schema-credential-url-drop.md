@@ -1,6 +1,7 @@
 # Drop `supplier_profiles.credential_document_url`: schema diff for review
 
-**Status:** Draft for review, 2026-11-20. **A migration** that deletes a column and its values.
+**Status:** **Approved 2026-11-20 as recommended (U1a, U2a) and built the same day** (§5). **A
+migration** that deletes a column and its values.
 **Scope:** the clean-up `docs/schema-w-credentials.md` V8 left for later. Since W-Credentials
 (2026-11-14), no code writes or reads the column. Each value it held was copied into
 `supplier_credentials` by the backfill in `20261114143342_w_credentials`.
@@ -60,3 +61,11 @@ and `apps/api/test/suppliers.e2e.test.ts` lose the field. `docs/pii-at-rest-revi
   model edited by hand, not through `prisma format`), applied to the dev DB.
 - The test changes above. `pnpm typecheck`, the unit suite and the live tests run, and
   `prisma migrate diff` reports no difference.
+
+## 5. As built (2026-11-20)
+
+- Migration `20261120101001_drop_credential_document_url` (written from `prisma migrate diff`,
+  since `migrate dev` refuses a data-losing step without a terminal; applied with `migrate
+  deploy`). Dev DB: the one value dropped, and `migrate diff` reports no difference.
+- The backfill test is deleted. The file's other live test, `dispatch.service.test.ts` and
+  `suppliers.e2e.test.ts` pass without the field.

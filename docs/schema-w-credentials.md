@@ -37,7 +37,8 @@ With the recommendations below:
   review. Dispatch, the expiring list, disruptions, the daily expiry scan and W-Home keep
   reading it unchanged (V3).
 - `supplier_profiles.credential_document_url` is no longer written or read; the column stays,
-  and a later migration drops it once the backfill has been checked on a real database.
+  and a later migration drops it once the backfill has been checked on a real database (dropped
+  2026-11-20, `docs/schema-credential-url-drop.md`).
 - Undo: drop the table and the two types, then copy the expiry back. Nothing else changes shape.
 
 ## 3. Decisions (options and recommendation)

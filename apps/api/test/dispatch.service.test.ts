@@ -83,7 +83,6 @@ function makeSupplier(
     provincesActive: ['La Habana'],
     vehicleDetails: null,
     rtnLicenseNumber: `RTN-${overrides.id}`,
-    credentialDocumentUrl: null,
     credentialExpiresAt: new Date('2027-12-31T00:00:00Z'),
     verificationStatus: 'VERIFIED',
     isAvailable: true,

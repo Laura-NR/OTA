@@ -46,7 +46,6 @@ function makeSupplier(
     provincesActive: ['La Habana'],
     vehicleDetails: null,
     rtnLicenseNumber: `RTN-${overrides.id.slice(0, 4)}`,
-    credentialDocumentUrl: null,
     credentialExpiresAt: null,
     verificationStatus: 'PENDING_AUDIT',
     isAvailable: true,
@@ -799,7 +798,6 @@ describe('suppliers', () => {
       makeSupplier({
         id: GUIDE_ID,
         verificationStatus: 'VERIFIED',
-        credentialDocumentUrl: 'credentials/x.jpg',
         credentialExpiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       }),
     );

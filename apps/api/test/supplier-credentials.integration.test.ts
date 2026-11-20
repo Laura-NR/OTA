@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { PrismaClient } from '@ota/db';
 import { InMemoryObjectStorage } from '@ota/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -18,24 +15,10 @@ const runIntegration = process.env.RUN_DB_INTEGRATION === '1';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]).toString('base64');
 
-/** The backfill statement of the W-Credentials migration (V8a). */
-function backfillSql(): string {
-  const migration = readFileSync(
-    join(
-      __dirname,
-      '../../../packages/db/prisma/migrations/20261114143342_w_credentials/migration.sql',
-    ),
-    'utf8',
-  );
-  return migration.slice(migration.indexOf('INSERT INTO "supplier_credentials"'));
-}
-
 /**
- * Live proof of W-Credentials against Postgres: the migration's backfill turns
- * a supplier's old credential file into one row of its category's main
- * document; a worker's upload, the desk's approval of the renewal, the old
- * version superseded, and the expiry dispatch reads recomputed from the date
- * columns. Run with `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest
+ * Live proof of W-Credentials against Postgres: a worker's upload, the desk's
+ * approval of the renewal, the old version superseded, and the expiry dispatch
+ * reads recomputed from the date columns. Run with `RUN_DB_INTEGRATION=1 pnpm --filter @ota/api exec vitest
  * run test/supplier-credentials.integration.test.ts` against a migrated dev
  * database.
  */
@@ -92,7 +75,6 @@ describe.skipIf(!runIntegration)('SupplierCredentialsService (live Postgres)', (
         provincesActive: ['La Habana'],
         rtnLicenseNumber: `RTN-CRED-${suffix}`,
         verificationStatus: 'VERIFIED',
-        credentialDocumentUrl: `credentials/legacy-${suffix}.jpg`,
         credentialExpiresAt: new Date('2027-03-01T00:00:00Z'),
       },
     });
@@ -110,30 +92,6 @@ describe.skipIf(!runIntegration)('SupplierCredentialsService (live Postgres)', (
       },
     });
     await prisma.$disconnect();
-  });
-
-  it('backfills an old credential file as the category’s main document (V8a)', async () => {
-    const rows = await prisma
-      .$transaction(async (tx) => {
-        await tx.$executeRawUnsafe(backfillSql());
-        const backfilled = await tx.supplierCredential.findMany({
-          where: { supplierId },
-        });
-        // Roll back: the migration already ran on this database.
-        throw Object.assign(new Error('rollback'), { backfilled });
-      })
-      .catch((error: { backfilled?: unknown[] }) => error.backfilled);
-
-    expect(rows).toEqual([
-      expect.objectContaining({
-        kind: 'TRANSPORT_LICENCE',
-        status: 'VERIFIED',
-        storageKey: `credentials/legacy-${suffix}.jpg`,
-        expiresOn: new Date('2027-03-01T00:00:00Z'),
-        uploadedVia: 'VISIT',
-      }),
-    ]);
-    expect(await prisma.supplierCredential.count({ where: { supplierId } })).toBe(0);
   });
 
   it('takes a renewal from the app, approves it, supersedes the old one and recomputes the expiry', async () => {
