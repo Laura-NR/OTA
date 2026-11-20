@@ -1,22 +1,27 @@
 # Production readiness
 
-- **Updated:** 2026-11-09
+- **Updated:** 2026-11-20
 - **Reader:** the owner. This is the list of what stands between the platform and real bookings,
   what is still open from earlier sessions, and what only the owner can do, with steps.
-- **How to use it:** tick items as they close. The agent's working notes stay in
-  `docs/handoff/vereda.md`, and the deployment detail in `docs/deployment-plan.md`. This file
-  only points at them.
+- **How to use it:** tick items as they close. The deployment detail is in
+  `docs/deployment-plan.md`; what was assumed or never run is in `docs/known-limitations.md`;
+  the decisions already taken are in `docs/decision-log.md` and the ADRs. This file only
+  points at them.
 
 ## 1. Where things stand
 
 - **Built and tested:** the storefront (es/en/fr), the desk (back-office) and the API. That
   covers packages, bookings, wire-transfer payments, documents, email, compliance, retention,
-  staff security, analytics and events.
-- **Not built:** the mobile apps (worker, traveler, admin), every deployment piece, real legal
-  texts and real data.
-- **Git:** all work since 2026-10-13 is on `vereda`, ready for a pull request into `main`. The
-  owner pushes and opens it; the agent's shell has no GitHub credentials. `main` has nothing
-  `vereda` lacks, so merging makes `main` equal to `vereda` with no force-push.
+  staff security, analytics and events (with room holds and photos), plus Ops Lite on the
+  phone.
+- **Built, tested only in a browser:** the worker app (Android, Expo): sign-in, offers, jobs and
+  their steps, the SOS, earnings and payouts, documents, vehicle changes, messages and
+  updates. It has never run on a phone (§5, step 10).
+- **Built, rehearsed locally:** the deployment stack (A2: images, Compose, Caddy, backups, the
+  Release workflow). The Release workflow has never run (§5, step 9).
+- **Not built:** the traveler and admin mobile apps, real legal texts and real data.
+- **Git:** the second pull request from `vereda` into `main` was opened on 2026-11-20. Merge it
+  with a merge commit; `main` has nothing `vereda` lacks.
 
 ## 2. What the owner decided on 2026-11-08
 
@@ -136,13 +141,21 @@
 
 **Owner technical choices:**
 - raster app icons from Vereda;
-- an SMS provider;
-- the 29 AGENTS.md §C lines proposed in the handoff (only the owner edits AGENTS.md).
+- an SMS provider.
 
 The domain answers the staff email domain and `PASSKEY_RP_ID` (A6).
 
+**Follow-ups waiting on the owner's call (2026-11-20):**
+- whether the traveler's payment schedule should also lose the desk's refund note and the
+  approval notes (the storefront does not show them; the staff emails are already gone);
+- worker app: the silent SMS module (after the APK machine), one shared id for an SOS logged
+  from an SMS and the app's own copy;
+- worker ↔ desk messages: translation (needs the AI provider), quick replies (need content),
+  a push or SMS to the worker when the desk replies (needs a push service or the SMS provider);
+- Ops Lite: a push to a closed page (a service worker and a push service), quick replies;
+- supplier documents: a retention path (PII review G5) and W-Login's banner.
+
 **Deferred build items:**
-- M10 room holds and event photos (need a migration doc);
 - a real screen-reader pass;
 - manifest editing beyond the feature flags.
 
@@ -226,22 +239,32 @@ test. It is dev only, but production `next start` memory has not been measured; 
    complete).
 4. A full booking with a real small wire transfer; check the PDFs; use the desk from Cuba.
 
-**Step 9: push, review and merge the pull request**
-1. Push: `git push origin vereda` from your own terminal, then open
-   `https://github.com/Laura-NR/OTA/compare/main...vereda?expand=1` and paste the description
-   the agent prepared.
-2. The security patches (A1) are on the branch since 2026-11-08; wait until CI is green. CI
-   runs on every pull request.
+**Step 9: merge the pull request and tag the first release**
+1. *Done 2026-11-20:* `vereda` pushed and the second pull request opened.
+2. Wait until its CI is green. If a check fails, give the agent the failing step's log.
 3. Review it yourself; Article 9 needs a named human.
-4. Add the 29 §C lines from the handoff to AGENTS.md.
+4. *Done 2026-11-20:* the handoff graduated: its lasting facts went into AGENTS.md §C (your
+   edit), its traps, open assumptions and decisions into `docs/dev-traps.md`,
+   `docs/known-limitations.md` and `docs/decision-log.md`, and `docs/handoff/vereda.md` was
+   deleted on the branch.
 5. Merge with **"Create a merge commit"**: `main` then equals `vereda` and keeps its history.
-   Squash would fold 487 commits into one; "rebase and merge" rewrites them.
-6. Before the merge, the agent graduates the handoff: facts go to AGENTS.md §C (via you),
-   decisions to the ADRs, and `docs/handoff/vereda.md` is deleted in the merge.
+   Squash would fold the commits into one; "rebase and merge" rewrites them.
+6. Set the repository variable `DESK_DOMAIN` to `desk.veredaexpeditions.com` (Settings ›
+   Secrets and variables › Actions › Variables).
+7. When CI on `main` is green, tag the merge: `git checkout main && git pull origin main &&
+   git tag -a v0.1.0 -m "First release" && git push origin v0.1.0`. Watch the Release workflow
+   (its first run) under Actions; never move or reuse a tag. Nothing goes live until
+   `deploy/deploy.sh` runs on a server (runbook "Release images" and "Deploy a release").
 
-**Step 10: worker app go-ahead**
-1. Approve Expo (a new dependency) when you want Phase 7 to start.
-2. Pick two or three suppliers for a field test (ADR 0007).
+**Step 10: the worker app on a phone (Phase 7 field test)**
+1. A machine with the Android SDK and a JDK for the first APK, with our own signing key backed
+   up twice, and the Android id.
+2. Before the first release: runbook "Releasing the worker app" (the update signing key and its
+   two backups, the QR, DNS for `app.<domain>`, `WORKER_APP_PUBLIC_URL`).
+3. Two or three suppliers for the field test (ADR 0007). It covers the checklist in
+   `docs/worker-app-plan.md` §8: the receipt's share sheet, background resend, the SOS SMS and
+   position, distribution (install from the page, both update kinds, a JS update), messages
+   written with no signal, and "Cambiar de vehículo".
 
 **Step 11: analytics.** Plausible runs on the same server (plan D20). The runbook's "Going live"
 steps run during the first deploy, not before.
@@ -281,14 +304,12 @@ Until then, the mock stays in dev, and production holds the desk's AI off by its
 
 ## 7. Suggested order
 
-1. *Done 2026-11-08:* security patches (A1), the small hardening (A5) and B6. **Owner:**
-   push `vereda`, so the pull request's CI runs on the patched versions.
-2. **Next:** fix the storefront 404 page (every "page not found" is sent without the site's
-   layout until the browser renders it; found 2026-11-08), then the rest of the deployment
-   build (A2), rehearsed locally, about two sessions.
-3. **Owner, in parallel:** counsel, business terms, the key backup, the domain steps, the PR
-   review.
-4. **When the legal entity exists:** accounts, the trial server, real data, the rehearsal;
-   start the worker app (A3) early enough to field-test before launch.
+1. *Done by 2026-11-20:* security patches (A1), the small hardening (A5), B6, the storefront
+   404 page, the deployment build (A2, rehearsed locally) and the worker app's build (A3,
+   short of a phone).
+2. **Owner, next:** merge the pull request and push the first tag (§5, step 9); then the APK
+   machine and the field test (§5, step 10).
+3. **Owner, in parallel:** counsel, business terms, the key backup, the domain steps.
+4. **When the legal entity exists:** accounts, the trial server, real data, the rehearsal.
 5. **Launch:** `docs/deployment-plan.md` §8 go/no-go checklist, then wipe the trial bookings
    (the owner's go).
