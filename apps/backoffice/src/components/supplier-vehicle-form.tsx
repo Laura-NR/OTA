@@ -2,11 +2,12 @@
 
 import type { VehicleDetailsDto } from '@ota/schemas';
 import { Alert, Button, Checkbox, Field, Input, Textarea } from '@ota/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
 
 import { apiRequest } from '@/lib/client-api';
+import { calendarDate } from '@/lib/ops-format';
 
 export interface SupplierVehicleFormProps {
   supplierId: string;
@@ -17,9 +18,10 @@ export interface SupplierVehicleFormProps {
 
 /**
  * A driver's vehicle on the inspector (A-Suppliers "Vehicle & fuel", M6
- * D7(b)): model, seats, A/C, extras, plate, insurance and routes, saved as one
- * object. The page keys this form by the stored vehicle, so a refresh after
- * saving resets it.
+ * D7(b)): model, seats, A/C, extras, plate, insurance cover and routes, saved
+ * as one object. The insurance date is shown, not edited: it is the verified
+ * insurance document's (`docs/schema-w-vehicle.md` X3a). The page keys this
+ * form by the stored vehicle, so a refresh after saving resets it.
  */
 export function SupplierVehicleForm({
   supplierId,
@@ -27,6 +29,7 @@ export function SupplierVehicleForm({
   canEdit,
 }: SupplierVehicleFormProps) {
   const t = useTranslations('backoffice.supplierDetail.vehicle');
+  const locale = useLocale();
   const router = useRouter();
   const id = useId();
   const [model, setModel] = useState(vehicle?.model ?? '');
@@ -37,7 +40,6 @@ export function SupplierVehicleForm({
   const [extras, setExtras] = useState(vehicle?.extras ?? '');
   const [plate, setPlate] = useState(vehicle?.plate ?? '');
   const [insurance, setInsurance] = useState(vehicle?.insurance ?? '');
-  const [insuranceUntil, setInsuranceUntil] = useState(vehicle?.insuranceUntil ?? '');
   const [routes, setRoutes] = useState((vehicle?.routes ?? []).join('\n'));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +59,6 @@ export function SupplierVehicleForm({
           extras: extras.trim() || null,
           plate,
           insurance: insurance.trim() || null,
-          insuranceUntil: insuranceUntil || null,
           routes: routes
             .split('\n')
             .map((route) => route.trim())
@@ -127,17 +128,17 @@ export function SupplierVehicleForm({
         </div>
         {text('extras', t('extras'), extras, setExtras, { maxLength: 120 })}
         {text('insurance', t('insurance'), insurance, setInsurance, { maxLength: 80 })}
-        <Field id={`${id}-insurance-until`} label={t('insuranceUntil')}>
-          {(control) => (
-            <Input
-              {...control}
-              type="date"
-              value={insuranceUntil}
-              disabled={disabled}
-              onChange={(event) => setInsuranceUntil(event.target.value)}
-            />
-          )}
-        </Field>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-body-sm font-medium text-default">
+            {t('insuranceUntil')}
+          </span>
+          <p className="flex min-h-10 items-center font-mono text-body-sm text-default">
+            {vehicle?.insuranceUntil
+              ? calendarDate(vehicle.insuranceUntil, locale)
+              : t('insuranceNone')}
+          </p>
+          <p className="text-caption text-muted">{t('insuranceFromDocument')}</p>
+        </div>
       </div>
       <Field id={`${id}-routes`} label={t('routes')} hint={t('routesHint')}>
         {(control) => (

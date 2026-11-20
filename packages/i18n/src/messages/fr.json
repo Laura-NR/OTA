@@ -2596,7 +2596,27 @@
         "saving": "Enregistrement…",
         "failed": "Impossible d'enregistrer le véhicule.",
         "insuranceExpired": "Assurance expirée",
-        "insuranceEnds": "L'assurance expire dans {days} j"
+        "insuranceEnds": "L'assurance expire dans {days} j",
+        "insuranceFromDocument": "D’après l’attestation d’assurance responsabilité civile vérifiée.",
+        "insuranceNone": "Aucune assurance vérifiée",
+        "request": {
+          "title": "Changement de véhicule demandé depuis l’app",
+          "line": "{model} · {plate} · {seats} places · {ac, select, yes {climatisation} other {sans climatisation}}",
+          "asked": "Demandé le {date}. Le véhicule actuel reste enregistré, et dans la répartition, jusqu’à votre approbation.",
+          "approve": "Examiner et approuver…",
+          "dialogTitle": "Approuver {model} · {plate} ?",
+          "plateChanges": "L’immatriculation passe de {from} à {to}. Le contrôle technique et l’assurance responsabilité civile enregistrés concernaient l’ancien véhicule : les deux sont écartés et les offres automatiques sont suspendues jusqu’à l’approbation des nouveaux.",
+          "samePlate": "Même immatriculation : les documents enregistrés restent.",
+          "firstVehicle": "Aucun véhicule n’était enregistré, les documents enregistrés restent donc.",
+          "confirm": "Approuver le véhicule",
+          "cancel": "Annuler",
+          "close": "Fermer",
+          "reason": "Motif pour le prestataire",
+          "reasonHint": "Le prestataire le lit dans l’application.",
+          "reject": "Refuser le changement",
+          "rejectForm": "Refuser le changement de véhicule",
+          "failed": "Impossible d’enregistrer la décision."
+        }
       },
       "autoReliability": "En pause · fiabilité",
       "autoWhyReliability": "Moins de {floor} % d'acceptation sur au moins {min} offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation.",

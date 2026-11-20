@@ -2596,7 +2596,27 @@
         "saving": "Guardando…",
         "failed": "No se pudo guardar el vehículo.",
         "insuranceExpired": "Seguro vencido",
-        "insuranceEnds": "El seguro vence en {days} d"
+        "insuranceEnds": "El seguro vence en {days} d",
+        "insuranceFromDocument": "Del seguro de responsabilidad civil verificado.",
+        "insuranceNone": "Sin seguro verificado",
+        "request": {
+          "title": "Cambio de vehículo pedido desde la app",
+          "line": "{model} · {plate} · {seats} plazas · {ac, select, yes {aire acondicionado} other {sin aire acondicionado}}",
+          "asked": "Pedido el {date}. El vehículo actual sigue registrado, y en el despacho, hasta que lo apruebes.",
+          "approve": "Revisar y aprobar…",
+          "dialogTitle": "¿Aprobar {model} · {plate}?",
+          "plateChanges": "La matrícula cambia de {from} a {to}. La inspección técnica y el seguro de responsabilidad civil registrados eran del vehículo anterior: ambos quedan sin efecto y las ofertas automáticas se pausan hasta que se aprueben los nuevos.",
+          "samePlate": "Misma matrícula: los documentos registrados se mantienen.",
+          "firstVehicle": "No había vehículo registrado, así que los documentos registrados se mantienen.",
+          "confirm": "Aprobar vehículo",
+          "cancel": "Cancelar",
+          "close": "Cerrar",
+          "reason": "Motivo para el colaborador",
+          "reasonHint": "El colaborador lo lee en la app.",
+          "reject": "Rechazar cambio",
+          "rejectForm": "Rechazar el cambio de vehículo",
+          "failed": "No se pudo guardar la decisión."
+        }
       },
       "autoReliability": "En pausa · fiabilidad",
       "autoWhyReliability": "Menos del {floor} % de aceptación en al menos {min} ofertas respondidas: el auto-despacho omite a este trabajador hasta que la tasa se recupere. La mesa aún puede ofrecerle un servicio desde la lista de reasignación.",

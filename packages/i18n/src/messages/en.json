@@ -2596,7 +2596,27 @@
         "saving": "Saving…",
         "failed": "Could not save the vehicle.",
         "insuranceExpired": "Insurance expired",
-        "insuranceEnds": "Insurance ends in {days} d"
+        "insuranceEnds": "Insurance ends in {days} d",
+        "insuranceFromDocument": "From the verified liability insurance document.",
+        "insuranceNone": "No verified insurance",
+        "request": {
+          "title": "Vehicle change asked from the app",
+          "line": "{model} · {plate} · {seats} seats · {ac, select, yes {air conditioning} other {no air conditioning}}",
+          "asked": "Asked {date}. The current vehicle stays on file, and in dispatch, until you approve.",
+          "approve": "Review and approve…",
+          "dialogTitle": "Approve {model} · {plate}?",
+          "plateChanges": "The plate changes from {from} to {to}. The technical inspection and the liability insurance on file named the old car: both are set aside, and automatic offers pause until the new ones are approved.",
+          "samePlate": "Same plate: the documents on file stay.",
+          "firstVehicle": "No vehicle was on file, so the documents on file stay.",
+          "confirm": "Approve vehicle",
+          "cancel": "Cancel",
+          "close": "Close",
+          "reason": "Reason for the worker",
+          "reasonHint": "The worker reads it in the app.",
+          "reject": "Reject change",
+          "rejectForm": "Reject the vehicle change",
+          "failed": "Could not save the decision."
+        }
       },
       "autoReliability": "Paused · reliability",
       "autoWhyReliability": "Below {floor} % acceptance over at least {min} answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list.",

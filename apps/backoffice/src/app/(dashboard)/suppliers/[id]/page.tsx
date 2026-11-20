@@ -26,6 +26,7 @@ import { SupplierPayoutMethod } from '@/components/supplier-payout-method';
 import { SupplierPayoutRecord } from '@/components/supplier-payout-record';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
 import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
+import { SupplierVehicleRequest } from '@/components/supplier-vehicle-request';
 import { VerificationActions } from '@/components/verification-actions';
 import { WorkerSignInCode } from '@/components/worker-sign-in-code';
 import { WorkerSignOut } from '@/components/worker-sign-out';
@@ -198,7 +199,7 @@ export default async function SupplierDetailPage({
         ? 'driver'
         : null;
   const resources = supplier.resources;
-  // The insurance date is informational (M6 D7(b)): it never pauses dispatch.
+  // The vehicle's insurance date is the verified insurance document's (X3a).
   const insuranceDays = supplier.vehicle?.insuranceUntil
     ? Math.ceil(
         (new Date(supplier.vehicle.insuranceUntil).getTime() - now.getTime()) / DAY_MS,
@@ -506,6 +507,15 @@ export default async function SupplierDetailPage({
                   <Badge variant={insurance.variant}>{insurance.label}</Badge>
                 ) : null}
               </div>
+              {supplier.pendingVehicle ? (
+                <SupplierVehicleRequest
+                  key={supplier.pendingVehicle.requestedAt}
+                  supplierId={supplier.id}
+                  currentPlate={supplier.vehicle?.plate ?? null}
+                  request={supplier.pendingVehicle}
+                  canDecide={canVerify}
+                />
+              ) : null}
               <SupplierVehicleForm
                 key={JSON.stringify(supplier.vehicle)}
                 supplierId={supplier.id}
