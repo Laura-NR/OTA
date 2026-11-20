@@ -71,6 +71,7 @@ export const scheduleReceiptSchema = paymentReceiptSchema.extend({
 export type ScheduleReceiptDto = z.infer<typeof scheduleReceiptSchema>;
 
 export const refundApprovalSchema = z.object({
+  /** Null in the traveler's schedule (`GET /me/reservations/:id/schedule`). */
   approverEmail: z.string().nullable(),
   approve: z.boolean(),
   note: z.string().nullable(),
@@ -112,6 +113,7 @@ export const refundSchema = z.object({
   providerRefundId: z.string().nullable(),
   sentAt: z.string().nullable(),
   createdAt: z.string(),
+  /** Null in the traveler's schedule, as is each approval's `approverEmail`. */
   requestedByEmail: z.string().nullable(),
   approvals: z.array(refundApprovalSchema),
   /** While REQUESTED, who still has to approve. */

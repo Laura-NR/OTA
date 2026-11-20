@@ -99,11 +99,20 @@ export function toRefundDto(row: RefundRow, limits: RefundThresholds): RefundDto
   };
 }
 
+/** The traveler's copy of a refund: who asked and who voted stay on the desk. */
+function withoutStaffEmails(refund: RefundDto): RefundDto {
+  return {
+    ...refund,
+    requestedByEmail: null,
+    approvals: refund.approvals.map((approval) => ({ ...approval, approverEmail: null })),
+  };
+}
+
 /**
  * The M4 payment schedule of a booking (`docs/schema-m4-payment-schedule.md`):
  * its instalments, what the traveler may still choose, the receipts with
  * their proofs, and the refunds. Read by the desk and, scoped to the owner, by
- * the traveler.
+ * the traveler, whose copy carries no staff email addresses.
  */
 @Injectable()
 export class ScheduleService {
@@ -163,12 +172,13 @@ export class ScheduleService {
           reviewedAt: proof.reviewedAt ? proof.reviewedAt.toISOString() : null,
         })),
       })),
-      refunds: row.refunds.map((refund) =>
-        toRefundDto(refund, {
+      refunds: row.refunds.map((refund) => {
+        const dto = toRefundDto(refund, {
           singleUpTo: thresholds.refundSingleUpTo,
           dualUpTo: thresholds.refundDualUpTo,
-        }),
-      ),
+        });
+        return options.ownerId ? withoutStaffEmails(dto) : dto;
+      }),
       rateLock: rateLockOf(row),
     };
   }

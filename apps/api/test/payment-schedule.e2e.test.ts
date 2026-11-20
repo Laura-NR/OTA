@@ -876,6 +876,30 @@ describe('M4 payment schedule API', () => {
       expect((await nudge('ops')).status).toBe(409);
     });
 
+    it('keeps staff email addresses out of the traveler’s schedule, not the desk’s', async () => {
+      const receiptId = await paidDeposit();
+      const refund = await create({ receiptId, reason: 'FORCE_MAJEURE', note: 'Storm' });
+      await vote(refund.body.id, 'ops');
+
+      const traveler = await http()
+        .get(`/me/reservations/${BOOKING}/schedule`)
+        .set(as('owner'));
+      expect(traveler.status).toBe(200);
+      expect(traveler.body.refunds).toHaveLength(1);
+      expect(traveler.body.refunds[0]).toMatchObject({
+        amount: refund.body.amount,
+        requestedByEmail: null,
+        approvals: [{ approverEmail: null, approve: true }],
+      });
+      expect(JSON.stringify(traveler.body)).not.toContain(USERS.ops.email);
+
+      const desk = await http().get(`/reservations/${BOOKING}/schedule`).set(as('ops'));
+      expect(desk.body.refunds[0]).toMatchObject({
+        requestedByEmail: USERS.ops.email,
+        approvals: [{ approverEmail: USERS.ops.email }],
+      });
+    });
+
     it('leaves a refund above the dual limit waiting for a Super Admin', async () => {
       const full = await link({ rail: 'OPEN_BANKING_SEPA', plan: 'FULL' });
       await confirm(full.body.id);
