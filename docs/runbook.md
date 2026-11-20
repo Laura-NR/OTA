@@ -630,10 +630,11 @@ visibility on GitHub after the first release.
 
 - **The code is at fault:**
   `git checkout <previous tag> && deploy/deploy.sh --rollback <previous tag>`
-  (no dump, no migration). Migrations are forward-only; this repo's add
-  columns and tables rather than drop them, so the previous image normally
-  runs on the newer schema. Check the release's migrations before relying on
-  that.
+  (no dump, no migration). Migrations are forward-only and mostly add columns
+  and tables, so the previous image normally runs on the newer schema. A
+  release that drops one (the first release drops `supplier_profiles.credential_document_url`)
+  breaks any older image that still reads it. Check the release's migrations
+  before relying on a rollback.
 - **A migration broke data:** restore the release's `pre-deploy` dump
   ("Restore over the live database") with `OTA_VERSION` set back to the
   previous tag first (in `deploy/.env`, the checkout at that tag). Everything
