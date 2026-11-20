@@ -52,8 +52,8 @@ in the history and the handoff. The file's other tests stay, and its supplier fi
 the dev DB, to prove a migration that will never run again.
 
 **Also changed (no decision):** the fake supplier rows in `apps/api/test/dispatch.service.test.ts`
-and `apps/api/test/suppliers.e2e.test.ts` lose the field. `docs/pii-at-rest-review.md` and
-`docs/schema-w-credentials.md` §7 record the drop.
+and `apps/api/test/suppliers.e2e.test.ts` lose the field. `docs/schema-w-credentials.md` records
+the drop (`docs/pii-at-rest-review.md` never listed the column).
 
 ## 4. What lands once approved
 
