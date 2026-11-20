@@ -19,3 +19,6 @@ allowBuilds:
 # advisories; the patched 8.5 line is the same major.
 overrides:
   'next>postcss': ^8.5.32
+  # @prisma/config pins effect to exactly 3.21.0 (GHSA-7589-6fvf-x4pw); 3.22.2
+  # is the same major, and no newer Prisma 6 bumps it.
+  '@prisma/config>effect': 3.22.2
