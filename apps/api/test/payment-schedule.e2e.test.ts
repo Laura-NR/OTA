@@ -4,6 +4,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { parseTenantConfig } from '@ota/config';
 import { Prisma } from '@ota/db';
+import type { EmailMessage } from '@ota/email';
 import { InMemoryObjectStorage } from '@ota/storage';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -11,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
 import { DocumentsService } from '../src/documents/documents.service';
+import { MAILER } from '../src/email/email.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { withNoSettingsVersion } from './fixtures/operating-settings';
 import { OBJECT_STORAGE } from '../src/storage/storage.module';
@@ -342,14 +344,48 @@ function createFakePrisma(state: State) {
         state.approvals.push(row);
         return row;
       },
+      deleteMany: async (args: { where: { refundId: string; approverId: string } }) => {
+        const before = state.approvals.length;
+        state.approvals = state.approvals.filter(
+          (row) =>
+            row.refundId !== args.where.refundId ||
+            row.approverId !== args.where.approverId,
+        );
+        return { count: before - state.approvals.length };
+      },
     },
     auditLog: {
       create: async (args: { data: Row }) => {
         state.audits.push(args.data);
         return args.data;
       },
+      // The refund nudges: by action and booking, newest first, and by refund id.
+      findFirst: async (args: {
+        where: { action: string; entityId: string; metadata: { equals: string } };
+      }) =>
+        state.audits
+          .filter(
+            (row) =>
+              row.action === args.where.action &&
+              row.entityId === args.where.entityId &&
+              (row.metadata as Row).refundId === args.where.metadata.equals,
+          )
+          .sort((a, b) => byCreated(b, a))[0] ?? null,
+      findMany: async (args: { where: { action: string; entityId: { in: string[] } } }) =>
+        state.audits
+          .filter(
+            (row) =>
+              row.action === args.where.action &&
+              args.where.entityId.in.includes(row.entityId as string),
+          )
+          .sort((a, b) => byCreated(b, a)),
     },
     user: {
+      // The active staff whose role holds a refund vote.
+      findMany: async (args: { where: { role: { in: string[] } } }) =>
+        users
+          .filter((candidate) => args.where.role.in.includes(candidate.role))
+          .map((candidate) => ({ ...candidate, fullName: null, locale: null })),
       // M9 C4: a link that names the shown currency keeps it when none is saved.
       updateMany: async (args: {
         where: { id: string; displayCurrency: null };
@@ -375,6 +411,8 @@ function createFakePrisma(state: State) {
         return { count: args.data.length };
       },
     },
+    // The refund row lock (`SELECT … FOR UPDATE`): one request at a time here.
+    $queryRaw: async () => [],
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
   };
   return fake;
@@ -392,6 +430,8 @@ const fakeAuthService = {
   },
 };
 
+const mail: EmailMessage[] = [];
+
 async function buildApp(state: State): Promise<INestApplication> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(PrismaService)
@@ -404,6 +444,8 @@ async function buildApp(state: State): Promise<INestApplication> {
     .useValue(new InMemoryObjectStorage())
     .overrideProvider(DocumentsService)
     .useValue({ generate: async () => undefined })
+    .overrideProvider(MAILER)
+    .useValue({ send: async (message: EmailMessage) => void mail.push(message) })
     .compile();
   const app = moduleRef.createNestApplication();
   await app.init();
@@ -773,6 +815,89 @@ describe('M4 payment schedule API', () => {
       });
       const rejected = await vote(refund.body.id, 'ops2', false);
       expect(rejected.body.status).toBe('REJECTED');
+    });
+
+    it('takes back one person’s approval while the refund waits, and only theirs', async () => {
+      const receiptId = await paidDeposit();
+      const refund = await create({ receiptId, reason: 'FORCE_MAJEURE', note: 'Storm' });
+      await vote(refund.body.id, 'ops');
+      const withdraw = (who: keyof typeof USERS) =>
+        http().post(`/refunds/${refund.body.id}/withdraw`).set(as(who));
+
+      expect((await withdraw('ops2')).status).toBe(409);
+      const back = await withdraw('ops');
+      expect(back.status).toBe(200);
+      expect(back.body).toMatchObject({
+        status: 'REQUESTED',
+        approvals: [],
+        decision: { state: 'PENDING', missing: 2 },
+      });
+      expect(state.audits.map((row) => row.action)).toContain(
+        'refund.approval_withdrawn',
+      );
+      expect((await withdraw('ops')).status).toBe(409);
+
+      // Approved, it is on its way and can no longer be taken back.
+      await vote(refund.body.id, 'ops');
+      expect((await vote(refund.body.id, 'ops2')).body.status).toBe('APPROVED');
+      expect((await withdraw('ops')).status).toBe(409);
+    });
+
+    it('nudges the approvers who have not voted, once per cooldown', async () => {
+      const full = await link({ rail: 'OPEN_BANKING_SEPA', plan: 'FULL' });
+      await confirm(full.body.id);
+      // € 3,100 is above the € 2,000 dual limit: only a Super Admin completes it.
+      const refund = await create({
+        receiptId: full.body.id,
+        reason: 'HOST_CANCELLATION',
+        note: 'Casa closed',
+      });
+      await vote(refund.body.id, 'ops');
+      mail.length = 0;
+
+      const nudge = (who: keyof typeof USERS) =>
+        http().post(`/refunds/${refund.body.id}/nudge`).set(as(who));
+      const first = await nudge('ops');
+      expect(first.status).toBe(200);
+      expect(first.body.recipients).toEqual([USERS.super.email]);
+      expect(mail.map((message) => message.to)).toEqual([USERS.super.email]);
+      expect(mail[0]!.subject).toContain('PAYSCH01');
+      // No locale of their own: the tenant's primary one (Spanish here).
+      expect(mail[0]!.text).toContain('necesita a un Super Admin');
+      expect(mail[0]!.text).toContain(`Ya aprobado por ${USERS.ops.email}`);
+
+      expect((await nudge('ops2')).status).toBe(409);
+      const queue = await http().get('/refunds').set(as('ops'));
+      expect(
+        queue.body.find((row: { id: string }) => row.id === refund.body.id).lastNudgedAt,
+      ).toBe(first.body.nudgedAt);
+
+      expect((await vote(refund.body.id, 'super')).body.status).toBe('APPROVED');
+      expect((await nudge('ops')).status).toBe(409);
+    });
+
+    it('keeps staff email addresses out of the traveler’s schedule, not the desk’s', async () => {
+      const receiptId = await paidDeposit();
+      const refund = await create({ receiptId, reason: 'FORCE_MAJEURE', note: 'Storm' });
+      await vote(refund.body.id, 'ops');
+
+      const traveler = await http()
+        .get(`/me/reservations/${BOOKING}/schedule`)
+        .set(as('owner'));
+      expect(traveler.status).toBe(200);
+      expect(traveler.body.refunds).toHaveLength(1);
+      expect(traveler.body.refunds[0]).toMatchObject({
+        amount: refund.body.amount,
+        requestedByEmail: null,
+        approvals: [{ approverEmail: null, approve: true }],
+      });
+      expect(JSON.stringify(traveler.body)).not.toContain(USERS.ops.email);
+
+      const desk = await http().get(`/reservations/${BOOKING}/schedule`).set(as('ops'));
+      expect(desk.body.refunds[0]).toMatchObject({
+        requestedByEmail: USERS.ops.email,
+        approvals: [{ approverEmail: USERS.ops.email }],
+      });
     });
 
     it('leaves a refund above the dual limit waiting for a Super Admin', async () => {

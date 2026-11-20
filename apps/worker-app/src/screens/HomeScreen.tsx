@@ -20,11 +20,13 @@ import {
   travelerLine,
 } from '../lib/format';
 import { Button, Card, Notice, colors, radius, space, type } from '../ui';
+import { JobCard } from './JobsScreen';
 
 /**
  * W-Home: who is signed in, whether the phone is in sync, the open offers
- * with their time left, the coming jobs, and the way to the calendar and to
- * reliability and payouts. `now` is the API's clock as the app tracks it, so
+ * with their time left, the coming jobs (each opens W-Job), and the way to
+ * the credentials, the thread with the desk (a card when the desk wrote), and a newer version of the app when one is published;
+ * the bottom bar leads to the calendar and to reliability and payouts. `now` is the API's clock as the app tracks it, so
  * a phone set to the wrong time still counts down right.
  */
 export function HomeScreen({
@@ -37,9 +39,12 @@ export function HomeScreen({
   refreshing,
   onRefresh,
   onOpenOffer,
-  onOpenCalendar,
-  onOpenEarnings,
+  onOpenJob,
+  onOpenCredentials,
+  onOpenMessages,
   onSignOut,
+  update,
+  onOpenUpdate,
 }: {
   home: WorkerHomeDto;
   now: number;
@@ -51,11 +56,23 @@ export function HomeScreen({
   refreshing: boolean;
   onRefresh: () => void;
   onOpenOffer: (offer: WorkerOfferDto) => void;
-  onOpenCalendar: () => void;
-  onOpenEarnings: () => void;
+  onOpenJob: (job: WorkerJobDto) => void;
+  onOpenCredentials: () => void;
+  /** The thread with the desk (`docs/schema-w-messages.md` M5). */
+  onOpenMessages: () => void;
   onSignOut: () => void;
+  /** A newer APK (U3a): offered, or required once the job under way is over. */
+  update: { kind: 'optional' | 'after-job'; versionName: string } | null;
+  onOpenUpdate: () => void;
 }) {
   const { worker } = home;
+  const unread = home.messages?.unread ?? 0;
+  const fromDesk =
+    unread > 0
+      ? ([...(home.messages?.messages ?? [])]
+          .reverse()
+          .find((message) => message.sender === 'OPERATIONS') ?? null)
+      : null;
   const offers = home.offers.filter(
     (offer) => !answered.has(offer.serviceItemId) && Date.parse(offer.deadline) > now,
   );
@@ -91,6 +108,36 @@ export function HomeScreen({
 
       {notice ? <Notice tone="warning">{notice}</Notice> : null}
 
+      {update?.kind === 'optional' ? (
+        <Card>
+          <Text style={[type.body, styles.strong]}>
+            {copy.update.title(update.versionName)}
+          </Text>
+          <Text style={type.small}>{copy.update.data}</Text>
+          <Button label={copy.update.open} variant="secondary" onPress={onOpenUpdate} />
+        </Card>
+      ) : update?.kind === 'after-job' ? (
+        <Notice tone="info">{copy.update.afterJob(update.versionName)}</Notice>
+      ) : null}
+
+      {fromDesk ? (
+        <Card style={styles.fromDesk}>
+          <Text style={[type.body, styles.strong]}>{copy.messages.fromDesk}</Text>
+          <Text style={type.body} numberOfLines={3}>
+            {fromDesk.body}
+          </Text>
+          <Text style={type.caption}>
+            {copy.messages.meta(
+              fromDesk.authorName ?? copy.messages.desk,
+              clock(fromDesk.createdAt),
+              null,
+              fromDesk.bookingCode,
+            )}
+          </Text>
+          <Button label={copy.messages.read} onPress={onOpenMessages} />
+        </Card>
+      ) : null}
+
       <Text style={type.small}>
         {copy.home.credential(
           worker.credentialExpiresAt ? calendarDate(worker.credentialExpiresAt) : null,
@@ -125,12 +172,20 @@ export function HomeScreen({
       </Text>
       {home.jobs.length === 0 ? <Text style={type.small}>{copy.home.noJobs}</Text> : null}
       {home.jobs.map((job) => (
-        <JobRow key={job.serviceItemId} job={job} />
+        <JobCard key={job.serviceItemId} job={job} onOpen={() => onOpenJob(job)} />
       ))}
 
       <View style={styles.footer}>
-        <Button label={copy.calendar.open} variant="secondary" onPress={onOpenCalendar} />
-        <Button label={copy.earnings.open} variant="secondary" onPress={onOpenEarnings} />
+        <Button
+          label={unread > 0 ? copy.messages.openUnread(unread) : copy.messages.open}
+          variant="secondary"
+          onPress={onOpenMessages}
+        />
+        <Button
+          label={copy.credentials.open}
+          variant="secondary"
+          onPress={onOpenCredentials}
+        />
         {settings.deskPhone ? (
           <Button
             label={copy.home.desk(settings.deskPhone)}
@@ -182,26 +237,6 @@ function OfferCard({
   );
 }
 
-function JobRow({ job }: { job: WorkerJobDto }) {
-  return (
-    <Card>
-      <View style={styles.row}>
-        <Text style={[type.body, styles.strong, type.figure]}>{clock(job.startsAt)}</Text>
-        <Text style={[type.small, styles.grow]}>{shortDate(job.startsAt)}</Text>
-        <Text style={[type.caption, styles.assigned]}>{copy.home.assigned}</Text>
-      </View>
-      <Text style={type.body}>
-        {serviceLabel(job.serviceType)}
-        {job.province ? ` · ${job.province}` : ''}
-      </Text>
-      <Text style={type.small}>
-        {travelerLine(job.traveler)} · {money(job.payout, job.currency)} ·{' '}
-        {job.bookingCode}
-      </Text>
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
   page: { padding: space.lg, gap: space.md, backgroundColor: colors.page, flexGrow: 1 },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
@@ -218,13 +253,6 @@ const styles = StyleSheet.create({
   grow: { flex: 1, minWidth: 0 },
   strong: { fontWeight: '700' },
   hurry: { borderColor: colors.warning },
-  assigned: {
-    color: colors.success,
-    backgroundColor: colors.successSoft,
-    borderRadius: radius.sm,
-    paddingHorizontal: space.sm,
-    paddingVertical: 2,
-    overflow: 'hidden',
-  },
+  fromDesk: { borderColor: colors.primary },
   footer: { gap: space.sm, marginTop: space.md },
 });

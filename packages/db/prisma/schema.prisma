@@ -113,6 +113,37 @@ enum PayoutStatus {
   FAILED
 }
 
+/// W-Earnings: how a worker is paid (docs/schema-w-earnings.md E2).
+enum PayoutMethod {
+  CASH_OFFICE
+  BANK_TRANSFER
+}
+
+/// W-Credentials: a supplier's document kinds (docs/schema-w-credentials.md V2).
+enum CredentialKind {
+  TRANSPORT_LICENCE
+  TECHNICAL_INSPECTION
+  LIABILITY_INSURANCE
+  GUIDE_LICENCE
+  HOST_LICENCE
+  IDENTITY_CARD
+}
+
+/// W-Credentials: one uploaded version's review state (V1).
+enum CredentialStatus {
+  PENDING_AUDIT
+  VERIFIED
+  REJECTED
+  SUPERSEDED
+}
+
+// W-Job J5 (docs/schema-w-job.md): who put an incident in the log.
+enum IncidentSource {
+  DESK
+  WORKER_APP
+  WORKER_SMS
+}
+
 // M4 payment schedule (docs/schema-m4-payment-schedule.md)
 enum InstalmentKind {
   DEPOSIT
@@ -473,6 +504,14 @@ model User {
   overrides           PermissionOverride[] @relation("PermissionOverrideUser")
   overridesDecided    PermissionOverride[] @relation("PermissionOverrideDecidedBy")
   overridesEnded      PermissionOverride[] @relation("PermissionOverrideEndedBy")
+  // W-Earnings
+  payoutsRecorded     SupplierPayout[]     @relation("SupplierPayoutRecordedBy")
+  // W-Credentials
+  credentialsUploaded SupplierCredential[] @relation("SupplierCredentialUploadedBy")
+  credentialsReviewed SupplierCredential[] @relation("SupplierCredentialReviewedBy")
+  // W-Job
+  incidentsAcknowledged Incident[] @relation("IncidentAcknowledgedBy")
+  authoredWorkerMessages WorkerMessage[]
 
   // Better Auth relations
   sessions Session[]
@@ -566,15 +605,21 @@ model SupplierProfile {
   provincesActive       String[]           @map("provinces_active")
   vehicleDetails        Json?              @map("vehicle_details")
   rtnLicenseNumber      String             @unique @map("rtn_license_number")
-  credentialDocumentUrl String?            @map("credential_document_url")
+  /// The earliest expiry of the current documents, rewritten on every review (W-Credentials V3).
   credentialExpiresAt   DateTime?          @map("credential_expires_at")
   verificationStatus    VerificationStatus @default(PENDING_AUDIT) @map("verification_status")
   isAvailable           Boolean            @default(true) @map("is_available")
+  /// Null until the desk sets it (W-Earnings E2).
+  payoutMethod          PayoutMethod?      @map("payout_method")
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")
 
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceItems ServiceItem[]
+  payouts      SupplierPayout[]
+  credentials  SupplierCredential[]
+  incidents    Incident[]
+  workerMessages WorkerMessage[]
   availabilities Availability[]
   dispatchOffers DispatchOffer[]
   inventoryItems InventoryItem[]
@@ -660,6 +705,7 @@ model InventoryItem {
   packageServices PackageService[]
   packageExtras   PackageExtra[]
   proposalLines   ProposalPriceLine[]
+  eventHolds      Event[]
 
   @@index([type])
   @@index([province])
@@ -1202,17 +1248,85 @@ model ServiceItem {
   // M2: what the traveler pays for this service (closes the invoice gap);
   // null until the booking is priced.
   travelerPrice   Decimal?          @map("traveler_price") @db.Decimal(10, 2)
+  /// The payment that settled this job; null until paid (W-Earnings E1).
+  payoutId        String?           @map("payout_id") @db.Uuid
+  /// W-Job J1: the desk's brief for the worker.
+  meetingPoint    String?           @map("meeting_point")
+  dropOff         String?           @map("drop_off")
+  workerBrief     String?           @map("worker_brief")
+  /// W-Job J2: the worker's steps, each set once.
+  enRouteAt       DateTime?         @map("en_route_at")
+  arrivedAt       DateTime?         @map("arrived_at")
+  startedAt       DateTime?         @map("started_at")
+  finishedAt      DateTime?         @map("finished_at")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
   reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   supplier    SupplierProfile? @relation(fields: [supplierId], references: [id])
+  payout      SupplierPayout?  @relation(fields: [payoutId], references: [id], onDelete: SetNull)
   dispatchOffers DispatchOffer[]
+  incidents      Incident[]
+  workerMessages WorkerMessage[]
 
   @@index([reservationId])
   @@index([supplierId])
   @@index([status])
   @@map("service_items")
+}
+
+/// W-Earnings: one payment to a worker, covering one or more finished jobs
+/// (docs/schema-w-earnings.md E1). Recorded after the money changed hands.
+model SupplierPayout {
+  id           String       @id @default(uuid()) @db.Uuid
+  supplierId   String       @map("supplier_id") @db.Uuid
+  method       PayoutMethod
+  currency     String       @default("EUR")
+  amount       Decimal      @db.Decimal(10, 2)
+  /// The calendar day the worker was paid, stored at UTC midnight.
+  paidAt       DateTime     @map("paid_at")
+  recordedById String?      @map("recorded_by_id") @db.Uuid
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  supplier     SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  recordedBy   User?           @relation("SupplierPayoutRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  serviceItems ServiceItem[]
+
+  @@index([supplierId, paidAt])
+  @@map("supplier_payouts")
+}
+
+/// W-Credentials: one uploaded version of a supplier's document
+/// (docs/schema-w-credentials.md V1). A kind's current document is its one
+/// VERIFIED row; a renewal is a PENDING_AUDIT row beside it. The service keeps
+/// at most one of each per kind (no partial unique index: Prisma 6 cannot declare one).
+model SupplierCredential {
+  id           String           @id @default(uuid()) @db.Uuid
+  supplierId   String           @map("supplier_id") @db.Uuid
+  kind         CredentialKind
+  status       CredentialStatus @default(PENDING_AUDIT)
+  /// Null for an identity card checked in person (V5), and once a file is removed (V7).
+  storageKey   String?          @map("storage_key")
+  number       String?          @db.VarChar(60)
+  issuer       String?          @db.VarChar(120)
+  issuedOn     DateTime?        @map("issued_on") @db.Date
+  expiresOn    DateTime?        @map("expires_on") @db.Date
+  uploadedAt   DateTime         @default(now()) @map("uploaded_at")
+  uploadedById String?          @map("uploaded_by_id") @db.Uuid
+  uploadedVia  ResourceChannel  @map("uploaded_via")
+  reviewedAt   DateTime?        @map("reviewed_at")
+  reviewedById String?          @map("reviewed_by_id") @db.Uuid
+  rejectReason String?          @map("reject_reason") @db.VarChar(500)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  supplier   SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  uploadedBy User?           @relation("SupplierCredentialUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  reviewedBy User?           @relation("SupplierCredentialReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([supplierId, kind, status])
+  @@index([status])
+  @@map("supplier_credentials")
 }
 
 // Ledger of every dispatch offer, including superseded and re-routed ones.
@@ -1675,6 +1789,40 @@ model Message {
   @@map("messages")
 }
 
+/// Worker <-> desk messages: who wrote a message in a worker's thread
+/// (docs/schema-w-messages.md).
+enum WorkerMessageSender {
+  WORKER
+  OPERATIONS
+}
+
+/// A message in a worker's one thread with the desk (M1, M2). Never a traveler's.
+model WorkerMessage {
+  id            String              @id @default(uuid()) @db.Uuid
+  supplierId    String              @map("supplier_id") @db.Uuid
+  sender        WorkerMessageSender
+  body          String
+  /// The desk person who wrote it (OPERATIONS only).
+  authorId      String?             @map("author_id") @db.Uuid
+  /// The job it is about, when it names one (M2, M8).
+  serviceItemId String?             @map("service_item_id") @db.Uuid
+  /// The phone's time of writing, corrected by the API's clock (M4).
+  writtenAt     DateTime?           @map("written_at")
+  /// The app's id, so a resent message is kept once (M4).
+  clientRef     String?             @unique @map("client_ref")
+  /// When the receiving side opened the thread (M3).
+  readAt        DateTime?           @map("read_at")
+  createdAt     DateTime            @default(now()) @map("created_at")
+
+  supplier    SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  author      User?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  serviceItem ServiceItem?    @relation(fields: [serviceItemId], references: [id], onDelete: SetNull)
+
+  @@index([supplierId, createdAt])
+  @@index([serviceItemId])
+  @@map("worker_messages")
+}
+
 /// W-Calendar: why a worker blocked a day.
 enum AvailabilityBlockReason {
   FAMILY
@@ -1721,10 +1869,28 @@ model Incident {
   severity      String
   resolvedAt    DateTime? @map("resolved_at")
   createdAt     DateTime  @default(now()) @map("created_at")
+  // W-Job J5: a worker's on-site report.
+  serviceItemId     String?        @map("service_item_id") @db.Uuid
+  supplierId        String?        @map("supplier_id") @db.Uuid
+  source            IncidentSource @default(DESK)
+  latitude          Decimal?       @db.Decimal(9, 6)
+  longitude         Decimal?       @db.Decimal(9, 6)
+  locationAccuracyM Int?           @map("location_accuracy_m")
+  /// The phone's time of the report, corrected by the API's clock.
+  occurredAt        DateTime?      @map("occurred_at")
+  /// The app's id for the report, so a resent one is not doubled.
+  clientRef         String?        @unique @map("client_ref")
+  acknowledgedAt    DateTime?      @map("acknowledged_at")
+  acknowledgedById  String?        @map("acknowledged_by_id") @db.Uuid
 
-  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservation    Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  serviceItem    ServiceItem?     @relation(fields: [serviceItemId], references: [id], onDelete: SetNull)
+  supplier       SupplierProfile? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  acknowledgedBy User?            @relation("IncidentAcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
 
   @@index([reservationId])
+  @@index([serviceItemId])
+  @@index([acknowledgedAt])
   @@map("incidents")
 }
 
@@ -1888,6 +2054,12 @@ model Event {
   summary        String
   notes          String?
   publishedAt    DateTime?   @map("published_at")
+  /// M10 H1a: the casa (an ACCOMMODATION catalog item) holding a room for concierge requests.
+  holdInventoryItemId String?   @map("hold_inventory_item_id") @db.Uuid
+  /// M10 H1a: the last day the hold line shows (a UTC calendar day).
+  holdUntil           DateTime? @map("hold_until") @db.Date
+  /// M10 H1a: the hold's detail ("balcony rooms, battery 8 h"), in the source locale.
+  holdNote            String?   @map("hold_note")
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
@@ -1895,6 +2067,8 @@ model Event {
   categories   EventSeatCategory[]
   translations EventTranslation[]
   requests     EventRequest[]
+  media        EventMedia[]
+  holdInventoryItem InventoryItem? @relation(fields: [holdInventoryItemId], references: [id], onDelete: SetNull)
 
   @@index([status, endsOn])
   @@map("events")
@@ -1947,6 +2121,10 @@ model EventTranslation {
   nights          Json?
   /// { [categoryId]: { name, description } }
   categories      Json?
+  /// M10 H1a: the hold's note in this locale.
+  holdNote        String?  @map("hold_note")
+  /// M10 P1a: { [mediaId]: altText }
+  mediaAlt        Json?    @map("media_alt")
   // Drafted text waits for a reviewer before travelers see it.
   published       Boolean  @default(false)
   // Event.updatedAt when this translation was last brought in line.
@@ -1958,6 +2136,23 @@ model EventTranslation {
 
   @@unique([eventId, locale])
   @@map("event_translations")
+}
+
+/// M10 P1a: an event's photo, as package_media; the first is the page's hero.
+model EventMedia {
+  id               String   @id @default(uuid()) @db.Uuid
+  eventId          String   @map("event_id") @db.Uuid
+  storageKey       String   @map("storage_key")
+  altText          String   @map("alt_text")
+  position         Int      @default(0)
+  showsPeople      Boolean  @default(false) @map("shows_people")
+  consentReference String?  @map("consent_reference")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@map("event_media")
 }
 
 /// M10: a traveler's request for event seats (D3, D5, D6).

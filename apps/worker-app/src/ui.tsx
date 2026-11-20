@@ -29,7 +29,7 @@ export const type = StyleSheet.create({
   figure: { fontVariant: ['tabular-nums'] },
 });
 
-type ButtonVariant = 'primary' | 'secondary' | 'quiet';
+type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'danger';
 
 /** A full-width action with a 48 dp target (DS 07 touch size). */
 export function Button({
@@ -38,17 +38,21 @@ export function Button({
   variant = 'primary',
   disabled = false,
   busy = false,
+  accessibilityLabel,
 }: {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
   busy?: boolean;
+  /** For a label repeated down a list, e.g. "Abrir recibo" on each payment. */
+  accessibilityLabel?: string;
 }) {
   const inactive = disabled || busy;
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: inactive, busy }}
       disabled={inactive}
       onPress={onPress}
@@ -61,10 +65,19 @@ export function Button({
     >
       {busy ? (
         <ActivityIndicator
-          color={variant === 'primary' ? colors.surface : colors.primary}
+          color={
+            variant === 'primary' || variant === 'danger'
+              ? colors.surface
+              : colors.primary
+          }
         />
       ) : (
-        <Text style={[styles.buttonLabel, variant === 'primary' && styles.primaryLabel]}>
+        <Text
+          style={[
+            styles.buttonLabel,
+            (variant === 'primary' || variant === 'danger') && styles.primaryLabel,
+          ]}
+        >
           {label}
         </Text>
       )}
@@ -80,6 +93,48 @@ export function Card({
   style?: StyleProp<ViewStyle>;
 }) {
   return <View style={[styles.card, style]}>{children}</View>;
+}
+
+/** A section of the bottom bar. */
+export type Tab = 'home' | 'calendar' | 'jobs' | 'profile';
+
+/**
+ * The bottom bar (W-Home's board): the four sections a worker moves between.
+ * Each tab is a 48 dp target; the current one is said, not only coloured.
+ */
+export function TabBar({
+  current,
+  labels,
+  label,
+  onSelect,
+}: {
+  current: Tab | null;
+  labels: Record<Tab, string>;
+  label: string;
+  onSelect: (tab: Tab) => void;
+}) {
+  const tabs: Tab[] = ['home', 'calendar', 'jobs', 'profile'];
+  return (
+    <View accessibilityRole="tablist" accessibilityLabel={label} style={styles.tabBar}>
+      {tabs.map((tab) => {
+        const selected = tab === current;
+        return (
+          <Pressable
+            key={tab}
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
+            onPress={() => onSelect(tab)}
+            style={({ pressed }) => [styles.tab, pressed && styles.pressed]}
+          >
+            <Text style={[styles.tabLabel, selected && styles.tabSelected]}>
+              {labels[tab]}
+            </Text>
+            <View style={[styles.tabMark, selected && styles.tabMarkSelected]} />
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 }
 
 type Tone = 'info' | 'warning' | 'success' | 'danger';
@@ -122,6 +177,7 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: colors.primary, borderColor: colors.primary },
   secondary: { backgroundColor: colors.surface, borderColor: colors.line },
   quiet: { backgroundColor: 'transparent', borderColor: 'transparent' },
+  danger: { backgroundColor: colors.danger, borderColor: colors.danger },
   inactive: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
   buttonLabel: { fontSize: 16, fontWeight: '600', color: colors.primary },
@@ -134,6 +190,23 @@ const styles = StyleSheet.create({
     padding: space.lg,
     gap: space.sm,
   },
+  tabBar: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    backgroundColor: colors.surface,
+  },
+  tab: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  tabLabel: { fontSize: 14, fontWeight: '600', color: colors.inkSoft },
+  tabSelected: { color: colors.primary },
+  tabMark: { height: 3, width: 24, borderRadius: 2, backgroundColor: 'transparent' },
+  tabMarkSelected: { backgroundColor: colors.primary },
   notice: {
     borderRadius: radius.sm,
     borderWidth: 1,

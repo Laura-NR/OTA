@@ -37,6 +37,7 @@ import {
   type TransitionReason,
 } from '@ota/domain';
 import type {
+  DeskChannel,
   DispatchBoardRowDto,
   DispatchCandidateDto,
   DispatchServiceItemDto,
@@ -380,6 +381,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
     serviceItemId: string,
     input: ReassignServiceItemRequest,
     actor: AuthUser,
+    channel: DeskChannel = 'desk',
   ): Promise<DispatchViewDto> {
     const item = await this.prisma.serviceItem.findUnique({
       where: { id: serviceItemId },
@@ -412,7 +414,7 @@ export class DispatchService implements OnModuleInit, OnModuleDestroy {
           action: 'dispatch.reassign',
           entityType: 'ServiceItem',
           entityId: item.id,
-          metadata: { preferredSupplierId: input.supplierId ?? null },
+          metadata: { preferredSupplierId: input.supplierId ?? null, channel },
         },
       });
     });

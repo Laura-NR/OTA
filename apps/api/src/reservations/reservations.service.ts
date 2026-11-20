@@ -27,6 +27,7 @@ import type {
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { generateBookingCode } from '../common/booking-code';
+import { currentStepDto, jobStepTimes, toJobStepTimesDto } from '../jobs/job-steps';
 import { DocumentsService } from '../documents/documents.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -134,6 +135,7 @@ function toServiceItemDto(
     serviceDateStart: item.serviceDateStart.toISOString(),
     serviceDateEnd: item.serviceDateEnd.toISOString(),
     supplierId: item.supplierId,
+    currentStep: currentStepDto(item),
   };
 }
 
@@ -149,6 +151,12 @@ function toDetailDto(row: DetailRow): ReservationDetailDto {
       ...toServiceItemDto(item),
       supplierName: item.supplier?.user.fullName ?? null,
       payoutRate: item.payoutRate.toString(),
+      brief: {
+        meetingPoint: item.meetingPoint,
+        dropOff: item.dropOff,
+        workerBrief: item.workerBrief,
+      },
+      steps: toJobStepTimesDto(jobStepTimes(item)),
     })),
   };
 }

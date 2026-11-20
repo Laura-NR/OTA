@@ -3,9 +3,11 @@ import {
   featureFlagsOf,
   pipelinePosition,
   travelerStatus,
+  UserRole,
 } from '@ota/domain';
 import type {
   AuditLogEntryDto,
+  BookingWorkerThreadDto,
   DispatchViewDto,
   DocumentDto,
   EventRequestListItemDto,
@@ -27,6 +29,7 @@ import type { ReactNode } from 'react';
 import { OverrideNotice } from '@/components/override-notice';
 import { deskAccess } from '@/lib/overrides';
 import { BookingServices, type ItemOffer } from '@/components/booking-services';
+import { BookingWorkerThreads } from '@/components/booking-worker-threads';
 import { IncidentLogForm } from '@/components/incident-log-form';
 import { IncidentResolveButton } from '@/components/incident-resolve-button';
 import { KpiCard } from '@/components/kpi-card';
@@ -42,6 +45,7 @@ import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { EVENT_REQUEST_BADGE } from '@/lib/events';
+import { MATRIX_COLUMNS } from '@/lib/matrix-columns';
 import { bookingDates, money, opsDate, opsTime, percent } from '@/lib/ops-format';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -73,7 +77,8 @@ function Section({
 /**
  * One booking on the desk (A-Booking): who, when and how much at the top, its
  * progress through the pipeline, the legal moves, the services with their
- * workers and timers, payments, duty of care, documents and the audit log.
+ * workers and timers, the workers' threads with the desk, payments, duty of
+ * care, documents and the audit log.
  */
 export default async function BookingPage({
   params,
@@ -84,6 +89,8 @@ export default async function BookingPage({
   const t = await getTranslations('backoffice.reservation');
   const traveler = await getTranslations('status.traveler');
   const requestsT = await getTranslations('eventRequestsDesk');
+  const incidentT = await getTranslations('backoffice.incidents');
+  const servicesT = await getTranslations('backoffice.dashboard.matrix.columns');
   const locale = await getLocale();
   const session = await getServerSession();
   const [access, dispatchAccess, paymentsAccess, customersAccess] = await Promise.all([
@@ -115,6 +122,7 @@ export default async function BookingPage({
     ofac,
     eventRequests,
     thresholds,
+    workerThreads,
   ] = await Promise.all([
     apiFetch<AuditLogEntryDto[]>(`/reservations/${id}/audit`).catch(() => []),
     apiFetch<DocumentDto[]>(`/reservations/${id}/documents`).catch(() => []),
@@ -133,7 +141,14 @@ export default async function BookingPage({
       () => [],
     ),
     getThresholds(),
+    apiFetch<BookingWorkerThreadDto[]>(`/reservations/${id}/worker-threads`).catch(
+      () => [],
+    ),
   ]);
+  // Worker messages M6: the support role reads, operations and Super Admin write.
+  const canMessageWorkers =
+    session?.user.role === UserRole.OperationsAdmin ||
+    session?.user.role === UserRole.SuperAdmin;
 
   const now = new Date();
   const currency = reservation.totalCurrency;
@@ -328,6 +343,18 @@ export default async function BookingPage({
         />
       </Section>
 
+      <Section
+        id="worker-threads-title"
+        title={t('workerThreads.title')}
+        description={t('workerThreads.description')}
+      >
+        <BookingWorkerThreads
+          threads={workerThreads}
+          bookingCode={reservation.bookingCode}
+          canWrite={canMessageWorkers}
+        />
+      </Section>
+
       {party ? (
         <Section
           id="party-title"
@@ -391,6 +418,7 @@ export default async function BookingPage({
               status={reservation.status}
               canManage={paymentsAccess.canManage}
               canVote={paymentsAccess.byRole}
+              viewerEmail={session?.user.email}
               schedule={schedule}
               features={featureFlagsOf(thresholds)}
               now={new Date().toISOString()}
@@ -466,12 +494,61 @@ export default async function BookingPage({
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-muted">{incident.description}</p>
+                  {incident.description ? (
+                    <p className="mt-1 text-muted">{incident.description}</p>
+                  ) : null}
+                  {incident.source === 'DESK' ? null : (
+                    <p className="mt-1 text-caption text-muted">
+                      {[
+                        incidentT(`sources.${incident.source}`),
+                        incident.supplierName
+                          ? incidentT('reportedBy', { name: incident.supplierName })
+                          : null,
+                        incidentT('reportedAt', {
+                          time: opsTime(
+                            incident.occurredAt ?? incident.createdAt,
+                            locale,
+                          ),
+                        }),
+                        incident.position
+                          ? incidentT('position', {
+                              lat: incident.position.latitude.toFixed(5),
+                              lng: incident.position.longitude.toFixed(5),
+                            })
+                          : null,
+                        incident.acknowledgedAt
+                          ? incidentT('acknowledgedBy', {
+                              name: incident.acknowledgedBy ?? '—',
+                              time: opsTime(incident.acknowledgedAt, locale),
+                            })
+                          : incidentT('notAcknowledged'),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
           )}
-          {canManage ? <IncidentLogForm reservationId={reservation.id} /> : null}
+          {canManage ? (
+            <IncidentLogForm
+              reservationId={reservation.id}
+              services={reservation.serviceItems.map((item) => ({
+                id: item.id,
+                label: [
+                  servicesT(
+                    MATRIX_COLUMNS.find((column) => column.type === item.serviceType)!
+                      .key,
+                  ),
+                  item.supplierName,
+                  bookingDates(item.serviceDateStart, item.serviceDateEnd, locale),
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+              }))}
+            />
+          ) : null}
         </div>
       </Section>
 

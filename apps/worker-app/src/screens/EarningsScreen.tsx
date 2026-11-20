@@ -3,10 +3,12 @@ import type {
   PayoutTotalDto,
   WorkerEarningsDto,
   WorkerEarningsJobDto,
+  WorkerPaymentDto,
 } from '@ota/schemas';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -15,10 +17,14 @@ import {
 } from 'react-native';
 
 import { ApiError, type WorkerApi } from '../lib/api';
+import { settings } from '../lib/config';
+import { openReceipt } from '../lib/open-receipt';
 import { copy } from '../lib/copy';
 import {
   categoryLabel,
+  dayShort,
   money,
+  payDay,
   serviceLabel,
   shortDate,
   travelerLine,
@@ -33,25 +39,33 @@ const STATE_STYLE: Record<WorkerPayoutState, { color: string; backgroundColor: s
   };
 
 /**
- * W-Earnings, read-only: the worker's reliability as the desk's floor reads
- * it, what they are owed and have been paid, and their latest finished jobs.
- * The payout method, the next pay day, receipts and ratings wait
- * (`docs/schema-w-earnings.md`). It needs a connection, like the calendar.
+ * W-Earnings: the worker's reliability as the desk's floor reads it, how they
+ * are paid and when next, what they are owed and have been paid, their latest
+ * finished jobs and their payments, each with its receipt to open
+ * (`docs/schema-w-earnings.md`). The desk records payments and changes the
+ * method (E3); ratings wait (E6). It needs a connection, like the calendar.
  */
 export function EarningsScreen({
   api,
   token,
+  onOpenCredentials,
   onBack,
   onSignedOut,
 }: {
   api: WorkerApi;
   token: string;
+  /** The profile's settings row "Mis credenciales" (W-Earnings board). */
+  onOpenCredentials: () => void;
   onBack: () => void;
   onSignedOut: () => void;
 }) {
   const [data, setData] = useState<WorkerEarningsDto | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [opening, setOpening] = useState<string | null>(null);
+  const [receiptError, setReceiptError] = useState<{ id: string; text: string } | null>(
+    null,
+  );
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -76,6 +90,31 @@ export function EarningsScreen({
   useEffect(() => {
     void load();
   }, [load]);
+
+  const showReceipt = useCallback(
+    async (paymentId: string) => {
+      setOpening(paymentId);
+      setReceiptError(null);
+      try {
+        await openReceipt(api.receiptUrl(paymentId), token, copy.earnings.receiptTitle);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          onSignedOut();
+          return;
+        }
+        setReceiptError({
+          id: paymentId,
+          text:
+            error instanceof ApiError && error.status === null
+              ? copy.login.noConnection
+              : copy.earnings.receiptFailed,
+        });
+      } finally {
+        setOpening(null);
+      }
+    },
+    [api, token, onSignedOut],
+  );
 
   if (!data) {
     return (
@@ -154,11 +193,31 @@ export function EarningsScreen({
         <Text accessibilityRole="header" style={type.heading}>
           {copy.earnings.payouts}
         </Text>
+        <Text style={[type.body, styles.strong]}>
+          {payouts.method === 'CASH_OFFICE'
+            ? copy.earnings.method.CASH_OFFICE(payouts.office)
+            : payouts.method === 'BANK_TRANSFER'
+              ? copy.earnings.method.BANK_TRANSFER
+              : copy.earnings.methodNotSet}
+        </Text>
         <Text style={type.small}>{copy.earnings.pending}</Text>
         <Text style={[styles.amount, type.figure]}>
           {money(payouts.pending.amount, payouts.currency)}
         </Text>
         <Text style={type.small}>{copy.earnings.jobs(payouts.pending.jobs)}</Text>
+        {payouts.nextPayDay ? (
+          <View style={styles.nextPay}>
+            <Text style={type.caption}>{copy.earnings.nextPay}</Text>
+            <Text style={[type.body, styles.strong]}>
+              {copy.earnings.nextPayLine(
+                payDay(payouts.nextPayDay.day),
+                payouts.nextPayDay.from,
+                payouts.nextPayDay.to,
+                payouts.method !== 'BANK_TRANSFER',
+              )}
+            </Text>
+          </View>
+        ) : null}
         <View style={styles.stats}>
           <Total
             label={copy.earnings.thisMonth}
@@ -179,7 +238,16 @@ export function EarningsScreen({
             )}
           </Notice>
         ) : null}
-        <Text style={type.small}>{copy.earnings.howPaid}</Text>
+        <Text style={type.small}>{copy.earnings.howPaid(payouts.businessDays)}</Text>
+        {settings.deskPhone ? (
+          <Button
+            label={copy.earnings.changeMethod}
+            variant="secondary"
+            onPress={() =>
+              void Linking.openURL(`tel:${settings.deskPhone!.replace(/\s/g, '')}`)
+            }
+          />
+        ) : null}
       </Card>
 
       <Text accessibilityRole="header" style={type.heading}>
@@ -192,7 +260,33 @@ export function EarningsScreen({
         <HistoryRow key={job.serviceItemId} job={job} />
       ))}
 
+      <Text accessibilityRole="header" style={type.heading}>
+        {copy.earnings.receipts}
+      </Text>
+      {data.payments.length === 0 ? (
+        <Text style={type.small}>{copy.earnings.noReceipts}</Text>
+      ) : (
+        <Card>
+          {data.payments.map((payment) => (
+            <PaymentRow
+              key={payment.id}
+              payment={payment}
+              office={payouts.office}
+              opening={opening === payment.id}
+              disabled={opening !== null}
+              error={receiptError?.id === payment.id ? receiptError.text : null}
+              onOpen={() => void showReceipt(payment.id)}
+            />
+          ))}
+        </Card>
+      )}
+
       <View style={styles.footer}>
+        <Button
+          label={copy.credentials.open}
+          variant="secondary"
+          onPress={onOpenCredentials}
+        />
         <Button label={copy.earnings.back} variant="secondary" onPress={onBack} />
       </View>
     </ScrollView>
@@ -228,8 +322,55 @@ function Total({
   );
 }
 
+function PaymentRow({
+  payment,
+  office,
+  opening,
+  disabled,
+  error,
+  onOpen,
+}: {
+  payment: WorkerPaymentDto;
+  office: string | null;
+  opening: boolean;
+  disabled: boolean;
+  error: string | null;
+  onOpen: () => void;
+}) {
+  return (
+    <View style={styles.payment}>
+      <View style={styles.row}>
+        <View style={styles.grow}>
+          <Text style={[type.body, styles.strong]}>{dayShort(payment.paidAt)}</Text>
+          <Text style={type.small}>
+            {payment.method === 'CASH_OFFICE'
+              ? copy.earnings.method.CASH_OFFICE(office)
+              : copy.earnings.method.BANK_TRANSFER}{' '}
+            · {copy.earnings.count(payment.jobs)}
+          </Text>
+        </View>
+        <Text style={[type.body, styles.strong, type.figure]}>
+          {money(payment.amount, payment.currency)}
+        </Text>
+      </View>
+      <Button
+        label={copy.earnings.openReceipt}
+        accessibilityLabel={copy.earnings.openReceiptFor(dayShort(payment.paidAt))}
+        variant="quiet"
+        busy={opening}
+        disabled={disabled}
+        onPress={onOpen}
+      />
+      {error ? <Notice tone="warning">{error}</Notice> : null}
+    </View>
+  );
+}
+
 function HistoryRow({ job }: { job: WorkerEarningsJobDto }) {
-  const state = copy.earnings.state[job.payoutState];
+  const state =
+    job.payoutState === 'PAID' && job.paidAt
+      ? copy.earnings.paidOn(dayShort(job.paidAt))
+      : copy.earnings.state[job.payoutState];
   return (
     <Card>
       <View style={styles.row}>
@@ -264,6 +405,8 @@ const styles = StyleSheet.create({
   amount: { fontSize: 28, lineHeight: 34, fontWeight: '700', color: colors.ink },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   stat: { flexGrow: 1, flexBasis: 96, gap: 2 },
+  nextPay: { gap: 2 },
+  payment: { gap: space.xs },
   chip: {
     borderRadius: radius.sm,
     borderWidth: 1,

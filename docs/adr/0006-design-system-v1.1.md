@@ -1766,3 +1766,380 @@ list: `docs/worker-app-plan.md` §6):
   finished this month, paid by the jobs' year, failed), each with a caption counting the jobs
   (en/es/fr); amounts to the cent (`moneyExact`).
 
+## Amendment, 2026-11-13: W-Earnings' payouts
+
+Recording payouts (`docs/schema-w-earnings.md` E1–E8, approved) was built without asking the
+design team, with existing tokens and components:
+
+- **App.** The board's method line, "Próximo pago … · trae tu carnet" (a caption over a bold
+  body line, as the other figures), "Pagado en 2026" and "Pagado 28 sep" chips (the success
+  pair already used) now hold. "Cambiar a transferencia" becomes a secondary button "Llamar a
+  la central para cambiarla" (`tel:`, as W-Home's desk button): the desk changes the method
+  (E3). "Recibos (PDF)" becomes a "Recibos" card listing each payment (day, method, jobs,
+  amount, the history rows' type), without the PDF for now. The board's "salvo que haya una
+  incidencia abierta" and "aquí guardas la copia" are dropped as untrue of the build.
+  Valoraciones stay hidden (E6c).
+- **Desk.** No board shows recording a payout. The supplier page's Payouts panel gains, under
+  the tiles, a `text-body-sm` secondary line (method · next pay day · rule), the method as the
+  DS 02 `Select` with a secondary "Save method" button, "Record payout" as a fieldset of the
+  existing `Checkbox` rows (amount in mono, then day · service · province · booking, a
+  destructive `Badge` for a failed payout) with a method `Select`, a date `Input` capped at
+  today and a primary button naming the total ("Record €45.00 for 1 job"), and the payments
+  in the shared `ResponsiveTable` with a "Receipt (PDF)" text link styled as the proposal's
+  PDF link. Panels are split by the existing `border-t pt-4` dividers.
+- **Receipt.** The shared A4 document shell (agency header with the MINTUR licence, footer),
+  in Spanish, with the jobs table, the total and two signature lines.
+
+
+## Amendment, 2026-11-13 (evening): the receipt in the app
+
+The owner chose option (a) for opening a payout receipt on the phone. Built without asking the
+design team, with existing tokens and components:
+
+- **App.** The board has one tertiary "Recibos (PDF)" button beside the method button and does
+  not say which receipt it opens. The build keeps the payments card, now titled with the
+  board's "Recibos (PDF)", and gives each payment a quiet "Abrir recibo" button (the app's
+  48 dp `Button`, its 16 px 600 label in the primary colour, full width under the row), with a per-row screen-reader
+  label ("Abrir el recibo del 13 nov"). While one receipt downloads its button shows the
+  spinner and the others are disabled; a failure shows a warning `Notice` under that row. The
+  board's "aquí guardas la copia" returns to the pay rule, since it is true again.
+- **Android.** The PDF opens through the system share sheet (`expo-sharing`), where a PDF
+  viewer, Drive or a messaging app takes it; there is no in-app viewer. The web preview saves
+  the file instead.
+
+
+## Amendment, 2026-11-14: Ops Lite
+
+The owner chose Ops Lite (Phase 7 item 2) over background resend, W-Job and a W-Credentials doc.
+Built from AL-Alerts, AL-Pipeline and AL-Inbox without asking the design team, on the existing
+tokens and components; every board colour is a token (`#C98A00`, the PENDING_PAYMENT dot, has
+none and takes `accent-600`). Where the boards were silent or ask for what does not exist, the
+build decided:
+
+- **Frame.** Phone screens in the back-office at `/lite` (ADR 0007): one column, at most 30 rem
+  wide and centred on a larger screen, on the warm page. Each screen's header is the board's
+  primary 700 band with a 16 px Inter bold title (the global `h1` display face is overridden,
+  as the board's `strong`) and a primary 200 caption; the board's brand mark is left out. The
+  bottom bar is 64 px with sprite icons: `alert-triangle`, `columns` (the board's lines icon
+  is not in the sprite), `message-circle`, `layout-dashboard` (no `monitor`). Its 11 px labels
+  and 10 px count dots take the 12 px caption, as A3 leaves those sizes uncovered.
+- **The desk under 560.** Staff now see a pointer at the top of every desk page below 560 px,
+  "On a phone? Ops Lite is the desk's triage, made for it. Open Ops Lite" (DS 07).
+- **Push.** The board's lock-screen push is a browser notification for each red crossing
+  while an Ops Lite page is open but out of sight, after "Notify me on this phone" (ADR 0007
+  A5). In view, the cue, the live region and the cards say it already.
+- **Alerts.** The pills are the desk's `Badge` variants (timeout, attention, accent,
+  secondary), counting items as the desk's strip does. A red card is one booking, led by its
+  oldest red item and titled "Guide timed out · Osvaldo Ruiz" or "… declined …"; it is
+  `error-100` until acknowledged, then white, and only the first card starts open. The
+  board's "Message" (to the worker) becomes "Open booking", since no worker thread exists.
+  Re-dispatch lists the desk's candidates inside the card, each with a 44 px call icon and
+  "Offer"; once offered, the card leaves the red list, so "Offered to … · logged as … (Ops
+  Lite)" is an info notice above the cards until dismissed. "Also red on this booking" keeps
+  its `error-100` box with a secondary "Re-dispatch <service>". Acknowledge is the desk's,
+  with its 6 s undo toast. Amber drops "Watch" (nothing to stop, as on 2026-10-29) for a
+  secondary "Re-dispatch early". The refund card reuses the desk's approve and reject, at
+  `md`; "Nudge Dayana" (push and SMS) and "Withdraw" are not built, as neither channel nor a
+  withdraw route exists. "Extend 24 h + new link (reason)" is the desk's "Extend 24 h" (the
+  link is unchanged, there is no reason field), and "Let it cancel" is dropped: nothing
+  cancels a booking automatically. The low card lists credentials expiring within the
+  threshold and opens the supplier page. The footer says which actions are logged as Ops
+  Lite.
+- **Pipeline.** "On the ground now" counts the trips under way and their party sizes, placed
+  in the province where they sleep tonight; a province with an open case wears the
+  `warning-100` pair and the scenario, and the link opens the most severe open case. The board's
+  check-in bar is left out: no check-in is recorded. The state list shows the stored status
+  keys in mono (the board's `&` is the enum's `AND`), each with its pressing bookings (up to
+  three) and a "+N more on the desk" link. Clocks read "3 min", "22 h", "48 d" for a wait,
+  "1:38" for time left, "Expired" in red, "today" in green, "day 3" in info. Today's
+  movements are payment deadlines (by time), then trips starting and ending today (by date:
+  no flight data exists). "Live" re-reads the screen every 30 s.
+- **Inbox.** The filters are All, Urgent and Unread: no worker thread exists, so the Workers
+  filter and the translation chip are left out, and so is the board's amber worker avatar.
+  Urgent is a traveler awaiting a reply on a booking with an open case. Quick-reply chips are
+  not built (canned replies need content). No thread opens by itself, since opening marks it
+  read; a tapped thread opens under the list with "Call", the bubbles (`neutral-100` in,
+  `primary-100` out) and a 48 px reply field with an `arrow-right` send button (the sprite has
+  no send icon). Replies go in-app with the email copy; there is no SMS.
+
+## Amendment, 2026-11-14 (later): W-Credentials
+
+The owner chose W-Credentials (Phase 7) and approved `docs/schema-w-credentials.md` V1–V8 as
+recommended. Built from W-Credentials, A-States' "Credencial suspendida" and A-Suppliers'
+credential inspector without asking the design team, on the existing tokens and components.
+Where the boards were silent or ask for what does not exist, the build decided:
+
+- **Chips.** A document's chip says "Verificada" or "Verificado" after the document's gender,
+  "Vence en N días" (warning pair) from twice the expiry window, which is the board's "Vence en
+  55 días" at a 30-day window, "Vencida"/"Vencido" and "Falta" (danger pair), and "En revisión"
+  for a first upload under review (info pair).
+- **Summary.** "Estado: activa · recibes ofertas automáticas" is a notice in the state's tone
+  (active success, in review info, expiring soon warning, suspended danger). "Todo verificado
+  por la central." shows only when every document is current and none waits for review;
+  "Siguiente vencimiento: …" names the document that expires first.
+- **The rule.** The board's "Regla" line sits on the document that expires first only, as the
+  board shows it on the inspection.
+- **Upload.** "Subir renovación o nueva foto" (or "Subir la foto" when none is verified) opens
+  "Hacer foto" and "Elegir de la galería". The preview shows the photo's real size: the
+  board's "se comprime a 300 KB" would need a second dependency (V6a). The three checks are
+  reminders with a ✓, not boxes to tick. "Enviar a revisión" and "Repetir" (the camera again)
+  are the board's; "Cancelar" is added. A photo that could not be sent stays on screen with
+  "Sin conexión. La foto sigue aquí: envíala cuando vuelva la señal."
+- **Identity card.** No upload. The board's "Guardado cifrado en la central" becomes
+  "Comprobado por la central. No guardamos la foto. …" (V5a).
+- **Insurance.** The vehicle line comes from the desk's vehicle form. "Subir nuevo seguro" is
+  the same upload button as the other documents, and "Cambiar de vehículo" is not built (the
+  vehicle stays the desk's form).
+- **Desk.** The credential inspector becomes one list of the category's documents. Each shows
+  the board's facts (Number, Issued by, Issued, Expires, Uploaded, Checked) plus "Auto-dispatch
+  pauses from", and its state as a badge (Valid, Auto-dispatch paused, Expired, Missing), with
+  "Pending audit" in the attention variant. The upload under review sits in the amber pair Ops
+  Lite uses (`warning-500` border on `accent-50`). "Approve · VERIFIED" takes the number,
+  issuer and dates read off the file. "Reject with reason" and "Request new upload" are one
+  action, "Reject · request new upload", whose reason the worker reads. The file stays hidden
+  until "Show document (logged)", and "Open full size (logged)" opens it in a tab: each read
+  is audited. Missing documents are a warning alert in the panel and a line under the
+  verification actions. The identity card has "Record checked in person" with the channel.
+
+## Amendment, 2026-11-15: W-Job
+
+The owner approved `docs/schema-w-job.md` J1–J9 as recommended. Built from W-Job and W-Home's
+bottom bar without asking the design team, on the existing tokens and components. Where the
+board was silent or asks for what does not exist, the build decided:
+
+- **Bottom bar.** "Inicio · Calendario · Trabajos · Perfil", 48 dp tabs, the current one in
+  `primary` with a 3 dp mark and `selected` for screen readers. The board's "Ofertas" tab is
+  dropped: the offers are on Inicio, with their count, and a second tab to the same screen
+  would mislead. It replaces the "Calendario y disponibilidad" and "Fiabilidad y pagos" buttons;
+  "Perfil" opens "Fiabilidad y pagos".
+- **Job screen.** "Trabajo de hoy" on any day the service runs, else "Trabajo del …". The sync
+  chip is the home's ("Sincronizado", "Sin conexión · guardado HH:MM"). The state line under
+  the emergency button names the latest step ("En camino", "En el lugar", "En servicio",
+  "Terminado · gracias"), "Asignado" before any. The board's flight status, luggage count and
+  saved map are not built; the desk's notes carry the flight. "Mensaje a la central" becomes
+  the desk's call (J9a). The contacts card calls the night's host ("Lis · casa de esta
+  noche") and the desk.
+- **Steps.** Numbered rows with the board's labels for a transfer; a guide or an activity says
+  "Con el grupo · Empezamos" and "Terminado"; a host has "Huéspedes llegaron" and "Salida".
+  Only the steps after the latest are offered, the next one as the primary button. A done step
+  reads "Hecho · HH:MM", or "Guardado · HH:MM · se enviará al volver la señal" while on the
+  phone. Before the service's day, or on a booking not yet paid, a notice says when they open.
+- **Emergency.** The board's red is the `danger` token (`timeout-600`, #C62828, 5.6:1 with
+  white) on the button, the sheet's 2 dp border and the selected type. The four types are
+  radios. "Avisar a la central con mi ubicación" shows "Buscando tu ubicación…" while it waits
+  for a fix. The sent state is "Central avisada · HH:MM · médica" with "La central te llamará.
+  Si no llega la llamada, marca el 104 / 106 según el caso." (the board's named operator and
+  two-minute promise are not the app's to make), "Llamar ahora", and "Enviar también por SMS"
+  when the report went through the API; with no data it says the SMS composer opened.
+- **Desk.** A worker's emergency is a card in the red strip's colours (`error-600`, white)
+  above the alert strip on every desk page and Ops Lite's alerts: who, when, the type, the
+  position with its accuracy, "Call …", "Open position" (`geo:`), "Open booking" and "I have
+  it". It plays the red cue and is announced in the assertive region; "I have it" has no undo
+  and refreshes the page behind. Ops Lite counts it in the alerts badge and no longer says
+  "All clear" beside it. A booking's services show "On the way · HH:MM" under the status,
+  "Brief written"/"No brief" under the service, and "Brief…" and "Record step…" (dialogs, a
+  bottom sheet at phone width).
+- **Traveler.** The trip page's status cell adds "Your driver is on the way", "Delivered" and
+  the like per service type, without the worker's name, timed as the row's own dates are.
+
+## Amendment, 2026-11-15 (later): worker app distribution
+
+ADR 0007 A3's distribution screens were never drawn. The build resolved them with existing
+tokens and components (`docs/worker-app-distribution-plan.md` §5); no token was added.
+
+- **Download page** (storefront `/app`, en/es/fr). A content page on the standard container,
+  its column capped at `max-w-3xl` and aligned with the header: the `h1`/`display-2` title and `body-lg` lede, the release as a
+  `Card` (version `h3`, size and date in `body-sm` tabular figures, the primary `lg` button
+  for arm64, a primary-700 underlined link for the 32-bit split, the certificate in
+  `font-mono` `body-sm` that breaks anywhere), then the install steps as a numbered list and
+  the failures as a bulleted one. A3's illustrated steps are text: the drawings would be a
+  brand export (like the adaptive icon), and screenshots of Android's dialogs differ per
+  maker. An iPhone sees a `warning` `Alert` ("Solo para Android"); with no release, an `info`
+  `Alert`.
+- **Update prompt** (worker app). The optional update is a `Card` on the home with the
+  version, the data note and a secondary "Ver la nueva versión" (the home's "Actualizar"
+  already refreshes it); the update screen, with A3's "Actualizar", reuses the app's
+  title, body, `Card`, `Notice` and `Button`; the progress bar is an 8 dp `line` track filled
+  with `primary` (radius sm). A required update replaces the whole screen and the bottom bar,
+  with no "Más tarde". A job under way turns it into an `info` notice on the home.
+- **Desk card** (`/suppliers/app-card`, en/es/fr). A `Card` capped at `max-w-md`, centred: the
+  agency overline, the heading, the QR at 192 px, the link in `font-mono`, the version and
+  certificate in `caption`; "Print" is a secondary button hidden in print, as is the hint for
+  a missing QR.
+
+## Amendment, 2026-11-16: worker ↔ desk messages
+
+The owner approved `docs/schema-w-messages.md` M1–M8 as recommended (migration
+`20261115230915_worker_messages`). Built from W-Job's "Mensaje a la central" and "Central · hoy",
+AL-Inbox's worker threads, A-Booking's "Worker threads" and A-Suppliers' "Worker app message"
+without asking the design team, on the existing tokens and components; no token was added.
+
+- **Worker app.** The Messages screen reuses the app's title, `Card`, `Notice` and `Button`:
+  the desk's bubbles on `page`, the worker's on `primarySoft` (radius md, 85 % wide), each with
+  a `caption` line "Ana · lun 16 nov 13:40" or "Tú · … · en cola / enviado", the booking code
+  added when it is another job's; the field is a 96 dp multiline input with the login's border
+  and radius. W-Home shows a `Card` outlined in `primary` ("Mensaje de la central", three
+  lines of the message, "Leer y responder") only while the desk's messages are unread, and a
+  secondary "Mensajes con la central · N nuevos" in the footer. W-Job's contacts card gains a
+  secondary "Mensaje a la central" under the desk's call. The board's inline "Central · hoy"
+  thread on W-Job is the separate screen: the job screen stays one scroll.
+- **Desk.** One `WorkerThread`: the board's amber avatar (`warning-100`/`warning-700`), the
+  name as an `h3` (plain text on the supplier page, whose `h1` already names the worker), the
+  line under it, a secondary "Call"; bubbles as AL-Inbox's traveler thread
+  (`neutral-100` in, `primary-100` out), each `caption` naming the writer and time, "arrived"
+  when the message waited on the phone, "read" on the desk's, and a `Tag` with another
+  booking's code; the 48 px field with the `arrow-right` send; the board's note on what workers
+  see. The support role sees "Support reads worker threads; operations reply." instead of the
+  field. The booking's "Worker threads" is a `Section` with a row per worker (name, kind, a
+  `New` pill, the latest message quoted, Call, "Open thread"); the thread opens below the
+  rows. The supplier page's header gains a secondary "Worker app message" link to its new
+  panel. AL-Inbox adds the board's Travelers and Workers chips after Unread (kept) and its
+  worker line "Worker · TOUR GUIDE · 16 Nov · E2EWRK01 · La Habana"; the translation chip and
+  quick replies stay out (no real model, no canned content), and so do the board's system
+  lines (offers, SMS fallbacks).
+
+## Amendment, 2026-11-18: the desktop cookie banner
+
+The owner picked the desktop cookie banner (deferred since T-Events) as the next item. From md
+the banner showed every purpose in a 720 px card capped at 60vh: 720 × 480 px, the bottom 62 %
+of a 1280 × 800 window and 50 % at 768 × 1024. DS 04 draws the banner's content (the three
+rows, Reject and Accept equal, "Save my selection") but not its placement at desktop, so the
+build resolved it without asking the design team, on the existing tokens; no token was added
+and no words changed.
+
+- **Compact at every width.** The phone's resolution of 2026-10-29 now applies everywhere:
+  the purposes and "Save my selection" wait behind "Choose by purpose" (a disclosure,
+  `aria-expanded`, chevron), placed before the rows it opens. Choosing by purpose is one
+  click away and nothing is pre-ticked.
+- **One row from lg.** The banner is as wide as the page column (`max-w-container` with the
+  pages' `lg:px-10`), the heading, words, privacy link and disclosure on the left and "Reject
+  non-essential" and "Accept all" on the right, aligned to the row's foot, as two equal grid
+  columns (equal in every locale, unlike a flex row whose longer label would win). 152 px,
+  19 % of a 1280 × 800 window; 172 px (22 %) at 1024 × 768 in English, 192 px (25 %) in
+  Spanish and French where the words take three lines. Between md and lg the closed banner
+  stacks in the 720 px card (243 px, 24 % of 768 × 1024).
+- **Opened.** The row gives way to the stacked banner the storefront already showed from md: the
+  disclosure, the rows, then the sticky action bar with "Save my selection", so the reading
+  order and the focus order stay the same (the actions never sit above rows that follow them
+  in the page). Opened it is about 60 % of the window again, as the visitor asked for it.
+- **Unchanged.** The phone banner (287 px at 390 × 844), the measured `--cookie-banner` that
+  keeps focus clear of it (WCAG 2.4.11), the region role, the Legal › Cookie settings page.
+
+## Amendment, 2026-11-18 (later): the header in Spanish and French
+
+The owner picked the French header overflow (Traps, 2026-11-18). DS 07 draws the header in
+English only, and its labels are longer in Spanish and French: at 1024 the French row was 74 px
+over its padded box (`/fr` scrolled 34 px sideways) and the Spanish one 37 px over (its right
+gutter 3 px instead of 40); from 1280, where the row is 1200 px at every width, French was
+47 px and Spanish 39 px over, with "Talk to a specialist" 230 px in Spanish and 201 px in
+French against 176 px in English. The build resolved it without asking the design team, on
+the existing tokens; no token was added and no words changed.
+
+- **The larger-text header.** A locale whose labels do not fit takes the layout this ADR
+  settled for larger text on 2026-10-24: the drawer until xl, then the six links without "Talk
+  to a specialist", which Support carries. `COMPACT_HEADER_LOCALES` (`es`, `fr`) in the
+  storefront's `site-nav.ts` names them, and the header carries `data-header="compact"`.
+  Tightening the link and row gaps instead would have changed English's DS 07 spacing and
+  still not fitted French at 1024.
+- **English unchanged.** The links from lg and the specialist from xl, as DS 07 draws them.
+- **Home's search button on a phone.** Below sm its label wraps instead of widening the
+  search card ("Trouvez votre voyage à Cuba" scrolled `/fr` 16 px at 320, 63 px with larger
+  text), keeping the lg button's 48 px minimum.
+- **Open.** At 320 the phone header (wordmark, locale pills, menu) eats 11 px of its 24 px
+  right gutter in every locale, 19 px with larger text; the page does not scroll. Fitting it
+  needs a choice (the pills into the drawer below sm, or a tighter gap for every text size),
+  left to the owner.
+
+## Amendment, 2026-11-18 (evening): the 320 phone header
+
+The owner picked the 320 phone header, left open by the amendment above. At 320 the header row
+(wordmark, locale pills, menu button) needed about 283 px of its 272 px padded box, so it ran
+11 px into its 24 px right gutter in every locale, 19 px with larger text; the page did not
+scroll. The build resolved it without asking the design team, on the existing tokens; no token
+was added.
+
+- **Language in the drawer below sm.** DS-Mobile-Patterns draws the phone header as logo and
+  menu, with "language and currency in the drawer so the header stays clean". Below sm the
+  locale pills are hidden; from sm they stay in the header as before. The drawer gains a
+  "Language" section (`nav.language`, en/es/fr) between the links and the currency: each
+  language in its own name, the current one marked, in the links' 48 px rows under the
+  sections' overline heading. The drawer shows it at every width below lg, as it does the
+  currency.
+- **Not chosen: a tighter row gap.** It would have changed English's DS 07 spacing for every
+  text size and still left the pills crowding the menu button.
+- **The cookie banner's switches, reached backwards.** With the pills gone, the phone banner
+  test's Shift+Tab walk went three stops further and found a defect it had stopped short of:
+  with the purposes open, Shift+Tab from "Reject non-essential" scrolled the Analytics switch
+  under the banner's sticky actions (WCAG 2.4.11). The actions' measured height is now the
+  banner's bottom scroll padding (plus 8 px for the focus ring), as the banner's own height
+  already is the page's.
+- **Tested.** The DS 07 header test measures the row at every width (it started at md); the
+  locale spec switches language from the drawer at 390; the touch test checks the drawer's
+  language row at 44 px or more on a phone and the pill's extended tap from 768.
+
+## Amendment, 2026-11-19: the refund card's Nudge and Withdraw
+
+The owner picked AL-Alerts' refund card actions, left unbuilt by the Ops Lite amendment
+(2026-11-14) because neither push nor SMS nor a withdraw route existed. The build resolved them
+without asking the design team, on the existing tokens and components; no token, migration or
+dependency was added.
+
+- **When the card offers them.** The design's card ("You already gave the first approval…") is
+  the viewer's own: once their approval is in and the refund still waits, Approve and Reject
+  give way to a caption naming who must decide next (another approver, or a Super Admin above
+  the dual limit), a primary "Nudge by email" and a tertiary "Withdraw my approval". Before,
+  the card offered a second vote that the API refused with a 409. The same actions sit in the
+  desk's refund queue and a booking's payments, since all three render `RefundActions`.
+- **Nudge is email.** "Nudge Dayana" (push and SMS) becomes "Nudge by email": every active
+  approver who has not voted, never the one nudging, and only Super Admins when one is needed,
+  in their own language (the tenant's when they have none). The design names one person; with
+  several possible approvers the build asks them all, as the override request does. One nudge
+  per refund every 30 minutes, whoever sends it: the button stays in the tab order and says
+  when it can go again. The confirmation names up to three people ("Emailed … at 14:34. The
+  refund goes out the moment the last approval is in.") and counts beyond. It drops the
+  design's "the traveler is told either way": nothing tells the traveler about a refund today.
+- **Withdraw takes back your approval**, not the refund: only your own, only while the refund
+  waits, behind the DS 06 confirmation dialog (as declining a proposal and withdrawing an event
+  request are). The refund stays requested with the approvals left. Withdrawing the request
+  itself would need a status the schema does not have.
+- **Logged.** `refund.nudged` (with the number of people asked, not their addresses) and
+  `refund.approval_withdrawn`, on the booking. A vote, a withdrawal and a nudge each lock the
+  refund row, so a withdrawal racing the second approval cannot leave a dual-limit refund
+  approved on one vote (a live test reproduced that without the lock).
+- **Tested.** Domain rules, the email in three languages, the API with the RBAC matrix (both
+  routes write-roles only and never through a permission override), a live test with the race,
+  and `ops-lite.spec.ts` at 390 px (nudge, the email in Mailpit, the cooldown, withdraw).
+
+## Amendment, 2026-11-20: the vehicle review and M10's holds and photos
+
+The owner approved `docs/schema-w-vehicle.md` and `docs/schema-m10-holds-photos.md` as
+recommended. Neither has an admin board for its desk surfaces, so the build resolved them
+without asking the design team, on the existing tokens and components; no token was added.
+
+- **A vehicle change on the supplier page.** The request sits at the top of the vehicle card,
+  boxed in a `warning-500` border (the colour the desk uses for something waiting on it), with
+  the requested car on one line, when it was asked, and "the current vehicle stays on file
+  until you approve". "Review and approve…" opens a DS 06 dialog that says, before anyone
+  confirms, when the new plate sets aside the inspection and the insurance (an amber alert) or
+  that the documents stay. Rejecting is the credential panel's inline reason form, since the
+  worker reads the reason in the app. The form's insurance date is read-only, mono, with "From
+  the verified liability insurance document." as its hint, in place of the date field.
+- **The app's form** follows W-Credentials' draft: the board's "Cambiar de vehículo" as a
+  secondary button under the insurance card, 48 px fields and a switch for the air
+  conditioning, the note about new documents above them, and the info notice "Cambio de
+  vehículo en revisión" while it waits. The vehicle line now shows even without a current
+  insurance, so a driver whose documents were set aside still sees the car.
+- **The hold line.** The board's sentence is an `aside` ("Room held for festival week") in the
+  page's surface card between the programme and the request, with "Build the trip with these
+  dates" as a secondary button; below sm the button spans the card and wraps, as Home's
+  search button does, so larger text at 320 px never widens the page. "Vedado" in the board becomes the event's province, since the
+  hold stores a casa, not a neighbourhood, and the note goes in brackets after the casa's name.
+  It shows through the hold's last day in Havana.
+- **Event photos.** The first photo is the event page's hero: 3:2 below sm and 21:9 from sm,
+  `bg-sunken` behind, then up to four more in a row from md, as the package page's gallery
+  hides its small photos on a phone. Each events-list card leads with its first photo at 3:2.
+  Low-bandwidth mode keeps them behind "Load photo". On the desk the Photos card follows the
+  package editor's, adding "Make hero" and an in-place Edit.
+- **The hold reminder** is one dashboard task per hold, in the existing list ("Room hold at …
+  ends …", "Open event"), from three days before its last day to the day after.
+

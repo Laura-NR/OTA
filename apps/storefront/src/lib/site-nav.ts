@@ -25,6 +25,15 @@ export const PRIMARY_NAV: readonly SiteLink[] = [
   { key: 'support', href: '/support' },
 ];
 
+/**
+ * The locales whose header labels overrun DS 07's row (at 1024 px, and in the
+ * 1200 px row from 1280 px). Their header takes the larger-text layout: the
+ * drawer until `xl`, then the six links without "Talk to a specialist", which
+ * Support carries. `e2e/responsive.spec.ts` measures the header in every locale,
+ * so a new locale that does not fit fails there.
+ */
+export const COMPACT_HEADER_LOCALES: ReadonlySet<string> = new Set(['es', 'fr']);
+
 /** Below `md`: Home · Search · Trips · Support, then the menu button. */
 export const BOTTOM_NAV: readonly BottomNavLink[] = [
   { key: 'home', href: '/', icon: 'home' },

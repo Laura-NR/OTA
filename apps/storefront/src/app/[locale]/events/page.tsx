@@ -5,11 +5,12 @@ import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Breadcrumb } from '@/components/breadcrumb';
+import { Photo } from '@/components/display/photo';
 import { PageIntro } from '@/components/content/page-intro';
 import { Link } from '@/i18n/navigation';
 import { getPageContent } from '@/lib/content';
 import { eventDateLine } from '@/lib/event-dates';
-import { getEvents } from '@/lib/events';
+import { eventMediaUrl, getEvents } from '@/lib/events';
 import { getTenantConfig } from '@/lib/tenant';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * "All events" (Concierge board, M10 D2): what the concierge can request this
- * season, soonest first, each with its dates and access, and the way in.
+ * season, soonest first, each with its dates and access, its first photo
+ * (P1a), and the way in.
  */
 export default async function EventsPage() {
   const [t, nav, locale, events, content] = await Promise.all([
@@ -53,6 +55,15 @@ export default async function EventsPage() {
           {events.map((event) => (
             <li key={event.slug} className="flex min-w-0">
               <article className="flex w-full flex-col gap-3 rounded-lg border bg-surface p-5 shadow-sm">
+                {event.media[0] ? (
+                  <div className="relative aspect-[3/2] overflow-hidden rounded-md bg-sunken">
+                    <Photo
+                      src={eventMediaUrl(event.media[0].id)}
+                      alt={event.media[0].altText}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  </div>
+                ) : null}
                 <p className="text-body-sm font-medium text-secondary-600">
                   {eventDateLine(event, locale, t('datesTbc'))}
                 </p>

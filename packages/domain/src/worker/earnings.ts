@@ -10,10 +10,10 @@ import { workerToday } from './calendar';
 /**
  * W-Earnings, read-only (`docs/worker-app-plan.md` §8): what the worker has
  * earned and been paid, and their reliability as the desk's floor reads it.
- * Built on the existing columns: a service item's `payoutRate` and
- * `payoutStatus`, and the dispatch-offer ledger. A paid date, the payout
- * method and receipts wait on `docs/schema-w-earnings.md`. Pure: the API
- * reads the rows.
+ * Built on a service item's `payoutRate` and `payoutStatus`, the payment
+ * that settled it (`docs/schema-w-earnings.md` E1) and the dispatch-offer
+ * ledger. Recording a payment and the pay rule are `./payouts`. Pure: the
+ * API reads the rows.
  */
 
 /** How the app names a job's payout: owed, paid, or held by an issue. */
@@ -31,6 +31,8 @@ export interface WorkerEarningsJob {
   /** The payout in cents of the base currency, so sums stay exact. */
   payoutCents: number;
   payoutStatus: string;
+  /** The day the payment that settled it was made; absent or null until paid. */
+  paidAt?: Date | null;
 }
 
 export interface EarningsTotal {
@@ -43,7 +45,7 @@ export interface WorkerEarnings<T extends WorkerEarningsJob> {
   pending: EarningsTotal;
   /** Finished jobs that ended this month in Havana, whatever their payout state. */
   thisMonth: EarningsTotal;
-  /** Paid jobs that ended this year in Havana; there is no paid date yet. */
+  /** Paid jobs whose payment was made this year (by the job's end in Havana when no date was kept). */
   paidThisYear: EarningsTotal;
   /** Jobs whose payout failed: the desk has to look at them. */
   issue: EarningsTotal;
@@ -63,6 +65,11 @@ export function isFinishedJob(job: WorkerEarningsJob, now: Date): boolean {
     job.reservationStatus !== ReservationStatus.Cancelled &&
     job.endsAt.getTime() <= now.getTime()
   );
+}
+
+/** The calendar day a payment was made; `paidAt` is stored at UTC midnight. */
+export function payoutDay(paidAt: Date): string {
+  return paidAt.toISOString().slice(0, 10);
 }
 
 export function workerPayoutState(payoutStatus: string): WorkerPayoutState {
@@ -99,7 +106,8 @@ export function workerEarnings<T extends WorkerEarningsJob>(
     const ended = workerToday(job.endsAt);
     if (job.payoutState === 'PENDING') add(pending, job.payoutCents);
     if (job.payoutState === 'ISSUE') add(issue, job.payoutCents);
-    if (job.payoutState === 'PAID' && ended.startsWith(year)) {
+    const paid = job.paidAt ? payoutDay(job.paidAt) : ended;
+    if (job.payoutState === 'PAID' && paid.startsWith(year)) {
       add(paidThisYear, job.payoutCents);
     }
     if (ended.startsWith(month)) add(thisMonth, job.payoutCents);

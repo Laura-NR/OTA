@@ -58,6 +58,13 @@ header 'nosniff on the storefront' "$site/" '^x-content-type-options: nosniff'
 header 'the storefront refuses frames' "$site/" '^x-frame-options: DENY'
 header 'the desk frames only itself' "$desk/login" '^x-frame-options: SAMEORIGIN'
 
+# The worker app's host is outside the trial gate and serves nothing else (U1a).
+app=https://app.$SITE_DOMAIN
+expect 'worker app download page, no gate' 200 "$app/"
+expect 'worker app release, no gate' 200 "$app/worker-app/latest"
+expect 'the worker app host sends other paths to the site' 302 "$app/reservations"
+header 'the worker app host asks crawlers to keep out' "$app/" '^x-robots-tag: noindex'
+
 # Each site signs in on its own host (D7a).
 for host in "$SITE_DOMAIN" "$DESK_DOMAIN"; do
   email=${SMOKE_EMAIL/@/-${host%%.*}@}

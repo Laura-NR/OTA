@@ -1,6 +1,7 @@
 import {
   DESK_RESOURCE_CHANNELS,
   GENERATOR_ACCESS,
+  PAYOUT_METHODS,
   POWER_KINDS,
   RESOURCE_CHANNELS,
   ServiceType,
@@ -8,11 +9,21 @@ import {
   VerificationStatus,
   WORKER_BLOCK_REASONS,
   type GeneratorAccess,
+  type PayoutMethod,
   type PowerKind,
   type ResourceChannel,
   type WorkerBlockReason,
 } from '@ota/domain';
 import { z } from 'zod';
+
+/** A calendar day, `YYYY-MM-DD`, that exists (no 30 February). */
+export const calendarDaySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(
+    (day) => new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) === day,
+    'Not a calendar day',
+  );
 
 export const supplierCategorySchema = z.enum([
   SupplierCategory.TourGuide,
@@ -58,9 +69,8 @@ export const supplierSchema = z.object({
   rtnLicenseNumber: z.string(),
   verificationStatus: verificationStatusSchema,
   isAvailable: z.boolean(),
+  /** The earliest expiry of the current documents (W-Credentials V3). */
   credentialExpiresAt: z.string().nullable(),
-  hasCredential: z.boolean(),
-  credentialContentType: z.string().nullable(),
 });
 
 export type SupplierDto = z.infer<typeof supplierSchema>;
@@ -73,15 +83,6 @@ export const credentialContentTypeSchema = z.enum([
   'image/webp',
   'application/pdf',
 ]);
-
-export const uploadCredentialSchema = z.object({
-  filename: z.string().trim().min(1).max(255),
-  contentType: credentialContentTypeSchema,
-  contentBase64: z.string().min(1),
-  expiresAt: z.coerce.date().optional(),
-});
-
-export type UploadCredentialRequest = z.infer<typeof uploadCredentialSchema>;
 
 export const expiringSuppliersQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(365).default(30),
@@ -250,7 +251,10 @@ const optionalText = (max: number) =>
 
 /**
  * A driver's vehicle (M6 D7(b)), stored in the profile's `vehicle_details`
- * JSON: the whole object is replaced on each save.
+ * JSON: the desk's save replaces these fields, and a worker's pending change
+ * is kept beside them. There is no insurance date: the vehicle's is the
+ * insurance document's (`docs/schema-w-vehicle.md` X3a), so a client that
+ * still sends `insuranceUntil` has it stripped.
  */
 export const vehicleDetailsInputSchema = z.object({
   model: z.string().trim().min(1).max(80),
@@ -261,7 +265,6 @@ export const vehicleDetailsInputSchema = z.object({
   plate: z.string().trim().min(1).max(20),
   /** The cover as the policy names it ("Civil liability"). */
   insurance: optionalText(80),
-  insuranceUntil: z.coerce.date().nullable().default(null),
   routes: z.array(z.string().trim().min(1).max(60)).max(12).default([]),
 });
 
@@ -274,12 +277,53 @@ export const vehicleDetailsSchema = z.object({
   extras: z.string().nullable(),
   plate: z.string(),
   insurance: z.string().nullable(),
-  /** `YYYY-MM-DD`. */
+  /**
+   * `YYYY-MM-DD`: the verified liability insurance's expiry (X3a); null while
+   * none is verified.
+   */
   insuranceUntil: z.string().nullable(),
   routes: z.array(z.string()),
 });
 
 export type VehicleDetailsDto = z.infer<typeof vehicleDetailsSchema>;
+
+/** A worker's vehicle change (`docs/schema-w-vehicle.md` X1a): `POST /worker/vehicle`. */
+export const vehicleRequestSchema = z.object({
+  model: z.string().trim().min(1).max(80),
+  plate: z.string().trim().min(1).max(20),
+  seats: z.number().int().min(1).max(60),
+  airConditioning: z.boolean(),
+});
+
+export type VehicleRequest = z.infer<typeof vehicleRequestSchema>;
+
+/** The change waiting for the desk; the current vehicle stays on file until then. */
+export const pendingVehicleSchema = z.object({
+  model: z.string(),
+  plate: z.string(),
+  seats: z.number().int(),
+  airConditioning: z.boolean(),
+  requestedAt: z.string(),
+});
+
+export type PendingVehicleDto = z.infer<typeof pendingVehicleSchema>;
+
+/** The last change the desk refused, until the worker asks again. */
+export const vehicleRejectionSchema = z.object({
+  model: z.string(),
+  plate: z.string(),
+  reason: z.string(),
+  rejectedAt: z.string(),
+});
+
+export type VehicleRejectionDto = z.infer<typeof vehicleRejectionSchema>;
+
+/** `POST /suppliers/:id/vehicle/reject`: the reason the worker reads in the app. */
+export const rejectVehicleSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+});
+
+export type RejectVehicleRequest = z.infer<typeof rejectVehicleSchema>;
 
 /** A sum of payouts, as a decimal string, and the finished jobs it covers. */
 export const payoutTotalSchema = z.object({
@@ -288,6 +332,12 @@ export const payoutTotalSchema = z.object({
 });
 
 export type PayoutTotalDto = z.infer<typeof payoutTotalSchema>;
+
+/** How a worker is paid (`docs/schema-w-earnings.md` E2). */
+export const payoutMethodSchema = z.enum([...PAYOUT_METHODS] as [
+  PayoutMethod,
+  ...PayoutMethod[],
+]);
 
 /**
  * A worker's payouts over their finished jobs (W-Earnings), the same figures
@@ -299,11 +349,19 @@ export const supplierPayoutsSchema = z.object({
   pending: payoutTotalSchema,
   /** Finished this month in Havana, whatever the payout state. */
   thisMonth: payoutTotalSchema,
-  /** Paid, over jobs that ended in `year`; there is no paid date yet. */
+  /** Paid this year, by the day of the payment. */
   paidThisYear: payoutTotalSchema,
   /** Payouts that failed. */
   issue: payoutTotalSchema,
   year: z.number().int(),
+  /** The worker's method; null until the desk sets it (E2). */
+  method: payoutMethodSchema.nullable(),
+  /** Where cash is collected, from the tenant manifest. */
+  office: z.string().nullable(),
+  /** Business days after a job ends before it is paid (E4). */
+  businessDays: z.number().int(),
+  /** The next office session that pays a pending job; null when none (E4). */
+  nextPayDay: z.object({ day: z.string(), from: z.string(), to: z.string() }).nullable(),
 });
 
 export type SupplierPayoutsDto = z.infer<typeof supplierPayoutsSchema>;
@@ -311,12 +369,14 @@ export type SupplierPayoutsDto = z.infer<typeof supplierPayoutsSchema>;
 /**
  * The inspector: the row plus the confirmed resources, the 12-month count,
  * a driver's vehicle (null when none is stored or the stored JSON does not
- * match the shape) and the worker's payouts.
+ * match the shape) and the change the worker asked for, and the worker's
+ * payouts.
  */
 export const supplierDetailSchema = supplierRowSchema.extend({
   resources: supplierResourcesSchema.nullable(),
   jobs12m: z.number().int(),
   vehicle: vehicleDetailsSchema.nullable(),
+  pendingVehicle: pendingVehicleSchema.nullable(),
   longBlock: blockedRunSchema.nullable(),
   payouts: supplierPayoutsSchema,
 });

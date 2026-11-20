@@ -16,6 +16,8 @@ interface Overlay {
   notes: string;
   nights: Record<string, string>;
   categories: Record<string, string>;
+  holdNote: string;
+  mediaAlt: Record<string, string>;
   published: boolean;
 }
 
@@ -34,6 +36,10 @@ function overlayFor(event: EventDto, locale: string): Overlay {
         category.id,
         saved?.categories[category.id]?.name ?? '',
       ]),
+    ),
+    holdNote: saved?.holdNote ?? '',
+    mediaAlt: Object.fromEntries(
+      event.media.map((photo) => [photo.id, saved?.mediaAlt[photo.id] ?? '']),
     ),
     published: saved?.published ?? false,
   };
@@ -87,6 +93,12 @@ export function EventTranslations({
       categories: Object.fromEntries(
         Object.entries(current.categories).flatMap(([id, name]) =>
           name.trim() ? [[id, { name }]] : [],
+        ),
+      ),
+      holdNote: orNull(current.holdNote),
+      mediaAlt: Object.fromEntries(
+        Object.entries(current.mediaAlt).flatMap(([id, alt]) =>
+          alt.trim() ? [[id, alt.trim()]] : [],
         ),
       ),
       published: current.published,
@@ -213,6 +225,40 @@ export function EventTranslations({
                         ...overlay.categories,
                         [category.id]: change.target.value,
                       },
+                    })
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {event.hold ? (
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Label htmlFor={`overlay-hold-${locale}`}>{t('translations.holdNote')}</Label>
+            <Input
+              id={`overlay-hold-${locale}`}
+              placeholder={event.holdNote ?? ''}
+              value={overlay.holdNote}
+              maxLength={160}
+              onChange={(change) => update(locale, { holdNote: change.target.value })}
+            />
+          </div>
+        ) : null}
+        {event.media.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {event.media.map((photo, index) => (
+              <div key={photo.id} className="flex min-w-0 flex-col gap-1.5">
+                <Label htmlFor={`overlay-media-${locale}-${photo.id}`}>
+                  {t('translations.mediaAlt', { number: index + 1 })}
+                </Label>
+                <Input
+                  id={`overlay-media-${locale}-${photo.id}`}
+                  placeholder={photo.altText}
+                  value={overlay.mediaAlt[photo.id] ?? ''}
+                  maxLength={300}
+                  onChange={(change) =>
+                    update(locale, {
+                      mediaAlt: { ...overlay.mediaAlt, [photo.id]: change.target.value },
                     })
                   }
                 />

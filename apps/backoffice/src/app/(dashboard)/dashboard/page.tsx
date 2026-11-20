@@ -3,6 +3,7 @@ import type {
   AnalyticsOverviewDto,
   DeskAlertMuteStateDto,
   DisruptionAlertDto,
+  EventListItemDto,
   EventRequestListItemDto,
   DispatchBoardRowDto,
   ReservationListItemDto,
@@ -23,7 +24,14 @@ import { OpsDesk } from '@/components/ops-desk';
 import { deskClock } from '@/lib/desk-clock';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
-import { bookingDates, money, monthName, percent, signedPercent } from '@/lib/ops-format';
+import {
+  bookingDates,
+  calendarDate,
+  money,
+  monthName,
+  percent,
+  signedPercent,
+} from '@/lib/ops-format';
 
 /**
  * The payment rails in A-Dashboard's order. They are drawn as one-hue bars
@@ -67,6 +75,7 @@ export default async function DashboardPage() {
     disruptions,
     eventRequests,
     muteState,
+    events,
   ] = await Promise.all([
     apiFetch<DispatchBoardRowDto[]>('/dispatch/active').catch(() => null),
     apiFetch<AnalyticsOverviewDto>(`/analytics/overview${rangeQuery(month)}`).catch(
@@ -88,9 +97,12 @@ export default async function DashboardPage() {
       '/event-requests?status=SUBMITTED&limit=200',
     ).catch(() => []),
     apiFetch<DeskAlertMuteStateDto>('/dispatch/alert-mute').catch(() => null),
+    apiFetch<EventListItemDto[]>('/events').catch(() => []),
   ]);
   // M10 D7: event requests the desk has not answered within the threshold.
   const unansweredRequests = eventRequests.filter((request) => request.overdue).length;
+  // M10 H2a: a room held at a casa for an event's requests, ending within days.
+  const endingHolds = events.filter((event) => event.holdReminderDue && event.hold);
   // M3: open bookings whose payment and vouchers wait for an OFAC certification.
   const ofacMissing = recent.filter(
     (reservation) =>
@@ -141,7 +153,8 @@ export default async function DashboardPage() {
     toDispatch.length +
     expiring.length +
     (purging.length > 0 ? 1 : 0) +
-    (unansweredRequests > 0 ? 1 : 0);
+    (unansweredRequests > 0 ? 1 : 0) +
+    endingHolds.length;
 
   const figures = (
     <>
@@ -347,6 +360,27 @@ export default async function DashboardPage() {
                 </Link>
               </li>
             ) : null}
+            {endingHolds.map((event) => (
+              <li key={event.id} className="flex flex-wrap items-start gap-3 px-5 py-4">
+                <div className="min-w-64 flex-1">
+                  <p className="font-semibold">
+                    {t('tasks.eventHold.title', {
+                      casa: event.hold!.casa,
+                      date: calendarDate(event.hold!.until, locale),
+                    })}
+                  </p>
+                  <p className="text-body-sm text-secondary">
+                    {t('tasks.eventHold.body', { event: event.name })}
+                  </p>
+                </div>
+                <Link
+                  href={`/content/events/${event.id}`}
+                  className={buttonClassName({ variant: 'secondary', size: 'md' })}
+                >
+                  {t('tasks.eventHold.action')}
+                </Link>
+              </li>
+            ))}
             {purging.length > 0 ? (
               <li className="flex flex-wrap items-start gap-3 px-5 py-4">
                 <div className="min-w-64 flex-1">

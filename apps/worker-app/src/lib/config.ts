@@ -4,6 +4,8 @@ import Constants from 'expo-constants';
 export interface AppSettings {
   /** The API's origin; empty in the web preview, which proxies it. */
   apiUrl: string;
+  /** The release's version code (`app.config.ts`); the web preview reads it as its own. */
+  versionCode: number;
   agencyName: string;
   /** The operations desk's 24/7 line, or null when the manifest has none. */
   deskPhone: string | null;

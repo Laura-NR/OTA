@@ -23,10 +23,13 @@ import { OverrideAuditInterceptor } from './overrides/override-audit.interceptor
 import { PermissionOverridesModule } from './overrides/permission-overrides.module';
 import { MeModule } from './me/me.module';
 import { MessagesModule } from './messages/messages.module';
+import { OpsLiteModule } from './ops-lite/ops-lite.module';
 import { PackagesModule } from './packages/packages.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProposalsModule } from './proposals/proposals.module';
+import { JobsModule } from './jobs/jobs.module';
+import { WorkerMessagesModule } from './worker-messages/worker-messages.module';
 import { QualityModule } from './quality/quality.module';
 import { RegulatoryModule } from './regulatory/regulatory.module';
 import { ReportsModule } from './reports/reports.module';
@@ -42,6 +45,7 @@ import { TelemetryModule } from './telemetry/telemetry.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TravelersModule } from './travelers/travelers.module';
 import { WorkerModule } from './worker/worker.module';
+import { WorkerAppModule } from './worker-app/worker-app.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
@@ -92,7 +96,10 @@ export const httpLoggerOptions = {
     AnalyticsModule,
     RegulatoryModule,
     AssistantModule,
+    JobsModule,
+    WorkerMessagesModule,
     QualityModule,
+    OpsLiteModule,
     ReportsModule,
     RetentionModule,
     ContactModule,
@@ -106,6 +113,7 @@ export const httpLoggerOptions = {
     PermissionOverridesModule,
     SmsModule,
     WorkerModule,
+    WorkerAppModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AuthGuard },

@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 
 import { CurrencyMenu } from '@/components/currency/currency-menu';
 import { DisplayPreferencesForm } from '@/components/display/display-preferences';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Link, usePathname } from '@/i18n/navigation';
 import { isCurrent, PRIMARY_NAV } from '@/lib/site-nav';
 
@@ -21,8 +22,10 @@ const subscribeNever = () => () => undefined;
 
 /**
  * The menu drawer below `lg` (DS 07, DS-Mobile-Patterns): the header links in
- * 48 px rows, then sign-in or the account. It closes when a link is followed,
- * because the header outlives client navigation. The drawer is portalled to
+ * 48 px rows, then sign-in or the account, then the language (the header's
+ * only place for it below `sm`), the currency and the display preferences. It
+ * closes when a link is followed, because the header outlives client
+ * navigation. The drawer is portalled to
  * `<body>` once hydrated, so the dialog never sits inside the header's or the
  * bottom bar's landmark.
  */
@@ -33,6 +36,7 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
   const display = useTranslations('display');
   // The header and the bottom bar each render a menu, so ids are per instance.
   const displayTitleId = useId();
+  const languageTitleId = useId();
   const hydrated = useSyncExternalStore(
     subscribeNever,
     () => true,
@@ -98,6 +102,12 @@ export function SiteMenu({ signedIn, variant, className }: SiteMenuProps) {
                   );
                 })}
               </ul>
+              <section aria-labelledby={languageTitleId} className="mt-6 flex flex-col">
+                <h2 id={languageTitleId} className="text-overline uppercase text-muted">
+                  {t('language')}
+                </h2>
+                <LocaleSwitcher variant="list" onNavigate={close} />
+              </section>
               <CurrencyMenu variant="list" compact className="mt-6" />
               <section aria-labelledby={displayTitleId} className="mt-6 flex flex-col">
                 <h2 id={displayTitleId} className="text-overline uppercase text-muted">

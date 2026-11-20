@@ -519,7 +519,18 @@ describe('desk events', () => {
       }),
     ).toBe(true);
     expect(results('alert_muted', { muted_for_s: 900, channel: 'desk' })).toBe(true);
-    expect(results('alert_muted', { muted_for_s: 900, channel: 'ops_lite' })).toBe(false);
+    // Ops Lite reports its own channel and origin; anything else is refused.
+    expect(results('alert_muted', { muted_for_s: 900, channel: 'ops_lite' })).toBe(true);
+    expect(results('alert_muted', { muted_for_s: 900, channel: 'push' })).toBe(false);
+    expect(
+      results('redispatch_triggered', {
+        service_item_id: 'cmh0service1',
+        mode: 'manual',
+        candidates_shown: 3,
+        position_chosen: 2,
+        from: 'ops_lite',
+      }),
+    ).toBe(true);
   });
 
   it('maps desk paths to the admin artboards', () => {
@@ -532,6 +543,10 @@ describe('desk events', () => {
     expect(deskScreenForPath('/packages/cmh0pkg1')).toBe('A-Package-Edit');
     expect(deskScreenForPath('/content/advisories/new')).toBe('A-Content');
     expect(deskScreenForPath('/invite')).toBe('A-Login');
+    expect(deskScreenForPath('/lite')).toBe('AL-Alerts');
+    expect(deskScreenForPath('/lite/alerts')).toBe('AL-Alerts');
+    expect(deskScreenForPath('/lite/pipeline')).toBe('AL-Pipeline');
+    expect(deskScreenForPath('/lite/inbox')).toBe('AL-Inbox');
     expect(deskScreenForPath('/nowhere')).toBe('A-States');
   });
 });

@@ -2,7 +2,7 @@
 
 import { Button, cn, Icon, Switch } from '@ota/ui';
 import { useTranslations } from 'next-intl';
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 
 import { WRAPPING_BUTTON } from '@/lib/button';
 
@@ -13,24 +13,28 @@ import { useTelemetry, type ConsentSource } from './telemetry-provider';
  * Essential is always on; each optional purpose the agency has words for is a
  * switch, off unless already granted (no pre-ticked boxes). "Reject
  * non-essential" and "Accept all" are equally weighted; "Save my selection"
- * keeps the switches as set.
+ * keeps the switches as set. In compact form (the banner) the rows and "Save
+ * my selection" wait behind "Choose by purpose"; closed, from lg, the intro and
+ * the two choices share one row.
  */
 export function CookieChoices({
   source,
   onSaved,
   stickyActions = false,
-  compactOnPhone = false,
+  compact = false,
+  intro,
 }: {
   source: ConsentSource;
   onSaved?: () => void;
   /** Keep the actions in view at the foot of a scrolling container (the banner). */
   stickyActions?: boolean;
   /**
-   * Below md, keep the rows and "Save my selection" behind a disclosure, so
-   * the banner leaves most of a phone's screen to the page (the two equal
-   * choices stay in view).
+   * Keep the rows and "Save my selection" behind a disclosure, so the banner
+   * leaves most of the screen to the page (the two equal choices stay in view).
    */
-  compactOnPhone?: boolean;
+  compact?: boolean;
+  /** The heading and words above the choices, beside them while compact and closed from lg. */
+  intro?: ReactNode;
 }) {
   const t = useTranslations('cookies');
   const { texts, permissions, save } = useTelemetry();
@@ -39,7 +43,7 @@ export function CookieChoices({
   // The banner and the settings page can both be in the DOM; ids are per instance.
   const idBase = useId();
   const rowsId = `${idBase}-rows`;
-  const collapsed = compactOnPhone && !open && 'max-md:hidden';
+  const collapsed = compact && !open;
 
   const offered = (['analytics', 'marketing'] as const).filter(
     (purpose) => texts[purpose],
@@ -52,23 +56,36 @@ export function CookieChoices({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {compactOnPhone ? (
-        <Button
-          type="button"
-          variant="tertiary"
-          aria-expanded={open}
-          aria-controls={rowsId}
-          className={cn(WRAPPING_BUTTON, 'self-start md:hidden')}
-          onClick={() => setOpen((current) => !current)}
-        >
-          {t('choose')}
-          <Icon name={open ? 'chevron-up' : 'chevron-down'} />
-        </Button>
+    <div
+      className={cn(
+        'flex flex-col gap-4',
+        collapsed && 'lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-x-8',
+      )}
+    >
+      {intro || compact ? (
+        <div className="flex min-w-0 flex-col gap-4">
+          {intro}
+          {compact ? (
+            <Button
+              type="button"
+              variant="tertiary"
+              aria-expanded={open}
+              aria-controls={rowsId}
+              className={cn(WRAPPING_BUTTON, 'self-start')}
+              onClick={() => setOpen((current) => !current)}
+            >
+              {t('choose')}
+              <Icon name={open ? 'chevron-up' : 'chevron-down'} />
+            </Button>
+          ) : null}
+        </div>
       ) : null}
       <ul
         id={rowsId}
-        className={cn('flex flex-col divide-y rounded-lg border bg-surface', collapsed)}
+        className={cn(
+          'flex flex-col divide-y rounded-lg border bg-surface',
+          collapsed && 'hidden',
+        )}
       >
         <li className="flex items-start gap-4 p-4">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -105,9 +122,12 @@ export function CookieChoices({
         })}
       </ul>
       <div
+        data-sticky-actions={stickyActions || undefined}
         className={cn(
           'flex flex-wrap gap-3',
           stickyActions && 'sticky -bottom-5 -mb-5 border-t bg-surface pb-5 pt-3',
+          // Beside the intro, the two choices are equal grid columns, not a sticky bar.
+          collapsed && 'lg:static lg:mb-0 lg:grid lg:grid-cols-2 lg:border-t-0 lg:p-0',
         )}
       >
         <Button
@@ -129,7 +149,7 @@ export function CookieChoices({
         <Button
           type="button"
           variant="tertiary"
-          className={cn(WRAPPING_BUTTON, 'basis-full', collapsed)}
+          className={cn(WRAPPING_BUTTON, 'basis-full', collapsed && 'hidden')}
           onClick={() => choose(selection)}
         >
           {t('save')}

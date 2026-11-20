@@ -16,6 +16,7 @@
     "menu": "Menu",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
+    "language": "Language",
     "primary": "Primary",
     "main": "Main",
     "homeLabel": "{agency} home",
@@ -896,6 +897,33 @@
       },
       "railOff": "Paying by bank transfer online is switched off for now. Contact us to complete the payment.",
       "contactUs": "Contact us"
+    },
+    "workerStep": {
+      "line": "{step} · {time}",
+      "TRANSPORTATION": {
+        "EN_ROUTE": "Your driver is on the way",
+        "ARRIVED": "Your driver has arrived",
+        "STARTED": "On board",
+        "FINISHED": "Delivered"
+      },
+      "GUIDE": {
+        "EN_ROUTE": "Your guide is on the way",
+        "ARRIVED": "Your guide has arrived",
+        "STARTED": "Tour under way",
+        "FINISHED": "Tour finished"
+      },
+      "EXPERIENCE": {
+        "EN_ROUTE": "Your host is on the way",
+        "ARRIVED": "Your host has arrived",
+        "STARTED": "Activity under way",
+        "FINISHED": "Activity finished"
+      },
+      "ACCOMMODATION": {
+        "EN_ROUTE": "Your host is on the way",
+        "ARRIVED": "Your host has arrived",
+        "STARTED": "Checked in",
+        "FINISHED": "Checked out"
+      }
     }
   },
   "join": {
@@ -1051,7 +1079,11 @@
         "traveler": "Traveler"
       },
       "passkeys": "Passkeys",
-      "skip": "Skip to content"
+      "skip": "Skip to content",
+      "opsLite": {
+        "pointer": "On a phone? Ops Lite is the desk's triage, made for it.",
+        "open": "Open Ops Lite"
+      }
     },
     "paymentsLedger": {
       "title": "Payments",
@@ -1373,6 +1405,7 @@
           "resourcesStaleDays": "Resources stale after",
           "reliabilityFloorPercent": "Reliability floor for auto-dispatch",
           "reliabilityMinAnswered": "Answered offers before the floor applies",
+          "payoutBusinessDays": "Business days before a finished job is paid",
           "conciergeAnswerHours": "Event request answered within",
           "staffPasskeysRequired": "Staff sign in with a passkey",
           "staffIdleLockMinutes": "Idle lock after no input",
@@ -1410,6 +1443,7 @@
           "resourcesStaleDays": "Suppliers, Disruptions, storefront Packages",
           "reliabilityFloorPercent": "Dispatch, Suppliers, re-dispatch list",
           "reliabilityMinAnswered": "Dispatch, Suppliers, re-dispatch list",
+          "payoutBusinessDays": "Worker app earnings, supplier payouts",
           "conciergeAnswerHours": "Bookings › Event requests, Dashboard, request email",
           "staffPasskeysRequired": "Desk sign-in, the escalation and messaging feeds",
           "staffIdleLockMinutes": "Desk sessions not marked as own device",
@@ -1763,7 +1797,35 @@
         "call": "Call",
         "acknowledgeFor": "Acknowledge red alert · {service} · {code}",
         "startHint": "Offers each service to the next qualified worker.",
-        "rule": "States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer and writes it to the audit log. Payout rates are the supplier's net; the traveler never sees this column."
+        "rule": "States per item: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. A re-dispatch withdraws the open offer and writes it to the audit log. Payout rates are the supplier's net; the traveler never sees this column.",
+        "stepLine": "{step} · {time}",
+        "steps": {
+          "EN_ROUTE": "On the way",
+          "ARRIVED": "Arrived",
+          "STARTED": "In service",
+          "FINISHED": "Finished"
+        },
+        "brief": "Brief…",
+        "briefFor": "Brief for the worker · {service} · {code}",
+        "briefTitle": "Brief for the worker",
+        "briefDescription": "The worker reads this in the app, also with no signal. Write only what the job needs: it is cleared with the traveler’s data.",
+        "meetingPoint": "Meeting point",
+        "dropOff": "Drop-off",
+        "workerBrief": "Notes for the worker",
+        "workerBriefHint": "Flight, sign text, mobility, luggage. 500 characters at most.",
+        "briefSave": "Save brief",
+        "briefWritten": "Brief written",
+        "briefMissing": "No brief",
+        "recordStep": "Record step…",
+        "recordStepFor": "Record a step · {service} · {code}",
+        "stepTitle": "Record a step from a call",
+        "stepDescription": "When the worker phones in a step. It is audited as the desk’s.",
+        "stepField": "Step",
+        "stepTime": "When (Havana time)",
+        "stepSave": "Record step",
+        "cancel": "Cancel",
+        "close": "Close",
+        "failed": "Could not save: {message}"
       },
       "payments": "Payments",
       "paymentsDescription": "Links are created once the booking is SECURED_AND_INVOICED; the first payment received (the deposit or the full amount) confirms it, and a balance is paid after.",
@@ -1924,6 +1986,18 @@
           "chooseFile": "Choose the scanned form.",
           "tooLarge": "The scan is over 10 MB."
         }
+      },
+      "workerThreads": {
+        "title": "Worker threads",
+        "description": "Worker chats are separate: workers only ever see traveler first names, languages and pickup details.",
+        "none": "No worker holds a service on this booking yet.",
+        "noMessage": "No message about this booking yet.",
+        "open": "Open thread",
+        "close": "Close thread",
+        "new": "{count, plural, one {New} other {# new}}",
+        "you": "You: {body}",
+        "call": "Call {name}",
+        "callShort": "Call"
       }
     },
     "reservationActions": {
@@ -1951,7 +2025,20 @@
       "failed": "Could not log incident",
       "resolving": "Resolving…",
       "resolve": "Resolve",
-      "resolveFailed": "Could not resolve"
+      "resolveFailed": "Could not resolve",
+      "source": "Where it came from",
+      "sources": {
+        "DESK": "Logged by the desk",
+        "WORKER_APP": "Worker’s app",
+        "WORKER_SMS": "Worker’s SMS"
+      },
+      "service": "Service",
+      "serviceNone": "Not about one service",
+      "reportedBy": "Reported by {name}",
+      "reportedAt": "Reported at {time}",
+      "position": "Position {lat}, {lng}",
+      "acknowledgedBy": "Acknowledged by {name} at {time}",
+      "notAcknowledged": "Not acknowledged yet"
     },
     "payments": {
       "none": "No payment links yet.",
@@ -2019,6 +2106,18 @@
       "cancel": "Cancel",
       "bankReference": "Bank reference",
       "markSent": "Record as sent",
+      "youApprovedAnother": "You approved. Another approver must give the next one: nudge them by email, or withdraw yours.",
+      "youApprovedSuper": "You approved. A Super Admin must give the next one: nudge them by email, or withdraw yours.",
+      "nudge": "Nudge by email",
+      "nudgeWait": "Nudged; again from {time}",
+      "nudged": "Emailed {names} at {time}. The refund goes out the moment the last approval is in.",
+      "nudgedMany": "Emailed {count} approvers at {time}. The refund goes out the moment the last approval is in.",
+      "lastNudged": "Approvers last nudged at {time}",
+      "withdraw": "Withdraw my approval",
+      "withdrawTitle": "Withdraw your approval?",
+      "withdrawExplain": "The refund of {amount} on {code} stays requested. It needs your approval or another approver’s again before it goes out.",
+      "withdrawConfirm": "Withdraw approval",
+      "close": "Close",
       "rule": "Scale {policy}: {days} days out, {keep} % kept + {fee}",
       "newRefund": "Record a refund",
       "fromPayment": "From payment",
@@ -2120,7 +2219,7 @@
     },
     "applications": {
       "title": "Applications",
-      "description": "Supplier recruitment. Approving an application creates the worker account and compliance profile.",
+      "description": "Supplier recruitment. Approving an application creates the worker account and compliance profile, and sends the worker the app's download link.",
       "recruitment": "Recruitment",
       "applicationsCount": "{count} application(s)",
       "empty": "No applications yet. The public form lives at /join.",
@@ -2279,6 +2378,11 @@
           "title": "{count, plural, one {# event request} other {# event requests}} waiting for an answer",
           "body": "Unanswered for over {hours} h. Say whether the seats can be requested, or mark them unavailable.",
           "action": "Answer"
+        },
+        "eventHold": {
+          "title": "Room hold at {casa} ends {date}",
+          "body": "For {event}. Release the room with the host, or move the date on the event.",
+          "action": "Open event"
         }
       },
       "redispatchFor": "Re-dispatch {service} · {code}",
@@ -2306,6 +2410,28 @@
         "toast": "Alert acknowledged · audio off for {code}",
         "undo": "Undo",
         "failed": "The acknowledgement for {code} was not recorded: {message}"
+      },
+      "emergency": {
+        "listLabel": "On-site emergencies",
+        "title": "On-site emergency · {code}",
+        "body": "{worker} reported an emergency at {time}: {category}.",
+        "categories": {
+          "MEDICAL": "medical",
+          "MECHANICAL": "mechanical",
+          "SECURITY": "security",
+          "OTHER": "other, they explain by phone"
+        },
+        "someone": "The worker",
+        "call": "Call {worker}",
+        "position": "Position {lat}, {lng}",
+        "accuracy": "± {accuracy} m",
+        "noPosition": "No position sent: call the worker.",
+        "openPosition": "Open position",
+        "openBooking": "Open booking",
+        "acknowledge": "I have it",
+        "acknowledgeFor": "I have it · emergency on {code}",
+        "failed": "Could not acknowledge the emergency on {code}: {message}",
+        "announce": "On-site emergency. Booking {code}: {worker}, {category}, at {time}."
       }
     },
     "messages": {
@@ -2358,8 +2484,8 @@
       "available": "Available for dispatch: {value}",
       "yes": "yes",
       "no": "no",
-      "credentialDocument": "Credential document",
-      "credentialDescription": "Formatur credential, transport operating licence, or RTN card.",
+      "credentialDocument": "Credentials",
+      "credentialDescription": "Each document the category needs: the current version, an upload waiting for review, and the expiry that pauses auto-dispatch.",
       "availability": "Availability calendar",
       "availabilityDescription": "Single-tap availability and granular blocking. Auto-dispatch and the re-dispatch list skip a worker on a blocked day (spec §5.2).",
       "longBlockTitle": "{days} days blocked in a row",
@@ -2391,12 +2517,35 @@
       "noJob": "None yet",
       "payouts": {
         "title": "Payouts",
-        "description": "What this worker is owed and has been paid for finished jobs: taken, ended, on a booking not cancelled. The worker sees the same figures in the app.",
+        "description": "What this worker is owed and has been paid for finished jobs: taken, ended, on a booking not cancelled. The worker sees the same figures in the app. Record a payment once the money has changed hands.",
         "pending": "Pending",
         "thisMonth": "Finished this month",
-        "paidYear": "Paid · jobs of {year}",
+        "paidYear": "Paid in {year}",
         "issue": "Payout failed",
-        "jobs": "{count, plural, one {# job} other {# jobs}}"
+        "jobs": "{count, plural, one {# job} other {# jobs}}",
+        "method": "Payout method",
+        "methodNotSet": "Method not set",
+        "methods": {
+          "CASH_OFFICE": "Cash at the office",
+          "BANK_TRANSFER": "Bank transfer"
+        },
+        "saveMethod": "Save method",
+        "failed": "Could not save. Try again.",
+        "nextPayDay": "Next pay day {day}, {from}–{to}",
+        "rule": "Paid {days, plural, one {# business day} other {# business days}} after a job ends",
+        "nothingToPay": "No finished job is waiting to be paid.",
+        "recordTitle": "Record payout",
+        "paidWith": "Paid by",
+        "paidOn": "Paid on",
+        "record": "Record {amount} for {count, plural, one {# job} other {# jobs}}",
+        "recordHint": "Record it once the worker has been paid, then print the receipt for them to sign.",
+        "payments": "Payments",
+        "noPayments": "No payment recorded yet.",
+        "amount": "Amount",
+        "jobsColumn": "Jobs",
+        "recordedBy": "Recorded by",
+        "receipt": "Receipt",
+        "receiptPdf": "Receipt (PDF)"
       },
       "resources": {
         "casaTitle": "Backup power & resilience",
@@ -2452,7 +2601,27 @@
         "saving": "Saving…",
         "failed": "Could not save the vehicle.",
         "insuranceExpired": "Insurance expired",
-        "insuranceEnds": "Insurance ends in {days} d"
+        "insuranceEnds": "Insurance ends in {days} d",
+        "insuranceFromDocument": "From the verified liability insurance document.",
+        "insuranceNone": "No verified insurance",
+        "request": {
+          "title": "Vehicle change asked from the app",
+          "line": "{model} · {plate} · {seats} seats · {ac, select, yes {air conditioning} other {no air conditioning}}",
+          "asked": "Asked {date}. The current vehicle stays on file, and in dispatch, until you approve.",
+          "approve": "Review and approve…",
+          "dialogTitle": "Approve {model} · {plate}?",
+          "plateChanges": "The plate changes from {from} to {to}. The technical inspection and the liability insurance on file named the old car: both are set aside, and automatic offers pause until the new ones are approved.",
+          "samePlate": "Same plate: the documents on file stay.",
+          "firstVehicle": "No vehicle was on file, so the documents on file stay.",
+          "confirm": "Approve vehicle",
+          "cancel": "Cancel",
+          "close": "Close",
+          "reason": "Reason for the worker",
+          "reasonHint": "The worker reads it in the app.",
+          "reject": "Reject change",
+          "rejectForm": "Reject the vehicle change",
+          "failed": "Could not save the decision."
+        }
       },
       "autoReliability": "Paused · reliability",
       "autoWhyReliability": "Below {floor} % acceptance over at least {min} answered offers: auto-dispatch skips this worker until the rate recovers. The desk can still offer them a job from the re-dispatch list.",
@@ -2478,6 +2647,12 @@
           "none": "No phone was signed in as {name}. Any code not yet used has stopped working.",
           "failed": "The worker could not be signed out"
         }
+      },
+      "approvalBlocked": "Verify these documents before approving: {documents}.",
+      "workerThread": {
+        "open": "Worker app message",
+        "title": "Worker app messages",
+        "description": "The worker's one thread with the desk, apart from the travelers' messages."
       }
     },
     "reports": {
@@ -2835,17 +3010,66 @@
       "uploading": "Uploading…",
       "uploadImage": "Upload image"
     },
-    "credential": {
+    "credentials": {
+      "kinds": {
+        "TRANSPORT_LICENCE": "Transport operating licence",
+        "TECHNICAL_INSPECTION": "Technical inspection (somatón)",
+        "LIABILITY_INSURANCE": "Civil liability insurance",
+        "GUIDE_LICENCE": "Guide licence",
+        "HOST_LICENCE": "Host licence (casa particular)",
+        "IDENTITY_CARD": "Identity card"
+      },
+      "state": {
+        "VALID": "Valid",
+        "EXPIRING": "Auto-dispatch paused",
+        "EXPIRED": "Expired",
+        "MISSING": "Missing"
+      },
+      "channels": {
+        "PHONE": "Phone",
+        "WHATSAPP": "WhatsApp",
+        "VISIT": "Visit",
+        "WORKER_APP": "Worker app"
+      },
+      "pendingBadge": "Pending audit",
+      "missingTitle": "Documents to verify",
+      "missing": "No verified version yet: {documents}. The supplier cannot be approved until each one is verified.",
+      "none": "No verified version on file.",
+      "number": "Number",
+      "issuer": "Issued by",
+      "issued": "Issued",
+      "expires": "Expires",
+      "pauseFrom": "Auto-dispatch pauses from",
+      "uploaded": "Uploaded",
+      "uploadedValue": "{date} · {channel}",
+      "checked": "Checked",
+      "checkedValue": "{date} · {name}",
+      "pending": "New upload waiting for review · {date} · {channel}",
+      "showFile": "Show document (logged)",
+      "hideFile": "Hide document",
+      "openFull": "Open full size (logged)",
+      "fileAlt": "{name}, uploaded document",
+      "approveForm": "Approve {name}",
+      "expiresHint": "As printed on the document.",
+      "approve": "Approve · VERIFIED",
+      "rejectForm": "Reject {name}",
+      "reason": "Reason for the worker",
+      "reasonHint": "Shown in the worker app, e.g. glare over the number, please retake the photo.",
+      "reject": "Reject · request new upload",
+      "rejected": "Rejected {date}: {reason}",
+      "uploadLabel": "Upload {name}",
+      "via": "Received by",
+      "upload": "Upload",
+      "uploading": "Uploading…",
       "choose": "Choose a file to upload.",
       "useFileType": "Use a JPEG, PNG, WebP, or PDF file.",
-      "uploadFailed": "Upload failed",
-      "alt": "Supplier credential",
-      "openTab": "Open in a new tab",
-      "none": "No credential document on file.",
-      "uploadLabel": "Upload credential (Formatur / licence / RTN)",
-      "expiresOn": "Expires on (optional)",
-      "uploading": "Uploading…",
-      "upload": "Upload"
+      "failed": "The change was not saved. Try again.",
+      "identityNone": "Not checked yet. No photo of it is kept: check it in person or on a video call.",
+      "identityChecked": "Checked in person on {date} by {name}. No photo is kept.",
+      "identityCheckedOn": "Checked in person on {date}. No photo is kept.",
+      "identityNoFile": "Checked in person. No photo is kept.",
+      "identityHint": "Record that you saw the original card, in person or on a video call.",
+      "recordIdentity": "Record checked in person"
     },
     "availability": {
       "loadFailed": "Could not load availability",
@@ -3180,6 +3404,232 @@
       "ended": "Your last override for this has ended.",
       "lapsed": "Your last request lapsed: no Super Admin answered within 24 hours.",
       "failed": "That did not go through."
+    },
+    "opsLite": {
+      "skip": "Skip to the screen",
+      "nav": {
+        "label": "Ops Lite",
+        "alerts": "Alerts",
+        "pipeline": "Pipeline",
+        "inbox": "Inbox",
+        "desk": "Desk",
+        "withCount": "{tab} ({count})"
+      },
+      "push": {
+        "title": "Ops Lite · red alert"
+      },
+      "sound": {
+        "on": "Sound on",
+        "onLabel": "Sound on, tap to mute 15 minutes",
+        "muted": "Muted · {time}",
+        "mutedLabel": "Muted until {time} by {name} (logged).",
+        "tapToUnmute": "Tap to unmute.",
+        "turnOn": "Turn on sound",
+        "someone": "someone on the desk"
+      },
+      "alerts": {
+        "title": "Ops Lite · Alerts",
+        "summary": "Alerts by kind",
+        "pills": {
+          "red": "Red {count}",
+          "amber": "Amber {count}",
+          "approvals": "Approvals {count}",
+          "payments": "Payments {count}"
+        },
+        "push": {
+          "enable": "Notify me on this phone",
+          "blocked": "Notifications are blocked for this site in the browser's settings."
+        },
+        "sound": {
+          "locked": "The browser holds the sound back until you tap the screen once."
+        },
+        "offered": "<strong>Offered to {name} · {time}</strong> · {service} on {code}, with a new timer · logged as {you} (Ops Lite).",
+        "dismiss": "Dismiss",
+        "noWorker": "no worker",
+        "someone": "someone on the desk",
+        "call": "Call {name}",
+        "openBooking": "Open booking",
+        "elapsed": "{percent} % of the timer elapsed",
+        "red": {
+          "declined": "{service} declined · {worker}",
+          "timedOut": "{service} timed out · {worker}",
+          "since": "red since {time}",
+          "audio": "audio every 60 s",
+          "acknowledged": "acknowledged by {name} · {time}",
+          "acknowledging": "acknowledged",
+          "offeredAt": "Offered {time}",
+          "declinedAt": "declined {time}",
+          "deadline": "deadline {time}",
+          "redispatch": "Re-dispatch · pick a fallback",
+          "also": "Also red on this booking: {what} · {time}",
+          "redispatchService": "Re-dispatch {service}",
+          "acknowledge": "Acknowledge · stop the audio"
+        },
+        "amber": {
+          "title": "{service} at {percent} % of timer · {left} left",
+          "redispatch": "Re-dispatch early"
+        },
+        "approvals": {
+          "title": "Refund {amount} · needs approval",
+          "requestedBy": "requested by {name}",
+          "approved": "Approved by {name} · {time}",
+          "rejected": "Rejected by {name} · {time}"
+        },
+        "payments": {
+          "windowExpired": "Payment window expired",
+          "balanceOverdue": "Balance overdue",
+          "body": "{code} · {traveler} · {amount} · due {due}",
+          "extend": "Extend 24 h",
+          "extending": "Extending…",
+          "extended": "Extended: now due {when}.",
+          "failed": "{code}: the payment could not be extended. {message}",
+          "nothingDue": "Nothing is due on this booking any more."
+        },
+        "credentials": {
+          "title": "Credential expiring · {name}",
+          "body": "Expires {date} · for the desk, not urgent"
+        },
+        "empty": "All clear: no red or amber offers, approvals or late payments.",
+        "note": "Ops Lite is for triage: call, re-dispatch, acknowledge, approve. Prices, documents and everything else wait for the desk. Re-dispatches, acknowledgements and mutes made here are logged as Ops Lite."
+      },
+      "redispatch": {
+        "rule": "Verified, free on every day of the service, licence valid beyond {days} days.",
+        "offer": "Offer",
+        "offerTo": "Offer to {name}",
+        "cancel": "Cancel"
+      },
+      "pipeline": {
+        "title": "Ops Lite · Pipeline",
+        "subtitle": "{total} bookings · {open} in pipeline · refreshed {time}",
+        "unavailable": "The pipeline is unavailable",
+        "live": "Live",
+        "loadError": "The pipeline could not be read. Try again in a moment.",
+        "clock": {
+          "expired": "Expired",
+          "today": "today",
+          "inDays": "in {days} d",
+          "day": "day {day}",
+          "minutes": "{count} min",
+          "hours": "{count} h",
+          "days": "{count} d"
+        },
+        "party": "{name} +{more}",
+        "accepted": "{accepted} of {total} accepted",
+        "call": "Call {name}",
+        "ground": {
+          "title": "On the ground now",
+          "travelers": "{count, plural, one {# traveler} other {# travelers}}",
+          "none": "No trip is under way.",
+          "trips": "{count, plural, one {# trip under way} other {# trips under way}}",
+          "province": "{province} {count}",
+          "provinceCase": "{province} {count} · {scenario}",
+          "case": "Disruption {reference} · {severity}"
+        },
+        "scenarios": {
+          "outage": "outage",
+          "hurricane": "hurricane",
+          "fuel": "fuel",
+          "casa": "casa",
+          "flight": "flight"
+        },
+        "severities": {
+          "MINOR": "minor",
+          "MAJOR": "major",
+          "EMERGENCY": "emergency"
+        },
+        "states": {
+          "title": "State machine · tap a state",
+          "spec": "spec §4.2",
+          "empty": "No booking in this state.",
+          "more": "+{count} more on the desk"
+        },
+        "who": {
+          "ITINERARY_SUBMITTED": "Waiting for the desk to start dispatch or send a proposal",
+          "DISPATCH_IN_PROGRESS": "Workers answering in their app · offer timers running",
+          "ASSEMBLY_AND_ESCALATION": "Amber watch · re-route declined items · call workers",
+          "ACTION_REQUIRED": "Red · re-dispatch from the Alerts tab",
+          "SECURED_AND_INVOICED": "Every service accepted · payment link next",
+          "PENDING_PAYMENT": "Payment window running · proofs matched on the desk",
+          "CONFIRMED": "Documents issued · the trip is ahead",
+          "IN_PROGRESS": "On the trip · incidents and disruption cases",
+          "COMPLETED": "Review prompt · payouts · retention clock",
+          "CANCELLED": "Policy applied · refunds on the desk"
+        },
+        "movements": {
+          "title": "Today's movements",
+          "none": "No arrival, departure or payment deadline today.",
+          "allDay": "today",
+          "PAYMENT_DUE": "Payment due on {code} · {who}",
+          "ARRIVAL": "{who} start their trip · {code}",
+          "DEPARTURE": "{who} end their trip · {code}",
+          "open": "Open booking"
+        },
+        "note": "A read-only view of the pipeline. Transitions, invoices and documents stay on the desk; from here you call, and re-dispatch from Alerts."
+      },
+      "inbox": {
+        "title": "Ops Lite · Inbox",
+        "subtitle": "Travelers and workers, urgent first",
+        "loadError": "The inbox could not be read. Try again in a moment.",
+        "filters": "Show",
+        "filter": {
+          "all": "All",
+          "urgent": "Urgent",
+          "unread": "Unread",
+          "travelers": "Travelers",
+          "workers": "Workers"
+        },
+        "empty": "No conversation yet.",
+        "noneHere": "No thread matches this filter.",
+        "threads": "Threads",
+        "you": "You: {body}",
+        "kind": "Traveler · {code}",
+        "urgent": "Urgent",
+        "new": "{count, plural, one {New} other {# new}}",
+        "partyOf": "party of {count}",
+        "call": "Call {name}",
+        "callShort": "Call",
+        "messages": "Messages",
+        "fromDesk": "Desk · {time}",
+        "fromTraveler": "{name} · {time}",
+        "placeholder": "Reply to {name} · in-app + email",
+        "reply": "Reply",
+        "send": "Send",
+        "urgentNote": "Urgent: disruption case {reference} is open on this booking. In-app is the record; the traveler also gets an email copy.",
+        "note": "In-app is the record; the traveler also gets an email copy.",
+        "workerKind": "Worker · {category}",
+        "workerJob": "{day} · {code} · {province}"
+      }
+    },
+    "appCard": {
+      "title": "Worker app card",
+      "description": "Print it for the desk: approved workers scan the QR or type the link to download the app. Approving an application also emails and texts them the link.",
+      "open": "Worker app card",
+      "heading": "Partner app",
+      "scan": "Scan the QR or open the link on an Android phone.",
+      "version": "Version {version}, published {date}",
+      "notPublished": "No version is published yet; the download page tells workers so.",
+      "noQr": "No QR yet. Make one for this link with any QR tool and save it as tenant/assets/worker-app/qr.svg.",
+      "qrAlt": "QR code for {url}",
+      "fingerprint": "Signing certificate (SHA-256)",
+      "print": "Print"
+    },
+    "workerThread": {
+      "loadFailed": "The thread could not be read. Try again in a moment.",
+      "sendFailed": "The message was not sent. Try again.",
+      "messages": "Messages",
+      "empty": "No messages with {name} yet.",
+      "fromWorker": "{name} · {time}",
+      "fromDesk": "{name} · {time}",
+      "desk": "Desk",
+      "arrived": "arrived {time}",
+      "read": "read {time}",
+      "reply": "Write to {name}",
+      "placeholder": "Write to {name} · worker app",
+      "send": "Send",
+      "call": "Call {name}",
+      "callShort": "Call",
+      "readOnly": "Support reads worker threads; operations reply.",
+      "note": "Workers see only first names and local numbers; nothing about billing goes in this thread. A message reaches the worker when they open the app; if it is urgent, call."
     }
   },
   "conditions": {
@@ -4071,7 +4521,15 @@
       "addCategory": "Add a category",
       "save": "Save event",
       "create": "Create draft",
-      "saveFailed": "The event was not saved."
+      "saveFailed": "The event was not saved.",
+      "holdTitle": "Room hold for concierge requests",
+      "holdHint": "Optional. The event page shows it through the last day; the room itself is held with the host by hand.",
+      "holdCasa": "Casa",
+      "holdNone": "No hold",
+      "holdUntil": "Held until",
+      "holdNote": "Note",
+      "holdNoteHint": "Optional, e.g. balcony rooms, battery 8 h.",
+      "holdIncomplete": "Choose the casa and the last day, or no hold."
     },
     "translations": {
       "title": "Other languages",
@@ -4086,7 +4544,9 @@
       "publishHint": "Empty fields fall back to the source text.",
       "save": "Save {locale}",
       "saved": "{locale} saved.",
-      "saveFailed": "The translation was not saved."
+      "saveFailed": "The translation was not saved.",
+      "holdNote": "Hold note",
+      "mediaAlt": "Photo {number} · alt text"
     },
     "actions": {
       "publish": "Publish",
@@ -4106,7 +4566,38 @@
       "NO_NIGHTS": "Add the nights a per-night category is sold for.",
       "NIGHT_OUTSIDE_DATES": "A night falls outside the event's dates.",
       "CONFIRM_AFTER_START": "Seats must be confirmed before the first day.",
-      "ENDED": "The event is over."
+      "ENDED": "The event is over.",
+      "MEDIA_ALT_REQUIRED": "Every photo needs alt text.",
+      "MEDIA_CONSENT_REQUIRED": "A photo that shows people needs a consent reference."
+    },
+    "photos": {
+      "none": "No photos yet. The first one you upload is the hero.",
+      "hero": "Hero",
+      "gallery": "Gallery {number}",
+      "showsPeople": "Shows people",
+      "consentOnFile": "consent on file",
+      "consentMissing": "consent missing",
+      "remove": "Remove",
+      "removeFailed": "The photo could not be removed.",
+      "file": "Photo",
+      "altText": "Alt text",
+      "altHint": "Say what the photo shows, for travelers who cannot see it.",
+      "peopleLabel": "People can be recognised in this photo",
+      "consentReference": "Consent reference",
+      "consentHint": "The signed release on file, e.g. its folder or form number.",
+      "chooseImage": "Choose a photo to upload.",
+      "useImageType": "Use a JPEG, PNG or WebP image.",
+      "tooLarge": "The photo is over 5 MB.",
+      "upload": "Upload photo",
+      "uploading": "Uploading…",
+      "uploadFailed": "The photo could not be uploaded.",
+      "title": "Photos",
+      "hint": "JPEG, PNG or WebP up to 5 MB. The first is the event page's hero and the events list's picture. Alt text is required; a photo that shows people needs a consent reference before the event can be published.",
+      "makeHero": "Make hero",
+      "edit": "Edit",
+      "save": "Save photo",
+      "cancel": "Cancel",
+      "saveFailed": "The photo was not saved."
     }
   },
   "eventRequestsDesk": {
@@ -4302,7 +4793,10 @@
       "onRequest": "trip request {reference}",
       "added": "{total} added to your booking.",
       "nothingCharged": "Nothing is charged yet."
-    }
+    },
+    "hold": "Festival-week casas fill early. We hold a room at {casa} for concierge requests until {date}; the custom builder opens with these dates and {province} already placed.",
+    "holdCta": "Build the trip with these dates",
+    "holdLabel": "Room held for festival week"
   },
   "display": {
     "title": "Display",
@@ -4431,5 +4925,35 @@
     "packages": "Browse trips",
     "about": "About us",
     "contact": "Contact us"
+  },
+  "workerApp": {
+    "title": "Partner app",
+    "lede": "Offers, your calendar and your jobs on your Android phone. It works offline: your answers are saved and sent when the signal returns.",
+    "notPublished": "The app is not published yet. The desk tells you when you can download it.",
+    "iphoneTitle": "Android only",
+    "iphoneText": "The partner app works on Android phones only. If you use an iPhone, call the desk and they will explain how to work with us.",
+    "version": "Version {version}",
+    "meta": "{size} · published on {date}",
+    "download": "Download the app",
+    "downloadHint": "For most phones. Better on Wi-Fi: the download uses data.",
+    "older": "Older phone? Download the 32-bit version ({size})",
+    "certificateTitle": "Signing certificate (SHA-256)",
+    "certificateText": "Android only updates the app with one signed by this same certificate. If someone passes you the app phone to phone, compare this fingerprint in Settings → Apps → Partners.",
+    "stepsTitle": "How to install it",
+    "steps": {
+      "download": "Tap “Download the app” and wait for the download to finish.",
+      "open": "Open the file from Chrome's notification or from “Downloads”.",
+      "allow": "If Android says Chrome cannot install apps, tap “Settings”, turn on “Allow from this source” and go back.",
+      "protect": "If Play Protect warns about an unknown app, tap “More details” and then “Install anyway”.",
+      "signIn": "Open “Partners” and sign in with your phone number."
+    },
+    "failTitle": "If the install fails",
+    "fail": {
+      "space": "“Not enough storage”: free some space and open the file again.",
+      "corrupt": "“There was a problem parsing the package”: the download was cut. Download it again.",
+      "conflict": "“App not installed”: if you already have another copy that did not come from this page, tell the desk before uninstalling it, because what the phone saved is lost.",
+      "old": "On an older phone, try the 32-bit version."
+    },
+    "desk": "Questions? Call the desk: {phone}"
   }
 }

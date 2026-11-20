@@ -54,7 +54,7 @@ reason).
 | Cards: one link per action; total and model before the click | pass | Title link and "View trip" |
 | Reviews: rating in text | pass | Sample copy |
 | Cookies: Accept and Reject equal; no pre-ticked boxes | pass | Both secondary, the same size. 44 px on touch now |
-| Focus behind the cookie banner | **fixed** (design change, 2026-10-29) | The banner's measured height joins the root's scroll padding and pads the page's end, so focus is scrolled clear of it and the last content can scroll above it. On a phone its purposes and "Save my selection" wait behind "Choose by purpose": 36 % of a 390 × 844 screen instead of about 60 %, Reject and Accept side by side and equal (`storefront-keyboard.spec.ts`) |
+| Focus behind the cookie banner | **fixed** (design change, 2026-10-29) | The banner's measured height joins the root's scroll padding and pads the page's end, so focus is scrolled clear of it and the last content can scroll above it. On a phone its purposes and "Save my selection" wait behind "Choose by purpose": 36 % of a 390 × 844 screen instead of about 60 %, Reject and Accept side by side and equal (`storefront-keyboard.spec.ts`). From 2026-11-18 the purposes wait behind "Choose by purpose" at every width, and from lg the closed banner is one row (152 px, 19 % of a 1280 × 800 window instead of 62 %) |
 | Support channel picker, 15-minute reply | pass | Support page |
 
 ## DS 04 · Status, feedback & navigation

@@ -170,7 +170,15 @@ export function renderWorkOrderHtml(
   <tbody>
     <tr><th>Provider</th><td>${escapeHtml(model.supplierName ?? '—')} (${escapeHtml(model.supplierPhone ?? '—')})</td></tr>
     <tr><th>Guest</th><td>${escapeHtml(model.travelerName)}</td></tr>
-    <tr><th>Rendezvous</th><td>${escapeHtml(model.province ?? 'Cuba')} · ${escapeHtml(formatDateTime(model.start))}</td></tr>
+    <tr><th>Rendezvous</th><td>${escapeHtml(model.meetingPoint ?? model.province ?? 'Cuba')} · ${escapeHtml(formatDateTime(model.start))}</td></tr>${
+      model.dropOff
+        ? `\n    <tr><th>Drop-off</th><td>${escapeHtml(model.dropOff)}</td></tr>`
+        : ''
+    }${
+      model.workerBrief
+        ? `\n    <tr><th>Notes from the desk</th><td>${escapeHtml(model.workerBrief)}</td></tr>`
+        : ''
+    }
     <tr><th>Schedule</th><td>${escapeHtml(formatDate(model.start))} → ${escapeHtml(formatDate(model.end))}</td></tr>
     <tr><th>Agreed rate</th><td>${escapeHtml(model.payoutRate)}</td></tr>
   </tbody>

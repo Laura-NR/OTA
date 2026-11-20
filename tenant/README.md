@@ -59,7 +59,9 @@ agency publishes real data. Pages marked `"status": "placeholder"` show a
   `trinidad` links a real package (`trinidad-heritage-trail`); only `vinales`
   has a full destination page in `content.destinations.details`.
 - `agency.config.json`: `licenseNumber` (`MINTUR-2026-XXXX`), the
-  `emergencyContacts` numbers (`+53 5555 …`), the `payments.bankTransfer` details,
+  `emergencyContacts` numbers (`+53 5555 …`), the `workerPayouts` office and
+  pay sessions (the W-Earnings board's Saturday 10:00–13:00, oficina Vedado),
+  the `payments.bankTransfer` details,
   and `supportEmail` (`desk@example.test`, a reserved domain that never delivers;
   in development Mailpit receives the Support form there). The `pricing` terms
   are the Booking board's samples: infants under 2 free, children up to 12 at

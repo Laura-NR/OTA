@@ -7,12 +7,15 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
   declineServiceItemSchema,
+  deskChannelQuerySchema,
   reassignServiceItemSchema,
   type DeclineServiceItemRequest,
+  type DeskChannelQuery,
   type DispatchBoardRowDto,
   type DispatchCandidateDto,
   type DispatchViewDto,
@@ -88,8 +91,9 @@ export class DispatchController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(reassignServiceItemSchema))
     body: ReassignServiceItemRequest,
+    @Query(new ZodValidationPipe(deskChannelQuerySchema)) query: DeskChannelQuery,
     @CurrentUser() actor: AuthUser,
   ): Promise<DispatchViewDto> {
-    return this.dispatch.reassign(id, body, actor);
+    return this.dispatch.reassign(id, body, actor, query.channel);
   }
 }

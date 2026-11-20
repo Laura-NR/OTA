@@ -13,23 +13,37 @@ import {
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
+  approveCredentialSchema,
   availabilityQuerySchema,
+  checkIdentityCardSchema,
   confirmResourcesSchema,
   expiringSuppliersQuerySchema,
   listSuppliersQuerySchema,
+  recordSupplierPayoutSchema,
+  rejectCredentialSchema,
+  rejectVehicleSchema,
   setAvailabilitySchema,
+  setPayoutMethodSchema,
   setVerificationSchema,
   uploadCredentialSchema,
   vehicleDetailsInputSchema,
+  type ApproveCredentialRequest,
   type AvailabilityDayDto,
   type AvailabilityQuery,
+  type CheckIdentityCardRequest,
   type ConfirmResourcesRequest,
   type ExpiringSuppliersQuery,
   type ListSuppliersQuery,
+  type RecordSupplierPayoutRequest,
+  type RejectCredentialRequest,
+  type RejectVehicleRequest,
   type SetAvailabilityRequest,
+  type SetPayoutMethodRequest,
   type SetVerificationRequest,
+  type SupplierCredentialsDto,
   type SupplierDetailDto,
   type SupplierDto,
+  type SupplierPayoutLedgerDto,
   type SupplierRowDto,
   type UploadCredentialRequest,
   type VehicleDetailsRequest,
@@ -41,6 +55,10 @@ import { CurrentUser } from '../common/auth/current-user.decorator';
 import { Capability } from '../common/auth/capability.decorator';
 import { Roles } from '../common/auth/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
+import { sendPdf } from '../proposals/proposal-pdf';
+import { SupplierCredentialsService } from './supplier-credentials.service';
+import { SupplierPayoutsService } from './supplier-payouts.service';
+import { SupplierVehicleService } from './supplier-vehicle.service';
 import { SuppliersService } from './suppliers.service';
 
 const READ_ROLES = [
@@ -52,7 +70,12 @@ const READ_ROLES = [
 @Capability('suppliers')
 @Controller('suppliers')
 export class SuppliersController {
-  constructor(private readonly suppliers: SuppliersService) {}
+  constructor(
+    private readonly suppliers: SuppliersService,
+    private readonly payouts: SupplierPayoutsService,
+    private readonly credentials: SupplierCredentialsService,
+    private readonly vehicles: SupplierVehicleService,
+  ) {}
 
   @Get()
   @Roles(...READ_ROLES)
@@ -78,13 +101,29 @@ export class SuppliersController {
     return this.suppliers.getById(id);
   }
 
-  @Get(':id/credential')
+  /** W-Credentials: each required document with its current, pending and rejected version. */
+  @Get(':id/credentials')
   @Roles(...READ_ROLES)
-  async credential(
+  credentialList(
     @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.forSupplier(id);
+  }
+
+  /** One version's file, inline; every read is audited. */
+  @Get(':id/credentials/:credentialId/file')
+  @Roles(...READ_ROLES)
+  async credentialFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('credentialId', ParseUUIDPipe) credentialId: string,
+    @CurrentUser() actor: AuthUser,
     @Res() response: Response,
   ): Promise<void> {
-    const { data, contentType } = await this.suppliers.readCredential(id);
+    const { data, contentType } = await this.credentials.readFile(
+      id,
+      credentialId,
+      actor,
+    );
     response.setHeader('content-type', contentType);
     response.setHeader('content-disposition', 'inline');
     response.send(Buffer.from(data));
@@ -134,6 +173,73 @@ export class SuppliersController {
     return this.suppliers.setVehicle(id, body, actor);
   }
 
+  /** The vehicle change the worker asked for becomes the vehicle (`docs/schema-w-vehicle.md` X1a). */
+  @Post(':id/vehicle/approve')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  approveVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.vehicles.approve(id, actor);
+  }
+
+  /** The change is refused; the worker reads the reason in the app. */
+  @Post(':id/vehicle/reject')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  rejectVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(rejectVehicleSchema)) body: RejectVehicleRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.vehicles.reject(id, body, actor);
+  }
+
+  /** W-Earnings E2, E3: how the worker is paid; the app only shows it. */
+  @Put(':id/payout-method')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  setPayoutMethod(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(setPayoutMethodSchema)) body: SetPayoutMethodRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierDetailDto> {
+    return this.suppliers.setPayoutMethod(id, body.method, actor);
+  }
+
+  /** W-Earnings: the finished jobs not yet paid and the payments made. */
+  @Get(':id/payouts')
+  @Roles(...READ_ROLES)
+  payoutLedger(@Param('id', ParseUUIDPipe) id: string): Promise<SupplierPayoutLedgerDto> {
+    return this.payouts.ledger(id);
+  }
+
+  /** W-Earnings E1, E7: record a payment made to the worker. */
+  @Post(':id/payouts')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  recordPayout(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(recordSupplierPayoutSchema))
+    body: RecordSupplierPayoutRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierPayoutLedgerDto> {
+    return this.payouts.record(id, body, actor);
+  }
+
+  /** W-Earnings E5: a payment's receipt, printed for the worker to sign. */
+  @Get(':id/payouts/:payoutId/receipt')
+  @Roles(...READ_ROLES)
+  async payoutReceipt(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('payoutId', ParseUUIDPipe) payoutId: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { body, filename } = await this.payouts.receipt(payoutId, id);
+    sendPdf(response, body, filename);
+  }
+
   @Post(':id/verification')
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
@@ -145,6 +251,7 @@ export class SuppliersController {
     return this.suppliers.setVerification(id, body, actor);
   }
 
+  /** A document received by visit, phone or WhatsApp; it waits for review like the worker's. */
   @Post(':id/credential')
   @HttpCode(HttpStatus.OK)
   @Roles(...READ_ROLES)
@@ -152,7 +259,43 @@ export class SuppliersController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(uploadCredentialSchema)) body: UploadCredentialRequest,
     @CurrentUser() actor: AuthUser,
-  ): Promise<SupplierDto> {
-    return this.suppliers.uploadCredential(id, body, actor);
+  ): Promise<SupplierCredentialsDto> {
+    const { via, ...upload } = body;
+    return this.credentials.uploadForDesk(id, upload, via, actor);
+  }
+
+  @Post(':id/credentials/identity-card')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  checkIdentityCard(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(checkIdentityCardSchema)) body: CheckIdentityCardRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.checkIdentityCard(id, body, actor);
+  }
+
+  @Post(':id/credentials/:credentialId/approve')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  approveCredential(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('credentialId', ParseUUIDPipe) credentialId: string,
+    @Body(new ZodValidationPipe(approveCredentialSchema)) body: ApproveCredentialRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.approve(id, credentialId, body, actor);
+  }
+
+  @Post(':id/credentials/:credentialId/reject')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.OperationsAdmin, UserRole.SuperAdmin)
+  rejectCredential(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('credentialId', ParseUUIDPipe) credentialId: string,
+    @Body(new ZodValidationPipe(rejectCredentialSchema)) body: RejectCredentialRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<SupplierCredentialsDto> {
+    return this.credentials.reject(id, credentialId, body, actor);
   }
 }

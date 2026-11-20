@@ -7,7 +7,8 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { isCurrent, PRIMARY_NAV } from '@/lib/site-nav';
 
 /**
- * The Home header's link row, from `lg` (DS 07): 15/20 nav type in ink; the
+ * The Home header's link row, from `lg` (DS 07; from `xl` with larger text or
+ * in a compact-header locale, see `SiteHeader`): 15/20 nav type in ink; the
  * current page in primary 700 over a 2 px primary 600 rule, a hover in neutral
  * 300.
  */
@@ -18,7 +19,7 @@ export function PrimaryNav() {
   return (
     <nav
       aria-label={t('primary')}
-      className="hidden flex-1 gap-4 whitespace-nowrap lg:flex xl:gap-5 lg:[[data-text-size=large]_&]:hidden xl:[[data-text-size=large]_&]:flex"
+      className="hidden flex-1 gap-4 whitespace-nowrap lg:flex xl:gap-5 lg:[[data-text-size=large]_&]:hidden xl:[[data-text-size=large]_&]:flex lg:group-data-[header=compact]/header:hidden xl:group-data-[header=compact]/header:flex"
     >
       {PRIMARY_NAV.map((link) => {
         if (!link.href) {

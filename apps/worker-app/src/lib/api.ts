@@ -1,11 +1,16 @@
-import type { WorkerAnswer } from '@ota/domain';
+import type { JobAction, WorkerAnswer, WorkerMessageDraft } from '@ota/domain';
 import type {
   SetWorkerDaysRequest,
   WorkerCalendarDto,
+  WorkerCredentialsDto,
   WorkerDaysResultDto,
   WorkerEarningsDto,
   WorkerFuelDto,
   WorkerHomeDto,
+  WorkerThreadDto,
+  WorkerAppLatestDto,
+  VehicleRequest,
+  WorkerUploadCredentialRequest,
 } from '@ota/schemas';
 
 /** A refused request; `status` is null when no response came back at all. */
@@ -25,6 +30,14 @@ export interface WorkerApi {
   home(token: string): Promise<WorkerHomeDto>;
   /** The HTTP status of an accept or decline, or null with no connection. */
   answer(token: string, answer: WorkerAnswer): Promise<number | null>;
+  /** W-Job: the HTTP status of a step or an emergency report, or null with no connection. */
+  jobAction(token: string, action: JobAction): Promise<number | null>;
+  /** A message to the desk from the phone's queue: the HTTP status, or null with no connection. */
+  sendMessage(token: string, draft: WorkerMessageDraft): Promise<number | null>;
+  /** The thread with the desk (`docs/schema-w-messages.md`). */
+  messages(token: string): Promise<WorkerThreadDto>;
+  /** The worker opened the thread: the desk's messages are read (M3). */
+  markMessagesRead(token: string): Promise<void>;
   signOut(token: string): Promise<void>;
   /** W-Calendar: a `YYYY-MM` month, or the current one in Havana. */
   calendar(token: string, month?: string): Promise<WorkerCalendarDto>;
@@ -32,6 +45,20 @@ export interface WorkerApi {
   declareFuel(token: string, litres: number): Promise<WorkerFuelDto>;
   /** W-Earnings: reliability, payouts and the latest finished jobs. */
   earnings(token: string): Promise<WorkerEarningsDto>;
+  /** E5: where one of the worker's own receipts is served, behind their bearer. */
+  receiptUrl(paymentId: string): string;
+  /** W-Credentials: the worker's documents and what they mean for offers. */
+  credentials(token: string): Promise<WorkerCredentialsDto>;
+  uploadCredential(
+    token: string,
+    upload: WorkerUploadCredentialRequest,
+  ): Promise<WorkerCredentialsDto>;
+  /** "Cambiar de vehículo": a change the desk reviews (`docs/schema-w-vehicle.md` X1a). */
+  requestVehicle(token: string, vehicle: VehicleRequest): Promise<WorkerCredentialsDto>;
+  /** The published APK, read signed out too (`docs/worker-app-distribution-plan.md` U3a). */
+  latestRelease(): Promise<WorkerAppLatestDto>;
+  /** Where an APK the release lists is downloaded from. */
+  apkUrl(path: string): string;
 }
 
 export function createWorkerApi(
@@ -100,6 +127,48 @@ export function createWorkerApi(
         return error instanceof ApiError ? error.status : null;
       }
     },
+    async jobAction(token, action) {
+      const path = `/worker/jobs/${action.serviceItemId}/${action.kind === 'step' ? 'steps' : 'emergency'}`;
+      const body =
+        action.kind === 'step'
+          ? { step: action.step, occurredAt: action.occurredAt }
+          : {
+              category: action.category,
+              occurredAt: action.occurredAt,
+              clientRef: action.clientRef,
+              position: action.position,
+            };
+      try {
+        return (await request(path, { method: 'POST', token, body })).status;
+      } catch (error) {
+        return error instanceof ApiError ? error.status : null;
+      }
+    },
+    async sendMessage(token, draft) {
+      try {
+        const response = await request('/worker/messages', {
+          method: 'POST',
+          token,
+          body: {
+            body: draft.body,
+            clientRef: draft.clientRef,
+            serviceItemId: draft.serviceItemId,
+            writtenAt: draft.writtenAt,
+          },
+        });
+        return response.status;
+      } catch (error) {
+        return error instanceof ApiError ? error.status : null;
+      }
+    },
+    async messages(token) {
+      return (await (
+        await request('/worker/messages', { token })
+      ).json()) as WorkerThreadDto;
+    },
+    async markMessagesRead(token) {
+      await request('/worker/messages/read', { method: 'POST', token });
+    },
     async signOut(token) {
       await request('/worker/sign-out', { method: 'POST', token });
     },
@@ -123,6 +192,30 @@ export function createWorkerApi(
       return (await (
         await request('/worker/earnings', { token })
       ).json()) as WorkerEarningsDto;
+    },
+    receiptUrl(paymentId) {
+      return `${baseUrl}/worker/payouts/${encodeURIComponent(paymentId)}/receipt`;
+    },
+    async credentials(token) {
+      return (await (
+        await request('/worker/credentials', { token })
+      ).json()) as WorkerCredentialsDto;
+    },
+    async uploadCredential(token, upload) {
+      return (await (
+        await request('/worker/credentials', { method: 'POST', token, body: upload })
+      ).json()) as WorkerCredentialsDto;
+    },
+    async requestVehicle(token, vehicle) {
+      return (await (
+        await request('/worker/vehicle', { method: 'POST', token, body: vehicle })
+      ).json()) as WorkerCredentialsDto;
+    },
+    async latestRelease() {
+      return (await (await request('/worker-app/latest')).json()) as WorkerAppLatestDto;
+    },
+    apkUrl(path) {
+      return `${baseUrl}${path}`;
     },
   };
 }

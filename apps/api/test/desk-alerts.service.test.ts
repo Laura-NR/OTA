@@ -212,6 +212,19 @@ describe('DeskAlertsService', () => {
     });
   });
 
+  it('records where an acknowledgement, a mute and an unmute came from', async () => {
+    await service.acknowledge(ITEM_ID, OFFERED_AT.toISOString(), OPERATOR, 'ops_lite');
+    await service.mute(OPERATOR, 'ops_lite');
+    store.audits[1]!.createdAt = new Date(Date.now() - 1000);
+    await service.unmute(SECOND);
+
+    expect(store.audits.map((row) => row.metadata?.channel)).toEqual([
+      'ops_lite',
+      'ops_lite',
+      'desk',
+    ]);
+  });
+
   it('mutes the desk for 15 minutes, logged with the actor', async () => {
     const before = Date.now();
     const { mute } = await service.mute(OPERATOR);

@@ -1,4 +1,8 @@
-import { ConflictException, UnprocessableEntityException } from '@nestjs/common';
+import {
+  ConflictException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { parseTenantConfig } from '@ota/config';
 import { PrismaClient } from '@ota/db';
 import type { EmailMessage, Mailer } from '@ota/email';
@@ -59,6 +63,9 @@ describe.skipIf(!runIntegration)(
     const sent: EmailMessage[] = [];
     const mailer: Mailer = { send: async (message) => void sent.push(message) };
     const rendered: string[] = [];
+    const storage = new InMemoryObjectStorage();
+    let casaId = '';
+    let photoEventId = '';
 
     beforeAll(async () => {
       prisma = new PrismaClient();
@@ -83,6 +90,7 @@ describe.skipIf(!runIntegration)(
         prisma as unknown as PrismaService,
         tenant,
         fakeOperatingSettings({ conciergeAnswerHours: 24 }),
+        storage,
       );
       requests = new EventRequestsService(
         prisma as unknown as PrismaService,
@@ -156,6 +164,10 @@ describe.skipIf(!runIntegration)(
       await prisma.customRequest.deleteMany({ where: { userId: { in: actorIds } } });
       await prisma.reservation.deleteMany({ where: { userId: { in: actorIds } } });
       if (eventId) await prisma.event.delete({ where: { id: eventId } });
+      if (photoEventId) {
+        await prisma.event.deleteMany({ where: { id: photoEventId } });
+      }
+      if (casaId) await prisma.inventoryItem.deleteMany({ where: { id: casaId } });
       await prisma.user.deleteMany({ where: { id: { in: actorIds } } });
       await prisma.$disconnect();
     });
@@ -192,6 +204,7 @@ describe.skipIf(!runIntegration)(
             pricePerSeat: null,
           },
         ],
+        hold: null,
       });
       eventId = created.id;
       slug = created.slug;
@@ -204,6 +217,7 @@ describe.skipIf(!runIntegration)(
         name: 'Festival de Jazz IT',
         nights: { [nightIds[0]!]: { label: 'Gala inaugural' } },
         categories: {},
+        mediaAlt: {},
         published: true,
       });
       await events.publish(ops, eventId);
@@ -215,6 +229,180 @@ describe.skipIf(!runIntegration)(
       expect(mine.nights[0]!.label).toBe('Gala inaugural');
       expect(mine.place).toBe('Vedado');
       expect(mine.answerHours).toBe(24);
+    });
+
+    it('holds a room at a casa, shows it through its day and reminds the desk (M10 H1–H3)', async () => {
+      const casa = await prisma.inventoryItem.create({
+        data: {
+          type: 'ACCOMMODATION',
+          name: `IT Casa Lis ${stamp}`,
+          province: 'La Habana',
+          basePrice: 45,
+        },
+      });
+      casaId = casa.id;
+      const transfer = await prisma.inventoryItem.create({
+        data: { type: 'TRANSPORT', name: `IT Transfer ${stamp}`, basePrice: 30 },
+      });
+      const current = await events.get(eventId);
+      const document = (hold: {
+        inventoryItemId: string;
+        until: Date;
+        note: string | null;
+      }) => ({
+        access: current.access,
+        province: current.province,
+        startsOn: new Date(`${current.startsOn}T00:00:00Z`),
+        endsOn: new Date(`${current.endsOn}T00:00:00Z`),
+        datesConfirmed: current.datesConfirmed,
+        confirmBy: current.confirmBy ? new Date(`${current.confirmBy}T00:00:00Z`) : null,
+        sourceLocale: current.sourceLocale,
+        name: current.name,
+        place: current.place,
+        summary: current.summary,
+        notes: current.notes,
+        nights: current.nights.map((night) => ({
+          id: night.id,
+          date: new Date(`${night.date}T00:00:00Z`),
+          label: night.label,
+          venue: night.venue,
+        })),
+        categories: current.categories.map((category) => ({
+          id: category.id,
+          kind: category.kind,
+          name: category.name,
+          description: category.description,
+          pricePerSeat: category.pricePerSeat,
+        })),
+        hold,
+      });
+
+      try {
+        await expect(
+          events.update(
+            ops,
+            eventId,
+            document({ inventoryItemId: transfer.id, until: utcDay(2), note: null }),
+          ),
+        ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      } finally {
+        await prisma.inventoryItem.delete({ where: { id: transfer.id } });
+      }
+
+      await events.update(
+        ops,
+        eventId,
+        document({ inventoryItemId: casa.id, until: utcDay(2), note: 'balcony rooms' }),
+      );
+      await events.putTranslation(ops, eventId, 'es', {
+        name: 'Festival de Jazz IT',
+        nights: { [nightIds[0]!]: { label: 'Gala inaugural' } },
+        categories: {},
+        holdNote: 'habitaciones con balcón',
+        mediaAlt: {},
+        published: true,
+      });
+
+      const listed = (await events.list()).find((event) => event.id === eventId)!;
+      expect(listed.hold).toMatchObject({
+        casa: casa.name,
+        until: utcDay(2).toISOString().slice(0, 10),
+      });
+      expect(listed.holdReminderDue).toBe(true);
+      const shown = await events.getPublic(slug, 'es');
+      expect(shown.hold).toEqual({
+        casa: casa.name,
+        until: utcDay(2).toISOString().slice(0, 10),
+        note: 'habitaciones con balcón',
+      });
+      expect(shown.builderStart).toEqual({
+        from: utcDay(60).toISOString().slice(0, 10),
+        to: utcDay(67).toISOString().slice(0, 10),
+        province: 'CU03',
+      });
+
+      // Past its day the line goes, and so does the reminder (a day later).
+      // Three UTC days back is past both in Havana at any hour.
+      await events.update(
+        ops,
+        eventId,
+        document({ inventoryItemId: casa.id, until: utcDay(-3), note: null }),
+      );
+      expect((await events.getPublic(slug, 'en')).hold).toBeNull();
+      expect(
+        (await events.list()).find((event) => event.id === eventId)!.holdReminderDue,
+      ).toBe(false);
+    });
+
+    it('keeps photos: the first is the hero, people need consent to publish, a draft’s stay private (M10 P1–P2)', async () => {
+      const draft = await events.create(ops, {
+        access: 'GUIDE_ONLY',
+        province: 'CU03',
+        startsOn: utcDay(30),
+        endsOn: utcDay(31),
+        datesConfirmed: true,
+        confirmBy: null,
+        sourceLocale: 'en',
+        name: `IT Photo Fest ${stamp}`,
+        place: 'Malecón',
+        summary: 'Free concerts on the seafront.',
+        notes: null,
+        nights: [],
+        categories: [],
+        hold: null,
+      });
+      photoEventId = draft.id;
+      const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]).toString('base64');
+      const stage = await events.uploadMedia(ops, draft.id, {
+        contentType: 'image/png',
+        contentBase64: png,
+        altText: 'The stage at dusk',
+        showsPeople: false,
+      });
+      const crowd = await events.uploadMedia(ops, draft.id, {
+        contentType: 'image/png',
+        contentBase64: png,
+        altText: 'Dancers by the sea wall',
+        showsPeople: true,
+      });
+      expect([stage.position, crowd.position]).toEqual([0, 1]);
+      expect(crowd.hasConsent).toBe(false);
+
+      // A draft's photo is the desk's only.
+      await expect(events.readMedia(stage.id, true)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect((await events.readMedia(stage.id, false)).contentType).toBe('image/png');
+
+      const moved = await events.updateMedia(ops, draft.id, crowd.id, { position: 0 });
+      expect(moved.media.map((photo) => photo.id)).toEqual([crowd.id, stage.id]);
+      expect(moved.publishIssues).toEqual(['MEDIA_CONSENT_REQUIRED']);
+      await expect(events.publish(ops, draft.id)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+
+      await events.updateMedia(ops, draft.id, crowd.id, { consentReference: 'REL-0042' });
+      await events.putTranslation(ops, draft.id, 'es', {
+        categories: {},
+        nights: {},
+        mediaAlt: { [crowd.id]: 'Bailarines junto al muro' },
+        published: true,
+      });
+      await events.publish(ops, draft.id);
+      const shown = await events.getPublic(draft.slug, 'es');
+      expect(shown.media).toEqual([
+        { id: crowd.id, altText: 'Bailarines junto al muro' },
+        { id: stage.id, altText: 'The stage at dusk' },
+      ]);
+      expect((await events.readMedia(crowd.id, true)).contentType).toBe('image/png');
+
+      const key = (await prisma.eventMedia.findUniqueOrThrow({ where: { id: stage.id } }))
+        .storageKey;
+      await events.deleteMedia(ops, draft.id, stage.id);
+      expect(await storage.get(key)).toBeNull();
+      expect((await events.get(draft.id)).media.map((photo) => photo.position)).toEqual([
+        0,
+      ]);
     });
 
     it('takes a trip to build and derives its M5 custom request', async () => {

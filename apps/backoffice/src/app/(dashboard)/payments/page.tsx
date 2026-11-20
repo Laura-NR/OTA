@@ -229,6 +229,7 @@ export default async function PaymentsPage({
                       refund={refund}
                       canManage={canManage}
                       canVote={access.byRole}
+                      viewerEmail={session?.user.email}
                     />
                   </li>
                 ))}

@@ -10,17 +10,24 @@ import {
   Patch,
   Post,
   Put,
+  Res,
   UseFilters,
 } from '@nestjs/common';
 import { UserRole } from '@ota/domain';
 import {
+  eventMediaUpdateSchema,
+  eventMediaUploadSchema,
   eventTranslationWriteSchema,
   eventWriteSchema,
   type EventDto,
   type EventListItemDto,
+  type EventMediaDto,
+  type EventMediaUpdateRequest,
+  type EventMediaUploadRequest,
   type EventTranslationWriteRequest,
   type EventWriteRequest,
 } from '@ota/schemas';
+import type { Response } from 'express';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import { CurrentUser } from '../common/auth/current-user.decorator';
@@ -116,5 +123,51 @@ export class EventsController {
     @CurrentUser() actor: AuthUser,
   ): Promise<EventDto> {
     return this.events.archive(actor, id);
+  }
+
+  // Event photos are served through an authorised route; the public stream
+  // lives at GET /catalog/events/media/:id (docs/schema-m10-holds-photos.md P2).
+  @Get('media/:mediaId')
+  @Roles(...READ_ROLES)
+  async media(
+    @Param('mediaId', ParseUUIDPipe) mediaId: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const { data, contentType } = await this.events.readMedia(mediaId, false);
+    response.setHeader('content-type', contentType);
+    response.setHeader('cache-control', 'private, max-age=60');
+    response.send(Buffer.from(data));
+  }
+
+  @Post(':id/media')
+  @Roles(...WRITE_ROLES)
+  addMedia(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(eventMediaUploadSchema)) body: EventMediaUploadRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<EventMediaDto> {
+    return this.events.uploadMedia(actor, id, body);
+  }
+
+  @Patch(':id/media/:mediaId')
+  @Roles(...WRITE_ROLES)
+  updateMedia(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('mediaId', ParseUUIDPipe) mediaId: string,
+    @Body(new ZodValidationPipe(eventMediaUpdateSchema)) body: EventMediaUpdateRequest,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<EventDto> {
+    return this.events.updateMedia(actor, id, mediaId, body);
+  }
+
+  @Delete(':id/media/:mediaId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(...WRITE_ROLES)
+  deleteMedia(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('mediaId', ParseUUIDPipe) mediaId: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<void> {
+    return this.events.deleteMedia(actor, id, mediaId);
   }
 }

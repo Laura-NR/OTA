@@ -16,6 +16,7 @@
     "menu": "Menu",
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
+    "language": "Langue",
     "primary": "Principale",
     "main": "Accès rapides",
     "homeLabel": "{agency} : accueil",
@@ -896,6 +897,33 @@
       },
       "railOff": "Le paiement par virement bancaire en ligne est désactivé pour le moment. Contactez-nous pour finaliser le paiement.",
       "contactUs": "Nous contacter"
+    },
+    "workerStep": {
+      "line": "{step} · {time}",
+      "TRANSPORTATION": {
+        "EN_ROUTE": "Votre chauffeur est en route",
+        "ARRIVED": "Votre chauffeur est arrivé",
+        "STARTED": "À bord",
+        "FINISHED": "Déposé"
+      },
+      "GUIDE": {
+        "EN_ROUTE": "Votre guide est en route",
+        "ARRIVED": "Votre guide est arrivé",
+        "STARTED": "Visite en cours",
+        "FINISHED": "Visite terminée"
+      },
+      "EXPERIENCE": {
+        "EN_ROUTE": "Votre hôte est en route",
+        "ARRIVED": "Votre hôte est arrivé",
+        "STARTED": "Activité en cours",
+        "FINISHED": "Activité terminée"
+      },
+      "ACCOMMODATION": {
+        "EN_ROUTE": "Votre hôte est en route",
+        "ARRIVED": "Votre hôte est arrivé",
+        "STARTED": "Arrivée à la casa",
+        "FINISHED": "Départ de la casa"
+      }
     }
   },
   "join": {
@@ -1051,7 +1079,11 @@
         "traveler": "Voyageur"
       },
       "passkeys": "Clés d'accès",
-      "skip": "Aller au contenu"
+      "skip": "Aller au contenu",
+      "opsLite": {
+        "pointer": "Sur un téléphone ? Ops Lite est le tri du bureau, conçu pour lui.",
+        "open": "Ouvrir Ops Lite"
+      }
     },
     "paymentsLedger": {
       "title": "Paiements",
@@ -1373,6 +1405,7 @@
           "resourcesStaleDays": "Ressources périmées après",
           "reliabilityFloorPercent": "Seuil de fiabilité de la répartition auto",
           "reliabilityMinAnswered": "Offres répondues avant le seuil",
+          "payoutBusinessDays": "Jours ouvrés avant le paiement d’une mission terminée",
           "conciergeAnswerHours": "Demande d’événement traitée sous",
           "staffPasskeysRequired": "Le personnel se connecte avec une clé d'accès",
           "staffIdleLockMinutes": "Verrouillage d'inactivité",
@@ -1410,6 +1443,7 @@
           "resourcesStaleDays": "Fournisseurs, Perturbations, Forfaits du site",
           "reliabilityFloorPercent": "Dispatch, Fournisseurs, liste de réaffectation",
           "reliabilityMinAnswered": "Dispatch, Fournisseurs, liste de réaffectation",
+          "payoutBusinessDays": "Gains de l’app collaborateurs, paiements du fournisseur",
           "conciergeAnswerHours": "Réservations › Demandes d’événements, Tableau de bord, e-mail de demande",
           "staffPasskeysRequired": "Connexion au bureau, flux d'escalade et messagerie",
           "staffIdleLockMinutes": "Sessions du bureau non marquées comme appareil personnel",
@@ -1763,7 +1797,35 @@
         "call": "Appeler",
         "acknowledgeFor": "Prendre en compte l’alerte rouge · {service} · {code}",
         "startHint": "Propose chaque service au prochain prestataire qualifié.",
-        "rule": "États d'un service : UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un nouveau dispatch retire l'offre ouverte et l'inscrit au journal d'audit. Les rémunérations sont le net du prestataire ; le voyageur ne voit jamais cette colonne."
+        "rule": "États d'un service : UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un nouveau dispatch retire l'offre ouverte et l'inscrit au journal d'audit. Les rémunérations sont le net du prestataire ; le voyageur ne voit jamais cette colonne.",
+        "stepLine": "{step} · {time}",
+        "steps": {
+          "EN_ROUTE": "En route",
+          "ARRIVED": "Arrivé",
+          "STARTED": "En service",
+          "FINISHED": "Terminé"
+        },
+        "brief": "Consignes…",
+        "briefFor": "Consignes pour le prestataire · {service} · {code}",
+        "briefTitle": "Consignes pour le prestataire",
+        "briefDescription": "Le prestataire les lit dans l’app, même sans réseau. N’écrivez que ce dont la prestation a besoin : elles sont effacées avec les données du voyageur.",
+        "meetingPoint": "Point de rendez-vous",
+        "dropOff": "Destination",
+        "workerBrief": "Notes pour le prestataire",
+        "workerBriefHint": "Vol, texte de la pancarte, mobilité, bagages. 500 caractères au plus.",
+        "briefSave": "Enregistrer les consignes",
+        "briefWritten": "Consignes rédigées",
+        "briefMissing": "Pas de consignes",
+        "recordStep": "Enregistrer une étape…",
+        "recordStepFor": "Enregistrer une étape · {service} · {code}",
+        "stepTitle": "Enregistrer une étape après un appel",
+        "stepDescription": "Quand le prestataire signale une étape par téléphone. Elle est journalisée comme venant du bureau.",
+        "stepField": "Étape",
+        "stepTime": "Quand (heure de La Havane)",
+        "stepSave": "Enregistrer l’étape",
+        "cancel": "Annuler",
+        "close": "Fermer",
+        "failed": "Enregistrement impossible : {message}"
       },
       "payments": "Paiements",
       "paymentsDescription": "Les liens sont créés une fois la réservation SECURED_AND_INVOICED ; le premier paiement reçu (l'acompte ou le montant total) la confirme, et le solde est réglé ensuite.",
@@ -1924,6 +1986,18 @@
           "chooseFile": "Choisissez le formulaire numérisé.",
           "tooLarge": "La numérisation dépasse 10 Mo."
         }
+      },
+      "workerThreads": {
+        "title": "Conversations avec les prestataires",
+        "description": "Les conversations avec les prestataires sont séparées : ils ne voient que le prénom, la langue et les détails de prise en charge des voyageurs.",
+        "none": "Aucun prestataire n'a encore de service sur cette réservation.",
+        "noMessage": "Aucun message sur cette réservation pour le moment.",
+        "open": "Ouvrir la conversation",
+        "close": "Fermer la conversation",
+        "new": "{count, plural, one {Nouveau} other {# nouveaux}}",
+        "you": "Vous : {body}",
+        "call": "Appeler {name}",
+        "callShort": "Appeler"
       }
     },
     "reservationActions": {
@@ -1951,7 +2025,20 @@
       "failed": "Impossible d'enregistrer l'incident",
       "resolving": "Résolution…",
       "resolve": "Résoudre",
-      "resolveFailed": "Impossible de résoudre"
+      "resolveFailed": "Impossible de résoudre",
+      "source": "Origine",
+      "sources": {
+        "DESK": "Saisi par le bureau",
+        "WORKER_APP": "App du prestataire",
+        "WORKER_SMS": "SMS du prestataire"
+      },
+      "service": "Prestation",
+      "serviceNone": "Pas liée à une prestation",
+      "reportedBy": "Signalé par {name}",
+      "reportedAt": "Signalé à {time}",
+      "position": "Position {lat}, {lng}",
+      "acknowledgedBy": "Confirmé par {name} à {time}",
+      "notAcknowledged": "Pas encore confirmé"
     },
     "payments": {
       "none": "Aucun lien de paiement pour l'instant.",
@@ -2019,6 +2106,18 @@
       "cancel": "Annuler",
       "bankReference": "Référence bancaire",
       "markSent": "Enregistrer comme envoyé",
+      "youApprovedAnother": "Vous avez approuvé. Un autre approbateur doit donner la suivante : relancez-le par e-mail ou retirez la vôtre.",
+      "youApprovedSuper": "Vous avez approuvé. Un Super Admin doit donner la suivante : relancez-le par e-mail ou retirez la vôtre.",
+      "nudge": "Relancer par e-mail",
+      "nudgeWait": "Relance envoyée ; de nouveau à partir de {time}",
+      "nudged": "E-mail envoyé à {names} à {time}. Le remboursement part dès que la dernière approbation est donnée.",
+      "nudgedMany": "E-mail envoyé à {count} approbateurs à {time}. Le remboursement part dès que la dernière approbation est donnée.",
+      "lastNudged": "Dernière relance des approbateurs à {time}",
+      "withdraw": "Retirer mon approbation",
+      "withdrawTitle": "Retirer votre approbation ?",
+      "withdrawExplain": "Le remboursement de {amount} sur {code} reste demandé. Il lui faudra de nouveau votre approbation ou celle d’un autre approbateur avant de partir.",
+      "withdrawConfirm": "Retirer l’approbation",
+      "close": "Fermer",
       "rule": "Barème {policy} : à {days} jours, {keep} % retenu + {fee}",
       "newRefund": "Enregistrer un remboursement",
       "fromPayment": "Depuis le paiement",
@@ -2120,7 +2219,7 @@
     },
     "applications": {
       "title": "Candidatures",
-      "description": "Recrutement des fournisseurs. Approuver une candidature crée le compte travailleur et le profil de conformité.",
+      "description": "Recrutement des fournisseurs. Approuver une candidature crée le compte travailleur et le profil de conformité, et envoie au travailleur le lien de téléchargement de l'application.",
       "recruitment": "Recrutement",
       "applicationsCount": "{count} candidature(s)",
       "empty": "Aucune candidature pour l'instant. Le formulaire public est sur /join.",
@@ -2279,6 +2378,11 @@
           "title": "{count, plural, one {# demande d’événement attend} other {# demandes d’événements attendent}} une réponse",
           "body": "Sans réponse depuis plus de {hours} h. Indiquez si les places peuvent être demandées, ou marquez-les indisponibles.",
           "action": "Répondre"
+        },
+        "eventHold": {
+          "title": "La réservation chez {casa} se termine le {date}",
+          "body": "Pour {event}. Libérez la chambre auprès de l’hôte ou décalez la date sur l’événement.",
+          "action": "Ouvrir l’événement"
         }
       },
       "redispatchFor": "Relancer le dispatch {service} · {code}",
@@ -2306,6 +2410,28 @@
         "toast": "Alerte prise en compte · son coupé pour {code}",
         "undo": "Annuler",
         "failed": "La prise en compte de {code} n’a pas été enregistrée : {message}"
+      },
+      "emergency": {
+        "listLabel": "Urgences sur place",
+        "title": "Urgence sur place · {code}",
+        "body": "{worker} a signalé une urgence à {time} : {category}.",
+        "categories": {
+          "MEDICAL": "médicale",
+          "MECHANICAL": "mécanique",
+          "SECURITY": "sécurité",
+          "OTHER": "autre, explication par téléphone"
+        },
+        "someone": "Le prestataire",
+        "call": "Appeler {worker}",
+        "position": "Position {lat}, {lng}",
+        "accuracy": "± {accuracy} m",
+        "noPosition": "Aucune position envoyée : appelez le prestataire.",
+        "openPosition": "Ouvrir la position",
+        "openBooking": "Ouvrir la réservation",
+        "acknowledge": "Je m’en occupe",
+        "acknowledgeFor": "Je m’en occupe · urgence sur {code}",
+        "failed": "Impossible de confirmer l’urgence sur {code} : {message}",
+        "announce": "Urgence sur place. Réservation {code} : {worker}, {category}, à {time}."
       }
     },
     "messages": {
@@ -2358,8 +2484,8 @@
       "available": "Disponible pour la répartition : {value}",
       "yes": "oui",
       "no": "non",
-      "credentialDocument": "Document justificatif",
-      "credentialDescription": "Justificatif Formatur, licence d'exploitation de transport ou carte RTN.",
+      "credentialDocument": "Justificatifs",
+      "credentialDescription": "Chaque document requis pour la catégorie : la version en vigueur, un téléversement en attente de vérification et l’expiration qui suspend la répartition automatique.",
       "availability": "Calendrier de disponibilité",
       "availabilityDescription": "Disponibilité en un tap et blocage granulaire. La répartition automatique et la liste de réaffectation écartent un prestataire un jour bloqué (spec §5.2).",
       "longBlockTitle": "{days} jours bloqués d’affilée",
@@ -2391,12 +2517,35 @@
       "noJob": "Aucune pour l'instant",
       "payouts": {
         "title": "Paiements",
-        "description": "Ce qui est dû à ce prestataire et ce qui lui a été payé pour les missions terminées : acceptées, réalisées, sur une réservation non annulée. Le prestataire voit les mêmes chiffres dans l'application.",
+        "description": "Ce qui est dû à ce collaborateur et ce qui lui a été payé pour les missions terminées : acceptées, achevées et sur une réservation non annulée. Le collaborateur voit les mêmes chiffres dans l’app. Enregistrez un paiement une fois l’argent remis.",
         "pending": "En attente",
         "thisMonth": "Terminées ce mois-ci",
-        "paidYear": "Payé · missions de {year}",
+        "paidYear": "Payé en {year}",
         "issue": "Paiement échoué",
-        "jobs": "{count, plural, one {# mission} other {# missions}}"
+        "jobs": "{count, plural, one {# mission} other {# missions}}",
+        "method": "Mode de paiement",
+        "methodNotSet": "Mode de paiement non défini",
+        "methods": {
+          "CASH_OFFICE": "Espèces au bureau",
+          "BANK_TRANSFER": "Virement bancaire"
+        },
+        "saveMethod": "Enregistrer le mode",
+        "failed": "Enregistrement impossible. Réessayez.",
+        "nextPayDay": "Prochain paiement {day}, {from}–{to}",
+        "rule": "Payé {days, plural, one {# jour ouvré} other {# jours ouvrés}} après la fin d’une mission",
+        "nothingToPay": "Aucune mission terminée n’attend de paiement.",
+        "recordTitle": "Enregistrer un paiement",
+        "paidWith": "Payé par",
+        "paidOn": "Payé le",
+        "record": "Enregistrer {amount} pour {count, plural, one {# mission} other {# missions}}",
+        "recordHint": "Enregistrez-le une fois le collaborateur payé, puis imprimez le reçu à lui faire signer.",
+        "payments": "Paiements",
+        "noPayments": "Aucun paiement enregistré.",
+        "amount": "Montant",
+        "jobsColumn": "Missions",
+        "recordedBy": "Enregistré par",
+        "receipt": "Reçu",
+        "receiptPdf": "Reçu (PDF)"
       },
       "resources": {
         "casaTitle": "Énergie de secours et résilience",
@@ -2452,7 +2601,27 @@
         "saving": "Enregistrement…",
         "failed": "Impossible d'enregistrer le véhicule.",
         "insuranceExpired": "Assurance expirée",
-        "insuranceEnds": "L'assurance expire dans {days} j"
+        "insuranceEnds": "L'assurance expire dans {days} j",
+        "insuranceFromDocument": "D’après l’attestation d’assurance responsabilité civile vérifiée.",
+        "insuranceNone": "Aucune assurance vérifiée",
+        "request": {
+          "title": "Changement de véhicule demandé depuis l’app",
+          "line": "{model} · {plate} · {seats} places · {ac, select, yes {climatisation} other {sans climatisation}}",
+          "asked": "Demandé le {date}. Le véhicule actuel reste enregistré, et dans la répartition, jusqu’à votre approbation.",
+          "approve": "Examiner et approuver…",
+          "dialogTitle": "Approuver {model} · {plate} ?",
+          "plateChanges": "L’immatriculation passe de {from} à {to}. Le contrôle technique et l’assurance responsabilité civile enregistrés concernaient l’ancien véhicule : les deux sont écartés et les offres automatiques sont suspendues jusqu’à l’approbation des nouveaux.",
+          "samePlate": "Même immatriculation : les documents enregistrés restent.",
+          "firstVehicle": "Aucun véhicule n’était enregistré, les documents enregistrés restent donc.",
+          "confirm": "Approuver le véhicule",
+          "cancel": "Annuler",
+          "close": "Fermer",
+          "reason": "Motif pour le prestataire",
+          "reasonHint": "Le prestataire le lit dans l’application.",
+          "reject": "Refuser le changement",
+          "rejectForm": "Refuser le changement de véhicule",
+          "failed": "Impossible d’enregistrer la décision."
+        }
       },
       "autoReliability": "En pause · fiabilité",
       "autoWhyReliability": "Moins de {floor} % d'acceptation sur au moins {min} offres répondues : la répartition automatique écarte ce prestataire jusqu'à ce que le taux remonte. Le bureau peut toujours lui proposer une mission depuis la liste de réaffectation.",
@@ -2478,6 +2647,12 @@
           "none": "Aucun téléphone n’était connecté en tant que {name}. Tout code pas encore utilisé a cessé de fonctionner.",
           "failed": "Le prestataire n’a pas pu être déconnecté"
         }
+      },
+      "approvalBlocked": "Vérifiez ces documents avant d’approuver : {documents}.",
+      "workerThread": {
+        "open": "Message par l'app",
+        "title": "Messages de l'app prestataires",
+        "description": "La seule conversation du prestataire avec la centrale, à part des messages des voyageurs."
       }
     },
     "reports": {
@@ -2835,17 +3010,66 @@
       "uploading": "Téléversement…",
       "uploadImage": "Téléverser l'image"
     },
-    "credential": {
+    "credentials": {
+      "kinds": {
+        "TRANSPORT_LICENCE": "Licence d'exploitation de transport",
+        "TECHNICAL_INSPECTION": "Contrôle technique (somatón)",
+        "LIABILITY_INSURANCE": "Assurance responsabilité civile",
+        "GUIDE_LICENCE": "Licence de guide",
+        "HOST_LICENCE": "Licence d'hébergeur (casa particular)",
+        "IDENTITY_CARD": "Carte d'identité"
+      },
+      "state": {
+        "VALID": "Valide",
+        "EXPIRING": "Répartition automatique en pause",
+        "EXPIRED": "Expiré",
+        "MISSING": "Manquant"
+      },
+      "channels": {
+        "PHONE": "Téléphone",
+        "WHATSAPP": "WhatsApp",
+        "VISIT": "Visite",
+        "WORKER_APP": "Application prestataires"
+      },
+      "pendingBadge": "En attente d'audit",
+      "missingTitle": "Documents à vérifier",
+      "missing": "Pas encore de version vérifiée : {documents}. Le prestataire ne peut pas être approuvé tant que chacun n'est pas vérifié.",
+      "none": "Aucune version vérifiée au dossier.",
+      "number": "Numéro",
+      "issuer": "Délivré par",
+      "issued": "Délivré le",
+      "expires": "Expire le",
+      "pauseFrom": "Répartition automatique en pause à partir du",
+      "uploaded": "Téléversé",
+      "uploadedValue": "{date} · {channel}",
+      "checked": "Vérifié",
+      "checkedValue": "{date} · {name}",
+      "pending": "Nouveau téléversement en attente de vérification · {date} · {channel}",
+      "showFile": "Afficher le document (journalisé)",
+      "hideFile": "Masquer le document",
+      "openFull": "Ouvrir en taille réelle (journalisé)",
+      "fileAlt": "{name}, document téléversé",
+      "approveForm": "Approuver {name}",
+      "expiresHint": "Tel qu’indiqué sur le document.",
+      "approve": "Approuver · VERIFIED",
+      "rejectForm": "Rejeter {name}",
+      "reason": "Motif pour le prestataire",
+      "reasonHint": "Affiché dans l'application du prestataire, p. ex. reflet sur le numéro, refaire la photo.",
+      "reject": "Rejeter · demander un nouveau téléversement",
+      "rejected": "Rejeté le {date} : {reason}",
+      "uploadLabel": "Téléverser {name}",
+      "via": "Reçu par",
+      "upload": "Téléverser",
+      "uploading": "Téléversement…",
       "choose": "Choisissez un fichier à téléverser.",
       "useFileType": "Utilisez un fichier JPEG, PNG, WebP ou PDF.",
-      "uploadFailed": "Échec du téléversement",
-      "alt": "Justificatif du fournisseur",
-      "openTab": "Ouvrir dans un nouvel onglet",
-      "none": "Aucun justificatif au dossier.",
-      "uploadLabel": "Téléverser un justificatif (Formatur / licence / RTN)",
-      "expiresOn": "Expire le (facultatif)",
-      "uploading": "Téléversement…",
-      "upload": "Téléverser"
+      "failed": "La modification n'a pas été enregistrée. Réessayez.",
+      "identityNone": "Pas encore vérifiée. Aucune photo n'est conservée : vérifiez-la en personne ou en visioconférence.",
+      "identityChecked": "Vérifiée en personne le {date} par {name}. Aucune photo n'est conservée.",
+      "identityCheckedOn": "Vérifiée en personne le {date}. Aucune photo n'est conservée.",
+      "identityNoFile": "Vérifiée en personne. Aucune photo n'est conservée.",
+      "identityHint": "Notez que vous avez vu la carte originale, en personne ou en visioconférence.",
+      "recordIdentity": "Noter vérifiée en personne"
     },
     "availability": {
       "loadFailed": "Impossible de charger la disponibilité",
@@ -3180,6 +3404,232 @@
       "ended": "Votre dernière dérogation pour ceci a pris fin.",
       "lapsed": "Votre dernière demande a expiré : aucun Super Admin n'a répondu en 24 heures.",
       "failed": "Cela n'a pas abouti."
+    },
+    "opsLite": {
+      "skip": "Aller à l’écran",
+      "nav": {
+        "label": "Ops Lite",
+        "alerts": "Alertes",
+        "pipeline": "Pipeline",
+        "inbox": "Messages",
+        "desk": "Bureau",
+        "withCount": "{tab} ({count})"
+      },
+      "push": {
+        "title": "Ops Lite · alerte rouge"
+      },
+      "sound": {
+        "on": "Son activé",
+        "onLabel": "Son activé, touchez pour couper 15 minutes",
+        "muted": "Son coupé · {time}",
+        "mutedLabel": "Son coupé jusqu’à {time} par {name} (journalisé).",
+        "tapToUnmute": "Touchez pour rétablir le son.",
+        "turnOn": "Activer le son",
+        "someone": "quelqu’un du bureau"
+      },
+      "alerts": {
+        "title": "Ops Lite · Alertes",
+        "summary": "Alertes par type",
+        "pills": {
+          "red": "Rouges {count}",
+          "amber": "Orange {count}",
+          "approvals": "Validations {count}",
+          "payments": "Paiements {count}"
+        },
+        "push": {
+          "enable": "M’avertir sur ce téléphone",
+          "blocked": "Les notifications de ce site sont bloquées dans les réglages du navigateur."
+        },
+        "sound": {
+          "locked": "Le navigateur retient le son jusqu’à ce que vous touchiez l’écran une fois."
+        },
+        "offered": "<strong>Proposé à {name} · {time}</strong> · {service} de {code}, avec un nouveau délai · journalisé au nom de {you} (Ops Lite).",
+        "dismiss": "Fermer",
+        "noWorker": "aucun prestataire",
+        "someone": "quelqu’un du bureau",
+        "call": "Appeler {name}",
+        "openBooking": "Ouvrir la réservation",
+        "elapsed": "{percent} % du délai écoulé",
+        "red": {
+          "declined": "{service} refusé · {worker}",
+          "timedOut": "{service} sans réponse · {worker}",
+          "since": "rouge depuis {time}",
+          "audio": "son toutes les 60 s",
+          "acknowledged": "pris en compte par {name} · {time}",
+          "acknowledging": "pris en compte",
+          "offeredAt": "Proposé à {time}",
+          "declinedAt": "refusé à {time}",
+          "deadline": "échéance {time}",
+          "redispatch": "Relancer le dispatch · choisir un remplaçant",
+          "also": "Aussi en rouge sur cette réservation : {what} · {time}",
+          "redispatchService": "Relancer le dispatch : {service}",
+          "acknowledge": "Prendre en compte · couper le son"
+        },
+        "amber": {
+          "title": "{service} à {percent} % du délai · {left} restant",
+          "redispatch": "Relancer le dispatch plus tôt"
+        },
+        "approvals": {
+          "title": "Remboursement de {amount} · validation requise",
+          "requestedBy": "demandé par {name}",
+          "approved": "Validé par {name} · {time}",
+          "rejected": "Refusé par {name} · {time}"
+        },
+        "payments": {
+          "windowExpired": "Délai de paiement dépassé",
+          "balanceOverdue": "Solde en retard",
+          "body": "{code} · {traveler} · {amount} · dû {due}",
+          "extend": "Donner 24 h de plus",
+          "extending": "Prolongation…",
+          "extended": "Prolongé : désormais dû {when}.",
+          "failed": "{code} : le paiement n’a pas pu être prolongé. {message}",
+          "nothingDue": "Plus rien n’est dû sur cette réservation."
+        },
+        "credentials": {
+          "title": "Justificatif bientôt expiré · {name}",
+          "body": "Expire le {date} · pour le bureau, pas urgent"
+        },
+        "empty": "Tout est en ordre : aucune offre en rouge ou en orange, aucune validation ni aucun paiement en retard.",
+        "note": "Ops Lite sert au tri : appeler, relancer le dispatch, prendre en compte, valider. Les prix, les documents et le reste attendent le bureau. Les relances, prises en compte et coupures du son faites ici sont journalisées comme Ops Lite."
+      },
+      "redispatch": {
+        "rule": "Vérifiés, libres chaque jour du service, licence valide au-delà de {days} jours.",
+        "offer": "Proposer",
+        "offerTo": "Proposer à {name}",
+        "cancel": "Annuler"
+      },
+      "pipeline": {
+        "title": "Ops Lite · Pipeline",
+        "subtitle": "{total} réservations · {open} en cours · actualisé à {time}",
+        "unavailable": "Le pipeline est indisponible",
+        "live": "En direct",
+        "loadError": "Le pipeline n’a pas pu être lu. Réessayez dans un instant.",
+        "clock": {
+          "expired": "Expiré",
+          "today": "aujourd’hui",
+          "inDays": "dans {days} j",
+          "day": "jour {day}",
+          "minutes": "{count} min",
+          "hours": "{count} h",
+          "days": "{count} j"
+        },
+        "party": "{name} +{more}",
+        "accepted": "{accepted} sur {total} acceptés",
+        "call": "Appeler {name}",
+        "ground": {
+          "title": "Sur place maintenant",
+          "travelers": "{count, plural, one {# voyageur} other {# voyageurs}}",
+          "none": "Aucun voyage en cours.",
+          "trips": "{count, plural, one {# voyage en cours} other {# voyages en cours}}",
+          "province": "{province} {count}",
+          "provinceCase": "{province} {count} · {scenario}",
+          "case": "Perturbation {reference} · {severity}"
+        },
+        "scenarios": {
+          "outage": "coupure",
+          "hurricane": "ouragan",
+          "fuel": "carburant",
+          "casa": "casa",
+          "flight": "vol"
+        },
+        "severities": {
+          "MINOR": "mineure",
+          "MAJOR": "majeure",
+          "EMERGENCY": "urgence"
+        },
+        "states": {
+          "title": "Machine d’états · touchez un état",
+          "spec": "spéc. §4.2",
+          "empty": "Aucune réservation dans cet état.",
+          "more": "+{count} de plus sur le bureau"
+        },
+        "who": {
+          "ITINERARY_SUBMITTED": "En attente du lancement du dispatch ou d’une proposition par le bureau",
+          "DISPATCH_IN_PROGRESS": "Les prestataires répondent dans leur appli · délais d’offre en cours",
+          "ASSEMBLY_AND_ESCALATION": "Veille orange · réaffecter les services refusés · appeler les prestataires",
+          "ACTION_REQUIRED": "Rouge · relancer le dispatch depuis l’onglet Alertes",
+          "SECURED_AND_INVOICED": "Tous les services acceptés · lien de paiement à suivre",
+          "PENDING_PAYMENT": "Délai de paiement en cours · justificatifs vérifiés au bureau",
+          "CONFIRMED": "Documents émis · le voyage est à venir",
+          "IN_PROGRESS": "En voyage · incidents et cas de perturbation",
+          "COMPLETED": "Demande d’avis · paiements des prestataires · délai de conservation",
+          "CANCELLED": "Politique appliquée · remboursements au bureau"
+        },
+        "movements": {
+          "title": "Mouvements du jour",
+          "none": "Aucune arrivée, aucun départ ni aucune échéance de paiement aujourd’hui.",
+          "allDay": "auj.",
+          "PAYMENT_DUE": "Paiement dû sur {code} · {who}",
+          "ARRIVAL": "{who} commencent leur voyage · {code}",
+          "DEPARTURE": "{who} terminent leur voyage · {code}",
+          "open": "Ouvrir la réservation"
+        },
+        "note": "Une vue en lecture seule du pipeline. Transitions, factures et documents restent au bureau ; d’ici on appelle, et on relance le dispatch depuis Alertes."
+      },
+      "inbox": {
+        "title": "Ops Lite · Messages",
+        "subtitle": "Voyageurs et prestataires, urgents en premier",
+        "loadError": "Les messages n’ont pas pu être lus. Réessayez dans un instant.",
+        "filters": "Afficher",
+        "filter": {
+          "all": "Toutes",
+          "urgent": "Urgentes",
+          "unread": "Non lues",
+          "travelers": "Voyageurs",
+          "workers": "Prestataires"
+        },
+        "empty": "Aucune conversation pour l’instant.",
+        "noneHere": "Aucune conversation ne correspond à ce filtre.",
+        "threads": "Conversations",
+        "you": "Vous : {body}",
+        "kind": "Voyageur · {code}",
+        "urgent": "Urgent",
+        "new": "{count, plural, one {Nouveau} other {# nouveaux}}",
+        "partyOf": "groupe de {count}",
+        "call": "Appeler {name}",
+        "callShort": "Appeler",
+        "messages": "Messages",
+        "fromDesk": "Bureau · {time}",
+        "fromTraveler": "{name} · {time}",
+        "placeholder": "Répondre à {name} · appli + e-mail",
+        "reply": "Réponse",
+        "send": "Envoyer",
+        "urgentNote": "Urgent : le cas de perturbation {reference} est ouvert sur cette réservation. L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail.",
+        "note": "L’appli fait foi ; le voyageur reçoit aussi une copie par e-mail.",
+        "workerKind": "Prestataire · {category}",
+        "workerJob": "{day} · {code} · {province}"
+      }
+    },
+    "appCard": {
+      "title": "Carte de l'application partenaires",
+      "description": "Imprimez-la pour le bureau : les travailleurs approuvés scannent le QR ou saisissent le lien pour télécharger l'application. Approuver une candidature leur envoie aussi le lien par e-mail et SMS.",
+      "open": "Carte de l'application",
+      "heading": "Application partenaires",
+      "scan": "Scannez le QR ou ouvrez le lien sur un téléphone Android.",
+      "version": "Version {version}, publiée le {date}",
+      "notPublished": "Aucune version n'est encore publiée ; la page de téléchargement l'indique aux travailleurs.",
+      "noQr": "Pas encore de QR. Créez-en un pour ce lien avec n'importe quel outil QR et enregistrez-le sous tenant/assets/worker-app/qr.svg.",
+      "qrAlt": "Code QR de {url}",
+      "fingerprint": "Certificat de signature (SHA-256)",
+      "print": "Imprimer"
+    },
+    "workerThread": {
+      "loadFailed": "La conversation n'a pas pu être lue. Réessayez dans un instant.",
+      "sendFailed": "Le message n'a pas été envoyé. Réessayez.",
+      "messages": "Messages",
+      "empty": "Aucun message avec {name} pour le moment.",
+      "fromWorker": "{name} · {time}",
+      "fromDesk": "{name} · {time}",
+      "desk": "Centrale",
+      "arrived": "arrivé {time}",
+      "read": "lu {time}",
+      "reply": "Écrire à {name}",
+      "placeholder": "Écrire à {name} · app prestataires",
+      "send": "Envoyer",
+      "call": "Appeler {name}",
+      "callShort": "Appeler",
+      "readOnly": "Le support lit les conversations avec les prestataires ; les opérations répondent.",
+      "note": "Les prestataires ne voient que les prénoms et les numéros locaux ; rien sur la facturation dans cette conversation. Le message arrive quand le prestataire ouvre l'app ; si c'est urgent, appelez."
     }
   },
   "conditions": {
@@ -4071,7 +4521,15 @@
       "addCategory": "Ajouter une catégorie",
       "save": "Enregistrer l’événement",
       "create": "Créer le brouillon",
-      "saveFailed": "L’événement n’a pas été enregistré."
+      "saveFailed": "L’événement n’a pas été enregistré.",
+      "holdTitle": "Chambre réservée pour les demandes de conciergerie",
+      "holdHint": "Facultatif. La page de l’événement l’affiche jusqu’au dernier jour ; la chambre est réservée auprès de l’hôte à la main.",
+      "holdCasa": "Casa",
+      "holdNone": "Aucune réservation",
+      "holdUntil": "Réservée jusqu’au",
+      "holdNote": "Note",
+      "holdNoteHint": "Facultatif, p. ex. chambres avec balcon, batterie 8 h.",
+      "holdIncomplete": "Choisissez la casa et le dernier jour, ou aucune réservation."
     },
     "translations": {
       "title": "Autres langues",
@@ -4086,7 +4544,9 @@
       "publishHint": "Les champs vides reprennent le texte source.",
       "save": "Enregistrer {locale}",
       "saved": "{locale} enregistré.",
-      "saveFailed": "La traduction n’a pas été enregistrée."
+      "saveFailed": "La traduction n’a pas été enregistrée.",
+      "holdNote": "Note de la réservation",
+      "mediaAlt": "Photo {number} · texte alternatif"
     },
     "actions": {
       "publish": "Publier",
@@ -4106,7 +4566,38 @@
       "NO_NIGHTS": "Ajoutez les soirées d’une catégorie vendue à la soirée.",
       "NIGHT_OUTSIDE_DATES": "Une soirée tombe hors des dates de l’événement.",
       "CONFIRM_AFTER_START": "Les places se confirment avant le premier jour.",
-      "ENDED": "L’événement est terminé."
+      "ENDED": "L’événement est terminé.",
+      "MEDIA_ALT_REQUIRED": "Chaque photo doit avoir un texte alternatif.",
+      "MEDIA_CONSENT_REQUIRED": "Une photo montrant des personnes doit avoir une référence de consentement."
+    },
+    "photos": {
+      "none": "Pas encore de photos. La première envoyée devient la photo principale.",
+      "hero": "Principale",
+      "gallery": "Galerie {number}",
+      "showsPeople": "Avec des personnes",
+      "consentOnFile": "consentement enregistré",
+      "consentMissing": "consentement manquant",
+      "remove": "Retirer",
+      "removeFailed": "La photo n'a pas pu être retirée.",
+      "file": "Photo",
+      "altText": "Texte alternatif",
+      "altHint": "Dites ce que montre la photo, pour qui ne peut pas la voir.",
+      "peopleLabel": "Des personnes sont reconnaissables sur cette photo",
+      "consentReference": "Référence du consentement",
+      "consentHint": "L'autorisation signée enregistrée, p. ex. son dossier ou numéro de formulaire.",
+      "chooseImage": "Choisissez une photo à envoyer.",
+      "useImageType": "Utilisez une image JPEG, PNG ou WebP.",
+      "tooLarge": "La photo dépasse 5 Mo.",
+      "upload": "Envoyer la photo",
+      "uploading": "Envoi…",
+      "uploadFailed": "La photo n'a pas pu être envoyée.",
+      "title": "Photos",
+      "hint": "JPEG, PNG ou WebP jusqu’à 5 Mo. La première est la photo principale de la page de l’événement et l’image de la liste des événements. Le texte alternatif est obligatoire ; une photo montrant des personnes doit avoir une référence de consentement avant la publication.",
+      "makeHero": "Mettre en principale",
+      "edit": "Modifier",
+      "save": "Enregistrer la photo",
+      "cancel": "Annuler",
+      "saveFailed": "La photo n’a pas été enregistrée."
     }
   },
   "eventRequestsDesk": {
@@ -4302,7 +4793,10 @@
       "onRequest": "demande de voyage {reference}",
       "added": "{total} ajoutés à votre réservation.",
       "nothingCharged": "Rien n’est encore débité."
-    }
+    },
+    "hold": "En semaine de festival, les casas se remplissent vite. Nous réservons une chambre chez {casa} pour les demandes de conciergerie jusqu’au {date} ; le créateur sur mesure s’ouvre avec ces dates et {province} déjà placée.",
+    "holdCta": "Créer le voyage avec ces dates",
+    "holdLabel": "Chambre réservée pour la semaine du festival"
   },
   "display": {
     "title": "Affichage",
@@ -4431,5 +4925,35 @@
     "packages": "Voir les voyages",
     "about": "À propos",
     "contact": "Nous contacter"
+  },
+  "workerApp": {
+    "title": "Application partenaires",
+    "lede": "Les offres, votre calendrier et vos missions sur votre téléphone Android. Elle fonctionne hors ligne : vos réponses sont enregistrées et envoyées au retour du réseau.",
+    "notPublished": "L'application n'est pas encore publiée. Le bureau vous prévient quand vous pourrez la télécharger.",
+    "iphoneTitle": "Android uniquement",
+    "iphoneText": "L'application partenaires fonctionne uniquement sur les téléphones Android. Si vous utilisez un iPhone, appelez le bureau, qui vous expliquera comment travailler avec nous.",
+    "version": "Version {version}",
+    "meta": "{size} · publiée le {date}",
+    "download": "Télécharger l'application",
+    "downloadHint": "Pour la plupart des téléphones. De préférence en Wi-Fi : le téléchargement consomme des données.",
+    "older": "Téléphone ancien ? Téléchargez la version 32 bits ({size})",
+    "certificateTitle": "Certificat de signature (SHA-256)",
+    "certificateText": "Android ne met à jour l'application qu'avec une version signée par ce même certificat. Si quelqu'un vous transmet l'application de téléphone à téléphone, comparez cette empreinte dans Paramètres → Applications → Partenaires.",
+    "stepsTitle": "Comment l'installer",
+    "steps": {
+      "download": "Touchez « Télécharger l'application » et attendez la fin du téléchargement.",
+      "open": "Ouvrez le fichier depuis la notification de Chrome ou depuis « Téléchargements ».",
+      "allow": "Si Android indique que Chrome ne peut pas installer d'applications, touchez « Paramètres », activez « Autoriser cette source » et revenez en arrière.",
+      "protect": "Si Play Protect signale une application inconnue, touchez « Plus de détails » puis « Installer quand même ».",
+      "signIn": "Ouvrez « Partenaires » et connectez-vous avec votre numéro de téléphone."
+    },
+    "failTitle": "Si l'installation échoue",
+    "fail": {
+      "space": "« Espace de stockage insuffisant » : libérez de l'espace et rouvrez le fichier.",
+      "corrupt": "« Erreur d'analyse du package » : le téléchargement a été interrompu. Téléchargez-la de nouveau.",
+      "conflict": "« Application non installée » : si vous avez déjà une autre copie qui ne vient pas de cette page, prévenez le bureau avant de la désinstaller, car les données enregistrées sur le téléphone sont perdues.",
+      "old": "Sur un téléphone ancien, essayez la version 32 bits."
+    },
+    "desk": "Des questions ? Appelez le bureau : {phone}"
   }
 }

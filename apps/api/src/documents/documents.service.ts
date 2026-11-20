@@ -87,6 +87,9 @@ function toDocumentInput(reservation: ReservationForDocuments): ReservationDocum
       serviceDateEnd: item.serviceDateEnd.toISOString(),
       payoutRate: item.payoutRate.toString(),
       travelerPrice: item.travelerPrice === null ? null : item.travelerPrice.toFixed(2),
+      meetingPoint: item.meetingPoint,
+      dropOff: item.dropOff,
+      workerBrief: item.workerBrief,
       supplier: item.supplier
         ? {
             fullName: item.supplier.user.fullName,

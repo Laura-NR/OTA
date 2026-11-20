@@ -105,6 +105,33 @@ Object storage is behind `packages/storage`: MinIO/S3 when `S3_ENDPOINT` +
 credentials are set, otherwise an in-memory fallback (dev only, lost on
 restart). For a persistent environment, verify the S3 endpoint and bucket.
 
+### Supplier documents (W-Credentials)
+
+- The worker uploads a photo in the app; the desk uploads on the supplier page ("Credentials").
+  Both wait for review there: an Operations or Super Admin approves with the number and expiry
+  read off the file, or rejects with a reason the worker sees in the app.
+- Approving rewrites the supplier's expiry (the earliest of the current documents), which the
+  expiry scan and auto-dispatch read. "Verify" or "Reinstate" answers 409 while a required
+  document is missing; the panel names it.
+- The identity card is never uploaded: record it as checked in person.
+- Every file view is in the audit log as `supplier.credential_viewed`. The review SMS is
+  logged in development and not sent until an SMS provider exists.
+
+### On-site emergency from a worker (W-Job)
+
+- A worker's report raises a red card at the top of every desk page and Ops Lite's alerts
+  ("On-site emergency · booking"), with the red cue. Call the worker first ("Call …"); the
+  position, when sent, is in the card ("Open position" opens it in the device's maps).
+- "I have it" stops the alert for every desk and records who took it
+  (`incident.acknowledged`). Resolve the incident on the booking's duty-of-care card once it is
+  over.
+- With no data, the worker's phone sends an SMS to the desk's 24/7 number (`supportPhone` in
+  the manifest) instead; the system does not read it. Log it on the booking's duty-of-care card
+  with "Where it came from: Worker's SMS" and the service; the app's own copy arrives when the
+  phone has data again and shows as a second, app-sourced incident.
+- The steps a worker taps show under each service on the booking ("On the way · 15:28"). A
+  step phoned in is recorded with "Record step…"; it is audited as the desk's.
+
 ### GDPR retention actions
 
 - Ops view: back-office `/retention`, or `GET /retention/pending` (ops role).
@@ -413,6 +440,58 @@ process exits with code 1. Keep the orchestrator's kill grace period above it
 - Answers given with no signal are kept on the phone and sent when it reconnects; an answer
   that arrives after the offer timed out is refused and the worker is told.
 
+## Worker payouts
+
+`docs/schema-w-earnings.md` (approved E1–E8).
+
+- A payment is recorded after the worker has been paid, never before: Suppliers → the worker →
+  Payouts → "Record payout", tick the jobs paid, the method and the day. The API sums the
+  jobs' payouts; nothing moves money. It is audited as `supplier.payout_recorded`.
+- Print "Receipt (PDF)" from the payments list for the worker to sign; the office keeps the
+  signed paper. The receipt is rendered on demand from the payment (the API's Chromium). The
+  worker can open the same PDF (unsigned) in the app: Fiabilidad y pagos → Recibos (PDF) →
+  "Abrir recibo".
+- A payment recorded by mistake cannot be undone from the desk: there is no route for it yet.
+- "409 A picked job was paid meanwhile": another desk recorded it; reload the page.
+- The method (cash at the office or bank transfer) is set on the same panel; bank details are
+  not kept. The pay rule is Settings › Suppliers "Business days before a finished job is
+  paid"; the office's place and sessions are `workerPayouts` in the tenant manifest (no
+  sessions: no next pay day is shown).
+
+## Releasing the worker app
+
+`docs/worker-app-distribution-plan.md` (approved U1–U8); ADR 0007. Releases are built and
+published on the machine with the Android SDK, never on the server.
+
+- **Once, before the first APK.** Generate the update signing key on that machine, outside the
+  repo: `pnpm --filter @ota/worker-app exec expo-updates codesigning:generate
+  --key-output-directory <outside the repo> --certificate-output-directory
+  ../../tenant/assets/worker-app --certificate-validity-duration-years 10
+  --certificate-common-name "<agency>"`. Commit only `tenant/assets/worker-app/certificate.pem`.
+  Back up the private key in two places beside the APK signing keystore: losing either forces
+  every worker to reinstall. Without the certificate the APK accepts no JS update at all.
+  Make the QR of `https://app.<domain>` once with any QR tool and save it as
+  `tenant/assets/worker-app/qr.svg` (the desk's card).
+- **Server, once.** A DNS record for `app.<domain>` (Caddy gets its certificate);
+  `WORKER_APP_PUBLIC_URL=https://app.<domain>` in `deploy/api.env`; the folder
+  `deploy/worker-app/` exists (the API mounts it read-only).
+- **A new APK** (any native change, or to ship to everyone): bump `version` and `versionCode`
+  in `apps/worker-app/app.config.ts`, build with `WORKER_API_URL=https://app.<domain>` (`expo
+  prebuild` + Gradle, release signing), then `pnpm build && pnpm worker-app:release apk --apk
+  arm64-v8a=<path> --apk armeabi-v7a=<path> [--min-version-code N] [--notes "..."]`. Set
+  `--min-version-code` to the new code only when older APKs must stop (the app then requires
+  the update, never during a job). The tool refuses an APK signed with another certificate.
+- **A JS-only update**: `WORKER_API_URL=https://app.<domain> pnpm --filter @ota/worker-app build`,
+  then `pnpm worker-app:release update --key <private-key.pem> --base-url
+  https://app.<domain>`. It refuses when a native module changed since the published APK:
+  release an APK instead. Phones fetch it at most once a day and run it from the next start.
+- **Publish**: copy `deploy/worker-app/` to the server's `deploy/worker-app/` (for example
+  `rsync -a deploy/worker-app/ <server>:<checkout>/deploy/worker-app/`). It is live at once; no
+  restart. Check `https://app.<domain>/worker-app/latest`. Old APK files may be removed once no
+  phone is mid-download.
+- A `releases.json` that does not parse is logged ("is invalid; serving no release") and the
+  page says no version is published: copy the folder again.
+
 ## Hosts, sign-in and crawling
 
 Deployment plan D7(a), D8(a), D18; build items B6–B8.
@@ -551,10 +630,11 @@ visibility on GitHub after the first release.
 
 - **The code is at fault:**
   `git checkout <previous tag> && deploy/deploy.sh --rollback <previous tag>`
-  (no dump, no migration). Migrations are forward-only; this repo's add
-  columns and tables rather than drop them, so the previous image normally
-  runs on the newer schema. Check the release's migrations before relying on
-  that.
+  (no dump, no migration). Migrations are forward-only and mostly add columns
+  and tables, so the previous image normally runs on the newer schema. A
+  release that drops one (the first release drops `supplier_profiles.credential_document_url`)
+  breaks any older image that still reads it. Check the release's migrations
+  before relying on a rollback.
 - **A migration broke data:** restore the release's `pre-deploy` dump
   ("Restore over the live database") with `OTA_VERSION` set back to the
   previous tag first (in `deploy/.env`, the checkout at that tag). Everything

@@ -88,6 +88,16 @@ describe('MessagesService', () => {
           messages.push(message);
           return message;
         },
+        updateMany: async (args: {
+          where: { sender: string; readAt: null };
+          data: { readAt: Date };
+        }) => {
+          const unread = messages.filter(
+            (message) => message.sender === args.where.sender && message.readAt === null,
+          );
+          for (const message of unread) message.readAt = args.data.readAt;
+          return { count: unread.length };
+        },
       },
     }) as unknown as PrismaService;
 
@@ -138,5 +148,26 @@ describe('MessagesService', () => {
     const list = await service.list(RESERVATION_ID, OPERATOR);
 
     expect(list.map((message) => message.body)).toEqual(['first', 'second']);
+  });
+
+  it('marks only the traveler’s unread messages read when the desk opens the thread', async () => {
+    const earlier = new Date('2026-09-19T10:00:00Z');
+    messages = [
+      makeMessage({ sender: 'TRAVELER' }),
+      makeMessage({ sender: 'TRAVELER', readAt: earlier }),
+      makeMessage({ sender: 'OPERATIONS' }),
+      makeMessage({ sender: 'TRAVELER' }),
+    ];
+    const service = new MessagesService(fakePrisma(), publisher, mailer, tenantConfig);
+
+    expect(await service.markRead(RESERVATION_ID)).toEqual({ read: 2 });
+    expect(messages.map((message) => message.readAt !== null)).toEqual([
+      true,
+      true,
+      false,
+      true,
+    ]);
+    expect(messages[1]!.readAt).toBe(earlier);
+    expect(await service.markRead(RESERVATION_ID)).toEqual({ read: 0 });
   });
 });

@@ -73,6 +73,7 @@ export const operatingThresholdsSchema = z.object({
   resourcesStaleDays: whole(1, 60),
   reliabilityFloorPercent: whole(0, 100),
   reliabilityMinAnswered: whole(1, 100),
+  payoutBusinessDays: whole(1, 30),
   conciergeAnswerHours: whole(1, 168),
   staffPasskeysRequired: z.boolean(),
   staffIdleLockMinutes: whole(5, 240),

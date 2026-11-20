@@ -27,6 +27,16 @@ export interface MessageSocketEvent {
   };
 }
 
+/** A message in a worker's thread, on `/ops` as `worker-message` (worker messages M5). */
+export interface WorkerMessageSocketEvent {
+  type: 'worker.message';
+  supplierId: string;
+  messageId: string;
+  sender: 'WORKER' | 'OPERATIONS';
+  serviceItemId: string | null;
+  occurredAt: string;
+}
+
 /**
  * Socket.IO lives on the API origin, not the Next origin: the browser connects
  * directly to the API (the realtime gateways set permissive CORS + credentials).

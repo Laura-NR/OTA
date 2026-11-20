@@ -189,6 +189,33 @@ export function isPriceLocked(status: ReservationStatus): boolean {
   return PRICE_LOCKED_STATUSES.includes(status);
 }
 
+function sameCents(a: number, b: number): boolean {
+  return Math.abs(a - b) < 0.005;
+}
+
+/**
+ * Whether two pricings of one booking charge the same: the same total and,
+ * line for line, the same kind, traveler, quantity and amounts. Labels are
+ * left out, so a package, tier or extra renamed in between does not count as
+ * a price change; any amount that moved does, even when the total does not.
+ */
+export function sameCharge(a: BookingPrice, b: BookingPrice): boolean {
+  return (
+    sameCents(a.total, b.total) &&
+    a.lines.length === b.lines.length &&
+    a.lines.every((line, index) => {
+      const other = b.lines[index]!;
+      return (
+        line.kind === other.kind &&
+        line.travelerIndex === other.travelerIndex &&
+        line.quantity === other.quantity &&
+        sameCents(line.unitAmount, other.unitAmount) &&
+        sameCents(line.amount, other.amount)
+      );
+    })
+  );
+}
+
 /** Places a departure still has once `booked` travelers hold seats on it. */
 export function departurePlacesLeft(capacity: number, booked: number): number {
   return Math.max(0, capacity - booked);

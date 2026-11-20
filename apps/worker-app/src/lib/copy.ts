@@ -1,3 +1,5 @@
+import type { EmergencyCategory, JobStep, ServiceType } from '@ota/domain';
+
 /**
  * The worker app's words, in Spanish (ADR 0007: W-* is Spanish only). They
  * follow the W-* boards; where a board's line assumed something the build
@@ -112,6 +114,138 @@ export const copy = {
     queued: 'Guardado en el teléfono · se enviará solo cuando vuelva la señal.',
     home: 'Volver al inicio',
   },
+  /** The bottom bar (W-Home's board; "Ofertas" lives on Inicio, with its count). */
+  update: {
+    title: (version: string) => `Nueva versión ${version}`,
+    requiredTitle: 'Actualiza la app para seguir',
+    requiredLead: (version: string) =>
+      `La central pide la versión ${version}. Las ofertas esperan a que la instales; tus respuestas guardadas no se pierden.`,
+    optionalLead: 'Hay una versión nueva de la app de colaboradores.',
+    size: (size: string, date: string) => `${size} · publicada el ${date}`,
+    data: 'Mejor con wifi: la descarga gasta datos.',
+    afterJob: (version: string) =>
+      `Hay una versión obligatoria (${version}). Te la pedimos al terminar el trabajo.`,
+    later: 'Más tarde',
+    install: 'Actualizar',
+    // The home's card: "Actualizar" there already refreshes the home.
+    open: 'Ver la nueva versión',
+    downloading: (done: string, total: string) => `Descargando… ${done} de ${total}`,
+    permission:
+      'Android te pedirá permitir instalar apps de «Colaboradores» la primera vez, y después confirmar la actualización.',
+    noData:
+      'Sin conexión. La descarga necesita datos o wifi; inténtalo cuando vuelva la señal.',
+    incomplete: 'La descarga llegó incompleta. Inténtalo otra vez.',
+    notInstalled:
+      'La actualización no se instaló. Inténtalo otra vez, o descárgala desde la página de la app.',
+    retry: 'Reintentar',
+    page: 'Abrir la página de descarga',
+    desk: (phone: string) => `¿Problemas? Llama a la central: ${phone}`,
+    back: 'Volver',
+  },
+  messages: {
+    title: 'Mensajes con la central',
+    back: 'Volver',
+    open: 'Mensajes con la central',
+    openUnread: (count: number) =>
+      `Mensajes con la central · ${count === 1 ? '1 nuevo' : `${count} nuevos`}`,
+    fromDesk: 'Mensaje de la central',
+    read: 'Leer y responder',
+    job: 'Mensaje a la central',
+    about: (code: string) => `Sobre el trabajo ${code}`,
+    empty: 'Aún no hay mensajes. Escribe a la central si necesitas algo.',
+    offline: 'Sin conexión: lo que escribas se envía al volver la señal.',
+    desk: 'Central',
+    you: 'Tú',
+    meta: (
+      who: string,
+      at: string,
+      state: 'sent' | 'queued' | null,
+      bookingCode: string | null,
+    ) =>
+      [
+        who,
+        at,
+        state === 'sent' ? 'enviado' : state === 'queued' ? 'en cola' : null,
+        bookingCode,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    label: 'Mensaje a la central',
+    placeholder: 'Escribe a la central',
+    send: 'Enviar',
+    queueNote: 'Sin conexión el mensaje espera en cola; si es urgente, llama.',
+    refused:
+      'La central no aceptó un mensaje guardado: el trabajo ya no es tuyo o la hora del teléfono está mal. Llama si era importante.',
+  },
+  nav: {
+    label: 'Secciones',
+    home: 'Inicio',
+    calendar: 'Calendario',
+    jobs: 'Trabajos',
+    profile: 'Perfil',
+  },
+  /** W-Job (`docs/schema-w-job.md`, approved J1–J9). */
+  job: {
+    title: 'Trabajo',
+    today: 'Trabajo de hoy',
+    on: (date: string) => `Trabajo del ${date}`,
+    back: 'Volver',
+    list: 'Trabajos',
+    listEmpty: 'No tienes trabajos asignados.',
+    open: 'Ver el trabajo',
+    savedAt: (time: string) => `Sin conexión · guardado ${time}`,
+    synced: 'Sincronizado',
+    state: {
+      none: 'Asignado',
+      EN_ROUTE: 'En camino',
+      ARRIVED: 'En el lugar',
+      STARTED: 'En servicio',
+      FINISHED: 'Terminado · gracias',
+    },
+    travelers: 'Viajeros',
+    meetingPoint: 'Recogida',
+    dropOff: 'Destino',
+    brief: 'Indicaciones de la central',
+    noBrief: 'La central no ha dejado indicaciones. Si te falta algo, llama.',
+    pay: 'Pago',
+    contacts: 'Contactos',
+    host: (name: string | null) =>
+      name ? `${name} · casa de esta noche` : 'Casa de esta noche',
+    desk: 'Central 24/7',
+    call: (who: string) => `Llamar: ${who}`,
+    privacy:
+      'Ves solo el nombre, el idioma y los teléfonos locales de contacto. Los datos de pago y la dirección del viajero en su país nunca llegan a esta app.',
+    steps: 'Pasos del servicio',
+    stepsLater: (date: string) => `Los pasos se activan el ${date}, el día del servicio.`,
+    stepsClosed:
+      'Los pasos se activan cuando el viaje esté confirmado y pagado. Si ya estás en camino, llama a la central.',
+    stepsNote:
+      'Cada paso se guarda con la hora en el teléfono y se envía al volver la señal; la central y los viajeros ven «en camino» y «entregado».',
+    stepDone: (time: string) => `Hecho · ${time}`,
+    stepQueued: (time: string) => `Guardado · ${time} · se enviará al volver la señal`,
+    stepRefused:
+      'La central no aceptó un paso o un aviso guardado: el trabajo cambió o ya había otro registrado. Llama si tienes dudas.',
+    emergency: 'Reportar emergencia en el lugar',
+    emergencyTitle: 'Emergencia · ¿qué pasa?',
+    emergencyCallDesk: 'Llamar a la central 24/7',
+    emergencyNotify: 'Avisar a la central con mi ubicación',
+    emergencyNumbers: [
+      { label: 'Ambulancia 104', phone: '104' },
+      { label: 'Policía 106', phone: '106' },
+      { label: 'Bomberos 105', phone: '105' },
+    ],
+    cancel: 'Cancelar',
+    locating: 'Buscando tu ubicación…',
+    notified: (time: string, kind: string) => `Central avisada · ${time} · ${kind}`,
+    notifiedText:
+      'La central te llamará. Si no llega la llamada, marca el 104 / 106 según el caso.',
+    notifiedSms:
+      'Sin datos: abrimos el SMS a la central con tu ubicación. Pulsa Enviar. El aviso también se enviará por la app al volver la señal.',
+    smsAgain: 'Enviar también por SMS',
+    callNow: 'Llamar ahora',
+    noDeskPhone:
+      'La app no tiene el teléfono de la central. Marca el 104 / 106 según el caso.',
+  },
   calendar: {
     title: 'Calendario',
     open: 'Calendario y disponibilidad',
@@ -214,14 +348,128 @@ export const copy = {
     jobs: (count: number) =>
       count === 1 ? '1 trabajo terminado' : `${count} trabajos terminados`,
     thisMonth: 'Este mes',
-    paidYear: (year: number) => `Pagado · trabajos de ${year}`,
+    paidYear: (year: number) => `Pagado en ${year}`,
     count: (count: number) => (count === 1 ? '1 trabajo' : `${count} trabajos`),
     issue: (amount: string, count: number) =>
       `${amount} con incidencia en el pago (${count === 1 ? '1 trabajo' : `${count} trabajos`}). Llama a la central.`,
-    howPaid: 'La central te dice cuándo y dónde cobras cada trabajo.',
+    method: {
+      CASH_OFFICE: (office: string | null) =>
+        office ? `Efectivo EUR · ${office}` : 'Efectivo EUR',
+      BANK_TRANSFER: 'Transferencia bancaria',
+    },
+    methodNotSet: 'La central aún no ha anotado cómo cobras.',
+    changeMethod: 'Llamar a la central para cambiarla',
+    nextPay: 'Próximo pago',
+    nextPayLine: (day: string, from: string, to: string, cash: boolean) =>
+      `${day} ${from}–${to}${cash ? ' · trae tu carnet' : ''}`,
+    howPaid: (days: number) =>
+      `Cada trabajo se paga ${days === 1 ? '1 día hábil' : `${days} días hábiles`} después de terminarlo. Firmas un recibo por cada pago; aquí guardas la copia.`,
+    paidOn: (day: string) => `Pagado ${day}`,
+    receipts: 'Recibos (PDF)',
+    openReceipt: 'Abrir recibo',
+    openReceiptFor: (day: string) => `Abrir el recibo del ${day}`,
+    receiptTitle: 'Recibo de pago',
+    receiptFailed:
+      'No se pudo abrir el recibo. Inténtalo de nuevo o pide la copia en la central.',
+    noReceipts: 'Aún no hay pagos registrados.',
     history: 'Historial',
     noHistory: 'Aún no tienes trabajos terminados.',
     state: { PENDING: 'Pendiente', PAID: 'Pagado', ISSUE: 'Incidencia' },
+    refused: 'No se pudo cargar. Inténtalo de nuevo o llama a la central.',
+    back: 'Volver al inicio',
+  },
+  credentials: {
+    open: 'Mis credenciales',
+    title: 'Mis credenciales',
+    state: {
+      ACTIVE: 'Estado: activa',
+      IN_REVIEW: 'Estado: en revisión',
+      EXPIRING: 'Estado: vence pronto',
+      SUSPENDED: 'Estado: suspendida',
+    },
+    offers: (auto: boolean) =>
+      auto ? 'recibes ofertas automáticas' : 'sin ofertas automáticas',
+    allVerified: 'Todo verificado por la central.',
+    next: (kind: string, day: string) => `Siguiente vencimiento: ${kind}, ${day}.`,
+    number: (number: string) => `Número ${number}`,
+    expires: (day: string, days: number) =>
+      days < 0
+        ? `Venció ${day}`
+        : `Vence ${day} · ${days === 1 ? '1 día' : `${days} días`}`,
+    reviewed: (day: string, name: string | null) =>
+      name ? `Revisada ${day} · ${name} (central)` : `Revisada ${day}`,
+    rule: (day: string, window: number) =>
+      `Desde el ${day} (${window} días antes) dejas de recibir ofertas automáticas hasta subir la nueva.`,
+    ruleLabel: 'Regla',
+    missing: 'Aún no la tenemos. Súbela para que la central la revise.',
+    vehicle: (model: string, plate: string, seats: number, airConditioning: boolean) =>
+      `Vehículo ${model} · ${plate} · ${seats} plazas${airConditioning ? ' · aire acondicionado' : ''}`,
+    changeVehicle: 'Cambiar de vehículo',
+    vehicleModel: 'Modelo',
+    vehiclePlate: 'Matrícula',
+    vehicleSeats: 'Plazas',
+    vehicleAir: 'Aire acondicionado',
+    vehicleNote:
+      'La central revisa el vehículo nuevo antes de usarlo en tus trabajos. Si cambia la matrícula, tendrás que subir de nuevo el seguro y la inspección técnica.',
+    vehicleSend: 'Enviar a la central',
+    vehicleInvalid: 'Revisa los datos: modelo, matrícula y plazas (de 1 a 60).',
+    vehiclePending: 'Cambio de vehículo en revisión',
+    vehiclePendingExplain: (model: string, plate: string) =>
+      `${model} · ${plate}. Sigues con el vehículo actual hasta que la central lo apruebe. Te avisamos por SMS.`,
+    vehicleRejected: (reason: string) =>
+      `La central no aceptó el cambio de vehículo: ${reason}`,
+    vehicleOffline:
+      'Sin conexión. Los datos siguen aquí: envíalos cuando vuelva la señal.',
+    vehicleRefused:
+      'La central no aceptó el envío. Revisa los datos o llama a la central.',
+    identityChecked:
+      'Comprobado por la central. No guardamos la foto. Solo se usa para comprobar que los documentos son tuyos; nunca se muestra a los viajeros.',
+    identityMissing:
+      'Enséñalo en la central o por videollamada. No se sube por la app: no guardamos la foto.',
+    uploadRenewal: 'Subir renovación o nueva foto',
+    uploadFirst: 'Subir la foto',
+    takePhoto: 'Hacer foto',
+    fromGallery: 'Elegir de la galería',
+    preview: (size: string) => `vista previa · ${size}`,
+    checks: [
+      'Las cuatro esquinas se ven',
+      'Sin reflejos sobre el número',
+      'Fecha de vencimiento legible: compruébala tú también',
+    ],
+    send: 'Enviar a revisión',
+    retake: 'Repetir',
+    cancel: 'Cancelar',
+    pending: 'Enviada · en revisión',
+    pendingExplain: (stillValid: boolean) =>
+      stillValid
+        ? 'La central la revisa en 1–2 días laborables. Sigues activo porque la actual no ha vencido. Te avisamos por SMS.'
+        : 'La central la revisa en 1–2 días laborables. Te avisamos por SMS.',
+    rejected: (reason: string) => `La central no la aceptó: ${reason}`,
+    tooBig: 'La foto pesa más de 5 MB. Repítela o elige otra.',
+    noImage: 'No se pudo leer la foto. Repítela o elige otra.',
+    cameraDenied:
+      'Sin permiso para la cámara. Elige la foto de la galería o da el permiso en los ajustes del teléfono.',
+    offline: 'Sin conexión. La foto sigue aquí: envíala cuando vuelva la señal.',
+    refusedUpload: 'La central no aceptó el envío. Repite la foto o llama a la central.',
+    how: 'Cómo funciona',
+    legend: (window: number) => [
+      {
+        state: 'Activa',
+        text: 'Documentos verificados y vigentes. Ofertas automáticas.',
+      },
+      {
+        state: 'En revisión',
+        text: 'Subiste algo nuevo; la central lo comprueba en 1–2 días.',
+      },
+      {
+        state: 'Vence pronto',
+        text: `Menos de ${window} días: sin ofertas automáticas, la central puede asignarte a mano.`,
+      },
+      {
+        state: 'Suspendida',
+        text: 'Documento vencido o rechazado. Nunca se emite un bono con un colaborador sin licencia.',
+      },
+    ],
     refused: 'No se pudo cargar. Inténtalo de nuevo o llama a la central.',
     back: 'Volver al inicio',
   },
@@ -244,3 +492,53 @@ export function declineReasonText(key: DeclineReasonKey, note: string): string {
   const typed = note.trim();
   return key === 'other' && typed ? `${reason.label}: ${typed}` : reason.label;
 }
+
+type StepWords = { label: string; action: string };
+
+const TRANSPORT_STEPS: Record<JobStep, StepWords> = {
+  EN_ROUTE: { label: 'En camino', action: 'Salgo ahora' },
+  ARRIVED: { label: 'He llegado', action: 'He llegado' },
+  STARTED: { label: 'Pasajeros a bordo', action: 'A bordo' },
+  FINISHED: { label: 'Entregado', action: 'Entregado' },
+};
+
+const GUIDE_STEPS: Record<JobStep, StepWords> = {
+  EN_ROUTE: { label: 'En camino', action: 'Salgo ahora' },
+  ARRIVED: { label: 'He llegado', action: 'He llegado' },
+  STARTED: { label: 'Con el grupo', action: 'Empezamos' },
+  FINISHED: { label: 'Terminado', action: 'Terminado' },
+};
+
+const STAY_STEPS: Record<JobStep, StepWords> = {
+  EN_ROUTE: { label: 'En camino', action: 'Salgo ahora' },
+  ARRIVED: { label: 'He llegado', action: 'He llegado' },
+  STARTED: { label: 'Huéspedes llegaron', action: 'Han llegado' },
+  FINISHED: { label: 'Salida', action: 'Ya se fueron' },
+};
+
+/** A step's name and button for the service type (W-Job; `jobStepsFor` picks the steps). */
+export function stepWords(serviceType: ServiceType, step: JobStep): StepWords {
+  const words =
+    serviceType === 'TRANSPORTATION'
+      ? TRANSPORT_STEPS
+      : serviceType === 'ACCOMMODATION'
+        ? STAY_STEPS
+        : GUIDE_STEPS;
+  return words[step];
+}
+
+/** The board's four emergency types; `short` is how the sent notice names it. */
+export const EMERGENCY_TYPES: ReadonlyArray<{
+  key: EmergencyCategory;
+  label: string;
+  short: string;
+}> = [
+  { key: 'MEDICAL', label: 'Médica · alguien necesita atención', short: 'médica' },
+  {
+    key: 'MECHANICAL',
+    label: 'Mecánica · el vehículo no puede seguir',
+    short: 'mecánica',
+  },
+  { key: 'SECURITY', label: 'Seguridad · robo, agresión, accidente', short: 'seguridad' },
+  { key: 'OTHER', label: 'Otra · lo explico por teléfono', short: 'otra' },
+];

@@ -125,7 +125,12 @@ export default async function HomePage() {
                 className="h-12"
               />
             </div>
-            <Button type="submit" size="lg">
+            {/* Below sm the button spans the card, and es/fr labels wrap rather than widen it. */}
+            <Button
+              type="submit"
+              size="lg"
+              className="max-sm:h-auto max-sm:min-h-12 max-sm:whitespace-normal max-sm:py-2 max-sm:text-center"
+            >
               <Icon name="search" />
               {t('find')}
             </Button>

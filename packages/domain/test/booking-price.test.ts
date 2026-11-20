@@ -7,6 +7,7 @@ import {
   departurePlacesLeft,
   isPriceLocked,
   priceBooking,
+  sameCharge,
   type BookingPriceInput,
 } from '../src';
 
@@ -228,5 +229,71 @@ describe('departurePlacesLeft', () => {
   it('never goes below zero', () => {
     expect(departurePlacesLeft(12, 5)).toBe(7);
     expect(departurePlacesLeft(4, 6)).toBe(0);
+  });
+});
+
+describe('sameCharge', () => {
+  const extra = {
+    label: 'Airport transfer',
+    unit: 'PER_BOOKING' as const,
+    unitAmount: 80,
+    quantity: 1,
+  };
+  const shown = priceBooking(input({ tier: comfort, extras: [extra] }));
+
+  it('holds for the same choices priced again, whatever the rows are called', () => {
+    const renamed = priceBooking(
+      input({
+        packageName: 'Trinidad Heritage Trail (new)',
+        tier: { ...comfort, name: 'Comfort+' },
+        extras: [{ ...extra, label: 'Transfer' }],
+      }),
+    );
+
+    expect(
+      sameCharge(shown, priceBooking(input({ tier: comfort, extras: [extra] }))),
+    ).toBe(true);
+    expect(sameCharge(shown, renamed)).toBe(true);
+  });
+
+  it('fails when a tier, extra or base price moved', () => {
+    expect(
+      sameCharge(
+        shown,
+        priceBooking(input({ tier: { ...comfort, priceDelta: 150 }, extras: [extra] })),
+      ),
+    ).toBe(false);
+    expect(
+      sameCharge(
+        shown,
+        priceBooking(input({ tier: comfort, extras: [{ ...extra, unitAmount: 90 }] })),
+      ),
+    ).toBe(false);
+    expect(
+      sameCharge(
+        shown,
+        priceBooking(input({ basePrice: 1010, tier: comfort, extras: [extra] })),
+      ),
+    ).toBe(false);
+  });
+
+  it('fails when amounts move between lines although the total stays', () => {
+    // The tier's delta up 10 a person, the extra down 20: the same total.
+    const moved = priceBooking(
+      input({
+        tier: { ...comfort, priceDelta: 130 },
+        extras: [{ ...extra, unitAmount: 60 }],
+      }),
+    );
+
+    expect(moved.total).toBe(shown.total);
+    expect(sameCharge(shown, moved)).toBe(false);
+  });
+
+  it('ignores less than a cent of floating-point drift', () => {
+    const drifted = { ...shown, total: shown.total + 0.001 };
+
+    expect(sameCharge(shown, drifted)).toBe(true);
+    expect(sameCharge(shown, { ...shown, total: shown.total + 0.01 })).toBe(false);
   });
 });

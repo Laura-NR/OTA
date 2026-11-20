@@ -9,12 +9,14 @@ import { OverrideNotice } from '@/components/override-notice';
 import { deskAccess } from '@/lib/overrides';
 import { EventActions } from '@/components/event-actions';
 import { EventEditor } from '@/components/event-editor';
+import { EventMediaManager } from '@/components/event-media-manager';
 import { EventTranslations } from '@/components/event-translations';
 import { PageHeader } from '@/components/page-header';
 import { advisoryProvinces } from '@/lib/advisory-regions';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
 import { EVENT_ACCESS_BADGE, EVENT_STATUS_BADGE, eventDates } from '@/lib/events';
+import { holdCasas } from '@/lib/hold-casas';
 import { getTenantConfig } from '@/lib/tenant';
 
 /**
@@ -40,6 +42,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const tenant = getTenantConfig();
   const access = await deskAccess(session?.user.role, 'catalog');
   const canManage = access.canManage;
+  const casas = canManage ? await holdCasas() : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -112,6 +115,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
               locales={tenant.supportedLocales}
               defaultSourceLocale={event.sourceLocale}
               provinces={advisoryProvinces()}
+              casas={casas}
             />
           ) : (
             <Card>
@@ -121,6 +125,18 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
               </CardContent>
             </Card>
           )}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('photos.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EventMediaManager
+                eventId={event.id}
+                media={event.media}
+                canManage={canManage}
+              />
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>{t('translations.title')}</CardTitle>

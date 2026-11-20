@@ -42,6 +42,12 @@ test.describe('cookie choice and T-Events', () => {
     const banner = page.getByRole('region', { name: 'Cookies, your choice' });
     await expect(banner).toBeVisible();
     // No pre-ticked boxes; Reject and Accept are equally weighted.
+    await expect(async () => {
+      await banner.getByRole('button', { name: 'Choose by purpose' }).click();
+      await expect(banner.getByRole('switch', { name: 'Analytics' })).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass();
     await expect(banner.getByRole('switch', { name: 'Analytics' })).toHaveAttribute(
       'aria-checked',
       'false',

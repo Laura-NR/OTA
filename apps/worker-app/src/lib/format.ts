@@ -95,6 +95,11 @@ export function calendarDate(iso: string): string {
   });
 }
 
+/** A download's size in megabytes, the way the update prompt and the download page say it. */
+export function megabytes(bytes: number): string {
+  return `${(bytes / 1_000_000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} MB`;
+}
+
 /**
  * Time left to answer as hours and minutes, "1:52" or "0:29" (W-Home,
  * W-Offer); never below "0:00".
@@ -167,4 +172,10 @@ export function dayName(day: string): string {
 export function dayShort(day: string): string {
   const { date, month } = dayParts(day);
   return `${date} ${month.slice(0, 3)}`;
+}
+
+/** "Sáb 14 nov" (W-Earnings' "Próximo pago"). */
+export function payDay(day: string): string {
+  const { weekday, date, month } = dayParts(day);
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1, 3)} ${date} ${month.slice(0, 3)}`;
 }

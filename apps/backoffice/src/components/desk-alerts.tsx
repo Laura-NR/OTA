@@ -3,6 +3,7 @@
 import {
   ALERT_ACK_UNDO_MS,
   ALERT_MUTE_MS,
+  EMERGENCY_CATEGORIES,
   alertCrossings,
   alertCue,
   alertKey,
@@ -10,17 +11,20 @@ import {
   redSince,
   timerElapsed,
   type DeskAlertMute,
+  type EmergencyCategory,
   type EscalationAlert,
 } from '@ota/domain';
 import type {
   AlertAcknowledgementDto,
   DeskAlertMuteDto,
+  DeskChannel,
   DeskAlertMuteStateDto,
   DispatchBoardItemDto,
   DispatchBoardRowDto,
+  IncidentDto,
 } from '@ota/schemas';
 import { useLocale, useTranslations } from 'next-intl';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   createContext,
   useContext,
@@ -88,6 +92,10 @@ export interface DeskAlertsValue {
    */
   acknowledge: (row: DispatchBoardRowDto, onlyItemId?: string) => void;
   changeMute: (on: boolean) => Promise<void>;
+  /** W-Job: workers' on-site emergencies nobody on the desk has acknowledged yet. */
+  emergencies: IncidentDto[];
+  /** "I have it": the emergency's alert stops for every desk. */
+  acknowledgeEmergency: (incident: IncidentDto) => Promise<void>;
   refresh: () => Promise<void>;
   /**
    * Take a board and mute state a server render just read (the dashboard's
@@ -129,6 +137,8 @@ export interface DeskAlertsProps {
   serverNow: number;
   amberThreshold: number;
   canManage: boolean;
+  /** Where the acknowledgements and mutes come from, for the audit and T-Events. */
+  channel?: DeskChannel;
   children: ReactNode;
 }
 
@@ -144,7 +154,9 @@ export interface DeskAlertsProps {
  * sounds a red alert until someone on the desk acknowledges it, amber once;
  * "Mute 15 min" silences the alerts already raised. Acknowledgements wait out
  * a 6 s undo here before they are recorded; both they and the mute are the
- * desk's, from the audit log.
+ * desk's, from the audit log. A worker's on-site emergency (W-Job) is one more
+ * red alert: read from its own route, cued and announced like the others, and
+ * acknowledged at once, with no undo.
  */
 export function DeskAlerts({
   initialRows,
@@ -152,11 +164,13 @@ export function DeskAlerts({
   serverNow,
   amberThreshold,
   canManage,
+  channel = 'desk',
   children,
 }: DeskAlertsProps) {
   const t = useTranslations('backoffice.dashboard');
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const onDashboard = pathname === DASHBOARD_PATH;
   const onDashboardRef = useRef(onDashboard);
   onDashboardRef.current = onDashboard;
@@ -189,6 +203,18 @@ export function DeskAlerts({
   const lastRedCueAt = useRef<Date | null>(null);
   /** Amber crossings waiting for their one cue. */
   const amberToCue = useRef(0);
+  const [emergencies, setEmergencies] = useState<IncidentDto[]>([]);
+  /** The emergencies already seen, so only a new one is announced; null before the first read. */
+  const seenEmergencies = useRef<Set<string> | null>(null);
+
+  /** Its own read: a role that may not read incidents keeps the board's refresh. */
+  async function refreshEmergencies() {
+    try {
+      setEmergencies(await apiRequest<IncidentDto[]>('/incidents/emergencies'));
+    } catch {
+      // Keep the last known list rather than dropping an alert on a transient error.
+    }
+  }
 
   async function refresh() {
     try {
@@ -201,6 +227,7 @@ export function DeskAlerts({
     } catch {
       // Keep the last known board rather than blanking it on a transient error.
     }
+    await refreshEmergencies();
   }
 
   function seed(
@@ -217,6 +244,10 @@ export function DeskAlerts({
     const timer = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!locked) void refreshEmergencies();
+  }, [locked]);
 
   useEffect(() => {
     if (locked) return;
@@ -283,19 +314,51 @@ export function DeskAlerts({
     // `alertSignature` changes exactly when an item's alert does; the clock ticks do not.
   }, [alertSignature]);
 
+  const emergencySignature = emergencies.map((incident) => incident.id).join('|');
+
+  useEffect(() => {
+    const seen = seenEmergencies.current;
+    seenEmergencies.current = new Set(emergencies.map((incident) => incident.id));
+    if (!seen) return;
+    const fresh = emergencies.filter((incident) => !seen.has(incident.id));
+    if (fresh.length === 0) return;
+    const sentences = fresh
+      .map((incident) =>
+        t('emergency.announce', {
+          code: incident.bookingCode,
+          worker: incident.supplierName ?? t('emergency.someone'),
+          category: emergencyCategory(incident.category),
+          time: opsTime(incident.occurredAt ?? incident.createdAt, locale),
+        }),
+      )
+      .join(' ');
+    setAnnounced((last) => ({ red: sentences, amber: '', seq: last.seq + 1 }));
+  }, [emergencySignature]);
+
   const isAcknowledged = (item: DispatchBoardItemDto): boolean =>
     item.acknowledgement !== null || localAcks.has(alertKey(item.id, item.offeredAt));
   const muteNow = muteWindow(mute);
   const muteActive = muteNow !== null && muteNow.until.getTime() > nowMs;
-  const redAlerts = red.map(({ item }) => {
-    const key = alertKey(item.id, item.offeredAt);
-    return {
-      key,
-      raisedAt: itemRedSince(item),
-      acknowledged: isAcknowledged(item),
-      cued: cued.current.has(key),
-    };
-  });
+  const redAlerts = [
+    ...red.map(({ item }) => {
+      const key = alertKey(item.id, item.offeredAt);
+      return {
+        key,
+        raisedAt: itemRedSince(item),
+        acknowledged: isAcknowledged(item),
+        cued: cued.current.has(key),
+      };
+    }),
+    ...emergencies.map((incident) => {
+      const key = `emergency:${incident.id}`;
+      return {
+        key,
+        raisedAt: new Date(incident.createdAt),
+        acknowledged: false,
+        cued: cued.current.has(key),
+      };
+    }),
+  ];
   const cueSignature = redAlerts
     .map((alert) => `${alert.key}:${alert.acknowledged}`)
     .join('|');
@@ -393,7 +456,7 @@ export function DeskAlerts({
       pending.items.map(async (item) => {
         try {
           await apiRequest<AlertAcknowledgementDto>(
-            `/service-items/${item.id}/acknowledge-alert`,
+            `/service-items/${item.id}/acknowledge-alert?channel=${channel}`,
             {
               method: 'POST',
               body: JSON.stringify({ offeredAt: item.offeredAt }),
@@ -405,7 +468,7 @@ export function DeskAlerts({
             seconds_to_ack: item.raisedAt
               ? Math.max(0, Math.round((Date.now() - item.raisedAt.getTime()) / 1000))
               : 0,
-            channel: 'desk',
+            channel,
           });
         } catch (error) {
           // 409: the alert changed meanwhile (offered again, or no longer red).
@@ -431,12 +494,13 @@ export function DeskAlerts({
     setMuteBusy(true);
     setAlertError(null);
     try {
-      const state = await apiRequest<DeskAlertMuteStateDto>('/dispatch/alert-mute', {
-        method: on ? 'POST' : 'DELETE',
-      });
+      const state = await apiRequest<DeskAlertMuteStateDto>(
+        `/dispatch/alert-mute?channel=${channel}`,
+        { method: on ? 'POST' : 'DELETE' },
+      );
       setMute(state.mute);
       if (on && state.mute) {
-        track('alert_muted', { muted_for_s: ALERT_MUTE_MS / 1000, channel: 'desk' });
+        track('alert_muted', { muted_for_s: ALERT_MUTE_MS / 1000, channel });
       }
     } catch (error) {
       setAlertError(
@@ -447,6 +511,31 @@ export function DeskAlerts({
     } finally {
       setMuteBusy(false);
     }
+  }
+
+  async function acknowledgeEmergency(incident: IncidentDto) {
+    setAlertError(null);
+    try {
+      await apiRequest<IncidentDto>(`/incidents/${incident.id}/acknowledge`, {
+        method: 'POST',
+      });
+    } catch (error) {
+      setAlertError(
+        t('emergency.failed', {
+          code: incident.bookingCode,
+          message: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    }
+    await refreshEmergencies();
+    // The page behind may show the incident (a booking's duty-of-care card).
+    router.refresh();
+  }
+
+  function emergencyCategory(category: string): string {
+    return (EMERGENCY_CATEGORIES as readonly string[]).includes(category)
+      ? t(`emergency.categories.${category as EmergencyCategory}`)
+      : category;
   }
 
   function serviceName(type: string): string {
@@ -509,6 +598,8 @@ export function DeskAlerts({
     isAcknowledged,
     acknowledge,
     changeMute,
+    emergencies,
+    acknowledgeEmergency,
     refresh,
     seed,
   };

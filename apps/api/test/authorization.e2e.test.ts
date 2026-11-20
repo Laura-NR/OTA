@@ -71,6 +71,7 @@ const STAFF_USER = '0d0d0d0d-0d0d-4d0d-8d0d-0d0d0d0d0d0d';
 const EVENT = '1e1e1e1e-1e1e-4e1e-8e1e-1e1e1e1e1e1e';
 const EVENT_REQUEST = '2f2f2f2f-2f2f-4f2f-8f2f-2f2f2f2f2f2f';
 const OVERRIDE = '3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a';
+const CREDENTIAL = '4b4b4b4b-4b4b-4b4b-8b4b-4b4b4b4b4b4b';
 
 type Allowed = 'opsRead' | 'opsWrite' | 'superAdmin' | 'worker' | 'authenticated';
 type Method = 'get' | 'post' | 'patch' | 'put' | 'delete';
@@ -239,6 +240,8 @@ const ROUTES: Route[] = [
   { method: 'post', path: `/proposals/${PROPOSAL}/versions`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/approve`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/reject`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/withdraw`, allowed: 'opsWrite' },
+  { method: 'post', path: `/refunds/${REFUND}/nudge`, allowed: 'opsWrite' },
   { method: 'post', path: `/refunds/${REFUND}/sent`, allowed: 'opsWrite' },
 
   // Dispatch / escalation — ops control; worker responds.
@@ -264,8 +267,30 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/worker/calendar', allowed: 'worker' },
   { method: 'put', path: '/worker/availability', allowed: 'worker' },
   { method: 'put', path: '/worker/fuel', allowed: 'worker' },
-  // W-Earnings: the worker's own reliability and payouts, read-only.
+  // W-Earnings: the worker's own reliability and payouts, and their receipts.
   { method: 'get', path: '/worker/earnings', allowed: 'worker' },
+  { method: 'get', path: `/worker/payouts/${PAYMENT}/receipt`, allowed: 'worker' },
+  // W-Credentials: the worker's own documents and uploads.
+  { method: 'get', path: '/worker/credentials', allowed: 'worker' },
+  { method: 'post', path: '/worker/credentials', allowed: 'worker' },
+  { method: 'post', path: '/worker/vehicle', allowed: 'worker' },
+  // W-Job: the worker's steps and on-site emergency, the desk's brief and steps.
+  { method: 'post', path: `/worker/jobs/${SERVICE_ITEM}/steps`, allowed: 'worker' },
+  { method: 'post', path: `/worker/jobs/${SERVICE_ITEM}/emergency`, allowed: 'worker' },
+  { method: 'patch', path: `/service-items/${SERVICE_ITEM}/brief`, allowed: 'opsWrite' },
+  { method: 'post', path: `/service-items/${SERVICE_ITEM}/steps`, allowed: 'opsWrite' },
+  // Worker ↔ desk messages: the worker's own thread, the desk's side of it.
+  { method: 'get', path: '/worker/messages', allowed: 'worker' },
+  { method: 'post', path: '/worker/messages', allowed: 'worker' },
+  { method: 'post', path: '/worker/messages/read', allowed: 'worker' },
+  { method: 'get', path: `/suppliers/${SUPPLIER}/messages`, allowed: 'opsRead' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/messages`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/messages/read`, allowed: 'opsRead' },
+  {
+    method: 'get',
+    path: `/reservations/${RESERVATION}/worker-threads`,
+    allowed: 'opsRead',
+  },
   // The desk's alert handling: support sees the mute, ops acknowledge and mute.
   {
     method: 'post',
@@ -275,6 +300,13 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/dispatch/alert-mute', allowed: 'opsRead' },
   { method: 'post', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
   { method: 'delete', path: '/dispatch/alert-mute', allowed: 'opsWrite' },
+  { method: 'get', path: '/ops-lite/pipeline', allowed: 'opsRead' },
+  { method: 'get', path: '/ops-lite/inbox', allowed: 'opsRead' },
+  {
+    method: 'post',
+    path: `/reservations/${RESERVATION}/messages/read`,
+    allowed: 'opsRead',
+  },
 
   // Inventory / CMS / pricing.
   { method: 'get', path: '/inventory', allowed: 'opsRead' },
@@ -318,8 +350,29 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/suppliers', allowed: 'opsRead' },
   { method: 'get', path: '/suppliers/expiring', allowed: 'opsRead' },
   { method: 'get', path: `/suppliers/${SUPPLIER}`, allowed: 'opsRead' },
-  { method: 'get', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
   { method: 'post', path: `/suppliers/${SUPPLIER}/credential`, allowed: 'opsRead' },
+  // W-Credentials: support reads and uploads; ops review.
+  { method: 'get', path: `/suppliers/${SUPPLIER}/credentials`, allowed: 'opsRead' },
+  {
+    method: 'get',
+    path: `/suppliers/${SUPPLIER}/credentials/${CREDENTIAL}/file`,
+    allowed: 'opsRead',
+  },
+  {
+    method: 'post',
+    path: `/suppliers/${SUPPLIER}/credentials/identity-card`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/suppliers/${SUPPLIER}/credentials/${CREDENTIAL}/approve`,
+    allowed: 'opsWrite',
+  },
+  {
+    method: 'post',
+    path: `/suppliers/${SUPPLIER}/credentials/${CREDENTIAL}/reject`,
+    allowed: 'opsWrite',
+  },
   { method: 'get', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsRead' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/availability`, allowed: 'opsWrite' },
   // The desk's worker sign-in code (W1) and sign-out: no permission override reaches them.
@@ -328,6 +381,17 @@ const ROUTES: Route[] = [
   // M6: support reads the resources on the inspector; only the desk writes them.
   { method: 'put', path: `/suppliers/${SUPPLIER}/resources`, allowed: 'opsWrite' },
   { method: 'put', path: `/suppliers/${SUPPLIER}/vehicle`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/vehicle/approve`, allowed: 'opsWrite' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/vehicle/reject`, allowed: 'opsWrite' },
+  // W-Earnings payouts (docs/schema-w-earnings.md E7): support reads, ops record.
+  { method: 'put', path: `/suppliers/${SUPPLIER}/payout-method`, allowed: 'opsWrite' },
+  { method: 'get', path: `/suppliers/${SUPPLIER}/payouts`, allowed: 'opsRead' },
+  { method: 'post', path: `/suppliers/${SUPPLIER}/payouts`, allowed: 'opsWrite' },
+  {
+    method: 'get',
+    path: `/suppliers/${SUPPLIER}/payouts/${PAYMENT}/receipt`,
+    allowed: 'opsRead',
+  },
   { method: 'post', path: `/suppliers/${SUPPLIER}/verification`, allowed: 'opsWrite' },
 
   // Imports, applications, quality.
@@ -348,6 +412,8 @@ const ROUTES: Route[] = [
   { method: 'get', path: '/incidents', allowed: 'opsRead' },
   { method: 'post', path: `/reservations/${RESERVATION}/incidents`, allowed: 'opsWrite' },
   { method: 'patch', path: `/incidents/${INCIDENT}/resolve`, allowed: 'opsWrite' },
+  { method: 'get', path: '/incidents/emergencies', allowed: 'opsRead' },
+  { method: 'post', path: `/incidents/${INCIDENT}/acknowledge`, allowed: 'opsWrite' },
   { method: 'get', path: '/reviews', allowed: 'opsRead' },
   { method: 'get', path: '/quality/supplier-reliability', allowed: 'opsRead' },
 
@@ -420,6 +486,10 @@ const ROUTES: Route[] = [
   { method: 'put', path: `/events/${EVENT}/translations/es`, allowed: 'opsWrite' },
   { method: 'post', path: `/events/${EVENT}/publish`, allowed: 'opsWrite' },
   { method: 'post', path: `/events/${EVENT}/archive`, allowed: 'opsWrite' },
+  { method: 'get', path: `/events/media/${EVENT}`, allowed: 'opsRead' },
+  { method: 'post', path: `/events/${EVENT}/media`, allowed: 'opsWrite' },
+  { method: 'patch', path: `/events/${EVENT}/media/${EVENT}`, allowed: 'opsWrite' },
+  { method: 'delete', path: `/events/${EVENT}/media/${EVENT}`, allowed: 'opsWrite' },
   // M10 concierge requests: the desk's queue, and the traveler's own requests.
   { method: 'get', path: '/event-requests', allowed: 'opsRead' },
   { method: 'get', path: `/event-requests/${EVENT_REQUEST}`, allowed: 'opsRead' },
@@ -545,6 +615,7 @@ const fakePrisma = {
   $queryRaw: async () => [{ '?column?': 1 }],
   advisory: { findMany: async () => [] },
   event: { findMany: async () => [], findFirst: async () => null },
+  eventMedia: { findUnique: async () => null },
   // M9: no stored rate (the mock provider's write is dropped), so the rates read is empty.
   exchangeRate: {
     findFirst: async () => null,
@@ -710,6 +781,10 @@ describe('authorization matrix', () => {
     expect(
       (await request(app.getHttpServer()).get('/catalog/events/no-such-event')).status,
     ).toBe(404);
+    // An event photo is public too; an unknown one is a 404, not a 401.
+    expect(
+      (await request(app.getHttpServer()).get(`/catalog/events/media/${EVENT}`)).status,
+    ).toBe(404);
 
     // The display rates are public: the storefront converts browsing prices with them.
     expect((await request(app.getHttpServer()).get('/catalog/currencies')).status).toBe(
@@ -719,6 +794,22 @@ describe('authorization matrix', () => {
     // The Support form is public; an empty body fails validation (400), not auth.
     const contact = await request(app.getHttpServer()).post('/contact').send({});
     expect(contact.status).toBe(400);
+
+    // The worker app's release, APKs and update check are public: the download
+    // page and a signed-out phone read them (docs/worker-app-distribution-plan.md U1a).
+    expect((await request(app.getHttpServer()).get('/worker-app/latest')).status).toBe(
+      200,
+    );
+    expect(
+      (await request(app.getHttpServer()).get('/worker-app/apk/none.apk')).status,
+    ).toBe(404);
+    expect(
+      (await request(app.getHttpServer()).get('/worker-app/updates/manifest')).status,
+    ).toBe(400);
+    expect(
+      (await request(app.getHttpServer()).get('/worker-app/updates/0.1.0/x/assets/y'))
+        .status,
+    ).toBe(404);
 
     // The T-Events intake is public (signed-out visitors browse too); an empty
     // batch fails validation (400), not auth.
@@ -751,6 +842,8 @@ describe('authorization matrix', () => {
       // O3: refund votes stay with the roles that hold them.
       ['post', `/refunds/${REFUND}/approve`],
       ['post', `/refunds/${REFUND}/reject`],
+      ['post', `/refunds/${REFUND}/withdraw`],
+      ['post', `/refunds/${REFUND}/nudge`],
       // Another row.
       ['post', '/reservations'],
       ['post', `/reservations/${RESERVATION}/dispatch`],

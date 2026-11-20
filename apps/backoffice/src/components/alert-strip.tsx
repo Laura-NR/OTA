@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { opsTime } from '@/lib/ops-format';
 
 import { DASHBOARD_PATH, useDeskAlerts, type FlaggedItem } from './desk-alerts';
+import { EmergencyAlerts } from './emergency-alerts';
 
 /** The bookings with a red alert nobody has acknowledged, in board order. */
 function unacknowledgedRows(
@@ -35,8 +36,9 @@ export interface AlertStripProps {
 }
 
 /**
- * A-Dashboard's alert strip: red with an icon and words while any alert is
- * red, amber otherwise, plain while only the mute is on. It names the
+ * A-Dashboard's alert strip: a worker's on-site emergency first (W-Job), then
+ * red with an icon and words while any alert is red, amber otherwise, plain
+ * while only the mute is on. It names the
  * bookings, leads to the matrix, offers "Mute 15 min" and "Unmute" to those
  * who re-dispatch, and says when the cue waits for a first click.
  */
@@ -50,11 +52,16 @@ export function AlertStrip({ matrixHref, acknowledgeHere = false }: AlertStripPr
   const { red, amber, mute, muteActive, muteBusy, canManage, soundReady } = alerts;
 
   if (red.length + amber.length === 0 && !muteActive) {
-    return alerts.alertError ? (
-      <p role="alert" className="text-body-sm text-error-700">
-        {alerts.alertError}
-      </p>
-    ) : null;
+    return (
+      <>
+        <EmergencyAlerts />
+        {alerts.alertError ? (
+          <p role="alert" className="text-body-sm text-error-700">
+            {alerts.alertError}
+          </p>
+        ) : null}
+      </>
+    );
   }
 
   const codes = (entries: FlaggedItem[]) =>
@@ -74,6 +81,7 @@ export function AlertStrip({ matrixHref, acknowledgeHere = false }: AlertStripPr
 
   return (
     <>
+      <EmergencyAlerts />
       <div
         className={cn(
           'flex flex-col gap-2 rounded-md px-4 py-3 text-body-sm',

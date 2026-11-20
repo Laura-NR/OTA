@@ -1,4 +1,5 @@
 import { PrismaClient } from '@ota/db';
+import { SUPPORTED_LOCALES } from '@ota/i18n';
 import { expect, test, type Page } from '@playwright/test';
 
 import { signIn } from './helpers';
@@ -75,6 +76,28 @@ async function expectFits(page: Page, path: string, bodyFontSize: string) {
   expect.soft(layout.bodyFontSize, `${path} body size`).toBe(bodyFontSize);
 }
 
+/**
+ * How far the header row's items run past the row's padded box (≤ 0 when they
+ * fit). The page check alone misses a row that eats its own gutter, or one that
+ * is over its box only where the viewport is wider than the 1280 px container.
+ */
+async function headerOverrun(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const row = document.querySelector('header > div');
+    if (!row) {
+      return 0;
+    }
+    const box =
+      row.getBoundingClientRect().right - parseFloat(getComputedStyle(row).paddingRight);
+    const right = Math.max(
+      ...Array.from(row.children, (child) => child.getBoundingClientRect())
+        .filter((rect) => rect.width > 0)
+        .map((rect) => rect.right),
+    );
+    return Math.round(right - box);
+  });
+}
+
 /** The public customer pages, with the first published package. */
 async function customerPaths(): Promise<string[]> {
   const packageSlug = (
@@ -127,6 +150,35 @@ test.describe('DS 07 responsive widths', () => {
     }
   });
 
+  test('Home and its header fit in every language, with either text size', async ({
+    page,
+  }) => {
+    // The pages above are English; the header's labels are longest in Spanish and French.
+    // The row is checked at every width: at 320 the locale pills once ran into its gutter.
+    for (const largeText of [false, true]) {
+      if (largeText) {
+        await page
+          .context()
+          .addCookies([
+            { name: 'ota_display', value: 'large-text', url: STOREFRONT_URL },
+          ]);
+      }
+      for (const locale of SUPPORTED_LOCALES) {
+        // The default locale is unprefixed, so its path alone follows the browser's language.
+        await page
+          .context()
+          .addCookies([{ name: 'NEXT_LOCALE', value: locale, url: STOREFRONT_URL }]);
+        await page.goto(`${STOREFRONT_URL}/${locale}`);
+        await expect(page.locator('html')).toHaveAttribute('lang', locale);
+        const { overflow } = await measure(page);
+        const overrun = Math.max(0, await headerOverrun(page));
+        expect
+          .soft({ locale, largeText, overflow, overrun }, `/${locale} header`)
+          .toEqual({ locale, largeText, overflow: 0, overrun: 0 });
+      }
+    }
+  });
+
   test('the traveler account and the builder never scroll sideways', async ({ page }) => {
     test.setTimeout(180_000);
     const reservation = await prisma.reservation.findFirst({
@@ -145,6 +197,14 @@ test.describe('DS 07 responsive widths', () => {
     for (const path of paths) {
       await page.goto(`${STOREFRONT_URL}${path}`);
       await expectFits(page, path, '16px');
+    }
+  });
+
+  test('Ops Lite never scrolls sideways, from a small phone up', async ({ page }) => {
+    await signIn(page);
+    for (const path of ['/lite/alerts', '/lite/pipeline', '/lite/inbox']) {
+      await page.goto(path);
+      await expectFits(page, path, '14px');
     }
   });
 

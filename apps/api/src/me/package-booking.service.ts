@@ -13,6 +13,7 @@ import type { Prisma } from '@ota/db';
 import {
   isUsPerson,
   planRooms,
+  sameCharge,
   signatureMatches,
   travelerKindOn,
   type BookingExtraInput,
@@ -77,6 +78,14 @@ export interface SubmittedReservation {
   totalCurrency: string;
 }
 
+function priceChanged(total: number, currency: string): ConflictException {
+  return new ConflictException({
+    error: 'PriceChanged',
+    message: `The price changed since it was shown; it is now ${total.toFixed(2)} ${currency}`,
+    total: total.toFixed(2),
+  });
+}
+
 function addDays(day: Date, days: number): Date {
   const result = new Date(day);
   result.setUTCDate(result.getUTCDate() + days);
@@ -92,7 +101,9 @@ function addDays(day: Date, days: number): Date {
  * departure is open and has room is decided in that transaction too
  * (`claimDepartureSeats`), so two bookings cannot both take its last seats, and
  * the tier and extras are held there (`claimPackageChoices`), so a package save
- * cannot remove or withdraw them under the booking.
+ * cannot remove or withdraw them under the booking. With them held, the price is
+ * confirmed there too (`confirmPrice`), so a save that changed one in place
+ * since `plan` cannot book the party at a price that is no longer offered.
  */
 @Injectable()
 export class PackageBookingService {
@@ -139,48 +150,19 @@ export class PackageBookingService {
     }
     const rooms = planRooms(kinds, input.rooming);
 
-    const extras = input.extras.map((choice): PlannedExtra => {
-      const extra = pkg.extras.find(
-        (candidate) => candidate.id === choice.packageExtraId && candidate.active,
-      );
-      if (!extra) {
-        throw new BadRequestException(
-          `Extra ${choice.packageExtraId} is not offered on this package`,
-        );
-      }
-      return {
-        packageExtraId: extra.id,
-        label: extra.name,
-        unit: extra.priceUnit,
-        unitAmount: Number(extra.price),
-        quantity: choice.quantity,
-      };
-    });
-
-    const price = pricePackageChoice(
+    const { extras, price } = this.priceChoices(
       pkg,
-      {
-        tier,
-        departure,
-        travelDate: startDate,
-        travelers: input.travelers.map((traveler, index) => ({
-          kind: kinds[index]!,
-          dateOfBirth: traveler.dateOfBirth,
-        })),
-        singleRooms: rooms.singleRooms,
-        extras,
-      },
-      this.tenant.pricing,
+      departure,
+      tier,
+      input,
+      kinds,
+      rooms.singleRooms,
     );
     if (
       input.expectedTotal !== undefined &&
       Math.abs(input.expectedTotal - price.total) >= 0.005
     ) {
-      throw new ConflictException({
-        error: 'PriceChanged',
-        message: `The price changed since it was shown; it is now ${price.total.toFixed(2)} ${pkg.currency}`,
-        total: price.total.toFixed(2),
-      });
+      throw priceChanged(price.total, pkg.currency);
     }
 
     const consents = input.consents.map((consent) => ({
@@ -338,6 +320,96 @@ export class PackageBookingService {
         locale: input.locale ?? null,
       })),
     });
+  }
+
+  /**
+   * Price the plan again inside the booking's transaction, after
+   * `claimDepartureSeats` and `claimPackageChoices` hold its departure, tier
+   * and extras: a package save that changed one of their prices, or the
+   * package's own, in place since `plan` read it has then either committed,
+   * and this re-read sees it, or waits for the booking. The package row is
+   * locked last because a save updates it after its departures, tiers and
+   * extras, so the two cannot deadlock. A charge that moved, or a new
+   * currency, is the same 409 as a stale `expectedTotal`: the traveler
+   * accepted the price `plan` showed, and nothing is written.
+   */
+  async confirmPrice(
+    tx: Prisma.TransactionClient,
+    plan: PackageBookingPlan,
+    input: BookPackageRequest,
+  ): Promise<void> {
+    await tx.$queryRaw`SELECT id FROM packages WHERE id = ${plan.pkg.id}::uuid FOR SHARE`;
+    const pkg = await tx.package.findUnique({
+      where: { id: plan.pkg.id },
+      include: PACKAGE_INCLUDE,
+    });
+    const departure = pkg?.departures.find(
+      (candidate) => candidate.id === plan.departureId,
+    );
+    if (!pkg || !departure) {
+      throw new ConflictException('That departure is not open for booking');
+    }
+    const tier =
+      plan.tierId === null
+        ? null
+        : (pkg.tiers.find((candidate) => candidate.id === plan.tierId) ?? null);
+
+    const { price } = this.priceChoices(
+      pkg,
+      departure,
+      tier,
+      input,
+      plan.kinds,
+      plan.rooms.singleRooms,
+    );
+    if (pkg.currency !== plan.pkg.currency || !sameCharge(price, plan.price)) {
+      throw priceChanged(price.total, pkg.currency);
+    }
+  }
+
+  /** The chosen extras and the M2 price of the choices on these package rows. */
+  private priceChoices(
+    pkg: BookedPackage,
+    departure: BookedPackage['departures'][number],
+    tier: BookedPackage['tiers'][number] | null,
+    input: BookPackageRequest,
+    kinds: TravelerKind[],
+    singleRooms: number,
+  ): { extras: PlannedExtra[]; price: BookingPrice } {
+    const extras = input.extras.map((choice): PlannedExtra => {
+      const extra = pkg.extras.find(
+        (candidate) => candidate.id === choice.packageExtraId && candidate.active,
+      );
+      if (!extra) {
+        throw new BadRequestException(
+          `Extra ${choice.packageExtraId} is not offered on this package`,
+        );
+      }
+      return {
+        packageExtraId: extra.id,
+        label: extra.name,
+        unit: extra.priceUnit,
+        unitAmount: Number(extra.price),
+        quantity: choice.quantity,
+      };
+    });
+
+    const price = pricePackageChoice(
+      pkg,
+      {
+        tier,
+        departure,
+        travelDate: departure.startDate,
+        travelers: input.travelers.map((traveler, index) => ({
+          kind: kinds[index]!,
+          dateOfBirth: traveler.dateOfBirth,
+        })),
+        singleRooms,
+        extras,
+      },
+      this.tenant.pricing,
+    );
+    return { extras, price };
   }
 
   private requireKey(): Buffer {

@@ -71,8 +71,9 @@ Android JavaScript (Hermes bytecode); no APK is built here.
 - W-Offer's "Queda menos de un cuarto del tiempo" becomes "Queda poco tiempo …", shown from
   the desk's amber threshold (`hurryFrom`), which is a runtime setting rather than a fixed
   quarter.
-- W-Home's credential line names the credential generically ("Credencial vigente · vence …"),
-  since a profile holds one credential date, not a licence and an insurance.
+- W-Home's credential line names the credential generically ("Credencial vigente · vence …"):
+  it reads the profile's one date, which since W-Credentials (2026-11-14) is the earliest
+  expiry of the current documents; "Mis credenciales" lists each one.
 - W-Offer's route ("Aeropuerto → Viñales"), flight and pickup notes are not in the data yet;
   the offer shows the service, province, start and end, travelers, payout and booking code.
 - Offer cards, the reasons list and the outcome states use the DS radii (4/10/20), the 48 dp
@@ -123,15 +124,23 @@ Android JavaScript (Hermes bytecode); no APK is built here.
     used: a decline lowers the acceptance share as much as no answer does. The app says what
     counts and the floor instead. The trend ("subió desde 93 en julio") and last-minute
     cancellations are not shown (E8, W-Job).
-  - Payouts: "Pendiente" (finished, not paid), "Este mes" (finished this month), and "Pagado ·
-    trabajos de 2026" rather than "Pagado en 2026", because there is no paid date until E1.
-    The payout method, the next pay day, "Cambiar a transferencia" and the receipts wait on
-    `docs/schema-w-earnings.md`; the card says "La central te dice cuándo y dónde cobras cada
-    trabajo." A failed payout shows as a danger notice asking the worker to call.
+  - Payouts (since 2026-11-13, `docs/schema-w-earnings.md` §8): the method line ("Efectivo EUR
+    · oficina Vedado", "Transferencia bancaria", or "La central aún no ha anotado cómo
+    cobras"), "Pendiente" (finished, not paid), "Próximo pago Sáb 10 oct 10:00–13:00 · trae tu
+    carnet" (the carnet only for cash), "Este mes" (finished this month), "Pagado en 2026" (by
+    the paid day), the rule ("Cada trabajo se paga 5 días hábiles después de terminarlo.
+    Firmas un recibo por cada pago; aquí guardas la copia."; the board's "salvo que haya una
+    incidencia abierta" is
+    dropped, since an incident does not hold a payout) and "Llamar a la central para
+    cambiarla" in place of "Cambiar a transferencia" (E3). A failed payout shows as a danger
+    notice asking the worker to call.
   - Historial: the job's end date, payout, service and province, the travelers' line and
-    booking code, and a state chip (Pendiente on `warningSoft`/`warning`, Pagado on
+    booking code, and a state chip (Pendiente on `warningSoft`/`warning`, "Pagado 28 sep" on
     `successSoft`/`success`, Incidencia on `surface`/`danger`, `radius-sm`). No route
     ("La Habana → Viñales") and no rating: neither is in the data.
+  - Recibos (PDF): one row per payment (day, method, jobs, amount) in a card, each with "Abrir
+    recibo" (since 2026-11-13): the PDF downloads with the bearer and opens in Android's share
+    sheet (`docs/schema-w-earnings.md` §8).
   - Valoraciones are not shown: a review rates the whole booking (E6).
   - Needs a connection, like the calendar; pull to refresh.
 
@@ -164,12 +173,56 @@ same rule); app `EarningsScreen.tsx`; the desk's Payouts panel on the supplier p
 the spec's fifth test. Recording a payout, its date, method and receipt, the next pay day and
 ratings wait on `docs/schema-w-earnings.md` (proposed, E1–E8).
 
+W-Earnings' payouts (2026-11-13, approved E1–E8 as recommended, migration
+`20261113145009_w_earnings_payouts`): domain `packages/domain/src/worker/payouts.ts`; API
+`SupplierPayoutsService` (record, ledger, method, receipts) and the worker's
+`GET /worker/payouts/:id/receipt`; the desk's "Record payout" and payments on the supplier
+page; the app's method, next pay day, paid days and "Recibos"; the spec's sixth test.
+`docs/schema-w-earnings.md` §8.
+
+The receipt in the app (2026-11-13, the owner's option (a), no migration, no route change):
+`expo-file-system` 58.0.11 and `expo-sharing` 58.0.20; `src/lib/open-receipt.ts` downloads the
+worker's own receipt with the bearer into the cache and opens the share sheet,
+`open-receipt.web.ts` saves it in the preview; "Abrir recibo" on each payment; the spec's sixth
+test downloads it.
+
+W-Credentials (2026-11-14, approved V1–V8, migration `20261114143342_w_credentials`):
+`expo-image-picker` 58.0.10; `CredentialsScreen.tsx` from W-Home and "Fiabilidad y pagos";
+`src/lib/credentials.ts`, `src/lib/pick-photo.ts`; `GET|POST /worker/credentials`; the desk's
+document list on the supplier page; the spec's seventh test. `docs/schema-w-credentials.md` §7.
+
+Background resend (2026-11-14, the owner's pick, no migration, no route change):
+`expo-background-task` 58.0.11 and `expo-task-manager` 58.0.12; `src/lib/background.ts` defines
+the task (imported first by `index.ts`) and schedules it while `needsBackgroundResend` holds
+(`packages/domain`), `background.web.ts` does nothing in the preview; `resendInBackground` and
+`takeBackgroundReport` in `src/lib/answers.ts`, where `flushAnswers` now runs one flush at a
+time. W6 otherwise unchanged: Android adds a resend with the app closed, once connected and at
+least 15 minutes after the app left the screen. Unit tests only (the preview has no
+background); the first real run is the APK.
+
+W-Job (2026-11-15, approved J1–J9, migration `20261115100000_w_job`, `expo-location` 58.0.19):
+`JobScreen.tsx` and `JobsScreen.tsx`, the bottom bar (`TabBar` in `ui.tsx`), `src/lib/position.ts`;
+steps and reports in the phone's queue beside the answers (`answers.ts`); the spec's eighth
+test. `docs/schema-w-job.md` §7.
+
+Distribution (2026-11-15, approved U1–U8, no migration, `expo-updates` 58.0.20,
+`expo-intent-launcher` 58.0.3, `expo-application` 58.1.2): the storefront's `/app` download
+page on `app.<domain>`, the home's "Nueva versión" card and the update screen, a required
+update in front of every screen, signed JS updates once a day, the split APKs' version codes,
+the release tool, the approval email and SMS, the desk's card.
+`docs/worker-app-distribution-plan.md` §5.
+
 ## 8. Next slices
 
 1. The field test on real phones: an APK built on a machine with the Android SDK (`expo
    prebuild` + Gradle, our own signing key backed up twice), two or three workers.
-2. Background resend (`expo-background-task`, a new dependency), W-Credentials, W-Earnings'
-   payouts (`docs/schema-w-earnings.md`; the read-only screen landed 2026-11-11).
-3. W-Job with the offline job screen and the SMS SOS (a custom Android module).
-4. Distribution: the download page, the in-app update prompt, self-hosted `expo-updates`.
-5. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).
+   Its checklist gains the background resend: answer with the phone offline, close the app,
+   turn data back on and note how long the desk waits for the answer (15 minutes at least;
+   Android may wait longer on a phone saving battery). And W-Job's: the position prompt on the
+   first job, a fix indoors and outdoors, the SOS with no data (the composer opens to the
+   desk's number; the desk's phone receives one segment), the steps offline.
+2. Distribution: built 2026-11-15 (above). The field test adds its checks: install from the
+   page (both splits), the "unknown app" and Play Protect steps, an optional and a required
+   update through the installer, a JS update after a restart. W-Job's silent SMS module
+   (ADR 0007) waits for the APK machine.
+3. The SMS provider (needs the legal entity), then the T+0 offer SMS (ADR 0007 A5).

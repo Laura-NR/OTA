@@ -30,13 +30,14 @@ supplier legal documents. Booking codes, UUIDs, and amounts are pseudonymous.
 | `Verification` (Better Auth) | `identifier` (email), `value` (token) | Untouched | **G3** |
 | `Reservation.customItineraryPayload` | free-text `notes` (≤1000 chars) | Untouched | **G1** |
 | `Message.body` | traveler/ops free text | Untouched | **G1** |
+| `WorkerMessage.body` (worker messages, `docs/schema-w-messages.md`) | worker/desk free text; one naming a job may mention a traveler's first name, health or mobility | A message naming one of the traveler's jobs is **redacted** on anonymization (`[redacted]`, M8); one naming no job is the supplier's own correspondence and stays with the supplier's data | **G5** (the supplier side, with Tier 3) |
 | `Review.comment` | traveler free text | Untouched | **G1** |
 | `Incident.description` | free text (often medical/emergency) | Untouched | **G1** |
 | `ServiceItem.declineReason`, `DispatchOffer.declineReason` | supplier free text | Untouched | **G1** |
 | `AuditLog.metadata` | applicant `email`, decline/rejection `reason`/`note` free text | Untouched | **G1/G3** |
 | `Document` + PDFs (`DOCUMENTS_DIR/<bookingCode>/*.pdf`) | traveler name + email, supplier name + phone (`packages/documents/src/data.ts`) | Untouched | **G2** |
 | `SupplierProfile` | `primaryPhone`, `rtnLicenseNumber`, `vehicleDetails` | No retention path | **G5** |
-| Supplier credential object (`credentials/<supplierId>/…`) | legal ID/licence scans | Private, API-gated, expiry-scanned | **G5** |
+| `SupplierCredential` + its object (`credentials/<supplierId>/…`) | licence, inspection and insurance photos with their numbers; no identity-card photo is kept (W-Credentials V5a) | Private, API-gated, every desk read audited; a superseded or rejected version's file is deleted (V7a); expiry-scanned | **G5** |
 | `SupplierApplication` | `fullName`, `email`, `phone`, `rtnLicenseNumber`, `message` | No retention path | **G4** |
 | `StaffInvite` (M9) | invited work `email` (the token is stored only as a SHA-256 hash) | Deleted by the retention scan 90 days after it closes; the audit log keeps the event | None |
 | `ImportBatch` | `rows` JSON may embed supplier names/emails | No retention path | **G9** |
@@ -124,6 +125,8 @@ anonymization, for every reservation owned by the traveler, overwrite free text
 that is not a fiscal record:
 - `Message.body` → `[redacted]` (keep the row: sender + timestamp are aggregate
   metadata),
+- `WorkerMessage.body` → `[redacted]` for a worker message that names one of the
+  traveler's service items (worker messages M8, 2026-11-16),
 - `Review.comment` → `null` (keep the rating — it feeds CSAT aggregates),
 - `Incident.description` → `[redacted]`, keep category/severity/resolvedAt,
 - `ServiceItem.declineReason` / `DispatchOffer.declineReason` → `null`,

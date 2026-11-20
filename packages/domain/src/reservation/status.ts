@@ -9,7 +9,7 @@
  *
  * The data dictionary (§6.2) lists a shorter, inconsistent set
  * (DRAFT, PENDING_PAYMENT, DISPATCHING, ...). The §4.2 set is authoritative here;
- * the discrepancy is flagged in the handoff.
+ * the discrepancy is recorded in AGENTS.md Section C (2026-09-20).
  */
 export const ReservationStatus = {
   Draft: 'DRAFT',

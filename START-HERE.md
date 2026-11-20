@@ -3,7 +3,7 @@
 > **This project is bootstrapped and in active development.** The three prompts
 > below are the original from-scratch bootstrap and are kept for history. To
 > continue an existing session, use `docs/next-session-prompt.md` and the living
-> status in `docs/handoff/main.md`.
+> status in `docs/production-readiness.md`.
 
 `AGENTS.md` is already set up. Nothing to install, nothing to run first.
 

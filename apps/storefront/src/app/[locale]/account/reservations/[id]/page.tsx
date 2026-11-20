@@ -305,9 +305,23 @@ export default async function AccountReservationPage({
                 key: item.id,
                 cells: [
                   tst(item.serviceType),
-                  <Badge key="status" variant="secondary">
-                    {tsi(item.status)}
-                  </Badge>,
+                  <div key="status" className="flex flex-col items-start gap-1">
+                    <Badge variant="secondary">{tsi(item.status)}</Badge>
+                    {item.currentStep ? (
+                      // W-Job J4: the worker's latest step, timed as the row's dates are.
+                      <span className="text-caption text-secondary">
+                        {t('workerStep.line', {
+                          step: t(
+                            `workerStep.${item.serviceType}.${item.currentStep.step}`,
+                          ),
+                          time: format.dateTime(new Date(item.currentStep.at), {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          }),
+                        })}
+                      </span>
+                    ) : null}
+                  </div>,
                   item.province ?? '—',
                   when(item.serviceDateStart),
                   when(item.serviceDateEnd),

@@ -2,6 +2,7 @@ import type { SupplierApplicationDto } from '@ota/schemas';
 import {
   Alert,
   Badge,
+  buttonClassName,
   Card,
   CardContent,
   CardDescription,
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@ota/ui';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 
 import { OverrideNotice } from '@/components/override-notice';
 import { deskAccess } from '@/lib/overrides';
@@ -31,8 +33,9 @@ function statusVariant(status: string) {
 }
 
 export default async function ApplicationsPage() {
-  const [t, session, thresholds] = await Promise.all([
+  const [t, card, session, thresholds] = await Promise.all([
     getTranslations('backoffice.applications'),
+    getTranslations('backoffice.appCard'),
     getServerSession(),
     getThresholds(),
   ]);
@@ -49,7 +52,14 @@ export default async function ApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')}>
+        <Link
+          href="/suppliers/app-card"
+          className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+        >
+          {card('open')}
+        </Link>
+      </PageHeader>
       <OverrideNotice capability="suppliers" overrides={access.overrides} />
       {thresholds.recruitmentPortal ? null : (
         <FeatureOffNotice feature="recruitmentPortal" />

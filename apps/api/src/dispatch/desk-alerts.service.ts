@@ -6,7 +6,11 @@ import {
   serviceItemAlert,
   type ServiceItemStatus,
 } from '@ota/domain';
-import type { AlertAcknowledgementDto, DeskAlertMuteStateDto } from '@ota/schemas';
+import type {
+  AlertAcknowledgementDto,
+  DeskAlertMuteStateDto,
+  DeskChannel,
+} from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
 import {
@@ -49,6 +53,7 @@ export class DeskAlertsService {
     serviceItemId: string,
     offeredAt: string | null,
     actor: AuthUser,
+    channel: DeskChannel = 'desk',
   ): Promise<AlertAcknowledgementDto> {
     const item = await this.prisma.serviceItem.findUnique({
       where: { id: serviceItemId },
@@ -96,6 +101,7 @@ export class DeskAlertsService {
           offeredAt: current,
           reservationId: item.reservationId,
           status: item.status,
+          channel,
         },
       },
       select: ACKNOWLEDGEMENT_SELECT,
@@ -148,7 +154,10 @@ export class DeskAlertsService {
    * Mute the desk's cue for 15 minutes from now. Muting again starts a new
    * window, which then also covers the alerts raised since the first.
    */
-  async mute(actor: AuthUser): Promise<DeskAlertMuteStateDto> {
+  async mute(
+    actor: AuthUser,
+    channel: DeskChannel = 'desk',
+  ): Promise<DeskAlertMuteStateDto> {
     const now = new Date();
     const until = new Date(now.getTime() + ALERT_MUTE_MS);
     await this.prisma.auditLog.create({
@@ -157,7 +166,11 @@ export class DeskAlertsService {
         action: ALERTS_MUTED,
         entityType: DISPATCH_DESK_ENTITY,
         createdAt: now,
-        metadata: { until: until.toISOString(), minutes: ALERT_MUTE_MS / 60_000 },
+        metadata: {
+          until: until.toISOString(),
+          minutes: ALERT_MUTE_MS / 60_000,
+          channel,
+        },
       },
     });
     this.escalation.publish({
@@ -169,7 +182,10 @@ export class DeskAlertsService {
   }
 
   /** Lift the mute in force; with none, nothing is recorded. */
-  async unmute(actor: AuthUser): Promise<DeskAlertMuteStateDto> {
+  async unmute(
+    actor: AuthUser,
+    channel: DeskChannel = 'desk',
+  ): Promise<DeskAlertMuteStateDto> {
     const now = new Date();
     const { mute } = await this.currentMute(now);
     if (!mute) {
@@ -181,7 +197,7 @@ export class DeskAlertsService {
         action: ALERTS_UNMUTED,
         entityType: DISPATCH_DESK_ENTITY,
         createdAt: now,
-        metadata: { mutedUntil: mute.until },
+        metadata: { mutedUntil: mute.until, channel },
       },
     });
     this.escalation.publish({

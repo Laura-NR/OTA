@@ -96,3 +96,76 @@ export function refundDecision(
     ? { state: 'APPROVED' }
     : { state: 'PENDING', missing: needed - approvers.size, superAdmin: false };
 }
+
+/** How long after one nudge the next may go out (AL-Alerts' "Nudge"). */
+export const REFUND_NUDGE_COOLDOWN_MINUTES = 30;
+
+/** A staff member who holds a refund vote by role. */
+export interface RefundApprover {
+  id: string;
+  role: string;
+}
+
+export type RefundNudge =
+  | { ok: true; recipients: string[] }
+  | { ok: false; refusal: 'NOT_PENDING' | 'NO_ONE_LEFT' }
+  | { ok: false; refusal: 'TOO_SOON'; retryAt: Date };
+
+/**
+ * Who a nudge for a pending refund reaches (AL-Alerts: "the second must come
+ * from Dayana; this card lets you nudge her"): every approver who has not
+ * voted, other than the one nudging, and only Super Admins when the refund
+ * waits on one. `approvers` are the active staff whose role holds a vote. One
+ * nudge per cooldown, whoever sends it, so a refund is not a stream of mail.
+ */
+export function refundNudge(input: {
+  decision: RefundDecision;
+  votes: readonly RefundVote[];
+  approvers: readonly RefundApprover[];
+  actorId: string;
+  lastNudgedAt: Date | null;
+  now: Date;
+}): RefundNudge {
+  const { decision } = input;
+  if (decision.state !== 'PENDING') {
+    return { ok: false, refusal: 'NOT_PENDING' };
+  }
+  if (input.lastNudgedAt) {
+    const retryAt = new Date(
+      input.lastNudgedAt.getTime() + REFUND_NUDGE_COOLDOWN_MINUTES * 60_000,
+    );
+    if (retryAt > input.now) {
+      return { ok: false, refusal: 'TOO_SOON', retryAt };
+    }
+  }
+  const voted = new Set(input.votes.map((vote) => vote.approverId));
+  const recipients = input.approvers
+    .filter(
+      (approver) =>
+        approver.id !== input.actorId &&
+        !voted.has(approver.id) &&
+        (!decision.superAdmin || approver.role === UserRole.SuperAdmin),
+    )
+    .map((approver) => approver.id);
+  return recipients.length > 0
+    ? { ok: true, recipients }
+    : { ok: false, refusal: 'NO_ONE_LEFT' };
+}
+
+/**
+ * Whether a person may take back their approval (AL-Alerts' "Withdraw"): only
+ * while the refund still waits on others, and only their own approval. A
+ * rejection already ended the refund, and an approved one is on its way.
+ */
+export function refundWithdrawal(
+  status: string,
+  votes: readonly RefundVote[],
+  actorId: string,
+): 'NOT_PENDING' | 'NO_APPROVAL' | null {
+  if (status !== 'REQUESTED') {
+    return 'NOT_PENDING';
+  }
+  return votes.some((vote) => vote.approverId === actorId && vote.approve)
+    ? null
+    : 'NO_APPROVAL';
+}

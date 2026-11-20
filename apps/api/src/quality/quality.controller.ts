@@ -57,6 +57,23 @@ export class QualityController {
     return this.quality.listIncidents(query);
   }
 
+  /** W-Job J6: workers' reports the desk has not acknowledged, its emergency alerts. */
+  @Get('incidents/emergencies')
+  @Roles(...READ_ROLES)
+  openEmergencies(): Promise<IncidentDto[]> {
+    return this.quality.openEmergencies();
+  }
+
+  @Post('incidents/:id/acknowledge')
+  @HttpCode(HttpStatus.OK)
+  @Roles(...WRITE_ROLES)
+  acknowledgeIncident(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<IncidentDto> {
+    return this.quality.acknowledgeIncident(id, actor);
+  }
+
   @Post('reservations/:id/incidents')
   @Roles(...WRITE_ROLES)
   createIncident(

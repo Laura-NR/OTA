@@ -6,6 +6,7 @@ import {
 } from '@ota/domain';
 import { z } from 'zod';
 
+import { currentJobStepSchema, jobBriefSchema, jobStepTimesSchema } from './job';
 import { nationalitySchema, tourismCategorySchema } from './regulatory';
 
 /**
@@ -109,6 +110,8 @@ export const reservationServiceItemSchema = z.object({
   serviceDateStart: z.string(),
   serviceDateEnd: z.string(),
   supplierId: z.string().uuid().nullable(),
+  /** W-Job J4: the worker's latest step, which the traveler sees too. */
+  currentStep: currentJobStepSchema.nullable(),
 });
 
 export type ReservationServiceItemDto = z.infer<typeof reservationServiceItemSchema>;
@@ -120,6 +123,9 @@ export type ReservationServiceItemDto = z.infer<typeof reservationServiceItemSch
 export const reservationDeskItemSchema = reservationServiceItemSchema.extend({
   supplierName: z.string().nullable(),
   payoutRate: z.string(),
+  /** W-Job J1, J2: the desk's brief for the worker and each step's time. */
+  brief: jobBriefSchema,
+  steps: jobStepTimesSchema,
 });
 
 export type ReservationDeskItemDto = z.infer<typeof reservationDeskItemSchema>;

@@ -368,6 +368,11 @@
     "maxSeats": 8,
     "ticketPaymentDays": 7
   },
+  "workerPayouts": {
+    "status": "placeholder",
+    "office": "oficina Vedado",
+    "sessions": [{ "weekday": 6, "from": "10:00", "to": "13:00" }]
+  },
   "emergencyContacts": [
     { "label": "Operations desk (24/7)", "phone": "+53 5555 0100" },
     { "label": "Medical emergency", "phone": "+53 5555 0104" },

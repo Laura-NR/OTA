@@ -153,6 +153,7 @@ export default async function ReportsPage({
 }) {
   const params = await searchParams;
   const t = await getTranslations('backoffice.reports');
+  const incidentT = await getTranslations('backoffice.incidents');
   const locale = await getLocale();
 
   const parsedYear = Number.parseInt(params.year ?? '', 10);
@@ -662,7 +663,10 @@ export default async function ReportsPage({
                       </Badge>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
-                      {incident.description}
+                      {incident.description ||
+                        [incidentT(`sources.${incident.source}`), incident.supplierName]
+                          .filter(Boolean)
+                          .join(' · ')}
                     </TableCell>
                     <TableCell>
                       {incident.resolvedAt ? (

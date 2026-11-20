@@ -6,8 +6,13 @@ import {
   isCredentialExpiringSoon,
   meetsReliabilityFloor,
 } from '@ota/domain';
-import type { SupplierDetailDto, SupplierReliabilityDto } from '@ota/schemas';
-import { Alert, Badge, buttonClassName, cn } from '@ota/ui';
+import type {
+  SupplierCredentialsDto,
+  SupplierDetailDto,
+  SupplierPayoutLedgerDto,
+  SupplierReliabilityDto,
+} from '@ota/schemas';
+import { Alert, Badge, ResponsiveTable, buttonClassName, cn } from '@ota/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -16,12 +21,16 @@ import type { ReactNode } from 'react';
 import { OverrideNotice } from '@/components/override-notice';
 import { deskAccess } from '@/lib/overrides';
 import { AvailabilityCalendar } from '@/components/availability-calendar';
-import { SupplierCredential } from '@/components/supplier-credential';
+import { SupplierCredentials } from '@/components/supplier-credentials';
+import { SupplierPayoutMethod } from '@/components/supplier-payout-method';
+import { SupplierPayoutRecord } from '@/components/supplier-payout-record';
 import { SupplierResourcesForm } from '@/components/supplier-resources-form';
 import { SupplierVehicleForm } from '@/components/supplier-vehicle-form';
+import { SupplierVehicleRequest } from '@/components/supplier-vehicle-request';
 import { VerificationActions } from '@/components/verification-actions';
 import { WorkerSignInCode } from '@/components/worker-sign-in-code';
 import { WorkerSignOut } from '@/components/worker-sign-out';
+import { WorkerThread } from '@/components/worker-thread';
 import { getThresholds } from '@/lib/operating';
 import { apiFetch, getServerSession } from '@/lib/api';
 import { ApiError } from '@/lib/errors';
@@ -36,6 +45,12 @@ const EDIT_ROLES: readonly string[] = [
 
 /** Who may issue a worker sign-in code or sign a worker out; no permission override reaches them (W1). */
 const SIGN_IN_CODE_ROLES: readonly string[] = [
+  UserRole.OperationsAdmin,
+  UserRole.SuperAdmin,
+];
+
+/** Who may write to a worker; the support role reads (worker messages M6). */
+const WORKER_MESSAGE_ROLES: readonly string[] = [
   UserRole.OperationsAdmin,
   UserRole.SuperAdmin,
 ];
@@ -71,10 +86,11 @@ function Panel({
  * The supplier inspector (A-Suppliers): the worker's profile, the credential
  * inspector (spec §4.5), the auto-dispatch state, reliability and job history,
  * a casa's backup power or a driver's vehicle and fuel reserve (M6), the
- * worker app sign-in code (`docs/worker-app-plan.md` W1), the payouts the
- * worker sees in the app (W-Earnings) and the availability calendar. Guide
- * specialities wait (M6 D7); recording a payout waits on
- * `docs/schema-w-earnings.md`.
+ * worker app sign-in code (`docs/worker-app-plan.md` W1), the worker's thread
+ * with the desk (`docs/schema-w-messages.md` M6), the payouts the
+ * worker sees in the app with their method, pay day, payments, receipts and
+ * "Record payout…" (W-Earnings, `docs/schema-w-earnings.md`) and the
+ * availability calendar. Guide specialities wait (M6 D7).
  */
 export default async function SupplierDetailPage({
   params,
@@ -83,6 +99,7 @@ export default async function SupplierDetailPage({
 }) {
   const { id } = await params;
   const t = await getTranslations('backoffice.supplierDetail');
+  const credentialsT = await getTranslations('backoffice.credentials');
   const serviceTypeT = await getTranslations('status.serviceType');
   const locale = await getLocale();
   const session = await getServerSession();
@@ -91,6 +108,7 @@ export default async function SupplierDetailPage({
   const canVerify = access.canManage;
   const canEdit = EDIT_ROLES.includes(role);
   const canIssueSignInCode = SIGN_IN_CODE_ROLES.includes(role);
+  const canMessageWorker = WORKER_MESSAGE_ROLES.includes(role);
 
   const supplier = await apiFetch<SupplierDetailDto>(`/suppliers/${id}`).catch(
     (error: unknown) => {
@@ -99,6 +117,10 @@ export default async function SupplierDetailPage({
       }
       throw error;
     },
+  );
+  const ledger = await apiFetch<SupplierPayoutLedgerDto>(`/suppliers/${id}/payouts`);
+  const credentials = await apiFetch<SupplierCredentialsDto>(
+    `/suppliers/${id}/credentials`,
   );
   const reliability = await apiFetch<SupplierReliabilityDto[]>(
     '/quality/supplier-reliability',
@@ -177,7 +199,7 @@ export default async function SupplierDetailPage({
         ? 'driver'
         : null;
   const resources = supplier.resources;
-  // The insurance date is informational (M6 D7(b)): it never pauses dispatch.
+  // The vehicle's insurance date is the verified insurance document's (X3a).
   const insuranceDays = supplier.vehicle?.insuranceUntil
     ? Math.ceil(
         (new Date(supplier.vehicle.insuranceUntil).getTime() - now.getTime()) / DAY_MS,
@@ -241,6 +263,12 @@ export default async function SupplierDetailPage({
               WhatsApp
             </a>
             <a
+              href="#worker-thread"
+              className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+            >
+              {t('workerThread.open')}
+            </a>
+            <a
               href={`mailto:${supplier.email}`}
               className={buttonClassName({ variant: 'secondary', size: 'sm' })}
             >
@@ -276,6 +304,17 @@ export default async function SupplierDetailPage({
               <dd className="mt-1">{supplier.isAvailable ? t('yes') : t('no')}</dd>
             </div>
           </dl>
+          {canVerify &&
+          supplier.verificationStatus !== 'VERIFIED' &&
+          credentials.missing.length > 0 ? (
+            <p className="text-body-sm text-secondary">
+              {t('approvalBlocked', {
+                documents: credentials.missing
+                  .map((kind) => credentialsT(`kinds.${kind}`))
+                  .join(', '),
+              })}
+            </p>
+          ) : null}
           <VerificationActions
             supplierId={supplier.id}
             status={supplier.verificationStatus}
@@ -305,6 +344,24 @@ export default async function SupplierDetailPage({
           </div>
         </Panel>
       ) : null}
+
+      <div id="worker-thread" className="scroll-mt-4">
+        <Panel
+          title={t('workerThread.title')}
+          description={t('workerThread.description')}
+        >
+          <WorkerThread
+            supplierId={supplier.id}
+            workerName={supplier.fullName ?? supplier.email}
+            phone={supplier.primaryPhone}
+            subtitle={supplier.category.replaceAll('_', ' ')}
+            serviceItemId={null}
+            canWrite={canMessageWorker}
+            headingId="worker-thread-name"
+            nameAsHeading={false}
+          />
+        </Panel>
+      </div>
 
       <Panel title={t('reliabilityTitle')} description={t('reliabilityDescription')}>
         {!reliability || reliability.offers === 0 ? (
@@ -360,6 +417,81 @@ export default async function SupplierDetailPage({
             />
           ))}
         </div>
+        <p className="text-body-sm text-secondary">
+          {[
+            supplier.payouts.method
+              ? t(`payouts.methods.${supplier.payouts.method}`) +
+                (supplier.payouts.method === 'CASH_OFFICE' && supplier.payouts.office
+                  ? ` · ${supplier.payouts.office}`
+                  : '')
+              : t('payouts.methodNotSet'),
+            supplier.payouts.nextPayDay
+              ? t('payouts.nextPayDay', {
+                  day: calendarDate(supplier.payouts.nextPayDay.day, locale),
+                  from: supplier.payouts.nextPayDay.from,
+                  to: supplier.payouts.nextPayDay.to,
+                })
+              : null,
+            t('payouts.rule', { days: supplier.payouts.businessDays }),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+        <SupplierPayoutMethod
+          key={supplier.payouts.method ?? 'none'}
+          supplierId={supplier.id}
+          method={supplier.payouts.method}
+          canEdit={canVerify}
+        />
+        {canVerify ? (
+          <div className="border-t pt-4">
+            <SupplierPayoutRecord
+              key={ledger.payable.map((job) => job.serviceItemId).join()}
+              supplierId={supplier.id}
+              currency={ledger.currency}
+              locale={locale}
+              payable={ledger.payable}
+              method={supplier.payouts.method}
+            />
+          </div>
+        ) : null}
+        <div className="flex flex-col gap-2 border-t pt-4">
+          <h3 className="text-body font-semibold">{t('payouts.payments')}</h3>
+          {ledger.payments.length === 0 ? (
+            <p className="text-body-sm text-muted">{t('payouts.noPayments')}</p>
+          ) : (
+            <ResponsiveTable
+              scrollRegionLabel={t('payouts.payments')}
+              columns={[
+                { label: t('payouts.paidOn') },
+                { label: t('payouts.amount'), cellClassName: 'font-mono' },
+                { label: t('payouts.paidWith') },
+                { label: t('payouts.jobsColumn') },
+                { label: t('payouts.recordedBy') },
+                { label: t('payouts.receipt') },
+              ]}
+              rows={ledger.payments.map((payment) => ({
+                key: payment.id,
+                cells: [
+                  calendarDate(payment.paidAt, locale),
+                  moneyExact(Number(payment.amount), payment.currency, locale),
+                  t(`payouts.methods.${payment.method}`),
+                  String(payment.jobs),
+                  payment.recordedBy ?? '—',
+                  <a
+                    key="receipt"
+                    href={`/api/ota/suppliers/${supplier.id}/payouts/${payment.id}/receipt`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-body-sm font-semibold text-primary-600 underline underline-offset-[3px]"
+                  >
+                    {t('payouts.receiptPdf')}
+                  </a>,
+                ],
+              }))}
+            />
+          )}
+        </div>
       </Panel>
 
       {resourcesKind ? (
@@ -375,6 +507,15 @@ export default async function SupplierDetailPage({
                   <Badge variant={insurance.variant}>{insurance.label}</Badge>
                 ) : null}
               </div>
+              {supplier.pendingVehicle ? (
+                <SupplierVehicleRequest
+                  key={supplier.pendingVehicle.requestedAt}
+                  supplierId={supplier.id}
+                  currentPlate={supplier.vehicle?.plate ?? null}
+                  request={supplier.pendingVehicle}
+                  canDecide={canVerify}
+                />
+              ) : null}
               <SupplierVehicleForm
                 key={JSON.stringify(supplier.vehicle)}
                 supplierId={supplier.id}
@@ -403,11 +544,11 @@ export default async function SupplierDetailPage({
       ) : null}
 
       <Panel title={t('credentialDocument')} description={t('credentialDescription')}>
-        <SupplierCredential
+        <SupplierCredentials
           supplierId={supplier.id}
-          hasCredential={supplier.hasCredential}
-          contentType={supplier.credentialContentType}
-          canEdit={canEdit}
+          credentials={credentials}
+          canUpload={canEdit}
+          canReview={canVerify}
         />
       </Panel>
 

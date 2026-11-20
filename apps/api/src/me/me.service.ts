@@ -35,6 +35,7 @@ import { generateBookingCode } from '../common/booking-code';
 import { accountReservationUrl } from '../common/storefront-url';
 import type { SigningClient } from '../compliance/affidavits.service';
 import { CurrenciesService } from '../currencies/currencies.service';
+import { currentStepDto } from '../jobs/job-steps';
 import { MAILER } from '../email/email.module';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -142,6 +143,7 @@ function toDetailDto(row: DetailRow): MyReservationDetailDto {
       serviceDateStart: item.serviceDateStart.toISOString(),
       serviceDateEnd: item.serviceDateEnd.toISOString(),
       supplierId: item.supplierId,
+      currentStep: currentStepDto(item),
     })),
     documents: row.documents.map((document): MyDocumentDto => ({
       id: document.id,
@@ -433,6 +435,7 @@ export class MeService {
           tierId: plan.tierId,
           packageExtraIds: plan.extras.map((extra) => extra.packageExtraId),
         });
+        await this.bookings.confirmPrice(tx, plan, input);
       },
       // Ids and counts only: no names, dates of birth or passport numbers.
       auditMetadata: {

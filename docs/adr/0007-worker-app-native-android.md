@@ -209,6 +209,132 @@ desk's supplier page shows the same payouts. No migration, no new dependency, on
 that a review rates the booking, not a worker, so recording payouts, the paid date, method,
 receipts, the next pay day and ratings wait on `docs/schema-w-earnings.md`.
 
+## Amendment, 2026-11-13: W-Earnings' payouts
+
+The owner approved `docs/schema-w-earnings.md` E1–E8 as recommended: one payment row per
+payout covering one or more jobs (`supplier_payouts`, `service_items.payout_id`), the method per
+worker and per payment (cash at the office or a bank transfer, no bank details kept), the next
+pay day computed from a business-day threshold and the office's sessions in the tenant
+manifest, a receipt PDF per payment, ratings not shown, Operations and Super Admin record, and
+the reliability window unchanged. Migration `20261113145009_w_earnings_payouts`, additive; no
+new dependency. The desk records a payment after the money changed hands; the API sums the
+amount and guards against paying a job twice. The app shows the method, the next pay day,
+paid days and its payments. It does not open the receipt PDF: on Android that needs a file or
+share module (a new dependency) or a signed link (an authentication decision), which the owner
+decides; the worker's receipt route exists for it.
+
+## Amendment, 2026-11-13 (evening): the receipt in the app
+
+The owner chose (a) of the three ways to open a payout receipt on the phone: two new
+dependencies, Expo's own SDK 58 modules `expo-file-system` 58.0.11 and `expo-sharing` 58.0.20
+(the exact pins in `expo/bundledNativeModules.json`), over a short-lived signed link the
+phone's browser opens (a new public route deciding access by an HMAC token) or no PDF in the
+app. The app downloads `GET /worker/payouts/:id/receipt` with the worker's bearer into its
+private cache and hands the file to Android's share sheet through `expo-sharing`'s
+non-exported FileProvider; the bearer stays the only key and no route changed.
+`expo-sharing`'s incoming-share config plugin is not enabled, so the app gains no intent
+filters. Not run on a device: the share sheet itself is only exercised once an APK exists.
+
+## Amendment, 2026-11-14: Ops Lite
+
+Ops Lite is built as the Consequences say: phone-sized screens in the back-office at `/lite`
+(alerts, pipeline, inbox), behind the desk's own checks (session age, IP allowlist, idle lock,
+passkey rule) and for staff only. It carries the desk's live alerts, cue and mute, so a mute
+or an acknowledgement on the phone holds for the desk. Its alerts are browser notifications
+while the page is open, as A5 settles; there is no service worker and no push to a closed
+page. Re-dispatches, acknowledgements, mutes and unmutes made there carry `?channel=ops_lite`
+into their audit rows, and the analytics channel says `ops_lite`. Two read routes serve it
+(`GET /ops-lite/pipeline`, `GET /ops-lite/inbox`, operations roles) and `POST
+/reservations/:id/messages/read` marks a traveler's messages read when the desk opens the
+thread, on the desk too. No migration, no new dependency.
+
+
+## Amendment, 2026-11-14 (later): W-Credentials
+
+The owner approved `docs/schema-w-credentials.md` V1–V8 as recommended. A supplier's documents
+are uploaded versions in `supplier_credentials` (migration `20261114143342_w_credentials`):
+each upload, the worker's from the app or the desk's from a visit, call or WhatsApp, waits for
+an Operations or Super Admin. Approving supersedes the old version, removes its file and
+rewrites `credential_expires_at` as the earliest expiry of the current documents, so dispatch
+is unchanged. The desk cannot approve a supplier while a required document is missing. No
+photo of the identity card is kept: the desk records it as checked in person. The app adds "Mis
+credenciales" with the camera or the gallery through `expo-image-picker` 58.0.10 (Expo's SDK
+58 pin, approved; it brings `expo-image-loader` 58.0.3). Its config plugin asks for the camera
+only (no photo-library or microphone permission). A photo that could not be sent stays on
+screen to send again; it is not queued like an answer. The review's outcome goes to the worker
+by the SMS channel, which logs in development and sends nothing until a provider exists. Seven
+routes (`GET|POST /worker/credentials` and five on `/suppliers/:id/credentials…`); the old
+single-file download is gone.
+
+## Amendment, 2026-11-14 (evening): background resend
+
+The owner approved `expo-background-task` 58.0.11 and `expo-task-manager` 58.0.12 (Expo's SDK
+58 pins; they bring `unimodules-app-loader` 58.0.2). Spec §7.2's background resend is a task
+defined when the bundle loads and run by Android's WorkManager, which waits for a connection
+and runs no sooner than 15 minutes after the app left the screen. The app schedules it while
+answers wait for a signed-in worker and cancels it when the queue empties or the worker signs
+out. It sends the queue as the open app does, one flush at a time, so the two never send an
+answer twice. What it sent or the API refused is shown on the next open: the "sent" tick and
+the existing refusal notice. There is no notification while the app is closed, which would need
+a notification dependency. A phone that restricts background work keeps the resend on open, on
+return to the foreground and by timer while open. The modules add no runtime permission (a job
+service and a boot receiver only). The web preview has no background, so this is unit-tested
+until the APK; it is not a custom Android module. No migration, no API change.
+
+## Amendment, 2026-11-15: W-Job
+
+The owner approved `docs/schema-w-job.md` J1–J9 as recommended (migration
+`20261115100000_w_job`, `expo-location` 58.0.19). The job screen reads the desk's brief, the
+steps and the night's host from the home the phone keeps, so it works with no signal. Steps
+and emergency reports are queued like answers and resent in the background; a report goes
+first. The emergency SMS opens the phone's composer to the desk's 24/7 number with one
+GSM-7 segment (booking, type, position, time, first name); the worker taps Send. That replaces
+this ADR's silent send for now: silent sending needs a custom Android module and the machine
+with the Android SDK, and it can replace the composer later with no migration. The position
+uses foreground permission only (fine and coarse location, no background location), one fix
+per report. The desk's 24/7 phone is a person's phone: the system does not read the SMS until
+an inbound SMS provider exists, and the desk can log it as `WORKER_SMS`. Worker ↔ desk
+messages are deferred (J9).
+## Amendment, 2026-11-15 (later): distribution
+
+The owner approved `docs/worker-app-distribution-plan.md` U1–U8 as recommended (no migration;
+`expo-updates` 58.0.20, `expo-intent-launcher` 58.0.3, `expo-application` 58.1.2). The phone and
+the download page live on `app.<domain>`, outside the trial gate, which lets only the page and
+the phone's token-authenticated calls through. Releases are a folder the release tool writes on
+the APK machine and the owner copies to the server; there is no table and no upload page. Each
+split APK has its own version code (release × 10 + ABI digit), so the app downloads its own
+split. JS-only updates are code-signed: the private key stays on the APK machine beside the APK
+signing key, and an APK built without the certificate accepts no update. The app checks for
+one at most once a day, never during a job, and applies it at the next start; a new APK is
+offered, or required below the release's minimum, but never while a job is under way.
+Approving a supplier emails and texts the download link; the desk prints a QR card. iPhones see
+"Android only". Not run on a device: the split build, the installer and an update's download.
+
+## Amendment, 2026-11-16: worker ↔ desk messages
+
+The owner approved `docs/schema-w-messages.md` M1–M8 as recommended (migration
+`20261115230915_worker_messages`, no new dependency). A worker has one thread with the desk,
+kept in its own table so it never reaches a traveler. Messages written with no signal wait on
+the phone in a third list, sent after emergency reports and answers and before steps, in the
+background too, each with an id that keeps a resend single and the time it was written. The
+worker reads the desk's replies at the next sync, since this ADR still has no push; nor is
+there an SMS to the worker until an SMS provider exists. The desk sees each message live on
+`/ops`, gets an email copy of a worker's, and answers from the booking, the supplier page or
+Ops Lite.
+
+## Amendment, 2026-11-20: changing vehicle
+
+The owner approved `docs/schema-w-vehicle.md` X1a–X3a (no migration, no new dependency). On
+W-Credentials' insurance card, "Cambiar de vehículo" asks for the new car's model, plate, seats
+and air conditioning and sends them for the desk to review. The request waits beside the
+current vehicle, which stays on file and in dispatch until the desk approves. Like a document
+photo, an unsent request stays on screen rather than being queued, since the desk has to see
+the car. Approving a different plate supersedes the verified inspection and insurance, which
+named the old car, so the app asks for both and auto-offers pause until they are approved.
+Each decision goes out by SMS, as a document review does, and a refusal's reason shows on the
+card until the worker asks again. The vehicle's insurance date is now the insurance
+document's, not a date the desk types.
+
 ## Sources (read 2026-10-14)
 
 - Twilio Cuba guidelines: https://www.twilio.com/en-us/guidelines/cu/sms

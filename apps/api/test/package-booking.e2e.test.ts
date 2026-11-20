@@ -93,6 +93,10 @@ interface State {
   sent: EmailMessage[];
   /** Places already held on the departure by other bookings. */
   booked: number;
+  /** How often the package was read: the Booking form's plan, then its claim. */
+  packageReads: number;
+  /** A package save landing after the plan read it, seen by every later read. */
+  savedBetween: ((stored: typeof pkg) => typeof pkg) | null;
 }
 
 const decimal = (value: number | string) => new Prisma.Decimal(value);
@@ -137,7 +141,7 @@ const pkg = {
       id: DEPARTURE,
       startDate: new Date('2027-02-13T00:00:00Z'),
       capacity: 8,
-      price: null,
+      price: null as Prisma.Decimal | null,
       status: 'OPEN',
     },
     {
@@ -181,6 +185,8 @@ function seed(): State {
     rates: [],
     sent: [],
     booked: 0,
+    packageReads: 0,
+    savedBetween: null,
   };
 }
 
@@ -191,8 +197,13 @@ function createFakePrisma(state: State) {
   });
   const fake = {
     package: {
-      findUnique: async (args: { where: { id: string } }) =>
-        args.where.id === PACKAGE_ID ? pkg : null,
+      findUnique: async (args: { where: { id: string } }) => {
+        if (args.where.id !== PACKAGE_ID) return null;
+        state.packageReads += 1;
+        return state.packageReads > 1 && state.savedBetween
+          ? state.savedBetween(pkg)
+          : pkg;
+      },
     },
     reservation: {
       aggregate: async () => ({ _sum: { partySize: state.booked } }),
@@ -308,7 +319,8 @@ function createFakePrisma(state: State) {
       },
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(fake),
-    // claimDepartureSeats and claimPackageChoices: the rows, as locked.
+    // claimDepartureSeats, claimPackageChoices and confirmPrice: the rows, as
+    // locked (the package's own lock returns nothing here; it is re-read after).
     $queryRaw: async (sql: TemplateStringsArray, ids: string | string[]) => {
       const rows = sql[0]!.includes('package_tiers')
         ? pkg.tiers
@@ -571,6 +583,57 @@ describe('Booking form API (POST /me/reservations/package-booking)', () => {
 
     const same = await book({ ...family, expectedTotal: 3192 });
     expect(same.status).toBe(201);
+  });
+
+  it('refuses a price a package save changed after the form read it, writing nothing', async () => {
+    const saves: Record<string, (stored: typeof pkg) => typeof pkg> = {
+      tier: (stored) => ({
+        ...stored,
+        tiers: stored.tiers.map((tier) =>
+          tier.id === TIER_COMFORT ? { ...tier, priceDelta: decimal(150) } : tier,
+        ),
+      }),
+      extra: (stored) => ({
+        ...stored,
+        extras: stored.extras.map((extra) =>
+          extra.id === EXTRA ? { ...extra, price: decimal(40) } : extra,
+        ),
+      }),
+      departure: (stored) => ({
+        ...stored,
+        departures: stored.departures.map((departure) =>
+          departure.id === DEPARTURE ? { ...departure, price: decimal(1100) } : departure,
+        ),
+      }),
+      base: (stored) => ({ ...stored, basePrice: decimal('1050.00') }),
+      currency: (stored) => ({ ...stored, currency: 'USD' }),
+    };
+
+    for (const [change, save] of Object.entries(saves)) {
+      state.packageReads = 0;
+      state.savedBetween = save;
+      const response = await book({ ...family, expectedTotal: 3192 });
+
+      expect(response.status, change).toBe(409);
+      expect(response.body, change).toMatchObject({ error: 'PriceChanged' });
+    }
+    expect(state.reservations).toHaveLength(0);
+    expect(state.lines).toHaveLength(0);
+    expect(state.travelers).toHaveLength(0);
+  });
+
+  it('books at the price shown when a save in between only renamed the rows', async () => {
+    state.savedBetween = (stored) => ({
+      ...stored,
+      name: 'Viñales Eco Trail',
+      tiers: stored.tiers.map((tier) => ({ ...tier, name: `${tier.name}+` })),
+    });
+
+    const response = await book({ ...family, expectedTotal: 3192 });
+
+    expect(response.status).toBe(201);
+    expect(state.packageReads).toBe(2);
+    expect(Number(state.reservations[0]!.totalAmount)).toBe(3192);
   });
 
   it('refuses stale legal words and writes nothing', async () => {

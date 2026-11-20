@@ -71,6 +71,7 @@ export const scheduleReceiptSchema = paymentReceiptSchema.extend({
 export type ScheduleReceiptDto = z.infer<typeof scheduleReceiptSchema>;
 
 export const refundApprovalSchema = z.object({
+  /** Null in the traveler's schedule (`GET /me/reservations/:id/schedule`). */
   approverEmail: z.string().nullable(),
   approve: z.boolean(),
   note: z.string().nullable(),
@@ -112,13 +113,25 @@ export const refundSchema = z.object({
   providerRefundId: z.string().nullable(),
   sentAt: z.string().nullable(),
   createdAt: z.string(),
+  /** Null in the traveler's schedule, as is each approval's `approverEmail`. */
   requestedByEmail: z.string().nullable(),
   approvals: z.array(refundApprovalSchema),
   /** While REQUESTED, who still has to approve. */
   decision: refundDecisionSchema,
+  /** The refund queue only (`GET /refunds`): when the last nudge went out. */
+  lastNudgedAt: z.string().nullable().optional(),
 });
 
 export type RefundDto = z.infer<typeof refundSchema>;
+
+/** `POST /refunds/:id/nudge` (AL-Alerts): when it went out and to whom. */
+export const refundNudgeResultSchema = z.object({
+  nudgedAt: z.string(),
+  /** Each recipient's name, or their email when they have none. */
+  recipients: z.array(z.string()),
+});
+
+export type RefundNudgeResultDto = z.infer<typeof refundNudgeResultSchema>;
 
 /** What the traveler may choose before the first payment link exists. */
 export const paymentOptionsSchema = z.object({

@@ -16,6 +16,7 @@
     "menu": "Menú",
     "openMenu": "Abrir el menú",
     "closeMenu": "Cerrar el menú",
+    "language": "Idioma",
     "primary": "Principal",
     "main": "Accesos rápidos",
     "homeLabel": "{agency}: inicio",
@@ -896,6 +897,33 @@
       },
       "railOff": "El pago por transferencia bancaria en línea está desactivado por ahora. Contacte con nosotros para completar el pago.",
       "contactUs": "Contacte con nosotros"
+    },
+    "workerStep": {
+      "line": "{step} · {time}",
+      "TRANSPORTATION": {
+        "EN_ROUTE": "Tu conductor está en camino",
+        "ARRIVED": "Tu conductor ha llegado",
+        "STARTED": "A bordo",
+        "FINISHED": "Entregado"
+      },
+      "GUIDE": {
+        "EN_ROUTE": "Tu guía está en camino",
+        "ARRIVED": "Tu guía ha llegado",
+        "STARTED": "Recorrido en marcha",
+        "FINISHED": "Recorrido terminado"
+      },
+      "EXPERIENCE": {
+        "EN_ROUTE": "Tu anfitrión está en camino",
+        "ARRIVED": "Tu anfitrión ha llegado",
+        "STARTED": "Actividad en marcha",
+        "FINISHED": "Actividad terminada"
+      },
+      "ACCOMMODATION": {
+        "EN_ROUTE": "Tu anfitrión está en camino",
+        "ARRIVED": "Tu anfitrión ha llegado",
+        "STARTED": "Registrados en la casa",
+        "FINISHED": "Salida de la casa"
+      }
     }
   },
   "join": {
@@ -1051,7 +1079,11 @@
         "traveler": "Viajero"
       },
       "passkeys": "Llaves de acceso",
-      "skip": "Saltar al contenido"
+      "skip": "Saltar al contenido",
+      "opsLite": {
+        "pointer": "¿En un móvil? Ops Lite es el triaje del escritorio hecho para él.",
+        "open": "Abrir Ops Lite"
+      }
     },
     "paymentsLedger": {
       "title": "Pagos",
@@ -1373,6 +1405,7 @@
           "resourcesStaleDays": "Recursos desactualizados tras",
           "reliabilityFloorPercent": "Umbral de fiabilidad del auto-despacho",
           "reliabilityMinAnswered": "Ofertas respondidas antes del umbral",
+          "payoutBusinessDays": "Días hábiles hasta pagar un trabajo terminado",
           "conciergeAnswerHours": "Solicitud de evento respondida en",
           "staffPasskeysRequired": "El personal entra con llave de acceso",
           "staffIdleLockMinutes": "Bloqueo por inactividad",
@@ -1410,6 +1443,7 @@
           "resourcesStaleDays": "Proveedores, Incidencias, Paquetes del sitio",
           "reliabilityFloorPercent": "Despacho, Proveedores, lista de reasignación",
           "reliabilityMinAnswered": "Despacho, Proveedores, lista de reasignación",
+          "payoutBusinessDays": "Pagos de la app de colaboradores, pagos del proveedor",
           "conciergeAnswerHours": "Reservas › Solicitudes de eventos, Panel, correo de solicitud",
           "staffPasskeysRequired": "Acceso a la mesa, avisos de escalado y mensajería",
           "staffIdleLockMinutes": "Sesiones de la mesa no marcadas como dispositivo propio",
@@ -1763,7 +1797,35 @@
         "call": "Llamar",
         "acknowledgeFor": "Acusar recibo de la alerta roja · {service} · {code}",
         "startHint": "Ofrece cada servicio al siguiente trabajador cualificado.",
-        "rule": "Estados de cada servicio: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un redespacho retira la oferta abierta y lo anota en el registro de auditoría. Las tarifas de pago son el neto del proveedor; el viajero nunca ve esta columna."
+        "rule": "Estados de cada servicio: UNASSIGNED → OFFERED → ACCEPTED | DECLINED | TIMEOUT → FULFILLED. Un redespacho retira la oferta abierta y lo anota en el registro de auditoría. Las tarifas de pago son el neto del proveedor; el viajero nunca ve esta columna.",
+        "stepLine": "{step} · {time}",
+        "steps": {
+          "EN_ROUTE": "En camino",
+          "ARRIVED": "Llegó",
+          "STARTED": "En servicio",
+          "FINISHED": "Terminado"
+        },
+        "brief": "Indicaciones…",
+        "briefFor": "Indicaciones para el colaborador · {service} · {code}",
+        "briefTitle": "Indicaciones para el colaborador",
+        "briefDescription": "El colaborador lo lee en la app, también sin señal. Escribe solo lo que el trabajo necesita: se borra con los datos del viajero.",
+        "meetingPoint": "Punto de recogida",
+        "dropOff": "Destino",
+        "workerBrief": "Notas para el colaborador",
+        "workerBriefHint": "Vuelo, texto del cartel, movilidad, equipaje. 500 caracteres como máximo.",
+        "briefSave": "Guardar indicaciones",
+        "briefWritten": "Con indicaciones",
+        "briefMissing": "Sin indicaciones",
+        "recordStep": "Registrar paso…",
+        "recordStepFor": "Registrar un paso · {service} · {code}",
+        "stepTitle": "Registrar un paso por teléfono",
+        "stepDescription": "Cuando el colaborador avisa un paso por teléfono. Queda auditado como de la central.",
+        "stepField": "Paso",
+        "stepTime": "Cuándo (hora de La Habana)",
+        "stepSave": "Registrar paso",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "failed": "No se pudo guardar: {message}"
       },
       "payments": "Pagos",
       "paymentsDescription": "Los enlaces se crean cuando la reserva está SECURED_AND_INVOICED; el primer pago recibido (el depósito o el importe completo) la confirma, y el resto se paga después.",
@@ -1924,6 +1986,18 @@
           "chooseFile": "Elige el formulario escaneado.",
           "tooLarge": "El escaneo supera los 10 MB."
         }
+      },
+      "workerThreads": {
+        "title": "Conversaciones con trabajadores",
+        "description": "Las conversaciones con trabajadores van aparte: solo ven el nombre de pila, el idioma y los datos de recogida de los viajeros.",
+        "none": "Ningún trabajador tiene aún un servicio de esta reserva.",
+        "noMessage": "Aún no hay mensajes sobre esta reserva.",
+        "open": "Abrir conversación",
+        "close": "Cerrar conversación",
+        "new": "{count, plural, one {Nuevo} other {# nuevos}}",
+        "you": "Tú: {body}",
+        "call": "Llamar a {name}",
+        "callShort": "Llamar"
       }
     },
     "reservationActions": {
@@ -1951,7 +2025,20 @@
       "failed": "No se pudo registrar la incidencia",
       "resolving": "Resolviendo…",
       "resolve": "Resolver",
-      "resolveFailed": "No se pudo resolver"
+      "resolveFailed": "No se pudo resolver",
+      "source": "Origen",
+      "sources": {
+        "DESK": "Registrado por la central",
+        "WORKER_APP": "App del colaborador",
+        "WORKER_SMS": "SMS del colaborador"
+      },
+      "service": "Servicio",
+      "serviceNone": "No es de un servicio",
+      "reportedBy": "Avisó {name}",
+      "reportedAt": "Aviso a las {time}",
+      "position": "Ubicación {lat}, {lng}",
+      "acknowledgedBy": "Confirmado por {name} a las {time}",
+      "notAcknowledged": "Sin confirmar"
     },
     "payments": {
       "none": "Aún no hay enlaces de pago.",
@@ -2019,6 +2106,18 @@
       "cancel": "Cancelar",
       "bankReference": "Referencia bancaria",
       "markSent": "Registrar como enviado",
+      "youApprovedAnother": "Aprobaste. Otro aprobador debe dar la siguiente: avísale por correo o retira la tuya.",
+      "youApprovedSuper": "Aprobaste. Un Super Admin debe dar la siguiente: avísale por correo o retira la tuya.",
+      "nudge": "Avisar por correo",
+      "nudgeWait": "Aviso enviado; de nuevo desde las {time}",
+      "nudged": "Correo enviado a {names} a las {time}. El reembolso sale en cuanto llega la última aprobación.",
+      "nudgedMany": "Correo enviado a {count} aprobadores a las {time}. El reembolso sale en cuanto llega la última aprobación.",
+      "lastNudged": "Último aviso a los aprobadores a las {time}",
+      "withdraw": "Retirar mi aprobación",
+      "withdrawTitle": "¿Retirar tu aprobación?",
+      "withdrawExplain": "El reembolso de {amount} en {code} sigue solicitado. Necesitará de nuevo tu aprobación o la de otro aprobador antes de salir.",
+      "withdrawConfirm": "Retirar aprobación",
+      "close": "Cerrar",
       "rule": "Escala {policy}: a {days} días, se retiene {keep} % + {fee}",
       "newRefund": "Registrar un reembolso",
       "fromPayment": "Del pago",
@@ -2120,7 +2219,7 @@
     },
     "applications": {
       "title": "Solicitudes",
-      "description": "Reclutamiento de proveedores. Aprobar una solicitud crea la cuenta de trabajador y el perfil de cumplimiento.",
+      "description": "Reclutamiento de proveedores. Aprobar una solicitud crea la cuenta de trabajador y el perfil de cumplimiento, y envía al trabajador el enlace de descarga de la app.",
       "recruitment": "Reclutamiento",
       "applicationsCount": "{count} solicitud(es)",
       "empty": "Aún no hay solicitudes. El formulario público está en /join.",
@@ -2279,6 +2378,11 @@
           "title": "{count, plural, one {# solicitud de evento espera} other {# solicitudes de eventos esperan}} respuesta",
           "body": "Sin respuesta desde hace más de {hours} h. Indique si las entradas se pueden pedir o márquelas como no disponibles.",
           "action": "Responder"
+        },
+        "eventHold": {
+          "title": "La reserva en {casa} termina el {date}",
+          "body": "Para {event}. Libera la habitación con el anfitrión o cambia la fecha en el evento.",
+          "action": "Abrir evento"
         }
       },
       "redispatchFor": "Redespachar {service} · {code}",
@@ -2306,6 +2410,28 @@
         "toast": "Recibo acusado · sonido apagado para {code}",
         "undo": "Deshacer",
         "failed": "No se registró el acuse de recibo de {code}: {message}"
+      },
+      "emergency": {
+        "listLabel": "Emergencias en el lugar",
+        "title": "Emergencia en el lugar · {code}",
+        "body": "{worker} avisó de una emergencia a las {time}: {category}.",
+        "categories": {
+          "MEDICAL": "médica",
+          "MECHANICAL": "mecánica",
+          "SECURITY": "seguridad",
+          "OTHER": "otra, lo explica por teléfono"
+        },
+        "someone": "El colaborador",
+        "call": "Llamar a {worker}",
+        "position": "Ubicación {lat}, {lng}",
+        "accuracy": "± {accuracy} m",
+        "noPosition": "Sin ubicación: llama al colaborador.",
+        "openPosition": "Abrir la ubicación",
+        "openBooking": "Abrir la reserva",
+        "acknowledge": "Me ocupo",
+        "acknowledgeFor": "Me ocupo · emergencia en {code}",
+        "failed": "No se pudo confirmar la emergencia de {code}: {message}",
+        "announce": "Emergencia en el lugar. Reserva {code}: {worker}, {category}, a las {time}."
       }
     },
     "messages": {
@@ -2358,8 +2484,8 @@
       "available": "Disponible para despacho: {value}",
       "yes": "sí",
       "no": "no",
-      "credentialDocument": "Documento de credencial",
-      "credentialDescription": "Credencial Formatur, licencia de operación de transporte o tarjeta RTN.",
+      "credentialDocument": "Credenciales",
+      "credentialDescription": "Cada documento que la categoría necesita: la versión vigente, una subida pendiente de revisión y el vencimiento que pausa el despacho automático.",
       "availability": "Calendario de disponibilidad",
       "availabilityDescription": "Disponibilidad con un toque y bloqueo granular. El auto-despacho y la lista de reasignación omiten a un trabajador en un día bloqueado (spec §5.2).",
       "longBlockTitle": "{days} días bloqueados seguidos",
@@ -2391,12 +2517,35 @@
       "noJob": "Ninguno aún",
       "payouts": {
         "title": "Pagos",
-        "description": "Lo que se le debe y se le ha pagado a este colaborador por trabajos terminados: aceptados, ya realizados y en reservas no canceladas. El colaborador ve las mismas cifras en la app.",
+        "description": "Lo que se debe y se ha pagado a este colaborador por trabajos terminados: aceptados, finalizados y en una reserva no cancelada. El colaborador ve las mismas cifras en la app. Registre un pago cuando el dinero ya se haya entregado.",
         "pending": "Pendiente",
         "thisMonth": "Terminados este mes",
-        "paidYear": "Pagado · trabajos de {year}",
+        "paidYear": "Pagado en {year}",
         "issue": "Pago fallido",
-        "jobs": "{count, plural, one {# trabajo} other {# trabajos}}"
+        "jobs": "{count, plural, one {# trabajo} other {# trabajos}}",
+        "method": "Forma de pago",
+        "methodNotSet": "Forma de pago sin definir",
+        "methods": {
+          "CASH_OFFICE": "Efectivo en la oficina",
+          "BANK_TRANSFER": "Transferencia bancaria"
+        },
+        "saveMethod": "Guardar forma de pago",
+        "failed": "No se pudo guardar. Inténtelo de nuevo.",
+        "nextPayDay": "Próximo pago {day}, {from}–{to}",
+        "rule": "Se paga {days, plural, one {# día hábil} other {# días hábiles}} después de terminar un trabajo",
+        "nothingToPay": "Ningún trabajo terminado espera pago.",
+        "recordTitle": "Registrar pago",
+        "paidWith": "Pagado en",
+        "paidOn": "Fecha de pago",
+        "record": "Registrar {amount} por {count, plural, one {# trabajo} other {# trabajos}}",
+        "recordHint": "Regístrelo cuando el colaborador ya haya cobrado; luego imprima el recibo para que lo firme.",
+        "payments": "Pagos",
+        "noPayments": "Aún no hay pagos registrados.",
+        "amount": "Importe",
+        "jobsColumn": "Trabajos",
+        "recordedBy": "Registrado por",
+        "receipt": "Recibo",
+        "receiptPdf": "Recibo (PDF)"
       },
       "resources": {
         "casaTitle": "Energía de respaldo y resiliencia",
@@ -2452,7 +2601,27 @@
         "saving": "Guardando…",
         "failed": "No se pudo guardar el vehículo.",
         "insuranceExpired": "Seguro vencido",
-        "insuranceEnds": "El seguro vence en {days} d"
+        "insuranceEnds": "El seguro vence en {days} d",
+        "insuranceFromDocument": "Del seguro de responsabilidad civil verificado.",
+        "insuranceNone": "Sin seguro verificado",
+        "request": {
+          "title": "Cambio de vehículo pedido desde la app",
+          "line": "{model} · {plate} · {seats} plazas · {ac, select, yes {aire acondicionado} other {sin aire acondicionado}}",
+          "asked": "Pedido el {date}. El vehículo actual sigue registrado, y en el despacho, hasta que lo apruebes.",
+          "approve": "Revisar y aprobar…",
+          "dialogTitle": "¿Aprobar {model} · {plate}?",
+          "plateChanges": "La matrícula cambia de {from} a {to}. La inspección técnica y el seguro de responsabilidad civil registrados eran del vehículo anterior: ambos quedan sin efecto y las ofertas automáticas se pausan hasta que se aprueben los nuevos.",
+          "samePlate": "Misma matrícula: los documentos registrados se mantienen.",
+          "firstVehicle": "No había vehículo registrado, así que los documentos registrados se mantienen.",
+          "confirm": "Aprobar vehículo",
+          "cancel": "Cancelar",
+          "close": "Cerrar",
+          "reason": "Motivo para el colaborador",
+          "reasonHint": "El colaborador lo lee en la app.",
+          "reject": "Rechazar cambio",
+          "rejectForm": "Rechazar el cambio de vehículo",
+          "failed": "No se pudo guardar la decisión."
+        }
       },
       "autoReliability": "En pausa · fiabilidad",
       "autoWhyReliability": "Menos del {floor} % de aceptación en al menos {min} ofertas respondidas: el auto-despacho omite a este trabajador hasta que la tasa se recupere. La mesa aún puede ofrecerle un servicio desde la lista de reasignación.",
@@ -2478,6 +2647,12 @@
           "none": "Ningún teléfono tenía abierta la sesión de {name}. Cualquier código aún sin usar ha dejado de servir.",
           "failed": "No se pudo cerrar la sesión del colaborador"
         }
+      },
+      "approvalBlocked": "Verifica estos documentos antes de aprobar: {documents}.",
+      "workerThread": {
+        "open": "Mensaje por la app",
+        "title": "Mensajes de la app de trabajadores",
+        "description": "La única conversación del trabajador con la central, aparte de los mensajes de los viajeros."
       }
     },
     "reports": {
@@ -2835,17 +3010,66 @@
       "uploading": "Subiendo…",
       "uploadImage": "Subir imagen"
     },
-    "credential": {
+    "credentials": {
+      "kinds": {
+        "TRANSPORT_LICENCE": "Licencia de operación de transporte",
+        "TECHNICAL_INSPECTION": "Inspección técnica (somatón)",
+        "LIABILITY_INSURANCE": "Seguro de responsabilidad civil",
+        "GUIDE_LICENCE": "Licencia de guía",
+        "HOST_LICENCE": "Licencia de arrendador (casa particular)",
+        "IDENTITY_CARD": "Carnet de identidad"
+      },
+      "state": {
+        "VALID": "Vigente",
+        "EXPIRING": "Despacho automático en pausa",
+        "EXPIRED": "Vencido",
+        "MISSING": "Falta"
+      },
+      "channels": {
+        "PHONE": "Teléfono",
+        "WHATSAPP": "WhatsApp",
+        "VISIT": "Visita",
+        "WORKER_APP": "App de colaboradores"
+      },
+      "pendingBadge": "Pendiente de auditoría",
+      "missingTitle": "Documentos por verificar",
+      "missing": "Aún sin versión verificada: {documents}. El proveedor no puede aprobarse hasta verificar cada uno.",
+      "none": "No hay versión verificada.",
+      "number": "Número",
+      "issuer": "Emitido por",
+      "issued": "Emitido",
+      "expires": "Vence",
+      "pauseFrom": "El despacho automático se pausa desde",
+      "uploaded": "Subido",
+      "uploadedValue": "{date} · {channel}",
+      "checked": "Revisado",
+      "checkedValue": "{date} · {name}",
+      "pending": "Nueva subida pendiente de revisión · {date} · {channel}",
+      "showFile": "Ver documento (queda registrado)",
+      "hideFile": "Ocultar documento",
+      "openFull": "Abrir a tamaño completo (queda registrado)",
+      "fileAlt": "{name}, documento subido",
+      "approveForm": "Aprobar {name}",
+      "expiresHint": "Tal como figura en el documento.",
+      "approve": "Aprobar · VERIFIED",
+      "rejectForm": "Rechazar {name}",
+      "reason": "Motivo para el colaborador",
+      "reasonHint": "Se muestra en la app del colaborador; p. ej., reflejo sobre el número, repite la foto.",
+      "reject": "Rechazar · pedir nueva subida",
+      "rejected": "Rechazado el {date}: {reason}",
+      "uploadLabel": "Subir {name}",
+      "via": "Recibido por",
+      "upload": "Subir",
+      "uploading": "Subiendo…",
       "choose": "Elige un archivo para subir.",
       "useFileType": "Usa un archivo JPEG, PNG, WebP o PDF.",
-      "uploadFailed": "Falló la subida",
-      "alt": "Credencial del proveedor",
-      "openTab": "Abrir en una pestaña nueva",
-      "none": "No hay documento de credencial.",
-      "uploadLabel": "Subir credencial (Formatur / licencia / RTN)",
-      "expiresOn": "Vence el (opcional)",
-      "uploading": "Subiendo…",
-      "upload": "Subir"
+      "failed": "No se guardó el cambio. Inténtalo de nuevo.",
+      "identityNone": "Aún no comprobado. No se guarda foto: compruébalo en persona o por videollamada.",
+      "identityChecked": "Comprobado en persona el {date} por {name}. No se guarda foto.",
+      "identityCheckedOn": "Comprobado en persona el {date}. No se guarda foto.",
+      "identityNoFile": "Comprobado en persona. No se guarda foto.",
+      "identityHint": "Registra que viste el carnet original, en persona o por videollamada.",
+      "recordIdentity": "Registrar comprobado en persona"
     },
     "availability": {
       "loadFailed": "No se pudo cargar la disponibilidad",
@@ -3180,6 +3404,232 @@
       "ended": "Su última excepción para esto terminó.",
       "lapsed": "Su última solicitud caducó: ningún Super Admin respondió en 24 horas.",
       "failed": "No se pudo completar."
+    },
+    "opsLite": {
+      "skip": "Saltar a la pantalla",
+      "nav": {
+        "label": "Ops Lite",
+        "alerts": "Alertas",
+        "pipeline": "Embudo",
+        "inbox": "Mensajes",
+        "desk": "Escritorio",
+        "withCount": "{tab} ({count})"
+      },
+      "push": {
+        "title": "Ops Lite · alerta roja"
+      },
+      "sound": {
+        "on": "Sonido activo",
+        "onLabel": "Sonido activo, toca para silenciar 15 minutos",
+        "muted": "Silenciado · {time}",
+        "mutedLabel": "Silenciado hasta las {time} por {name} (registrado).",
+        "tapToUnmute": "Toca para reactivar el sonido.",
+        "turnOn": "Activar sonido",
+        "someone": "alguien del escritorio"
+      },
+      "alerts": {
+        "title": "Ops Lite · Alertas",
+        "summary": "Alertas por tipo",
+        "pills": {
+          "red": "Rojas {count}",
+          "amber": "Ámbar {count}",
+          "approvals": "Aprobaciones {count}",
+          "payments": "Pagos {count}"
+        },
+        "push": {
+          "enable": "Avisarme en este móvil",
+          "blocked": "Las notificaciones de este sitio están bloqueadas en los ajustes del navegador."
+        },
+        "sound": {
+          "locked": "El navegador retiene el sonido hasta que toques la pantalla una vez."
+        },
+        "offered": "<strong>Ofrecido a {name} · {time}</strong> · {service} de {code}, con un plazo nuevo · registrado como {you} (Ops Lite).",
+        "dismiss": "Cerrar",
+        "noWorker": "sin colaborador",
+        "someone": "alguien del escritorio",
+        "call": "Llamar a {name}",
+        "openBooking": "Abrir reserva",
+        "elapsed": "{percent} % del plazo transcurrido",
+        "red": {
+          "declined": "{service} rechazado · {worker}",
+          "timedOut": "{service} sin respuesta · {worker}",
+          "since": "en rojo desde las {time}",
+          "audio": "sonido cada 60 s",
+          "acknowledged": "recibo acusado por {name} · {time}",
+          "acknowledging": "recibo acusado",
+          "offeredAt": "Ofrecido a las {time}",
+          "declinedAt": "rechazado a las {time}",
+          "deadline": "plazo a las {time}",
+          "redispatch": "Redespachar · elegir un sustituto",
+          "also": "También en rojo en esta reserva: {what} · {time}",
+          "redispatchService": "Redespachar {service}",
+          "acknowledge": "Acusar recibo · parar el sonido"
+        },
+        "amber": {
+          "title": "{service} al {percent} % del plazo · quedan {left}",
+          "redispatch": "Redespachar antes"
+        },
+        "approvals": {
+          "title": "Reembolso de {amount} · requiere aprobación",
+          "requestedBy": "pedido por {name}",
+          "approved": "Aprobado por {name} · {time}",
+          "rejected": "Rechazado por {name} · {time}"
+        },
+        "payments": {
+          "windowExpired": "Plazo de pago vencido",
+          "balanceOverdue": "Saldo vencido",
+          "body": "{code} · {traveler} · {amount} · vence {due}",
+          "extend": "Dar 24 h más",
+          "extending": "Ampliando…",
+          "extended": "Ampliado: ahora vence {when}.",
+          "failed": "{code}: no se pudo ampliar el pago. {message}",
+          "nothingDue": "Ya no queda nada por pagar en esta reserva."
+        },
+        "credentials": {
+          "title": "Credencial a punto de vencer · {name}",
+          "body": "Vence el {date} · para el escritorio, no es urgente"
+        },
+        "empty": "Todo en orden: no hay ofertas en rojo ni en ámbar, aprobaciones ni pagos atrasados.",
+        "note": "Ops Lite sirve para el triaje: llamar, redespachar, acusar recibo, aprobar. Precios, documentos y todo lo demás esperan al escritorio. Los redespachos, acuses de recibo y silencios hechos aquí se registran como Ops Lite."
+      },
+      "redispatch": {
+        "rule": "Verificados, libres todos los días del servicio, con licencia válida más allá de {days} días.",
+        "offer": "Ofrecer",
+        "offerTo": "Ofrecer a {name}",
+        "cancel": "Cancelar"
+      },
+      "pipeline": {
+        "title": "Ops Lite · Embudo",
+        "subtitle": "{total} reservas · {open} en curso · actualizado a las {time}",
+        "unavailable": "El embudo no está disponible",
+        "live": "En vivo",
+        "loadError": "No se pudo leer el embudo. Inténtalo de nuevo en un momento.",
+        "clock": {
+          "expired": "Vencido",
+          "today": "hoy",
+          "inDays": "en {days} d",
+          "day": "día {day}",
+          "minutes": "{count} min",
+          "hours": "{count} h",
+          "days": "{count} d"
+        },
+        "party": "{name} +{more}",
+        "accepted": "{accepted} de {total} aceptados",
+        "call": "Llamar a {name}",
+        "ground": {
+          "title": "Ahora en destino",
+          "travelers": "{count, plural, one {# viajero} other {# viajeros}}",
+          "none": "No hay ningún viaje en curso.",
+          "trips": "{count, plural, one {# viaje en curso} other {# viajes en curso}}",
+          "province": "{province} {count}",
+          "provinceCase": "{province} {count} · {scenario}",
+          "case": "Interrupción {reference} · {severity}"
+        },
+        "scenarios": {
+          "outage": "apagón",
+          "hurricane": "huracán",
+          "fuel": "combustible",
+          "casa": "casa",
+          "flight": "vuelo"
+        },
+        "severities": {
+          "MINOR": "leve",
+          "MAJOR": "grave",
+          "EMERGENCY": "emergencia"
+        },
+        "states": {
+          "title": "Máquina de estados · toca un estado",
+          "spec": "espec. §4.2",
+          "empty": "Ninguna reserva en este estado.",
+          "more": "+{count} más en el escritorio"
+        },
+        "who": {
+          "ITINERARY_SUBMITTED": "A la espera de que el escritorio inicie el despacho o envíe una propuesta",
+          "DISPATCH_IN_PROGRESS": "Los colaboradores responden en su app · plazos de oferta en marcha",
+          "ASSEMBLY_AND_ESCALATION": "Vigilancia ámbar · reasignar servicios rechazados · llamar a colaboradores",
+          "ACTION_REQUIRED": "Rojo · redespachar desde la pestaña Alertas",
+          "SECURED_AND_INVOICED": "Todos los servicios aceptados · falta el enlace de pago",
+          "PENDING_PAYMENT": "Plazo de pago en marcha · justificantes revisados en el escritorio",
+          "CONFIRMED": "Documentos emitidos · el viaje está por llegar",
+          "IN_PROGRESS": "De viaje · incidencias y casos de interrupción",
+          "COMPLETED": "Petición de opinión · pagos a colaboradores · plazo de conservación",
+          "CANCELLED": "Política aplicada · reembolsos en el escritorio"
+        },
+        "movements": {
+          "title": "Movimientos de hoy",
+          "none": "Hoy no hay llegadas, salidas ni vencimientos de pago.",
+          "allDay": "hoy",
+          "PAYMENT_DUE": "Pago que vence en {code} · {who}",
+          "ARRIVAL": "{who} empiezan su viaje · {code}",
+          "DEPARTURE": "{who} terminan su viaje · {code}",
+          "open": "Abrir reserva"
+        },
+        "note": "Vista de solo lectura del embudo. Las transiciones, facturas y documentos siguen en el escritorio; desde aquí se llama, y se redespacha desde Alertas."
+      },
+      "inbox": {
+        "title": "Ops Lite · Mensajes",
+        "subtitle": "Viajeros y trabajadores, urgentes primero",
+        "loadError": "No se pudieron leer los mensajes. Inténtalo de nuevo en un momento.",
+        "filters": "Mostrar",
+        "filter": {
+          "all": "Todas",
+          "urgent": "Urgentes",
+          "unread": "Sin leer",
+          "travelers": "Viajeros",
+          "workers": "Trabajadores"
+        },
+        "empty": "Todavía no hay conversaciones.",
+        "noneHere": "Ninguna conversación coincide con este filtro.",
+        "threads": "Conversaciones",
+        "you": "Tú: {body}",
+        "kind": "Viajero · {code}",
+        "urgent": "Urgente",
+        "new": "{count, plural, one {Nuevo} other {# nuevos}}",
+        "partyOf": "grupo de {count}",
+        "call": "Llamar a {name}",
+        "callShort": "Llamar",
+        "messages": "Mensajes",
+        "fromDesk": "Escritorio · {time}",
+        "fromTraveler": "{name} · {time}",
+        "placeholder": "Responder a {name} · en la app + correo",
+        "reply": "Respuesta",
+        "send": "Enviar",
+        "urgentNote": "Urgente: el caso de interrupción {reference} está abierto en esta reserva. La app es el registro; el viajero también recibe una copia por correo.",
+        "note": "La app es el registro; el viajero también recibe una copia por correo.",
+        "workerKind": "Trabajador · {category}",
+        "workerJob": "{day} · {code} · {province}"
+      }
+    },
+    "appCard": {
+      "title": "Tarjeta de la app de colaboradores",
+      "description": "Imprímala para la mesa: los trabajadores aprobados escanean el QR o escriben el enlace para descargar la app. Al aprobar una solicitud también se les envía el enlace por correo y SMS.",
+      "open": "Tarjeta de la app",
+      "heading": "App de colaboradores",
+      "scan": "Escanea el QR o abre el enlace en un teléfono Android.",
+      "version": "Versión {version}, publicada el {date}",
+      "notPublished": "Aún no hay ninguna versión publicada; la página de descarga se lo indica a los trabajadores.",
+      "noQr": "Aún no hay QR. Genere uno para este enlace con cualquier herramienta de QR y guárdelo como tenant/assets/worker-app/qr.svg.",
+      "qrAlt": "Código QR de {url}",
+      "fingerprint": "Certificado de firma (SHA-256)",
+      "print": "Imprimir"
+    },
+    "workerThread": {
+      "loadFailed": "No se pudo leer la conversación. Inténtalo de nuevo en un momento.",
+      "sendFailed": "El mensaje no se envió. Inténtalo de nuevo.",
+      "messages": "Mensajes",
+      "empty": "Aún no hay mensajes con {name}.",
+      "fromWorker": "{name} · {time}",
+      "fromDesk": "{name} · {time}",
+      "desk": "Central",
+      "arrived": "llegó {time}",
+      "read": "leído {time}",
+      "reply": "Escribir a {name}",
+      "placeholder": "Escribe a {name} · app de trabajadores",
+      "send": "Enviar",
+      "call": "Llamar a {name}",
+      "callShort": "Llamar",
+      "readOnly": "Soporte lee las conversaciones con trabajadores; operaciones responde.",
+      "note": "Los trabajadores solo ven nombres de pila y teléfonos locales; nada de facturación va en esta conversación. El mensaje le llega al trabajador cuando abre la app; si es urgente, llama."
     }
   },
   "conditions": {
@@ -4071,7 +4521,15 @@
       "addCategory": "Añadir una categoría",
       "save": "Guardar evento",
       "create": "Crear borrador",
-      "saveFailed": "El evento no se guardó."
+      "saveFailed": "El evento no se guardó.",
+      "holdTitle": "Habitación reservada para solicitudes del conserje",
+      "holdHint": "Opcional. La página del evento la muestra hasta el último día; la habitación se reserva con el anfitrión a mano.",
+      "holdCasa": "Casa",
+      "holdNone": "Sin reserva",
+      "holdUntil": "Reservada hasta",
+      "holdNote": "Nota",
+      "holdNoteHint": "Opcional, p. ej. habitaciones con balcón, batería 8 h.",
+      "holdIncomplete": "Elige la casa y el último día, o sin reserva."
     },
     "translations": {
       "title": "Otros idiomas",
@@ -4086,7 +4544,9 @@
       "publishHint": "Los campos vacíos muestran el texto de origen.",
       "save": "Guardar {locale}",
       "saved": "{locale} guardado.",
-      "saveFailed": "La traducción no se guardó."
+      "saveFailed": "La traducción no se guardó.",
+      "holdNote": "Nota de la reserva",
+      "mediaAlt": "Foto {number} · texto alternativo"
     },
     "actions": {
       "publish": "Publicar",
@@ -4106,7 +4566,38 @@
       "NO_NIGHTS": "Añada las noches de una categoría por noche.",
       "NIGHT_OUTSIDE_DATES": "Una noche cae fuera de las fechas del evento.",
       "CONFIRM_AFTER_START": "Las entradas se confirman antes del primer día.",
-      "ENDED": "El evento ya terminó."
+      "ENDED": "El evento ya terminó.",
+      "MEDIA_ALT_REQUIRED": "Cada foto necesita texto alternativo.",
+      "MEDIA_CONSENT_REQUIRED": "Una foto con personas necesita una referencia de consentimiento."
+    },
+    "photos": {
+      "none": "Aún no hay fotos. La primera que subas será la principal.",
+      "hero": "Principal",
+      "gallery": "Galería {number}",
+      "showsPeople": "Con personas",
+      "consentOnFile": "consentimiento registrado",
+      "consentMissing": "falta el consentimiento",
+      "remove": "Quitar",
+      "removeFailed": "No se pudo quitar la foto.",
+      "file": "Foto",
+      "altText": "Texto alternativo",
+      "altHint": "Describe lo que muestra la foto, para quien no puede verla.",
+      "peopleLabel": "Se reconoce a personas en esta foto",
+      "consentReference": "Referencia del consentimiento",
+      "consentHint": "La autorización firmada que consta, p. ej. su carpeta o número de formulario.",
+      "chooseImage": "Elige una foto para subir.",
+      "useImageType": "Usa una imagen JPEG, PNG o WebP.",
+      "tooLarge": "La foto supera los 5 MB.",
+      "upload": "Subir foto",
+      "uploading": "Subiendo…",
+      "uploadFailed": "No se pudo subir la foto.",
+      "title": "Fotos",
+      "hint": "JPEG, PNG o WebP de hasta 5 MB. La primera es la principal de la página del evento y la imagen de la lista de eventos. El texto alternativo es obligatorio; una foto con personas necesita una referencia de consentimiento antes de publicar el evento.",
+      "makeHero": "Hacer principal",
+      "edit": "Editar",
+      "save": "Guardar foto",
+      "cancel": "Cancelar",
+      "saveFailed": "No se guardó la foto."
     }
   },
   "eventRequestsDesk": {
@@ -4302,7 +4793,10 @@
       "onRequest": "solicitud de viaje {reference}",
       "added": "{total} añadidos a tu reserva.",
       "nothingCharged": "Aún no se cobra nada."
-    }
+    },
+    "hold": "Las casas se llenan pronto en semana de festival. Reservamos una habitación en {casa} para solicitudes del conserje hasta el {date}; el constructor a medida se abre con estas fechas y {province} ya colocada.",
+    "holdCta": "Crear el viaje con estas fechas",
+    "holdLabel": "Habitación reservada para la semana del festival"
   },
   "display": {
     "title": "Visualización",
@@ -4431,5 +4925,35 @@
     "packages": "Ver viajes",
     "about": "Sobre nosotros",
     "contact": "Contacte con nosotros"
+  },
+  "workerApp": {
+    "title": "App de colaboradores",
+    "lede": "Las ofertas, tu calendario y tus trabajos en tu teléfono Android. Funciona sin conexión: tus respuestas se guardan y se envían cuando vuelve la señal.",
+    "notPublished": "La app aún no está publicada. La central te avisa cuando puedas descargarla.",
+    "iphoneTitle": "Solo para Android",
+    "iphoneText": "La app de colaboradores funciona solo en teléfonos Android. Si usas un iPhone, llama a la central y te explican cómo trabajar con nosotros.",
+    "version": "Versión {version}",
+    "meta": "{size} · publicada el {date}",
+    "download": "Descargar la app",
+    "downloadHint": "Para la mayoría de los teléfonos. Mejor con wifi: la descarga gasta datos.",
+    "older": "¿Teléfono antiguo? Descarga la versión de 32 bits ({size})",
+    "certificateTitle": "Certificado de firma (SHA-256)",
+    "certificateText": "Android solo actualiza la app con otra firmada con este mismo certificado. Si alguien te pasa la app de teléfono a teléfono, compara esta huella en Ajustes → Apps → Colaboradores.",
+    "stepsTitle": "Cómo instalarla",
+    "steps": {
+      "download": "Toca «Descargar la app» y espera a que termine la descarga.",
+      "open": "Abre el archivo desde la notificación de Chrome o desde «Descargas».",
+      "allow": "Si Android dice que Chrome no puede instalar apps, toca «Configuración», activa «Permitir de esta fuente» y vuelve atrás.",
+      "protect": "Si Play Protect avisa de una app desconocida, toca «Más detalles» y después «Instalar de todas formas».",
+      "signIn": "Abre «Colaboradores» y entra con tu número de teléfono."
+    },
+    "failTitle": "Si la instalación falla",
+    "fail": {
+      "space": "«Espacio insuficiente»: libera espacio y vuelve a abrir el archivo.",
+      "corrupt": "«Error al analizar el paquete»: la descarga se cortó. Descárgala otra vez.",
+      "conflict": "«La app no se instaló»: si ya tienes otra copia que no vino de esta página, avisa a la central antes de desinstalarla, porque se pierde lo guardado en el teléfono.",
+      "old": "En un teléfono antiguo, prueba la versión de 32 bits."
+    },
+    "desk": "¿Dudas? Llama a la central: {phone}"
   }
 }

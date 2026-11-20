@@ -93,6 +93,86 @@ describe('the worker app API client (W1, W3, W5)', () => {
     );
   });
 
+  it('points a receipt at the worker’s own receipt route, not the desk’s', () => {
+    const api = createWorkerApi('http://api.test', recorder().fetcher);
+    expect(api.receiptUrl('5d3c2b1a-0000-4000-8000-000000000001')).toBe(
+      'http://api.test/worker/payouts/5d3c2b1a-0000-4000-8000-000000000001/receipt',
+    );
+    expect(createWorkerApi('', recorder().fetcher).receiptUrl('p-1')).toBe(
+      '/worker/payouts/p-1/receipt',
+    );
+  });
+
+  it('reads the worker’s documents and posts a photo as the signed-in worker (W-Credentials)', async () => {
+    const { calls, fetcher } = recorder(200, { slots: [] });
+    const api = createWorkerApi('http://api.test', fetcher);
+    await api.credentials('t');
+    await api.uploadCredential('t', {
+      kind: 'TECHNICAL_INSPECTION',
+      filename: 'documento.jpg',
+      contentType: 'image/jpeg',
+      contentBase64: 'AAAA',
+    });
+    expect(calls.map((call) => [call.init.method, call.url])).toEqual([
+      ['GET', 'http://api.test/worker/credentials'],
+      ['POST', 'http://api.test/worker/credentials'],
+    ]);
+    expect(JSON.parse(String(calls[1]!.init.body))).toMatchObject({
+      kind: 'TECHNICAL_INSPECTION',
+      contentBase64: 'AAAA',
+    });
+    expect((calls[1]!.init.headers as Record<string, string>).authorization).toBe(
+      'Bearer t',
+    );
+  });
+
+  it('posts a vehicle change for the desk to review as the signed-in worker', async () => {
+    const { calls, fetcher } = recorder(200, { slots: [] });
+    const api = createWorkerApi('http://api.test', fetcher);
+    await api.requestVehicle('t', {
+      model: 'Hyundai H1',
+      plate: 'P 311 004',
+      seats: 9,
+      airConditioning: true,
+    });
+    expect(calls.map((call) => [call.init.method, call.url])).toEqual([
+      ['POST', 'http://api.test/worker/vehicle'],
+    ]);
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({
+      model: 'Hyundai H1',
+      plate: 'P 311 004',
+      seats: 9,
+      airConditioning: true,
+    });
+    expect((calls[0]!.init.headers as Record<string, string>).authorization).toBe(
+      'Bearer t',
+    );
+  });
+
+  it('sends a queued message with its id and time, and reads the thread (worker messages M4)', async () => {
+    const { calls, fetcher } = recorder(200, { messages: [], unread: 0 });
+    const api = createWorkerApi('', fetcher);
+    const status = await api.sendMessage('t', {
+      clientRef: 'ref-1',
+      body: 'Listo.',
+      serviceItemId: null,
+      writtenAt: '2026-11-16T13:52:00.000Z',
+      attempts: 2,
+    });
+    expect(status).toBe(200);
+    expect(calls[0]!.url).toBe('/worker/messages');
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({
+      body: 'Listo.',
+      clientRef: 'ref-1',
+      serviceItemId: null,
+      writtenAt: '2026-11-16T13:52:00.000Z',
+    });
+    expect(await api.messages('t')).toEqual({ messages: [], unread: 0 });
+    await api.markMessagesRead('t');
+    expect(calls[2]!.url).toBe('/worker/messages/read');
+    expect(calls[2]!.init.method).toBe('POST');
+  });
+
   it('reports no connection as a null status', async () => {
     const api = createWorkerApi('', (async () => {
       throw new TypeError('Network request failed');

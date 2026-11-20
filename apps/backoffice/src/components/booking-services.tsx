@@ -23,11 +23,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import type { DeskClock } from '@/lib/desk-clock';
-import { bookingDates, hoursMinutes, money } from '@/lib/ops-format';
+import { bookingDates, hoursMinutes, money, opsTime } from '@/lib/ops-format';
 
 import { useDeskAlerts } from './desk-alerts';
 import { StartDispatchButton } from './dispatch-controls';
 import { RedispatchPanel, type RedispatchTarget } from './redispatch-panel';
+import { BriefButton, RecordStepButton } from './service-job-actions';
 import {
   itemAlert,
   OPEN_ITEM_STATUSES,
@@ -68,7 +69,9 @@ export interface BookingServicesProps {
  * the payout agreed and what the desk can do (call, acknowledge a red alert,
  * re-dispatch). A submitted booking starts its dispatch here, as on the
  * dashboard; `A` on a row acknowledges that service's red alert through the
- * shell's desk alerts, as on the matrix.
+ * shell's desk alerts, as on the matrix. W-Job: each service shows the
+ * worker's latest step, and the desk writes the worker's brief and records a
+ * step phoned in.
  */
 export function BookingServices({
   reservationId,
@@ -164,6 +167,10 @@ export function BookingServices({
               dispatching &&
               OPEN_ITEM_STATUSES.includes(item.status) &&
               (alert !== 'NONE' || item.status === 'UNASSIGNED');
+            const taken = item.status === 'ACCEPTED' || item.status === 'FULFILLED';
+            const hasBrief = Boolean(
+              item.brief.meetingPoint || item.brief.dropOff || item.brief.workerBrief,
+            );
             return (
               <TableRow
                 key={item.id}
@@ -190,6 +197,9 @@ export function BookingServices({
                         .filter(Boolean)
                         .join(' · ')}
                     </span>
+                    <span className="text-caption text-muted">
+                      {hasBrief ? t('briefWritten') : t('briefMissing')}
+                    </span>
                   </div>
                 </TableHead>
                 <TableCell className="align-top">
@@ -204,6 +214,14 @@ export function BookingServices({
                       now={now}
                       amberThreshold={clock.amberThreshold}
                     />
+                    {item.currentStep ? (
+                      <span className="text-caption text-secondary">
+                        {t('stepLine', {
+                          step: t(`steps.${item.currentStep.step}`),
+                          time: opsTime(item.currentStep.at, locale),
+                        })}
+                      </span>
+                    ) : null}
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-right align-top font-mono">
@@ -241,6 +259,19 @@ export function BookingServices({
                       >
                         {dashboard('acknowledge.button')}
                       </Button>
+                    ) : null}
+                    {canManage ? (
+                      <BriefButton
+                        item={item}
+                        label={t('briefFor', { service, code: bookingCode })}
+                      />
+                    ) : null}
+                    {canManage && taken && item.supplierId ? (
+                      <RecordStepButton
+                        item={item}
+                        now={now}
+                        label={t('recordStepFor', { service, code: bookingCode })}
+                      />
                     ) : null}
                     {reroute ? (
                       <Button

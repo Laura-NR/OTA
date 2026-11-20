@@ -14,6 +14,8 @@ import {
   calculateSupplierReliability,
   daysBetween,
   isResourcesStale,
+  jobNightHost,
+  jobStepsOpen,
   longBlockedRun,
   monthDays,
   planWorkerDays,
@@ -24,6 +26,7 @@ import {
   workerHorizon,
   workerReliability,
   workerToday,
+  type PayoutMethod,
   type ServiceType,
   type VerificationStatus,
   type WorkerDaysRefusal,
@@ -42,14 +45,18 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import { jobStepTimes, toJobStepTimesDto } from '../jobs/job-steps';
 import { PrismaService } from '../prisma/prisma.service';
+import { WorkerMessagesService } from '../worker-messages/worker-messages.service';
 import { OperatingSettingsService } from '../settings/operating-settings.service';
 import {
   PAYOUT_CURRENCY,
+  PAYOUT_JOB_SELECT,
   finishedJobsWhere,
-  payoutCents,
+  toEarningsJob,
   toPayoutsDto,
 } from '../suppliers/payouts';
+import { SupplierPayoutsService } from '../suppliers/supplier-payouts.service';
 import { SuppliersService } from '../suppliers/suppliers.service';
 
 /** Coming jobs W-Home lists ("Hoy", "Esta semana" and on). */
@@ -75,13 +82,48 @@ const ITEM_SELECT = {
 
 type WorkerItem = Prisma.ServiceItemGetPayload<{ select: typeof ITEM_SELECT }>;
 
-/** A finished job as W-Earnings reads it: the job plus its payout and booking state. */
+/**
+ * A taken job as W-Home and W-Job read it (`docs/schema-w-job.md`): the
+ * desk's brief, the steps so far and the trip's stays, for the night's host.
+ */
+const HOME_JOB_SELECT = {
+  ...ITEM_SELECT,
+  meetingPoint: true,
+  dropOff: true,
+  workerBrief: true,
+  enRouteAt: true,
+  arrivedAt: true,
+  startedAt: true,
+  finishedAt: true,
+  reservation: {
+    select: {
+      ...ITEM_SELECT.reservation.select,
+      status: true,
+      serviceItems: {
+        where: { serviceType: 'ACCOMMODATION', status: { in: [...JOB_STATUSES] } },
+        select: {
+          serviceDateStart: true,
+          serviceDateEnd: true,
+          supplier: {
+            select: { primaryPhone: true, user: { select: { fullName: true } } },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.ServiceItemSelect;
+
+type HomeJobItem = Prisma.ServiceItemGetPayload<{ select: typeof HOME_JOB_SELECT }>;
+
+/** A finished job as W-Earnings reads it: the job plus its payout, payment and booking state. */
 const EARNINGS_SELECT = {
   ...ITEM_SELECT,
-  status: true,
-  payoutStatus: true,
+  ...PAYOUT_JOB_SELECT,
   reservation: { select: { ...ITEM_SELECT.reservation.select, status: true } },
 } satisfies Prisma.ServiceItemSelect;
+
+/** Payments W-Earnings' "Recibos" lists. */
+const PAYMENTS_SHOWN = 12;
 
 function firstName(fullName: string | null): string | null {
   return fullName?.trim().split(/\s+/)[0] || null;
@@ -135,6 +177,8 @@ export class WorkerService {
     private readonly prisma: PrismaService,
     private readonly settings: OperatingSettingsService,
     private readonly suppliers: SuppliersService,
+    private readonly payouts: SupplierPayoutsService,
+    private readonly workerMessages: WorkerMessagesService,
   ) {}
 
   async home(actor: AuthUser, now: Date = new Date()): Promise<WorkerHomeDto> {
@@ -153,7 +197,7 @@ export class WorkerService {
       throw new ForbiddenException('No supplier profile is linked to this account');
     }
 
-    const [offers, jobs, ledger, thresholds] = await Promise.all([
+    const [offers, jobs, ledger, thresholds, messages] = await Promise.all([
       this.prisma.serviceItem.findMany({
         where: {
           supplierId: profile.id,
@@ -163,21 +207,23 @@ export class WorkerService {
         orderBy: { dispatchDeadline: 'asc' },
         select: ITEM_SELECT,
       }),
+      // A job finished today (W-Job's last step) stays listed until its day ends.
       this.prisma.serviceItem.findMany({
         where: {
           supplierId: profile.id,
-          status: ServiceItemStatus.Accepted,
+          status: { in: [...JOB_STATUSES] },
           serviceDateEnd: { gte: startOfDay(now) },
         },
         orderBy: { serviceDateStart: 'asc' },
         take: JOBS_SHOWN,
-        select: ITEM_SELECT,
+        select: HOME_JOB_SELECT,
       }),
       this.prisma.dispatchOffer.findMany({
         where: { supplierId: profile.id },
         select: { supplierId: true, status: true, offeredAt: true, respondedAt: true },
       }),
       this.settings.thresholds(),
+      this.workerMessages.threadOf(profile.id),
     ]);
     const [card] = calculateSupplierReliability(ledger);
     const hurryShare = thresholds.amberPercent / 100;
@@ -195,14 +241,16 @@ export class WorkerService {
             : null,
       },
       offers: offers.flatMap((item) => this.toOffer(item, hurryShare)),
-      jobs: jobs.map((item) => this.toJob(item)),
+      jobs: jobs.map((item) => this.toHomeJob(item)),
+      messages,
       serverTime: now.toISOString(),
     };
   }
 
   /**
-   * W-Earnings, read-only: the worker's reliability as the desk's floor reads
-   * it, their payouts over finished jobs, and the latest of those jobs.
+   * W-Earnings: the worker's reliability as the desk's floor reads it, their
+   * payouts over finished jobs with their method and next pay day, the latest
+   * of those jobs and their payments.
    */
   async earnings(actor: AuthUser, now: Date = new Date()): Promise<WorkerEarningsDto> {
     const profile = await this.prisma.supplierProfile.findUnique({
@@ -211,6 +259,7 @@ export class WorkerService {
         id: true,
         category: true,
         provincesActive: true,
+        payoutMethod: true,
         user: { select: { fullName: true } },
       },
     });
@@ -218,7 +267,7 @@ export class WorkerService {
       throw new ForbiddenException('No supplier profile is linked to this account');
     }
 
-    const [items, ledger, thresholds] = await Promise.all([
+    const [items, ledger, thresholds, terms, payments] = await Promise.all([
       this.prisma.serviceItem.findMany({
         where: finishedJobsWhere(profile.id, now),
         select: EARNINGS_SELECT,
@@ -228,18 +277,11 @@ export class WorkerService {
         select: { supplierId: true, status: true, offeredAt: true, respondedAt: true },
       }),
       this.settings.thresholds(),
+      this.payouts.terms(),
+      this.payouts.payments(profile.id, PAYMENTS_SHOWN),
     ]);
-    const earnings = workerEarnings(
-      items.map((item) => ({
-        item,
-        status: item.status,
-        reservationStatus: item.reservation.status,
-        endsAt: item.serviceDateEnd,
-        payoutCents: payoutCents(item.payoutRate),
-        payoutStatus: item.payoutStatus,
-      })),
-      now,
-    );
+    const jobs = items.map((item) => ({ item, ...toEarningsJob(item) }));
+    const earnings = workerEarnings(jobs, now);
 
     return {
       worker: {
@@ -252,12 +294,43 @@ export class WorkerService {
         thresholds.reliabilityFloorPercent,
         thresholds.reliabilityMinAnswered,
       ),
-      payouts: toPayoutsDto(earnings),
+      payouts: toPayoutsDto(
+        earnings,
+        jobs,
+        profile.payoutMethod as PayoutMethod | null,
+        terms,
+        now,
+      ),
       history: earnings.history.map((job) => ({
         ...this.toJob(job.item),
         payoutState: job.payoutState,
+        paidAt: job.paidAt ? job.paidAt.toISOString().slice(0, 10) : null,
+      })),
+      // Who recorded a payment is the desk's business, not the worker's.
+      payments: payments.map((payment) => ({
+        id: payment.id,
+        method: payment.method,
+        currency: payment.currency,
+        amount: payment.amount,
+        paidAt: payment.paidAt,
+        jobs: payment.jobs,
       })),
     };
+  }
+
+  /** W-Earnings E5: the receipt of one of the worker's own payments; another's is a 404. */
+  async receipt(
+    actor: AuthUser,
+    payoutId: string,
+  ): Promise<{ body: Uint8Array; filename: string }> {
+    const profile = await this.prisma.supplierProfile.findUnique({
+      where: { userId: actor.id },
+      select: { id: true },
+    });
+    if (!profile) {
+      throw new ForbiddenException('No supplier profile is linked to this account');
+    }
+    return this.payouts.receipt(payoutId, profile.id);
   }
 
   /**
@@ -527,6 +600,33 @@ export class WorkerService {
         hurryFrom: new Date(item.offeredAt.getTime() + window * hurryShare).toISOString(),
       },
     ];
+  }
+
+  /** A taken job with what W-Job adds: the brief, the steps and the night's host. */
+  private toHomeJob(item: HomeJobItem): WorkerJobDto {
+    return {
+      ...this.toJob(item),
+      brief: {
+        meetingPoint: item.meetingPoint,
+        dropOff: item.dropOff,
+        workerBrief: item.workerBrief,
+      },
+      steps: toJobStepTimesDto(jobStepTimes(item)),
+      stepsOpen: jobStepsOpen(item.reservation.status),
+      // A host's own stay has no other host to call.
+      nightHost:
+        item.serviceType === 'ACCOMMODATION'
+          ? null
+          : jobNightHost(
+              item.serviceDateStart,
+              item.reservation.serviceItems.map((stay) => ({
+                startsAt: stay.serviceDateStart,
+                endsAt: stay.serviceDateEnd,
+                hostFirstName: firstName(stay.supplier?.user.fullName ?? null),
+                hostPhone: stay.supplier?.primaryPhone ?? null,
+              })),
+            ),
+    };
   }
 
   private toJob(item: WorkerItem): WorkerJobDto {

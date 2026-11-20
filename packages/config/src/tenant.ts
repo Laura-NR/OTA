@@ -206,6 +206,33 @@ export const conciergeSchema = z.object({
 
 export type ConciergeConfig = z.infer<typeof conciergeSchema>;
 
+/** One weekly window when the office pays workers, Havana time. */
+export const payoutSessionSchema = z
+  .object({
+    /** ISO weekday: 1 is Monday, 7 is Sunday. */
+    weekday: z.number().int().min(1).max(7),
+    from: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    to: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  })
+  .refine((session) => session.from < session.to, {
+    message: 'A payout session ends after it starts',
+  });
+
+/**
+ * W-Earnings E4 (`docs/schema-w-earnings.md`): where and when the office pays
+ * workers. The business days before a job is paid are an operating threshold
+ * (`payoutBusinessDays`). No sessions means the app shows no next pay day.
+ */
+export const workerPayoutsSchema = z.object({
+  /** `placeholder` marks the hours and place as samples, not the agency's. */
+  status: z.enum(['placeholder', 'published']).default('placeholder'),
+  /** Where cash is collected, as the worker reads it ("oficina Vedado"). */
+  office: z.string().min(1).nullable().default(null),
+  sessions: z.array(payoutSessionSchema).default([]),
+});
+
+export type WorkerPayoutsConfig = z.infer<typeof workerPayoutsSchema>;
+
 /**
  * M8: the agency's crisis framework (A-Disruption). A case copies its
  * scenario's steps, options and compensation text when it opens (D1), so a
@@ -314,6 +341,7 @@ export const tenantConfigSchema = z.object({
   /** No scenarios means the desk cannot open a case. */
   disruptions: disruptionsSchema.prefault({}),
   concierge: conciergeSchema.prefault({}),
+  workerPayouts: workerPayoutsSchema.prefault({}),
   emergencyContacts: z.array(emergencyContactSchema).default([]),
   /** M9 D4: staff invitations go only to these domains; empty allows any. */
   staff: z

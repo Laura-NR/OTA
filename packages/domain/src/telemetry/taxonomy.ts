@@ -97,6 +97,7 @@ export const SCREENS: readonly ScreenId[] = SCREEN_IDS;
 /**
  * The desk's screens, named after the admin artboards. A section's sub-pages
  * report the section's artboard; the sign-in and invite pages are `A-Login`.
+ * Ops Lite's phone screens (`/lite`) report their own `AL-*` boards.
  */
 const DESK_SCREEN_IDS = [
   'A-Dashboard',
@@ -113,6 +114,9 @@ const DESK_SCREEN_IDS = [
   'A-Settings',
   'A-Login',
   'A-States',
+  'AL-Alerts',
+  'AL-Pipeline',
+  'AL-Inbox',
 ] as const;
 
 export type DeskScreenId = (typeof DESK_SCREEN_IDS)[number];
@@ -360,7 +364,7 @@ export const TELEMETRY_EVENTS = {
     mode: ['manual'],
     candidates_shown: 'count',
     position_chosen: 'count',
-    from: ['dashboard', 'booking'],
+    from: ['dashboard', 'booking', 'ops_lite'],
   }),
   /**
    * A red alert acknowledged for the desk once its undo ran out;
@@ -369,10 +373,10 @@ export const TELEMETRY_EVENTS = {
   alert_acknowledged: deskEvent({
     service_item_id: 'id',
     seconds_to_ack: 'count',
-    channel: ['desk'],
+    channel: ['desk', 'ops_lite'],
   }),
   /** The desk's audio cue muted ("Mute 15 min"). */
-  alert_muted: deskEvent({ muted_for_s: 'count', channel: ['desk'] }),
+  alert_muted: deskEvent({ muted_for_s: 'count', channel: ['desk', 'ops_lite'] }),
   /** The desk regenerated a booking's documents. */
   document_generated: deskEvent({ booking_code: 'id', trigger: ['manual'] }),
   /**
@@ -598,6 +602,9 @@ const DESK_SCREEN_PATHS: readonly [RegExp, DeskScreenId][] = [
   [/^\/content(\/.*)?$/, 'A-Content'],
   [/^\/settings(\/.*)?$/, 'A-Settings'],
   [/^\/(login|invite)\/?$/, 'A-Login'],
+  [/^\/lite(\/alerts)?\/?$/, 'AL-Alerts'],
+  [/^\/lite\/pipeline\/?$/, 'AL-Pipeline'],
+  [/^\/lite\/inbox\/?$/, 'AL-Inbox'],
 ];
 
 /** The desk screen a back-office path renders; anything else is an edge state. */

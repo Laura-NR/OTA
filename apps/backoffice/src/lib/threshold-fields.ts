@@ -52,6 +52,7 @@ export const THRESHOLD_GROUPS: readonly {
       { key: 'reliabilityFloorPercent', unit: 'pct', min: 0, max: 100 },
       { key: 'reliabilityMinAnswered', unit: 'count', min: 1, max: 100 },
       { key: 'resourcesStaleDays', unit: 'days', min: 1, max: 60 },
+      { key: 'payoutBusinessDays', unit: 'days', min: 1, max: 30 },
     ],
   },
   {

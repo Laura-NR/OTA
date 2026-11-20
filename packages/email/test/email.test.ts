@@ -7,6 +7,7 @@ import {
   passkeyChangeEmail,
   newDeviceSignInEmail,
   permissionOverrideRequestEmail,
+  refundApprovalNudgeEmail,
   ConsoleMailer,
   SmtpMailer,
   bookingReceivedEmail,
@@ -24,6 +25,8 @@ import {
   disruptionOptionsEmail,
   travelAdvisoryEmail,
   tripReconfirmEmail,
+  workerAppInviteEmail,
+  workerMessageEmail,
   type EmailBranding,
 } from '../src';
 
@@ -931,5 +934,111 @@ describe('permissionOverrideRequestEmail (docs/schema-m9-permission-overrides.md
     expect(
       permissionOverrideRequestEmail({ ...base, capability: 'somethingElse' }).text,
     ).toContain('"somethingElse"');
+  });
+});
+
+describe('refundApprovalNudgeEmail (AL-Alerts nudge)', () => {
+  const base = {
+    to: 'dayana@vereda.travel',
+    nudgerName: 'Ana Rodríguez',
+    bookingCode: 'VX8TL2VN',
+    amount: '1310.00',
+    currency: 'EUR',
+    reason: 'FORCE_MAJEURE',
+    approvedBy: ['Ana Rodríguez'],
+    superAdmin: false,
+    url: 'http://localhost:3002/payments#refunds-title',
+    branding,
+  };
+
+  it('names the booking, the amount, the reason, who approved and where to decide', () => {
+    const message = refundApprovalNudgeEmail(base);
+    expect(message.to).toBe('dayana@vereda.travel');
+    expect(message.subject).toBe('A refund on VX8TL2VN is waiting for your approval');
+    expect(message.text).toContain(
+      'Ana Rodríguez asks you to decide on a refund of €1,310.00 on booking VX8TL2VN.',
+    );
+    expect(message.text).toContain('Reason: Force majeure');
+    expect(message.text).toContain('Already approved by Ana Rodríguez');
+    expect(message.text).not.toContain('Super Admin.');
+    expect(message.html).toContain('http://localhost:3002/payments#refunds-title');
+  });
+
+  it('says when only a Super Admin can complete it, and writes Spanish and French', () => {
+    expect(refundApprovalNudgeEmail({ ...base, superAdmin: true }).text).toContain(
+      'it needs a Super Admin.',
+    );
+    const es = refundApprovalNudgeEmail({ ...base, locale: 'es' });
+    expect(es.subject).toBe('Un reembolso de VX8TL2VN espera su aprobación');
+    expect(es.text).toContain('Motivo: Fuerza mayor');
+    expect(es.text).toContain('1310,00 €');
+    expect(refundApprovalNudgeEmail({ ...base, locale: 'fr' }).subject).toBe(
+      'Un remboursement sur VX8TL2VN attend votre approbation',
+    );
+    expect(
+      refundApprovalNudgeEmail({ ...base, approvedBy: [], reason: 'OTHER' }).text,
+    ).not.toContain('Already approved');
+  });
+});
+
+describe('workerAppInviteEmail', () => {
+  it('links the download page and names the phone the worker signs in with', () => {
+    const message = workerAppInviteEmail({
+      to: 'yoel@example.com',
+      phone: '+53 5 555 0101',
+      url: 'https://app.example.com',
+      locale: 'es',
+      branding: { ...branding, supportPhone: '+53 5 555 0000' },
+    });
+    expect(message.to).toBe('yoel@example.com');
+    expect(message.subject).toContain('app de colaboradores');
+    expect(message.text).toContain('https://app.example.com');
+    expect(message.text).toContain('(+53 5 555 0101)');
+    expect(message.text).toContain('La central: +53 5 555 0000.');
+    expect(message.html).toContain('href="https://app.example.com"');
+  });
+
+  it('leaves the desk line out when the tenant has no support phone', () => {
+    const message = workerAppInviteEmail({
+      to: 'yoel@example.com',
+      phone: '+53 5 555 0101',
+      url: 'https://app.example.com',
+      branding: { ...branding, supportPhone: null },
+    });
+    expect(message.text).toContain('Download the app');
+    expect(message.text).not.toContain('The desk:');
+  });
+});
+
+describe('workerMessageEmail', () => {
+  it("copies a worker's message to the desk, naming the booking and escaping the text", () => {
+    const email = workerMessageEmail({
+      to: 'desk@example.test',
+      workerName: 'Reinier <b>',
+      bookingCode: 'VX-7K2M9Q',
+      body: 'Listo\n<script>x</script>',
+      threadUrl: 'http://localhost:3002/suppliers/s-1#worker-thread',
+      branding,
+    });
+    expect(email.to).toBe('desk@example.test');
+    expect(email.subject).toBe('Worker message from Reinier <b> about booking VX-7K2M9Q');
+    expect(email.html).toContain('Reinier &lt;b&gt;');
+    expect(email.html).toContain('&lt;script&gt;');
+    expect(email.html).not.toContain('<script>');
+    expect(email.text).toContain(
+      'Reply at http://localhost:3002/suppliers/s-1#worker-thread',
+    );
+  });
+
+  it('leaves the booking out when the message names no job', () => {
+    const email = workerMessageEmail({
+      to: 'desk@example.test',
+      workerName: 'Yamilé',
+      bookingCode: null,
+      body: 'Mañana no puedo.',
+      threadUrl: 'http://localhost:3002/suppliers/s-2#worker-thread',
+      branding,
+    });
+    expect(email.subject).toBe('Worker message from Yamilé');
   });
 });

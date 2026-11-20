@@ -11,6 +11,7 @@ import {
   dayTitle,
   money,
   monthTitle,
+  payDay,
   secondsLeft,
   shortDate,
   timeLeft,
@@ -65,6 +66,22 @@ describe('how the worker app says things (W-Home, W-Offer)', () => {
     expect(dayShort('2026-09-03')).toBe('3 sep');
   });
 
+  it('reads W-Earnings’ pay day and method as the board does', () => {
+    expect(payDay('2026-10-10')).toBe('Sáb 10 oct');
+    expect(payDay('2026-10-07')).toBe('Mié 7 oct');
+    expect(copy.earnings.nextPayLine('Sáb 10 oct', '10:00', '13:00', true)).toBe(
+      'Sáb 10 oct 10:00–13:00 · trae tu carnet',
+    );
+    expect(copy.earnings.nextPayLine('Sáb 10 oct', '10:00', '13:00', false)).toBe(
+      'Sáb 10 oct 10:00–13:00',
+    );
+    expect(copy.earnings.method.CASH_OFFICE('oficina Vedado')).toBe(
+      'Efectivo EUR · oficina Vedado',
+    );
+    expect(copy.earnings.howPaid(5)).toContain('5 días hábiles');
+    expect(copy.earnings.howPaid(1)).toContain('1 día hábil ');
+  });
+
   it('does not count a day on the range button before both ends are picked', () => {
     expect(copy.calendar.blockDays(0)).toBe('Bloquear días');
     expect(copy.calendar.blockDays(1)).toBe('Bloquear 1 día');
@@ -90,6 +107,7 @@ describe('how the worker app says things (W-Home, W-Offer)', () => {
       ISSUE: 'Incidencia',
     });
     expect(copy.earnings.jobs(1)).toBe('1 trabajo terminado');
-    expect(copy.earnings.paidYear(2026)).toBe('Pagado · trabajos de 2026');
+    expect(copy.earnings.paidYear(2026)).toBe('Pagado en 2026');
+    expect(copy.earnings.paidOn('28 sep')).toBe('Pagado 28 sep');
   });
 });

@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { EventEditor } from '@/components/event-editor';
 import { PageHeader } from '@/components/page-header';
 import { advisoryProvinces } from '@/lib/advisory-regions';
+import { holdCasas } from '@/lib/hold-casas';
 import { getTenantConfig } from '@/lib/tenant';
 
 /** A new event (A-Content, M10 D1), saved as a draft. */
 export default async function NewEventPage() {
-  const t = await getTranslations('eventsDesk');
+  const [t, casas] = await Promise.all([getTranslations('eventsDesk'), holdCasas()]);
   const tenant = getTenantConfig();
   const sourceLocale = tenant.supportedLocales.includes('en')
     ? 'en'
@@ -25,6 +26,7 @@ export default async function NewEventPage() {
         locales={tenant.supportedLocales}
         defaultSourceLocale={sourceLocale}
         provinces={advisoryProvinces()}
+        casas={casas}
       />
     </div>
   );

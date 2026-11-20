@@ -1,6 +1,12 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 
-import type { Incident, Prisma, Review } from '@ota/db';
+import type { Prisma, Review } from '@ota/db';
 import { calculateSupplierReliability } from '@ota/domain';
 import type {
   CreateIncidentRequest,
@@ -13,9 +19,26 @@ import type {
 } from '@ota/schemas';
 
 import type { AuthUser } from '../common/auth/auth-user';
+import {
+  ESCALATION_PUBLISHER,
+  type EscalationPublisher,
+} from '../escalation/escalation.publisher';
 import { PrismaService } from '../prisma/prisma.service';
 
-type IncidentRow = Incident & { reservation: { bookingCode: string } };
+const INCLUDE_RESERVATION = {
+  reservation: { select: { bookingCode: true } },
+};
+
+/** An incident with what the desk shows of it, a worker's report included (W-Job J5). */
+const INCLUDE_INCIDENT = {
+  ...INCLUDE_RESERVATION,
+  supplier: {
+    select: { primaryPhone: true, user: { select: { fullName: true, email: true } } },
+  },
+  acknowledgedBy: { select: { fullName: true, email: true } },
+} satisfies Prisma.IncidentInclude;
+
+type IncidentRow = Prisma.IncidentGetPayload<{ include: typeof INCLUDE_INCIDENT }>;
 
 function toIncidentDto(row: IncidentRow): IncidentDto {
   return {
@@ -27,12 +50,34 @@ function toIncidentDto(row: IncidentRow): IncidentDto {
     severity: row.severity,
     resolvedAt: row.resolvedAt ? row.resolvedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
+    source: row.source,
+    serviceItemId: row.serviceItemId,
+    supplierName: row.supplier
+      ? (row.supplier.user.fullName ?? row.supplier.user.email)
+      : null,
+    supplierPhone: row.supplier?.primaryPhone ?? null,
+    position:
+      row.latitude !== null && row.longitude !== null
+        ? {
+            latitude: row.latitude.toNumber(),
+            longitude: row.longitude.toNumber(),
+            accuracyM: row.locationAccuracyM,
+          }
+        : null,
+    occurredAt: row.occurredAt?.toISOString() ?? null,
+    acknowledgedAt: row.acknowledgedAt?.toISOString() ?? null,
+    acknowledgedBy: row.acknowledgedBy
+      ? (row.acknowledgedBy.fullName ?? row.acknowledgedBy.email)
+      : null,
   };
 }
 
-const INCLUDE_RESERVATION = {
-  reservation: { select: { bookingCode: true } },
-};
+/** A worker's report the desk has not acknowledged yet: a red alert (W-Job J6). */
+const OPEN_EMERGENCY_WHERE = {
+  source: { in: ['WORKER_APP', 'WORKER_SMS'] },
+  acknowledgedAt: null,
+  resolvedAt: null,
+} satisfies Prisma.IncidentWhereInput;
 
 type ReviewRow = Review & { reservation: { bookingCode: string } };
 
@@ -54,7 +99,10 @@ function toReviewDto(row: ReviewRow): ReviewDto {
  */
 @Injectable()
 export class QualityService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(ESCALATION_PUBLISHER) private readonly escalation: EscalationPublisher,
+  ) {}
 
   async listIncidents(query: ListIncidentsQuery): Promise<IncidentDto[]> {
     const where: Prisma.IncidentWhereInput = {};
@@ -67,9 +115,56 @@ export class QualityService {
       where,
       orderBy: { createdAt: 'desc' },
       take: query.limit,
-      include: INCLUDE_RESERVATION,
+      include: INCLUDE_INCIDENT,
     });
     return rows.map(toIncidentDto);
+  }
+
+  /** Workers' reports still waiting for the desk, oldest first: the emergency alerts. */
+  async openEmergencies(): Promise<IncidentDto[]> {
+    const rows = await this.prisma.incident.findMany({
+      where: OPEN_EMERGENCY_WHERE,
+      orderBy: { createdAt: 'asc' },
+      include: INCLUDE_INCIDENT,
+    });
+    return rows.map(toIncidentDto);
+  }
+
+  /**
+   * Someone on the desk has the emergency in hand: its alert stops for every
+   * desk. A second acknowledgement returns the first.
+   */
+  async acknowledgeIncident(id: string, actor: AuthUser): Promise<IncidentDto> {
+    const existing = await this.prisma.incident.findUnique({
+      where: { id },
+      include: INCLUDE_INCIDENT,
+    });
+    if (!existing) {
+      throw new NotFoundException(`Incident ${id} not found`);
+    }
+    if (existing.acknowledgedAt) return toIncidentDto(existing);
+    const now = new Date();
+    const { count } = await this.prisma.incident.updateMany({
+      where: { id, acknowledgedAt: null },
+      data: { acknowledgedAt: now, acknowledgedById: actor.id },
+    });
+    const row = await this.prisma.incident.findUniqueOrThrow({
+      where: { id },
+      include: INCLUDE_INCIDENT,
+    });
+    if (count > 0) {
+      await this.audit(actor, 'incident.acknowledged', id, {
+        reservationId: row.reservationId,
+      });
+      this.escalation.publish({
+        type: 'incident.acknowledged',
+        incidentId: id,
+        reservationId: row.reservationId,
+        serviceItemId: row.serviceItemId,
+        occurredAt: now.toISOString(),
+      });
+    }
+    return toIncidentDto(row);
   }
 
   async listReviews(query: ListReviewsQuery): Promise<ReviewDto[]> {
@@ -92,11 +187,22 @@ export class QualityService {
   ): Promise<IncidentDto> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
-      select: { id: true },
+      select: {
+        id: true,
+        serviceItems: { select: { id: true, supplierId: true } },
+      },
     });
     if (!reservation) {
       throw new NotFoundException(`Reservation ${reservationId} not found`);
     }
+    const item = input.serviceItemId
+      ? reservation.serviceItems.find((candidate) => candidate.id === input.serviceItemId)
+      : undefined;
+    if (input.serviceItemId && !item) {
+      throw new UnprocessableEntityException('That service is not on this booking');
+    }
+    // A report the desk enters from a worker's SMS is in hand already (W-Job J6).
+    const fromSms = input.source === 'WORKER_SMS';
 
     const row = await this.prisma.incident.create({
       data: {
@@ -104,12 +210,18 @@ export class QualityService {
         category: input.category,
         description: input.description,
         severity: input.severity,
+        source: input.source,
+        serviceItemId: item?.id ?? null,
+        supplierId: item?.supplierId ?? null,
+        acknowledgedAt: fromSms ? new Date() : null,
+        acknowledgedById: fromSms ? actor.id : null,
       },
-      include: INCLUDE_RESERVATION,
+      include: INCLUDE_INCIDENT,
     });
     await this.audit(actor, 'incident.logged', row.id, {
       reservationId,
       severity: input.severity,
+      source: input.source,
     });
     return toIncidentDto(row);
   }
@@ -130,7 +242,7 @@ export class QualityService {
     const row = await this.prisma.incident.update({
       where: { id },
       data: { resolvedAt: new Date() },
-      include: INCLUDE_RESERVATION,
+      include: INCLUDE_INCIDENT,
     });
     await this.audit(actor, 'incident.resolved', id, { note: input.note ?? null });
     return toIncidentDto(row);

@@ -22,3 +22,4 @@ export {
   type ProposalPdfLocale,
   type ProposalPdfModel,
 } from './proposal';
+export { renderPayoutReceiptHtml, type PayoutReceiptModel } from './payout-receipt';

@@ -57,7 +57,7 @@ export interface CircuitCount {
 export interface RegulatorySummary {
   bookings: number;
   travelers: number;
-  /** Accommodation nights across the window (per booking — see the handoff). */
+  /** Accommodation nights across the window (per booking — AGENTS.md Section C, 2026-09-23). */
   bedNights: number;
   /** ECOTOURISM + AGROTOURISM + NATURE over all bookings, 0 when empty. */
   specialisedRatio: number;

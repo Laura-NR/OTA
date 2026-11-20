@@ -5,6 +5,10 @@ export type { EmailBranding, MagicLinkEmailInput } from './templates/magic-link'
 export { contactMessageEmail } from './templates/contact-message';
 export type { ContactMessageEmailInput } from './templates/contact-message';
 export { newMessageEmail } from './templates/new-message';
+export {
+  workerMessageEmail,
+  type WorkerMessageEmailInput,
+} from './templates/worker-message';
 export type { NewMessageEmailInput } from './templates/new-message';
 export { retentionNoticeEmail } from './templates/retention-notice';
 export type { RetentionNoticeEmailInput } from './templates/retention-notice';
@@ -44,6 +48,7 @@ export type {
   TravelAdvisoryEmailInput,
 } from './templates/travel-advisory';
 export { staffInviteEmail } from './templates/staff-invite';
+export { workerAppInviteEmail } from './templates/worker-app-invite';
 export {
   passkeyChangeEmail,
   type PasskeyChangeEmailInput,
@@ -58,7 +63,12 @@ export {
   permissionOverrideRequestEmail,
   type PermissionOverrideRequestEmailInput,
 } from './templates/permission-override-request';
+export {
+  refundApprovalNudgeEmail,
+  type RefundApprovalNudgeEmailInput,
+} from './templates/refund-approval-nudge';
 export type { StaffInviteEmailInput } from './templates/staff-invite';
+export type { WorkerAppInviteEmailInput } from './templates/worker-app-invite';
 export { eventRequestEmail } from './templates/event-request';
 export type {
   EventRequestEmailInput,

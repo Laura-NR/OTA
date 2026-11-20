@@ -1,4 +1,6 @@
 import {
+  CredentialKind,
+  CredentialStatus,
   GeneratorAccess,
   InventoryType,
   PrismaClient,
@@ -147,6 +149,54 @@ async function main(): Promise<void> {
           confirmedAt: new Date(),
           confirmedById: superAdmin.id,
           confirmedVia: ResourceChannel.PHONE,
+        },
+      });
+    }
+  }
+
+  // W-Credentials: every required document of the seeded suppliers, verified
+  // with placeholder numbers (dev data only; the sets mirror the domain's
+  // REQUIRED_CREDENTIALS). The identity card is checked in person, so it has no
+  // file or number. A re-seed keeps whatever the desk reviewed since.
+  const seededDocuments: Record<SupplierCategory, CredentialKind[]> = {
+    [SupplierCategory.TOUR_GUIDE]: [
+      CredentialKind.GUIDE_LICENCE,
+      CredentialKind.IDENTITY_CARD,
+    ],
+    [SupplierCategory.HOMESTAY_HOST]: [
+      CredentialKind.HOST_LICENCE,
+      CredentialKind.IDENTITY_CARD,
+    ],
+    [SupplierCategory.PRIVATE_DRIVER]: [
+      CredentialKind.TRANSPORT_LICENCE,
+      CredentialKind.TECHNICAL_INSPECTION,
+      CredentialKind.LIABILITY_INSURANCE,
+      CredentialKind.IDENTITY_CARD,
+    ],
+    [SupplierCategory.TRANSLATOR]: [CredentialKind.IDENTITY_CARD],
+  };
+  const seededSuppliers = await prisma.supplierProfile.findMany({
+    where: {
+      rtnLicenseNumber: { in: ['RTN-DEMO-0001', 'RTN-DEMO-0002', 'RTN-DEMO-0003'] },
+    },
+  });
+  for (const supplier of seededSuppliers) {
+    for (const kind of seededDocuments[supplier.category]) {
+      const current = await prisma.supplierCredential.findFirst({
+        where: { supplierId: supplier.id, kind, status: CredentialStatus.VERIFIED },
+      });
+      if (current) continue;
+      const identity = kind === CredentialKind.IDENTITY_CARD;
+      await prisma.supplierCredential.create({
+        data: {
+          supplierId: supplier.id,
+          kind,
+          status: CredentialStatus.VERIFIED,
+          number: identity ? null : `${supplier.rtnLicenseNumber}-${kind.slice(0, 3)}`,
+          expiresOn: identity ? null : new Date('2027-12-31T00:00:00Z'),
+          uploadedVia: ResourceChannel.VISIT,
+          reviewedAt: new Date(),
+          reviewedById: superAdmin.id,
         },
       });
     }
@@ -431,6 +481,33 @@ async function seedEvents(): Promise<string[]> {
         sourceUpdatedAt: jazz.updatedAt,
       },
       update: {},
+    });
+  }
+
+  // M10 H1a (docs/schema-m10-holds-photos.md): a room the desk holds at a
+  // Vedado casa for the festival's concierge requests, set once so a re-seed
+  // never overrides the desk's own hold.
+  const casaLis = await ensureInventoryItem('Casa Lis', {
+    type: InventoryType.ACCOMMODATION,
+    province: 'La Habana',
+    basePrice: '55.00',
+    description: 'Vedado casa with balcony rooms and an 8-hour battery.',
+  });
+  await prisma.event.updateMany({
+    where: { id: jazz.id, holdInventoryItemId: null },
+    data: {
+      holdInventoryItemId: casaLis.id,
+      holdUntil: calendarDay('2027-01-10'),
+      holdNote: 'balcony rooms, battery 8 h',
+    },
+  });
+  for (const [locale, holdNote] of [
+    ['es', 'habitaciones con balcón, batería 8 h'],
+    ['fr', 'chambres avec balcon, batterie 8 h'],
+  ] as const) {
+    await prisma.eventTranslation.updateMany({
+      where: { eventId: jazz.id, locale, holdNote: null },
+      data: { holdNote },
     });
   }
 

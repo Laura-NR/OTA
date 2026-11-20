@@ -44,18 +44,23 @@ interface CategoryRow {
  * A-Content's event editor (M10 D1, D2): the event's details, its nights and
  * its seat categories in the source language. Nights and categories keep their
  * ids across saves, because requests point at them; the API refuses removing
- * one a request holds.
+ * one a request holds. The room held at a casa for concierge requests
+ * (`docs/schema-m10-holds-photos.md` H1a) is optional: a casa and a last day,
+ * or neither.
  */
 export function EventEditor({
   event,
   locales,
   defaultSourceLocale,
   provinces,
+  casas,
 }: {
   event: EventDto | null;
   locales: readonly string[];
   defaultSourceLocale: string;
   provinces: readonly { code: string; name: string }[];
+  /** The catalog's active stays a room can be held at. */
+  casas: readonly { id: string; name: string }[];
 }) {
   const t = useTranslations('eventsDesk');
   const router = useRouter();
@@ -99,6 +104,14 @@ export function EventEditor({
         price: category.pricePerSeat === null ? '' : String(category.pricePerSeat),
       })) ?? [],
   );
+  const [holdCasa, setHoldCasa] = useState(event?.hold?.inventoryItemId ?? '');
+  const [holdUntil, setHoldUntil] = useState(event?.hold?.until ?? '');
+  const [holdNote, setHoldNote] = useState(event?.holdNote ?? '');
+  // A casa deactivated since keeps its place in the list until the hold changes.
+  const casaOptions =
+    event?.hold && !casas.some((casa) => casa.id === event.hold?.inventoryItemId)
+      ? [...casas, { id: event.hold.inventoryItemId, name: event.hold.casa }]
+      : casas;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,6 +130,10 @@ export function EventEditor({
 
   async function onSubmit(submitEvent: FormEvent<HTMLFormElement>) {
     submitEvent.preventDefault();
+    if (Boolean(holdCasa) !== Boolean(holdUntil)) {
+      setError(t('editor.holdIncomplete'));
+      return;
+    }
     const body = {
       access,
       province,
@@ -142,6 +159,10 @@ export function EventEditor({
         description: category.description.trim() || null,
         pricePerSeat: category.price.trim() === '' ? null : Number(category.price),
       })),
+      hold:
+        holdCasa && holdUntil
+          ? { inventoryItemId: holdCasa, until: holdUntil, note: holdNote.trim() || null }
+          : null,
     } as unknown as EventWriteRequest;
     setBusy(true);
     setError(null);
@@ -503,6 +524,54 @@ export function EventEditor({
           >
             {t('editor.addCategory')}
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('editor.holdTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <p className="text-caption text-muted">{t('editor.holdHint')}</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label htmlFor="event-hold-casa">{t('editor.holdCasa')}</Label>
+              <Select
+                id="event-hold-casa"
+                value={holdCasa}
+                onChange={(change) => setHoldCasa(change.target.value)}
+              >
+                <option value="">{t('editor.holdNone')}</option>
+                {casaOptions.map((casa) => (
+                  <option key={casa.id} value={casa.id}>
+                    {casa.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label htmlFor="event-hold-until">{t('editor.holdUntil')}</Label>
+              <Input
+                id="event-hold-until"
+                type="date"
+                value={holdUntil}
+                onChange={(change) => setHoldUntil(change.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="event-hold-note">{t('editor.holdNote')}</Label>
+            <Input
+              id="event-hold-note"
+              maxLength={160}
+              aria-describedby="event-hold-note-hint"
+              value={holdNote}
+              onChange={(change) => setHoldNote(change.target.value)}
+            />
+            <p id="event-hold-note-hint" className="text-caption text-muted">
+              {t('editor.holdNoteHint')}
+            </p>
+          </div>
         </CardContent>
       </Card>
 

@@ -9,6 +9,7 @@ export const UPLOAD_ROUTES = [
   '/packages/:id/media',
   '/inventory/:id/media',
   '/suppliers/:id/credential',
+  '/worker/credentials',
   '/imports',
   '/reservations/:id/travelers/:travelerId/affidavit',
   '/me/reservations/:id/payments/:paymentId/proof',
