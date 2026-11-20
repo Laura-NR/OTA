@@ -2378,6 +2378,11 @@
           "title": "{count, plural, one {# event request} other {# event requests}} waiting for an answer",
           "body": "Unanswered for over {hours} h. Say whether the seats can be requested, or mark them unavailable.",
           "action": "Answer"
+        },
+        "eventHold": {
+          "title": "Room hold at {casa} ends {date}",
+          "body": "For {event}. Release the room with the host, or move the date on the event.",
+          "action": "Open event"
         }
       },
       "redispatchFor": "Re-dispatch {service} · {code}",
@@ -4516,7 +4521,15 @@
       "addCategory": "Add a category",
       "save": "Save event",
       "create": "Create draft",
-      "saveFailed": "The event was not saved."
+      "saveFailed": "The event was not saved.",
+      "holdTitle": "Room hold for concierge requests",
+      "holdHint": "Optional. The event page shows it through the last day; the room itself is held with the host by hand.",
+      "holdCasa": "Casa",
+      "holdNone": "No hold",
+      "holdUntil": "Held until",
+      "holdNote": "Note",
+      "holdNoteHint": "Optional, e.g. balcony rooms, battery 8 h.",
+      "holdIncomplete": "Choose the casa and the last day, or no hold."
     },
     "translations": {
       "title": "Other languages",
@@ -4531,7 +4544,9 @@
       "publishHint": "Empty fields fall back to the source text.",
       "save": "Save {locale}",
       "saved": "{locale} saved.",
-      "saveFailed": "The translation was not saved."
+      "saveFailed": "The translation was not saved.",
+      "holdNote": "Hold note",
+      "mediaAlt": "Photo {number} · alt text"
     },
     "actions": {
       "publish": "Publish",
@@ -4551,7 +4566,38 @@
       "NO_NIGHTS": "Add the nights a per-night category is sold for.",
       "NIGHT_OUTSIDE_DATES": "A night falls outside the event's dates.",
       "CONFIRM_AFTER_START": "Seats must be confirmed before the first day.",
-      "ENDED": "The event is over."
+      "ENDED": "The event is over.",
+      "MEDIA_ALT_REQUIRED": "Every photo needs alt text.",
+      "MEDIA_CONSENT_REQUIRED": "A photo that shows people needs a consent reference."
+    },
+    "photos": {
+      "none": "No photos yet. The first one you upload is the hero.",
+      "hero": "Hero",
+      "gallery": "Gallery {number}",
+      "showsPeople": "Shows people",
+      "consentOnFile": "consent on file",
+      "consentMissing": "consent missing",
+      "remove": "Remove",
+      "removeFailed": "The photo could not be removed.",
+      "file": "Photo",
+      "altText": "Alt text",
+      "altHint": "Say what the photo shows, for travelers who cannot see it.",
+      "peopleLabel": "People can be recognised in this photo",
+      "consentReference": "Consent reference",
+      "consentHint": "The signed release on file, e.g. its folder or form number.",
+      "chooseImage": "Choose a photo to upload.",
+      "useImageType": "Use a JPEG, PNG or WebP image.",
+      "tooLarge": "The photo is over 5 MB.",
+      "upload": "Upload photo",
+      "uploading": "Uploading…",
+      "uploadFailed": "The photo could not be uploaded.",
+      "title": "Photos",
+      "hint": "JPEG, PNG or WebP up to 5 MB. The first is the event page's hero and the events list's picture. Alt text is required; a photo that shows people needs a consent reference before the event can be published.",
+      "makeHero": "Make hero",
+      "edit": "Edit",
+      "save": "Save photo",
+      "cancel": "Cancel",
+      "saveFailed": "The photo was not saved."
     }
   },
   "eventRequestsDesk": {
@@ -4747,7 +4793,9 @@
       "onRequest": "trip request {reference}",
       "added": "{total} added to your booking.",
       "nothingCharged": "Nothing is charged yet."
-    }
+    },
+    "hold": "Festival-week casas fill early. We hold a room at {casa} for concierge requests until {date}; the custom builder opens with these dates and {province} already placed.",
+    "holdCta": "Build the trip with these dates"
   },
   "display": {
     "title": "Display",

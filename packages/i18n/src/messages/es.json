@@ -2378,6 +2378,11 @@
           "title": "{count, plural, one {# solicitud de evento espera} other {# solicitudes de eventos esperan}} respuesta",
           "body": "Sin respuesta desde hace más de {hours} h. Indique si las entradas se pueden pedir o márquelas como no disponibles.",
           "action": "Responder"
+        },
+        "eventHold": {
+          "title": "La reserva en {casa} termina el {date}",
+          "body": "Para {event}. Libera la habitación con el anfitrión o cambia la fecha en el evento.",
+          "action": "Abrir evento"
         }
       },
       "redispatchFor": "Redespachar {service} · {code}",
@@ -4516,7 +4521,15 @@
       "addCategory": "Añadir una categoría",
       "save": "Guardar evento",
       "create": "Crear borrador",
-      "saveFailed": "El evento no se guardó."
+      "saveFailed": "El evento no se guardó.",
+      "holdTitle": "Habitación reservada para solicitudes del conserje",
+      "holdHint": "Opcional. La página del evento la muestra hasta el último día; la habitación se reserva con el anfitrión a mano.",
+      "holdCasa": "Casa",
+      "holdNone": "Sin reserva",
+      "holdUntil": "Reservada hasta",
+      "holdNote": "Nota",
+      "holdNoteHint": "Opcional, p. ej. habitaciones con balcón, batería 8 h.",
+      "holdIncomplete": "Elige la casa y el último día, o sin reserva."
     },
     "translations": {
       "title": "Otros idiomas",
@@ -4531,7 +4544,9 @@
       "publishHint": "Los campos vacíos muestran el texto de origen.",
       "save": "Guardar {locale}",
       "saved": "{locale} guardado.",
-      "saveFailed": "La traducción no se guardó."
+      "saveFailed": "La traducción no se guardó.",
+      "holdNote": "Nota de la reserva",
+      "mediaAlt": "Foto {number} · texto alternativo"
     },
     "actions": {
       "publish": "Publicar",
@@ -4551,7 +4566,38 @@
       "NO_NIGHTS": "Añada las noches de una categoría por noche.",
       "NIGHT_OUTSIDE_DATES": "Una noche cae fuera de las fechas del evento.",
       "CONFIRM_AFTER_START": "Las entradas se confirman antes del primer día.",
-      "ENDED": "El evento ya terminó."
+      "ENDED": "El evento ya terminó.",
+      "MEDIA_ALT_REQUIRED": "Cada foto necesita texto alternativo.",
+      "MEDIA_CONSENT_REQUIRED": "Una foto con personas necesita una referencia de consentimiento."
+    },
+    "photos": {
+      "none": "Aún no hay fotos. La primera que subas será la principal.",
+      "hero": "Principal",
+      "gallery": "Galería {number}",
+      "showsPeople": "Con personas",
+      "consentOnFile": "consentimiento registrado",
+      "consentMissing": "falta el consentimiento",
+      "remove": "Quitar",
+      "removeFailed": "No se pudo quitar la foto.",
+      "file": "Foto",
+      "altText": "Texto alternativo",
+      "altHint": "Describe lo que muestra la foto, para quien no puede verla.",
+      "peopleLabel": "Se reconoce a personas en esta foto",
+      "consentReference": "Referencia del consentimiento",
+      "consentHint": "La autorización firmada que consta, p. ej. su carpeta o número de formulario.",
+      "chooseImage": "Elige una foto para subir.",
+      "useImageType": "Usa una imagen JPEG, PNG o WebP.",
+      "tooLarge": "La foto supera los 5 MB.",
+      "upload": "Subir foto",
+      "uploading": "Subiendo…",
+      "uploadFailed": "No se pudo subir la foto.",
+      "title": "Fotos",
+      "hint": "JPEG, PNG o WebP de hasta 5 MB. La primera es la principal de la página del evento y la imagen de la lista de eventos. El texto alternativo es obligatorio; una foto con personas necesita una referencia de consentimiento antes de publicar el evento.",
+      "makeHero": "Hacer principal",
+      "edit": "Editar",
+      "save": "Guardar foto",
+      "cancel": "Cancelar",
+      "saveFailed": "No se guardó la foto."
     }
   },
   "eventRequestsDesk": {
@@ -4747,7 +4793,9 @@
       "onRequest": "solicitud de viaje {reference}",
       "added": "{total} añadidos a tu reserva.",
       "nothingCharged": "Aún no se cobra nada."
-    }
+    },
+    "hold": "Las casas se llenan pronto en semana de festival. Reservamos una habitación en {casa} para solicitudes del conserje hasta el {date}; el constructor a medida se abre con estas fechas y {province} ya colocada.",
+    "holdCta": "Crear el viaje con estas fechas"
   },
   "display": {
     "title": "Visualización",

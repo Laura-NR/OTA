@@ -2378,6 +2378,11 @@
           "title": "{count, plural, one {# demande d’événement attend} other {# demandes d’événements attendent}} une réponse",
           "body": "Sans réponse depuis plus de {hours} h. Indiquez si les places peuvent être demandées, ou marquez-les indisponibles.",
           "action": "Répondre"
+        },
+        "eventHold": {
+          "title": "La réservation chez {casa} se termine le {date}",
+          "body": "Pour {event}. Libérez la chambre auprès de l’hôte ou décalez la date sur l’événement.",
+          "action": "Ouvrir l’événement"
         }
       },
       "redispatchFor": "Relancer le dispatch {service} · {code}",
@@ -4516,7 +4521,15 @@
       "addCategory": "Ajouter une catégorie",
       "save": "Enregistrer l’événement",
       "create": "Créer le brouillon",
-      "saveFailed": "L’événement n’a pas été enregistré."
+      "saveFailed": "L’événement n’a pas été enregistré.",
+      "holdTitle": "Chambre réservée pour les demandes de conciergerie",
+      "holdHint": "Facultatif. La page de l’événement l’affiche jusqu’au dernier jour ; la chambre est réservée auprès de l’hôte à la main.",
+      "holdCasa": "Casa",
+      "holdNone": "Aucune réservation",
+      "holdUntil": "Réservée jusqu’au",
+      "holdNote": "Note",
+      "holdNoteHint": "Facultatif, p. ex. chambres avec balcon, batterie 8 h.",
+      "holdIncomplete": "Choisissez la casa et le dernier jour, ou aucune réservation."
     },
     "translations": {
       "title": "Autres langues",
@@ -4531,7 +4544,9 @@
       "publishHint": "Les champs vides reprennent le texte source.",
       "save": "Enregistrer {locale}",
       "saved": "{locale} enregistré.",
-      "saveFailed": "La traduction n’a pas été enregistrée."
+      "saveFailed": "La traduction n’a pas été enregistrée.",
+      "holdNote": "Note de la réservation",
+      "mediaAlt": "Photo {number} · texte alternatif"
     },
     "actions": {
       "publish": "Publier",
@@ -4551,7 +4566,38 @@
       "NO_NIGHTS": "Ajoutez les soirées d’une catégorie vendue à la soirée.",
       "NIGHT_OUTSIDE_DATES": "Une soirée tombe hors des dates de l’événement.",
       "CONFIRM_AFTER_START": "Les places se confirment avant le premier jour.",
-      "ENDED": "L’événement est terminé."
+      "ENDED": "L’événement est terminé.",
+      "MEDIA_ALT_REQUIRED": "Chaque photo doit avoir un texte alternatif.",
+      "MEDIA_CONSENT_REQUIRED": "Une photo montrant des personnes doit avoir une référence de consentement."
+    },
+    "photos": {
+      "none": "Pas encore de photos. La première envoyée devient la photo principale.",
+      "hero": "Principale",
+      "gallery": "Galerie {number}",
+      "showsPeople": "Avec des personnes",
+      "consentOnFile": "consentement enregistré",
+      "consentMissing": "consentement manquant",
+      "remove": "Retirer",
+      "removeFailed": "La photo n'a pas pu être retirée.",
+      "file": "Photo",
+      "altText": "Texte alternatif",
+      "altHint": "Dites ce que montre la photo, pour qui ne peut pas la voir.",
+      "peopleLabel": "Des personnes sont reconnaissables sur cette photo",
+      "consentReference": "Référence du consentement",
+      "consentHint": "L'autorisation signée enregistrée, p. ex. son dossier ou numéro de formulaire.",
+      "chooseImage": "Choisissez une photo à envoyer.",
+      "useImageType": "Utilisez une image JPEG, PNG ou WebP.",
+      "tooLarge": "La photo dépasse 5 Mo.",
+      "upload": "Envoyer la photo",
+      "uploading": "Envoi…",
+      "uploadFailed": "La photo n'a pas pu être envoyée.",
+      "title": "Photos",
+      "hint": "JPEG, PNG ou WebP jusqu’à 5 Mo. La première est la photo principale de la page de l’événement et l’image de la liste des événements. Le texte alternatif est obligatoire ; une photo montrant des personnes doit avoir une référence de consentement avant la publication.",
+      "makeHero": "Mettre en principale",
+      "edit": "Modifier",
+      "save": "Enregistrer la photo",
+      "cancel": "Annuler",
+      "saveFailed": "La photo n’a pas été enregistrée."
     }
   },
   "eventRequestsDesk": {
@@ -4747,7 +4793,9 @@
       "onRequest": "demande de voyage {reference}",
       "added": "{total} ajoutés à votre réservation.",
       "nothingCharged": "Rien n’est encore débité."
-    }
+    },
+    "hold": "En semaine de festival, les casas se remplissent vite. Nous réservons une chambre chez {casa} pour les demandes de conciergerie jusqu’au {date} ; le créateur sur mesure s’ouvre avec ces dates et {province} déjà placée.",
+    "holdCta": "Créer le voyage avec ces dates"
   },
   "display": {
     "title": "Affichage",
