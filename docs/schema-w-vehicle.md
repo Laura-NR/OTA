@@ -1,7 +1,7 @@
 # W-Credentials vehicle follow-ups: decisions for review
 
-**Status:** Draft for review, 2026-11-20. **No migration** (the vehicle stays in
-`supplier_profiles.vehicle_details`, JSON).
+**Status:** **Approved 2026-11-20 as recommended (X1a, X2a, X3a) and built the same day** (§5).
+**No migration** (the vehicle stays in `supplier_profiles.vehicle_details`, JSON).
 **Scope:** the two items `docs/schema-w-credentials.md` §4 left out: the worker changing vehicle
 (W-Credentials' "Cambiar de vehículo") and aligning the vehicle form's own insurance date with the
 insurance document.
@@ -72,3 +72,35 @@ They can drift again on the next edit.
 
 - Several vehicles per driver (a fleet): one vehicle per driver, as M6 D7(b).
 - Linking a document to a plate: X2(a) works on the request's plate, so no column is needed.
+
+## 5. As built (2026-11-20)
+
+- Domain `packages/domain/src/supplier/vehicle.ts`: `vehicleRequestRefusal` (drivers only),
+  `normalizePlate` (spaces, hyphens and case ignored), `credentialsSupersededByVehicle` (a
+  different plate takes the inspection and the insurance; the same plate or a first vehicle
+  takes nothing), `vehicleInsuranceUntil` (the latest verified insurance's expiry), and
+  `vehicleReviewSms` (one GSM-7 segment, no accents).
+- Storage: `vehicle_details` keeps the desk's fields at the top level, with `pendingVehicle`
+  and `rejectedVehicle` beside them (`apps/api/src/suppliers/vehicle-json.ts`). The desk's save
+  keeps a waiting request. A date stored before X3a is not read, and the next save drops it.
+- API `SupplierVehicleService`: `POST /worker/vehicle` (SERVICE_WORKER; a non-driver gets
+  **422**, as the desk's `PUT …/vehicle` already answers, not the 409 §3 named),
+  `POST /suppliers/:id/vehicle/approve|reject` (ops + super; 409 with nothing waiting). Every
+  step, and the desk's `PUT`, locks the profile row (`SELECT … FOR UPDATE`). Approval
+  supersedes only **verified** versions: an upload already waiting may be the new car's.
+  Audited as `supplier.vehicle_requested`, `…_approved` (with the superseded ids) and
+  `…_rejected`. An SMS goes out after each decision. RBAC matrix +3.
+- DTOs: `SupplierDetailDto.pendingVehicle`, and on `WorkerCredentialsDto`, `vehicleRequest`
+  and `vehicleRejection` (the refusal shows until the worker asks again). `vehicle.insuranceUntil`
+  is the document's date. `vehicleDetailsInputSchema` no longer has `insuranceUntil`.
+- App: "Cambiar de vehículo" on the insurance card opens model, plate, seats and A/C, plus
+  the note about the new documents. "Cambio de vehículo en revisión" while waiting, and the
+  desk's reason after a rejection. Unsent fields stay on screen. The vehicle line now shows
+  whether or not the insurance is current.
+- Desk: the vehicle card shows the request ("Vehicle change asked from the app", a
+  warning-500 border) with "Review and approve…" (a DS 06 dialog that says when the plate
+  change sets the documents aside) and an inline reject form with the reason, as the
+  credential panel's. The form's insurance date is read-only ("From the verified liability
+  insurance document."), in en/es/fr.
+- e2e: `worker-app.spec.ts` (request from the app, approval on the desk, the app asks for
+  both documents) and `supplier-resources.spec.ts` (the date from a verified insurance).
