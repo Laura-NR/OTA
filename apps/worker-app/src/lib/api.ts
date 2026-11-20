@@ -9,6 +9,7 @@ import type {
   WorkerHomeDto,
   WorkerThreadDto,
   WorkerAppLatestDto,
+  VehicleRequest,
   WorkerUploadCredentialRequest,
 } from '@ota/schemas';
 
@@ -52,6 +53,8 @@ export interface WorkerApi {
     token: string,
     upload: WorkerUploadCredentialRequest,
   ): Promise<WorkerCredentialsDto>;
+  /** "Cambiar de vehículo": a change the desk reviews (`docs/schema-w-vehicle.md` X1a). */
+  requestVehicle(token: string, vehicle: VehicleRequest): Promise<WorkerCredentialsDto>;
   /** The published APK, read signed out too (`docs/worker-app-distribution-plan.md` U3a). */
   latestRelease(): Promise<WorkerAppLatestDto>;
   /** Where an APK the release lists is downloaded from. */
@@ -201,6 +204,11 @@ export function createWorkerApi(
     async uploadCredential(token, upload) {
       return (await (
         await request('/worker/credentials', { method: 'POST', token, body: upload })
+      ).json()) as WorkerCredentialsDto;
+    },
+    async requestVehicle(token, vehicle) {
+      return (await (
+        await request('/worker/vehicle', { method: 'POST', token, body: vehicle })
       ).json()) as WorkerCredentialsDto;
     },
     async latestRelease() {

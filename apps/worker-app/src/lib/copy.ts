@@ -404,6 +404,24 @@ export const copy = {
     missing: 'Aún no la tenemos. Súbela para que la central la revise.',
     vehicle: (model: string, plate: string, seats: number, airConditioning: boolean) =>
       `Vehículo ${model} · ${plate} · ${seats} plazas${airConditioning ? ' · aire acondicionado' : ''}`,
+    changeVehicle: 'Cambiar de vehículo',
+    vehicleModel: 'Modelo',
+    vehiclePlate: 'Matrícula',
+    vehicleSeats: 'Plazas',
+    vehicleAir: 'Aire acondicionado',
+    vehicleNote:
+      'La central revisa el vehículo nuevo antes de usarlo en tus trabajos. Si cambia la matrícula, tendrás que subir de nuevo el seguro y la inspección técnica.',
+    vehicleSend: 'Enviar a la central',
+    vehicleInvalid: 'Revisa los datos: modelo, matrícula y plazas (de 1 a 60).',
+    vehiclePending: 'Cambio de vehículo en revisión',
+    vehiclePendingExplain: (model: string, plate: string) =>
+      `${model} · ${plate}. Sigues con el vehículo actual hasta que la central lo apruebe. Te avisamos por SMS.`,
+    vehicleRejected: (reason: string) =>
+      `La central no aceptó el cambio de vehículo: ${reason}`,
+    vehicleOffline:
+      'Sin conexión. Los datos siguen aquí: envíalos cuando vuelva la señal.',
+    vehicleRefused:
+      'La central no aceptó el envío. Revisa los datos o llama a la central.',
     identityChecked:
       'Comprobado por la central. No guardamos la foto. Solo se usa para comprobar que los documentos son tuyos; nunca se muestra a los viajeros.',
     identityMissing:

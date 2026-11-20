@@ -1,13 +1,19 @@
 import type { CredentialKind } from '@ota/domain';
-import type { CredentialSlotDto, WorkerCredentialsDto } from '@ota/schemas';
-import { useCallback, useEffect, useState } from 'react';
+import type {
+  CredentialSlotDto,
+  VehicleRequest,
+  WorkerCredentialsDto,
+} from '@ota/schemas';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -54,6 +60,8 @@ type Draft = { kind: CredentialKind; photo: PhotoUpload | null };
  * for review, and what the desk said. A photo that could not be sent stays on
  * the screen to send again; it is not queued like an answer, since it is too
  * heavy to resend in the background. It needs a connection, like the calendar.
+ * A driver's insurance card also asks for a vehicle change, which the desk
+ * reviews (`docs/schema-w-vehicle.md` X1a); unsent, its fields stay too.
  */
 export function CredentialsScreen({
   api,
@@ -144,6 +152,22 @@ export function CredentialsScreen({
     }
   }
 
+  /** Null once the desk has the request; otherwise what to tell the worker. */
+  async function requestVehicle(vehicle: VehicleRequest): Promise<string | null> {
+    try {
+      setData(await api.requestVehicle(token, vehicle));
+      return null;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        onSignedOut();
+        return null;
+      }
+      return error instanceof ApiError && error.status === null
+        ? copy.credentials.vehicleOffline
+        : copy.credentials.vehicleRefused;
+    }
+  }
+
   if (!data) {
     return (
       <View style={styles.center}>
@@ -220,7 +244,15 @@ export function CredentialsScreen({
             setDraft(null);
             setDraftMessage(null);
           }}
-        />
+        >
+          {slot.kind === 'LIABILITY_INSURANCE' ? (
+            <VehicleChange
+              request={data.vehicleRequest}
+              rejection={data.vehicleRejection}
+              onSend={requestVehicle}
+            />
+          ) : null}
+        </SlotCard>
       ))}
 
       <Card>
@@ -253,6 +285,7 @@ function SlotCard({
   onChoose,
   onSend,
   onCancel,
+  children,
 }: {
   slot: CredentialSlotDto;
   now: number;
@@ -267,6 +300,8 @@ function SlotCard({
   onChoose: (source: 'camera' | 'library') => void;
   onSend: () => void;
   onCancel: () => void;
+  /** What the card adds below its document: the vehicle change on the insurance. */
+  children?: ReactNode;
 }) {
   const badge = slotBadge(slot, now, windowDays);
   const { current, pending, rejected } = slot;
@@ -311,11 +346,11 @@ function SlotCard({
               )}
             </Text>
           ) : null}
-          {vehicle ? <Text style={type.small}>{vehicle}</Text> : null}
         </View>
       ) : (
         <Text style={type.small}>{copy.credentials.missing}</Text>
       )}
+      {vehicle ? <Text style={type.small}>{vehicle}</Text> : null}
 
       {ruled && slot.pauseFrom ? (
         <Text style={type.small}>
@@ -393,7 +428,142 @@ function SlotCard({
           onPress={onStart}
         />
       )}
+      {children}
     </Card>
+  );
+}
+
+/**
+ * "Cambiar de vehículo" (X1a): the new car's model, plate, seats and A/C, sent
+ * for the desk's review. The current vehicle stays on file until then.
+ */
+function VehicleChange({
+  request,
+  rejection,
+  onSend,
+}: {
+  request: WorkerCredentialsDto['vehicleRequest'];
+  rejection: WorkerCredentialsDto['vehicleRejection'];
+  onSend: (vehicle: VehicleRequest) => Promise<string | null>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [model, setModel] = useState('');
+  const [plate, setPlate] = useState('');
+  const [seats, setSeats] = useState('');
+  const [air, setAir] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function send() {
+    const count = Number(seats);
+    if (
+      !model.trim() ||
+      !plate.trim() ||
+      !Number.isInteger(count) ||
+      count < 1 ||
+      count > 60
+    ) {
+      setMessage(copy.credentials.vehicleInvalid);
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    const refused = await onSend({
+      model: model.trim(),
+      plate: plate.trim(),
+      seats: count,
+      airConditioning: air,
+    });
+    setBusy(false);
+    if (refused) {
+      setMessage(refused);
+      return;
+    }
+    setOpen(false);
+    setModel('');
+    setPlate('');
+    setSeats('');
+  }
+
+  const field = (
+    label: string,
+    value: string,
+    onChange: (next: string) => void,
+    options: { maxLength: number; numeric?: boolean; caps?: boolean },
+  ) => (
+    <View style={styles.field}>
+      <Text style={type.small}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        value={value}
+        onChangeText={onChange}
+        maxLength={options.maxLength}
+        keyboardType={options.numeric ? 'number-pad' : 'default'}
+        autoCapitalize={options.caps ? 'characters' : 'sentences'}
+        editable={!busy}
+        style={styles.input}
+      />
+    </View>
+  );
+
+  return (
+    <View style={styles.draft}>
+      {request ? (
+        <Notice tone="info">
+          <Text style={styles.strong}>{copy.credentials.vehiclePending}</Text>
+          {'\n'}
+          {copy.credentials.vehiclePendingExplain(request.model, request.plate)}
+        </Notice>
+      ) : rejection ? (
+        <Notice tone="danger">
+          {copy.credentials.vehicleRejected(rejection.reason)}
+        </Notice>
+      ) : null}
+      {open ? (
+        <View style={styles.draft}>
+          <Text style={type.small}>{copy.credentials.vehicleNote}</Text>
+          {field(copy.credentials.vehicleModel, model, setModel, { maxLength: 80 })}
+          {field(copy.credentials.vehiclePlate, plate, setPlate, {
+            maxLength: 20,
+            caps: true,
+          })}
+          {field(copy.credentials.vehicleSeats, seats, setSeats, {
+            maxLength: 2,
+            numeric: true,
+          })}
+          <View style={styles.switchRow}>
+            <Text style={[type.small, styles.grow]}>{copy.credentials.vehicleAir}</Text>
+            <Switch
+              accessibilityLabel={copy.credentials.vehicleAir}
+              value={air}
+              onValueChange={setAir}
+              disabled={busy}
+            />
+          </View>
+          {message ? <Notice tone="warning">{message}</Notice> : null}
+          <Button
+            label={copy.credentials.vehicleSend}
+            busy={busy}
+            onPress={() => void send()}
+          />
+          <Button
+            label={copy.credentials.cancel}
+            variant="quiet"
+            disabled={busy}
+            onPress={() => {
+              setOpen(false);
+              setMessage(null);
+            }}
+          />
+        </View>
+      ) : (
+        <Button
+          label={copy.credentials.changeVehicle}
+          variant="secondary"
+          onPress={() => setOpen(true)}
+        />
+      )}
+    </View>
   );
 }
 
@@ -416,6 +586,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   draft: { gap: space.sm },
+  field: { gap: space.xs },
+  input: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+    backgroundColor: colors.surface,
+    color: colors.ink,
+    fontSize: 16,
+  },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 48 },
   preview: {
     width: '100%',
     height: 200,

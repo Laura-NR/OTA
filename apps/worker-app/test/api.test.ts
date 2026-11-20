@@ -126,6 +126,29 @@ describe('the worker app API client (W1, W3, W5)', () => {
     );
   });
 
+  it('posts a vehicle change for the desk to review as the signed-in worker', async () => {
+    const { calls, fetcher } = recorder(200, { slots: [] });
+    const api = createWorkerApi('http://api.test', fetcher);
+    await api.requestVehicle('t', {
+      model: 'Hyundai H1',
+      plate: 'P 311 004',
+      seats: 9,
+      airConditioning: true,
+    });
+    expect(calls.map((call) => [call.init.method, call.url])).toEqual([
+      ['POST', 'http://api.test/worker/vehicle'],
+    ]);
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({
+      model: 'Hyundai H1',
+      plate: 'P 311 004',
+      seats: 9,
+      airConditioning: true,
+    });
+    expect((calls[0]!.init.headers as Record<string, string>).authorization).toBe(
+      'Bearer t',
+    );
+  });
+
   it('sends a queued message with its id and time, and reads the thread (worker messages M4)', async () => {
     const { calls, fetcher } = recorder(200, { messages: [], unread: 0 });
     const api = createWorkerApi('', fetcher);
