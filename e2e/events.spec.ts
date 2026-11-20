@@ -230,8 +230,14 @@ test.describe('M10 events and the ticket concierge', () => {
       'href',
       '/en/custom?from=2027-04-10&to=2027-04-13&province=CU03',
     );
-    await page.goto(`${STOREFRONT_URL}/en/events`);
-    await expect(page.getByAltText('Dancers by the sea wall')).toBeVisible();
+    // The list is cached for 60 s (`getEvents`), so an earlier spec's visit can
+    // serve it from before this event existed.
+    await expect(async () => {
+      await page.goto(`${STOREFRONT_URL}/en/events`);
+      await expect(page.getByAltText('Dancers by the sea wall')).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 90_000, intervals: [5_000] });
 
     // H3a: signed in, the builder starts on those dates with Havana placed.
     await signIn(page, TRAVELER_EMAIL, {
