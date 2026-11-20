@@ -178,6 +178,21 @@ test.describe('M6 supplier resources', () => {
     await expect(page.getByText(/Last confirmed .* · WhatsApp · /)).toBeVisible();
     await expect(page.getByLabel('Generator hours per day')).toHaveValue('6');
 
+    // The vehicle's insurance date is the verified insurance document's
+    // (docs/schema-w-vehicle.md X3a); it ends within 30 days, so it is flagged.
+    await prisma.supplierCredential.create({
+      data: {
+        supplierId: driverId,
+        kind: 'LIABILITY_INSURANCE',
+        status: 'VERIFIED',
+        expiresOn: new Date(
+          new Date(Date.now() + 10 * DAY_MS).toISOString().slice(0, 10) + 'T00:00:00Z',
+        ),
+        uploadedVia: 'VISIT',
+        reviewedAt: new Date(),
+      },
+    });
+
     // The driver's fuel card; the transfer is the last job.
     await page.goto(`/suppliers/${driverId}`);
     await expect(page.getByRole('heading', { name: 'Vehicle & fuel' })).toBeVisible();
@@ -187,8 +202,7 @@ test.describe('M6 supplier resources', () => {
         .filter({ has: page.getByRole('heading', { name: 'Reliability score' }) })
         .getByText('Transport · Matanzas'),
     ).toBeVisible();
-    // The vehicle (D7(b)); the insurance ends within 30 days, so it is flagged.
-    const insuranceUntil = new Date(Date.now() + 10 * DAY_MS).toISOString().slice(0, 10);
+    // The vehicle (D7(b)).
     await expect(async () => {
       await page.getByLabel('Model').fill('Peugeot 5008');
       await expect(page.getByLabel('Model')).toHaveValue('Peugeot 5008');
@@ -196,7 +210,10 @@ test.describe('M6 supplier resources', () => {
     await page.getByLabel('Seats').fill('7');
     await page.getByLabel('Plate').fill('P 207 913');
     await page.getByRole('checkbox', { name: 'Air conditioning' }).check();
-    await page.getByLabel('Insurance until').fill(insuranceUntil);
+    await expect(page.getByLabel('Insurance until')).toHaveCount(0);
+    await expect(
+      page.getByText('From the verified liability insurance document.'),
+    ).toBeVisible();
     await page.getByLabel('Routes').fill('HAV ⇄ Viñales\nZapata');
     await page.getByRole('button', { name: 'Save vehicle' }).click();
     await expect(page.getByText(/Insurance ends in (9|10) d/)).toBeVisible();

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import { PrismaClient } from '@ota/db';
+import { Prisma, PrismaClient } from '@ota/db';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
 import { createDispatchableReservation, deleteReservationFixture } from './fixtures';
@@ -226,6 +226,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
         OR: [
           { action: { startsWith: 'supplier.credential_' } },
           { action: { in: ['supplier.identity_checked', 'supplier.verification'] } },
+          { action: { startsWith: 'supplier.vehicle_' } },
         ],
       },
     });
@@ -233,6 +234,7 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
       where: { id: supplierId },
       data: {
         category: 'TOUR_GUIDE',
+        vehicleDetails: Prisma.DbNull,
         payoutMethod: null,
         verificationStatus: 'VERIFIED',
         credentialExpiresAt: new Date('2027-12-31T00:00:00Z'),
@@ -759,6 +761,92 @@ test.describe('the worker app (Phase 7, docs/worker-app-plan.md)', () => {
       (await prisma.supplierProfile.findUniqueOrThrow({ where: { id: supplierId } }))
         .verificationStatus,
     ).toBe('VERIFIED');
+    await app.context().close();
+  });
+
+  test('a driver asks to change vehicle from the app and the desk approves it (docs/schema-w-vehicle.md)', async ({
+    page,
+    browser,
+  }) => {
+    await prisma.supplierProfile.update({
+      where: { id: supplierId },
+      data: {
+        category: 'PRIVATE_DRIVER',
+        vehicleDetails: {
+          model: 'Peugeot 5008',
+          seats: 7,
+          airConditioning: true,
+          extras: null,
+          plate: 'P 207 913',
+          insurance: 'Civil liability',
+          routes: ['Zapata'],
+        },
+      },
+    });
+    const reviewedAt = new Date();
+    await prisma.supplierCredential.createMany({
+      data: (['LIABILITY_INSURANCE', 'TECHNICAL_INSPECTION'] as const).map((kind) => ({
+        supplierId,
+        kind,
+        status: 'VERIFIED' as const,
+        expiresOn: new Date('2027-09-30T00:00:00Z'),
+        uploadedVia: 'VISIT' as const,
+        reviewedAt,
+      })),
+    });
+    const code = await codeFromDesk(page);
+    const app = await signInOnApp(browser, code);
+
+    await app.getByRole('button', { name: 'Mis credenciales' }).click();
+    await expect(
+      app.getByText('Vehículo Peugeot 5008 · P 207 913 · 7 plazas · aire acondicionado'),
+    ).toBeVisible();
+    await app.getByRole('button', { name: 'Cambiar de vehículo' }).click();
+    await app.getByLabel('Modelo').fill('Hyundai H1');
+    await app.getByLabel('Matrícula').fill('P 311 004');
+    await app.getByLabel('Plazas').fill('9');
+    await app.getByRole('button', { name: 'Enviar a la central' }).click();
+    await expect(app.getByText('Cambio de vehículo en revisión')).toBeVisible();
+    // The current vehicle stays on file until the desk approves.
+    await expect(app.getByText('Vehículo Peugeot 5008', { exact: false })).toBeVisible();
+
+    // The desk sees the request on the vehicle card and approves the new plate.
+    await page.reload();
+    const request = page.getByRole('region', {
+      name: 'Vehicle change asked from the app',
+    });
+    await expect(request).toContainText(
+      'Hyundai H1 · P 311 004 · 9 seats · air conditioning',
+    );
+    const dialog = page.getByRole('dialog', { name: 'Approve Hyundai H1 · P 311 004?' });
+    await expect(async () => {
+      await request.getByRole('button', { name: 'Review and approve…' }).click();
+      await expect(dialog).toBeVisible({ timeout: 2_000 });
+    }).toPass();
+    await expect(dialog).toContainText('The plate changes from P 207 913 to P 311 004');
+    await dialog.getByRole('button', { name: 'Approve vehicle' }).click();
+    await expect(request).toHaveCount(0);
+    await expect(page.getByLabel('Model')).toHaveValue('Hyundai H1');
+    await expect(page.getByText('No verified insurance')).toBeVisible();
+    const documents = await prisma.supplierCredential.findMany({
+      where: { supplierId },
+      select: { kind: true, status: true },
+    });
+    expect(documents.map(({ status }) => status)).toEqual(['SUPERSEDED', 'SUPERSEDED']);
+
+    // The app asks for the new car's insurance and inspection.
+    await app.getByRole('button', { name: 'Volver al inicio' }).click();
+    await app.getByRole('button', { name: 'Mis credenciales' }).click();
+    await expect(
+      app.getByText('Vehículo Hyundai H1 · P 311 004 · 9 plazas · aire acondicionado'),
+    ).toBeVisible();
+    await expect(
+      app.getByRole('button', { name: 'Subir la foto: Seguro de responsabilidad civil' }),
+    ).toBeVisible();
+    await expect(
+      app.getByRole('button', { name: 'Subir la foto: Inspección técnica (somatón)' }),
+    ).toBeVisible();
+    await expect(app.getByText('Cambio de vehículo en revisión')).toHaveCount(0);
     await app.context().close();
   });
 
