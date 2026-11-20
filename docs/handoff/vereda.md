@@ -1,4 +1,4 @@
-# Handoff — vereda — updated 2026-11-20 09:56
+# Handoff — vereda — updated 2026-11-20 16:30
 
 ## Goal
 Build the design team's handoff into the platform. The current handoff is `design/vereda-v1.2/`;
@@ -17,13 +17,18 @@ desk's worker sign-out, on 2026-11-11 W-Calendar, its block reasons and W-Earnin
 2026-11-13 W-Earnings' payouts and the receipt in the app, on 2026-11-14 Ops Lite and
 W-Credentials, on 2026-11-15 W-Job and the worker app's distribution, on 2026-11-16 worker ↔ desk
 messages, on 2026-11-18 the desktop cookie banner, the header in Spanish and French and the 320
-phone header, on 2026-11-19 the refund card's Nudge and Withdraw) and
+phone header, on 2026-11-19 the refund card's Nudge and Withdraw, on 2026-11-20 the vehicle
+review and M10's holds and photos) and
 ADR 0007 (worker
 app; amended 2026-11-09 for the first slice, 2026-11-10 for the desk's sign-out and 2026-11-11
 for W-Calendar, again for its block reasons and for W-Earnings, 2026-11-13 for the payouts and the receipt in the app, 2026-11-14 for Ops Lite, W-Credentials and background resend, 2026-11-15 for W-Job and
-distribution, 2026-11-16 for worker ↔ desk messages).
+distribution, 2026-11-16 for worker ↔ desk messages, 2026-11-20 for changing vehicle).
 The worker app:
-`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). Worker ↔ desk messages:
+`docs/worker-app-plan.md` (approved W1, W3, W7; §7 as built). The vehicle follow-ups:
+`docs/schema-w-vehicle.md` (approved X1a–X3a 2026-11-20, §5 as built, no migration). The
+credential column drop: `docs/schema-credential-url-drop.md` (approved U1a, U2a 2026-11-20, §5,
+a migration). M10's holds and photos: `docs/schema-m10-holds-photos.md` (approved H1a–H3a, P1a,
+P2 2026-11-20, §7 as built, a migration). Worker ↔ desk messages:
 `docs/schema-w-messages.md` (approved M1–M8 2026-11-16, §7 as built, a migration). Distribution:
 `docs/worker-app-distribution-plan.md` (approved U1–U8 2026-11-15, §5 as built, no migration). W-Job: `docs/schema-w-job.md`
 (approved J1–J9 2026-11-15, §7 as built, a migration). W-Credentials:
@@ -42,6 +47,38 @@ as built, a migration). W-Calendar's block reasons: `docs/schema-w-calendar-reas
 events (T-Events)".
 
 ## State
+- **2026-11-20: the owner's "all of them, in the most logical order"** (after Task 1 found no CI
+  or Release run: `origin/vereda` still `b1ac87c`, no tag). In order:
+  - **`effect` override** (`43f5134`): the audit's one new advisory, `effect` 3.21.0 (high,
+    GHSA-7589-6fvf-x4pw, ReDoS), reached only through `@prisma/config`'s exact pin;
+    `pnpm-workspace.yaml` overrides `'@prisma/config>effect': 3.22.2` (same major). Prisma CLI
+    validate/generate/migrate status checked. `picomatch` no longer shows; the four settled
+    advisories remain.
+  - **Staff emails out of the traveler's schedule** (`7aba06d`): `ScheduleService.get` with
+    `ownerId` nulls each refund's `requestedByEmail` and `approverEmail` (fields already
+    nullable, no contract change); the desk's read keeps them. API test added.
+  - **`credential_document_url` dropped** (`fe99e18`, migration
+    `20261120101001_drop_credential_document_url`, applied): the backfill live test is deleted
+    (U2a), fakes lose the field.
+  - **W-Credentials' vehicle follow-ups** (`84022c1`…`bf67591`, no migration, no dependency):
+    domain `supplier/vehicle.ts`; `vehicle_details` keeps `pendingVehicle` / `rejectedVehicle`
+    beside the desk's fields (`apps/api/src/suppliers/vehicle-json.ts`); `SupplierVehicleService`
+    (`POST /worker/vehicle`, `POST /suppliers/:id/vehicle/approve|reject`, all under a profile
+    row lock, as is the desk's `PUT …/vehicle` now); a new plate supersedes the verified
+    inspection and insurance (`SupplierCredentialsService.supersedeVerified`); the vehicle's
+    `insuranceUntil` is the verified insurance's expiry and the input no longer takes it. App:
+    "Cambiar de vehículo" on the insurance card. Desk: `supplier-vehicle-request.tsx` and the
+    read-only date. RBAC +3. e2e: `worker-app.spec.ts` (new test), `supplier-resources.spec.ts`.
+  - **M10's room holds and event photos** (`3dacf2a`…`175dae8`, migration
+    `20261120102556_m10_holds_and_photos`, applied): domain `events/holds.ts`; the editor's
+    hold (an active ACCOMMODATION item, last day, note), the public `hold` / `media` /
+    `builderStart`, translations' `holdNote` / `mediaAlt`; photo routes (`POST /events/:id/media`,
+    `PATCH|DELETE …/media/:mediaId`, `GET /events/media/:id`, public
+    `GET /catalog/events/media/:id`), publish refuses people without consent; desk hold card,
+    Photos card (`event-media-manager.tsx`), translations, dashboard task per hold ending;
+    storefront hero/gallery, the hold aside, list thumbnails, `/custom?from&to&province`.
+    Seed: "Casa Lis" and a hold on the jazz festival (no seeded photo). RBAC +4. e2e:
+    `events.spec.ts` second test.
 - **2026-11-19: the refund card's Nudge and Withdraw** (the owner's pick: AL-Alerts' last
   unbuilt actions). No migration, no dependency (`703ea8a`, `81c3aa9`, `89b80aa`, `ae61ce3`,
   `c7e4ff3`). Domain `packages/domain/src/payments/refunds.ts`: `refundNudge` (every approver
@@ -883,40 +920,60 @@ events (T-Events)".
   privacy notice's cookies paragraph, the concierge fee and the events copy
   (`content.events`, en/es; the US note waits for counsel); dev seed as before plus two events.
 
-## Verified (2026-11-19/20, the refund nudge and withdraw; dev stack stopped for the verify, restarted after)
-- CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched 2026-11-19), no `v*` tag, no
-  new PR ref, so no CI or Release run. `pnpm audit --prod`: four deferred advisories
-  (`deepmerge-ts`, `uuid`, `glob`, `minimatch`), nothing new.
+## Verified (2026-11-20, the effect override, the schedule's emails, the column drop, the vehicle follow-ups and M10's holds and photos; dev stack stopped for the verify, restarted after)
+- CI: nothing to fix. `origin/vereda` is still `b1ac87c` (fetched 2026-11-20), no `v*` tag, so
+  no CI or Release run. `pnpm audit --prod`: the four settled advisories (`deepmerge-ts`,
+  `uuid`, `glob`, `minimatch`) after the `effect` override; `picomatch` no longer listed.
 - `pnpm lint`, `pnpm format:check` green. `TURBO_FORCE=true pnpm typecheck` **34/34**,
-  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1609 passed / 72 skipped** (+9 new, +1 skipped:
-  the new live test), `TURBO_FORCE=true pnpm build` **19/19**.
+  `TURBO_FORCE=true pnpm test` **31/31 tasks, 1636 passed / 73 skipped**,
+  `TURBO_FORCE=true pnpm build` **19/19**.
 - Live (`RUN_DB_INTEGRATION=1`, `REDIS_URL=redis://localhost:6379`, from `apps/api`, the 18
-  `test/*.integration.test.ts` files) **71/71**. The lock: with `lockRow`'s `FOR UPDATE`
-  removed, `payment-schedule.integration.test.ts`' race failed 4 of 4 runs (APPROVED with the
-  withdrawal also accepted); restored, it passed every run.
-- Full `pnpm e2e` (seven projects, 1.5 h, ports clear and `.next` deleted first): **197
-  passed, 2 failed, 3 skipped**. Both were `page.goto` timeouts, not this change: keep building
-  (default) passed alone on a fresh stack; ds07-375 "customer pages … larger text" failed twice
-  more on a stack the previous spec had grown (storefront `next dev` 3.8 GB, Traps 2026-10-31),
-  then passed after `kill -9`, ports free and `.next` deleted (2.0 min). `ops-lite.spec.ts`
-  4/4 in the full run.
-- Browser (390 Ops Lite; 1024 and 1280 the desk's refund queue; screenshots and computed
-  styles): caption 12/16 px muted; Nudge primary and Withdraw tertiary at Ops Lite's `md`
-  (40 px, 16 px type), `sm` on the desk (32 px, 14 px); in the cooldown Nudge is
-  `aria-disabled` with "Nudged; again from HH:MM"; the success alert in success-100/700; the
-  DS 06 dialog at 390 (sheet) and 1280; no horizontal overflow at any width.
+  `test/*.integration.test.ts` files) **72/72** (the backfill test gone, two events tests new).
+- Migrations `20261120101001_drop_credential_document_url` and
+  `20261120102556_m10_holds_and_photos` applied to the dev DB; `prisma migrate diff` no
+  difference; seed re-run (Casa Lis hold on the jazz festival, es/fr notes).
+- Full `pnpm e2e` (seven projects, 1.6 h, ports clear and `.next` deleted first): **195
+  passed, 6 failed, 3 skipped**. Two were this batch's: `events.spec.ts`' new test (the 60 s
+  events-list cache, Traps) and DS 07 320 "larger text" (the hold button widened
+  `/en/events/havana-jazz-festival-2027` by 20 px; fixed `09769d3`). Four were storefront
+  navigation timeouts on a grown `next dev` (both `next-server` at 4–7 GB): keep-building,
+  keyboard "pages are titled", packages "books one", DS 07 375 `page.goto
+  /en/packages/compare`. Rerun of those five spec files on a fresh stack (`.next` deleted;
+  projects default, ds07-320, ds07-375): **28 passed, 2 skipped, 0 failed** (18.2 min).
+- Browser (one-off script, en-US, screenshots and computed styles at 390, 1024 and 1280 against
+  the restarted stack): no horizontal overflow on the supplier page with a vehicle request,
+  its dialog (390: full-width sheet; 1024/1280: 640 px), the event editor's hold and Photos
+  cards, the dashboard's hold task, the storefront event page and the events list. Request box
+  border `warning-500` (rgb 245 158 11), 8 px radius; "Review and approve…" 32 px / 14 px; the
+  read-only date in `plexMono` 14 px; hero 358×239 (3:2) at 390, 944×405 and 1200×514 (21:9)
+  from sm; the hold aside a column at 390 and a row from md, its button 44 px at 390 and 40 px
+  from sm. The app's vehicle form was checked only through the worker-app e2e (web preview).
 - Owner's dev stack restarted with Task 0's settings (`setsid nohup pnpm dev`; API, desk and
   storefront answer 200) and left running.
 
 ## Assumptions & unknowns
+- **Traveler schedule (2026-11-20):** only the staff emails were taken out, as asked. The
+  traveler's JSON still carries the refund's `note` (the desk's request note) and each
+  approval's `note` (a reject reason); the storefront shows neither. Whether to drop those
+  too is the owner's call.
+- **Vehicle change (2026-11-20):** a non-driver asking gets 422, as the desk's `PUT
+  …/vehicle` answers, not the 409 the doc's §3 named (recorded in §5). Approval supersedes only
+  **verified** inspection/insurance: an upload already waiting is kept as possibly the new
+  car's. A desk save drops a pre-X3a `insuranceUntil` from the JSON (the audit row keeps it).
+  Nothing ran on a device: the app form was exercised in the web preview only.
+- **M10 holds and photos (2026-11-20):** the hold's casa name is the catalog item's name, not
+  translated; "Vedado" in the board's line became the event's province. No placeholder photo
+  is seeded (§7 of the doc says why). The builder link's `from` follows Havana's day while
+  `/custom` checks it against the UTC day, so between 00:00 and ~05:00 UTC on an event's
+  running days a link from "today" can be ignored (the builder then opens empty); not seen,
+  inferred from the code. `GET /catalog/events` is cached 60 s by the storefront, so a hold
+  line can outlive its day by up to a minute.
 - **Refund nudge (2026-11-19):** email stands in for push/SMS; a send failure is logged and
   the nudge (and its cooldown) stands. Approvers are found by role (`OPERATIONS_ADMIN`,
   `SUPER_ADMIN`, active), so in dev the list is long: the dev DB has seven active Super Admins
   left by earlier runs (including one named "Traveler Two"), hence the "Emailed 7 approvers"
-  form. Not confirmed with the owner: 30 minutes as the cooldown (a constant in the domain,
-  not a setting). Found, not changed: a traveler's `GET /me/reservations/:id/schedule` returns
-  `RefundDto` with `requestedByEmail` and each approval's `approverEmail` (staff addresses in
-  the traveler's JSON; the storefront does not show them).
+  form. The owner kept 30 minutes as the cooldown (2026-11-20). The staff addresses in the
+  traveler's schedule JSON are gone since 2026-11-20 (State).
 - **W-Job (2026-11-15):** nothing ran on a device; the e2e drives the web preview, where
   `expo-location` is the browser's geolocation and the composer path (no data) is not taken.
   Assumed: Android's `sms:` link opens the default SMS app with the body filled; a fix indoors
@@ -1195,6 +1252,30 @@ events (T-Events)".
   every stay has backup power; `staff.allowedEmailDomains` should become the agency's domain.
 
 ## Traps
+- **`prisma migrate dev` will not drop data without a terminal (2026-11-20):** in this
+  non-interactive shell it stops at "You are about to drop the column … which still contains 1
+  non-null values" and exits. For a data-losing migration: write the folder by hand with
+  `prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel
+  prisma/schema.prisma --script`, apply it with `prisma migrate deploy`, then `prisma generate`
+  (deploy does not generate). An additive migration still goes through `migrate dev`.
+- **Package changes do not reach a running `pnpm dev` (2026-11-20):** `packages/*` have no
+  dev watcher; apps read their `dist`. Build the changed package (`pnpm --filter @ota/<name>
+  run build`) before a targeted e2e, or the stack serves the old DTOs and copy. Editing a
+  package's `src` during an e2e run is therefore safe; editing `apps/*/src` is not (Traps
+  2026-11-18).
+- **The storefront's events list caches 60 s (2026-11-20):** `getEvents` fetches with
+  `revalidate: 60`, so in a full e2e run an earlier spec's visit to `/en/events` served the list
+  from before `events.spec.ts` created its event, and the photo check failed (it passed alone).
+  A new e2e assertion on a cached storefront list reloads inside `toPass` for up to 90 s.
+- **Vehicle JSON (2026-11-20):** `supplier_profiles.vehicle_details` is read through
+  `readVehicleJson` (`apps/api/src/suppliers/vehicle-json.ts`), never `vehicleDetailsSchema`
+  directly: since X3a a stored vehicle has no `insuranceUntil`, which the DTO schema requires,
+  so a direct `safeParse` reads every saved vehicle as none.
+- **A direct service call skips zod defaults (2026-11-20):** live tests call
+  `EventsService.putTranslation` / `create` without the HTTP pipe, so a field the schema
+  defaults (`mediaAlt: {}`, `hold: null`) arrives `undefined`; `Object.keys(undefined)` threw
+  until the test passed them. API tests are not type-checked (Traps 2026-11-16), so nothing
+  flags it before the run.
 - **Refund fixtures (2026-11-19):** above the dual limit a Super Admin's approval completes a
   refund on its own, so a hand-made REQUESTED refund above € 2,000 with a Super Admin's
   approval is really approved and the card shows no action (the first visual check failed
@@ -1879,6 +1960,18 @@ events (T-Events)".
   or a one-shot `$transaction` wrapper (desk party edit).
 - **AGENTS.md §C lines proposed (owner edit)**, in addition to the earlier ones still pending
   (M7, SIGTERM, document downloads, M8, graceful shutdown, Nest 12, M6, log redaction):
+  - "2026-11-20: a driver's vehicle is `supplier_profiles.vehicle_details` (JSON) with the
+    worker's `pendingVehicle` and the desk's last `rejectedVehicle` beside it; read and write
+    it only through `apps/api/src/suppliers/vehicle-json.ts`, under the profile row lock
+    (`SELECT … FOR UPDATE`). The vehicle's insurance date is the verified LIABILITY_INSURANCE's
+    expiry, never a stored field."
+  - "2026-11-20: event photos follow package photos (`event_media`, keys
+    `events/<eventId>/<uuid>.<ext>`): desk reads `GET /events/media/:id`, the storefront
+    `GET /catalog/events/media/:id`, which refuses an unpublished event's. An event's room hold
+    (`events.hold_*`) is a line on the page through its last day, not an allocation."
+  - "2026-11-20: `prisma migrate dev` refuses a data-losing step in a non-interactive shell;
+    write that migration from `prisma migrate diff --script`, apply it with `migrate deploy`,
+    then `prisma generate`."
   - "2026-11-19: refund votes, withdrawals and nudges lock the refund row (`SELECT … FOR
     UPDATE` in `RefundsService.lockRow`) and read the approvals inside that transaction; a new
     write to `refund_approvals` must do the same, or a withdrawal can race a second approval
@@ -2150,10 +2243,12 @@ events (T-Events)".
 ## Next
 1. Owner: push `vereda` (background resend, W-Job, distribution, worker ↔ desk messages, the
    desktop cookie banner, the header in Spanish and French, the stale price window, the 320
-   phone header and the refund nudge/withdraw are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
+   phone header, the refund nudge/withdraw and the 2026-11-20 batch (the `effect` override,
+   the schedule's staff emails, the credential column drop, the vehicle follow-ups, M10's holds
+   and photos, two migrations) are local; W-Credentials was pushed) and open a new pull request from `vereda` into `main`,
    so CI runs on W-Earnings' payouts, the receipt, Ops Lite, W-Credentials, background resend,
    W-Job, distribution and worker messages: PR #1 is merged, and a push to `vereda` alone runs
-   no workflow (none has run since `94c0910`; checked 2026-11-19: `origin/vereda` still
+   no workflow (none has run since `94c0910`; checked 2026-11-20: `origin/vereda` still
    `b1ac87c`, no `v*` tag).
 2. Owner, before the first release: set the repository variable `DESK_DOMAIN`
    (`desk.veredaexpeditions.com`), then push a `v*` tag and watch the Release workflow (its
@@ -2175,21 +2270,23 @@ events (T-Events)".
    follow-ups are the owner's call: translation (needs the AI provider), quick replies (need
    content), push or SMS to the worker for a desk reply (needs a push service or the SMS
    provider).
-   W-Credentials' follow-ups are the owner's call: the worker changing vehicle, the vehicle
-   form's insurance date, a migration dropping `credential_document_url`. Ops
+   W-Credentials' follow-ups landed 2026-11-20 (changing vehicle, the insurance date, the
+   column drop); left: a retention path for supplier documents (PII G5), W-Login's banner, and
+   the field test of "Cambiar de vehículo". Ops
    Lite (Phase 7 item 2) landed 2026-11-14 and its worker threads 2026-11-16; its follow-ups
    are the owner's call: push to a closed page (a service worker and a push service), quick
    replies (the refund card's nudge and withdraw landed 2026-11-19). Also the owner's call,
-   found 2026-11-19: drop staff emails from the traveler's schedule JSON (Assumptions), and
-   whether 30 minutes is the right nudge cooldown.
+   found 2026-11-20: whether the traveler's schedule should also lose the refund and approval
+   notes (Assumptions).
 4. Owner, waiting on the legal entity and counsel (the owner says when): Phase C accounts, the
    counsel package (also the AI provider and sanctions question), the business values, the
    tenant placeholders, the SMS provider. The full list is `docs/production-readiness.md` §4;
    do not re-ask what it records as decided.
 5. The AI provider (open; suggestions in `docs/production-readiness.md` §6): production holds
    the mock off by itself (A4), so this does not block launch.
-6. Deferred, the owner's call: M10 room holds/photos (migration doc), a real screen-reader
-   run, manifest editing beyond flags, PII purge Tiers 2–3, the load test (D24), SMS.
+6. Deferred, the owner's call: a real screen-reader run, manifest editing beyond flags, PII
+   purge Tiers 2–3, the load test (D24), SMS. (M10's room holds and photos landed
+   2026-11-20.)
 7. Before the next merge into `main`: graduate this handoff (facts → AGENTS.md §C via the
    owner, decisions → ADRs/PR) and delete it in the merge; merge with a merge commit. PR #1 was
    merged on 2026-11-13 without this step, so `main` carries the handoff file as of `94c0910`.
@@ -2950,3 +3047,25 @@ events (T-Events)".
   vote from someone who already voted (the API refused it with 409); locking the refund row in
   vote as well, since a withdrawal racing the second approval reproduced a dual-limit refund
   approved on one vote; the recipients named up to three, counted beyond.
+- 2026-11-20 — the owner asked for all four offered items "in the most logical order", kept 30
+  minutes as the nudge cooldown, and took the `effect` override over deferring it. The order
+  chosen: the override, the schedule's staff emails (no migration, small), then the three
+  docs batched for one approval, then the column drop, the vehicle follow-ups and M10 (largest
+  last). The owner approved all three docs as recommended (U1a/U2a, X1a–X3a, H1a–H3a/P1a/P2).
+- 2026-11-20 — the schedule's staff emails are nulled in the owner-scoped read rather than a
+  separate traveler DTO: both fields were already nullable, so neither the storefront nor the
+  schema changes shape. The notes were left, as the owner asked about the emails only.
+- 2026-11-20 — the vehicle request lives in `vehicle_details` beside the desk's fields (no
+  migration), behind one reader/writer (`vehicle-json.ts`); the request, the decisions and the
+  desk's own save all lock the profile row, since the JSON is read and written whole. A
+  refusal is kept (`rejectedVehicle`) so the app can show the reason until the next request.
+  Approval supersedes verified versions only. A non-driver gets 422 as the desk's save does.
+  The app's vehicle line shows without a current insurance, so a driver whose documents were
+  set aside still sees the car.
+- 2026-11-20 — M10's photos copy the package photo pattern but add `PATCH` (alt text,
+  people/consent, position) as P2 approved; the desk component is its own
+  (`event-media-manager.tsx`) rather than a generalised package manager, so the package editor
+  is untouched. The seed holds a room at a new placeholder "Casa Lis" (La Habana) and seeds no
+  photo, since the seed cannot reach the API's object storage. The hold line's "Vedado" is the
+  event's province; the casa name is not translated. The hold reminder is one dashboard task
+  per hold.

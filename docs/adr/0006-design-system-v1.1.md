@@ -2131,7 +2131,8 @@ without asking the design team, on the existing tokens and components; no token 
   insurance, so a driver whose documents were set aside still sees the car.
 - **The hold line.** The board's sentence is an `aside` ("Room held for festival week") in the
   page's surface card between the programme and the request, with "Build the trip with these
-  dates" as a secondary button. "Vedado" in the board becomes the event's province, since the
+  dates" as a secondary button; below sm the button spans the card and wraps, as Home's
+  search button does, so larger text at 320 px never widens the page. "Vedado" in the board becomes the event's province, since the
   hold stores a casa, not a neighbourhood, and the note goes in brackets after the casa's name.
   It shows through the hold's last day in Havana.
 - **Event photos.** The first photo is the event page's hero: 3:2 below sm and 21:9 from sm,
